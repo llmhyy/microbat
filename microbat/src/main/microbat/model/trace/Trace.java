@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
@@ -60,10 +61,21 @@ public class Trace {
 		return this.exectionList.size();
 	}
 	
-	public List<TraceNode> getTopLevelNodes(){
+	public List<TraceNode> getTopMethodLevelNodes(){
 		List<TraceNode> topList = new ArrayList<>();
 		for(TraceNode node: this.exectionList){
 			if(node.getInvocationParent() == null){
+				topList.add(node);
+			}
+		}
+		
+		return topList;
+	}
+	
+	public List<TraceNode> getTopLoopLevelNodes(){
+		List<TraceNode> topList = new ArrayList<>();
+		for(TraceNode node: this.exectionList){
+			if(node.getLoopParent() == null){
 				topList.add(node);
 			}
 		}
@@ -150,6 +162,60 @@ public class Trace {
 			node.conductStateDiff();
 		}
 		
+	}
+	
+	public void constructLoopParentRelation(){
+		Stack<TraceNode> loopParentStack = new Stack<>();
+		
+		for(TraceNode node: this.exectionList){
+			/**
+			 * if out of the scope the loop parent, pop
+			 */
+			if(!loopParentStack.isEmpty()){
+				TraceNode currentLoopParent = loopParentStack.peek();
+				while(!isLoopParentContainDirectlyOrIndirectly(currentLoopParent, node)
+						|| node.getLineNumber() == currentLoopParent.getLineNumber()){
+					loopParentStack.pop();
+					if(loopParentStack.isEmpty()){
+						break;
+					}
+					currentLoopParent = loopParentStack.peek(); 
+				}
+			}
+			
+			/**
+			 * connect loop parent-child relation
+			 */
+			if(!loopParentStack.isEmpty()){
+				TraceNode loopParent = loopParentStack.peek();
+				loopParent.addLoopChild(node);
+				node.setLoopParent(loopParent);
+			}
+			
+			/**
+			 * if a node is a loop condition, push
+			 */
+			if(node.isLoopCondition()){
+				loopParentStack.push(node);
+			}
+		}
+	}
+
+	private boolean isLoopParentContainDirectlyOrIndirectly(TraceNode currentLoopParent, TraceNode node) {
+		List<TraceNode> invocationParentList = new ArrayList<>();
+		TraceNode invocationParent = node;
+		while(invocationParent != null){
+			invocationParentList.add(invocationParent);
+			invocationParent = invocationParent.getInvocationParent();
+		}
+		
+		for(TraceNode iParent: invocationParentList){
+			if(currentLoopParent.getConditionScope().containsNodeScope(iParent)){
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	public void constructDomianceRelation(){

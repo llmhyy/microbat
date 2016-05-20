@@ -154,12 +154,12 @@ public class StartDebugHandler extends AbstractHandler {
 								e.printStackTrace();
 							} 
 							
-							/** 4. construct dominance relation*/
-							monitor.setTaskName("construct dominance relation");
+							/** 4. construct dominance and loop-parent relation*/
+							monitor.setTaskName("construct dominance and loop-parent relation");
 							
 							Trace trace = tcExecutor.getTrace();
 							trace.constructDomianceRelation();
-							//trace.conductStateDiff();
+							trace.constructLoopParentRelation();
 							
 							monitor.worked(1);
 							

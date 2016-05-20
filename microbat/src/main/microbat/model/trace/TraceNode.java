@@ -72,6 +72,9 @@ public class TraceNode{
 	private List<TraceNode> invocationChildren = new ArrayList<>();
 	private TraceNode invocationParent;
 	
+	private List<TraceNode> loopChildren = new ArrayList<>();
+	private TraceNode loopParent;
+	
 	private boolean isException;
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order) {
@@ -697,5 +700,25 @@ public class TraceNode{
 		}
 		
 		return node.getOrder();
+	}
+
+	public List<TraceNode> getLoopChildren() {
+		return loopChildren;
+	}
+
+	public void setLoopChildren(List<TraceNode> loopChildren) {
+		this.loopChildren = loopChildren;
+	}
+
+	public TraceNode getLoopParent() {
+		return loopParent;
+	}
+
+	public void setLoopParent(TraceNode loopParent) {
+		this.loopParent = loopParent;
+	}
+	
+	public void addLoopChild(TraceNode loopChild){
+		this.loopChildren.add(loopChild);
 	}
 }

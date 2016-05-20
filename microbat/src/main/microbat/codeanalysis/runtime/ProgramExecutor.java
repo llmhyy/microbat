@@ -103,8 +103,7 @@ import com.sun.jdi.request.StepRequest;
 public class ProgramExecutor extends Executor {
 	public static final long DEFAULT_TIMEOUT = -1;
 
-	// private static Logger log =
-	// LoggerFactory.getLogger(ProgramExecutor.class);
+	// private static Logger log = LoggerFactory.getLogger(ProgramExecutor.class);
 
 	/**
 	 * fundamental fields for debugging
@@ -123,8 +122,7 @@ public class ProgramExecutor extends Executor {
 	 */
 	private Trace trace = new Trace();
 
-	public ProgramExecutor() {
-	}
+	public ProgramExecutor() {}
 
 	/**
 	 * Executing the program, each time of the execution, we catch a JVM event
@@ -297,8 +295,6 @@ public class ProgramExecutor extends Executor {
 					 * our debugging process
 					 */
 					if (bkp != null) {
-						// TraceNode node = handleBreakpoint(bkp, ((StepEvent)
-						// event).thread(), currentLocation);
 						BreakPointValue bkpVal = extractValuesAtLocation(bkp, thread,
 								currentLocation);
 						TraceNode node = recordTrace(bkp, bkpVal);
@@ -307,6 +303,9 @@ public class ProgramExecutor extends Executor {
 						// System.currentTimeMillis();
 						// }
 
+						/**
+						 * pop up method after an exception is caught.
+						 */
 						if (caughtLocationForJustException != null) {
 							if (!methodNodeStack.isEmpty()) {
 								TraceNode invocationNode = this.trace.findLastestExceptionNode();
