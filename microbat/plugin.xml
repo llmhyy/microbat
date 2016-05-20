@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="microbat.category"
+            name="MicroBat">
+      </category>
+      <view
+            category="microbat.category"
+            class="microbat.views.DebugFeedbackView"
+            icon="icons/feedback.png"
+            id="microbat.view.debugFeedback"
+            name="Debug Feedback"
+            restorable="true">
+      </view>
+      <view
+            category="microbat.category"
+            class="microbat.views.TraceView"
+            icon="icons/trace.png"
+            id="microbat.view.trace"
+            name="Trace"
+            restorable="true">
+      </view>
+      <view
+            category="microbat.category"
+            class="microbat.views.NavigationHistoryView"
+            icon="icons/navigation_history.png"
+            id="microbat.view.navigationHistory"
+            name="Navigation History"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="microbat.perspectives.MicroBatPerspective"
+            icon="icons/microbat.png"
+            id="microbat.perspectives.MicroBatPerspective"
+            name="MicroBat">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            defaultHandler="microbat.handler.StartDebugHandler"
+            id="microbat.command.startDebug"
+            name="Start Debugging">
+      </command>
+      <command
+            defaultHandler="microbat.evaluation.handler.EvaluationHandler"
+            id="microbat.evaluateCommand"
+            name="Run Evaluation">
+      </command>
+      <command
+            defaultHandler="microbat.handler.UndoHandler"
+            id="microbat.undoCommand"
+            name="Undo">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.eclipse.ui.main.menu">
+         <menu
+               label="MicroBat">
+            <command
+                  commandId="microbat.command.startDebug"
+                  icon="icons/microbat.png"
+                  label="Start Debug"
+                  style="push">
+            </command>
+            <command
+                  commandId="microbat.undoCommand"
+                  icon="icons/undo.png"
+                  label="Undo Your Debug Operation"
+                  style="push">
+            </command>
+            <command
+                  commandId="microbat.evaluateCommand"
+                  icon="icons/evaluation.png"
+                  label="Run Evaluation"
+                  style="push">
+            </command>
+         </menu>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.ui.main.toolbar">
+         <toolbar
+               id="microbat.toolbar.startDebug">
+            <command
+                  commandId="microbat.command.startDebug"
+                  icon="icons/microbat.png"
+                  label="Start Debug"
+                  style="push">
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.ui.main.toolbar">
+         <toolbar
+               id="microbat.toolbar.undo">
+            <command
+                  commandId="microbat.undoCommand"
+                  icon="icons/undo.png"
+                  label="Undo Your Debug Operation"
+                  style="push"
+                  tooltip="undo your previous debugging operation">
+            </command>
+         </toolbar>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.markerAnnotationSpecification">
+      <specification
+            annotationImageProvider="microbat.views.StepImageProvider"
+            annotationType="microbat.specification.step"
+            colorPreferenceKey="inspected_step_color"
+            colorPreferenceValue="127,255,212"
+            contributesToHeader="true"
+            highlightPreferenceKey="inspected_step_highlight"
+            highlightPreferenceValue="true"
+            includeOnPreferencePage="true"
+            label="StepAnnotation"
+            overviewRulerPreferenceKey="inspected_step_overview"
+            overviewRulerPreferenceValue="true"
+            textPreferenceKey="inspected_step_text"
+            textPreferenceValue="true"
+            verticalRulerPreferenceKey="inspected_step_vertical"
+            verticalRulerPreferenceValue="false">
+      </specification>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="microbat.preference.MicrobatPreference"
+            id="microbat.preference"
+            name="Microbat Debugging">
+      </page>
+   </extension>
+
+</plugin>

@@ -1,0 +1,48 @@
++ : - * /
+- : + * /
+* : + - /
+/ : + - *
+!x : ~x
+~x : !x
+++x : x++ --x x--
+--x : x-- ++x x++
+x++ : ++x --x x--
+x-- : --x ++x x++
++x : -x
+-x : +x
+& : | ^
+| : & ^
+^ : | &
+> : < <= >= !=
+< : > <= >= !=
+<= : < > >= !=
+>= : < > <= !=
+!= : < > >= <=
++= : -= *= /=
+-= : += *= /=
+*= : -= += /=
+/= : -= += *=
+&= : |= ^=
+|= : &= ^=
+^= : |= &=
+<<= : >>=
+>>= : <<=
+== : !=
+!= : ==
+n : n++ n-- ++n --n n+[-10, 10)
+b : !b true false
+s : empty null
+f : f
+o : null o
+
+rem NUMBER : NUMBER++ ++NUMBER NUMBER-- --NUMBER NUMBER RANDOM
+rem BOOL : !BOOL TRUE FALSE BOOL
+rem || : && LHS RHS TRUE FALSE
+rem && : || LHS RHS TRUE FALSE
+rem OBJ : NULL OBJ
+rem STRING : EMPTY NULL
+rem FUNC_CALL : FUNC_CALL
+
+
+
+

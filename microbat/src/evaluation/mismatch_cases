@@ -1,0 +1,33 @@
+The matching algorithm in the evaluation can hardly to be 100% accurate. Therefore, we
+may need to evaluate the evaluation with two research questions:
+1) how accurate does the matching algorithm?
+2) when the miss-match happen?
+3) what is the effect of miss-match on debugging evaluation?
+
+======================================================================================
+		String className = "org.apache.commons.math.analysis.ComposableFunctionTest";
+		String methodName = "testSignum";
+		String mutationFile = "C:\\Users\\YUNLIN~1\\AppData\\Local\\Temp\\"
+				+ "mutatedSource3984330978923495794\\640_17_1\\FastMath.java";
+		String mutatedClass = "org.apache.commons.math.util.FastMath";
+		int mutatedLine = 640;
+======================================================================================
+
+Test case: org.apache.commons.math.analysis.BinaryFunctionTest#testAtan2 fail to find bug
+Mutated File: C:\Users\YUNLIN~1\AppData\Local\Temp\apache-common-math-2.2\3054_38_1\FastMath.java, 
+
+Test case: org.apache.commons.math.analysis.BinaryFunctionTest#testAtan2 fail to find bug
+Mutated File: C:\Users\YUNLIN~1\AppData\Local\Temp\apache-common-math-2.2\3054_38_3\FastMath.java, 
+
+Test case: org.apache.commons.math.analysis.BinaryFunctionTest#testAtan2 fail to find bug
+Mutated File: C:\Users\YUNLIN~1\AppData\Local\Temp\apache-common-math-2.2\3054_38_4\FastMath.java, 
+
+Test case: org.apache.commons.math.analysis.BinaryFunctionTest#testAtan2 fail to find bug
+Mutated File: C:\Users\YUNLIN~1\AppData\Local\Temp\apache-common-math-2.2\3054_42_1\FastMath.java, 
+
+Test case: org.apache.commons.math.analysis.BinaryFunctionTest#testAtan2 fail to find bug
+Mutated File: C:\Users\YUNLIN~1\AppData\Local\Temp\apache-common-math-2.2\3041_27_1\FastMath.java, 
+
+Test case: org.apache.commons.math.analysis.BinaryFunctionTest#testAtan2 fail to find bug
+Mutated File: C:\Users\YUNLIN~1\AppData\Local\Temp\apache-common-math-2.2\3043_30_3\FastMath.java
+
