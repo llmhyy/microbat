@@ -2,6 +2,7 @@ package microbat.model.trace;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -682,6 +683,75 @@ public class TraceNode{
 				if(scope.containsNodeScope(parent)){
 					return true;
 				}
+			}
+		}
+		
+		return false;
+	}
+	
+	public TraceNode getAbstractionParent(){
+		TraceNode invocationParent = getInvocationParent();
+		TraceNode loopParent = getLoopParent();
+		
+		if(invocationParent==null && loopParent==null){
+			return null;
+		}
+		else if(invocationParent!=null && loopParent==null){
+			return invocationParent;
+		}
+		else if(invocationParent==null && loopParent!=null){
+			return loopParent;
+		}
+		else{
+			TraceNode abstractionParent = (invocationParent.getOrder()>loopParent.getOrder())?
+					invocationParent:loopParent;
+			return abstractionParent;
+		}
+	}
+	
+	public List<TraceNode> getAbstractChildren(){
+		List<TraceNode> abstractChildren = new ArrayList<>();
+		
+		if(this.loopChildren.isEmpty() && this.invocationChildren.isEmpty()){
+			return abstractChildren;
+		}
+		else if(!this.loopChildren.isEmpty() && this.invocationChildren.isEmpty()){
+			return loopChildren;
+		}
+		else if(this.loopChildren.isEmpty() && !this.invocationChildren.isEmpty()){
+			abstractChildren.addAll(this.invocationChildren);
+			clearLoopParentsInMethodParent(abstractChildren);
+			return abstractChildren;
+		}
+		else{
+			abstractChildren.addAll(this.invocationChildren);
+			clearLoopParentsInMethodParent(abstractChildren);
+			abstractChildren.addAll(this.loopChildren);
+			return abstractChildren;
+		}
+	}
+
+	private void clearLoopParentsInMethodParent(List<TraceNode> abstractChildren) {
+		Iterator<TraceNode> iter = abstractChildren.iterator();
+		while(iter.hasNext()){
+			TraceNode node = iter.next();
+			if(isIndirectlyLoopContains(node)){
+				iter.remove();
+			}
+		}
+	}
+
+	private boolean isIndirectlyLoopContains(TraceNode node) {
+		List<TraceNode> loopParents = new ArrayList<>();
+		TraceNode loopParent = node.getLoopParent();
+		while(loopParent != null){
+			loopParents.add(loopParent);
+			loopParent = loopParent.getLoopParent();
+		}
+		
+		for(TraceNode lParent: loopParents){
+			if(this.invocationChildren.contains(lParent)){
+				return true;
 			}
 		}
 		

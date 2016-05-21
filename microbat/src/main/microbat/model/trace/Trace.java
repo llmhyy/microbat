@@ -83,6 +83,17 @@ public class Trace {
 		return topList;
 	}
 	
+	public List<TraceNode> getTopAbstractionLevelNodes(){
+		List<TraceNode> topList = new ArrayList<>();
+		for(TraceNode node: this.exectionList){
+			if(node.getAbstractionParent() == null){
+				topList.add(node);
+			}
+		}
+		
+		return topList;
+	}
+	
 	public TraceNode getLastestNode(){
 		int len = size();
 		if(len > 0){
@@ -188,8 +199,10 @@ public class Trace {
 			 */
 			if(!loopParentStack.isEmpty()){
 				TraceNode loopParent = loopParentStack.peek();
-				loopParent.addLoopChild(node);
-				node.setLoopParent(loopParent);
+				if(loopParent.getConditionScope().containsNodeScope(node)){
+					loopParent.addLoopChild(node);
+					node.setLoopParent(loopParent);					
+				}
 			}
 			
 			/**

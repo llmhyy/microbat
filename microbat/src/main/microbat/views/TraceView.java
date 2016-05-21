@@ -347,14 +347,16 @@ public class TraceView extends ViewPart {
 			if(parentElement instanceof Trace){
 				Trace trace = (Trace)parentElement;
 				//List<TraceNode> nodeList = trace.getExectionList();
-				List<TraceNode> nodeList = trace.getTopMethodLevelNodes();
+//				List<TraceNode> nodeList = trace.getTopMethodLevelNodes();
 //				List<TraceNode> nodeList = trace.getTopLoopLevelNodes();
+				List<TraceNode> nodeList = trace.getTopAbstractionLevelNodes();
 				return nodeList.toArray(new TraceNode[0]);
 			}
 			else if(parentElement instanceof TraceNode){
 				TraceNode parentNode = (TraceNode)parentElement;
-				List<TraceNode> nodeList = parentNode.getInvocationChildren();
+//				List<TraceNode> nodeList = parentNode.getInvocationChildren();
 //				List<TraceNode> nodeList = parentNode.getLoopChildren();
+				List<TraceNode> nodeList = parentNode.getAbstractChildren();
 				return nodeList.toArray(new TraceNode[0]);
 			}
 			return null;
@@ -369,8 +371,9 @@ public class TraceView extends ViewPart {
 		public boolean hasChildren(Object element) {
 			if(element instanceof TraceNode){
 				TraceNode node = (TraceNode)element;
-				return !node.getInvocationChildren().isEmpty();
+//				return !node.getInvocationChildren().isEmpty();
 //				return !node.getLoopChildren().isEmpty();
+				return !node.getAbstractChildren().isEmpty();
 			}
 			return false;
 		}
