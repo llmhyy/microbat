@@ -14,7 +14,6 @@ import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
-import microbat.util.PrimitiveUtils;
 
 public class TraceNodePair {
 
@@ -185,7 +184,7 @@ public class TraceNodePair {
 						
 						if(mutatedRefVar.getChildren() != null && originalRefVar.getChildren() != null){
 							HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
-							differ.diff(mutatedRefVar, originalRefVar);
+							differ.diff(mutatedRefVar, originalRefVar, true);
 							
 							if(!differ.getDiffs().isEmpty()){
 								differentVarValueList.add(mutatedVar);

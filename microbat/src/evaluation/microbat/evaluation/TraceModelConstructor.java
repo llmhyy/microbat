@@ -69,9 +69,10 @@ public class TraceModelConstructor {
 			e.printStackTrace();
 		}
 		
-		/** 5. construct dominance relation*/
+		/** 5. construct dominance and loop-parent relation*/
 		Trace trace = tcExecutor.getTrace();
 		trace.constructDomianceRelation();
+		trace.constructLoopParentRelation();
 		
 		return trace;
 	}

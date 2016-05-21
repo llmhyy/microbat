@@ -140,7 +140,7 @@ public class TraceNodeSimilarityComparator {
 						System.currentTimeMillis();
 						
 						HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
-						differ.diff(var1, var2);
+						differ.diff(var1, var2, true);
 						if(differ.getDiffs().isEmpty()){
 							commonness += 0.5;						
 						}							

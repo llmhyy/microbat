@@ -325,7 +325,7 @@ public class TraceNode{
 //		}
 		
 		HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
-		differ.diff(nodeBefore, nodeAfter);
+		differ.diff(nodeBefore, nodeAfter, false);
 		List<GraphDiff> diffs = differ.getDiffs();
 		this.consequences = diffs;
 	}
