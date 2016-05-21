@@ -2,7 +2,7 @@ package microbat.algorithm.graphdiff;
 
 import microbat.model.value.GraphNode;
 
-class MatchingGraphPair{
+public class MatchingGraphPair{
 	private GraphNode nodeBefore;
 	private GraphNode nodeAfter;
 	

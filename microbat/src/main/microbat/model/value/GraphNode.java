@@ -13,8 +13,6 @@ public interface GraphNode {
 	 */
 	public boolean match(GraphNode node);
 	
-//	public boolean isVisited();
-//	public void setVisited(boolean isVisited);
 	/**
 	 * compare the content of two graph nodes
 	 * @param node

@@ -7,13 +7,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import microbat.algorithm.graphdiff.GraphDiff;
+import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.evaluation.accuracy.Accuracy;
+import microbat.evaluation.model.LCSMatcher;
 import microbat.evaluation.model.PairList;
 import microbat.evaluation.model.StateWrapper;
 import microbat.evaluation.model.StepOperationTuple;
 import microbat.evaluation.model.TraceNodePair;
+import microbat.evaluation.model.TraceNodeWrapper;
 import microbat.evaluation.model.Trial;
-import microbat.evaluation.util.DiffUtil;
 import microbat.handler.CheckingState;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -34,12 +37,63 @@ public class SimulatedMicroBat {
 	private SimulatedUser user = new SimulatedUser();
 	private StepRecommender recommender;
 	
+	private PairList matchTraceNodePair(Trace mutatedTrace, Trace correctTrace) {
+		
+		
+		TraceNodeWrapper mutatedTraceNodeWrapper = initVirtualWrapper(mutatedTrace);
+		TraceNodeWrapper correctTraceNodeWrapper = initVirtualWrapper(correctTrace);
+		
+		
+		HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
+		differ.diff(mutatedTraceNodeWrapper, correctTraceNodeWrapper, false, new LCSMatcher());
+		
+		List<GraphDiff> diffList = differ.getDiffs();
+		List<TraceNodePair> pList = new ArrayList<>();
+		for(GraphDiff diff: diffList){
+			if(diff.getDiffType().equals(GraphDiff.UPDATE)){
+				TraceNodeWrapper wrapperBefore = (TraceNodeWrapper)diff.getNodeBefore();
+				TraceNodeWrapper wrapperAfter = (TraceNodeWrapper)diff.getNodeAfter();
+				
+				TraceNodePair pair = new TraceNodePair(wrapperBefore.getTraceNode(), wrapperAfter.getTraceNode());
+				pList.add(pair);
+			}
+		}
+		
+		for(GraphDiff common: differ.getCommons()){
+			TraceNodeWrapper wrapperBefore = (TraceNodeWrapper)common.getNodeBefore();
+			TraceNodeWrapper wrapperAfter = (TraceNodeWrapper)common.getNodeAfter();
+			
+			TraceNodePair pair = new TraceNodePair(wrapperBefore.getTraceNode(), wrapperAfter.getTraceNode());
+			pList.add(pair);
+		}
+		
+		Collections.sort(pList, new TraceNodePairReverseOrderComparator());
+		
+		PairList pairList = new PairList(pList);
+		
+		return pairList;
+	}
+	
+	
+	private TraceNodeWrapper initVirtualWrapper(Trace trace) {
+		TraceNode virtualNode = new TraceNode(null, null, -1);
+		List<TraceNode> topList = trace.getTopAbstractionLevelNodes();
+		virtualNode.setInvocationChildren(topList);
+		
+		TraceNodeWrapper wrapper = new TraceNodeWrapper(virtualNode);
+		
+		return wrapper;
+	}
+
+
 	public Trial detectMutatedBug(Trace mutatedTrace, Trace correctTrace, ClassLocation mutatedLocation, 
 			String testCaseName, String mutatedFile) throws SimulationFailException {
 		
 		boolean enableClear = false;
 		
-		PairList pairList = DiffUtil.generateMatchedTraceNodeList(mutatedTrace, correctTrace);
+		
+//		PairList pairList = DiffUtil.generateMatchedTraceNodeList(mutatedTrace, correctTrace);
+		PairList pairList = matchTraceNodePair(mutatedTrace, correctTrace); 
 		
 		TraceNode rootCause = findRootCause(mutatedLocation.getClassCanonicalName(), 
 				mutatedLocation.getLineNo(), mutatedTrace, pairList);
@@ -84,6 +138,8 @@ public class SimulatedMicroBat {
 //		System.out.println(accuracy);
 	}
 	
+	
+
 	private TraceNode findObservedFault(List<TraceNode> wrongNodeList){
 		TraceNode observedFaultNode = null;
 		

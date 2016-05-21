@@ -26,11 +26,15 @@ public class DiffUtil {
 	 */
 	public static PairList generateMatchedTraceNodeList(Trace mutatedTrace, Trace correctTrace) {
 		
-		List<TraceNodePair> pairList = new ArrayList<>();
-		
 		TraceNode[] mutatedTraceArray = mutatedTrace.getExectionList().toArray(new TraceNode[0]);
 		TraceNode[] correctTraceArray = correctTrace.getExectionList().toArray(new TraceNode[0]);
 		
+		return generateMatchedTraceNodeList(mutatedTraceArray, correctTraceArray);
+	}
+	
+	public static PairList generateMatchedTraceNodeList(TraceNode[] mutatedTraceArray, TraceNode[] correctTraceArray){
+		
+		List<TraceNodePair> pairList = new ArrayList<>();
 		TraceNodeSimilarityComparator sc = new TraceNodeSimilarityComparator(); 
 		
 		double[][] scoreTable = buildScoreTable(mutatedTraceArray, correctTraceArray, sc);
@@ -83,7 +87,7 @@ public class DiffUtil {
 		return list;
 	}
 	
-	private static void reverseOrder(List<TraceNodePair> pairList){
+	public static void reverseOrder(List<TraceNodePair> pairList){
 		
 		int midIndex = pairList.size()/2;
 		for(int i=0; i<midIndex; i++){
