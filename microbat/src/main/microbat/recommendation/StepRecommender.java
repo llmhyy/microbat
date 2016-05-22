@@ -149,7 +149,15 @@ public class StepRecommender {
 			state = DebugState.UNCLEAR;
 			visitedUnclearNodeList.add(currentNode);
 			Collections.sort(visitedUnclearNodeList, new TraceNodeOrderComparator());
-			TraceNode node = findMoreClearNode(trace, currentNode);
+			//TraceNode node = findMoreClearNode(trace, currentNode);
+			TraceNode node = currentNode.getAbstractionParent();
+			if(node == null){
+				node = currentNode.getStepInPrevious();
+				if(node == null){
+					node = currentNode;
+				}
+			}
+			
 			return node;
 		}
 		else if((state==DebugState.UNCLEAR || state==DebugState.PARTIAL_CLEAR) && feedback.equals(UserFeedback.CORRECT)){
