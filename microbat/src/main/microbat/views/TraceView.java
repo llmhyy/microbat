@@ -146,7 +146,7 @@ public class TraceView extends ViewPart {
 		List<TraceNode> path = new ArrayList<>();
 		while(node != null){
 			path.add(node);
-			node = node.getInvocationParent();
+			node = node.getAbstractionParent();
 		}
 		TraceNode[] list = path.toArray(new TraceNode[0]);
 		listViewer.setExpandedElements(list);
