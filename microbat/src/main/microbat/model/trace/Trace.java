@@ -741,7 +741,8 @@ public class Trace {
 		StepVariableRelationEntry entry = this.stepVariableTable.get(varID);
 		
 		if(entry == null){
-			System.currentTimeMillis();
+			System.err.println("the variable with ID " + varID + " is not explicitly read or written");
+			return null;
 		}
 		
 		if(!entry.getProducers().isEmpty()){
