@@ -23,10 +23,13 @@ public class HeuristicIgnoringFieldRule {
 	private static List<String> prefixExcludes = new ArrayList<>();
 	
 	static{
-		String c1 = "java.util.ArrayList";
+		String c0 = "java.io.Serializable";
+		ArrayList<String> fieldList0 = new ArrayList<>();
+		fieldList0.add("serialVersionUID");
+		ignoringMap.put(c0, fieldList0);
 		
+		String c1 = "java.util.Collection";
 		ArrayList<String> fieldList1 = new ArrayList<>();
-		fieldList1.add("serialVersionUID");
 		fieldList1.add("DEFAULT_CAPACITY");
 		fieldList1.add("EMPTY_ELEMENTDATA");
 		fieldList1.add("DEFAULTCAPACITY_EMPTY_ELEMENTDATA");
@@ -49,19 +52,37 @@ public class HeuristicIgnoringFieldRule {
 	
 	public static boolean isForIgnore(ClassType type, String fieldName){
 		String className;
+		ArrayList<String> fields;
+		
 		if(type.isEnum()){
 			className = ENUM;
+			fields = ignoringMap.get(className);
+			if(fields != null){
+				return fields.contains(fieldName);			
+			}
 		}
 		else{
 			className = type.name();
+			List<Type> allSuperTypes = new ArrayList<>();
+			findAllSuperTypes(type, allSuperTypes);
+			
+			if(containsOneOfIgnoreClass(allSuperTypes, fieldName, ignoringMap)){
+				return true;
+			}
 		}
 		
-		ArrayList<String> fields = ignoringMap.get(className);
-		if(fields != null){
-			return fields.contains(fieldName);			
+		return false;
+	}
+
+	private static boolean containsOneOfIgnoreClass(List<Type> allSuperTypes, String fieldName,
+			Map<String, ArrayList<String>> ignoringMap2) {
+		for(Type type: allSuperTypes){
+			String typeString = type.toString();
+			List<String> fields = ignoringMap2.get(typeString);
+			if(fields != null){
+				return fields.contains(fieldName);
+			}
 		}
-		
-		System.currentTimeMillis();
 		return false;
 	}
 
