@@ -98,7 +98,7 @@ public class SimulatedMicroBat {
 		TraceNode rootCause = findRootCause(mutatedLocation.getClassCanonicalName(), 
 				mutatedLocation.getLineNo(), mutatedTrace, pairList);
 		
-//		System.currentTimeMillis();
+		System.currentTimeMillis();
 //		Object dom = rootCause.findAllDominatees();
 //		dominatees.add(rootCause);
 		
@@ -144,10 +144,10 @@ public class SimulatedMicroBat {
 		TraceNode observedFaultNode = null;
 		
 		for(TraceNode node: wrongNodeList){
-			if(!JTestUtil.isInTestCase(node.getDeclaringCompilationUnitName())){
+			//if(!JTestUtil.isInTestCase(node.getDeclaringCompilationUnitName())){
 				observedFaultNode = node;
 				break;
-			}
+			//}
 		}
 		
 		return observedFaultNode;
@@ -224,11 +224,11 @@ public class SimulatedMicroBat {
 				else{
 					isBugFound = rootCause.getLineNumber()==suspiciousNode.getLineNumber();
 					
-					if(suspiciousNode.getOrder() == 448){
-						System.currentTimeMillis();
-					}
-					
 					if(!isBugFound){
+						if(suspiciousNode.getOrder() == 30){
+							System.currentTimeMillis();
+						}
+						
 						feedbackType = operateFeedback(suspiciousNode,
 								mutatedTrace, pairList, enableClear, confusingStack,
 								jumpingSteps, false);
