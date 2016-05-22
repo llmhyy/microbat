@@ -149,10 +149,10 @@ public class TestCaseAnalyzer {
 //				+ "apache-common-math-2.2\\2081_22_1\\MathUtils.java";
 //		String mutatedClass = "org.apache.commons.math.util.MathUtils";
 		
-		String testClassName = "org.apache.commons.math.analysis.BinaryFunctionTest";
-		String testMethodName = "testPow";
+		String testClassName = "org.apache.commons.math.MathExceptionTest";
+		String testMethodName = "testPrintStackTrace";
 		String mutationFile = "C:\\Users\\YUNLIN~1\\AppData\\Local\\Temp\\"
-				+ "apache-common-math-2.2\\1374_22_3\\FastMath.java";
+				+ "apache-common-math-2.2\\176_13_1\\MathException.java";
 //		String mutatedClass = "org.apache.commons.math.util.FastMath";
 		
 //		String mutationFile = "C:\\Users\\YUNLIN~1\\AppData\\Local\\Temp\\"
