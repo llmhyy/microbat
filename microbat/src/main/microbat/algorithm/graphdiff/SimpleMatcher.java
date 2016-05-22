@@ -15,13 +15,13 @@ public class SimpleMatcher implements Matcher{
 		GraphNode node = null;
 		for(GraphNode childAfter: childrenAfter){
 			if(!isVisited(childAfter) && childBefore.match(childAfter)){
-				
-				if(node == null){
-					node = childAfter;					
-				}
-				else if(childBefore.getStringValue().equals(childAfter.getStringValue())){
-					node = childAfter;
-				}
+				return childAfter;
+//				if(node == null){
+//					node = childAfter;					
+//				}
+//				else if(childBefore.getStringValue().equals(childAfter.getStringValue())){
+//					node = childAfter;
+//				}
 			}
 		}
 		
