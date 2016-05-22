@@ -24,6 +24,8 @@ public class SimulatedUser {
 		List<String> wrongReadVarIDs = pair.findSingleWrongReadVarID(mutatedTrace);
 		List<String> wrongWrittenVarIDs = pair.findSingleWrongWrittenVarID(mutatedTrace);
 		
+		System.currentTimeMillis();
+		
 		if(wrongReadVarIDs.size() < 2 && wrongWrittenVarIDs.size() < 2){
 			List<String> wrongVarIDs = new ArrayList<>();
 			wrongVarIDs.addAll(wrongReadVarIDs);
