@@ -64,10 +64,10 @@ public class TraceNodeWrapper implements GraphNode {
 		return false;
 	}
 
-	@Override
-	public String getStringValue() {
-		return traceNode.toString();
-	}
+//	@Override
+//	public String getStringValue() {
+//		return traceNode.toString();
+//	}
 
 	public TraceNode getTraceNode() {
 		return traceNode;

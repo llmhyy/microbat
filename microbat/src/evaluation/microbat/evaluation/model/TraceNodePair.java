@@ -110,7 +110,7 @@ public class TraceNodePair {
 		
 		for(VarValue mutatedReadVar: mutatedNode.getReadVariables()){
 			List<VarValue> mutatedVarList = findCorrespondingVarWithDifferentValue(mutatedReadVar, 
-					originalNode.getReadVariables(), mutatedNode.getReadVariables(), mutatedTrace, Variable.WRITTEN);
+					originalNode.getReadVariables(), mutatedNode.getReadVariables(), mutatedTrace, Variable.READ);
 			if(!mutatedVarList.isEmpty()){
 				for(VarValue value: mutatedVarList){
 					wrongVarIDs.add(value.getVarID());
@@ -131,7 +131,7 @@ public class TraceNodePair {
 	 * variable, e.g., obj. They are different because some of their attributes or elements are different, e.g., obj.x. In 
 	 * this case, the simulated user does not know whether the reference variable itself (e.g., obj) is wrong, or its 
 	 * attribute or element (e.g., obj.x) is wrong. Therefore, we return both case for the simulated debugging. In above case,
-	 * the first element is the reference variable value, and the second one is the wrong attribute variable value.
+	 * the first element in the list is the reference variable value, and the second one is the wrong attribute variable value.
 	 * 
 	 * @param mutatedVar
 	 * @param originalList
@@ -194,19 +194,22 @@ public class TraceNodePair {
 								if(diff.getDiffType().equals(GraphDiff.UPDATE)){
 									VarValue mutatedSubVarValue = (VarValue) diff.getNodeBefore();
 									
-									String varID = mutatedSubVarValue.getVarID();
-									if(!varID.contains(":") && !varID.contains(VirtualVar.VIRTUAL_PREFIX)){
-										String order = mutatedTrace.findDefiningNodeOrder(Variable.READ, mutatedNode, varID);
-										varID = varID + ":" + order;
+									if(!mutatedSubVarValue.equals(mutatedVar)){
+										String varID = mutatedSubVarValue.getVarID();
+										if(!varID.contains(":") && !varID.contains(VirtualVar.VIRTUAL_PREFIX)){
+											String order = mutatedTrace.findDefiningNodeOrder(Variable.READ, mutatedNode, varID);
+											varID = varID + ":" + order;
+										}
+										mutatedSubVarValue.setVarID(varID);
+										
+										if(!differentVarValueList.contains(mutatedSubVarValue)){
+											differentVarValueList.add(mutatedSubVarValue);										
+										}
+										
+										/** one wrong attribute is enough for debugging. */
+										break;
+										
 									}
-									mutatedSubVarValue.setVarID(varID);
-									
-									if(!differentVarValueList.contains(mutatedSubVarValue)){
-										differentVarValueList.add(mutatedSubVarValue);										
-									}
-									
-									/** one wrong attribute is enough for debugging. */
-									break;
 								}
 							}
 							
