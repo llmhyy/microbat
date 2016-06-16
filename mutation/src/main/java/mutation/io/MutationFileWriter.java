@@ -29,6 +29,11 @@ import sav.common.core.utils.StringUtils;
  */
 public class MutationFileWriter extends AbstractMutationFileWriter {
 	private static Logger log = LoggerFactory.getLogger(MutationFileWriter.class);
+	
+	public MutationFileWriter(String srcFolder, String tmpFolder) {
+		super(srcFolder, tmpFolder);
+	}
+	
 	public MutationFileWriter(String srcFolder) {
 		super(srcFolder);
 	}

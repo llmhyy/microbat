@@ -35,8 +35,16 @@ import sav.strategies.mutanbug.MutationResult;
 public class Mutator implements IMutator {
 	//TODO LLT: correct the configuration file path, temporary fix for running in eclipse
 	private static final String OPERATOR_MAP_FILE = "\\src\\main\\resources\\MuMap.txt";
+	
+	
 	private Map<String, List<String>> opMapConfig;
 	private String srcFolder;
+	private String tmpMutationFolder;
+	
+	public Mutator(String srcFolder, String tmpMutationFolder) {
+		this.srcFolder = srcFolder;
+		this.tmpMutationFolder = tmpMutationFolder;
+	}
 	
 	public Mutator(String srcFolder) {
 		this.srcFolder = srcFolder;
@@ -53,7 +61,7 @@ public class Mutator implements IMutator {
 		MutationVisitor mutationVisitor = new MutationVisitor(new MutationMap(opMapConfig), classAnalyzer);
 		
 		Map<String, MutationResult> result = new HashMap<String, MutationResult>();
-		MutationFileWriter fileWriter = new MutationFileWriter(srcFolder);
+		MutationFileWriter fileWriter = new MutationFileWriter(srcFolder, tmpMutationFolder);
 		for (Entry<String, List<Integer>> entry : classLocationMap.entrySet()) {
 			String className = entry.getKey();
 			

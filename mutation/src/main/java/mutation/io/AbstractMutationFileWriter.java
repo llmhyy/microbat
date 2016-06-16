@@ -28,6 +28,46 @@ public class AbstractMutationFileWriter {
 	protected String muSrcFolder;
 	protected String scrFolder;
 	
+	public AbstractMutationFileWriter(String srcFolder, String tmpFileString) {
+		
+		this.scrFolder = srcFolder;
+		try {
+			String projName = srcFolder.substring(0, srcFolder.indexOf("/src"));
+			projName = projName.substring(projName.lastIndexOf("/")+1, projName.length());
+			
+			if(projName.length() < 5){
+				projName = "mutation";
+			}
+			
+			File tmpFile = new File(tmpFileString);
+			if(!tmpFile.exists()){
+				tmpFile.mkdirs();
+			}
+			
+			File file;
+			if(tmpFileString != null){
+				file = File.createTempFile(projName, "", new File(tmpFileString));
+			}
+			else{
+				file = File.createTempFile(projName, "");
+			}
+			 
+			String path = file.toString();
+			path = path.substring(0, path.indexOf(projName)+projName.length());
+			file = new File(path);
+			file.delete();
+			file.mkdir();
+			
+			muSrcFolder = file.getAbsolutePath();
+		} catch (IOException e) {
+			throw new SavRtException("cannot create temp dir");
+		}
+		
+		
+//		muSrcFolder = FileUtils.createTempFolder("mutatedSource")
+//				.getAbsolutePath();
+	}
+	
 	public AbstractMutationFileWriter(String srcFolder) {
 		this.scrFolder = srcFolder;
 		try {

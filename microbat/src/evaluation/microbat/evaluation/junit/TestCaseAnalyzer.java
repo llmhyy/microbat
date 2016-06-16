@@ -43,6 +43,7 @@ import sav.strategies.mutanbug.MutationResult;
 public class TestCaseAnalyzer {
 	
 	public static final String TEST_RUNNER = "microbat.evaluation.junit.MicroBatTestRunner";
+	private static final String TMP_DIRECTORY = "C:\\microbat_evaluation\\";
 	
 	private List<Trial> trials = new ArrayList<>();
 //	private List<Trial> overLongTrials = new ArrayList<>();
@@ -98,7 +99,7 @@ public class TestCaseAnalyzer {
 		cleanClassInTestPackage(sourceFolderPath, locationList);
 		System.currentTimeMillis();
 		
-		Mutator mutator = new Mutator(sourceFolderPath);
+		Mutator mutator = new Mutator(sourceFolderPath, TMP_DIRECTORY);
 		Map<String, MutationResult> mutations = mutator.mutate(locationList);
 		
 		return mutations;
