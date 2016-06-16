@@ -175,6 +175,7 @@ public class TraceView extends ViewPart {
 		
 		listViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			
+			@SuppressWarnings("unused")
 			public void showDebuggingInfo(TraceNode node){
 				Trace t = Activator.getDefault().getCurrentTrace();
 				System.out.println("Data Dominator: ");

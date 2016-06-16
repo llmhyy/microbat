@@ -13,7 +13,6 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jdi.TimeoutException;
-import org.eclipse.jdi.VirtualMachine;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -68,7 +67,7 @@ public class JavaUtil {
 			
 			parser.setSource(text.toCharArray());
 			
-			CompilationUnit cu = (CompilationUnit) parser.createAST(null);		
+			CompilationUnit cu = (CompilationUnit) parser.createAST(null);
 			return cu;
 			
 		} catch (IOException e) {
