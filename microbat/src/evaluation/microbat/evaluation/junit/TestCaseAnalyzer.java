@@ -354,7 +354,7 @@ public class TestCaseAnalyzer {
 												//errorMsgs.add(errorMsg);
 											}
 											
-											if(trials.size() > 1000){
+											if(trials.size() > 5000){
 												reporter.export(trials, Settings.projectName+trialFileNum);
 												
 												trials.clear();
