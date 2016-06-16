@@ -121,20 +121,20 @@ public class TestCaseAnalyzer {
 
 	public void runEvaluation() throws JavaModelException{
 		
-//		ExcelReporter reporter = new ExcelReporter();
-//		reporter.start();
-//		
-//		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
-//		
-//		for(IJavaElement element: testRoot.getChildren()){
-//			if(element instanceof IPackageFragment){
-//				runEvaluation((IPackageFragment)element, reporter);				
-//			}
-//		}
-//		
-//		reporter.export(trials, Settings.projectName+trialFileNum);
+		ExcelReporter reporter = new ExcelReporter();
+		reporter.start();
 		
-		runSingeTrial();
+		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
+		
+		for(IJavaElement element: testRoot.getChildren()){
+			if(element instanceof IPackageFragment){
+				runEvaluation((IPackageFragment)element, reporter);				
+			}
+		}
+		
+		reporter.export(trials, Settings.projectName+trialFileNum);
+		
+//		runSingeTrial();
 		
 //		String className = "org.apache.commons.math.analysis.polynomials.PolynomialFunctionLagrangeFormTest";
 //		String methodName = "testLinearFunction";
@@ -149,10 +149,10 @@ public class TestCaseAnalyzer {
 //				+ "apache-common-math-2.2\\2081_22_1\\MathUtils.java";
 //		String mutatedClass = "org.apache.commons.math.util.MathUtils";
 		
-		String testClassName = "org.apache.commons.math.MathExceptionTest";
-		String testMethodName = "testPrintStackTrace";
+		String testClassName = "org.apache.commons.math.analysis.polynomials.PolynomialsUtilsTest";
+		String testMethodName = "testFirstChebyshevPolynomials";
 		String mutationFile = "C:\\Users\\YUNLIN~1\\AppData\\Local\\Temp\\"
-				+ "apache-common-math-2.2\\176_13_1\\MathException.java";
+				+ "apache-common-math-2.2\\239_13_1\\PolynomialsUtils.java";
 //		String mutatedClass = "org.apache.commons.math.util.FastMath";
 		
 //		String mutationFile = "C:\\Users\\YUNLIN~1\\AppData\\Local\\Temp\\"

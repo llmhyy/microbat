@@ -24,7 +24,6 @@ import microbat.model.trace.TraceNodeReverseOrderComparator;
 import microbat.model.value.VarValue;
 import microbat.recommendation.StepRecommender;
 import microbat.recommendation.UserFeedback;
-import microbat.util.JTestUtil;
 import microbat.util.Settings;
 import sav.strategies.dto.ClassLocation;
 
@@ -77,7 +76,8 @@ public class SimulatedMicroBat {
 	
 	private TraceNodeWrapper initVirtualWrapper(Trace trace) {
 		TraceNode virtualNode = new TraceNode(null, null, -1);
-		List<TraceNode> topList = trace.getTopAbstractionLevelNodes();
+		List<TraceNode> topList = trace.getTopMethodLevelNodes();
+//		List<TraceNode> topList = trace.getTopAbstractionLevelNodes();
 		virtualNode.setInvocationChildren(topList);
 		
 		TraceNodeWrapper wrapper = new TraceNodeWrapper(virtualNode);
