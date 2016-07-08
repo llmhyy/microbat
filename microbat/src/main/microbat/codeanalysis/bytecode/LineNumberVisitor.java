@@ -33,6 +33,12 @@ import microbat.model.variable.LocalVar;
 import microbat.util.JavaUtil;
 import sav.common.core.utils.SignatureUtils;
 
+/**
+ * collect information such as method signature, and read/written variables in a certain line.
+ * 
+ * @author Yun Lin
+ *
+ */
 public class LineNumberVisitor extends EmptyVisitor {
 	
 	private BreakPoint breakPoint;
