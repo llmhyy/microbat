@@ -14,39 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.jar.JarFile;
 
-import microbat.codeanalysis.ast.ConditionalScopeParser;
-import microbat.model.BreakPoint;
-import microbat.model.Scope;
-import microbat.model.variable.ArrayElementVar;
-import microbat.model.variable.FieldVar;
-import microbat.model.variable.LocalVar;
-import microbat.model.variable.Variable;
-import microbat.util.JTestUtil;
-import microbat.util.JavaUtil;
-
 import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.ArrayAccess;
-import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.FieldAccess;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Name;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
-
-import sav.common.core.SavException;
-import sav.common.core.utils.Assert;
-import sav.common.core.utils.ClassUtils;
-import sav.common.core.utils.CollectionUtils;
-import sav.common.core.utils.Predicate;
-import sav.common.core.utils.SignatureUtils;
-import sav.strategies.dto.AppJavaClassPath;
 
 import com.ibm.wala.classLoader.BinaryDirectoryTreeModule;
 import com.ibm.wala.classLoader.IMethod;
@@ -100,6 +73,23 @@ import com.ibm.wala.types.generics.MethodTypeSignature;
 import com.ibm.wala.types.generics.TypeSignature;
 import com.ibm.wala.util.config.FileOfClasses;
 import com.ibm.wala.util.strings.Atom;
+
+import microbat.codeanalysis.ast.ConditionalScopeParser;
+import microbat.model.BreakPoint;
+import microbat.model.Scope;
+import microbat.model.variable.ArrayElementVar;
+import microbat.model.variable.FieldVar;
+import microbat.model.variable.LocalVar;
+import microbat.model.variable.Variable;
+import microbat.util.JTestUtil;
+import microbat.util.JavaUtil;
+import sav.common.core.SavException;
+import sav.common.core.utils.Assert;
+import sav.common.core.utils.ClassUtils;
+import sav.common.core.utils.CollectionUtils;
+import sav.common.core.utils.Predicate;
+import sav.common.core.utils.SignatureUtils;
+import sav.strategies.dto.AppJavaClassPath;
 
 /**
  * 
@@ -578,176 +568,6 @@ public class MicrobatByteCodeAnalyzer{
 		point.setConditionScope(conditionScope);
 	}
 	
-	class ASTNodeRetriever extends ASTVisitor{
-		CompilationUnit cu;
-		int lineNumber;
-		String varName;
-		
-		public ASTNodeRetriever(CompilationUnit cu, int lineNumber, String varName){
-			this.cu = cu;
-			this.lineNumber = lineNumber;
-			this.varName = varName;
-		}
-	}
-	
-	/**
-	 * TODO 
-	 * A rigorous implementation. I just find the first array access in a given source code line which has
-	 * the specific type. A more precise implementation is left in the future.
-	 * @author "linyun"
-	 *
-	 */
-	class ReadArrayElementRetriever extends ASTNodeRetriever{
-		String typeName;
-		String arrayElementName;
-		
-		public ReadArrayElementRetriever(CompilationUnit cu, int lineNumber, String typeName){
-			super(cu, lineNumber, "");
-			this.typeName = typeName;
-		}
-		
-		public boolean visit(ArrayAccess access){
-			int linNum = cu.getLineNumber(access.getStartPosition());
-			if(linNum == lineNumber){
-				Expression arrayExp = access.getArray();
-				if(arrayExp instanceof Name){
-					Name name = (Name)arrayExp;
-					ITypeBinding typeBinding = name.resolveTypeBinding();
-					if(typeBinding.isArray()){
-						String arrayType = typeBinding.getElementType().getName();
-						if(arrayType.equals(typeName)){
-							arrayElementName = access.toString();
-							return false;
-						}
-					}
-				}
-			}
-			return true;
-		}
-		
-	}
-	
-	/**
-	 * TODO 
-	 * it is possible that two array elements are written in the same line. In this implementation, I do
-	 * not handle such case. An improvement is required in the future. 
-	 * @author "linyun"
-	 *
-	 */
-	class WrittenArrayElementRetriever extends ASTNodeRetriever{
-		String typeName;
-		String arrayElementName;
-		
-		public WrittenArrayElementRetriever(CompilationUnit cu, int lineNumber, String typeName){
-			super(cu, lineNumber, "");
-			this.typeName = typeName;
-		}
-		
-		public boolean visit(Assignment assignment){
-			int linNum = cu.getLineNumber(assignment.getStartPosition());
-			if(linNum == lineNumber){
-				Expression expr = assignment.getLeftHandSide();
-				
-				if(expr instanceof ArrayAccess){
-					ArrayAccess access = (ArrayAccess)expr;
-					Expression arrayExp = access.getArray();
-					if(arrayExp instanceof Name){
-						Name name = (Name)arrayExp;
-						ITypeBinding typeBinding = name.resolveTypeBinding();
-						if(typeBinding.isArray()){
-							String arrayType = typeBinding.getElementType().getName();
-							if(arrayType.equals(typeName)){
-								arrayElementName = access.toString();
-								return false;
-							}
-						}
-					}
-				}
-				
-			}
-			return true;
-		}
-		
-	}
-
-	class WrittenFieldRetriever extends ASTNodeRetriever{
-		String fullFieldName;
-		
-		public WrittenFieldRetriever(CompilationUnit cu, int lineNumber, String varName){
-			super(cu, lineNumber, varName);
-		}
-		
-		public boolean visit(Assignment assignment){
-			int linNum = cu.getLineNumber(assignment.getStartPosition());
-			if(linNum == lineNumber){
-				Expression expr = assignment.getLeftHandSide();
-				
-				if(expr instanceof QualifiedName){
-					QualifiedName qName = (QualifiedName)expr;
-					fullFieldName = qName.getFullyQualifiedName();
-				}
-				else if(expr instanceof SimpleName){
-					SimpleName sName = (SimpleName)expr;
-					fullFieldName = sName.getFullyQualifiedName();
-				}
-				else if(expr instanceof FieldAccess){
-					FieldAccess access = (FieldAccess)expr;
-					fullFieldName = access.toString();
-				}
-				
-				return false;
-			}
-			return true;
-		}
-		
-		public boolean visit(FieldDeclaration fd){
-			int linNum = cu.getLineNumber(fd.getStartPosition());
-			if(linNum == lineNumber){
-				fullFieldName = varName;
-				return false;
-			}
-			return true;
-		}
-	}
-	
-	class ReadFieldRetriever extends ASTNodeRetriever{
-		String fullFieldName;
-		
-		public ReadFieldRetriever(CompilationUnit cu, int lineNumber, String varName){
-			super(cu, lineNumber, varName);
-		}
-		
-		public boolean visit(QualifiedName name){
-			int linNum = cu.getLineNumber(name.getStartPosition());
-			if(linNum == lineNumber){
-				String qualifedName = name.getFullyQualifiedName();
-				String namePart = name.getName().getIdentifier();
-				
-				if(namePart.equals(varName)){
-					fullFieldName = qualifedName;
-					return false;
-				}
-			}
-			return true;
-		}
-		
-		public boolean visit(SimpleName name){
-			int linNum = cu.getLineNumber(name.getStartPosition());
-			if(linNum == lineNumber){
-				String namePart = name.getIdentifier();
-				if(namePart.equals(varName)){
-					fullFieldName = namePart;
-				}
-			}
-			return false;
-		}
-		
-		public boolean visit(FieldAccess access){
-			fullFieldName = access.toString();
-			return false;
-		}
-	}
-
 	private String getClassCanonicalName(IMethod method) {
 		TypeName clazz = method.getDeclaringClass().getName();
 		String className = ClassUtils.getCanonicalName(clazz.getPackage().toString()

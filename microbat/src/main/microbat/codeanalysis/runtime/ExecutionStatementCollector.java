@@ -65,13 +65,12 @@ public class ExecutionStatementCollector extends Executor{
 							StepEvent sEvent = (StepEvent)event;
 							Location location = sEvent.location();
 							
-							String path = location.sourcePath();
-							path = path.substring(0, path.indexOf(".java"));
-							path = path.replace(File.separator, ".");
+//							String path = location.sourcePath();
+//							path = path.substring(0, path.indexOf(".java"));
+//							path = path.replace(File.separator, ".");
 							
 							int lineNumber = location.lineNumber();
-							
-							BreakPoint breakPoint = new BreakPoint(path, lineNumber);
+							BreakPoint breakPoint = new BreakPoint(location.declaringType().name(), lineNumber);
 //							System.out.println(breakPoint);
 
 							if(!isInTestRunner(breakPoint) && !pointList.contains(breakPoint)){
@@ -101,9 +100,9 @@ public class ExecutionStatementCollector extends Executor{
 			} catch (InterruptedException e) {
 				connected = false;
 				e.printStackTrace();
-			} catch (AbsentInformationException e) {
+			} /*catch (AbsentInformationException e) {
 				e.printStackTrace();
-			}
+			}*/
 			
 			
 		}

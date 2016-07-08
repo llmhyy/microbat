@@ -3,21 +3,6 @@ package microbat.handler;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.Activator;
-import microbat.codeanalysis.ast.LocalVariableScope;
-import microbat.codeanalysis.ast.VariableScopeParser;
-import microbat.codeanalysis.bytecode.MicrobatByteCodeAnalyzer;
-import microbat.codeanalysis.runtime.ExecutionStatementCollector;
-import microbat.codeanalysis.runtime.ProgramExecutor;
-import microbat.model.BreakPoint;
-import microbat.model.trace.Trace;
-import microbat.util.JavaUtil;
-import microbat.util.MicroBatUtil;
-import microbat.util.Settings;
-import microbat.views.DebugFeedbackView;
-import microbat.views.MicroBatViews;
-import microbat.views.TraceView;
-
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -34,6 +19,22 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
+import microbat.Activator;
+import microbat.codeanalysis.ast.LocalVariableScope;
+import microbat.codeanalysis.ast.VariableScopeParser;
+import microbat.codeanalysis.bytecode.BPVariableRetriever;
+import microbat.codeanalysis.bytecode.MicrobatByteCodeAnalyzer;
+import microbat.codeanalysis.runtime.ExecutionStatementCollector;
+import microbat.codeanalysis.runtime.ProgramExecutor;
+import microbat.model.BreakPoint;
+import microbat.model.trace.Trace;
+import microbat.model.variable.Variable;
+import microbat.util.JavaUtil;
+import microbat.util.MicroBatUtil;
+import microbat.util.Settings;
+import microbat.views.DebugFeedbackView;
+import microbat.views.MicroBatViews;
+import microbat.views.TraceView;
 import sav.common.core.SavException;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -106,16 +107,23 @@ public class StartDebugHandler extends AbstractHandler {
 							/** 1. parse read/written variables**/
 							monitor.setTaskName("parse read/written variables");
 							
-							MicrobatByteCodeAnalyzer slicer = new MicrobatByteCodeAnalyzer(executingStatements);
+							BPVariableRetriever retriever = new BPVariableRetriever(executingStatements);
 							List<BreakPoint> runningStatements = null;
 							try {
-								System.out.println("start analyzing byte code ...");
-//								breakpoints = slicer.slice(appClassPath, startPoints);
-								runningStatements = slicer.parsingBreakPoints(appClassPath);
-								System.out.println("finish analyzing byte code ...!");
+								runningStatements = retriever.parsingBreakPoints(appClassPath);
 							} catch (Exception e1) {
 								e1.printStackTrace();
 							}
+							
+//							MicrobatByteCodeAnalyzer slicer = new MicrobatByteCodeAnalyzer(executingStatements);
+//							List<BreakPoint> runningStatements = null;
+//							try {
+//								System.out.println("start analyzing byte code ...");
+//								runningStatements = slicer.parsingBreakPoints(appClassPath);
+//								System.out.println("finish analyzing byte code ...!");
+//							} catch (Exception e1) {
+//								e1.printStackTrace();
+//							}
 							
 							monitor.worked(2);
 							
