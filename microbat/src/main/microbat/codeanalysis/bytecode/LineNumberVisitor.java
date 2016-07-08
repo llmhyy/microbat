@@ -46,31 +46,34 @@ public class LineNumberVisitor extends EmptyVisitor {
 	public void visitMethod(Method method){
 		Code code = method.getCode();
 		
-		List<int[]> rangeList = searchOffsetRange(this.breakPoint.getLineNo(), code);
-		
-		if(!rangeList.isEmpty()){
+		if(code != null){
+			List<int[]> rangeList = searchOffsetRange(this.breakPoint.getLineNo(), code);
+			
+			if(!rangeList.isEmpty()){
 //			if(breakPoint.getLineNo() == 60){
 //				System.currentTimeMillis();
 //			}
-			String methodSig = breakPoint.getClassCanonicalName() + "." + method.getSignature();
-			breakPoint.setMethodSign(methodSig);
-			
-			List<InstructionHandle> correspondingInstructions = new ArrayList<>();
-			
-			InstructionList list = new InstructionList(code.getCode());
-			Iterator iter = list.iterator();
-			while(iter.hasNext()){
-				InstructionHandle instructionHandle = (InstructionHandle)iter.next();
-				int offset = instructionHandle.getPosition();
+				String methodSig = breakPoint.getClassCanonicalName() + "." + method.getSignature();
+				breakPoint.setMethodSign(methodSig);
 				
-				if(isInRange(offset, rangeList)){
-					correspondingInstructions.add(instructionHandle);
+				List<InstructionHandle> correspondingInstructions = new ArrayList<>();
+				
+				InstructionList list = new InstructionList(code.getCode());
+				Iterator iter = list.iterator();
+				while(iter.hasNext()){
+					InstructionHandle instructionHandle = (InstructionHandle)iter.next();
+					int offset = instructionHandle.getPosition();
+					
+					if(isInRange(offset, rangeList)){
+						correspondingInstructions.add(instructionHandle);
+					}
+					
 				}
 				
+				parseReadWrittenVariable(correspondingInstructions, code);
 			}
-			
-			parseReadWrittenVariable(correspondingInstructions, code);
 		}
+		
 		
     }
 
