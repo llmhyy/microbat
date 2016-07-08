@@ -142,10 +142,7 @@ public class VariableValueExtractor {
 				}
 
 				if (!allVariables.isEmpty()) {
-//					long t1 = System.currentTimeMillis();
 					collectValue(bkVal, objRef, thread, allVariables);
-//					long t2 = System.currentTimeMillis();
-//					System.out.println("collectValue() takes time " + (t2-t1) + "s");
 				}
 			}
 		}

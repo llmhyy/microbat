@@ -1067,12 +1067,7 @@ public class ProgramExecutor extends Executor {
 			VarValue varValue = generateVarValue(frame, readVar, node, Variable.READ);
 
 			System.currentTimeMillis();
-			if (varValue == null) {
-				System.err.println("When processing read variable, there is an error when generating the id for "
-						+ readVar + " in line " + node.getBreakPoint().getLineNo() + " of "
-						+ node.getBreakPoint().getClassCanonicalName());
-				// varID = generateVarID(frame, readVar, node);
-			} else {
+			if (varValue != null) {
 				node.addReadVariable(varValue);
 				String varID = varValue.getVarID();
 
@@ -1098,12 +1093,7 @@ public class ProgramExecutor extends Executor {
 		for (Variable writtenVar : writtenVariables) {
 			VarValue varValue = generateVarValue(frame, writtenVar, node, Variable.WRITTEN);
 
-			if (varValue == null) {
-				System.err.println("When processing written variable, there is an error when generating the id for "
-						+ writtenVar + " in line " + node.getBreakPoint().getLineNo() + " of "
-						+ node.getBreakPoint().getClassCanonicalName());
-				// varID = generateVarID(frame, writtenVar, node);
-			} else {
+			if (varValue != null) {
 				node.addWrittenVariable(varValue);
 				String varID = varValue.getVarID();
 
