@@ -6,6 +6,7 @@ import java.util.List;
 
 import microbat.codeanalysis.ast.LocalVariableScope;
 import microbat.codeanalysis.ast.VariableScopeParser;
+import microbat.codeanalysis.bytecode.BPVariableRetriever;
 import microbat.codeanalysis.bytecode.MicrobatByteCodeAnalyzer;
 import microbat.codeanalysis.runtime.ProgramExecutor;
 import microbat.model.BreakPoint;
@@ -43,15 +44,23 @@ public class TraceModelConstructor {
 		
 		
 		/** 2. parse read/written variables**/
-		MicrobatByteCodeAnalyzer slicer = new MicrobatByteCodeAnalyzer(executingStatements);
+		BPVariableRetriever retriever = new BPVariableRetriever(executingStatements);
 		List<BreakPoint> runningStatements = null;
 		try {
-			System.out.println("start analyzing byte code ...");
-			runningStatements = slicer.parsingBreakPoints(appClassPath);
-			System.out.println("finish analyzing byte code ...!");
+			runningStatements = retriever.parsingBreakPoints(appClassPath);
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
+		
+//		MicrobatByteCodeAnalyzer slicer = new MicrobatByteCodeAnalyzer(executingStatements);
+//		List<BreakPoint> runningStatements = null;
+//		try {
+//			System.out.println("start analyzing byte code ...");
+//			runningStatements = slicer.parsingBreakPoints(appClassPath);
+//			System.out.println("finish analyzing byte code ...!");
+//		} catch (Exception e1) {
+//			e1.printStackTrace();
+//		}
 		
 		/**
 		 * 3. find the variable scope for:
