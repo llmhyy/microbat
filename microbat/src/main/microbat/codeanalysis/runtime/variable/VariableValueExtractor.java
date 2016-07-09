@@ -68,6 +68,7 @@ public class VariableValueExtractor {
 	private Location loc;
 	private ProgramExecutor executor;
 	
+	
 	public VariableValueExtractor(BreakPoint bkp, ThreadReference thread,
 			Location loc, ProgramExecutor executor) {
 		this.bkp = bkp;
@@ -85,9 +86,10 @@ public class VariableValueExtractor {
 		BreakPointValue bkVal = new BreakPointValue(bkp.getId());
 		//ThreadReference thread = event.thread();
 		synchronized (thread) {
-			if (!thread.frames().isEmpty()) {
+			List<StackFrame> frames = this.thread.frames();
+			if (!frames.isEmpty()) {
 				//StackFrame frame = findFrameByLocation(thread.frames(), event.location());
-				final StackFrame frame = findFrameByLocation(thread.frames(), loc);
+				final StackFrame frame = findFrameByLocation(frames, loc);
 				Method method = frame.location().method();
 				ReferenceType refType;
 				ObjectReference objRef = null;
@@ -477,21 +479,6 @@ public class VariableValueExtractor {
 					stringValue = JavaUtil.retrieveToStringValue(objValue, Settings.referenceFieldLayerInString, thread);					
 				}
 				
-//				List<Method> mList = objValue.referenceType().methodsByName("toString");
-//				String stringValue = "$Not Known$";
-//				if(mList.isEmpty()){
-//					if(objValue instanceof ArrayReference){
-//						ArrayReference arrayValue = (ArrayReference)objValue;
-//						stringValue = JavaUtil.retrieveStringValueOfArray(arrayValue);
-//					}
-//				}
-//				else{
-//					stringValue = JavaUtil.retrieveToStringValue(thread, objValue, this.executor);
-//					System.currentTimeMillis();
-//				}
-				
-				
-				//String message = value.toString();
 				val.setStringValue(stringValue);
 			}
 			else{
@@ -516,14 +503,27 @@ public class VariableValueExtractor {
 		setMessageValue(thread, arrayVal);
 		
 		//add value of elements
-		for (int i = 0; i < value.length() /*&& i < MAX_ARRAY_ELEMENT_TO_COLLECT*/; i++) {
+		List<Value> list = new ArrayList<>();
+		if(value.length() > 0){
+			list = value.getValues(0, value.length()); 
+		}
+		for(int i = 0; i < value.length(); i++){
 			String varName = String.valueOf(i);
-			Value elementValue = getArrayEleValue(value, i);
+			Value elementValue = list.get(i);
 			if(elementValue != null){
 				ArrayElementVar var = new ArrayElementVar(varName, elementValue.type().toString());
 				appendVarVal(arrayVal, var, elementValue, level, thread, false);
 			}
 		}
+		
+//		for (int i = 0; i < value.length() /*&& i < MAX_ARRAY_ELEMENT_TO_COLLECT*/; i++) {
+//			String varName = String.valueOf(i);
+//			Value elementValue = getArrayEleValue(value, i);
+//			if(elementValue != null){
+//				ArrayElementVar var = new ArrayElementVar(varName, elementValue.type().toString());
+//				appendVarVal(arrayVal, var, elementValue, level, thread, false);
+//			}
+//		}
 		
 		parent.addChild(arrayVal);
 		arrayVal.addParent(parent);
