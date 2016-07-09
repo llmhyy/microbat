@@ -100,7 +100,7 @@ public class VariableValueExtractor {
 					refType = objRef.referenceType();
 				}
 				/**
-				 * LOCALVARIABLES MUST BE NAVIGATED BEFORE FIELDS, because: in
+				 * Local variables MUST BE navigated before fields, because: in
 				 * case a class field and a local variable in method have the
 				 * same name, and the breakpoint variable with that name has the
 				 * scope UNDEFINED, it must be the variable in the method.
@@ -135,8 +135,6 @@ public class VariableValueExtractor {
 							if (param.getValue() != null && !matchedField.name().equals(bpVar.getName())) {
 								param = recursiveMatch(param, extractSubProperty(bpVar.getName()));
 							}
-							
-							System.currentTimeMillis();
 						}
 					}
 					if (param != null) {

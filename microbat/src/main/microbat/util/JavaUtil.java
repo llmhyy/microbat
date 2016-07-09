@@ -83,8 +83,6 @@ public class JavaUtil {
 		
 	}
 	
-	
-	
 	public static String retrieveStringValueOfArray(ArrayReference arrayValue) {
 		String stringValue;
 		List<Value> list = new ArrayList<>();
