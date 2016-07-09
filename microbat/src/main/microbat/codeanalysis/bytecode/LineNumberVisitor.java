@@ -59,7 +59,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 //			if(breakPoint.getLineNo() == 60){
 //				System.currentTimeMillis();
 //			}
-				String methodSig = breakPoint.getClassCanonicalName() + "." + method.getSignature();
+				String methodSig = breakPoint.getClassCanonicalName() + "." + method.getName() + method.getSignature();
 				breakPoint.setMethodSign(methodSig);
 				
 				List<InstructionHandle> correspondingInstructions = new ArrayList<>();
