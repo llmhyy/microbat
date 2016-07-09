@@ -103,8 +103,6 @@ import com.sun.jdi.request.StepRequest;
 public class ProgramExecutor extends Executor {
 	public static final long DEFAULT_TIMEOUT = -1;
 
-	// private static Logger log = LoggerFactory.getLogger(ProgramExecutor.class);
-
 	/**
 	 * fundamental fields for debugging
 	 */
@@ -134,7 +132,7 @@ public class ProgramExecutor extends Executor {
 	 * <br>
 	 * <br>
 	 * Note that the trace node can form a tree-structure in terms of method
-	 * invocation relations.
+	 * invocation relations and loop relations.
 	 * 
 	 * <br>
 	 * <br>
@@ -254,7 +252,7 @@ public class ProgramExecutor extends Executor {
 				} else if (event instanceof StepEvent) {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
-					if (currentLocation.lineNumber() == 3751) {
+					if (this.trace.getLastestNode()!=null && this.trace.getLastestNode().getOrder()==331) {
 						System.currentTimeMillis();
 					}
 
@@ -295,8 +293,16 @@ public class ProgramExecutor extends Executor {
 					 * our debugging process
 					 */
 					if (bkp != null) {
-						BreakPointValue bkpVal = extractValuesAtLocation(bkp, thread,
-								currentLocation);
+						BreakPointValue bkpVal;
+						if(this.trace.getLastestNode() != null && !isContextChange){
+							bkpVal = this.trace.getLastestNode().getAfterStepInState();
+							System.currentTimeMillis();
+						}
+						else{
+							bkpVal = extractValuesAtLocation(bkp, thread, currentLocation);
+						}
+//						bkpVal = extractValuesAtLocation(bkp, thread, currentLocation);
+						
 						TraceNode node = recordTrace(bkp, bkpVal);
 						// System.out.println("Parsed node " + node);
 						// if(node.getOrder() == 21){
@@ -1156,10 +1162,10 @@ public class ProgramExecutor extends Executor {
 	private void collectValueOfPreviousStep(BreakPoint lastSteppingInPoint, ThreadReference thread, Location loc)
 			throws SavException {
 
-		BreakPoint currnetPoint = new BreakPoint(lastSteppingInPoint.getClassCanonicalName(),
+		BreakPoint current = new BreakPoint(lastSteppingInPoint.getClassCanonicalName(),
 				lastSteppingInPoint.getLineNo());
 
-		BreakPointValue bkpVal = extractValuesAtLocation(currnetPoint, thread, loc);
+		BreakPointValue bkpVal = extractValuesAtLocation(current, thread, loc);
 
 		int len = trace.getExectionList().size();
 		TraceNode node = trace.getExectionList().get(len - 1);
