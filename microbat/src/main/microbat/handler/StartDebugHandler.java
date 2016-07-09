@@ -153,10 +153,10 @@ public class StartDebugHandler extends AbstractHandler {
 							
 							tcExecutor.setConfig(appClassPath);
 							try {
-								long t1 = System.currentTimeMillis();
+//								long t1 = System.currentTimeMillis();
 								tcExecutor.run(runningStatements, monitor);
-								long t2 = System.currentTimeMillis();
-								System.out.println("time spent on collecting variables: " + (t2-t1));
+//								long t2 = System.currentTimeMillis();
+//								System.out.println("time spent on collecting variables: " + (t2-t1));
 								
 							} catch (SavException | TimeoutException e) {
 								e.printStackTrace();

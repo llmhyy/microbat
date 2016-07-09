@@ -24,6 +24,7 @@ import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.util.JavaUtil;
 import microbat.util.PrimitiveUtils;
+import microbat.util.Settings;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -356,7 +357,7 @@ public class VariableValueExtractor {
 			 * if the class name is "String"
 			 */
 			if (PrimitiveUtils.isString(type.name())) {
-				String pValue = toPrimitiveValue((ClassType) type, (ObjectReference)value, thread);
+				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)value, thread);
 				StringValue ele = new StringValue(pValue, isRoot, variable);
 				ele.setVarID(String.valueOf(((ObjectReference)value).uniqueID()));
 				parent.addChild(ele);
@@ -366,7 +367,7 @@ public class VariableValueExtractor {
 			 * if the class name is "Integer", "Float", ...
 			 */
 			else if (PrimitiveUtils.isPrimitiveType(type.name())) {
-				String pValue = toPrimitiveValue((ClassType) type, (ObjectReference)value, thread);
+				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)value, thread);
 				PrimitiveValue ele = new PrimitiveValue(pValue, isRoot, variable);
 				ele.setVarID(String.valueOf(((ObjectReference)value).uniqueID()));
 				parent.addChild(ele);
@@ -381,29 +382,6 @@ public class VariableValueExtractor {
 		}
 		
 		
-	}
-
-	private synchronized String toPrimitiveValue(ClassType type, ObjectReference value,
-			ThreadReference thread) {
-		Method method = type.concreteMethodByName(TO_STRING_NAME, TO_STRING_SIGN);
-		if (method != null) {
-			try {
-				if (thread.isSuspended()) {
-					if (value instanceof StringReference) {
-						return ((StringReference) value).value();
-					}
-					Value toStringValue = value.invokeMethod(thread, method,
-							new ArrayList<Value>(),
-							ObjectReference.INVOKE_SINGLE_THREADED);
-					return toStringValue.toString();
-					
-				}
-			} catch (Exception e) {
-				// ignore.
-//				log.warn(e.getMessage());
-			}
-		}
-		return null;
 	}
 	
 //	private void appendNullVarVal(VarValue parent, Variable variable) {
@@ -491,23 +469,26 @@ public class VariableValueExtractor {
 			
 			if(value instanceof ObjectReference){
 				ObjectReference objValue = (ObjectReference)value;
-				List<Method> mList = objValue.referenceType().methodsByName("toString");
-				String stringValue = "$Not Known$";
-				if(mList.isEmpty()){
-					if(objValue instanceof ArrayReference){
-						ArrayReference arrayValue = (ArrayReference)objValue;
-						stringValue = JavaUtil.retrieveStringValueOfArray(arrayValue);
-					}
+				String stringValue;
+				if(value instanceof ArrayReference){
+					stringValue = JavaUtil.retrieveStringValueOfArray((ArrayReference)value);
 				}
 				else{
-					if(thread.isSuspended()){
-						stringValue = JavaUtil.retrieveToStringValue(thread, objValue, this.executor);
-						
-						System.currentTimeMillis();
-					}
-					
-//					stringValue = value.toString();
+					stringValue = JavaUtil.retrieveToStringValue(objValue, Settings.referenceFieldLayerInString, thread);					
 				}
+				
+//				List<Method> mList = objValue.referenceType().methodsByName("toString");
+//				String stringValue = "$Not Known$";
+//				if(mList.isEmpty()){
+//					if(objValue instanceof ArrayReference){
+//						ArrayReference arrayValue = (ArrayReference)objValue;
+//						stringValue = JavaUtil.retrieveStringValueOfArray(arrayValue);
+//					}
+//				}
+//				else{
+//					stringValue = JavaUtil.retrieveToStringValue(thread, objValue, this.executor);
+//					System.currentTimeMillis();
+//				}
 				
 				
 				//String message = value.toString();

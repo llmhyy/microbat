@@ -26,6 +26,8 @@ public class Settings {
 	public static boolean isRecordSnapshot;
 	public static int stepLimit;
 	
+	public static int referenceFieldLayerInString = 3;
+	
 	public static int distribtionLayer = 3;
 	public static ImageUI imageUI = new ImageUI();
 	

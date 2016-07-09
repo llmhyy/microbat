@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +33,8 @@ import org.eclipse.jdt.internal.core.JarPackageFragmentRoot;
 
 import com.sun.jdi.ArrayReference;
 import com.sun.jdi.ClassNotLoadedException;
+import com.sun.jdi.ClassType;
+import com.sun.jdi.Field;
 import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.InvalidTypeException;
 import com.sun.jdi.InvocationException;
@@ -38,6 +42,7 @@ import com.sun.jdi.Method;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.StackFrame;
+import com.sun.jdi.StringReference;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 
@@ -89,13 +94,103 @@ public class JavaUtil {
 		StringBuffer buffer = new StringBuffer();
 		for(Value v: list){
 			if(v != null){
-				buffer.append(v.toString()+ ",") ;					
+				buffer.append(v.toString());
+				buffer.append(",");
 			}
 		}
 		stringValue = buffer.toString();
 		return stringValue;
 	}
 	
+	public synchronized static String toPrimitiveValue(ClassType type, ObjectReference value,
+			ThreadReference thread) {
+		Method method = type.concreteMethodByName(TO_STRING_NAME, TO_STRING_SIGN);
+		if (method != null) {
+			try {
+				if (thread.isSuspended()) {
+					if (value instanceof StringReference) {
+						return ((StringReference) value).value();
+					}
+					Value toStringValue = value.invokeMethod(thread, method,
+							new ArrayList<Value>(),
+							ObjectReference.INVOKE_SINGLE_THREADED);
+					return toStringValue.toString();
+					
+				}
+			} catch (Exception e) {
+			}
+		}
+		return null;
+	}
+	
+	public static String retrieveToStringValue(ObjectReference objValue, int retrieveLayer, ThreadReference thread){
+		ClassType type = (ClassType)objValue.type();
+		String typeName = type.name();
+		if(PrimitiveUtils.isPrimitiveType(typeName)){
+			return toPrimitiveValue(type, objValue, thread);
+		}
+		else if(PrimitiveUtils.isString(typeName)){
+			return objValue.toString();
+		}
+		
+		
+		Map<Field, Value> map = objValue.getValues(type.allFields());
+		List<Field> fieldList = new ArrayList<>(map.keySet());
+		Collections.sort(fieldList, new Comparator<Field>() {
+			@Override
+			public int compare(Field o1, Field o2) {
+				return o1.name().compareTo(o2.name());
+			}
+		});
+		
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("[");
+		for(Field field: map.keySet()){
+			try {
+				String fieldType = field.type().name();
+				Value fieldValue = map.get(field);
+				
+				String fieldValueString = "$unknown";
+				if(fieldValue == null){
+					fieldValueString = "null";
+				}
+				else if(PrimitiveUtils.isPrimitiveTypeOrString(fieldType)){
+					fieldValueString = fieldValue.toString();
+				}
+				else if(fieldValue instanceof ArrayReference){
+					fieldValueString = JavaUtil.retrieveStringValueOfArray((ArrayReference)fieldValue);
+				}
+				else if(fieldValue instanceof ObjectReference){
+					if(retrieveLayer==1){
+						fieldValueString = fieldValue.toString();
+					}
+					else{
+						fieldValueString = retrieveToStringValue((ObjectReference)fieldValue, retrieveLayer-1, thread);
+					}
+				}
+				String fString = field.name() + "=" + fieldValueString + ";";
+				buffer.append(fString);
+				
+			} catch (ClassNotLoadedException e) {
+				//e.printStackTrace();
+			}
+		}
+		buffer.append("]");
+		
+		return buffer.toString();
+	}
+	
+	/**
+	 * This method is used to retrieve the toString() value of an object. I deprecate it for it consume too much
+	 * time when constructing the trace model.
+	 * 
+	 * @param thread
+	 * @param objValue
+	 * @param executor
+	 * @return
+	 * @throws TimeoutException
+	 */
+	@Deprecated
 	public static String retrieveToStringValue(ThreadReference thread,
 			ObjectReference objValue, ProgramExecutor executor) throws TimeoutException {
 		

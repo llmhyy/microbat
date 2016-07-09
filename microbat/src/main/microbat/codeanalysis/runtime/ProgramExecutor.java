@@ -389,7 +389,7 @@ public class ProgramExecutor extends Executor {
 					Method method = mee.method();
 					// System.out.println(method + ":" + ((MethodEntryEvent)
 					// event).location());
-
+					
 					Location location = ((MethodEntryEvent) event).location();
 					boolean isLocationInRunningStatement = isLocationInRunningStatement(location, locBrpMap);
 					if (isLocationInRunningStatement) {
@@ -695,7 +695,9 @@ public class ProgramExecutor extends Executor {
 			} else if (returnedValue instanceof ArrayReference) {
 				returnedStringValue = JavaUtil.retrieveStringValueOfArray((ArrayReference) returnedValue);
 			} else if (returnedValue instanceof ObjectReference) {
-				returnedStringValue = JavaUtil.retrieveToStringValue(thread, (ObjectReference) returnedValue, this);
+//				returnedStringValue = JavaUtil.retrieveToStringValue(thread, (ObjectReference) returnedValue, this);
+				returnedStringValue = JavaUtil.retrieveToStringValue((ObjectReference)returnedValue, 
+						Settings.referenceFieldLayerInString, thread);
 			}
 
 		}
@@ -931,7 +933,7 @@ public class ProgramExecutor extends Executor {
 					var.setVarID(varID);
 
 					if (value.type().toString().equals("java.lang.String")) {
-						String strValue = JavaUtil.retrieveToStringValue(frame.thread(), objRef, this);
+						String strValue = value.toString();
 						strValue = strValue.substring(1, strValue.length() - 1);
 						varValue = new StringValue(strValue, false, var);
 					} else {
@@ -940,7 +942,9 @@ public class ProgramExecutor extends Executor {
 							ArrayReference arrayValue = (ArrayReference) objRef;
 							strValue = JavaUtil.retrieveStringValueOfArray(arrayValue);
 						} else {
-							strValue = JavaUtil.retrieveToStringValue(frame.thread(), objRef, this);
+//							strValue = JavaUtil.retrieveToStringValue(frame.thread(), objRef, this);
+							strValue = JavaUtil.retrieveToStringValue(objRef, 
+									Settings.referenceFieldLayerInString, frame.thread());
 						}
 
 						varValue = new ReferenceValue(false, false, var);
@@ -1034,11 +1038,11 @@ public class ProgramExecutor extends Executor {
 	private void parseReadWrittenVariableInThisStep(ThreadReference thread, Location location, TraceNode node,
 			Map<String, StepVariableRelationEntry> stepVariableTable, String action) {
 
-		try {
-			thread.frames();
-		} catch (IncompatibleThreadStateException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			thread.frames();
+//		} catch (IncompatibleThreadStateException e) {
+//			e.printStackTrace();
+//		}
 
 		StackFrame frame = findFrame(thread, location);
 		if (frame == null) {
