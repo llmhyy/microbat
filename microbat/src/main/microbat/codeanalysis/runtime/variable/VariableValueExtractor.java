@@ -403,7 +403,6 @@ public class VariableValueExtractor {
 	 */
 	private void appendClassVarVal(VarValue parent, Variable variable, ObjectReference objRef, 
 			int level, ThreadReference thread, boolean isRoot) {
-		System.currentTimeMillis();
 		ClassType type = (ClassType) objRef.type();
 		long refID = objRef.uniqueID();
 		
@@ -416,6 +415,10 @@ public class VariableValueExtractor {
 			setMessageValue(thread, val);
 			
 			this.objectPool.put(refID, val);
+			
+			if(type.name().contains("Stack")){
+				System.currentTimeMillis();
+			}
 			
 			boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);
 			
@@ -498,7 +501,7 @@ public class VariableValueExtractor {
 		arrayVal.setComponentType(componentType);
 		arrayVal.setReferenceID(value.uniqueID());
 		
-		setMessageValue(thread, arrayVal);
+//		setMessageValue(thread, arrayVal);
 		
 		//add value of elements
 		List<Value> list = new ArrayList<>();
@@ -514,14 +517,11 @@ public class VariableValueExtractor {
 			}
 		}
 		
-//		for (int i = 0; i < value.length() /*&& i < MAX_ARRAY_ELEMENT_TO_COLLECT*/; i++) {
-//			String varName = String.valueOf(i);
-//			Value elementValue = getArrayEleValue(value, i);
-//			if(elementValue != null){
-//				ArrayElementVar var = new ArrayElementVar(varName, elementValue.type().toString());
-//				appendVarVal(arrayVal, var, elementValue, level, thread, false);
-//			}
-//		}
+		StringBuffer buffer = new StringBuffer();
+		for(VarValue childValue: arrayVal.getChildren()){
+			buffer.append(childValue.getStringValue()+", ");
+		}
+		arrayVal.setStringValue(buffer.toString());
 		
 		parent.addChild(arrayVal);
 		arrayVal.addParent(parent);
