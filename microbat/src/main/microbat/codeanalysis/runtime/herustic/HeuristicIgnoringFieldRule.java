@@ -13,6 +13,14 @@ import com.sun.jdi.Type;
 public class HeuristicIgnoringFieldRule {
 	
 	public static final String ENUM = "enum";
+	public static final String SERIALIZABLE = "java.io.Serializable";
+	public static final String COLLECTION = "java.util.Collection";
+	
+	/**
+	 * for example, I record map(java.util.Stack)=java.io.Collection
+	 */
+	private static Map<String, Boolean> isCollectionMap = new HashMap<>();
+	private static Map<String, Boolean> isSerializableMap = new HashMap<>();
 	
 	/**
 	 * this map store <className, list<fieldName>>, specifying which fields will be
@@ -23,12 +31,10 @@ public class HeuristicIgnoringFieldRule {
 	private static List<String> prefixExcludes = new ArrayList<>();
 	
 	static{
-		String c0 = "java.io.Serializable";
 		ArrayList<String> fieldList0 = new ArrayList<>();
 		fieldList0.add("serialVersionUID");
-		ignoringMap.put(c0, fieldList0);
+		ignoringMap.put(SERIALIZABLE, fieldList0);
 		
-		String c1 = "java.util.Collection";
 		ArrayList<String> fieldList1 = new ArrayList<>();
 		fieldList1.add("DEFAULT_CAPACITY");
 		fieldList1.add("EMPTY_ELEMENTDATA");
@@ -36,7 +42,7 @@ public class HeuristicIgnoringFieldRule {
 		fieldList1.add("MAX_ARRAY_SIZE");
 		fieldList1.add("modCount");
 		fieldList1.add("ENUM$VALUES");
-		ignoringMap.put(c1, fieldList1);
+		ignoringMap.put(COLLECTION, fieldList1);
 		
 		String c2 = ENUM;
 		ArrayList<String> fieldList2 = new ArrayList<>();
@@ -63,29 +69,78 @@ public class HeuristicIgnoringFieldRule {
 		}
 		else{
 			className = type.name();
+			if(isSerializableClass(type)){
+				if(isValidField(fieldName, HeuristicIgnoringFieldRule.SERIALIZABLE, ignoringMap)){
+					return true;
+				}
+			}
+			
+			if(isCollectionClass(type)){
+				if(isValidField(fieldName, HeuristicIgnoringFieldRule.COLLECTION, ignoringMap)){
+					return true;
+				}
+			}
+			
+			return false;
+		}
+		
+		return false;
+	}
+	
+	
+	private static boolean isSerializableClass(ClassType type) {
+		String typeName = type.name();
+		Boolean isSerializable = isSerializableMap.get(typeName);
+		
+		if(isSerializable == null){
 			List<Type> allSuperTypes = new ArrayList<>();
 			findAllSuperTypes(type, allSuperTypes);
-			
-			if(containsOneOfIgnoreClass(allSuperTypes, fieldName, ignoringMap)){
-				return true;
+			isSerializable = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.SERIALIZABLE);
+			if(isSerializable){
+				isSerializableMap.put(typeName, true);
 			}
+			else{
+				isSerializableMap.put(typeName, false);
+			}
+		}
+		
+		return isSerializable;
+	}
+
+
+	public static boolean isCollectionClass(ClassType type){
+		String typeName = type.name();
+		Boolean isCollection = isCollectionMap.get(typeName);
+		
+		if(isCollection == null){
+			List<Type> allSuperTypes = new ArrayList<>();
+			findAllSuperTypes(type, allSuperTypes);
+			isCollection = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.COLLECTION);
+			if(isCollection){
+				isCollectionMap.put(typeName, true);
+			}
+			else{
+				isCollectionMap.put(typeName, false);
+			}
+		}
+		
+		return isCollection;
+	}
+
+	private static boolean isValidField(String fieldName, String className,
+			Map<String, ArrayList<String>> ignoringMap) {
+		List<String> fields = ignoringMap.get(className);
+		if(fields != null){
+			return fields.contains(fieldName);
 		}
 		
 		return false;
 	}
 
-	private static boolean containsOneOfIgnoreClass(List<Type> allSuperTypes, String fieldName,
-			Map<String, ArrayList<String>> ignoringMap2) {
-		for(Type type: allSuperTypes){
-			String typeString = type.toString();
-			List<String> fields = ignoringMap2.get(typeString);
-			if(fields != null){
-				return fields.contains(fieldName);
-			}
-		}
-		return false;
-	}
-
+	
+	
+	
+	private static Map<String, Boolean> parsingTypeMap = new HashMap<>();
 	/**
 	 * For some JDK class, we do not need its detailed fields. However, we may still be
 	 * interested in the elements in Collection class.
@@ -95,24 +150,19 @@ public class HeuristicIgnoringFieldRule {
 	public static boolean isNeedParsingFields(ClassType type) {
 		String typeName = type.name();
 		
-		if(containPrefix(typeName, prefixExcludes)){
-			for(InterfaceType interf: type.interfaces()){
-				if(interf.name().contains("java.util.Collection")){
-					return true;
-				}
-				else{
-					List<Type> allInterfaces = new ArrayList<>();
-					findAllSuperTypes(type, allInterfaces);
-					if(allInterfaces.toString().contains("java.util.Collection")){
-						return true;
-					}
-				}
+		Boolean isNeed = parsingTypeMap.get(typeName);
+		if(isNeed == null){
+			if(containPrefix(typeName, prefixExcludes)){
+				isNeed = isCollectionClass(type);
+			}
+			else{
+				isNeed = true;				
 			}
 			
-			return false;
+			parsingTypeMap.put(typeName, isNeed);
 		}
 		
-		return true;
+		return isNeed;
 	}
 	
 	private static void findAllSuperTypes(Type type, List<Type> allSuperType) {
