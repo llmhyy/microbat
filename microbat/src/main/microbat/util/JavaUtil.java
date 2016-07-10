@@ -166,7 +166,7 @@ public class JavaUtil {
 						fieldValueString = retrieveToStringValue((ObjectReference)fieldValue, retrieveLayer-1, thread);
 					}
 				}
-				String fString = field.name() + "=" + fieldValueString + ";";
+				String fString = field.name() + "=" + fieldValueString + "; ";
 				buffer.append(fString);
 				
 			} catch (ClassNotLoadedException e) {
