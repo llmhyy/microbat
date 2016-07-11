@@ -142,5 +142,11 @@
             name="Microbat Debugging">
       </page>
    </extension>
+   <extension
+         point="org.eclipse.ui.editors.annotationTypes">
+      <type
+            name="microbat.specification.step">
+      </type>
+   </extension>
 
 </plugin>
