@@ -127,9 +127,9 @@
             allPopups="false"
             locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
          <command
-               commandId="microbat.command.searchStepForward"
-               icon="icons/microbat.png"
-               label="Search Step Forward"
+               commandId="microbat.command.searchStepBackward"
+               icon="icons/up.png"
+               label="Search Step Backward"
                style="push"
                tooltip="search the nearest trace step with regard to current step">
          </command>
@@ -138,9 +138,9 @@
             allPopups="false"
             locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
          <command
-               commandId="microbat.command.searchStepBackward"
-               icon="icons/microbat.png"
-               label="Search Step Backward"
+               commandId="microbat.command.searchStepForward"
+               icon="icons/down.png"
+               label="Search Step Forward"
                style="push"
                tooltip="search the nearest trace step with regard to current step">
          </command>
