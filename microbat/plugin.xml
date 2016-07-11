@@ -50,13 +50,23 @@
       </command>
       <command
             defaultHandler="microbat.evaluation.handler.EvaluationHandler"
-            id="microbat.evaluateCommand"
+            id="microbat.command.evaluate"
             name="Run Evaluation">
       </command>
       <command
             defaultHandler="microbat.handler.UndoHandler"
-            id="microbat.undoCommand"
+            id="microbat.command.undo"
             name="Undo">
+      </command>
+      <command
+            defaultHandler="microbat.handler.SearchStepForwardHandler"
+            id="microbat.command.searchStepForward"
+            name="Search Step Forward">
+      </command>
+      <command
+            defaultHandler="microbat.handler.SearchStepBackwardHandler"
+            id="microbat.command.searchStepBackward"
+            name="Search Step Backward">
       </command>
    </extension>
    <extension
@@ -73,13 +83,13 @@
                   style="push">
             </command>
             <command
-                  commandId="microbat.undoCommand"
+                  commandId="microbat.command.undo"
                   icon="icons/undo.png"
                   label="Undo Your Debug Operation"
                   style="push">
             </command>
             <command
-                  commandId="microbat.evaluateCommand"
+                  commandId="microbat.command.evaluate"
                   icon="icons/evaluation.png"
                   label="Run Evaluation"
                   style="push">
@@ -105,13 +115,35 @@
          <toolbar
                id="microbat.toolbar.undo">
             <command
-                  commandId="microbat.undoCommand"
+                  commandId="microbat.command.undo"
                   icon="icons/undo.png"
                   label="Undo Your Debug Operation"
                   style="push"
                   tooltip="undo your previous debugging operation">
             </command>
          </toolbar>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
+         <command
+               commandId="microbat.command.searchStepForward"
+               icon="icons/microbat.png"
+               label="Search Step Forward"
+               style="push"
+               tooltip="search the nearest trace step with regard to current step">
+         </command>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
+         <command
+               commandId="microbat.command.searchStepBackward"
+               icon="icons/microbat.png"
+               label="Search Step Backward"
+               style="push"
+               tooltip="search the nearest trace step with regard to current step">
+         </command>
       </menuContribution>
    </extension>
    <extension

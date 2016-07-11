@@ -160,7 +160,7 @@ public class Trace {
 		return resultIndex;
 	}
 	
-	private String combineTraceNodeExpression(String className, int lineNumber){
+	public static String combineTraceNodeExpression(String className, int lineNumber){
 		className = className.substring(className.lastIndexOf(".")+1, className.length());
 		
 		String exp = className + " line:" + lineNumber;

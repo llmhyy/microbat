@@ -68,6 +68,11 @@ public class TraceView extends ViewPart {
 	public TraceView() {
 	}
 	
+	public void setSearchText(String expression){
+		this.searchText.setText(expression);
+		this.previousSearchExpression = expression;
+	}
+	
 	private void createSearchBox(Composite parent){
 		searchText = new Text(parent, SWT.BORDER);
 		FontData searchTextFont = searchText.getFont().getFontData()[0];
@@ -111,7 +116,7 @@ public class TraceView extends ViewPart {
 		
 	}
 	
-	private void jumpToNode(String searchContent, boolean forward){
+	public void jumpToNode(String searchContent, boolean forward){
 		Trace trace = Activator.getDefault().getCurrentTrace();
 		
 		if(!previousSearchExpression.equals(searchContent)){
@@ -263,7 +268,6 @@ public class TraceView extends ViewPart {
 							}
 							
 							Activator.getDefault().getCurrentTrace().setObservingIndex(node.getOrder()-1);
-							System.currentTimeMillis();
 						}
 					}
 					
