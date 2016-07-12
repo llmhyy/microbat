@@ -52,6 +52,7 @@ public class SimulatedMicroBat {
 				TraceNodeWrapper wrapperAfter = (TraceNodeWrapper)diff.getNodeAfter();
 				
 				TraceNodePair pair = new TraceNodePair(wrapperBefore.getTraceNode(), wrapperAfter.getTraceNode());
+				pair.setExactSame(false);
 				pList.add(pair);
 			}
 		}
@@ -61,6 +62,7 @@ public class SimulatedMicroBat {
 			TraceNodeWrapper wrapperAfter = (TraceNodeWrapper)common.getNodeAfter();
 			
 			TraceNodePair pair = new TraceNodePair(wrapperBefore.getTraceNode(), wrapperAfter.getTraceNode());
+			pair.setExactSame(true);
 			pList.add(pair);
 		}
 		
@@ -92,7 +94,6 @@ public class SimulatedMicroBat {
 		TraceNode rootCause = findRootCause(mutatedLocation.getClassCanonicalName(), 
 				mutatedLocation.getLineNo(), mutatedTrace, pairList);
 		
-		System.currentTimeMillis();
 //		Object dom = rootCause.findAllDominatees();
 //		dominatees.add(rootCause);
 		
