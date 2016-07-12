@@ -9,23 +9,6 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import microbat.codeanalysis.runtime.ProgramExecutor;
-import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
-import microbat.model.BreakPoint;
-import microbat.model.BreakPointValue;
-import microbat.model.value.ArrayValue;
-import microbat.model.value.PrimitiveValue;
-import microbat.model.value.ReferenceValue;
-import microbat.model.value.StringValue;
-import microbat.model.value.VarValue;
-import microbat.model.variable.ArrayElementVar;
-import microbat.model.variable.FieldVar;
-import microbat.model.variable.LocalVar;
-import microbat.model.variable.Variable;
-import microbat.util.JavaUtil;
-import microbat.util.PrimitiveUtils;
-import microbat.util.Settings;
-
 import org.apache.commons.lang.StringUtils;
 
 import com.sun.jdi.AbsentInformationException;
@@ -43,15 +26,31 @@ import com.sun.jdi.ObjectReference;
 import com.sun.jdi.PrimitiveType;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.StackFrame;
-import com.sun.jdi.StringReference;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Type;
 import com.sun.jdi.Value;
+
+import microbat.codeanalysis.runtime.ProgramExecutor;
+import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
+import microbat.model.BreakPoint;
+import microbat.model.BreakPointValue;
+import microbat.model.value.ArrayValue;
+import microbat.model.value.PrimitiveValue;
+import microbat.model.value.ReferenceValue;
+import microbat.model.value.StringValue;
+import microbat.model.value.VarValue;
+import microbat.model.variable.ArrayElementVar;
+import microbat.model.variable.FieldVar;
+import microbat.model.variable.LocalVar;
+import microbat.model.variable.Variable;
+import microbat.util.JavaUtil;
+import microbat.util.PrimitiveUtils;
+import microbat.util.Settings;
 @SuppressWarnings("restriction")
 public class VariableValueExtractor {
 //	protected static Logger log = LoggerFactory.getLogger(DebugValueExtractor.class);
-	private static final String TO_STRING_SIGN= "()Ljava/lang/String;";
-	private static final String TO_STRING_NAME= "toString";
+//	private static final String TO_STRING_SIGN= "()Ljava/lang/String;";
+//	private static final String TO_STRING_NAME= "toString";
 	private static final Pattern OBJECT_ACCESS_PATTERN = Pattern.compile("^\\.([^.\\[]+)(\\..+)*(\\[.+)*$");
 	private static final Pattern ARRAY_ACCESS_PATTERN = Pattern.compile("^\\[(\\d+)\\](.*)$");
 	//private static final int MAX_ARRAY_ELEMENT_TO_COLLECT = 5;
@@ -74,7 +73,7 @@ public class VariableValueExtractor {
 		this.bkp = bkp;
 		this.thread = thread;
 		this.loc = loc;
-		this.executor = executor;
+		this.setExecutor(executor);
 	}
 
 	public final BreakPointValue extractValue()
@@ -412,16 +411,10 @@ public class VariableValueExtractor {
 		ReferenceValue val = this.objectPool.get(refID);
 		if(val == null){
 			val = new ReferenceValue(false, refID, isRoot, variable);	
-			setMessageValue(thread, val);
-			
+//			setMessageValue(thread, val);
 			this.objectPool.put(refID, val);
 			
-			if(type.name().contains("Stack")){
-				System.currentTimeMillis();
-			}
-			
 			boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);
-			
 			if(needParseFields){
 				Map<Field, Value> fieldValueMap = objRef.getValues(type.allFields());
 				for (Field field : type.allFields()) {
@@ -433,20 +426,24 @@ public class VariableValueExtractor {
 						}
 					}
 					
-					
 					boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(type, field.name());
 					if(!isIgnore){
 //						String childVarID = val.getChildId(field.name());
-						
 						if(childVarValue != null){
 							FieldVar var = new FieldVar(field.isStatic(), field.name(), childVarValue.type().toString());
 							appendVarVal(val, var, childVarValue, level, thread, false);											
 						}
 					}
-					
 				}
-				
 			}
+			
+			StringBuffer buffer = new StringBuffer();
+			buffer.append("[");
+			for(VarValue child: val.getChildren()){
+				buffer.append(child.getVarName() + "=" + child.getStringValue() + "; ");
+			}
+			buffer.append("]");
+			val.setStringValue(buffer.toString());
 		}
 		/**
 		 * handle the case of alias variable
@@ -541,6 +538,14 @@ public class VariableValueExtractor {
 	private boolean areLocationsEqual(Location location1, Location location2) throws AbsentInformationException {
 		//return location1.compareTo(location2) == 0;
 		return location1.equals(location2);
+	}
+
+	public ProgramExecutor getExecutor() {
+		return executor;
+	}
+
+	public void setExecutor(ProgramExecutor executor) {
+		this.executor = executor;
 	}
 	
 }

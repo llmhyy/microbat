@@ -124,6 +124,7 @@ public class JavaUtil {
 	public static String retrieveToStringValue(ObjectReference objValue, int retrieveLayer, ThreadReference thread){
 		ClassType type = (ClassType)objValue.type();
 		String typeName = type.name();
+		
 		if(PrimitiveUtils.isPrimitiveType(typeName)){
 			return toPrimitiveValue(type, objValue, thread);
 		}
