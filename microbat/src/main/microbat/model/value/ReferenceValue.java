@@ -8,7 +8,6 @@
 
 package microbat.model.value;
 
-import microbat.model.variable.FieldVar;
 import microbat.model.variable.Variable;
 
 /**
@@ -17,31 +16,29 @@ import microbat.model.variable.Variable;
  */
 
 public class ReferenceValue extends VarValue {
-	protected static final String NULL_CODE = "isNull";
+//	protected static final String NULL_CODE = "isNull";
 	
 //	private ClassType classType; 
 	
 	public ReferenceValue(boolean isNull, boolean isRoot, Variable variable) {
 		super(isRoot, variable);
 		
-		FieldVar field = new FieldVar(false, "isNull", "boolean");
-		BooleanValue child = new BooleanValue(isNull, false, field);
-		child.setVarID("isNull");
-		
-		addChild(child);
-		child.addParent(this);
+//		FieldVar field = new FieldVar(false, "isNull", "boolean");
+//		BooleanValue child = new BooleanValue(isNull, false, field);
+//		child.setVarID("isNull");
+//		addChild(child);
+//		child.addParent(this);
 	}
 	
 	public ReferenceValue(boolean isNull, long referenceID, boolean isRoot, Variable variable) {
 		super(isRoot, variable);
 		this.variable.setVarID(String.valueOf(referenceID));
 		
-		FieldVar field = new FieldVar(false, "isNull", "boolean");
-		BooleanValue child = new BooleanValue(isNull, false, field);
-		child.setVarID("isNull");
-		
-		addChild(child);
-		child.addParent(this);
+//		FieldVar field = new FieldVar(false, "isNull", "boolean");
+//		BooleanValue child = new BooleanValue(isNull, false, field);
+//		child.setVarID("isNull");
+//		addChild(child);
+//		child.addParent(this);
 		
 //		setReferenceID(referenceID);
 //		setClassType(type);
