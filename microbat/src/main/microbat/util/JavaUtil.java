@@ -49,6 +49,7 @@ import com.sun.jdi.Value;
 import microbat.codeanalysis.ast.MethodDeclarationFinder;
 import microbat.codeanalysis.ast.MethodInvocationFinder;
 import microbat.codeanalysis.runtime.ProgramExecutor;
+import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
 import microbat.codeanalysis.runtime.jpda.expr.ParseException;
 import microbat.model.trace.TraceNode;
@@ -145,33 +146,40 @@ public class JavaUtil {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("[");
 		for(Field field: map.keySet()){
-			try {
-				String fieldType = field.type().name();
-				Value fieldValue = map.get(field);
-				
-				String fieldValueString = "$unknown";
-				if(fieldValue == null){
-					fieldValueString = "null";
-				}
-				else if(PrimitiveUtils.isPrimitiveTypeOrString(fieldType)){
-					fieldValueString = fieldValue.toString();
-				}
-				else if(fieldValue instanceof ArrayReference){
-					fieldValueString = JavaUtil.retrieveStringValueOfArray((ArrayReference)fieldValue);
-				}
-				else if(fieldValue instanceof ObjectReference){
-					if(retrieveLayer==1){
+			if(field.name().equals("modCount")){
+				System.currentTimeMillis();
+			}
+			boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(type, field.name());
+			if(!isIgnore){
+				try {
+					String fieldType = field.type().name();
+					Value fieldValue = map.get(field);
+					
+					String fieldValueString = "$unknown";
+					if(fieldValue == null){
+						fieldValueString = "null";
+					}
+					else if(PrimitiveUtils.isPrimitiveTypeOrString(fieldType)){
 						fieldValueString = fieldValue.toString();
 					}
-					else{
-						fieldValueString = retrieveToStringValue((ObjectReference)fieldValue, retrieveLayer-1, thread);
+					else if(fieldValue instanceof ArrayReference){
+						fieldValueString = JavaUtil.retrieveStringValueOfArray((ArrayReference)fieldValue);
 					}
+					else if(fieldValue instanceof ObjectReference){
+						if(retrieveLayer==1){
+							fieldValueString = fieldValue.toString();
+						}
+						else{
+							fieldValueString = retrieveToStringValue((ObjectReference)fieldValue, retrieveLayer-1, thread);
+						}
+					}
+					String fString = field.name() + "=" + fieldValueString + "; ";
+					buffer.append(fString);
+					
+				} catch (ClassNotLoadedException e) {
+					//e.printStackTrace();
 				}
-				String fString = field.name() + "=" + fieldValueString + "; ";
-				buffer.append(fString);
 				
-			} catch (ClassNotLoadedException e) {
-				//e.printStackTrace();
 			}
 		}
 		buffer.append("]");
