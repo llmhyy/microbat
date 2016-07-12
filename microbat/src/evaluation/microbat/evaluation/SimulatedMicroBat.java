@@ -38,10 +38,8 @@ public class SimulatedMicroBat {
 	
 	private PairList matchTraceNodePair(Trace mutatedTrace, Trace correctTrace) {
 		
-		
-		TraceNodeWrapper mutatedTraceNodeWrapper = initVirtualWrapper(mutatedTrace);
-		TraceNodeWrapper correctTraceNodeWrapper = initVirtualWrapper(correctTrace);
-		
+		TraceNodeWrapper mutatedTraceNodeWrapper = initVirtualRootWrapper(mutatedTrace);
+		TraceNodeWrapper correctTraceNodeWrapper = initVirtualRootWrapper(correctTrace);
 		
 		HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
 		differ.diff(mutatedTraceNodeWrapper, correctTraceNodeWrapper, false, new LCSMatcher());
@@ -67,17 +65,15 @@ public class SimulatedMicroBat {
 		}
 		
 		Collections.sort(pList, new TraceNodePairReverseOrderComparator());
-		
 		PairList pairList = new PairList(pList);
-		
 		return pairList;
 	}
 	
 	
-	private TraceNodeWrapper initVirtualWrapper(Trace trace) {
+	private TraceNodeWrapper initVirtualRootWrapper(Trace trace) {
 		TraceNode virtualNode = new TraceNode(null, null, -1);
-		List<TraceNode> topList = trace.getTopMethodLevelNodes();
-//		List<TraceNode> topList = trace.getTopAbstractionLevelNodes();
+//		List<TraceNode> topList = trace.getTopMethodLevelNodes();
+		List<TraceNode> topList = trace.getTopAbstractionLevelNodes();
 		virtualNode.setInvocationChildren(topList);
 		
 		TraceNodeWrapper wrapper = new TraceNodeWrapper(virtualNode);
@@ -88,9 +84,7 @@ public class SimulatedMicroBat {
 
 	public Trial detectMutatedBug(Trace mutatedTrace, Trace correctTrace, ClassLocation mutatedLocation, 
 			String testCaseName, String mutatedFile) throws SimulationFailException {
-		
 		boolean enableClear = false;
-		
 		
 //		PairList pairList = DiffUtil.generateMatchedTraceNodeList(mutatedTrace, correctTrace);
 		PairList pairList = matchTraceNodePair(mutatedTrace, correctTrace); 

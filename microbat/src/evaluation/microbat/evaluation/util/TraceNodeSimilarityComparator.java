@@ -36,16 +36,6 @@ public class TraceNodeSimilarityComparator {
 				simVarScore = (2*(double)commonReadVarWithSameValue+2*commonWrittenVarWithSameValue)/totalVars;
 			}
 			
-//			int len1 = traceNode1.findTraceLength();
-//			int len2 = traceNode2.findTraceLength();
-//			int len = (len1 > len2) ? len1 : len2;
-//			double diffLoc = Math.abs(traceNode1.getOrder() - traceNode2.getOrder());
-//			double simLocationScore = 1 - diffLoc/len;
-			
-			/**
-			 * give a value for same location similarity
-			 */
-//			return 0.05 + 0.5*simVarScore + 0.45*simLocationScore;
 			return 0.05 + 0.95*simVarScore;
 		}
 		
@@ -107,6 +97,7 @@ public class TraceNodeSimilarityComparator {
 		double commonness = 0;
 		
 		if(var1 instanceof VirtualValue && var2 instanceof VirtualValue){
+			//TODO I may need to distinguish virtual variable of primitive type or object type.
 			if(var1.getStringValue().equals(var2.getStringValue())){
 				commonness = 1;
 			}
@@ -128,17 +119,12 @@ public class TraceNodeSimilarityComparator {
 					}
 				}
 				else if((var1 instanceof ReferenceValue) && (var2 instanceof ReferenceValue)){
-					
-					System.currentTimeMillis();
-					
 					ReferenceValue refVar1 = (ReferenceValue)var1;
 					setChildren(refVar1, node1);
 					ReferenceValue refVar2 = (ReferenceValue)var2;
 					setChildren(refVar2, node2);
 					
 					if(refVar1.getChildren() != null && refVar2.getChildren() != null){
-						System.currentTimeMillis();
-						
 						HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
 						differ.diff(var1, var2, true);
 						if(differ.getDiffs().isEmpty()){
