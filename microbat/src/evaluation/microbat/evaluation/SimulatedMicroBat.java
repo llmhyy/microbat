@@ -17,6 +17,7 @@ import microbat.evaluation.model.StepOperationTuple;
 import microbat.evaluation.model.TraceNodePair;
 import microbat.evaluation.model.TraceNodeWrapper;
 import microbat.evaluation.model.Trial;
+import microbat.evaluation.util.TraceNodeComprehensiveSimilarityComparator;
 import microbat.handler.CheckingState;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -42,7 +43,8 @@ public class SimulatedMicroBat {
 		TraceNodeWrapper correctTraceNodeWrapper = initVirtualRootWrapper(correctTrace);
 		
 		HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
-		differ.diff(mutatedTraceNodeWrapper, correctTraceNodeWrapper, false, new LCSMatcher());
+		differ.diff(mutatedTraceNodeWrapper, correctTraceNodeWrapper, false, 
+				new LCSMatcher(new TraceNodeComprehensiveSimilarityComparator()));
 		
 		List<GraphDiff> diffList = differ.getDiffs();
 		List<TraceNodePair> pList = new ArrayList<>();

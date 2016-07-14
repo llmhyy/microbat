@@ -10,45 +10,29 @@ import microbat.model.trace.TraceNode;
 
 public class DiffUtil {
 	/**
-	 * {@code multisetList} represents the multiset list corresponds to {@code commonTokenList}. For example, the common
-	 * token list for two strings [a b c a d] and [a c a d] is [a c a d], its corresponding multiset list is {a, a}, {c, c}, 
-	 * {a, a} and {d, d}.<p>
-	 * 
-	 * This method is for recursively invoked. Therefore, I can achieve the common token list and its corresponding multiset
-	 * in the process of computing longest common subsequence. <p>
-	 * 
-	 * Initially, the {@code multisetList} and {@code commonTokenList} have the same content, e.g., [a b c a d] and {a}, {b},
-	 * {c}, {a}, {d}.
+	 * compare traces directly seems not working, which may report may false positive for the matching.
 	 * 
 	 * @param multisetList
 	 * @param commonTokenList
 	 * @param tokenList2
 	 */
+	@Deprecated
 	public static PairList generateMatchedTraceNodeList(Trace mutatedTrace, Trace correctTrace) {
 		
 		TraceNode[] mutatedTraceArray = mutatedTrace.getExectionList().toArray(new TraceNode[0]);
 		TraceNode[] correctTraceArray = correctTrace.getExectionList().toArray(new TraceNode[0]);
 		
-		return generateMatchedTraceNodeList(mutatedTraceArray, correctTraceArray);
+		return generateMatchedTraceNodeList(mutatedTraceArray, correctTraceArray, new TraceNodeComprehensiveSimilarityComparator());
 	}
 	
-	public static PairList generateMatchedTraceNodeList(TraceNode[] mutatedTraceArray, TraceNode[] correctTraceArray){
+	public static PairList generateMatchedTraceNodeList(TraceNode[] mutatedTraceArray, TraceNode[] correctTraceArray,
+			TraceNodeSimilarityComparator sc){
 		
 		List<TraceNodePair> pairList = new ArrayList<>();
-		TraceNodeSimilarityComparator sc = new TraceNodeSimilarityComparator(); 
-		
 		double[][] scoreTable = buildScoreTable(mutatedTraceArray, correctTraceArray, sc);
 
 		for (int i = mutatedTraceArray.length, j = correctTraceArray.length; (i > 0 && j > 0);) {
 			if (mutatedTraceArray[i - 1].hasSameLocation(correctTraceArray[j - 1])) {
-				
-				if(mutatedTraceArray[i - 1].getOrder() == 41 && correctTraceArray[j-1].getOrder()==38){
-					System.currentTimeMillis();
-				}
-				
-				if(mutatedTraceArray[i - 1].getOrder() == 3 && correctTraceArray[j-1].getOrder()==6){
-					System.currentTimeMillis();
-				}
 				
 				double sim = sc.compute(mutatedTraceArray[i - 1], correctTraceArray[j - 1]);
 				double increase = scoreTable[i][j]-scoreTable[i-1][j-1];

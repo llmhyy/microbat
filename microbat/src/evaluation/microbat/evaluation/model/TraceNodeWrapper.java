@@ -3,7 +3,7 @@ package microbat.evaluation.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.evaluation.util.TraceNodeSimilarityComparator;
+import microbat.evaluation.util.TraceNodeVariableSimilarityComparator;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.GraphNode;
 
@@ -55,7 +55,7 @@ public class TraceNodeWrapper implements GraphNode {
 	public boolean isTheSameWith(GraphNode node) {
 		if(node instanceof TraceNodeWrapper){
 			TraceNodeWrapper thatNode = (TraceNodeWrapper)node;
-			TraceNodeSimilarityComparator comparator = new TraceNodeSimilarityComparator();
+			TraceNodeVariableSimilarityComparator comparator = new TraceNodeVariableSimilarityComparator();
 			
 			double sim = comparator.compute(this.getTraceNode(), thatNode.getTraceNode());
 			
