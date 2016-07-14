@@ -18,37 +18,37 @@ public class SimulatedUser {
 	
 	private List<List<String>> otherOptions = new ArrayList<>();
 	
-	private List<List<String>> checkWrongVariableIDOptions(TraceNodePair pair, Trace mutatedTrace){
-		List<List<String>> options = new ArrayList<>();
+	private List<List<VarValue>> checkWrongVariableIDOptions(TraceNodePair pair, Trace mutatedTrace){
+		List<List<VarValue>> options = new ArrayList<>();
 		
-		List<String> wrongReadVarIDs = pair.findSingleWrongReadVarID(mutatedTrace);
-		List<String> wrongWrittenVarIDs = pair.findSingleWrongWrittenVarID(mutatedTrace);
+		List<VarValue> wrongReadVarIDs = pair.findSingleWrongReadVar(mutatedTrace);
+		List<VarValue> wrongWrittenVarIDs = pair.findSingleWrongWrittenVarID(mutatedTrace);
 		
 		System.currentTimeMillis();
 		
 		if(wrongReadVarIDs.size() < 2 && wrongWrittenVarIDs.size() < 2){
-			List<String> wrongVarIDs = new ArrayList<>();
+			List<VarValue> wrongVarIDs = new ArrayList<>();
 			wrongVarIDs.addAll(wrongReadVarIDs);
 			wrongVarIDs.addAll(wrongWrittenVarIDs);
 			
 			options.add(wrongVarIDs);
 		}
 		else{
-			List<String> varIDsWithLargeSize; 
-			List<String> varIDsWithSmallSize;
+			List<VarValue> varListWithLargeSize; 
+			List<VarValue> varListWithSmallSize;
 			if(wrongReadVarIDs.size() == 2){
-				varIDsWithLargeSize = wrongReadVarIDs;
-				varIDsWithSmallSize = wrongWrittenVarIDs;
+				varListWithLargeSize = wrongReadVarIDs;
+				varListWithSmallSize = wrongWrittenVarIDs;
 			}
 			else{
-				varIDsWithLargeSize = wrongWrittenVarIDs;
-				varIDsWithSmallSize = wrongReadVarIDs;
+				varListWithLargeSize = wrongWrittenVarIDs;
+				varListWithSmallSize = wrongReadVarIDs;
 			}
 			
-			for(String wrongVarLarge: varIDsWithLargeSize){
-				if(varIDsWithSmallSize.size() > 0){
-					for(String wrongVarSmall: varIDsWithSmallSize){
-						List<String> wrongVarIDs = new ArrayList<>();
+			for(VarValue wrongVarLarge: varListWithLargeSize){
+				if(varListWithSmallSize.size() > 0){
+					for(VarValue wrongVarSmall: varListWithSmallSize){
+						List<VarValue> wrongVarIDs = new ArrayList<>();
 						wrongVarIDs.add(wrongVarLarge);
 						wrongVarIDs.add(wrongVarSmall);
 						
@@ -56,10 +56,10 @@ public class SimulatedUser {
 					}
 				}
 				else{
-					List<String> wrongVarIDs = new ArrayList<>();
-					wrongVarIDs.add(wrongVarLarge);
+					List<VarValue> wrongVars = new ArrayList<>();
+					wrongVars.add(wrongVarLarge);
 					
-					options.add(wrongVarIDs);
+					options.add(wrongVars);
 				}
 			}
 		}
@@ -88,16 +88,21 @@ public class SimulatedUser {
 //					System.currentTimeMillis();
 				}
 				
-				List<String> wrongVarIDs = new ArrayList<>();
-				List<List<String>> options = checkWrongVariableIDOptions(pair, mutatedTrace);
-				wrongVarIDs = options.get(0);
+				List<VarValue> wrongVars = new ArrayList<>();
+				List<List<VarValue>> options = checkWrongVariableIDOptions(pair, mutatedTrace);
+				wrongVars = options.get(0); 
 				
 				for(int i=1; i<options.size(); i++){
-					otherOptions.add(options.get(i));
+					List<String> ids = new ArrayList<String>();
+					for(VarValue varValue: options.get(i)){
+						ids.add(varValue.getVarID());
+					}
+					otherOptions.add(ids);
 				}
 				
-				if(!wrongVarIDs.isEmpty()){
-					for(String wrongVarID: wrongVarIDs){
+				if(!wrongVars.isEmpty()){
+					for(VarValue var: wrongVars){
+						String wrongVarID = var.getVarID();
 						Settings.interestedVariables.add(wrongVarID, checkTime);
 					}			
 					feedback = UserFeedback.INCORRECT;

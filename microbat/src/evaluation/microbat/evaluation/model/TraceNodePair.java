@@ -82,45 +82,45 @@ public class TraceNodePair {
 //		return wrongVarIDs;
 //	}
 	
-	public List<String> findSingleWrongWrittenVarID(Trace trace){
-		List<String> wrongVarIDs = new ArrayList<>();
+	public List<VarValue> findSingleWrongWrittenVarID(Trace trace){
+		List<VarValue> wrongVars = new ArrayList<>();
 		
 		for(VarValue mutatedWrittenVar: mutatedNode.getWrittenVariables()){
 			List<VarValue> mutatedVarList = findCorrespondingVarWithDifferentValue(mutatedWrittenVar, 
 					originalNode.getWrittenVariables(), mutatedNode.getWrittenVariables(), trace, Variable.WRITTEN);
 			if(!mutatedVarList.isEmpty()){
 				for(VarValue value: mutatedVarList){
-					wrongVarIDs.add(value.getVarID());
+					wrongVars.add(value);
 				}
 				
-				return wrongVarIDs;
+				return wrongVars;
 			}
 		}
 		
-		return wrongVarIDs;
+		return wrongVars;
 	}
 	
 	/**
 	 * 
 	 * @return
 	 */
-	public List<String> findSingleWrongReadVarID(Trace mutatedTrace){
+	public List<VarValue> findSingleWrongReadVar(Trace mutatedTrace){
 		
-		List<String> wrongVarIDs = new ArrayList<>();
+		List<VarValue> wrongVars = new ArrayList<>();
 		
 		for(VarValue mutatedReadVar: mutatedNode.getReadVariables()){
 			List<VarValue> mutatedVarList = findCorrespondingVarWithDifferentValue(mutatedReadVar, 
 					originalNode.getReadVariables(), mutatedNode.getReadVariables(), mutatedTrace, Variable.READ);
 			if(!mutatedVarList.isEmpty()){
 				for(VarValue value: mutatedVarList){
-					wrongVarIDs.add(value.getVarID());
+					wrongVars.add(value);
 				}
 				System.currentTimeMillis();
-				return wrongVarIDs;
+				return wrongVars;
 			}
 		}
 		
-		return wrongVarIDs;
+		return wrongVars;
 	}
 
 	/**
