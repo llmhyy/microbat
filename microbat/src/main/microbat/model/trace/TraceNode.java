@@ -610,7 +610,7 @@ public class TraceNode{
 	}
 
 	public boolean hasSameLocation(TraceNode node) {
-		return getClassCanonicalName().equals(node.getClassCanonicalName()) && 
+		return getDeclaringCompilationUnitName().equals(node.getDeclaringCompilationUnitName()) && 
 				getLineNumber()==node.getLineNumber();
 	}
 
@@ -729,6 +729,10 @@ public class TraceNode{
 			abstractChildren.addAll(this.loopChildren);
 			return abstractChildren;
 		}
+	}
+	
+	public boolean isAbstractParent(){
+		return getAbstractChildren().size()!=0;
 	}
 
 	private void clearLoopParentsInMethodParent(List<TraceNode> abstractChildren) {

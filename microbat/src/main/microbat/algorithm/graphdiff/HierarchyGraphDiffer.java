@@ -43,8 +43,6 @@ public class HierarchyGraphDiffer {
 		List<? extends GraphNode> childrenAfter = rootAfter.getChildren();
 		List<MatchingGraphPair> pairs = matcher.matchList(childrenBefore, childrenAfter);
 
-//		System.currentTimeMillis();
-		
 		for(MatchingGraphPair pair: pairs){
 			GraphNode nodeBefore = pair.getNodeBefore();
 			GraphNode nodeAfter = pair.getNodeAfter();
