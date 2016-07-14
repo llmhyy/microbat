@@ -656,12 +656,12 @@ public class DebugFeedbackView extends ViewPart {
 				openReconfirmDialog(message);
 				return false;
 			}
-			else if(recommender != null && recommender.getLatestCause().isCausedByWrongPath() && feedbackType.equals(UserFeedback.CORRECT)){
-				String message = "The lastest node has wrong path, but you now tell me that no variable "
-						+ "in this conditional statement is wrong, are you really sure?";
-				openReconfirmDialog(message);
-				return false;
-			}
+//			else if(recommender != null && recommender.getLatestCause().isCausedByWrongPath() && feedbackType.equals(UserFeedback.CORRECT)){
+//				String message = "The lastest node has wrong path, but you now tell me that no variable "
+//						+ "in this conditional statement is wrong, are you really sure?";
+//				openReconfirmDialog(message);
+//				return false;
+//			}
 			
 			return true;
 		}
