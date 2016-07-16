@@ -193,9 +193,6 @@ public class LineNumberVisitor extends EmptyVisitor {
 			else if(insHandle.getInstruction() instanceof BranchInstruction){
 				setConditionalScope(cu, point);
 				
-				
-				
-//				ClassLocation target0 = findSubsequentInstruction(i, correspondingInstructions, point, code);
 				ClassLocation target0 = transferToLocation(insHandle.getNext(), code);
 				if(target0 != null){
 					point.addTarget(target0);					
