@@ -18,6 +18,7 @@ import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.IINC;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.InstructionTargeter;
 import org.apache.bcel.generic.LoadInstruction;
 import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.ReturnInstruction;
@@ -26,6 +27,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import microbat.codeanalysis.ast.ConditionalScopeParser;
 import microbat.model.BreakPoint;
+import microbat.model.ClassLocation;
 import microbat.model.Scope;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
@@ -98,7 +100,8 @@ public class LineNumberVisitor extends EmptyVisitor {
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getClassCanonicalName());
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool()); 
 		 
-		for(InstructionHandle insHandle: correspondingInstructions){
+		for(int i=0; i<correspondingInstructions.size(); i++){
+			InstructionHandle insHandle = correspondingInstructions.get(i);
 			if(insHandle.getInstruction() instanceof FieldInstruction){
 				FieldInstruction gIns = (FieldInstruction)insHandle.getInstruction();
 				String fullFieldName = gIns.getFieldName(pool);
@@ -190,12 +193,49 @@ public class LineNumberVisitor extends EmptyVisitor {
 			}
 			else if(insHandle.getInstruction() instanceof BranchInstruction){
 				setConditionalScope(cu, point);
+				
+				
+				
+//				ClassLocation target0 = findSubsequentInstruction(i, correspondingInstructions, point, code);
+				ClassLocation target0 = transferToLocation(insHandle.getNext(), code);
+				if(target0 != null){
+					point.addTarget(target0);					
+				}
+				else{
+					System.currentTimeMillis();
+				}
+				
+				BranchInstruction bIns = (BranchInstruction)insHandle.getInstruction();
+				InstructionHandle ins1 = bIns.getTarget();
+				ClassLocation target1 = transferToLocation(ins1, code);
+				point.addTarget(target1);					
 			}
 		}
 		
 		
 	}
 
+	private ClassLocation transferToLocation(InstructionHandle insHandle, Code code) {
+		LineNumberTable table = code.getLineNumberTable();
+		int sourceLine = table.getSourceLine(insHandle.getPosition());
+		
+		ClassLocation location = new ClassLocation(this.breakPoint.getClassCanonicalName(), null, sourceLine);
+		return location;
+	}
+
+	private ClassLocation findSubsequentInstruction(int index, List<InstructionHandle> correspondingInstructions, BreakPoint point, Code code) {
+		for(int i=index+1; i<correspondingInstructions.size(); i++){
+			InstructionHandle ins = correspondingInstructions.get(i);
+			ClassLocation location = transferToLocation(ins, code);
+			if(!location.equals(point)){
+				return location;
+			}
+		}
+		
+		return null;
+	}
+
+	
 	/**
 	 * Based on my observation, if an instruction stores a value into a local variable, the start position of this instruction
 	 * will be smaller than the start PC of this local variable. In other words, the instruction is out of the scope of this

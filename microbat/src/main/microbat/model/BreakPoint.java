@@ -30,8 +30,10 @@ public class BreakPoint extends ClassLocation {
 	private List<Variable> allVisibleVariables = new ArrayList<>();
 	
 	private boolean isReturnStatement;
+	
 	private boolean isConditioanl;
 	private Scope conditionScope;
+	private List<ClassLocation> targets = new ArrayList<>();
 	
 	public BreakPoint(String className, int linNum){
 		super(className, null, linNum);
@@ -211,5 +213,19 @@ public class BreakPoint extends ClassLocation {
 
 	public void setConditionScope(Scope conditionScope) {
 		this.conditionScope = conditionScope;
+	}
+
+	public List<ClassLocation> getTargets() {
+		return targets;
+	}
+
+	public void setTargets(List<ClassLocation> targets) {
+		this.targets = targets;
+	}
+	
+	public void addTarget(ClassLocation target){
+		if(!this.targets.contains(target)){
+			this.targets.add(target);			
+		}
 	}
 }

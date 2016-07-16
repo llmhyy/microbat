@@ -82,7 +82,7 @@ public class ClassLocation {
 
 	@Override
 	public String toString() {
-		return this.id;
+		return this.classCanonicalName + ", line=" + this.lineNo;
 	}
 	
 	public String getMethodName() {
