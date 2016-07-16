@@ -516,7 +516,8 @@ public class StepRecommender {
 	}
 	
 	private TraceNode handleWrongPath(Trace trace, TraceNode currentNode, String feedback){
-		TraceNode suspiciousNode = trace.findControlSuspiciousDominator(currentNode, feedback);
+//		TraceNode suspiciousNode = trace.findSuspiciousControlDominator(currentNode, feedback);
+		TraceNode suspiciousNode = currentNode.getControlDominator();
 		
 		this.latestCause.setBuggyNode(currentNode);
 		this.latestCause.setWrongPath(true);

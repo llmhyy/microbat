@@ -50,7 +50,7 @@ public class TraceNode{
 	
 	private Map<TraceNode, List<String>> dataDominators = new HashMap<>();
 	private Map<TraceNode, List<String>> dataDominatees = new HashMap<>();
-	private List<TraceNode> controlDominators = new ArrayList<>();
+	private TraceNode controlDominator;
 	private List<TraceNode> controlDominatees = new ArrayList<>();
 	
 	/**
@@ -494,13 +494,16 @@ public class TraceNode{
 			}
 		}
 		
-		
-		for(TraceNode controlDominator: node.getControlDominators()){
-			if(!dominators.containsKey(controlDominator.getOrder())){
-				dominators.put(controlDominator.getOrder(), controlDominator);
-				findDominators(controlDominator, dominators);				
-			}
+		if(this.controlDominator != null){
+			dominators.put(this.controlDominator.getOrder(), this.controlDominator);
 		}
+		
+//		for(TraceNode controlDominator: node.getControlDominators()){
+//			if(!dominators.containsKey(controlDominator.getOrder())){
+//				dominators.put(controlDominator.getOrder(), controlDominator);
+//				findDominators(controlDominator, dominators);				
+//			}
+//		}
 		
 	}
 	
@@ -536,20 +539,27 @@ public class TraceNode{
 		}
 	}
 	
-
-	public List<TraceNode> getControlDominators() {
-		return controlDominators;
-	}
-
-	public void setControlDominators(List<TraceNode> controlDominators) {
-		this.controlDominators = controlDominators;
+	public void setControlDominator(TraceNode controlDominator){
+		this.controlDominator = controlDominator;
 	}
 	
-	public void addControlDominator(TraceNode dominator){
-		if(!this.controlDominators.contains(dominator)){
-			this.controlDominators.add(dominator);
-		}
+	public TraceNode getControlDominator(){
+		return this.controlDominator;
 	}
+
+//	public List<TraceNode> getControlDominators() {
+//		return controlDominators;
+//	}
+//
+//	public void setControlDominators(List<TraceNode> controlDominators) {
+//		this.controlDominators = controlDominators;
+//	}
+//	
+//	public void addControlDominator(TraceNode dominator){
+//		if(!this.controlDominators.contains(dominator)){
+//			this.controlDominators.add(dominator);
+//		}
+//	}
 
 	public List<TraceNode> getControlDominatees() {
 		return controlDominatees;
@@ -627,23 +637,35 @@ public class TraceNode{
 //			}
 //		}
 		
-		if(!this.controlDominators.isEmpty()){
-			TraceNode controlDominator = this.controlDominators.get(0);
+		if(this.controlDominator != null){
+			TraceNode controlDominator = this.controlDominator;
 			while(controlDominator != null){
 				if(controlDominator.isLoopCondition()  && controlDominator.isLoopContainsNodeScope(this)){
 					return controlDominator;
 				}
 				else{
-					List<TraceNode> controlDominators = controlDominator.getControlDominators();
-					if(!controlDominators.isEmpty()){
-						controlDominator = controlDominators.get(0);
-					}
-					else{
-						controlDominator = null;
-					}
+					controlDominator = controlDominator.getControlDominator();
 				}
 			}
 		}
+		
+//		if(!this.controlDominators.isEmpty()){
+//			TraceNode controlDominator = this.controlDominators.get(0);
+//			while(controlDominator != null){
+//				if(controlDominator.isLoopCondition()  && controlDominator.isLoopContainsNodeScope(this)){
+//					return controlDominator;
+//				}
+//				else{
+//					List<TraceNode> controlDominators = controlDominator.getControlDominators();
+//					if(!controlDominators.isEmpty()){
+//						controlDominator = controlDominators.get(0);
+//					}
+//					else{
+//						controlDominator = null;
+//					}
+//				}
+//			}
+//		}
 		
 		return null;
 	}
@@ -794,5 +816,16 @@ public class TraceNode{
 	
 	public void addLoopChild(TraceNode loopChild){
 		this.loopChildren.add(loopChild);
+	}
+
+	public List<TraceNode> findAllInvocationParents() {
+		List<TraceNode> list = new ArrayList<>();
+		TraceNode parent = this.getInvocationParent();
+		while(parent != null){
+			list.add(parent);
+			parent = parent.getInvocationParent();
+		}
+		
+		return list;
 	}
 }

@@ -14,7 +14,6 @@ import microbat.model.UserInterestedVariables;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
-import microbat.recommendation.UserFeedback;
 import microbat.util.Settings;
 
 /**
@@ -233,53 +232,110 @@ public class Trace {
 
 	public void constructDomianceRelation(){
 		constructDataDomianceRelation();
+//		constructControlDomianceRelation0();
 		constructControlDomianceRelation();
 	}
 	
 	private void constructControlDomianceRelation() {
-		if(this.exectionList.size()>1){
-			for(int i=this.exectionList.size()-1; i>=1; i--){
-				TraceNode dominatee = this.exectionList.get(i);
-				List<TraceNode> controlDominators = findControlDominators(dominatee.getOrder());
-				
-				for(TraceNode controlDominator: controlDominators){
-					dominatee.addControlDominator(controlDominator);
-					controlDominator.addControlDominatee(dominatee);
+		TraceNode controlDominator = null;
+		for(TraceNode node: this.exectionList){
+			if(controlDominator != null){
+				if(isContainedInScope(node, controlDominator.getConditionScope())){
+					controlDominator.addControlDominatee(node);
+					node.setControlDominator(controlDominator);
 				}
-			}			
-		}
-		
-	}
-
-	private List<TraceNode> findControlDominators(int startOrder) {
-		
-		List<TraceNode> controlDominators = new ArrayList<>();
-
-		TraceNode dominatee = this.exectionList.get(startOrder-1);
-		for(int i=startOrder-1-1; i>=0; i--){
-			TraceNode node = this.exectionList.get(i);
+				else{/** which means the {@code controlDominator} is no longer effective now */
+					controlDominator = findContainingControlDominator(node, controlDominator);
+					if(controlDominator != null){
+						controlDominator.addControlDominatee(node);
+						node.setControlDominator(controlDominator);
+					}
+				}
+			}
 			
 			if(node.isConditional()){
-				Scope conditionScope = node.getConditionScope();
-				if(conditionScope != null){
-					if(conditionScope.containsNodeScope(dominatee)){
-						controlDominators.add(node);
-						return controlDominators;
-					}
-					else if(conditionScope.hasJumpStatement()){
-						controlDominators.add(node);
-					}
-				}
-				
+				controlDominator = node;
 			}
-			
-			if(node.equals(dominatee.getInvocationParent())){
-				dominatee = dominatee.getInvocationParent();
+		}
+	}
+
+	private TraceNode findContainingControlDominator(TraceNode node, TraceNode controlDominator) {
+		TraceNode superControlDominator = controlDominator.getControlDominator();
+		while(superControlDominator != null){
+			if(isContainedInScope(node, superControlDominator.getConditionScope())){
+				return superControlDominator;
 			}
 		}
 		
-		return controlDominators;
+		return null;
 	}
+
+	/**
+	 * I will consider the invocation parents of {@code node} as well
+	 * @param node
+	 * @param conditionScope
+	 * @return
+	 */
+	private boolean isContainedInScope(TraceNode node, Scope conditionScope) {
+		List<TraceNode> testingSet = new ArrayList<>();
+		testingSet.add(node);
+		List<TraceNode> invocationParents = node.findAllInvocationParents();
+		testingSet.addAll(invocationParents);
+		
+		for(TraceNode n: testingSet){
+			if(conditionScope.containsNodeScope(n)){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+//	@Deprecated
+//	private void constructControlDomianceRelation0() {
+//		if(this.exectionList.size()>1){
+//			for(int i=this.exectionList.size()-1; i>=1; i--){
+//				TraceNode dominatee = this.exectionList.get(i);
+//				List<TraceNode> controlDominators = findControlDominators(dominatee.getOrder());
+//				
+//				for(TraceNode controlDominator: controlDominators){
+//					dominatee.addControlDominator(controlDominator);
+//					controlDominator.addControlDominatee(dominatee);
+//				}
+//			}			
+//		}
+//		
+//	}
+
+//	private List<TraceNode> findControlDominators(int startOrder) {
+//		
+//		List<TraceNode> controlDominators = new ArrayList<>();
+//
+//		TraceNode dominatee = this.exectionList.get(startOrder-1);
+//		for(int i=startOrder-1-1; i>=0; i--){
+//			TraceNode node = this.exectionList.get(i);
+//			
+//			if(node.isConditional()){
+//				Scope conditionScope = node.getConditionScope();
+//				if(conditionScope != null){
+//					if(conditionScope.containsNodeScope(dominatee)){
+//						controlDominators.add(node);
+//						return controlDominators;
+//					}
+//					else if(conditionScope.hasJumpStatement()){
+//						controlDominators.add(node);
+//					}
+//				}
+//				
+//			}
+//			
+//			if(node.equals(dominatee.getInvocationParent())){
+//				dominatee = dominatee.getInvocationParent();
+//			}
+//		}
+//		
+//		return controlDominators;
+//	}
 
 	private void constructDataDomianceRelation() {
 		for(String varID: this.stepVariableTable.keySet()){
@@ -539,29 +595,28 @@ public class Trace {
 		}
 	}
 
-	public TraceNode findControlSuspiciousDominator(TraceNode buggyNode, String feedback) {
-		
-		
-		List<TraceNode> dominators;
-		if(feedback.equals(UserFeedback.WRONG_PATH)){
-			dominators = buggyNode.getControlDominators();
-		}
-		else{
-			dominators = new ArrayList<>(buggyNode.getDataDominator().keySet());
-		}
-		
-		if(dominators.isEmpty()){
-			return buggyNode;
-		}
-		else{
-			for(TraceNode controlDominator: dominators){
-				if(!controlDominator.hasChecked()){
-					return controlDominator;
-				}
-			}
-			return dominators.get(0);
-		}
-	}
+//	public TraceNode findSuspiciousControlDominator(TraceNode buggyNode, String feedback) {
+//		
+//		List<TraceNode> dominators;
+//		if(feedback.equals(UserFeedback.WRONG_PATH)){
+//			dominators = buggyNode.getControlDominators();
+//		}
+//		else{
+//			dominators = new ArrayList<>(buggyNode.getDataDominator().keySet());
+//		}
+//		
+//		if(dominators.isEmpty()){
+//			return buggyNode;
+//		}
+//		else{
+//			for(TraceNode controlDominator: dominators){
+//				if(!controlDominator.hasChecked()){
+//					return controlDominator;
+//				}
+//			}
+//			return dominators.get(0);
+//		}
+//	}
 	
 	
 	public void distributeSuspiciousness(UserInterestedVariables interestedVariables) {
