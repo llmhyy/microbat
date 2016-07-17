@@ -240,6 +240,10 @@ public class Trace {
 		TraceNode controlDominator = null;
 		for(TraceNode node: this.exectionList){
 			if(controlDominator != null){
+				if(controlDominator.getConditionScope() == null){
+					System.currentTimeMillis();
+				}
+				
 				if(isContainedInScope(node, controlDominator.getConditionScope())){
 					controlDominator.addControlDominatee(node);
 					node.setControlDominator(controlDominator);
@@ -265,6 +269,7 @@ public class Trace {
 			if(isContainedInScope(node, superControlDominator.getConditionScope())){
 				return superControlDominator;
 			}
+			superControlDominator = superControlDominator.getControlDominator();
 		}
 		
 		return null;
