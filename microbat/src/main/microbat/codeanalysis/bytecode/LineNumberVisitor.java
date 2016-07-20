@@ -197,6 +197,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 			else if(insHandle.getInstruction() instanceof IfInstruction || insHandle.getInstruction() instanceof Select){
 				setConditionalScope(insHandle, point, cfg, code, cu);
 				
+				System.currentTimeMillis();
 //				ClassLocation target0 = transferToLocation(insHandle.getNext(), code);
 //				if(target0 != null){
 //					point.addTarget(target0);					

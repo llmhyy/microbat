@@ -66,6 +66,15 @@ public class CFG {
 		}
 		return null;
 	}
+	
+	public CFGNode findNode(int offset){
+		for(CFGNode node: this.nodeList){
+			if(node.getInstructionHandle().getPosition() == offset){
+				return node;
+			}
+		}
+		return null;
+	}
 
 	public int size() {
 		return nodeList.size();

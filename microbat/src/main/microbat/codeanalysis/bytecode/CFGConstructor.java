@@ -4,16 +4,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.swing.plaf.InsetsUIResource;
-
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.generic.BranchInstruction;
-import org.apache.bcel.generic.GotoInstruction;
-import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
-import org.apache.bcel.generic.JsrInstruction;
 import org.apache.bcel.generic.Select;
 
 import microbat.util.JavaUtil;
@@ -23,10 +18,12 @@ public class CFGConstructor {
 	public CFG buildCFGWithControlDomiance(Code code){
 		CFG cfg = constructCFG(code);
 		
-		System.currentTimeMillis();
+//		System.currentTimeMillis();
 		
 		constructPostDomination(cfg);
 		constructControlDependency(cfg);
+		
+//		LineNumberTable table = code.getLineNumberTable();
 		
 		return cfg;
 	}
@@ -54,15 +51,7 @@ public class CFGConstructor {
 				cfg.setStartNode(node);
 			}
 			
-			if(instructionHandle.getInstruction() instanceof IfInstruction){
-				IfInstruction ifIns = (IfInstruction)instructionHandle.getInstruction();
-				InstructionHandle target = ifIns.getTarget();
-				
-				CFGNode targetNode = cfg.findOrCreateNewNode(target);
-				targetNode.addParent(node);
-				node.addChild(targetNode);
-			}
-			else if(instructionHandle.getInstruction() instanceof Select){
+			if(instructionHandle.getInstruction() instanceof Select){
 				Select switchIns = (Select)instructionHandle.getInstruction();
 				InstructionHandle[] targets = switchIns.getTargets();
 				
@@ -71,6 +60,14 @@ public class CFGConstructor {
 					targetNode.addParent(node);
 					node.addChild(targetNode);
 				}
+			}
+			else if(instructionHandle.getInstruction() instanceof BranchInstruction){
+				BranchInstruction bIns = (BranchInstruction)instructionHandle.getInstruction();
+				InstructionHandle target = bIns.getTarget();
+				
+				CFGNode targetNode = cfg.findOrCreateNewNode(target);
+				targetNode.addParent(node);
+				node.addChild(targetNode);
 			}
 			
 			previousNode = node;
@@ -97,6 +94,7 @@ public class CFGConstructor {
 					node.addPostDominatee(parent);
 				}
 			}
+			node.addPostDominatee(node);
 		}
 		
 		/** extend */
@@ -110,6 +108,10 @@ public class CFGConstructor {
 			
 			for(CFGNode node: cfg.getNodeList()){
 				List<CFGNode> totalAppendedList = new ArrayList<>();
+				
+				if(node.getInstructionHandle().getPosition()==113){
+					System.currentTimeMillis();
+				}
 				
 				for(CFGNode postDominatee: node.getPostDominatee()){
 					List<CFGNode> appendedList = checkAppendedPostDominatee(node, postDominatee);
