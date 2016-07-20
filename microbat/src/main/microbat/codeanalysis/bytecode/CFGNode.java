@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.bcel.generic.BranchInstruction;
+import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.Select;
 
 public class CFGNode {
 
@@ -22,7 +24,8 @@ public class CFGNode {
 	}
 
 	public boolean isBranch(){
-		return this.instructionHandle.getInstruction() instanceof BranchInstruction;
+		return this.instructionHandle.getInstruction() instanceof Select
+				|| this.instructionHandle.getInstruction() instanceof IfInstruction;
 	}
 	
 	public InstructionHandle getInstructionHandle() {

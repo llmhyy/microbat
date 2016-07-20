@@ -12,15 +12,16 @@ import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ArrayInstruction;
-import org.apache.bcel.generic.BranchInstruction;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.IINC;
+import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.LoadInstruction;
 import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.ReturnInstruction;
+import org.apache.bcel.generic.Select;
 import org.apache.bcel.generic.StoreInstruction;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
@@ -193,21 +194,21 @@ public class LineNumberVisitor extends EmptyVisitor {
 			else if(insHandle.getInstruction() instanceof ReturnInstruction){
 				point.setReturnStatement(true);
 			}
-			else if(insHandle.getInstruction() instanceof BranchInstruction){
+			else if(insHandle.getInstruction() instanceof IfInstruction || insHandle.getInstruction() instanceof Select){
 				setConditionalScope(insHandle, point, cfg, code, cu);
 				
-				ClassLocation target0 = transferToLocation(insHandle.getNext(), code);
-				if(target0 != null){
-					point.addTarget(target0);					
-				}
-				else{
-					System.currentTimeMillis();
-				}
-				
-				BranchInstruction bIns = (BranchInstruction)insHandle.getInstruction();
-				InstructionHandle ins1 = bIns.getTarget();
-				ClassLocation target1 = transferToLocation(ins1, code);
-				point.addTarget(target1);					
+//				ClassLocation target0 = transferToLocation(insHandle.getNext(), code);
+//				if(target0 != null){
+//					point.addTarget(target0);					
+//				}
+//				else{
+//					System.currentTimeMillis();
+//				}
+//				
+//				BranchInstruction bIns = (BranchInstruction)insHandle.getInstruction();
+//				InstructionHandle ins1 = bIns.getTarget();
+//				ClassLocation target1 = transferToLocation(ins1, code);
+//				point.addTarget(target1);					
 			}
 		}
 	}

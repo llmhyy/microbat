@@ -9,7 +9,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.JavaModelException;
 
-import microbat.evaluation.io.ExcelHandler;
 import microbat.evaluation.junit.TestCaseAnalyzer;
 
 public class EvaluationHandler extends AbstractHandler {

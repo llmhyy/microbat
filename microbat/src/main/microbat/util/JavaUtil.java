@@ -10,6 +10,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.bcel.generic.GotoInstruction;
+import org.apache.bcel.generic.Instruction;
+import org.apache.bcel.generic.JsrInstruction;
+import org.apache.bcel.generic.Select;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -58,6 +62,11 @@ import microbat.model.trace.TraceNode;
 public class JavaUtil {
 	private static final String TO_STRING_SIGN= "()Ljava/lang/String;";
 	private static final String TO_STRING_NAME= "toString";
+	
+	public static boolean isNonJumpInstruction(Instruction ins){
+		return !(ins instanceof GotoInstruction) && 
+				!(ins instanceof JsrInstruction) && !(ins instanceof Select);
+	}
 	
 	@SuppressWarnings({ "rawtypes", "deprecation" })
 	public static CompilationUnit parseCompilationUnit(String file){
