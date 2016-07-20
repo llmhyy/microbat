@@ -74,9 +74,11 @@ import com.ibm.wala.types.generics.TypeSignature;
 import com.ibm.wala.util.config.FileOfClasses;
 import com.ibm.wala.util.strings.Atom;
 
-import microbat.codeanalysis.ast.ConditionalScopeParser;
+import microbat.codeanalysis.ast.SourceScopeParser;
 import microbat.model.BreakPoint;
-import microbat.model.Scope;
+import microbat.model.ClassLocation;
+import microbat.model.ControlScope;
+import microbat.model.SourceScope;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
@@ -459,7 +461,7 @@ public class MicrobatByteCodeAnalyzer{
 			int varIndex = lIns.getVarIndex();
 			
 			LocalVar var = generateLocalVar(method, pc, varIndex, 
-					point.getDeclaringCompilationUnitName(), point.getLineNo());
+					point.getDeclaringCompilationUnitName(), point.getLineNumber());
 			
 			if(var != null){
 				if(!var.getName().equals("this")){
@@ -505,7 +507,7 @@ public class MicrobatByteCodeAnalyzer{
 //				String className = type.getType().getName().toString();
 				
 				LocalVar var = generateLocalVar(method, pc, varIndex, 
-						point.getDeclaringCompilationUnitName(), point.getLineNo());
+						point.getDeclaringCompilationUnitName(), point.getLineNumber());
 				point.addWrittenVariable(var);
 			}
 			
@@ -563,9 +565,16 @@ public class MicrobatByteCodeAnalyzer{
 	
 	private void setConditionalScope(CompilationUnit cu, int lineNumber, BreakPoint point){
 		point.setConditional(true);
-		ConditionalScopeParser parser = new ConditionalScopeParser();
-		Scope conditionScope = parser.parseScope(cu, lineNumber);
-		point.setConditionScope(conditionScope);
+		SourceScopeParser parser = new SourceScopeParser();
+		SourceScope conditionScope = parser.parseScope(cu, lineNumber);
+		
+		List<ClassLocation> rangeList = new ArrayList<>();
+		for(int line = conditionScope.getStartLine(); line<=conditionScope.getEndLine(); line++){
+			ClassLocation location = new ClassLocation(JavaUtil.getFullNameOfCompilationUnit(cu), null, line);
+			rangeList.add(location);
+		}
+		ControlScope scope = new ControlScope(rangeList, conditionScope.isLoop());
+		point.setControlScope(scope);
 	}
 	
 	private String getClassCanonicalName(IMethod method) {
@@ -672,7 +681,7 @@ public class MicrobatByteCodeAnalyzer{
 			String thisCompilationUnitName = JavaUtil.getFullNameOfCompilationUnit(cu);
 			for(BreakPoint point: executingStatements){
 				if(point.getDeclaringCompilationUnitName().equals(thisCompilationUnitName)){
-					int breakPointLineNo = point.getLineNo();
+					int breakPointLineNo = point.getLineNumber();
 					if(startLine<=breakPointLineNo && breakPointLineNo<=endLine){
 						return true;
 					}
@@ -695,7 +704,7 @@ public class MicrobatByteCodeAnalyzer{
 	private boolean isThePositionContainedInExecution(String className, int lineNum){
 		for(BreakPoint bp: this.executingStatements){
 			if(bp.getClassCanonicalName().equals(className) &&
-					bp.getLineNo() == lineNum){
+					bp.getLineNumber() == lineNum){
 				return true;
 			}
 		}
@@ -738,7 +747,7 @@ public class MicrobatByteCodeAnalyzer{
 		List<Statement> stmts = new ArrayList<Statement>();
 		for (BreakPoint bkp : breakpoints) {
 			CGNode node = findMethod(cg, bkp.getClassCanonicalName(), bkp.getMethodName());
-			List<Statement> seedStmts = findSingleSeedStmt(node, bkp.getLineNo());
+			List<Statement> seedStmts = findSingleSeedStmt(node, bkp.getLineNumber());
 			for (Statement stmt : seedStmts) {
 				CollectionUtils.addIfNotNullNotExist(stmts, stmt);
 			}

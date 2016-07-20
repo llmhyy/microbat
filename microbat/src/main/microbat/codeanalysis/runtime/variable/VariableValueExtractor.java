@@ -154,7 +154,7 @@ public class VariableValueExtractor {
 		for(LocalVariable lv: visibleVars){
 //			Var var = new Var(lv.name(), lv.name(), VarScope.UNDEFINED);
 			LocalVar var = new LocalVar(lv.name(), lv.typeName(), 
-					bkp.getDeclaringCompilationUnitName(), bkp.getLineNo());
+					bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
 			varList.add(var);
 		}
 		for(Field field: allFields){
@@ -196,7 +196,7 @@ public class VariableValueExtractor {
 		
 		if(objRef != null){
 			LocalVar variable = new LocalVar("this", objRef.type().toString(), 
-					bkp.getDeclaringCompilationUnitName(), bkp.getLineNo());
+					bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
 			appendClassVarVal(bkVal, variable, objRef, 1, thread, true);			
 		}
 		
@@ -214,7 +214,7 @@ public class VariableValueExtractor {
 			
 			if(!isField){
 				LocalVar variable = new LocalVar(var.getName(), var.getType(), 
-						bkp.getDeclaringCompilationUnitName(), bkp.getLineNo());
+						bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
 				
 				appendVarVal(bkVal, variable, value, 1, thread, true);				
 				System.currentTimeMillis();

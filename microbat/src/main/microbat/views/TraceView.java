@@ -182,6 +182,10 @@ public class TraceView extends ViewPart {
 			
 			@SuppressWarnings("unused")
 			public void showDebuggingInfo(TraceNode node){
+				System.out.println("=========================");
+				System.out.println("=========================");
+				System.out.println("=========================");
+				
 				Trace t = Activator.getDefault().getCurrentTrace();
 				System.out.println("Data Dominator: ");
 				for(TraceNode dominator: node.getDataDominator().keySet()){
@@ -238,7 +242,7 @@ public class TraceView extends ViewPart {
 						if(obj instanceof TraceNode){
 							TraceNode node = (TraceNode)obj;
 							
-							showDebuggingInfo(node);
+//							showDebuggingInfo(node);
 							
 							DebugFeedbackView view = (DebugFeedbackView)PlatformUI.getWorkbench().
 									getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.DEBUG_FEEDBACK);
@@ -299,7 +303,7 @@ public class TraceView extends ViewPart {
 					IDocumentProvider provider = new TextFileDocumentProvider();
 					provider.connect(javaFile);
 					IDocument document = provider.getDocument(javaFile);
-					IRegion region = document.getLineInformation(breakPoint.getLineNo()-1);
+					IRegion region = document.getLineInformation(breakPoint.getLineNumber()-1);
 					
 					if (region != null) {
 						sourceEditor.selectAndReveal(region.getOffset(), 0);
@@ -439,7 +443,7 @@ public class TraceView extends ViewPart {
 				}
 				
 //				String methodName = breakPoint.getMethodName();
-				int lineNumber = breakPoint.getLineNo();
+				int lineNumber = breakPoint.getLineNumber();
 				int order = node.getOrder();
 				
 				//TODO it is better to parse method name as well.

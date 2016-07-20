@@ -122,7 +122,7 @@ public class Trace {
 			TraceNode node = exectionList.get(i);
 			BreakPoint breakPoint = node.getBreakPoint();
 			String className = breakPoint.getDeclaringCompilationUnitName();
-			int lineNumber = breakPoint.getLineNo();
+			int lineNumber = breakPoint.getLineNumber();
 			
 			String exp = combineTraceNodeExpression(className, lineNumber);
 			if(exp.equals(expression)){
@@ -144,7 +144,7 @@ public class Trace {
 			TraceNode node = exectionList.get(i);
 			BreakPoint breakPoint = node.getBreakPoint();
 			String className = breakPoint.getDeclaringCompilationUnitName();
-			int lineNumber = breakPoint.getLineNo();
+			int lineNumber = breakPoint.getLineNumber();
 			
 			String exp = combineTraceNodeExpression(className, lineNumber);
 			if(exp.equals(expression)){
@@ -198,7 +198,7 @@ public class Trace {
 			 */
 			if(!loopParentStack.isEmpty()){
 				TraceNode loopParent = loopParentStack.peek();
-				if(loopParent.getConditionScope().containsNodeScope(node)){
+				if(loopParent.getControlScope().containsNodeScope(node)){
 					loopParent.addLoopChild(node);
 					node.setLoopParent(loopParent);					
 				}
@@ -222,7 +222,7 @@ public class Trace {
 		}
 		
 		for(TraceNode iParent: invocationParentList){
-			if(currentLoopParent.getConditionScope().containsNodeScope(iParent)){
+			if(currentLoopParent.getLoopScope().containsNodeScope(iParent)){
 				return true;
 			}
 		}
@@ -240,11 +240,11 @@ public class Trace {
 		TraceNode controlDominator = null;
 		for(TraceNode node: this.exectionList){
 			if(controlDominator != null){
-				if(controlDominator.getConditionScope() == null){
+				if(controlDominator.getControlScope() == null){
 					System.currentTimeMillis();
 				}
 				
-				if(isContainedInScope(node, controlDominator.getConditionScope())){
+				if(isContainedInScope(node, controlDominator.getControlScope())){
 					controlDominator.addControlDominatee(node);
 					node.setControlDominator(controlDominator);
 				}
@@ -266,7 +266,7 @@ public class Trace {
 	private TraceNode findContainingControlDominator(TraceNode node, TraceNode controlDominator) {
 		TraceNode superControlDominator = controlDominator.getControlDominator();
 		while(superControlDominator != null){
-			if(isContainedInScope(node, superControlDominator.getConditionScope())){
+			if(isContainedInScope(node, superControlDominator.getControlScope())){
 				return superControlDominator;
 			}
 			superControlDominator = superControlDominator.getControlDominator();

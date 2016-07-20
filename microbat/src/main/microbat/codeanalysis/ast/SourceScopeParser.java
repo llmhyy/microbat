@@ -1,6 +1,6 @@
 package microbat.codeanalysis.ast;
 
-import microbat.model.Scope;
+import microbat.model.SourceScope;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.BreakStatement;
@@ -16,11 +16,11 @@ import org.eclipse.jdt.core.dom.SwitchStatement;
 import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
-public class ConditionalScopeParser {
+public class SourceScopeParser {
 	
 	class ScopeVisitor extends ASTVisitor{
 		CompilationUnit cu;
-		Scope scope;
+		SourceScope scope;
 		int conditionLineNumber;
 		
 		public ScopeVisitor(CompilationUnit cu, int lineNumber){
@@ -84,7 +84,7 @@ public class ConditionalScopeParser {
 		}
 		
 		private void setScope(Statement statement, boolean isLoop){
-			scope = new Scope();
+			scope = new SourceScope();
 			scope.setCompilationUnit(cu);
 			scope.setStartLine(cu.getLineNumber(statement.getStartPosition())); 
 			scope.setEndLine(cu.getLineNumber(statement.getStartPosition()+statement.getLength())); 
@@ -121,12 +121,12 @@ public class ConditionalScopeParser {
 		}
 	}
 	
-	public Scope parseScope(CompilationUnit cu, int conditionLineNumber){
+	public SourceScope parseScope(CompilationUnit cu, int conditionLineNumber){
 		
 		ScopeVisitor scopeVisitor = new ScopeVisitor(cu, conditionLineNumber);
 		cu.accept(scopeVisitor);
 		
-		Scope scope = scopeVisitor.scope;
+		SourceScope scope = scopeVisitor.scope;
 		return scope;
 	}
 }

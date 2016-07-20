@@ -43,7 +43,7 @@ public class ClassLocation {
 		this.methodSign = methodSign;
 	}
 
-	public int getLineNo() {
+	public int getLineNumber() {
 		return lineNo;
 	}
 
@@ -70,14 +70,15 @@ public class ClassLocation {
 			return true;
 		if (obj == null)
 			return false;
-		if (getClass() != obj.getClass())
-			return false;
 		
-		//
-		ClassLocation other = (ClassLocation) obj;
-
-		return classCanonicalName.equals(other.getClassCanonicalName())
-				&& lineNo == other.getLineNo();
+		if(obj instanceof ClassLocation){
+			ClassLocation other = (ClassLocation) obj;
+			
+			return classCanonicalName.equals(other.getClassCanonicalName())
+					&& lineNo == other.getLineNumber();			
+		}
+		
+		return false;
 	}
 
 	@Override

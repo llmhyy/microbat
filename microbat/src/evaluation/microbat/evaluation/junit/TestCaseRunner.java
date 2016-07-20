@@ -257,7 +257,7 @@ public class TestCaseRunner extends ExecutionStatementCollector{
 
 	private boolean isAboutToFinishTestRunner(BreakPoint breakPoint) {
 		if(isInTestRunnerOrTestCase(breakPoint)){
-			return breakPoint.getLineNo() == FINISH_LINE_NO_IN_TEST_RUNNER;
+			return breakPoint.getLineNumber() == FINISH_LINE_NO_IN_TEST_RUNNER;
 		}
 		return false;
 	}

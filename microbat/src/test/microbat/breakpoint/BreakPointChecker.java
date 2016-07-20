@@ -22,7 +22,7 @@ public class BreakPointChecker {
 	public void testBreakPoint() {
 		for(BreakPoint breakpoint: runningStatements){
 			for(BreakPoint breakpoint0: runningStatements0){
-				if(breakpoint.getLineNo() == breakpoint0.getLineNo()){
+				if(breakpoint.getLineNumber() == breakpoint0.getLineNumber()){
 					
 					if(breakpoint.getReadVariables().size() == breakpoint0.getReadVariables().size()){
 						for(Variable var: breakpoint.getReadVariables()){

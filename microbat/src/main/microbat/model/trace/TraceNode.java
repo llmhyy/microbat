@@ -32,11 +32,7 @@ public class TraceNode{
 	
 	private Map<AttributionVar, Double> suspicousScoreMap = new HashMap<>();
 	
-	
 	private int checkTime = -1;
-//	private int stepCorrectness = STEP_UNKNOWN;
-//	private int readVarsCorrectness = READ_VARS_UNKNOWN;
-//	private int writtenVarsCorrectness = WRITTEN_VARS_UNKNOWN;
 	
 	private BreakPoint breakPoint;
 	private BreakPointValue programState;
@@ -191,7 +187,7 @@ public class TraceNode{
 	}
 	
 	public int getLineNumber(){
-		return this.breakPoint.getLineNo();
+		return this.breakPoint.getLineNumber();
 	}
 
 	public BreakPoint getBreakPoint() {
@@ -579,8 +575,12 @@ public class TraceNode{
 		return this.breakPoint.isConditional();
 	}
 	
-	public Scope getConditionScope(){
-		return this.breakPoint.getConditionScope();
+	public Scope getControlScope(){
+		return this.breakPoint.getControlScope();
+	}
+	
+	public Scope getLoopScope(){
+		return this.breakPoint.getLoopScope();
 	}
 
 	public int getInvocationLevel() {
@@ -596,9 +596,9 @@ public class TraceNode{
 
 	public boolean isLoopCondition() {
 		if(isConditional()){
-			Scope scope = getConditionScope();
+			Scope scope = getControlScope();
 			if(scope != null){
-				return scope.isLoopScope();
+				return scope.isLoop();
 			}
 		}
 		return false;
@@ -700,7 +700,7 @@ public class TraceNode{
 				node = node.getInvocationParent();
 			}
 			
-			Scope scope = getConditionScope();
+			Scope scope = getControlScope();
 			for(TraceNode parent: parentList){
 				if(scope.containsNodeScope(parent)){
 					return true;

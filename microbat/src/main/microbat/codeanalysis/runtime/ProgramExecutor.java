@@ -848,7 +848,7 @@ public class ProgramExecutor extends Executor {
 		ReferenceType refType = classPrepEvent.referenceType();
 		List<BreakPoint> brkpList = CollectionUtils.initIfEmpty(brkpsMap.get(refType.name()));
 		for (BreakPoint brkp : brkpList) {
-			Location location = checkBreakpoint(vm, refType, brkp.getLineNo());
+			Location location = checkBreakpoint(vm, refType, brkp.getLineNumber());
 			if (location != null) {
 				locBrpMap.put(location.toString(), brkp);
 			} else {
@@ -960,7 +960,7 @@ public class ProgramExecutor extends Executor {
 				} else {
 					if (var instanceof LocalVar) {
 						LocalVariableScope scope = Settings.localVariableScopes.findScope(var.getName(), node
-								.getBreakPoint().getLineNo(), node.getBreakPoint().getDeclaringCompilationUnitName());
+								.getBreakPoint().getLineNumber(), node.getBreakPoint().getDeclaringCompilationUnitName());
 						String varID;
 						if (scope != null) {
 							varID = Variable.concanateLocalVarID(node.getBreakPoint().getClassCanonicalName(),
@@ -1137,7 +1137,7 @@ public class ProgramExecutor extends Executor {
 			ExpressionParser.clear();
 
 			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getClassCanonicalName());
-			ExpressionParser.setParameters(cu, point.getLineNo());
+			ExpressionParser.setParameters(cu, point.getLineNumber());
 			Value val = ExpressionParser.evaluate(expression, frame.virtualMachine(), frameGetter);
 
 			eValue = new ExpressionValue(val, ExpressionParser.parentValue, null);
@@ -1163,7 +1163,7 @@ public class ProgramExecutor extends Executor {
 			throws SavException {
 
 		BreakPoint current = new BreakPoint(lastSteppingInPoint.getClassCanonicalName(),
-				lastSteppingInPoint.getLineNo());
+				lastSteppingInPoint.getLineNumber());
 
 		BreakPointValue bkpVal = extractValuesAtLocation(current, thread, loc);
 

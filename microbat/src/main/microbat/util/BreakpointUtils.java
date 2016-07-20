@@ -48,7 +48,7 @@ public class BreakpointUtils {
 		for (T brkp : brkps) {
 			List<Integer> lineNos = CollectionUtils.getListInitIfEmpty(map,
 					brkp.getClassCanonicalName());
-			lineNos.add(brkp.getLineNo());
+			lineNos.add(brkp.getLineNumber());
 		}
 		return map;
 	}
@@ -56,13 +56,13 @@ public class BreakpointUtils {
 	public static <T extends ClassLocation> List<Integer> extractLineNo(List<T> bkps) {
 		List<Integer> result = new ArrayList<Integer>(bkps.size());
 		for (T loc : bkps) {
-			result.add(loc.getLineNo());
+			result.add(loc.getLineNumber());
 		}
 		return result;
 	}
 	
 	public static <T extends ClassLocation>String getLocationId(T bkp) {
-		return getLocationId(bkp.getClassCanonicalName(), bkp.getLineNo());
+		return getLocationId(bkp.getClassCanonicalName(), bkp.getLineNumber());
 	}
 	
 	public static String getLocationId(String classNameOrPath, int lineNo) {
@@ -103,7 +103,7 @@ public class BreakpointUtils {
 	public static BreakPoint toBreakPoint(ClassLocation location) {
 		BreakPoint breakpoint = new BreakPoint(
 				location.getClassCanonicalName(), location.getMethodSign(),
-				location.getLineNo());
+				location.getLineNumber());
 		return breakpoint;
 	}
 	

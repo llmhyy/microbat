@@ -552,7 +552,7 @@ public class TestCaseAnalyzer {
 			String className = point.getDeclaringCompilationUnitName();
 			if(!JTestUtil.isInTestCase(className)){
 				ClassLocation location = new ClassLocation(className, 
-						null, point.getLineNo());
+						null, point.getLineNumber());
 				locations.add(location);
 //				try {
 //					if(!JTestUtil.isLocationInTestPackage(location)){

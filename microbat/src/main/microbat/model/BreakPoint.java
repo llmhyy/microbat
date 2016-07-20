@@ -32,7 +32,8 @@ public class BreakPoint extends ClassLocation {
 	private boolean isReturnStatement;
 	
 	private boolean isConditioanl;
-	private Scope conditionScope;
+	private ControlScope controlScope;
+	private SourceScope loopScope;
 	private List<ClassLocation> targets = new ArrayList<>();
 	
 	public BreakPoint(String className, int linNum){
@@ -160,25 +161,6 @@ public class BreakPoint extends ClassLocation {
 		return result;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		BreakPoint other = (BreakPoint) obj;
-		if (classCanonicalName == null) {
-			if (other.classCanonicalName != null)
-				return false;
-		} else if (!classCanonicalName.equals(other.classCanonicalName))
-			return false;
-		if (lineNo != other.lineNo)
-			return false;
-		return true;
-	}
-
 	public boolean isReturnStatement() {
 		return isReturnStatement;
 	}
@@ -207,12 +189,12 @@ public class BreakPoint extends ClassLocation {
 		return this.isConditioanl;
 	}
 
-	public Scope getConditionScope() {
-		return conditionScope;
+	public Scope getControlScope() {
+		return controlScope;
 	}
 
-	public void setConditionScope(Scope conditionScope) {
-		this.conditionScope = conditionScope;
+	public void setControlScope(ControlScope conditionScope) {
+		this.controlScope = conditionScope;
 	}
 
 	public List<ClassLocation> getTargets() {
@@ -227,5 +209,29 @@ public class BreakPoint extends ClassLocation {
 		if(!this.targets.contains(target)){
 			this.targets.add(target);			
 		}
+	}
+
+	public void mergeControlScope(ControlScope locationScope) {
+		if(this.controlScope == null){
+			this.controlScope = locationScope;
+		}
+		else{
+			for(ClassLocation location: locationScope.getRangeList()){
+				if(this.controlScope instanceof ControlScope){
+					ControlScope thisScope = (ControlScope)this.controlScope;
+					if(!thisScope.containsLocation(location)){
+						thisScope.addLocation(location);
+					}
+				}
+			}
+		}
+	}
+
+	public SourceScope getLoopScope() {
+		return loopScope;
+	}
+
+	public void setLoopScope(SourceScope loopScope) {
+		this.loopScope = loopScope;
 	}
 }

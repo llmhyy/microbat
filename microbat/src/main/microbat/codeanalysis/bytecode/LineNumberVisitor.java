@@ -24,10 +24,12 @@ import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.StoreInstruction;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
-import microbat.codeanalysis.ast.ConditionalScopeParser;
+import microbat.codeanalysis.ast.LoopHeadParser;
+import microbat.codeanalysis.ast.SourceScopeParser;
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
-import microbat.model.Scope;
+import microbat.model.ControlScope;
+import microbat.model.SourceScope;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
@@ -52,9 +54,10 @@ public class LineNumberVisitor extends EmptyVisitor {
 	@SuppressWarnings("rawtypes")
 	public void visitMethod(Method method){
 		Code code = method.getCode();
+		CFG cfg = new CFGConstructor().buildCFGWithControlDomiance(code);
 		
 		if(code != null){
-			List<int[]> rangeList = searchOffsetRange(this.breakPoint.getLineNo(), code);
+			List<int[]> rangeList = searchOffsetRange(this.breakPoint.getLineNumber(), code);
 			
 			if(!rangeList.isEmpty()){
 //			if(breakPoint.getLineNo() == 60){
@@ -77,7 +80,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 					
 				}
 				
-				parseReadWrittenVariable(correspondingInstructions, code);
+				parseReadWrittenVariable(correspondingInstructions, code, cfg);
 			}
 		}
 		
@@ -93,7 +96,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 		return false;
 	}
 
-	private void parseReadWrittenVariable(List<InstructionHandle> correspondingInstructions, Code code) {
+	private void parseReadWrittenVariable(List<InstructionHandle> correspondingInstructions, Code code, CFG cfg) {
 		BreakPoint point = this.breakPoint;
 		
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getClassCanonicalName());
@@ -118,12 +121,12 @@ public class LineNumberVisitor extends EmptyVisitor {
 						 * I want to get "a.attr1.attr2" instead of "attr2".
 						 */
 						if(rw){
-							ReadFieldRetriever rfRetriever = new ReadFieldRetriever(cu, point.getLineNo(), fullFieldName);
+							ReadFieldRetriever rfRetriever = new ReadFieldRetriever(cu, point.getLineNumber(), fullFieldName);
 							cu.accept(rfRetriever);
 							fullFieldName = rfRetriever.fullFieldName;							
 						}
 						else{
-							WrittenFieldRetriever wfRetriever = new WrittenFieldRetriever(cu, point.getLineNo(), fullFieldName);
+							WrittenFieldRetriever wfRetriever = new WrittenFieldRetriever(cu, point.getLineNumber(), fullFieldName);
 							cu.accept(wfRetriever);
 							fullFieldName = wfRetriever.fullFieldName;
 						}
@@ -150,7 +153,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 				
 				if(variable != null && !variable.getName().equals("this")){
 					LocalVar var = new LocalVar(variable.getName(), SignatureUtils.signatureToName(variable.getSignature()), 
-							point.getDeclaringCompilationUnitName(), point.getLineNo());
+							point.getDeclaringCompilationUnitName(), point.getLineNumber());
 					if(insHandle.getInstruction() instanceof IINC){
 						point.addReadVariable(var);
 						point.addWrittenVariable(var);
@@ -169,7 +172,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 				String typeName = SignatureUtils.signatureToName(typeSig);
 				
 				if(insHandle.getInstruction().getName().toLowerCase().contains("load")){
-					ReadArrayElementRetriever raeRetriever = new ReadArrayElementRetriever(cu, point.getLineNo(), typeName);
+					ReadArrayElementRetriever raeRetriever = new ReadArrayElementRetriever(cu, point.getLineNumber(), typeName);
 					cu.accept(raeRetriever);
 					String readArrayElement = raeRetriever.arrayElementName;
 					if(readArrayElement != null){
@@ -178,7 +181,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 					}
 				}
 				else if(insHandle.getInstruction().getName().toLowerCase().contains("store")){
-					WrittenArrayElementRetriever waeRetriever = new WrittenArrayElementRetriever(cu, point.getLineNo(), typeName);
+					WrittenArrayElementRetriever waeRetriever = new WrittenArrayElementRetriever(cu, point.getLineNumber(), typeName);
 					cu.accept(waeRetriever);
 					String writtenArrayElement = waeRetriever.arrayElementName;
 					if(writtenArrayElement != null){
@@ -191,7 +194,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 				point.setReturnStatement(true);
 			}
 			else if(insHandle.getInstruction() instanceof BranchInstruction){
-				setConditionalScope(cu, point);
+				setConditionalScope(insHandle, point, cfg, code, cu);
 				
 				ClassLocation target0 = transferToLocation(insHandle.getNext(), code);
 				if(target0 != null){
@@ -207,8 +210,31 @@ public class LineNumberVisitor extends EmptyVisitor {
 				point.addTarget(target1);					
 			}
 		}
+	}
+	
+	private void setConditionalScope(InstructionHandle handle, BreakPoint point, CFG cfg, Code code, 
+			CompilationUnit cu){
+		point.setConditional(true);
 		
+		CFGNode node = cfg.findNode(handle);
+		List<CFGNode> scopeNodes = node.getControlDependentees();
+		List<ClassLocation> list = new ArrayList<>();
+		for(CFGNode n: scopeNodes){
+			ClassLocation location = transferToLocation(n.getInstructionHandle(), code);
+			if(!list.contains(location)){
+				list.add(location);
+			}
+		}
 		
+		LoopHeadParser lhParser = new LoopHeadParser(cu, point.getLineNumber());
+		cu.accept(lhParser);
+		
+		point.mergeControlScope(new ControlScope(list, lhParser.isLoop()));
+		if(lhParser.isLoop()){
+			SourceScopeParser parser = new SourceScopeParser();
+			SourceScope sourceScope = parser.parseScope(cu, point.getLineNumber());
+			point.setLoopScope(sourceScope);
+		}
 	}
 
 	private ClassLocation transferToLocation(InstructionHandle insHandle, Code code) {
@@ -281,10 +307,5 @@ public class LineNumberVisitor extends EmptyVisitor {
 		return rangeList;
 	}
 	
-	private void setConditionalScope(CompilationUnit cu, BreakPoint point){
-		point.setConditional(true);
-		ConditionalScopeParser parser = new ConditionalScopeParser();
-		Scope conditionScope = parser.parseScope(cu, point.getLineNo());
-		point.setConditionScope(conditionScope);
-	}
+	
 }
