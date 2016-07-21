@@ -24,8 +24,6 @@ public class SimulatedUser {
 		List<VarValue> wrongReadVarIDs = pair.findSingleWrongReadVar(mutatedTrace);
 		List<VarValue> wrongWrittenVarIDs = pair.findSingleWrongWrittenVarID(mutatedTrace);
 		
-		System.currentTimeMillis();
-		
 		if(wrongReadVarIDs.size() < 2 && wrongWrittenVarIDs.size() < 2){
 			List<VarValue> wrongVarIDs = new ArrayList<>();
 			wrongVarIDs.addAll(wrongReadVarIDs);
@@ -67,7 +65,8 @@ public class SimulatedUser {
 		return options;
 	}
 	
-	public String feedback(TraceNode suspiciousNode, Trace mutatedTrace, PairList pairList, int checkTime, boolean isFirstTime, boolean enableUnclear) {
+	public String feedback(TraceNode suspiciousNode, Trace mutatedTrace, PairList pairList, 
+			int checkTime, boolean isFirstTime, boolean enableUnclear) {
 		
 		otherOptions.clear();
 		

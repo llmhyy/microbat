@@ -19,6 +19,7 @@ import microbat.evaluation.model.TraceNodeWrapper;
 import microbat.evaluation.model.Trial;
 import microbat.evaluation.util.TraceNodeComprehensiveSimilarityComparator;
 import microbat.handler.CheckingState;
+import microbat.model.Cause;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.trace.TraceNodeReverseOrderComparator;
@@ -294,7 +295,13 @@ public class SimulatedMicroBat {
 				Settings.interestedVariables, Settings.potentialCorrectPatterns);
 		
 		String feedbackType = user.feedback(suspiciousNode, mutatedTrace, pairList, mutatedTrace.getCheckTime(), isFirstTime, enableClear);
-
+		
+		/** adjust the effect of  */
+		Cause lastestCause = recommender.getLatestCause();
+		if(lastestCause.isCausedByWrongPath() && feedbackType.equals(UserFeedback.CORRECT)){
+			feedbackType = UserFeedback.WRONG_PATH;
+		}
+		
 		for(List<String> wrongVarIDs: user.getOtherOptions()){
 			ArrayList<StepOperationTuple> clonedJumpingSteps = (ArrayList<StepOperationTuple>) jumpingSteps.clone();
 			StateWrapper stateWrapper = new StateWrapper(state, wrongVarIDs, clonedJumpingSteps);
