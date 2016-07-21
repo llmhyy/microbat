@@ -47,7 +47,7 @@ public class TraceModelConstructor {
 		BPVariableRetriever retriever = new BPVariableRetriever(executingStatements);
 		List<BreakPoint> runningStatements = null;
 		try {
-			runningStatements = retriever.parsingBreakPoints(appClassPath);
+			runningStatements = retriever.parsingBreakPoints(appClassPath, true);
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}

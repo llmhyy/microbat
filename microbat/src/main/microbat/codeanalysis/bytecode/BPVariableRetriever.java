@@ -19,7 +19,7 @@ public class BPVariableRetriever {
 		this.setExecutingStatements(executingStatements);
 	}
 
-	public List<BreakPoint> parsingBreakPoints(AppJavaClassPath appClassPath) throws Exception {
+	public List<BreakPoint> parsingBreakPoints(AppJavaClassPath appClassPath, boolean isForEvaluation) throws Exception {
 		
 		String systemClassPath = System.getProperty("java.class.path");
 		StringBuffer buffer = new StringBuffer(systemClassPath);
@@ -30,7 +30,11 @@ public class BPVariableRetriever {
 		systemClassPath = System.getProperty("java.class.path");
 		
 		for(BreakPoint breakpoint: executingStatements){
-			Repository.clearCache();
+			
+			/** current evaluation does not change line number, so we can keep the cache to speed up the progress */
+			if(!isForEvaluation){
+				Repository.clearCache();				
+			}
 			JavaClass clazz = Repository.lookupClass(breakpoint.getClassCanonicalName());
 			LineNumberVisitor visitor = new LineNumberVisitor(breakpoint);
 			clazz.accept(new DescendingVisitor(clazz, visitor));
