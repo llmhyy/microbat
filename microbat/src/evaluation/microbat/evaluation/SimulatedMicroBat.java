@@ -89,7 +89,7 @@ public class SimulatedMicroBat {
 
 	public Trial detectMutatedBug(Trace mutatedTrace, Trace correctTrace, ClassLocation mutatedLocation, 
 			String testCaseName, String mutatedFile) throws SimulationFailException {
-		boolean enableClear = false;
+		boolean enableClear = true;
 		
 //		PairList pairList = DiffUtil.generateMatchedTraceNodeList(mutatedTrace, correctTrace);
 		PairList pairList = matchTraceNodePair(mutatedTrace, correctTrace); 
