@@ -104,8 +104,8 @@ public class TestCaseRunner extends ExecutionStatementCollector{
 				}
 				else{
 					connected = false;
-					vm.exit(0);
-					vm.dispose();
+//					vm.dispose();
+//					vm.exit(0);
 				}
 				
 			} catch (InterruptedException e) {
@@ -114,6 +114,11 @@ public class TestCaseRunner extends ExecutionStatementCollector{
 			} catch (AbsentInformationException e) {
 				e.printStackTrace();
 			}
+		}
+		
+		if(vm != null){
+			vm.exit(0);
+			vm.dispose();
 		}
 	}
 	
@@ -189,8 +194,8 @@ public class TestCaseRunner extends ExecutionStatementCollector{
 				}
 				else{
 					connected = false;
-					vm.exit(0);
-					vm.dispose();
+//					vm.exit(0);
+//					vm.dispose();
 				}
 				
 				

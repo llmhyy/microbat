@@ -150,10 +150,10 @@ public class TestCaseAnalyzer {
 //				+ "apache-common-math-2.2\\2081_22_1\\MathUtils.java";
 //		String mutatedClass = "org.apache.commons.math.util.MathUtils";
 		
-		String testClassName = "org.apache.commons.math.analysis.polynomials.PolynomialsUtilsTest";
-		String testMethodName = "testFirstChebyshevPolynomials";
-		String mutationFile = "C:\\Users\\YUNLIN~1\\AppData\\Local\\Temp\\"
-				+ "apache-common-math-2.2\\239_13_1\\PolynomialsUtils.java";
+		String testClassName = "test.SimpleCalculatorTest";
+		String testMethodName = "testCalculator";
+		String mutationFile = "C:\\microbat_evaluation\\mutation\\40_37_1\\SimpleCalculator.java";
+		//50_80_1
 //		String mutatedClass = "org.apache.commons.math.util.FastMath";
 		
 //		String mutationFile = "C:\\Users\\YUNLIN~1\\AppData\\Local\\Temp\\"
