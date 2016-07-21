@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.EmptyVisitor;
-import org.apache.bcel.classfile.LineNumber;
 import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
@@ -52,34 +51,22 @@ public class LineNumberVisitor extends EmptyVisitor {
 		this.breakPoint = breakPoint;
 	}
 
-	@SuppressWarnings("rawtypes")
+	
 	public void visitMethod(Method method){
 		Code code = method.getCode();
 		CFG cfg = new CFGConstructor().buildCFGWithControlDomiance(code);
 		
+		if(/*breakPoint.getLineNumber() == 123 && */method.getName().equals("main")){
+			System.currentTimeMillis();
+		}
+		
 		if(code != null){
-			List<int[]> rangeList = searchOffsetRange(this.breakPoint.getLineNumber(), code);
+			List<InstructionHandle> correspondingInstructions 
+				= findCorrespondingInstructions(this.breakPoint.getLineNumber(), code);
 			
-			if(!rangeList.isEmpty()){
-//			if(breakPoint.getLineNo() == 60){
-//				System.currentTimeMillis();
-//			}
+			if(!correspondingInstructions.isEmpty()){
 				String methodSig = breakPoint.getClassCanonicalName() + "." + method.getName() + method.getSignature();
 				breakPoint.setMethodSign(methodSig);
-				
-				List<InstructionHandle> correspondingInstructions = new ArrayList<>();
-				
-				InstructionList list = new InstructionList(code.getCode());
-				Iterator iter = list.iterator();
-				while(iter.hasNext()){
-					InstructionHandle instructionHandle = (InstructionHandle)iter.next();
-					int offset = instructionHandle.getPosition();
-					
-					if(isInRange(offset, rangeList)){
-						correspondingInstructions.add(instructionHandle);
-					}
-					
-				}
 				
 				parseReadWrittenVariable(correspondingInstructions, code, cfg);
 			}
@@ -88,13 +75,22 @@ public class LineNumberVisitor extends EmptyVisitor {
 		
     }
 
-	private boolean isInRange(int offset, List<int[]> rangeList) {
-		for(int[] range: rangeList){
-			if(range[0]<=offset && (offset<=range[1] || range[1]==-1)){
-				return true;
+	@SuppressWarnings("rawtypes")
+	private List<InstructionHandle> findCorrespondingInstructions(int lineNumber, Code code) {
+		List<InstructionHandle> correspondingInstructions = new ArrayList<>();
+		
+		InstructionList list = new InstructionList(code.getCode());
+		Iterator iter = list.iterator();
+		while(iter.hasNext()){
+			InstructionHandle insHandle = (InstructionHandle) iter.next();
+			int instructionLine = code.getLineNumberTable().getSourceLine(insHandle.getPosition());
+			
+			if(instructionLine == lineNumber){
+				correspondingInstructions.add(insHandle);
 			}
 		}
-		return false;
+		
+		return correspondingInstructions;
 	}
 
 	private void parseReadWrittenVariable(List<InstructionHandle> correspondingInstructions, Code code, CFG cfg) {
@@ -281,33 +277,5 @@ public class LineNumberVisitor extends EmptyVisitor {
 		
 		return bestVar;
 	}
-
-	private List<int[]> searchOffsetRange(int lineNumber, Code obj) {
-		
-		List<int[]> rangeList = new ArrayList<>();
-		
-		LineNumberTable table = obj.getLineNumberTable();
-		LineNumber[] lineNumbers = table.getLineNumberTable();
-		for(int i=0; i<lineNumbers.length; i++){
-			LineNumber lineNum = lineNumbers[i];
-			if(lineNum.getLineNumber() == lineNumber){
-				int startPC = lineNum.getStartPC();
-				
-				int endPC;
-				if(i >= lineNumbers.length-1){
-					endPC = -1;
-				}
-				else{
-					endPC = lineNumbers[i+1].getStartPC() - 1;
-				}
-				
-				int[] range = new int[]{startPC, endPC};
-				rangeList.add(range);
-			}
-		}
-		
-		return rangeList;
-	}
-	
 	
 }
