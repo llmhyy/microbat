@@ -30,6 +30,7 @@ public class BPVariableRetriever {
 		systemClassPath = System.getProperty("java.class.path");
 		
 		for(BreakPoint breakpoint: executingStatements){
+			Repository.clearCache();
 			JavaClass clazz = Repository.lookupClass(breakpoint.getClassCanonicalName());
 			LineNumberVisitor visitor = new LineNumberVisitor(breakpoint);
 			clazz.accept(new DescendingVisitor(clazz, visitor));
