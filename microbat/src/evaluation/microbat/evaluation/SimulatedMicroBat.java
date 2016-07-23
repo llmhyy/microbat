@@ -88,7 +88,7 @@ public class SimulatedMicroBat {
 
 
 	public Trial detectMutatedBug(Trace mutatedTrace, Trace correctTrace, ClassLocation mutatedLocation, 
-			String testCaseName, String mutatedFile, boolean enableClear, boolean enableLoopInference) 
+			String testCaseName, String mutatedFile, boolean enableUnclear, boolean enableLoopInference) 
 					throws SimulationFailException {
 		
 //		PairList pairList = DiffUtil.generateMatchedTraceNodeList(mutatedTrace, correctTrace);
@@ -111,7 +111,7 @@ public class SimulatedMicroBat {
 			TraceNode observedFaultNode = findObservedFault(wrongNodeList);
 			
 			Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
-					testCaseName, mutatedFile, enableClear, enableLoopInference);
+					testCaseName, mutatedFile, enableUnclear, enableLoopInference);
 			return trial;
 			
 		}
@@ -153,12 +153,14 @@ public class SimulatedMicroBat {
 	
 	private Trial startSimulation(TraceNode observedFaultNode, TraceNode rootCause, Trace mutatedTrace, 
 			Map<Integer, TraceNode> allWrongNodeMap, PairList pairList, String testCaseName, String mutatedFile, 
-			boolean enableClear, boolean enableLoopInference) 
+			boolean enableUnclear, boolean enableLoopInference) 
 					throws SimulationFailException {
 		Settings.interestedVariables.clear();
 		Settings.localVariableScopes.clear();
 		Settings.potentialCorrectPatterns.clear();
 		recommender = new StepRecommender(enableLoopInference);
+		
+		user = new SimulatedUser();
 		
 		Stack<StateWrapper> confusingStack = new Stack<>();
 		ArrayList<StepOperationTuple> jumpingSteps = new ArrayList<>();
@@ -168,7 +170,7 @@ public class SimulatedMicroBat {
 			TraceNode suspiciousNode = observedFaultNode;
 			
 			String feedbackType = operateFeedback(observedFaultNode,
-					mutatedTrace, pairList, enableClear, confusingStack,
+					mutatedTrace, pairList, enableUnclear, confusingStack,
 					jumpingSteps, true);
 			
 			jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedbackType));
@@ -230,7 +232,7 @@ public class SimulatedMicroBat {
 						}
 						
 						feedbackType = operateFeedback(suspiciousNode,
-								mutatedTrace, pairList, enableClear, confusingStack,
+								mutatedTrace, pairList, enableUnclear, confusingStack,
 								jumpingSteps, false);
 						
 						jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedbackType));
@@ -287,7 +289,7 @@ public class SimulatedMicroBat {
 	 * @return
 	 */
 	private String operateFeedback(TraceNode suspiciousNode,
-			Trace mutatedTrace, PairList pairList, boolean enableClear,
+			Trace mutatedTrace, PairList pairList, boolean enableUnclear,
 			Stack<StateWrapper> confusingStack,
 			ArrayList<StepOperationTuple> jumpingSteps,
 			boolean isFirstTime) {
@@ -296,7 +298,8 @@ public class SimulatedMicroBat {
 		state.recordCheckingState(suspiciousNode, recommender, mutatedTrace, 
 				Settings.interestedVariables, Settings.potentialCorrectPatterns);
 		
-		String feedbackType = user.feedback(suspiciousNode, mutatedTrace, pairList, mutatedTrace.getCheckTime(), isFirstTime, enableClear);
+		String feedbackType = user.feedback(suspiciousNode, mutatedTrace, pairList, 
+				mutatedTrace.getCheckTime(), isFirstTime, enableUnclear);
 		
 		/** adjust the effect of  */
 		Cause lastestCause = recommender.getLatestCause();
