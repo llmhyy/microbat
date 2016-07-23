@@ -125,6 +125,12 @@ public class StepRecommender {
 		}
 	}
 	
+	public StepRecommender(boolean enableLoopInference){
+		this.enableLoopInference = enableLoopInference;
+	}
+	
+	private boolean enableLoopInference = true;
+	
 	private int state = DebugState.JUMP;
 	
 	/**
@@ -585,7 +591,7 @@ public class StepRecommender {
 				isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path);	//TODO				
 			}
 			
-			if(isPathInPattern && !shouldStopOnCheckedNode(currentNode, path)){
+			if(this.enableLoopInference && isPathInPattern && !shouldStopOnCheckedNode(currentNode, path)){
 				state = DebugState.SKIP;
 				
 				this.loopRange.endNode = path.getEndNode();
@@ -834,7 +840,7 @@ public class StepRecommender {
 	
 	@SuppressWarnings("unchecked")
 	public StepRecommender clone(){
-		StepRecommender recommender = new StepRecommender();
+		StepRecommender recommender = new StepRecommender(this.enableLoopInference);
 		recommender.state = this.state;
 		recommender.lastNode = this.lastNode;
 		//recommender.lastRecommendNode = this.lastRecommendNode;

@@ -22,18 +22,18 @@ public class ExcelReader {
 	
 	private Set<Trial> set = new HashSet<>();
 	
-	public int readXLSX() throws IOException {
+	@SuppressWarnings("resource")
+	public void readXLSX() throws IOException {
 		
 		String projectName = Settings.projectName;
-		int num = 0;
 
-		String fileName = projectName + num + ".xlsx";
+		String fileName = projectName + ".xlsx";
 		
 		File file = new File(fileName);
-		while (file.exists()) {
+		if(file.exists()) {
 			InputStream excelFileToRead = new FileInputStream(file);
 			
-			@SuppressWarnings("resource")
+			
 			XSSFWorkbook wb = new XSSFWorkbook(excelFileToRead);
 
 			XSSFSheet sheet = wb.getSheetAt(0);
@@ -59,20 +59,12 @@ public class ExcelReader {
 							trial.setTestCaseName(testcaseName);
 							break;
 						case 1:
-							boolean isBugFound = cell.getBooleanCellValue();
-							trial.setBugFound(isBugFound);
-							break;
-						case 4:
 							String mutatedFile = cell.getStringCellValue();
 							trial.setMutatedFile(mutatedFile);
 							break;
-						case 5:
+						case 2:
 							int linNum = (int) cell.getNumericCellValue();
 							trial.setMutatedLineNumber(linNum);
-							break;
-						case 7:
-							String result = cell.getStringCellValue();
-							trial.setResult(result);
 							break;
 						}
 					}
@@ -81,13 +73,7 @@ public class ExcelReader {
 				}
 				
 			}
-
-			num++;
-			fileName = projectName + num + ".xlsx";
-			file = new File(fileName);
 		}
-
-		return num;
 	}
 
 	public Set<Trial> getSet() {

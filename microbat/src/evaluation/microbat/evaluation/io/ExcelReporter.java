@@ -1,99 +1,126 @@
 package microbat.evaluation.io;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
-
-import microbat.evaluation.model.Trial;
+import java.io.InputStream;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import microbat.evaluation.model.Trial;
+
 public class ExcelReporter {
 	
-	private Workbook book; 
+	private String titles[] = {
+			"test case",
+    		"mutation file",
+    		"mutation line",
+    		"total steps",
+    		"time",
+    		
+    		"jump steps (clear, loop)",
+    		"jump steps (unclear, loop)",
+    		"unclear number (loop)",
+    		
+    		"jump steps (clear, nonloop)",
+    		"jump steps (unclear, nonloop)",
+    		"unclear number (nonloop)",
+    		
+    		"result (clear, loop)",
+    		"result (unclear, loop)",
+    		"result (clear, nonloop)",
+    		"result (unclear, nonloop)",
+    		
+    		"jump detail (clear, loop)",
+    		"jump detail (unclear, loop)",
+    		"jump detail (clear, nonloop)",
+    		"jump detail (unclear, nonloop)"
+    		};
+	
+	
+	private File file;
 	private Sheet sheet;
+	private Workbook book;
+	private int lastRowNum = 1;
 	
-	private int bookSize = 0;
-	
-	public ExcelReporter(){
-		this.bookSize = 0;
-	}
-
-	public void start(){
-		book = new XSSFWorkbook(); 
-		sheet = book.createSheet("data");  
-        Row row = sheet.createRow((short) 0); 
-        
-        String titles[] = {"test case",
-        		"is bug found",
-        		"total steps",
-        		"jump steps",
-        		"mutated file",
-        		"mutated line number",
-        		"jump steps",
-        		"result",
-        		"time"};
-        for(int i = 0; i < titles.length; i++){
-        	row.createCell(i).setCellValue(titles[i]); 
-        }
-        
-        bookSize = 1;
-	}
-	
-	public void export(List<Trial> trials, String fileName){
-		int rowNo = 1;
-        try {
-        	for(Trial trial: trials){
-        		Row row = sheet.createRow(rowNo);
-        		
-        		row.createCell(0).setCellValue(trial.getTestCaseName());
-        		row.createCell(1).setCellValue(trial.isBugFound());
-        		row.createCell(2).setCellValue(trial.getTotalSteps());
-        		
-        		if(trial.getJumpSteps() != null){
-        			row.createCell(3).setCellValue(trial.getJumpSteps().size());        			
-        		}
-        		
-        		row.createCell(4).setCellValue(trial.getMutatedFile());
-        		row.createCell(5).setCellValue(trial.getMutatedLineNumber());
-        		
-        		if(trial.getJumpSteps() != null){
-        			row.createCell(6).setCellValue(trial.getJumpSteps().toString());   
-        			
-        			if(trial.getJumpSteps().size() == 183){
-        				int i=0;
-        				for(String step: trial.getJumpSteps()){
-        					if(step.contains("unclear")){
-        						i++;
-        					}
-        				}
-        				System.out.println("unclear number: " + i);
-        			}
-        		}
-        		
-        		row.createCell(7).setCellValue(trial.getResult());
-        		row.createCell(8).setCellValue(trial.getTime());
-        		
-        		rowNo++;
-        	}
-		} catch (Exception e) {
-			e.printStackTrace();
+	public ExcelReporter(String fileName){
+		file = new File(fileName);
+		
+		if(file.exists()){
+			InputStream excelFileToRead;
+			try {
+				excelFileToRead = new FileInputStream(file);
+				book = new XSSFWorkbook(excelFileToRead);
+				sheet = book.getSheetAt(0);
+				
+				lastRowNum = sheet.getPhysicalNumberOfRows();
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-        
-        for(int i=0; i<7; i++){
-        	sheet.autoSizeColumn(i);
-        }
-        
-        writeToExcel(fileName);
+		else{
+			book = new XSSFWorkbook();
+			sheet = book.createSheet("data");
+			
+			Row row = sheet.createRow(0);
+			for(int i = 0; i < titles.length; i++){
+	        	row.createCell(i).setCellValue(titles[i]); 
+	        }
+		}
 	}
 
-	private void writeToExcel(String fileName){
+	public void export(Trial clearLoopTrial, Trial unclearLoopTrial, 
+			Trial clearNonloopTrial, Trial unclearNonloopTrial) throws IOException{
+		
+		Row row = sheet.createRow(lastRowNum);
+		fillRowInformation(row, clearLoopTrial, unclearLoopTrial, clearNonloopTrial, unclearNonloopTrial);
+		
+//		for(int i=0; i<titles.length; i++){
+//        	sheet.autoSizeColumn(i);
+//        }
+		
+        writeToExcel(book, file.getName());
+        
+        lastRowNum++;
+	}
+	
+	private void fillRowInformation(Row row, Trial clearLoopTrial, Trial unclearLoopTrial,
+			Trial clearNonloopTrial, Trial unclearNonloopTrial) {
+		row.createCell(0).setCellValue(clearLoopTrial.getTestCaseName());
+		row.createCell(1).setCellValue(clearLoopTrial.getMutatedFile());
+		row.createCell(2).setCellValue(clearLoopTrial.getMutatedLineNumber());
+		row.createCell(3).setCellValue(clearLoopTrial.getTotalSteps());
+		row.createCell(4).setCellValue(clearLoopTrial.getTime());
+		
+		
+		row.createCell(5).setCellValue(clearLoopTrial.getJumpSteps().size());
+		row.createCell(6).setCellValue(unclearLoopTrial.getJumpSteps().size());
+		row.createCell(7).setCellValue(unclearLoopTrial.getUnclearFeedbackNumber());
+		
+		row.createCell(8).setCellValue(clearNonloopTrial.getJumpSteps().size());
+		row.createCell(9).setCellValue(unclearNonloopTrial.getJumpSteps().size());
+		row.createCell(10).setCellValue(unclearNonloopTrial.getUnclearFeedbackNumber());
+		
+		row.createCell(11).setCellValue(clearLoopTrial.isBugFound());
+		row.createCell(12).setCellValue(unclearLoopTrial.isBugFound());
+		row.createCell(13).setCellValue(clearNonloopTrial.isBugFound());
+		row.createCell(14).setCellValue(unclearNonloopTrial.isBugFound());
+		
+		row.createCell(15).setCellValue(clearLoopTrial.getJumpSteps().toString());
+		row.createCell(16).setCellValue(unclearLoopTrial.getJumpSteps().toString());
+		row.createCell(17).setCellValue(clearNonloopTrial.getJumpSteps().toString());
+		row.createCell(18).setCellValue(unclearNonloopTrial.getJumpSteps().toString());
+	}
+
+	private void writeToExcel(Workbook book, String fileName){
 		try {
-			FileOutputStream fileOut = new FileOutputStream(fileName + ".xlsx");
+			FileOutputStream fileOut = new FileOutputStream(fileName);
 			book.write(fileOut); 
 			fileOut.close(); 
 		} catch (FileNotFoundException e) {

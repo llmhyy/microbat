@@ -88,8 +88,8 @@ public class SimulatedMicroBat {
 
 
 	public Trial detectMutatedBug(Trace mutatedTrace, Trace correctTrace, ClassLocation mutatedLocation, 
-			String testCaseName, String mutatedFile) throws SimulationFailException {
-		boolean enableClear = true;
+			String testCaseName, String mutatedFile, boolean enableClear, boolean enableLoopInference) 
+					throws SimulationFailException {
 		
 //		PairList pairList = DiffUtil.generateMatchedTraceNodeList(mutatedTrace, correctTrace);
 		PairList pairList = matchTraceNodePair(mutatedTrace, correctTrace); 
@@ -111,7 +111,7 @@ public class SimulatedMicroBat {
 			TraceNode observedFaultNode = findObservedFault(wrongNodeList);
 			
 			Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
-					testCaseName, mutatedFile, enableClear);
+					testCaseName, mutatedFile, enableClear, enableLoopInference);
 			return trial;
 			
 		}
@@ -152,12 +152,13 @@ public class SimulatedMicroBat {
 	}
 	
 	private Trial startSimulation(TraceNode observedFaultNode, TraceNode rootCause, Trace mutatedTrace, 
-			Map<Integer, TraceNode> allWrongNodeMap, PairList pairList, String testCaseName, String mutatedFile, boolean enableClear) 
+			Map<Integer, TraceNode> allWrongNodeMap, PairList pairList, String testCaseName, String mutatedFile, 
+			boolean enableClear, boolean enableLoopInference) 
 					throws SimulationFailException {
 		Settings.interestedVariables.clear();
 		Settings.localVariableScopes.clear();
 		Settings.potentialCorrectPatterns.clear();
-		recommender = new StepRecommender();
+		recommender = new StepRecommender(enableLoopInference);
 		
 		Stack<StateWrapper> confusingStack = new Stack<>();
 		ArrayList<StepOperationTuple> jumpingSteps = new ArrayList<>();
@@ -184,8 +185,9 @@ public class SimulatedMicroBat {
 				suspiciousNode = findSuspicioiusNode(suspiciousNode, mutatedTrace, feedbackType);
 				
 				/** It means that the bug cannot be found now */
-				if((suspiciousNode.getOrder() == lastNode.getOrder() && !feedbackType.equals(UserFeedback.UNCLEAR)) ||
-						(jumpingSteps.size() > mutatedTrace.size())){
+				if((suspiciousNode.getOrder() == lastNode.getOrder() 
+						&& !feedbackType.equals(UserFeedback.UNCLEAR)) 
+						|| (jumpingSteps.size() > mutatedTrace.size())){
 //					break;
 					suspiciousNode = findSuspicioiusNode(suspiciousNode, mutatedTrace, feedbackType);
 					

@@ -45,19 +45,16 @@ public class TestCaseAnalyzer {
 	public static final String TEST_RUNNER = "microbat.evaluation.junit.MicroBatTestRunner";
 	private static final String TMP_DIRECTORY = "C:\\microbat_evaluation\\";
 	
-	private List<Trial> trials = new ArrayList<>();
+//	private List<Trial> trials = new ArrayList<>();
 //	private List<Trial> overLongTrials = new ArrayList<>();
 	private IgnoredTestCaseFiles ignoredTestCaseFiles;
 	private ParsedTrials parsedTrials;
 	
-	private List<String> errorMsgs = new ArrayList<>();
-	private int trialFileNum = 0;
+//	private List<String> errorMsgs = new ArrayList<>();
+//	private int trialFileNum = 0;
 	private int trialNumPerTestCase = 3;
 	
 	public TestCaseAnalyzer(){
-		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
-		parsedTrials = new ParsedTrials();
-		trialFileNum = parsedTrials.getStartFileOrder();
 	}
 	
 	public void test(){
@@ -121,9 +118,10 @@ public class TestCaseAnalyzer {
 	}
 
 	public void runEvaluation() throws JavaModelException{
+		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
+		parsedTrials = new ParsedTrials();
 		
-		ExcelReporter reporter = new ExcelReporter();
-		reporter.start();
+		ExcelReporter reporter = new ExcelReporter(Settings.projectName+".xlsx");
 		
 		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
 		
@@ -133,7 +131,7 @@ public class TestCaseAnalyzer {
 			}
 		}
 		
-		reporter.export(trials, Settings.projectName+trialFileNum);
+//		reporter.export(trials, Settings.projectName+trialFileNum);
 		
 //		runSingeTrial();
 		
@@ -213,7 +211,7 @@ public class TestCaseAnalyzer {
 		Trial trial;
 		try {
 			trial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, mutatedLocation, 
-					testcaseName, mutatedFile.toString());
+					testcaseName, mutatedFile.toString(), false, true);
 			if(trial != null){
 				if(!trial.isBugFound()){
 					System.err.println("Cannot find bug in Mutated File: " + mutatedFile);
@@ -325,45 +323,35 @@ public class TestCaseAnalyzer {
 									
 									SimulatedMicroBat microbat = new SimulatedMicroBat();
 									ClassLocation mutatedLocation = new ClassLocation(tobeMutatedClass, null, line);
-									Trial trial;
+									
 									try {
-										trial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, mutatedLocation, 
-												testCaseName, mutationFile.toString());
-										if(trial != null){
-											trial.setTime(killingMutatantTrace.getConstructTime());
+										Trial clearLoopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
+												mutatedLocation, testCaseName, mutationFile.toString(), false, true);
+										Trial clearNonloopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
+												mutatedLocation, testCaseName, mutationFile.toString(), false, false);
+										Trial unclearLoopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
+												mutatedLocation, testCaseName, mutationFile.toString(), true, true);
+										Trial unclearNonloopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
+												mutatedLocation, testCaseName, mutationFile.toString(), true, false);
+										
+										
+										if(clearLoopTrial != null && unclearLoopTrial != null 
+												&& clearNonloopTrial != null && unclearNonloopTrial != null){
+											clearLoopTrial.setTime(killingMutatantTrace.getConstructTime());
 											/**
 											 * must be an implementation error, so I do not count it in the evaluation
 											 * for approach.
 											 */
-											if(trial.getJumpSteps().size() == 1 && !trial.isBugFound()){
+											if(clearLoopTrial.getJumpSteps().size() == 1 && !clearLoopTrial.isBugFound()){
 												//do nothing	
-												trials.add(trial);	
-												reporter.export(trials, Settings.projectName+trialFileNum);
-												System.currentTimeMillis();
+												reporter.export(clearLoopTrial, unclearLoopTrial, clearNonloopTrial, unclearNonloopTrial);
 											}
 											else{
-												trials.add(trial);	
-												reporter.export(trials, Settings.projectName+trialFileNum);
+												reporter.export(clearLoopTrial, unclearLoopTrial, clearNonloopTrial, unclearNonloopTrial);
 												System.currentTimeMillis();
 											}
 											
-											if(!trial.isBugFound()){
-												String errorMsg = "Test case: " + testCaseName + 
-														" fail to find bug\n" + "Mutated File: " + mutationFile;
-												System.err.println(errorMsg);
-												//errorMsgs.add(errorMsg);
-											}
-											
-											if(trials.size() > 5000){
-												reporter.export(trials, Settings.projectName+trialFileNum);
-												
-												trials.clear();
-												reporter = new ExcelReporter();
-												reporter.start();
-												trialFileNum++;
-											}
-											
-											thisTrialNum++;
+//											thisTrialNum++;
 //											if(thisTrialNum >= trialNumPerTestCase){
 //												break stop;
 //											}

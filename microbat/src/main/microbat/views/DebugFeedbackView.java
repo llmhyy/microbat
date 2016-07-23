@@ -60,7 +60,7 @@ public class DebugFeedbackView extends ViewPart {
 	private TraceNode currentNode;
 //	private TraceNode lastestNode;
 	
-	private StepRecommender recommender = new StepRecommender();
+	private StepRecommender recommender = new StepRecommender(true);
 	
 	private String feedbackType = UserFeedback.INCORRECT;
 	
@@ -101,7 +101,7 @@ public class DebugFeedbackView extends ViewPart {
 	
 	public void clear(){
 		this.currentNode = null;
-		this.recommender = new StepRecommender();
+		this.recommender = new StepRecommender(true);
 	}
 	
 	public void setRecommender(StepRecommender recommender){

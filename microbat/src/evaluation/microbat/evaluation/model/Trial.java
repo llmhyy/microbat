@@ -23,19 +23,18 @@ public class Trial {
 		
 	}
 	
-	public Trial(String testCaseName, int mutatedLineNumber, String mutatedFile,
-			boolean isBugFound, List<String> jumpSteps, int totalSteps, String result, int time) {
-		super();
-		this.testCaseName = testCaseName;
-		this.mutatedFile = mutatedFile;
-		this.mutatedLineNumber = mutatedLineNumber;
-		this.isBugFound = isBugFound;
-		this.jumpSteps = jumpSteps;
-		this.totalSteps = totalSteps;
-		this.setResult(result);
-		this.setTime(time);
+	public int getUnclearFeedbackNumber(){
+		int count = 0;
+		for(String str: jumpSteps){
+			String feedback = str.substring(str.lastIndexOf(":")+1, str.length());
+			if(feedback.contains("unclear")){
+				count++;
+			}
+		}
+		
+		return count;
 	}
-
+	
 	public String getTestCaseName() {
 		return testCaseName;
 	}
