@@ -187,7 +187,7 @@ public class StepRecommender {
 				return node;
 			}
 			else{
-				TraceNode node = findMoreDetailedNodeInBetween(trace, currentNode, earliestVisitedNode);
+				TraceNode node = findClearerNodeInBetween(trace, currentNode, earliestVisitedNode);
 				if(node.equals(currentNode)){
 					return earliestVisitedNode;
 				}
@@ -208,7 +208,7 @@ public class StepRecommender {
 		}
 	}
 	
-	private TraceNode findMoreDetailedNodeInBetween(Trace trace, TraceNode currentNode, TraceNode earliestVisitedUnclearNode) {
+	private TraceNode findClearerNodeInBetween(Trace trace, TraceNode currentNode, TraceNode earliestVisitedUnclearNode) {
 		TraceNode earliestNodeWithWrongVar = trace.getEarliestNodeWithWrongVar();
 		
 		if(earliestNodeWithWrongVar != null){
@@ -221,7 +221,7 @@ public class StepRecommender {
 				TraceNode dominator = iter.next();
 				boolean shouldRemove = dominator.getOrder() < currentNode.getOrder() || 
 						dominator.getOrder() > earliestVisitedUnclearNode.getOrder() ||
-						dominator.getInvocationLevel() > earliestVisitedUnclearNode.getInvocationLevel();
+						dominator.getAbstractionLevel() > earliestVisitedUnclearNode.getAbstractionLevel();
 				if(shouldRemove){
 					iter.remove();
 				}

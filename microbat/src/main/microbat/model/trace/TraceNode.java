@@ -593,6 +593,17 @@ public class TraceNode{
 		
 		return level;
 	}
+	
+	public int getAbstractionLevel() {
+		int level = 0;
+		TraceNode parent = getAbstractionParent();
+		while(parent != null){
+			parent = parent.getAbstractionParent();
+			level++;
+		}
+		
+		return level;
+	}
 
 	public boolean isLoopCondition() {
 		if(isConditional()){
