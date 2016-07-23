@@ -44,6 +44,13 @@ public class Trace {
 	 */
 	private int constructTime = 0;
 
+	public void resetCheckTime(){
+		this.checkTime = -1;
+		for(TraceNode node: getExectionList()){
+			node.resetCheckTime();
+		}
+	}
+	
 	public List<TraceNode> getExectionList() {
 		return exectionList;
 	}

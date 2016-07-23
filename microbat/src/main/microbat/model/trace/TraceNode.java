@@ -83,7 +83,7 @@ public class TraceNode{
 	
 	public List<VarValue> findMarkedReadVariable(){
 		List<VarValue> markedReadVars = new ArrayList<>();
-		for(VarValue readVarValue: getReadVariables()){
+		for(VarValue readVarValue: this.readVariables){
 			String readVarID = readVarValue.getVarID();
 			if(Settings.interestedVariables.contains(readVarID)){
 				markedReadVars.add(readVarValue);
@@ -838,5 +838,10 @@ public class TraceNode{
 		}
 		
 		return list;
+	}
+
+	public void resetCheckTime() {
+		this.checkTime = -1;
+		
 	}
 }

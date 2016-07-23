@@ -110,6 +110,7 @@ public class SimulatedMicroBat {
 			
 			TraceNode observedFaultNode = findObservedFault(wrongNodeList);
 			
+			mutatedTrace.resetCheckTime();
 			Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
 					testCaseName, mutatedFile, unclearRate, enableLoopInference);
 			return trial;

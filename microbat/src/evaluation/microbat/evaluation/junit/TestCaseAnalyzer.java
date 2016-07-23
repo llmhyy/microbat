@@ -54,8 +54,8 @@ public class TestCaseAnalyzer {
 //	private int trialFileNum = 0;
 	private int trialNumPerTestCase = 3;
 	
-//	private double[] unclearRates = {0, 0.05, 0.1, 0.15, -1};
-	private double[] unclearRates = {0};
+	private double[] unclearRates = {0, 0.05, 0.1, 0.15, -1};
+//	private double[] unclearRates = {0};
 	
 	public TestCaseAnalyzer(){
 	}
@@ -357,10 +357,12 @@ public class TestCaseAnalyzer {
 					boolean isValid = true;
 					List<Trial> trialList = new ArrayList<>();
 					for(int i=0; i<unclearRates.length; i++){
-						Trial loopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
-								mutatedLocation, testCaseName, mutationFile.toString(), unclearRates[i], true);
+						
 						Trial nonloopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
 								mutatedLocation, testCaseName, mutationFile.toString(), unclearRates[i], false);
+						Trial loopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
+								mutatedLocation, testCaseName, mutationFile.toString(), unclearRates[i], true);
+						
 						nonloopTrial.setTime(killingMutatantTrace.getConstructTime());
 						loopTrial.setTime(killingMutatantTrace.getConstructTime());
 						
