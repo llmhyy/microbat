@@ -54,6 +54,9 @@ public class TestCaseAnalyzer {
 //	private int trialFileNum = 0;
 	private int trialNumPerTestCase = 3;
 	
+//	private double[] unclearRates = {0, 0.05, 0.1, 0.15, -1};
+	private double[] unclearRates = {0};
+	
 	public TestCaseAnalyzer(){
 	}
 	
@@ -121,7 +124,7 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		ExcelReporter reporter = new ExcelReporter(Settings.projectName+".xlsx");
+		ExcelReporter reporter = new ExcelReporter(Settings.projectName+".xlsx", this.unclearRates);
 		
 		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
 		
@@ -211,7 +214,7 @@ public class TestCaseAnalyzer {
 		Trial trial;
 		try {
 			trial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, mutatedLocation, 
-					testcaseName, mutatedFile.toString(), false, true);
+					testcaseName, mutatedFile.toString(), 0, true);
 			if(trial != null){
 				if(!trial.isBugFound()){
 					System.err.println("Cannot find bug in Mutated File: " + mutatedFile);
@@ -268,10 +271,8 @@ public class TestCaseAnalyzer {
 		checker.checkValidity(testcaseConfig);
 		
 		Trace correctTrace = null;
-		
 		if(checker.isPassingTest()){
 			System.out.println(testCaseName + " is a passed test case");
-			
 			List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig);
 			if(checker.isOverLong()){
 				return false;
@@ -281,7 +282,6 @@ public class TestCaseAnalyzer {
 			List<ClassLocation> locationList = findMutationLocation(executingStatements);
 			
 			int thisTrialNum = 0;
-			
 			if(!locationList.isEmpty()){
 				System.out.println("mutating the tested methods of " + testCaseName);
 				Map<String, MutationResult> mutations = generateMutationFiles(locationList);
@@ -294,7 +294,6 @@ public class TestCaseAnalyzer {
 						List<File> mutatedFileList = result.getMutatedFiles(line);	
 						
 						for(File mutationFile: mutatedFileList){
-							
 							Trial tmpTrial = new Trial();
 							tmpTrial.setTestCaseName(testCaseName);
 							tmpTrial.setMutatedFile(mutationFile.toString());
@@ -304,73 +303,15 @@ public class TestCaseAnalyzer {
 								continue;
 							}
 							
-							try {
-								MutateInfo mutateInfo = 
-										mutateCode(tobeMutatedClass, mutationFile, testcaseConfig, line, testCaseName);
-								
-								if(mutateInfo.isTimeOut){
-									System.out.println("Timeout, mutated file: " + mutationFile);
-									System.out.println("skip Time Out test case: " + testCaseName);
-									continue;
+							boolean isSuccess = runEvaluationForSingleTrial(tobeMutatedClass, mutationFile, 
+									testcaseConfig, line, testCaseName, correctTrace, executingStatements, 
+									reporter, tmpTrial);
+							if(isSuccess){
+								thisTrialNum++;								
+								if(thisTrialNum >= trialNumPerTestCase){
+									break stop;
 								}
-								
-								Trace killingMutatantTrace = mutateInfo.killingMutateTrace;
-								if(killingMutatantTrace != null && killingMutatantTrace.size() > 1){
-									if(null == correctTrace){
-										correctTrace = new TraceModelConstructor().
-												constructTraceModel(testcaseConfig, executingStatements);
-									}
-									
-									SimulatedMicroBat microbat = new SimulatedMicroBat();
-									ClassLocation mutatedLocation = new ClassLocation(tobeMutatedClass, null, line);
-									
-									try {
-										Trial clearLoopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
-												mutatedLocation, testCaseName, mutationFile.toString(), false, true);
-										Trial clearNonloopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
-												mutatedLocation, testCaseName, mutationFile.toString(), false, false);
-										Trial unclearLoopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
-												mutatedLocation, testCaseName, mutationFile.toString(), true, true);
-										Trial unclearNonloopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
-												mutatedLocation, testCaseName, mutationFile.toString(), true, false);
-										
-										
-										if(clearLoopTrial != null && unclearLoopTrial != null 
-												&& clearNonloopTrial != null && unclearNonloopTrial != null){
-											clearLoopTrial.setTime(killingMutatantTrace.getConstructTime());
-											/**
-											 * must be an implementation error, so I do not count it in the evaluation
-											 * for approach.
-											 */
-											if(clearLoopTrial.getJumpSteps().size() == 1 && !clearLoopTrial.isBugFound()){
-												//do nothing	
-												reporter.export(clearLoopTrial, unclearLoopTrial, clearNonloopTrial, unclearNonloopTrial);
-											}
-											else{
-												reporter.export(clearLoopTrial, unclearLoopTrial, clearNonloopTrial, unclearNonloopTrial);
-												System.currentTimeMillis();
-											}
-											
-//											thisTrialNum++;
-//											if(thisTrialNum >= trialNumPerTestCase){
-//												break stop;
-//											}
-										}
-									} catch (Exception e) {
-										e.printStackTrace();
-										String errorMsg = "Test case: " + testCaseName + 
-												" has exception when simulating debugging\n" + "Mutated File: " + mutationFile;
-										System.err.println(errorMsg);
-									}
-								}
-								else{
-									System.out.println("No suitable mutants for test case " + testCaseName + "in line " + line);
-								}
-							} catch (Exception e) {
-								e.printStackTrace();
-								System.err.println("test case has excpetion when generating trace:");
-								System.err.println(tmpTrial);
-							} 
+							}
 						}
 					}
 				}
@@ -389,6 +330,77 @@ public class TestCaseAnalyzer {
 		return false;
 	}
 	
+	private boolean runEvaluationForSingleTrial(String tobeMutatedClass, File mutationFile, AppJavaClassPath testcaseConfig, 
+			int line, String testCaseName, Trace correctTrace, List<BreakPoint> executingStatements, 
+			ExcelReporter reporter, Trial tmpTrial) throws JavaModelException {
+		try {
+			MutateInfo mutateInfo = 
+					mutateCode(tobeMutatedClass, mutationFile, testcaseConfig, line, testCaseName);
+			
+			if(mutateInfo.isTimeOut){
+				System.out.println("Timeout, mutated file: " + mutationFile);
+				System.out.println("skip Time Out test case: " + testCaseName);
+				return false;
+			}
+			
+			Trace killingMutatantTrace = mutateInfo.killingMutateTrace;
+			if(killingMutatantTrace != null && killingMutatantTrace.size() > 1){
+				if(null == correctTrace){
+					correctTrace = new TraceModelConstructor().
+							constructTraceModel(testcaseConfig, executingStatements);
+				}
+				
+				SimulatedMicroBat microbat = new SimulatedMicroBat();
+				ClassLocation mutatedLocation = new ClassLocation(tobeMutatedClass, null, line);
+				
+				try {
+					boolean isValid = true;
+					List<Trial> trialList = new ArrayList<>();
+					for(int i=0; i<unclearRates.length; i++){
+						Trial loopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
+								mutatedLocation, testCaseName, mutationFile.toString(), unclearRates[i], true);
+						Trial nonloopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
+								mutatedLocation, testCaseName, mutationFile.toString(), unclearRates[i], false);
+						nonloopTrial.setTime(killingMutatantTrace.getConstructTime());
+						loopTrial.setTime(killingMutatantTrace.getConstructTime());
+						
+						if(loopTrial==null || nonloopTrial==null){
+							isValid = false;
+							break;
+						}
+						
+						trialList.add(nonloopTrial);
+						trialList.add(loopTrial);
+					}
+					
+					if(isValid){
+						/**
+						 * TODO 
+						 * Note that the potential implementation error could be included. The failed
+						 * trial with only one step.
+						 */
+						reporter.export(trialList);
+						return true;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					String errorMsg = "Test case: " + testCaseName + 
+							" has exception when simulating debugging\n" + "Mutated File: " + mutationFile;
+					System.err.println(errorMsg);
+				}
+			}
+			else{
+				System.out.println("No suitable mutants for test case " + testCaseName + "in line " + line);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("test case has excpetion when generating trace:");
+			System.err.println(tmpTrial);
+		} 
+		
+		return false;
+	}
+
 	class TraceFilePair{
 		Trace mutatedTrace;
 		String mutatedFile;

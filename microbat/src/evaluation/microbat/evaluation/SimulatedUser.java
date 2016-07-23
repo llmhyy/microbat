@@ -17,6 +17,7 @@ public class SimulatedUser {
 	private HashMap<TraceNode, Integer> labeledUnclearNodeVisitedTimes = new HashMap<>();
 	
 	private List<List<String>> otherOptions = new ArrayList<>();
+	private int unclearFeedbackNum = 0;
 	
 	private List<List<VarValue>> checkWrongVariableIDOptions(TraceNodePair pair, Trace mutatedTrace){
 		List<List<VarValue>> options = new ArrayList<>();
@@ -66,17 +67,20 @@ public class SimulatedUser {
 	}
 	
 	public String feedback(TraceNode suspiciousNode, Trace mutatedTrace, PairList pairList, 
-			int checkTime, boolean isFirstTime, boolean enableUnclear) {
+			int checkTime, boolean isFirstTime, int maxUnclearFeedbackNum) {
 		
 		otherOptions.clear();
 		
 		String feedback;
 		
-		boolean isClear = isClear(suspiciousNode, labeledUnclearNodeVisitedTimes, isFirstTime, enableUnclear);
+		
+		
+		boolean isClear = isClear(suspiciousNode, labeledUnclearNodeVisitedTimes, isFirstTime, maxUnclearFeedbackNum);
 //		isClear = false;
 		
 		if(!isClear){
 			feedback = UserFeedback.UNCLEAR;
+			unclearFeedbackNum++;
 		}
 		else{
 			TraceNodePair pair = pairList.findByMutatedNode(suspiciousNode);
@@ -131,9 +135,9 @@ public class SimulatedUser {
 	
 	
 	private boolean isClear(TraceNode suspiciousNode, HashMap<TraceNode, Integer> labeledUnclearNodeVisitedTimes, 
-			boolean isFirstTime, boolean enableUnclear) {
+			boolean isFirstTime, int maxUnclearFeedbackNum) {
 		
-		if(!enableUnclear){
+		if(maxUnclearFeedbackNum == 0 || this.unclearFeedbackNum > maxUnclearFeedbackNum){
 			return true;
 		}
 		
