@@ -350,8 +350,10 @@ public class TestCaseAnalyzer {
 							constructTraceModel(testcaseConfig, executingStatements);
 				}
 				
-				SimulatedMicroBat microbat = new SimulatedMicroBat();
 				ClassLocation mutatedLocation = new ClassLocation(tobeMutatedClass, null, line);
+				
+				SimulatedMicroBat microbat = new SimulatedMicroBat();
+				microbat.prepare(killingMutatantTrace, correctTrace, mutatedLocation, testCaseName, mutationFile.toString());
 				
 				try {
 					boolean isValid = true;

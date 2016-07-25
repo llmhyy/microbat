@@ -86,55 +86,40 @@ public class SimulatedMicroBat {
 		return wrapper;
 	}
 
-
-	public Trial detectMutatedBug(Trace mutatedTrace, Trace correctTrace, ClassLocation mutatedLocation, 
-			String testCaseName, String mutatedFile, double unclearRate, boolean enableLoopInference) 
-					throws SimulationFailException {
-		
+	
+	PairList pairList;
+	TraceNode rootCause;
+	Map<Integer, TraceNode> allWrongNodeMap;
+	TraceNode observedFaultNode;
+	
+	public void prepare(Trace mutatedTrace, Trace correctTrace, ClassLocation mutatedLocation, 
+			String testCaseName, String mutatedFile){
 //		PairList pairList = DiffUtil.generateMatchedTraceNodeList(mutatedTrace, correctTrace);
-		PairList pairList = matchTraceNodePair(mutatedTrace, correctTrace); 
+		pairList = matchTraceNodePair(mutatedTrace, correctTrace); 
 		
-		TraceNode rootCause = findRootCause(mutatedLocation.getClassCanonicalName(), 
+		rootCause = findRootCause(mutatedLocation.getClassCanonicalName(), 
 				mutatedLocation.getLineNo(), mutatedTrace, pairList);
 		
-//		Object dom = rootCause.findAllDominatees();
-//		dominatees.add(rootCause);
-		
-//		List<TraceNode> dominatees = findAllDominatees(mutatedTrace, mutatedLocation);
-		Map<Integer, TraceNode> allWrongNodeMap = findAllWrongNodes(pairList, mutatedTrace);
+		allWrongNodeMap = findAllWrongNodes(pairList, mutatedTrace);
 		
 		if(!allWrongNodeMap.isEmpty()){
 			List<TraceNode> wrongNodeList = new ArrayList<>(allWrongNodeMap.values());
 			Collections.sort(wrongNodeList, new TraceNodeReverseOrderComparator());
-//			TraceNode observedFaultNode = wrongNodeList.get(0);
-			
-			TraceNode observedFaultNode = findObservedFault(wrongNodeList);
-			
-			mutatedTrace.resetCheckTime();
+			observedFaultNode = findObservedFault(wrongNodeList);
+		}
+		
+	}
+
+	public Trial detectMutatedBug(Trace mutatedTrace, Trace correctTrace, ClassLocation mutatedLocation, 
+			String testCaseName, String mutatedFile, double unclearRate, boolean enableLoopInference) 
+					throws SimulationFailException {
+		mutatedTrace.resetCheckTime();
+		if(observedFaultNode != null){
 			Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
 					testCaseName, mutatedFile, unclearRate, enableLoopInference);
-			return trial;
-			
+			return trial;			
 		}
-		else{
-			return null;
-		}
-		
-		
-//		Accuracy accuracy = computeAccuracy(dominatees, allWrongNodes);
-//		
-//		if(accuracy.getRecall() < 0.95){
-//			System.out.println(mutatedLocation.getClassCanonicalName() + ":" + mutatedLocation.getLineNo() + " has problem");
-//			TraceNodeSimilarityComparator sc = new TraceNodeSimilarityComparator();
-//			TraceNode node = falseNegative.get(0);
-//			TraceNodePair pair = pairList.findByMutatedNode(node);
-//			
-//			double d = sc.compute(pair.getMutatedNode(), pair.getOriginalNode());
-//			
-//			System.currentTimeMillis();
-//		}
-//		
-//		System.out.println(accuracy);
+		return null;
 	}
 	
 	
