@@ -154,6 +154,8 @@ public class TestCaseAnalyzer {
 		String testClassName = "test.SimpleCalculatorTest";
 		String testMethodName = "testCalculator";
 		String mutationFile = "C:\\microbat_evaluation\\mutation\\40_37_1\\SimpleCalculator.java";
+		double unclearRate = 0;
+		boolean enableLoopInference = true;
 		//50_80_1
 //		String mutatedClass = "org.apache.commons.math.util.FastMath";
 		
@@ -162,7 +164,8 @@ public class TestCaseAnalyzer {
 //		String mutatedClass = "com.simplecalculator.SimpleCalculator";
 		
 		try {
-			runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile);
+			runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 
+					unclearRate, enableLoopInference);
 		} catch (JavaModelException e) {
 			e.printStackTrace();
 		} catch (MalformedURLException e) {
@@ -175,7 +178,7 @@ public class TestCaseAnalyzer {
 	
 
 	private void runEvaluationForSingleTrial(String testClassName,
-			String testMethodName, String mutationFile) 
+			String testMethodName, String mutationFile, double unclearRate, boolean enableLoopInference) 
 					throws JavaModelException, MalformedURLException, IOException {
 		String testcaseName = testClassName + "#" + testMethodName;
 		AppJavaClassPath testcaseConfig = createProjectClassPath(testClassName, testMethodName);
@@ -214,7 +217,7 @@ public class TestCaseAnalyzer {
 		Trial trial;
 		try {
 			trial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, mutatedLocation, 
-					testcaseName, mutatedFile.toString(), 0, true);
+					testcaseName, mutatedFile.toString(), unclearRate, enableLoopInference);
 			if(trial != null){
 				if(!trial.isBugFound()){
 					System.err.println("Cannot find bug in Mutated File: " + mutatedFile);
