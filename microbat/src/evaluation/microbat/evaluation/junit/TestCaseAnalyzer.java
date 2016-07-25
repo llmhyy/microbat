@@ -215,7 +215,7 @@ public class TestCaseAnalyzer {
 		Trial trial;
 		try {
 			trial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, mutatedLocation, 
-					testcaseName, mutatedFile.toString(), unclearRate, enableLoopInference);
+					testcaseName, mutatedFile.toString(), unclearRate, enableLoopInference);				
 			if(trial != null){
 				if(!trial.isBugFound()){
 					System.err.println("Cannot find bug in Mutated File: " + mutatedFile);

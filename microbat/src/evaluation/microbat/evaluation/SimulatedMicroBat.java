@@ -117,7 +117,7 @@ public class SimulatedMicroBat {
 		if(observedFaultNode != null){
 			try {
 				Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
-						testCaseName, mutatedFile, unclearRate, enableLoopInference);
+						testCaseName, mutatedFile, unclearRate, enableLoopInference);					
 				return trial;			
 			} catch (Exception e) {
 				String errorMsg = "Test case: " + testCaseName + 
@@ -302,9 +302,15 @@ public class SimulatedMicroBat {
 		String feedbackType = user.feedback(suspiciousNode, mutatedTrace, pairList, 
 				mutatedTrace.getCheckTime(), isFirstTime, maxUnclearFeedbackNum);
 		
-		/** adjust the effect of  */
-		Cause lastestCause = recommender.getLatestCause();
-		if(lastestCause.isCausedByWrongPath() && feedbackType.equals(UserFeedback.CORRECT)){
+		/** 
+		 * Adjust the effect of constraints. 
+		 * If last feedback is wrong-path, then this step should not be
+		 * a correct step.
+		 */
+		String lastFeedback = jumpingSteps.isEmpty() ? null : 
+			jumpingSteps.get(jumpingSteps.size()-1).getUserFeedback();
+		if(lastFeedback != null && lastFeedback.equals(UserFeedback.WRONG_PATH) 
+				&& feedbackType.equals(UserFeedback.CORRECT)){
 			feedbackType = UserFeedback.WRONG_PATH;
 		}
 		
