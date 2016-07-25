@@ -115,10 +115,19 @@ public class SimulatedMicroBat {
 					throws SimulationFailException {
 		mutatedTrace.resetCheckTime();
 		if(observedFaultNode != null){
-			Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
-					testCaseName, mutatedFile, unclearRate, enableLoopInference);
-			return trial;			
+			try {
+				Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
+						testCaseName, mutatedFile, unclearRate, enableLoopInference);
+				return trial;			
+			} catch (Exception e) {
+				String errorMsg = "Test case: " + testCaseName + 
+						" has exception when simulating debugging\n" + "Mutated File: " + mutatedFile +
+						", unclearRate: " + unclearRate + ", enableLoopInference: " + enableLoopInference;
+				System.err.println(errorMsg);
+				e.printStackTrace();
+			}
 		}
+		
 		return null;
 	}
 	
@@ -144,9 +153,10 @@ public class SimulatedMicroBat {
 		Settings.interestedVariables.clear();
 		Settings.localVariableScopes.clear();
 		Settings.potentialCorrectPatterns.clear();
-		recommender = new StepRecommender(enableLoopInference);
 		
+		recommender = new StepRecommender(enableLoopInference);
 		user = new SimulatedUser();
+		
 		int traceLength = mutatedTrace.getExectionList().size();
 		int maxUnclearFeedbackNum = (int)(traceLength*unclearRate);
 		if(unclearRate == -1){
