@@ -1,6 +1,7 @@
 package microbat.util;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Stack;
 
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -63,6 +64,12 @@ public class Settings {
 	 * the variables checked by user as wrong.
 	 */
 	public static UserInterestedVariables interestedVariables = new UserInterestedVariables();
+	
+	/**
+	 * TODO
+	 * the trace order in execution trace that are marked by user as wrong-path.
+	 */
+	public static HashSet<Integer> wrongPathNodeOrder = new HashSet<>();
 	
 	/**
 	 * This variable is to trace whether the variables in different lines are the same

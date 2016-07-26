@@ -1,6 +1,7 @@
 package microbat.handler;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import microbat.model.AttributionVar;
@@ -20,11 +21,15 @@ public class CheckingState {
 	private int traceCheckTime;
 	
 	private UserInterestedVariables interestedVariables;
+	private HashSet<Integer> wrongPathNodeOrder;
+	
 	private PotentialCorrectPatternList potentialCorrectPatterns;
 	
+	@SuppressWarnings("unchecked")
 	public void recordCheckingState(TraceNode currentNode,
 			StepRecommender recommender, Trace trace,
 			UserInterestedVariables interestedVariables,
+			HashSet<Integer> wrongPathNodeOrder,
 			PotentialCorrectPatternList potentialCorrectPatterns) {
 		
 		this.currentNodeOrder = currentNode.getOrder();
@@ -39,6 +44,8 @@ public class CheckingState {
 		this.traceCheckTime = trace.getCheckTime();
 		
 		this.interestedVariables = interestedVariables.clone();
+		this.wrongPathNodeOrder = (HashSet<Integer>) wrongPathNodeOrder.clone();
+		
 		this.potentialCorrectPatterns = potentialCorrectPatterns.clone();
 	}
 	
@@ -98,6 +105,16 @@ public class CheckingState {
 
 	public void setPotentialCorrectPatterns(PotentialCorrectPatternList potentialCorrectPatterns) {
 		this.potentialCorrectPatterns = potentialCorrectPatterns;
+	}
+
+
+	public HashSet<Integer> getWrongPathNodeOrder() {
+		return wrongPathNodeOrder;
+	}
+
+
+	public void setWrongPathNodeOrder(HashSet<Integer> wrongPathNodeOrder) {
+		this.wrongPathNodeOrder = wrongPathNodeOrder;
 	}
 
 	

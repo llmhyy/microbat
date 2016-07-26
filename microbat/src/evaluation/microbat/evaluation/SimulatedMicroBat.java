@@ -210,6 +210,7 @@ public class SimulatedMicroBat {
 						
 						Settings.interestedVariables = state.getInterestedVariables();
 						Settings.potentialCorrectPatterns = state.getPotentialCorrectPatterns();
+						Settings.wrongPathNodeOrder = state.getWrongPathNodeOrder();
 						recommender = state.getRecommender();
 						
 						List<String> wrongVarIDs = stateWrapper.getChoosingVarID();
@@ -297,7 +298,7 @@ public class SimulatedMicroBat {
 		
 		CheckingState state = new CheckingState();
 		state.recordCheckingState(suspiciousNode, recommender, mutatedTrace, 
-				Settings.interestedVariables, Settings.potentialCorrectPatterns);
+				Settings.interestedVariables, Settings.wrongPathNodeOrder, Settings.potentialCorrectPatterns);
 		
 		String feedbackType = user.feedback(suspiciousNode, mutatedTrace, pairList, 
 				mutatedTrace.getCheckTime(), isFirstTime, maxUnclearFeedbackNum);

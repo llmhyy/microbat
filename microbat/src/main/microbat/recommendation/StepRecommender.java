@@ -2,19 +2,17 @@ package microbat.recommendation;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import microbat.model.AttributionVar;
 import microbat.model.Cause;
-import microbat.model.trace.LoopSequence;
 import microbat.model.trace.PathInstance;
 import microbat.model.trace.PotentialCorrectPattern;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.trace.TraceNodeOrderComparator;
-import microbat.model.trace.TraceNodeReverseOrderComparator;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.util.MicroBatUtil;
@@ -146,6 +144,10 @@ public class StepRecommender {
 	private List<TraceNode> visitedUnclearNodeList = new ArrayList<>();
 	
 	public TraceNode recommendNode(Trace trace, TraceNode currentNode, String feedback){
+		if(feedback.equals(UserFeedback.WRONG_PATH)){
+			Settings.wrongPathNodeOrder.add(currentNode.getOrder());
+		}
+		
 		if(feedback.equals(UserFeedback.UNCLEAR)){
 			
 			if(state==DebugState.JUMP || state==DebugState.SKIP || state==DebugState.BINARY_SEARCH || state==DebugState.DETAIL_INSPECT){
@@ -209,10 +211,10 @@ public class StepRecommender {
 	}
 	
 	private TraceNode findClearerNodeInBetween(Trace trace, TraceNode currentNode, TraceNode earliestVisitedUnclearNode) {
-		TraceNode earliestNodeWithWrongVar = trace.getEarliestNodeWithWrongVar();
+		TraceNode latestWrongNode = trace.getLatestWrongNode();
 		
-		if(earliestNodeWithWrongVar != null){
-			Map<Integer, TraceNode> dominatorMap = earliestNodeWithWrongVar.findAllDominators();
+		if(latestWrongNode != null){
+			Map<Integer, TraceNode> dominatorMap = latestWrongNode.findAllDominators();
 			List<TraceNode> dominators = new ArrayList<>(dominatorMap.values());
 			Collections.sort(dominators, new TraceNodeOrderComparator());
 			
@@ -237,152 +239,8 @@ public class StepRecommender {
 			}
 		}
 		else{
-			System.err.println("Cannot find earliestNodeWithWrongVar in findMoreDetailedNodeInBetween()");
+			System.err.println("Cannot find latest wrong node in findMoreDetailedNodeInBetween()");
 		}
-		
-		return null;
-	}
-
-	/**
-	 * A dominator is an abstract dominator if it is either a method invocation or a loop head.
-	 * @param loopSequence
-	 * @param dominators, *sorted in a reverse order*
-	 * @param currentNode
-	 * @return
-	 */
-	private TraceNode findMoreAbstractDominator(LoopSequence loopSequence, List<TraceNode> dominators, TraceNode currentNode, Trace trace){
-		
-		TraceNode latestCorrectNode = trace.getLatestCorrectNode();
-		
-		TraceNode moreAbstractDominator = null;
-		for(TraceNode dominator: dominators){
-			
-			boolean flag = (latestCorrectNode == null) ? false : dominator.getOrder() < latestCorrectNode.getOrder();
-			
-			if(dominator.getOrder() > currentNode.getOrder() || flag){
-				continue;
-			}
-			
-			if(dominator.getInvocationLevel() < currentNode.getInvocationLevel()){
-				/**
-				 * method invocation
-				 */
-				if(dominator.getOrder() <= currentNode.getInvocationParent().getOrder()){
-					moreAbstractDominator = dominator;		
-					break;
-				}
-			}
-
-			if(dominator.getInvocationLevel() == currentNode.getInvocationLevel()){
-				if(latestCorrectNode != null && dominator.getOrder() > latestCorrectNode.getOrder()){
-					moreAbstractDominator = dominator;
-				}
-				
-				/**
-				 * loop head
-				 */
-				if(loopSequence != null){
-					if(loopSequence.containsRangeOf(dominator) && 
-							loopSequence.getStartOrder() != dominator.getOrder()){
-						continue;
-					}
-					else{
-						moreAbstractDominator = dominator;
-						break;
-					}
-				}
-			}
-		}
-		
-		return moreAbstractDominator;
-	}
-	
-	/**
-	 * Find the invocation parent or nearest loop control dominator. If the node has neither
-	 * invocation parent nor nearest loop control dominator, the previous step-over node will
-	 * be chosen.
-	 * 
-	 * @param trace
-	 * @param currentNode
-	 * @return
-	 */
-	private TraceNode findMoreClearNode(Trace trace, TraceNode currentNode){
-		List<TraceNode> clearNodeList = new ArrayList<>();
-		
-		TraceNode invocationParent = currentNode.getInvocationParent();
-		TraceNode containingLoopControlDominator = currentNode.findContainingLoopControlDominator();
-		
-		if(invocationParent != null){
-			clearNodeList.add(invocationParent);
-		}
-		if(containingLoopControlDominator != null){
-			clearNodeList.add(containingLoopControlDominator);
-		}
-		
-		if(!clearNodeList.isEmpty()){
-			Collections.sort(clearNodeList, new TraceNodeReverseOrderComparator());
-			return clearNodeList.get(0);
-		}
-		else{
-			int order = currentNode.getOrder() - 1;
-			if(order-1>=0){
-				return trace.getExectionList().get(order-1);				
-			}
-			else{
-				return currentNode;
-			}
-		}
-	}
-	
-	/**
-	 * More clear node means the data or control dominator in method invocation or loop head for current node.
-	 * <p>
-	 * I am considering that the aim of more clear node is for understanding, thus, I decide to use a more simple
-	 * way to suggest unclear node. @see {@link microbat.recommendation.StepRecommender#findMoreClearNode()}
-	 * 
-	 * @param trace
-	 * @param currentNode
-	 * @return
-	 */
-	@Deprecated
-	private TraceNode findMoreClearNode0(Trace trace, TraceNode currentNode) {
-		TraceNode earliestNodeWithWrongVar = trace.getEarliestNodeWithWrongVar();
-		
-		if(earliestNodeWithWrongVar != null){
-			Map<Integer, TraceNode> dominatorMap = earliestNodeWithWrongVar.findAllDominators();
-			List<TraceNode> dominators = new ArrayList<>(dominatorMap.values());
-			Collections.sort(dominators, new TraceNodeReverseOrderComparator());
-			
-			LoopSequence loopSequence = trace.findLoopRangeOf(currentNode);
-			TraceNode moreAbstractDominator = findMoreAbstractDominator(loopSequence, dominators, currentNode, trace);
-			
-			if(moreAbstractDominator != null){
-				/**
-				 * try to find a dominator which has not been checked, if not, I just return the abstract dominator 
-				 */
-				if(moreAbstractDominator.hasChecked()){
-					int index = dominators.indexOf(moreAbstractDominator);
-					for(int i=index; i>=0; i--){
-						TraceNode dominator = dominators.get(i);
-						if(!dominator.equals(moreAbstractDominator)){
-							if(!dominator.hasChecked()){
-								return dominator;
-							}
-						}
-					}
-					
-					return moreAbstractDominator;
-				}
-				else{
-					return moreAbstractDominator;
-				}
-			}
-			else if(!dominators.isEmpty()){
-				return dominators.get(0);
-			}
-		}
-		
-//		System.currentTimeMillis();
 		
 		return null;
 	}
@@ -588,7 +446,7 @@ public class StepRecommender {
 			PathInstance path = null;
 			if(getLatestCause().getBuggyNode() != null){
 				path = new PathInstance(suspiciousNode, getLatestCause().getBuggyNode());
-				isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path);	//TODO				
+				isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path);				
 			}
 			
 			if(this.enableLoopInference && isPathInPattern && !shouldStopOnCheckedNode(currentNode, path)){
@@ -633,81 +491,6 @@ public class StepRecommender {
 		
 	}
 
-	
-//	private TraceNode handleWrongValue(Trace trace, TraceNode currentNode, String userFeedBack){
-//		TraceNode oldSusiciousNode = currentNode;
-//		
-//		List<AttributionVar> readVars = constructAttributionRelation(currentNode, trace.getCheckTime());
-//		AttributionVar focusVar = Settings.interestedVariables.findFocusVar(trace, currentNode, readVars);
-//				
-//		if(focusVar != null){
-////			long t1 = System.currentTimeMillis();
-//			trace.distributeSuspiciousness(Settings.interestedVariables);
-////			long t2 = System.currentTimeMillis();
-////			System.out.println("time for distributeSuspiciousness: " + (t2-t1));
-//			TraceNode suspiciousNode = trace.findMostSupiciousNode(focusVar);
-//			
-//			/**
-//			 * it means the suspiciousness of focusVar cannot be distributed to other trace node any more. 
-//			 */
-//			TraceNode producer = trace.getProducer(focusVar.getVarID());
-////			if(suspiciousNode.isWrittenVariablesContains(focusVar.getVarID()) && suspiciousNode.equals(this.lastNode)){
-//			if(suspiciousNode.getOrder()>currentNode.getOrder() && producer!=null && producer.equals(suspiciousNode)){
-//				//TODO it could be done in a more intelligent way.
-//				this.inspectingRange = new InspectingRange(suspiciousNode.getDataDominator(), suspiciousNode);
-//				TraceNode recommendedNode = handleDetailInspecting(trace, currentNode, userFeedBack);
-//				return recommendedNode;
-//			}
-//			else{
-//				TraceNode readTraceNode = focusVar.getReadTraceNode();
-//				boolean isPathInPattern = false;
-//				PathInstance path = null;
-//				if(readTraceNode != null){
-//					path = new PathInstance(suspiciousNode, readTraceNode);
-//					isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path)? true : false;					
-//				}
-//				
-//				if(isPathInPattern){
-//					state = DebugState.SKIP;
-//					
-//					this.loopRange.endNode = path.getEndNode();
-//					this.loopRange.skipPoints.clear();
-//					//this.range.skipPoints.add(suspiciousNode);
-//					
-//					while(Settings.potentialCorrectPatterns.containsPattern(path) 
-//							&& !shouldStopOnCheckedNode(suspiciousNode, path)){
-//						
-//						Settings.potentialCorrectPatterns.addPathForPattern(path);
-//						this.loopRange.skipPoints.add(suspiciousNode);
-//						
-//						PotentialCorrectPattern pattern = Settings.potentialCorrectPatterns.getPattern(path);
-//						oldSusiciousNode = suspiciousNode;
-//						
-//						suspiciousNode = findNextSuspiciousNodeByPattern(pattern, oldSusiciousNode);
-//						
-//						if(suspiciousNode == null){
-//							break;
-//						}
-//						else{
-//							path = new PathInstance(suspiciousNode, oldSusiciousNode);					
-//						}
-//					}
-//					
-//					this.lastNode = currentNode;
-//					return oldSusiciousNode;
-//				}
-//				else{
-//					state = DebugState.JUMP;
-//					
-//					this.lastNode = currentNode;
-//					return suspiciousNode;				
-//				}
-//			}
-//		}
-//		
-//		System.err.println("fucosVar is null");
-//		return currentNode;
-//	}
 	
 	private TraceNode handleJumpBehavior(Trace trace, TraceNode currentNode, String userFeedBack) {
 		
@@ -801,42 +584,6 @@ public class StepRecommender {
 		return null;
 	}
 	
-	
-	
-
-	private List<AttributionVar> constructAttributionRelation(TraceNode currentNode, int checkTime){
-		List<AttributionVar> readVars = new ArrayList<>();
-		for(VarValue writtenVarValue: currentNode.getWrittenVariables()){
-			String writtenVarID = writtenVarValue.getVarID();
-			if(Settings.interestedVariables.contains(writtenVarID)){
-				for(VarValue readVarValue: currentNode.getReadVariables()){
-					String readVarID = readVarValue.getVarID();
-					if(Settings.interestedVariables.contains(readVarID)){
-						
-						AttributionVar writtenVar = Settings.interestedVariables.findOrCreateVar(writtenVarID, checkTime);
-						AttributionVar readVar = Settings.interestedVariables.findOrCreateVar(readVarID, checkTime);
-						readVar.setReadTraceNode(currentNode);
-						
-						readVar.addChild(writtenVar);
-						writtenVar.addParent(readVar);
-					}
-				}						
-			}
-		}
-		
-		Settings.interestedVariables.updateAttributionTrees();
-		
-		for(VarValue readVarValue: currentNode.getReadVariables()){
-			String readVarID = readVarValue.getVarID();
-			if(Settings.interestedVariables.contains(readVarID)){
-				AttributionVar readVar = Settings.interestedVariables.findOrCreateVar(readVarID, checkTime);
-				readVar.setReadTraceNode(currentNode);
-				readVars.add(readVar);
-			}
-		}		
-		
-		return readVars;
-	}
 	
 	@SuppressWarnings("unchecked")
 	public StepRecommender clone(){

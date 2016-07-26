@@ -93,6 +93,12 @@ public class TraceNode{
 		return markedReadVars;
 	}
 	
+	/**
+	 * @param isUICheck
+	 * whether this trace node is checked on UI for now.
+	 * 
+	 * @return
+	 */
 	public boolean isAllReadWrittenVarCorrect(boolean isUICheck){
 		boolean writtenCorrect = getWittenVarCorrectness(Settings.interestedVariables, isUICheck) == TraceNode.WRITTEN_VARS_CORRECT;
 		boolean readCorrect = getReadVarCorrectness(Settings.interestedVariables, isUICheck) == TraceNode.READ_VARS_CORRECT;
@@ -109,6 +115,13 @@ public class TraceNode{
 			}
 		}
 		
+		/**
+		 * Distinguish between "correct" and "unknown".
+		 * 
+		 * When none of the read variables is located in {@code interestedVariables}, the node is
+		 * correct if either (1) the node has been checked or (2) it is being checked on the UI.
+		 *  
+		 */
 		if(hasChecked() || isUICheck){
 			return TraceNode.READ_VARS_CORRECT;			
 		}
@@ -843,5 +856,9 @@ public class TraceNode{
 	public void resetCheckTime() {
 		this.checkTime = -1;
 		
+	}
+
+	public boolean isWrongPathNode() {
+		return Settings.wrongPathNodeOrder.contains(new Integer(this.getOrder()));
 	}
 }

@@ -42,7 +42,7 @@ public class UndoHandler extends AbstractHandler {
 		
 		Settings.interestedVariables = state.getInterestedVariables();
 		Settings.potentialCorrectPatterns = state.getPotentialCorrectPatterns();
-		
+		Settings.wrongPathNodeOrder = state.getWrongPathNodeOrder();
 		
 		DebugFeedbackView debugFeedbackView = (DebugFeedbackView)PlatformUI.getWorkbench().
 				getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.DEBUG_FEEDBACK);

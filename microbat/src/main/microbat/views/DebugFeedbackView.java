@@ -63,6 +63,7 @@ public class DebugFeedbackView extends ViewPart {
 	private StepRecommender recommender = new StepRecommender(true);
 	
 	private String feedbackType = UserFeedback.INCORRECT;
+	private String lastFeedbackType = null;
 	
 //	public static final String INPUT = "input";
 //	public static final String OUTPUT = "output";
@@ -656,7 +657,7 @@ public class DebugFeedbackView extends ViewPart {
 				openReconfirmDialog(message);
 				return false;
 			}
-			else if(recommender != null && recommender.getLatestCause().isCausedByWrongPath() && feedbackType.equals(UserFeedback.CORRECT)){
+			else if(lastFeedbackType != null && lastFeedbackType.equals(UserFeedback.WRONG_PATH) && feedbackType.equals(UserFeedback.CORRECT)){
 				String message = "The lastest node has wrong path, but you now tell me that no variable "
 						+ "in this conditional statement is wrong, are you really sure?";
 				openReconfirmDialog(message);
@@ -672,30 +673,13 @@ public class DebugFeedbackView extends ViewPart {
 			} 
 			else {
 				Trace trace = Activator.getDefault().getCurrentTrace();
-				
 				TraceNode suspiciousNode = null;
-				
 				boolean isValidForRecommendation = isValidForRecommendation();
 				if(isValidForRecommendation){
 					CheckingState state = new CheckingState();
-					state.recordCheckingState(currentNode, recommender, trace, 
-							Settings.interestedVariables, Settings.potentialCorrectPatterns);
+					state.recordCheckingState(currentNode, recommender, trace, Settings.interestedVariables, 
+							Settings.wrongPathNodeOrder, Settings.potentialCorrectPatterns);
 					Settings.checkingStateStack.push(state);
-					
-//					ConflictRuleChecker conflictRuleChecker = new ConflictRuleChecker();
-//					TraceNode conflictNode = conflictRuleChecker.checkConflicts(trace, currentNode.getOrder());
-//					
-//					if(conflictNode == null){
-//						suspiciousNode = recommender.recommendSuspiciousNode(trace, currentNode);
-//					}
-//					else{
-//						boolean userConfirm = MessageDialog.openConfirm(PlatformUI.getWorkbench().getDisplay().getActiveShell(), 
-//								"Feedback Conflict", "The choice is conflict with your previous feedback, "
-//										+ "are your sure with your this choice?");
-//						if(userConfirm){
-//							suspiciousNode = conflictNode;
-//						}
-//					}
 					
 					if(!feedbackType.equals(UserFeedback.UNCLEAR)){
 						setCurrentNodeChecked(trace, currentNode);		
@@ -703,6 +687,7 @@ public class DebugFeedbackView extends ViewPart {
 					}
 					
 					suspiciousNode = recommender.recommendNode(trace, currentNode, feedbackType);
+					lastFeedbackType = feedbackType;
 				}
 				
 				if(suspiciousNode != null){

@@ -827,14 +827,13 @@ public class Trace {
 		this.constructTime = constructTime;
 	}
 
-	public TraceNode getLatestCorrectNode() {
-		TraceNode latestCorrectNode = null;
+	public TraceNode getLatestWrongNode() {
 		for(TraceNode node: this.exectionList){
-			if(node.isAllReadWrittenVarCorrect(false)){
-				latestCorrectNode = node;
+			if(!node.isAllReadWrittenVarCorrect(false) || node.isWrongPathNode()){
+				return node;
 			}
 		}
-		return latestCorrectNode;
+		return null;
 	}
 
 	
