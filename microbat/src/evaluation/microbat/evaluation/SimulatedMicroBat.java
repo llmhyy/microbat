@@ -229,7 +229,7 @@ public class SimulatedMicroBat {
 					isBugFound = rootCause.getLineNumber()==suspiciousNode.getLineNumber();
 					
 					if(!isBugFound){
-						if(suspiciousNode.getOrder() == 139){
+						if(suspiciousNode.getOrder() == 132){
 							System.currentTimeMillis();
 						}
 						

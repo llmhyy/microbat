@@ -74,7 +74,7 @@ public class SimulatedUser {
 		String feedback;
 		
 		boolean isClear = isClear(suspiciousNode, labeledUnclearNodeVisitedTimes, isFirstTime, maxUnclearFeedbackNum);
-//		isClear = false;
+//		isClear = true;
 		
 		if(!isClear){
 			feedback = UserFeedback.UNCLEAR;
