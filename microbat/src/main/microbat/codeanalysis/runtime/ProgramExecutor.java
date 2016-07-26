@@ -261,10 +261,6 @@ public class ProgramExecutor extends Executor {
 
 					/**
 					 * collect the variable values after executing previous step
-					 * 
-					 * TODO it is possible to optimize the program space this
-					 * step. I just need the consequence of last step, thus, I
-					 * may just check those written variables and their values.
 					 */
 					boolean isContextChange = false;
 					if (lastSteppingInPoint != null) {
@@ -297,19 +293,13 @@ public class ProgramExecutor extends Executor {
 						BreakPointValue bkpVal;
 						if(this.trace.getLastestNode() != null && !isContextChange){
 							bkpVal = this.trace.getLastestNode().getAfterStepInState();
-							System.currentTimeMillis();
 						}
 						else{
 							bkpVal = extractValuesAtLocation(bkp, thread, currentLocation);
 						}
-//						bkpVal = extractValuesAtLocation(bkp, thread, currentLocation);
 						
 						TraceNode node = recordTrace(bkp, bkpVal);
-						// System.out.println("Parsed node " + node);
-						// if(node.getOrder() == 21){
-						// System.currentTimeMillis();
-						// }
-
+						
 						/**
 						 * pop up method after an exception is caught.
 						 */
@@ -1197,7 +1187,6 @@ public class ProgramExecutor extends Executor {
 			throws SavException {
 		if (Settings.isRecordSnapshot) {
 			try {
-				// return getValueExtractor().extractValue(bkp, bkpEvent);
 				VariableValueExtractor extractor = new VariableValueExtractor(bkp, thread, loc, this);
 				BreakPointValue bpValue = extractor.extractValue();
 				return bpValue;

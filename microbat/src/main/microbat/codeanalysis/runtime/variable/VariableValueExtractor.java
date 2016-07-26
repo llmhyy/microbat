@@ -83,11 +83,9 @@ public class VariableValueExtractor {
 		}
 		
 		BreakPointValue bkVal = new BreakPointValue(bkp.getId());
-		//ThreadReference thread = event.thread();
 		synchronized (thread) {
 			List<StackFrame> frames = this.thread.frames();
 			if (!frames.isEmpty()) {
-				//StackFrame frame = findFrameByLocation(thread.frames(), event.location());
 				final StackFrame frame = findFrameByLocation(frames, loc);
 				Method method = frame.location().method();
 				ReferenceType refType;
@@ -217,7 +215,6 @@ public class VariableValueExtractor {
 						bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
 				
 				appendVarVal(bkVal, variable, value, 1, thread, true);				
-				System.currentTimeMillis();
 			}
 			
 		}
@@ -492,6 +489,10 @@ public class VariableValueExtractor {
 	private void appendArrVarVal(VarValue parent, Variable variable,
 			ArrayReference value, int level, ThreadReference thread, boolean isRoot) {
 		
+		if(variable.getName().equals("operators")){
+			System.currentTimeMillis();
+		}
+		
 		ArrayValue arrayVal = new ArrayValue(false, isRoot, variable);
 //		arrayVal.setValue(value);
 		String componentType = ((ArrayType)value.type()).componentTypeName();
@@ -508,10 +509,9 @@ public class VariableValueExtractor {
 		for(int i = 0; i < value.length(); i++){
 			String varName = String.valueOf(i);
 			Value elementValue = list.get(i);
-			if(elementValue != null){
-				ArrayElementVar var = new ArrayElementVar(varName, elementValue.type().toString());
-				appendVarVal(arrayVal, var, elementValue, level, thread, false);
-			}
+			
+			ArrayElementVar var = new ArrayElementVar(varName, componentType);
+			appendVarVal(arrayVal, var, elementValue, level, thread, false);
 		}
 		
 		StringBuffer buffer = new StringBuffer();
