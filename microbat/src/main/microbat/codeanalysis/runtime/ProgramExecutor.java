@@ -155,6 +155,7 @@ public class ProgramExecutor extends Executor {
 			if(vm != null){
 				vm.exit(0);
 			}
+			System.out.println("JVM is ended.");
 		}
 
 	}
