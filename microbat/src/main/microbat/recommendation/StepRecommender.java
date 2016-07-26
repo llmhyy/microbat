@@ -198,7 +198,8 @@ public class StepRecommender {
 				}
 			}
 		}
-		else if((state==DebugState.UNCLEAR || state==DebugState.PARTIAL_CLEAR) && feedback.equals(UserFeedback.INCORRECT)){
+		else if((state==DebugState.UNCLEAR || state==DebugState.PARTIAL_CLEAR) && 
+				(feedback.equals(UserFeedback.INCORRECT) || feedback.equals(UserFeedback.WRONG_PATH))){
 			visitedUnclearNodeList.clear();
 			state = latestClearState;
 			TraceNode node = recommendSuspiciousNode(trace, currentNode, feedback);
