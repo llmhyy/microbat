@@ -11,7 +11,8 @@ import org.eclipse.swt.graphics.Image;
 public class ImageUI {
 
 	public static final String CHECK_MARK = "icons/check_mark.png";
-	public static final String BUGGY_MARK = "icons/cross_mark.png";
+	public static final String WRONG_VALUE_MARK = "icons/cross_mark.png";
+	public static final String WRONG_PATH_MARK = "icons/path_mark.png";
 	public static final String QUESTION_MARK = "icons/question_mark.png";
 
 //	private Image checkMarkImage;

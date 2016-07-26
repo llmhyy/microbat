@@ -415,11 +415,14 @@ public class TraceView extends ViewPart {
 				TraceNode node = (TraceNode)element;
 				
 				if(node.hasChecked()){
-					if(node.isAllReadWrittenVarCorrect(true) && !node.isWrongPathNode()){
-						return Settings.imageUI.getImage(ImageUI.CHECK_MARK);						
+					if(!node.isAllReadWrittenVarCorrect(true)){
+						return Settings.imageUI.getImage(ImageUI.WRONG_VALUE_MARK);	
 					}
-					else{
-						return Settings.imageUI.getImage(ImageUI.BUGGY_MARK);	
+					else if(node.isWrongPathNode()){
+						return Settings.imageUI.getImage(ImageUI.WRONG_PATH_MARK);	
+					}
+					else {
+						return Settings.imageUI.getImage(ImageUI.CHECK_MARK);
 					}
 				}
 				else{

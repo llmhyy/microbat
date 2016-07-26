@@ -38,7 +38,8 @@ public class Activator extends AbstractUIPlugin {
 		
 		ImageRegistry imgReg = getImageRegistry();
 		imgReg.put(ImageUI.CHECK_MARK, getImageDescriptor(ImageUI.CHECK_MARK));
-		imgReg.put(ImageUI.BUGGY_MARK, getImageDescriptor(ImageUI.BUGGY_MARK));
+		imgReg.put(ImageUI.WRONG_VALUE_MARK, getImageDescriptor(ImageUI.WRONG_VALUE_MARK));
+		imgReg.put(ImageUI.WRONG_PATH_MARK, getImageDescriptor(ImageUI.WRONG_PATH_MARK));
 		imgReg.put(ImageUI.QUESTION_MARK, getImageDescriptor(ImageUI.QUESTION_MARK));
 	}
 	
