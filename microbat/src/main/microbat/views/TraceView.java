@@ -415,7 +415,7 @@ public class TraceView extends ViewPart {
 				TraceNode node = (TraceNode)element;
 				
 				if(node.hasChecked()){
-					if(node.isAllReadWrittenVarCorrect(true)){
+					if(node.isAllReadWrittenVarCorrect(true) && !node.isWrongPathNode()){
 						return Settings.imageUI.getImage(ImageUI.CHECK_MARK);						
 					}
 					else{
