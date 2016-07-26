@@ -101,10 +101,9 @@ public class JavaUtil {
 		}
 		StringBuffer buffer = new StringBuffer();
 		for(Value v: list){
-			if(v != null){
-				buffer.append(v.toString());
-				buffer.append(",");
-			}
+			String valueString = (v != null) ? v.toString() : "\"null\"";
+			buffer.append(valueString);
+			buffer.append(",");
 		}
 		stringValue = buffer.toString();
 		return stringValue;
