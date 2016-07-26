@@ -816,7 +816,7 @@ public class DebugFeedbackView extends ViewPart {
 					}
 				}
 				else{
-					return true;
+					return !children.isEmpty();
 				}
 			}
 			return false;
@@ -989,8 +989,15 @@ public class DebugFeedbackView extends ViewPart {
 			}
 			else if(inputElement instanceof ReferenceValue){
 				ReferenceValue value = (ReferenceValue)inputElement;
-				return value.getChildren().toArray(new VarValue[0]);
+				VarValue[] list = value.getChildren().toArray(new VarValue[0]);
+				if(list.length != 0){
+					return list;
+				}
+				else{
+					return null;
+				}
 			}
+			
 			return null;
 		}
 
@@ -1004,7 +1011,8 @@ public class DebugFeedbackView extends ViewPart {
 
 		public boolean hasChildren(Object element) {
 			if(element instanceof ReferenceValue){
-				List<VarValue> children = ((ReferenceValue)element).getChildren();
+				ReferenceValue rValue = (ReferenceValue)element;
+				List<VarValue> children = rValue.getChildren();
 				return children != null && !children.isEmpty();
 			}
 			return false;
