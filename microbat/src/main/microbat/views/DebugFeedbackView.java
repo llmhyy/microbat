@@ -19,6 +19,7 @@ import microbat.recommendation.Bug;
 import microbat.recommendation.BugInferer;
 import microbat.recommendation.StepRecommender;
 import microbat.recommendation.UserFeedback;
+import microbat.util.JavaUtil;
 import microbat.util.Settings;
 
 import org.eclipse.core.runtime.IStatus;
@@ -1044,7 +1045,11 @@ public class DebugFeedbackView extends ViewPart {
 				VarValue varValue = (VarValue)element;
 				switch(columnIndex){
 				case 0: 
-					return varValue.getType();
+					String type = varValue.getType();
+					if(type.contains(".")){
+						type = type.substring(type.lastIndexOf(".")+1, type.length());
+					}
+					return type;
 				case 1: 
 					String name = varValue.getVarName();
 					return name;
