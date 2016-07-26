@@ -123,17 +123,17 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-//		ExcelReporter reporter = new ExcelReporter(Settings.projectName+".xlsx", this.unclearRates);
-//		
-//		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
-//		
-//		for(IJavaElement element: testRoot.getChildren()){
-//			if(element instanceof IPackageFragment){
-//				runEvaluation((IPackageFragment)element, reporter);				
-//			}
-//		}
+		ExcelReporter reporter = new ExcelReporter(Settings.projectName+".xlsx", this.unclearRates);
 		
-		runSingeTrial();
+		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
+		
+		for(IJavaElement element: testRoot.getChildren()){
+			if(element instanceof IPackageFragment){
+				runEvaluation((IPackageFragment)element, reporter);				
+			}
+		}
+		
+//		runSingeTrial();
 		
 //		String className = "org.apache.commons.math.analysis.polynomials.PolynomialFunctionLagrangeFormTest";
 //		String methodName = "testLinearFunction";
@@ -150,7 +150,7 @@ public class TestCaseAnalyzer {
 		
 		String testClassName = "test.SimpleCalculatorTest";
 		String testMethodName = "testCalculator";
-		String mutationFile = "C:\\microbat_evaluation\\mutation\\110_42_1\\SimpleCalculator.java";
+		String mutationFile = "C:\\microbat_evaluation\\mutation\\115_56_1\\SimpleCalculator.java";
 		double unclearRate = -1;
 		boolean enableLoopInference = false;
 		//50_80_1
@@ -307,12 +307,12 @@ public class TestCaseAnalyzer {
 							boolean isSuccess = runEvaluationForSingleTrial(tobeMutatedClass, mutationFile, 
 									testcaseConfig, line, testCaseName, correctTrace, executingStatements, 
 									reporter, tmpTrial);
-							if(isSuccess){
-								thisTrialNum++;								
-								if(thisTrialNum >= trialNumPerTestCase){
-									break stop;
-								}
-							}
+//							if(isSuccess){
+//								thisTrialNum++;								
+//								if(thisTrialNum >= trialNumPerTestCase){
+//									break stop;
+//								}
+//							}
 						}
 					}
 				}
