@@ -106,6 +106,7 @@ public class TraceModelConstructor {
 	
 	private void clearOldData(){
 		Settings.interestedVariables.clear();
+		Settings.wrongPathNodeOrder.clear();
 		Settings.localVariableScopes.clear();
 		Settings.potentialCorrectPatterns.clear();
 	}

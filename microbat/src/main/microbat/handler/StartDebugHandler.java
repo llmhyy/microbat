@@ -40,6 +40,7 @@ public class StartDebugHandler extends AbstractHandler {
 	
 	private void clearOldData(){
 		Settings.interestedVariables.clear();
+		Settings.wrongPathNodeOrder.clear();
 		Settings.localVariableScopes.clear();
 		Settings.potentialCorrectPatterns.clear();
 		Settings.checkingStateStack.clear();
