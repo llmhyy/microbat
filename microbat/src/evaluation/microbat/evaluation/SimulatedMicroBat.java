@@ -117,7 +117,7 @@ public class SimulatedMicroBat {
 		if(observedFaultNode != null){
 			try {
 				Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
-						testCaseName, mutatedFile, unclearRate, enableLoopInference);					
+						testCaseName, mutatedFile, unclearRate, enableLoopInference);
 				return trial;			
 			} catch (Exception e) {
 				String errorMsg = "Test case: " + testCaseName + 

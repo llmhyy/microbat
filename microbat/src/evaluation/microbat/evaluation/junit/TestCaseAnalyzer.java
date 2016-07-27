@@ -53,7 +53,7 @@ public class TestCaseAnalyzer {
 //	private int trialFileNum = 0;
 	private int trialNumPerTestCase = 3;
 	
-	private double[] unclearRates = {0, 0.05, 0.1, 0.15, -1};
+	private double[] unclearRates = {0, 0.005, 0.01, 0.05, 0.1, -1};
 //	private double[] unclearRates = {0};
 	
 	public TestCaseAnalyzer(){
@@ -150,9 +150,9 @@ public class TestCaseAnalyzer {
 		
 		String testClassName = "test.SimpleCalculatorTest";
 		String testMethodName = "testCalculator";
-		String mutationFile = "C:\\microbat_evaluation\\mutation\\115_56_1\\SimpleCalculator.java";
+		String mutationFile = "C:\\microbat_evaluation\\mutation\\79_78_2\\SimpleCalculator.java";
 		double unclearRate = -1;
-		boolean enableLoopInference = false;
+		boolean enableLoopInference = true;
 		//50_80_1
 //		String mutatedClass = "org.apache.commons.math.util.FastMath";
 		
