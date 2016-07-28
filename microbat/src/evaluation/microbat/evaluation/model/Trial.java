@@ -26,7 +26,8 @@ public class Trial {
 	public int getUnclearFeedbackNumber(){
 		int count = 0;
 		for(String str: jumpSteps){
-			String feedback = str.substring(str.lastIndexOf(":")+1, str.length());
+			int index = str.indexOf(" ...");
+			String feedback = str.substring(index-8, index);
 			if(feedback.contains("unclear")){
 				count++;
 			}
