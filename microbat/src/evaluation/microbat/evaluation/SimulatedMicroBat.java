@@ -338,7 +338,7 @@ public class SimulatedMicroBat {
 		for(StepOperationTuple tuple: jumpingSteps){
 			String correspondingStr = (tuple.getReferenceNode()==null)? "" : tuple.getReferenceNode().toString();
 			
-			String str = tuple.getNode().toString() + ": " + tuple.getUserFeedback() 
+			String str = tuple.getNode().toString() + ": " + tuple.getUserFeedback() + " ... "
 				+ correspondingStr + "\n";
 			System.out.print(str);		
 			jumpStringSteps.add(str);
