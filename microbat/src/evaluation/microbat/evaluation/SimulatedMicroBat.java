@@ -174,7 +174,10 @@ public class SimulatedMicroBat {
 					mutatedTrace, pairList, maxUnclearFeedbackNum, confusingStack,
 					jumpingSteps, true);
 			
-			jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedbackType));
+			TraceNodePair pair = pairList.findByMutatedNode(suspiciousNode);
+			TraceNode referenceNode = (pair==null)? null : pair.getOriginalNode();
+			
+			jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedbackType, referenceNode));
 			
 			if(!feedbackType.equals(UserFeedback.UNCLEAR)){
 				setCurrentNodeChecked(mutatedTrace, suspiciousNode);		
@@ -237,7 +240,10 @@ public class SimulatedMicroBat {
 								mutatedTrace, pairList, maxUnclearFeedbackNum, confusingStack,
 								jumpingSteps, false);
 						
-						jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedbackType));
+						pair = pairList.findByMutatedNode(suspiciousNode);
+						referenceNode = (pair==null)? null : pair.getOriginalNode();
+						
+						jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedbackType, referenceNode));
 						
 						if(!feedbackType.equals(UserFeedback.UNCLEAR)){
 							setCurrentNodeChecked(mutatedTrace, suspiciousNode);		
@@ -251,7 +257,7 @@ public class SimulatedMicroBat {
 						}
 					}
 					else{
-						jumpingSteps.add(new StepOperationTuple(suspiciousNode, "Bug Found"));
+						jumpingSteps.add(new StepOperationTuple(suspiciousNode, "Bug Found", null));
 					}
 					
 				}
@@ -330,7 +336,10 @@ public class SimulatedMicroBat {
 		List<String> jumpStringSteps = new ArrayList<>();
 		System.out.println("bug found: " + isBugFound);
 		for(StepOperationTuple tuple: jumpingSteps){
-			String str = tuple.getNode().toString() + ": " + tuple.getUserFeedback() + "\n";
+			String correspondingStr = (tuple.getReferenceNode()==null)? "" : tuple.getReferenceNode().toString();
+			
+			String str = tuple.getNode().toString() + ": " + tuple.getUserFeedback() 
+				+ correspondingStr + "\n";
 			System.out.print(str);		
 			jumpStringSteps.add(str);
 		}
