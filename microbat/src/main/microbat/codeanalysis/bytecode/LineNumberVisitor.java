@@ -54,6 +54,11 @@ public class LineNumberVisitor extends EmptyVisitor {
 	
 	public void visitMethod(Method method){
 		Code code = method.getCode();
+		
+		if(method.toString().equals("static void <clinit>()")){
+			System.currentTimeMillis();
+		}
+		
 		CFG cfg = new CFGConstructor().buildCFGWithControlDomiance(code);
 		
 		if(/*breakPoint.getLineNumber() == 123 && */method.getName().equals("main")){

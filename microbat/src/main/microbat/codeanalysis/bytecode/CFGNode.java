@@ -1,9 +1,9 @@
 package microbat.codeanalysis.bytecode;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
-import org.apache.bcel.generic.BranchInstruction;
 import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.Select;
@@ -14,7 +14,7 @@ public class CFGNode {
 	private List<CFGNode> parents = new ArrayList<>();
 	private List<CFGNode> children = new ArrayList<>();
 	
-	private List<CFGNode> postDominatee = new ArrayList<>();
+	private HashSet<CFGNode> postDominatee = new HashSet<>();
 	
 	private List<CFGNode> controlDependentees = new ArrayList<>();
 
@@ -76,7 +76,7 @@ public class CFGNode {
 		return false;
 	}
 
-	public List<CFGNode> getPostDominatee() {
+	public HashSet<CFGNode> getPostDominatee() {
 		return postDominatee;
 	}
 	
@@ -90,6 +90,11 @@ public class CFGNode {
 
 	public void addControlDominatee(CFGNode child) {
 		this.controlDependentees.add(child);
+		
+	}
+
+	public void setPostDominatee(HashSet<CFGNode> originalSet) {
+		this.postDominatee = originalSet;
 		
 	}
 }

@@ -1,6 +1,6 @@
 package microbat.codeanalysis.bytecode;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -89,69 +89,58 @@ public class CFGConstructor {
 	public void constructPostDomination(CFG cfg){
 		/** connect basic post domination relation */
 		for(CFGNode node: cfg.getNodeList()){
+			node.addPostDominatee(node);
 			for(CFGNode parent: node.getParents()){
 				if(!parent.isBranch()){
 					node.addPostDominatee(parent);
+					for(CFGNode postDominatee: parent.getPostDominatee()){
+						node.addPostDominatee(postDominatee);
+					}
 				}
 			}
-			node.addPostDominatee(node);
 		}
 		
 		/** extend */
 		extendPostDominatee(cfg);
 	}
 
+	@SuppressWarnings("unchecked")
 	private void extendPostDominatee(CFG cfg) {
 		boolean isClose = false;
 		while(!isClose){
 			isClose = true;
 			
 			for(CFGNode node: cfg.getNodeList()){
-				List<CFGNode> totalAppendedList = new ArrayList<>();
-				
-				if(node.getInstructionHandle().getPosition()==113){
-					System.currentTimeMillis();
-				}
+				HashSet<CFGNode> originalSet = (HashSet<CFGNode>) node.getPostDominatee().clone();
+				int originalSize = originalSet.size();
 				
 				for(CFGNode postDominatee: node.getPostDominatee()){
-					List<CFGNode> appendedList = checkAppendedPostDominatee(node, postDominatee);
-					totalAppendedList.addAll(appendedList);
-					isClose = isClose && appendedList.isEmpty();
+					originalSet.addAll(postDominatee.getPostDominatee());
+					int newSize = node.getPostDominatee().size();
+					
+					boolean isAppendNew =  originalSize != newSize;
+					isClose = isClose && !isAppendNew;
 				}
 				
-				node.getPostDominatee().addAll(totalAppendedList);
+				node.setPostDominatee(originalSet);
 			}
 			
 			
 			for(CFGNode nodei: cfg.getNodeList()){
-				for(CFGNode nodej: cfg.getNodeList()){
-					if(!nodei.equals(nodej) && nodei.isBranch()){
-						boolean isExpend = checkBranchDomination(nodei, nodej);
-						isClose = isClose && !isExpend;
+				if(nodei.isBranch()){
+					for(CFGNode nodej: cfg.getNodeList()){
+						if(!nodei.equals(nodej)){
+							boolean isExpend = checkBranchDomination(nodei, nodej);
+							isClose = isClose && !isExpend;
+						}
 					}
+					
 				}
+				
 			}
 		}
 	}
 	
-	/**
-	 * return true if {code postDominatee} has some dominatee not contained in this code,
-	 * and vice versa.
-	 * 
-	 * @param postDominatee
-	 * @return
-	 */
-	private List<CFGNode> checkAppendedPostDominatee(CFGNode node, CFGNode postDominatee){
-		List<CFGNode> appendedList = new ArrayList<>();
-		for(CFGNode pDominatee: postDominatee.getPostDominatee()){
-			if(!node.getPostDominatee().contains(pDominatee)){
-				if(!appendedList.contains(pDominatee)){
-					appendedList.add(pDominatee);					
-				}
-			}
-		}
-		return appendedList;
-	}
 
 	private boolean checkBranchDomination(CFGNode branchNode, CFGNode postDominator) {
 		boolean isExpend = false;
