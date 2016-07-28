@@ -19,7 +19,6 @@ import microbat.evaluation.model.TraceNodeWrapper;
 import microbat.evaluation.model.Trial;
 import microbat.evaluation.util.TraceNodeComprehensiveSimilarityComparator;
 import microbat.handler.CheckingState;
-import microbat.model.Cause;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.trace.TraceNodeReverseOrderComparator;
