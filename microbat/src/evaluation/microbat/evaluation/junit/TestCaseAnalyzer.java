@@ -304,15 +304,16 @@ public class TestCaseAnalyzer {
 								continue;
 							}
 							
-							boolean isSuccess = runEvaluationForSingleTrial(tobeMutatedClass, mutationFile, 
+							EvaluationInfo evalInfo = runEvaluationForSingleTrial(tobeMutatedClass, mutationFile, 
 									testcaseConfig, line, testCaseName, correctTrace, executingStatements, 
 									reporter, tmpTrial);
-//							if(isSuccess){
-//								thisTrialNum++;								
-//								if(thisTrialNum >= trialNumPerTestCase){
-//									break stop;
-//								}
-//							}
+							correctTrace = evalInfo.correctTrace;
+							if(evalInfo.isSuccess){
+								thisTrialNum++;								
+								if(thisTrialNum >= trialNumPerTestCase){
+									break stop;
+								}
+							}
 						}
 					}
 				}
@@ -331,7 +332,20 @@ public class TestCaseAnalyzer {
 		return false;
 	}
 	
-	private boolean runEvaluationForSingleTrial(String tobeMutatedClass, File mutationFile, AppJavaClassPath testcaseConfig, 
+	class EvaluationInfo{
+		boolean isSuccess;
+		/**
+		 * for performance
+		 */
+		Trace correctTrace;
+		public EvaluationInfo(boolean isSuccess, Trace correctTrace) {
+			super();
+			this.isSuccess = isSuccess;
+			this.correctTrace = correctTrace;
+		}
+	}
+	
+	private EvaluationInfo runEvaluationForSingleTrial(String tobeMutatedClass, File mutationFile, AppJavaClassPath testcaseConfig, 
 			int line, String testCaseName, Trace correctTrace, List<BreakPoint> executingStatements, 
 			ExcelReporter reporter, Trial tmpTrial) throws JavaModelException {
 		try {
@@ -341,7 +355,7 @@ public class TestCaseAnalyzer {
 			if(mutateInfo.isTimeOut){
 				System.out.println("Timeout, mutated file: " + mutationFile);
 				System.out.println("skip Time Out test case: " + testCaseName);
-				return false;
+				return new EvaluationInfo(false, correctTrace);
 			}
 			
 			Trace killingMutatantTrace = mutateInfo.killingMutateTrace;
@@ -382,7 +396,7 @@ public class TestCaseAnalyzer {
 					 * trial with only one step.
 					 */
 					reporter.export(trialList);
-					return true;
+					return new EvaluationInfo(true, correctTrace);
 				}
 				
 			}
@@ -395,7 +409,7 @@ public class TestCaseAnalyzer {
 			System.err.println(tmpTrial);
 		} 
 		
-		return false;
+		return new EvaluationInfo(false, correctTrace);
 	}
 
 	class TraceFilePair{
