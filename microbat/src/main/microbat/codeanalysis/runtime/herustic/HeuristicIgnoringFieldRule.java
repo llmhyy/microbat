@@ -75,7 +75,7 @@ public class HeuristicIgnoringFieldRule {
 					}
 				}
 			} catch (ClassNotLoadedException e) {
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			
 			className = ENUM;

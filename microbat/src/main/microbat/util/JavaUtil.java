@@ -153,10 +153,7 @@ public class JavaUtil {
 		
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("[");
-		for(Field field: map.keySet()){
-			if(field.name().equals("modCount")){
-				System.currentTimeMillis();
-			}
+		for(Field field: fieldList){
 			boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(type, field);
 			if(!isIgnore){
 				try {
