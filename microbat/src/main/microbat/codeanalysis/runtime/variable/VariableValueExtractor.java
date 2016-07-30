@@ -2,6 +2,8 @@ package microbat.codeanalysis.runtime.variable;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -414,7 +416,14 @@ public class VariableValueExtractor {
 			boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);
 			if(needParseFields){
 				Map<Field, Value> fieldValueMap = objRef.getValues(type.allFields());
-				for (Field field : type.allFields()) {
+				List<Field> fieldList = new ArrayList<>(fieldValueMap.keySet());
+				Collections.sort(fieldList, new Comparator<Field>() {
+					@Override
+					public int compare(Field o1, Field o2) {
+						return o1.name().compareTo(o2.name());
+					}
+				});
+				for (Field field : fieldList) {
 					Value childVarValue = fieldValueMap.get(field);
 					if(type.isEnum()){
 						String childTypeName = field.typeName();
