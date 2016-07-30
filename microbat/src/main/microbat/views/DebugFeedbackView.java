@@ -3,25 +3,6 @@ package microbat.views;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.Activator;
-import microbat.algorithm.graphdiff.GraphDiff;
-import microbat.handler.CheckingState;
-import microbat.model.BreakPointValue;
-import microbat.model.trace.Trace;
-import microbat.model.trace.TraceNode;
-import microbat.model.value.ArrayValue;
-import microbat.model.value.PrimitiveValue;
-import microbat.model.value.ReferenceValue;
-import microbat.model.value.VarValue;
-import microbat.model.variable.Variable;
-import microbat.model.variable.VirtualVar;
-import microbat.recommendation.Bug;
-import microbat.recommendation.BugInferer;
-import microbat.recommendation.StepRecommender;
-import microbat.recommendation.UserFeedback;
-import microbat.util.JavaUtil;
-import microbat.util.Settings;
-
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
@@ -54,6 +35,24 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
+
+import microbat.Activator;
+import microbat.algorithm.graphdiff.GraphDiff;
+import microbat.handler.CheckingState;
+import microbat.model.BreakPointValue;
+import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
+import microbat.model.value.ArrayValue;
+import microbat.model.value.PrimitiveValue;
+import microbat.model.value.ReferenceValue;
+import microbat.model.value.VarValue;
+import microbat.model.variable.Variable;
+import microbat.model.variable.VirtualVar;
+import microbat.recommendation.Bug;
+import microbat.recommendation.BugInferer;
+import microbat.recommendation.StepRecommender;
+import microbat.recommendation.UserFeedback;
+import microbat.util.Settings;
 
 
 public class DebugFeedbackView extends ViewPart {
@@ -137,7 +136,7 @@ public class DebugFeedbackView extends ViewPart {
 	
 	
 	private void createWrittenVariableContent(List<VarValue> writtenVariables) {
-		this.writtenVariableTreeViewer.setContentProvider(new RWVariableContentProvider());
+		this.writtenVariableTreeViewer.setContentProvider(new RWVariableContentProvider(false));
 		this.writtenVariableTreeViewer.setLabelProvider(new VariableLabelProvider());
 		this.writtenVariableTreeViewer.setInput(writtenVariables);	
 		
@@ -148,7 +147,7 @@ public class DebugFeedbackView extends ViewPart {
 	}
 
 	private void createReadVariableContect(List<VarValue> readVariables) {
-		this.readVariableTreeViewer.setContentProvider(new RWVariableContentProvider());
+		this.readVariableTreeViewer.setContentProvider(new RWVariableContentProvider(true));
 		this.readVariableTreeViewer.setLabelProvider(new VariableLabelProvider());
 		this.readVariableTreeViewer.setInput(readVariables);	
 		
@@ -755,7 +754,15 @@ public class DebugFeedbackView extends ViewPart {
 	
 	@SuppressWarnings("unchecked")
 	class RWVariableContentProvider implements ITreeContentProvider{
-
+		/**
+		 * rw is true means read, and rw is false means write.
+		 */
+		boolean rw;
+		
+		public RWVariableContentProvider(boolean rw) {
+			this.rw = rw;
+		}
+		
 		@Override
 		public void dispose() {
 			
@@ -780,8 +787,28 @@ public class DebugFeedbackView extends ViewPart {
 		public Object[] getChildren(Object parentElement) {
 			if(parentElement instanceof ReferenceValue){
 				ReferenceValue parent = (ReferenceValue)parentElement;
-				if(parent.getChildren() == null){
-					VarValue vv = currentNode.getProgramState().findVarValue(parent.getVarID());
+				
+				List<VarValue> children = ((ReferenceValue)parentElement).getChildren();
+				if(children == null){
+					String varID = parent.getVarID();
+					varID = varID.substring(0, varID.indexOf(":"));
+					
+					VarValue vv = null;
+					/** read */
+					if(rw){
+						vv = currentNode.getProgramState().findVarValue(varID);
+					}
+					/** write */
+					else{
+						if(currentNode.getStepOverNext() != null){
+							vv = currentNode.getStepOverNext().getProgramState().findVarValue(varID);
+						}
+						
+						if(currentNode.getStepInNext() != null){
+							vv = currentNode.getStepInNext().getProgramState().findVarValue(varID);
+						}
+					}
+					
 					if(vv != null){
 						parent.setChildren(vv.getChildren());
 						return vv.getChildren().toArray(new VarValue[0]);
@@ -802,25 +829,13 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public boolean hasChildren(Object element) {
-			if(element instanceof ReferenceValue){
-				ReferenceValue parent = (ReferenceValue)element;
-				
-				List<VarValue> children = ((ReferenceValue)element).getChildren();
-				if(children == null){
-					String varID = parent.getVarID();
-					varID = varID.substring(0, varID.indexOf(":"));
-					
-					VarValue vv = currentNode.getProgramState().findVarValue(varID);
-					if(vv != null){
-						parent.setChildren(vv.getChildren());
-						return !parent.getChildren().isEmpty();
-					}
-				}
-				else{
-					return !children.isEmpty();
-				}
+			Object[] children = getChildren(element);
+			if(children==null || children.length==0){
+				return false;
 			}
-			return false;
+			else{
+				return true;
+			}
 		}
 		
 	}
