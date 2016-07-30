@@ -81,7 +81,8 @@ public class SearchStepHandler extends AbstractHandler {
 		try {
 			for(IPackageFragmentRoot root: javaProject.getAllPackageFragmentRoots()){
 				if(root instanceof PackageFragmentRoot){
-					String rootName = root.getElementName();
+					String rootName = root.getPath().toPortableString();
+					rootName = rootName.substring(javaProject.getElementName().length()+2, rootName.length());
 					String prefix = projectPath + "/" + rootName + "/";
 					
 					if(path.contains(prefix)){
