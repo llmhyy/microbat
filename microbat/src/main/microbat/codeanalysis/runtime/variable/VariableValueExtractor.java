@@ -423,7 +423,7 @@ public class VariableValueExtractor {
 						}
 					}
 					
-					boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(type, field.name());
+					boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(type, field);
 					if(!isIgnore){
 //						String childVarID = val.getChildId(field.name());
 						if(childVarValue != null){

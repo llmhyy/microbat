@@ -253,11 +253,6 @@ public class ProgramExecutor extends Executor {
 				} else if (event instanceof StepEvent) {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
-					if (this.trace.getLastestNode()!=null && this.trace.getLastestNode().getOrder()==331) {
-						System.currentTimeMillis();
-					}
-
-					// System.out.println("step event: " + currentLocation);
 
 					/**
 					 * collect the variable values after executing previous step
@@ -353,6 +348,9 @@ public class ProgramExecutor extends Executor {
 							returnedValue = lastestReturnedValue;
 						}
 
+						if (currentLocation.lineNumber()==85) {
+							System.currentTimeMillis();
+						}
 						parseReadWrittenVariableInThisStep(thread, currentLocation, node,
 								this.trace.getStepVariableTable(), Variable.READ);
 

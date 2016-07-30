@@ -157,7 +157,7 @@ public class JavaUtil {
 			if(field.name().equals("modCount")){
 				System.currentTimeMillis();
 			}
-			boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(type, field.name());
+			boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(type, field);
 			if(!isIgnore){
 				try {
 					String fieldType = field.type().name();

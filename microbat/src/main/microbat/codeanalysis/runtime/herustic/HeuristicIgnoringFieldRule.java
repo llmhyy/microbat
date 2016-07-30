@@ -5,8 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.ClassType;
+import com.sun.jdi.Field;
 import com.sun.jdi.InterfaceType;
+import com.sun.jdi.ReferenceType;
 import com.sun.jdi.Type;
 
 @SuppressWarnings("restriction")
@@ -56,11 +59,25 @@ public class HeuristicIgnoringFieldRule {
 		}
 	}
 	
-	public static boolean isForIgnore(ClassType type, String fieldName){
+	public static boolean isForIgnore(ClassType type, Field field){
+		String fieldName = field.name();
 		String className;
 		ArrayList<String> fields;
 		
 		if(type.isEnum()){
+			Type fieldType;
+			try {
+				fieldType = field.type();
+				if(fieldType instanceof ClassType){
+					ClassType rType = (ClassType)fieldType;
+					if(rType.isEnum()){
+						return true;
+					}
+				}
+			} catch (ClassNotLoadedException e) {
+				e.printStackTrace();
+			}
+			
 			className = ENUM;
 			fields = ignoringMap.get(className);
 			if(fields != null){
