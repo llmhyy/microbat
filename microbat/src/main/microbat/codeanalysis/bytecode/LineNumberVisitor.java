@@ -55,7 +55,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 	public void visitMethod(Method method){
 		Code code = method.getCode();
 		
-		if(method.toString().equals("static void <clinit>()")){
+		if(method.toString().contains("getMessage")){
 			System.currentTimeMillis();
 		}
 		

@@ -13,6 +13,7 @@ import java.util.Map;
 import org.apache.bcel.generic.GotoInstruction;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.JsrInstruction;
+import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Select;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
@@ -64,7 +65,7 @@ public class JavaUtil {
 	private static final String TO_STRING_NAME= "toString";
 	
 	public static boolean isNonJumpInstruction(Instruction ins){
-		return !(ins instanceof GotoInstruction) && 
+		return !(ins instanceof GotoInstruction) && !(ins instanceof ReturnInstruction) &&
 				!(ins instanceof JsrInstruction) && !(ins instanceof Select);
 	}
 	
