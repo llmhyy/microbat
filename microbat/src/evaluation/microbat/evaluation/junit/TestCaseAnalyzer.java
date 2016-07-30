@@ -148,17 +148,17 @@ public class TestCaseAnalyzer {
 //				+ "apache-common-math-2.2\\2081_22_1\\MathUtils.java";
 //		String mutatedClass = "org.apache.commons.math.util.MathUtils";
 		
-		String testClassName = "test.SimpleCalculatorTest";
-		String testMethodName = "testCalculator";
-		String mutationFile = "C:\\microbat_evaluation\\mutation\\79_78_2\\SimpleCalculator.java";
-		double unclearRate = -1;
-		boolean enableLoopInference = true;
-		//50_80_1
-//		String mutatedClass = "org.apache.commons.math.util.FastMath";
+//		String testClassName = "test.SimpleCalculatorTest";
+//		String testMethodName = "testCalculator";
+//		String mutationFile = "C:\\microbat_evaluation\\mutation\\73_70_1\\SimpleCalculator.java";
+//		double unclearRate = 0;
+//		boolean enableLoopInference = true;
 		
-//		String mutationFile = "C:\\Users\\YUNLIN~1\\AppData\\Local\\Temp\\"
-//				+ "mutation\\85_40_1\\SimpleCalculator.java";
-//		String mutatedClass = "com.simplecalculator.SimpleCalculator";
+		String testClassName = "org.apache.commons.math.DuplicateSampleAbscissaExceptionTest";
+		String testMethodName = "testConstructor";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\48_41_1\\DuplicateSampleAbscissaException.java";
+		double unclearRate = 0;
+		boolean enableLoopInference = true;
 		
 		try {
 			runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 
@@ -309,10 +309,10 @@ public class TestCaseAnalyzer {
 									reporter, tmpTrial);
 							correctTrace = evalInfo.correctTrace;
 							if(evalInfo.isSuccess){
-								thisTrialNum++;								
-								if(thisTrialNum >= trialNumPerTestCase){
-									break stop;
-								}
+//								thisTrialNum++;								
+//								if(thisTrialNum >= trialNumPerTestCase){
+//									break stop;
+//								}
 							}
 						}
 					}
@@ -522,7 +522,13 @@ public class TestCaseAnalyzer {
 		iunit.save(new NullProgressMonitor(), true);
 		autoCompile();
 		
-		MutateInfo mutateInfo = generateMutateTrace(testcaseConfig, iunit, mutatedLine);
+		MutateInfo mutateInfo = null;
+		try{
+			mutateInfo = generateMutateTrace(testcaseConfig, iunit, mutatedLine);			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 		
 		iunit.getBuffer().setContents(originalCodeText);
 		iunit.save(new NullProgressMonitor(), true);
