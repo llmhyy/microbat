@@ -97,4 +97,30 @@ public class CFGNode {
 		this.postDominatee = originalSet;
 		
 	}
+
+	public boolean canReachDominatee(CFGNode target) {
+		HashSet<CFGNode> visitedNodes = new HashSet<>();
+		return canReachDominatee(target, visitedNodes);
+	}
+
+	private boolean canReachDominatee(CFGNode target, HashSet<CFGNode> visitedNodes) {
+		for(CFGNode postDominatee: this.getPostDominatee()){
+			if(visitedNodes.contains(postDominatee)){
+				continue;
+			}
+			visitedNodes.add(postDominatee);
+			
+			if(postDominatee.equals(target)){
+				return true;
+			}
+			else if(!postDominatee.equals(this)){
+				boolean can = postDominatee.canReachDominatee(target, visitedNodes);
+				if(can){
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
 }

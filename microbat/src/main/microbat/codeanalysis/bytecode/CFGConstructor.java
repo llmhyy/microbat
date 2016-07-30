@@ -15,7 +15,11 @@ import microbat.util.JavaUtil;
 
 public class CFGConstructor {
 	
+	private Code code;
+	
 	public CFG buildCFGWithControlDomiance(Code code){
+		this.code = code;
+		
 		CFG cfg = constructCFG(code);
 		
 //		System.currentTimeMillis();
@@ -105,7 +109,7 @@ public class CFGConstructor {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void extendPostDominatee(CFG cfg) {
+	private void extendPostDominatee0(CFG cfg) {
 		boolean isClose = false;
 		while(!isClose){
 			isClose = true;
@@ -114,6 +118,7 @@ public class CFGConstructor {
 				HashSet<CFGNode> originalSet = (HashSet<CFGNode>) node.getPostDominatee().clone();
 				int originalSize = originalSet.size();
 				
+				long t5 = System.currentTimeMillis();
 				for(CFGNode postDominatee: node.getPostDominatee()){
 					originalSet.addAll(postDominatee.getPostDominatee());
 					int newSize = node.getPostDominatee().size();
@@ -121,6 +126,8 @@ public class CFGConstructor {
 					boolean isAppendNew =  originalSize != newSize;
 					isClose = isClose && !isAppendNew;
 				}
+				long t6 = System.currentTimeMillis();
+				System.out.println("time for travese post dominatee: " + (t6-t5));
 				
 				node.setPostDominatee(originalSet);
 			}
@@ -130,7 +137,7 @@ public class CFGConstructor {
 				if(nodei.isBranch()){
 					for(CFGNode nodej: cfg.getNodeList()){
 						if(!nodei.equals(nodej)){
-							boolean isExpend = checkBranchDomination(nodei, nodej);
+							boolean isExpend = checkBranchDomination0(nodei, nodej);
 							isClose = isClose && !isExpend;
 						}
 					}
@@ -142,7 +149,7 @@ public class CFGConstructor {
 	}
 	
 
-	private boolean checkBranchDomination(CFGNode branchNode, CFGNode postDominator) {
+	private boolean checkBranchDomination0(CFGNode branchNode, CFGNode postDominator) {
 		boolean isExpend = false;
 		if(allBranchTargetsIncludedInDominatees(branchNode, postDominator)){
 			if(!postDominator.getPostDominatee().contains(branchNode)){
@@ -163,6 +170,45 @@ public class CFGConstructor {
 		return true;
 	}
 	
+	private void extendPostDominatee(CFG cfg) {
+		boolean isClose = false;
+		
+		while(!isClose){
+			isClose = true;
+			for(CFGNode nodei: cfg.getNodeList()){
+				if(nodei.isBranch()){
+					for(CFGNode nodej: cfg.getNodeList()){
+						if(!nodei.equals(nodej)){
+							boolean isAppend = checkBranchDomination(nodei, nodej);
+							isClose = isClose && !isAppend;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	private boolean checkBranchDomination(CFGNode branchNode, CFGNode postDominator) {
+		boolean isExpend = false;
+		if(allBranchTargetsReachedByDominatees(branchNode, postDominator)){
+			if(!postDominator.getPostDominatee().contains(branchNode)){
+				isExpend = true;
+				postDominator.getPostDominatee().add(branchNode);
+			}
+		}
+		return isExpend;
+	}
+	
+	private boolean allBranchTargetsReachedByDominatees(CFGNode branchNode, CFGNode postDominator) {
+		for(CFGNode target: branchNode.getChildren()){
+			if(!postDominator.canReachDominatee(target)){
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
 	/**
 	 * This method can only be called after the post domination relation is built in {@code cfg}.
 	 * Given a branch node, I traverse its children in first order. All its non-post-dominatees are
@@ -171,18 +217,18 @@ public class CFGConstructor {
 	 * @param cfg
 	 */
 	public void constructControlDependency(CFG cfg){
-		for(CFGNode node: cfg.getNodeList()){
-			if(node.isBranch()){
-				computeControlDependentees(node, node.getChildren());
+		for(CFGNode branchNode: cfg.getNodeList()){
+			if(branchNode.isBranch()){
+				computeControlDependentees(branchNode, branchNode.getChildren());
 			}
 		}
 	}
 
-	private void computeControlDependentees(CFGNode node, List<CFGNode> list) {
+	private void computeControlDependentees(CFGNode branchNode, List<CFGNode> list) {
 		for(CFGNode child: list){
-			if(!child.getPostDominatee().contains(node) && !node.getControlDependentees().contains(child)){
-				node.addControlDominatee(child);
-				computeControlDependentees(node, child.getChildren());
+			if(!child.canReachDominatee(branchNode) && !branchNode.getControlDependentees().contains(child)){
+				branchNode.addControlDominatee(child);
+				computeControlDependentees(branchNode, child.getChildren());
 			}
 		}
 		
