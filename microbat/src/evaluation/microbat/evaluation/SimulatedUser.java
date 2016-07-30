@@ -87,8 +87,8 @@ public class SimulatedUser {
 				feedback = UserFeedback.WRONG_PATH;
 			}
 			else{
-				if(suspiciousNode.getLineNumber() == 51){
-//					System.currentTimeMillis();
+				if(suspiciousNode.getOrder() == 35){
+					System.currentTimeMillis();
 				}
 				
 				List<VarValue> wrongVars = new ArrayList<>();

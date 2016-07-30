@@ -92,7 +92,13 @@ public class ReferenceValue extends VarValue {
 			ReferenceValue thatRef = (ReferenceValue)nodeAfter;
 			
 			if(this.isDefinedToStringMethod() && thatRef.isDefinedToStringMethod()){
-				return this.getStringValue().equals(thatRef.getStringValue());
+				String thisString = getStringValue();
+				String thatString = thatRef.getStringValue();
+				
+				thisString = thisString.replaceAll("\\(id=\\d+\\)", "");
+				thatString = thatString.replaceAll("\\(id=\\d+\\)", "");
+				
+				return thisString.equals(thatString);
 			}
 			else if(!this.isDefinedToStringMethod() && !thatRef.isDefinedToStringMethod()){
 				return true;

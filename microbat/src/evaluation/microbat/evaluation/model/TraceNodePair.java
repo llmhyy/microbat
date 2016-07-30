@@ -190,6 +190,8 @@ public class TraceNodePair {
 								differentVarValueList.add(mutatedVar);
 							}
 							
+							System.currentTimeMillis();
+							
 							for(GraphDiff diff: differ.getDiffs()){
 								if(diff.getDiffType().equals(GraphDiff.UPDATE)){
 									VarValue mutatedSubVarValue = (VarValue) diff.getNodeBefore();
