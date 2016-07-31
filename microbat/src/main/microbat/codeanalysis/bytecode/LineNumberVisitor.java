@@ -22,7 +22,9 @@ import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Select;
 import org.apache.bcel.generic.StoreInstruction;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import microbat.codeanalysis.ast.LoopHeadParser;
 import microbat.codeanalysis.ast.SourceScopeParser;
@@ -136,7 +138,13 @@ public class LineNumberVisitor extends EmptyVisitor {
 						else{
 							WrittenFieldRetriever wfRetriever = new WrittenFieldRetriever(cu, point.getLineNumber(), fullFieldName);
 							cu.accept(wfRetriever);
-							fullFieldName = wfRetriever.fullFieldName;
+							AbstractTypeDeclaration atd = (AbstractTypeDeclaration) cu.types().get(0);
+							if(wfRetriever.fullFieldName == null && !(atd instanceof TypeDeclaration)){
+								/** keep original full field name */
+							}
+							else{
+								fullFieldName = wfRetriever.fullFieldName;
+							}
 //							System.currentTimeMillis();
 						}
 					}
