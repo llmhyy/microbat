@@ -13,8 +13,16 @@ import org.apache.bcel.generic.Select;
 
 import microbat.util.JavaUtil;
 
+/**
+ * Construct CFG based on bytecode of a method.
+ * 
+ * @author Yun Lin
+ *
+ */
 public class CFGConstructor {
-	
+	/**
+	 * This field is remained for debugging purpose
+	 */
 	private Code code;
 	
 	public CFG buildCFGWithControlDomiance(Code code){

@@ -518,6 +518,9 @@ public class JavaUtil {
 		List<IMethodBinding> methodInvocationBindings = findMethodInvocations(prevNode);
 		if(!methodInvocationBindings.isEmpty()){
 			MethodDeclaration md = findMethodDeclaration(postNode);
+			if(md == null){
+				return null;
+			}
 			IMethodBinding methodDeclarationBinding = md.resolveBinding();
 			
 			if(canFindCompatibleSig(methodInvocationBindings, methodDeclarationBinding)){
@@ -526,7 +529,6 @@ public class JavaUtil {
 			}
 		}
 		
-		System.currentTimeMillis();
 		return null;
 	}
 

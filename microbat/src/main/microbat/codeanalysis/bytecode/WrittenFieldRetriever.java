@@ -39,8 +39,9 @@ public class WrittenFieldRetriever extends ASTNodeRetriever{
 	}
 	
 	public boolean visit(FieldDeclaration fd){
-		int linNum = cu.getLineNumber(fd.getStartPosition());
-		if(linNum == lineNumber){
+		int startLineNum = cu.getLineNumber(fd.getStartPosition());
+		int endLineNum = cu.getLineNumber(fd.getStartPosition()+fd.getLength());
+		if(startLineNum <= lineNumber && lineNumber <= endLineNum){
 			fullFieldName = varName;
 			return false;
 		}

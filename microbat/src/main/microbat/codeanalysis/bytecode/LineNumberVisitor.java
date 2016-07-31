@@ -55,8 +55,8 @@ public class LineNumberVisitor extends EmptyVisitor {
 	public void visitMethod(Method method){
 		Code code = method.getCode();
 		
-		if(method.toString().contains("getMessage")){
-			System.currentTimeMillis();
+		if(code == null){
+			return;
 		}
 		
 		CFG cfg = new CFGConstructor().buildCFGWithControlDomiance(code);
@@ -101,6 +101,10 @@ public class LineNumberVisitor extends EmptyVisitor {
 	private void parseReadWrittenVariable(List<InstructionHandle> correspondingInstructions, Code code, CFG cfg) {
 		BreakPoint point = this.breakPoint;
 		
+		if(point.getLineNumber()==39){
+			System.currentTimeMillis();
+		}
+		
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getClassCanonicalName());
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool()); 
 		 
@@ -131,6 +135,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 							WrittenFieldRetriever wfRetriever = new WrittenFieldRetriever(cu, point.getLineNumber(), fullFieldName);
 							cu.accept(wfRetriever);
 							fullFieldName = wfRetriever.fullFieldName;
+//							System.currentTimeMillis();
 						}
 					}
 					
