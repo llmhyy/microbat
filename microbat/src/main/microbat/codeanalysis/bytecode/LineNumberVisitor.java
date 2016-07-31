@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.EmptyVisitor;
+import org.apache.bcel.classfile.LineNumber;
 import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
@@ -61,18 +62,19 @@ public class LineNumberVisitor extends EmptyVisitor {
 			return;
 		}
 		
-		CFG cfg = new CFGConstructor().buildCFGWithControlDomiance(code);
-		
-		if(/*breakPoint.getLineNumber() == 123 && */method.getName().equals("main")){
-			System.currentTimeMillis();
+		List<BreakPoint> includedBreakPoints = findIncludeBreakPoints(code, this.breakPoints);
+		if(includedBreakPoints.isEmpty()){
+			return;
 		}
 		
+		CFG cfg = new CFGConstructor().buildCFGWithControlDomiance(code);
 		if(code != null){
-			for(BreakPoint breakPoint: this.breakPoints){
+			for(BreakPoint breakPoint: breakPoints){
 				List<InstructionHandle> correspondingInstructions 
 				= findCorrespondingInstructions(breakPoint.getLineNumber(), code);
 				
 				if(!correspondingInstructions.isEmpty()){
+					
 					String methodSig = breakPoint.getClassCanonicalName() + "." + method.getName() + method.getSignature();
 					breakPoint.setMethodSign(methodSig);
 					
@@ -85,6 +87,24 @@ public class LineNumberVisitor extends EmptyVisitor {
 		
 		
     }
+
+	private List<BreakPoint> findIncludeBreakPoints(Code code, List<BreakPoint> breakPoints) {
+		List<BreakPoint> includedPoints = new ArrayList<>();
+		
+		LineNumber[] table = code.getLineNumberTable().getLineNumberTable();
+		
+		int startLine = table[0].getLineNumber()-1;
+		int endLine = table[table.length-1].getLineNumber();
+		
+		for(BreakPoint point: breakPoints){
+			if(startLine<=point.getLineNumber() && point.getLineNumber()<=endLine){
+				includedPoints.add(point);
+			}
+		}
+		
+		return includedPoints;
+	}
+
 
 	@SuppressWarnings("rawtypes")
 	private List<InstructionHandle> findCorrespondingInstructions(int lineNumber, Code code) {

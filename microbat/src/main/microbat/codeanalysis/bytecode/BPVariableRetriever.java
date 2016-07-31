@@ -32,7 +32,6 @@ public class BPVariableRetriever {
 		systemClassPath = System.getProperty("java.class.path");
 		
 		Map<String, List<BreakPoint>> class2PointMap = summarize(executingStatements);
-		
 		for(String className: class2PointMap.keySet()){
 			/** current evaluation does not change line number, so we can keep the cache to speed up the progress */
 			if(!isForEvaluation){
