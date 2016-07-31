@@ -44,11 +44,11 @@ import sav.common.core.utils.SignatureUtils;
  */
 public class LineNumberVisitor extends EmptyVisitor {
 	
-	private BreakPoint breakPoint;
+	private List<BreakPoint> breakPoints;
 	
-	public LineNumberVisitor(BreakPoint breakPoint) {
+	public LineNumberVisitor(List<BreakPoint> breakPoints) {
 		super();
-		this.breakPoint = breakPoint;
+		this.breakPoints = breakPoints;
 	}
 
 	
@@ -66,15 +66,19 @@ public class LineNumberVisitor extends EmptyVisitor {
 		}
 		
 		if(code != null){
-			List<InstructionHandle> correspondingInstructions 
-				= findCorrespondingInstructions(this.breakPoint.getLineNumber(), code);
-			
-			if(!correspondingInstructions.isEmpty()){
-				String methodSig = breakPoint.getClassCanonicalName() + "." + method.getName() + method.getSignature();
-				breakPoint.setMethodSign(methodSig);
+			for(BreakPoint breakPoint: this.breakPoints){
+				List<InstructionHandle> correspondingInstructions 
+				= findCorrespondingInstructions(breakPoint.getLineNumber(), code);
 				
-				parseReadWrittenVariable(correspondingInstructions, code, cfg);
+				if(!correspondingInstructions.isEmpty()){
+					String methodSig = breakPoint.getClassCanonicalName() + "." + method.getName() + method.getSignature();
+					breakPoint.setMethodSign(methodSig);
+					
+					parseReadWrittenVariable(breakPoint, correspondingInstructions, code, cfg);
+				}
+				
 			}
+			
 		}
 		
 		
@@ -98,9 +102,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 		return correspondingInstructions;
 	}
 
-	private void parseReadWrittenVariable(List<InstructionHandle> correspondingInstructions, Code code, CFG cfg) {
-		BreakPoint point = this.breakPoint;
-		
+	private void parseReadWrittenVariable(BreakPoint point, List<InstructionHandle> correspondingInstructions, Code code, CFG cfg) {
 		if(point.getLineNumber()==39){
 			System.currentTimeMillis();
 		}
@@ -228,7 +230,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 		List<CFGNode> scopeNodes = node.getControlDependentees();
 		List<ClassLocation> list = new ArrayList<>();
 		for(CFGNode n: scopeNodes){
-			ClassLocation location = transferToLocation(n.getInstructionHandle(), code);
+			ClassLocation location = transferToLocation(n.getInstructionHandle(), code, point);
 			if(!list.contains(location)){
 				list.add(location);
 			}
@@ -245,11 +247,11 @@ public class LineNumberVisitor extends EmptyVisitor {
 		}
 	}
 
-	private ClassLocation transferToLocation(InstructionHandle insHandle, Code code) {
+	private ClassLocation transferToLocation(InstructionHandle insHandle, Code code, BreakPoint point) {
 		LineNumberTable table = code.getLineNumberTable();
 		int sourceLine = table.getSourceLine(insHandle.getPosition());
 		
-		ClassLocation location = new ClassLocation(this.breakPoint.getClassCanonicalName(), null, sourceLine);
+		ClassLocation location = new ClassLocation(point.getClassCanonicalName(), null, sourceLine);
 		return location;
 	}
 
