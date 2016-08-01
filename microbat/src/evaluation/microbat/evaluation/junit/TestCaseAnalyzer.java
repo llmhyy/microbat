@@ -154,9 +154,9 @@ public class TestCaseAnalyzer {
 //		double unclearRate = 0;
 //		boolean enableLoopInference = true;
 		
-		String testClassName = "org.apache.commons.math.DuplicateSampleAbscissaExceptionTest";
-		String testMethodName = "testConstructor";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\48_41_1\\DuplicateSampleAbscissaException.java";
+		String testClassName = "org.apache.commons.math.analysis.BinaryFunctionTest";
+		String testMethodName = "testPow";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\1642_41_1\\FastMath.java";
 		double unclearRate = 0;
 		boolean enableLoopInference = true;
 		
@@ -309,10 +309,10 @@ public class TestCaseAnalyzer {
 									reporter, tmpTrial);
 							correctTrace = evalInfo.correctTrace;
 							if(evalInfo.isSuccess){
-//								thisTrialNum++;								
-//								if(thisTrialNum >= trialNumPerTestCase){
-//									break stop;
-//								}
+								thisTrialNum++;								
+								if(thisTrialNum >= trialNumPerTestCase){
+									break stop;
+								}
 							}
 						}
 					}
@@ -352,6 +352,10 @@ public class TestCaseAnalyzer {
 			MutateInfo mutateInfo = 
 					mutateCode(tobeMutatedClass, mutationFile, testcaseConfig, line, testCaseName);
 			
+			if(mutateInfo == null){
+				return new EvaluationInfo(false, correctTrace);
+			}
+			
 			if(mutateInfo.isTimeOut){
 				System.out.println("Timeout, mutated file: " + mutationFile);
 				System.out.println("skip Time Out test case: " + testCaseName);
@@ -361,6 +365,7 @@ public class TestCaseAnalyzer {
 			Trace killingMutatantTrace = mutateInfo.killingMutateTrace;
 			if(killingMutatantTrace != null && killingMutatantTrace.size() > 1){
 				if(null == correctTrace){
+					System.out.println("Generating correct trace for " + testCaseName);
 					correctTrace = new TraceModelConstructor().
 							constructTraceModel(testcaseConfig, executingStatements);
 				}
@@ -401,7 +406,7 @@ public class TestCaseAnalyzer {
 				
 			}
 			else{
-				System.out.println("No suitable mutants for test case " + testCaseName + "in line " + line);
+//				System.out.println("No suitable mutants for test case " + testCaseName + "in line " + line);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -457,7 +462,8 @@ public class TestCaseAnalyzer {
 		
 	}
 	
-	private MutateInfo generateMutateTrace(AppJavaClassPath testcaseConfig, ICompilationUnit iunit, int mutatedLine){
+	private MutateInfo generateMutateTrace(AppJavaClassPath testcaseConfig, ICompilationUnit iunit, int mutatedLine, 
+			String mutatedFile){
 		Trace killingMutantTrace = null;
 		boolean isTooLong = false;
 		boolean isKill = true;
@@ -467,10 +473,11 @@ public class TestCaseAnalyzer {
 			checker.checkValidity(testcaseConfig);
 			
 			isKill = !checker.isPassingTest() && !checker.hasCompilationError();
-			System.out.println(": " + (isKill? "killed" : "not killed"));
 			
 			if(isKill){
-				System.out.println("generating trace for mutated class " + iunit.getElementName() + " (line: " + mutatedLine + ")");
+				String testMethod = testcaseConfig.getOptionalTestClass() + "#" + testcaseConfig.getOptionalTestMethod();
+				
+				System.out.println("generating trace for " + testMethod + " (mutation: " + mutatedFile + ")");
 				TraceModelConstructor constructor = new TraceModelConstructor();
 				
 				List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig);
@@ -506,8 +513,6 @@ public class TestCaseAnalyzer {
 //		Settings.compilationUnitMap.clear();
 //		Settings.iCompilationUnitMap.clear();
 		
-		
-		
 		ICompilationUnit iunit = JavaUtil.findNonCacheICompilationUnitInProject(toBeMutatedClass);
 		CompilationUnit unit = JavaUtil.convertICompilationUnitToASTNode(iunit);
 		Settings.iCompilationUnitMap.put(toBeMutatedClass, iunit);
@@ -515,7 +520,7 @@ public class TestCaseAnalyzer {
 		
 		String originalCodeText = iunit.getSource();
 		
-		System.out.print("checking mutated class " + iunit.getElementName() + " (line: " + mutatedLine + ")");
+//		System.out.println("checking mutated class " + iunit.getElementName() + " (line: " + mutatedLine + ")");
 		String mutatedCodeText = FileUtils.readFileToString(mutationFile);
 		
 		iunit.getBuffer().setContents(mutatedCodeText);
@@ -524,7 +529,7 @@ public class TestCaseAnalyzer {
 		
 		MutateInfo mutateInfo = null;
 		try{
-			mutateInfo = generateMutateTrace(testcaseConfig, iunit, mutatedLine);			
+			mutateInfo = generateMutateTrace(testcaseConfig, iunit, mutatedLine, mutationFile.toString());			
 		}
 		catch(Exception e){
 			e.printStackTrace();
