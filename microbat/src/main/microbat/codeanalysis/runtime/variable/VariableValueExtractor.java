@@ -443,10 +443,15 @@ public class VariableValueExtractor {
 				}
 			}
 			
+	        
 			StringBuffer buffer = new StringBuffer();
 			buffer.append("[");
 			for(VarValue child: val.getChildren()){
-				buffer.append(child.getVarName() + "=" + child.getStringValue() + "; ");
+				String childStringValue = child.getStringValue(); 
+				if(childStringValue!=null && childStringValue.length()>300){
+					childStringValue = childStringValue.substring(0, 300);
+				}
+				buffer.append(child.getVarName() + "=" + childStringValue + "; ");
 			}
 			buffer.append("]");
 			val.setStringValue(buffer.toString());
