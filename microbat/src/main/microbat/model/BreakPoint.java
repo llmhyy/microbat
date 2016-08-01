@@ -115,9 +115,9 @@ public class BreakPoint extends ClassLocation {
 	}
 	
 	public String getMethodSign() {
-		if(methodSign == null){
-			System.err.println("missing method name!");
-		}
+//		if(methodSign == null){
+//			System.err.println("missing method name!");
+//		}
 		return methodSign;
 	}
 	

@@ -778,10 +778,14 @@ public class ProgramExecutor extends Executor {
 
 	private boolean checkContext(BreakPoint lastSteppingPoint, Location loc) {
 		String methodSign1 = lastSteppingPoint.getMethodSign();
-		methodSign1 = methodSign1.substring(methodSign1.lastIndexOf(".") + 1, methodSign1.length());
+		if(methodSign1 == null){
+			return true;
+		}
+		methodSign1 = methodSign1.substring(methodSign1.lastIndexOf(".") + 1, methodSign1.length());			
 
 		String methodSign2 = loc.method().signature();
 		methodSign2 = loc.method().name() + methodSign2;
+		
 
 		String class1 = loc.declaringType().signature();
 		class1 = SignatureUtils.signatureToName(class1);
