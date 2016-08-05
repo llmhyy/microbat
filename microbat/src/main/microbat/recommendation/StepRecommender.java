@@ -261,12 +261,7 @@ public class StepRecommender {
 		
 		TraceNode suspiciousNode = null;
 		if(state == DebugState.SIMPLE_INFERENCE){
-			if(userFeedBack.equals(UserFeedback.CORRECT)){
-				
-			}
-			else{
-				suspiciousNode = handleSimpleInferenceState(trace, currentNode, userFeedBack);				
-			}
+			suspiciousNode = handleSimpleInferenceState(trace, currentNode, userFeedBack);
 			
 		}
 		else if(state == DebugState.SKIP){
