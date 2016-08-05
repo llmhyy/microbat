@@ -128,7 +128,7 @@ public class StepRecommender {
 	
 	private boolean enableLoopInference = true;
 	
-	private int state = DebugState.JUMP;
+	private int state = DebugState.SIMPLE_INFERENCE;
 	
 	/**
 	 * Fields for clear state.
@@ -149,7 +149,7 @@ public class StepRecommender {
 		
 		if(feedback.equals(UserFeedback.UNCLEAR)){
 			
-			if(state==DebugState.JUMP || state==DebugState.SKIP || state==DebugState.BINARY_SEARCH || state==DebugState.DETAIL_INSPECT){
+			if(state==DebugState.SIMPLE_INFERENCE || state==DebugState.SKIP || state==DebugState.BINARY_SEARCH || state==DebugState.DETAIL_INSPECT){
 				latestClearState = state;
 			}
 			
@@ -256,21 +256,27 @@ public class StepRecommender {
 		
 		TraceNode lastRecommendNode = getLatestCause().getRecommendedNode();
 		if(lastRecommendNode!= null && !currentNode.equals(lastRecommendNode)){
-			state = DebugState.JUMP;
+			state = DebugState.SIMPLE_INFERENCE;
 		}
 		
 		TraceNode suspiciousNode = null;
-		if(state == DebugState.JUMP){
-			suspiciousNode = handleJumpBehavior(trace, currentNode, userFeedBack);
+		if(state == DebugState.SIMPLE_INFERENCE){
+			if(userFeedBack.equals(UserFeedback.CORRECT)){
+				
+			}
+			else{
+				suspiciousNode = handleSimpleInferenceState(trace, currentNode, userFeedBack);				
+			}
+			
 		}
 		else if(state == DebugState.SKIP){
-			suspiciousNode = handleSkipBehavior(trace, currentNode, userFeedBack);
+			suspiciousNode = handleSkipState(trace, currentNode, userFeedBack);
 		}
 		else if(state == DebugState.BINARY_SEARCH){
-			suspiciousNode = handleBinarySearchBehavior(trace, currentNode, userFeedBack);
+			suspiciousNode = handleBinarySearchState(trace, currentNode, userFeedBack);
 		}
 		else if(state == DebugState.DETAIL_INSPECT){
-			suspiciousNode = handleDetailInspecting(trace, currentNode, userFeedBack);
+			suspiciousNode = handleDetailInspectingState(trace, currentNode, userFeedBack);
 		}
 		
 		getLatestCause().setRecommendedNode(suspiciousNode);
@@ -278,7 +284,7 @@ public class StepRecommender {
 		return suspiciousNode;
 	}
 
-	private TraceNode handleBinarySearchBehavior(Trace trace, TraceNode currentNode, String userFeedback) {
+	private TraceNode handleBinarySearchState(Trace trace, TraceNode currentNode, String userFeedback) {
 		TraceNode suspiciousNode = null;
 		
 		boolean isOverSkipping = currentNode.isAllReadWrittenVarCorrect(false);
@@ -325,8 +331,8 @@ public class StepRecommender {
 						this.lastNode = currentNode;
 					}
 					else{
-						state = DebugState.JUMP;
-						suspiciousNode = handleJumpBehavior(trace, currentNode, userFeedback);
+						state = DebugState.SIMPLE_INFERENCE;
+						suspiciousNode = handleSimpleInferenceState(trace, currentNode, userFeedback);
 					}
 				}
 				else{
@@ -355,7 +361,7 @@ public class StepRecommender {
 		return null;
 	}
 
-	private TraceNode handleSkipBehavior(Trace trace, TraceNode currentNode, String userFeedback) {
+	private TraceNode handleSkipState(Trace trace, TraceNode currentNode, String userFeedback) {
 		TraceNode suspiciousNode;
 		boolean isOverSkipping = currentNode.isAllReadWrittenVarCorrect(false);
 		if(isOverSkipping){
@@ -370,11 +376,11 @@ public class StepRecommender {
 			this.lastNode = currentNode;
 		}
 		else{
-			state = DebugState.JUMP;
+			state = DebugState.SIMPLE_INFERENCE;
 			
 			this.loopRange.clearSkipPoints();
 			
-			suspiciousNode = handleJumpBehavior(trace, currentNode, userFeedback);
+			suspiciousNode = handleSimpleInferenceState(trace, currentNode, userFeedback);
 		}
 		return suspiciousNode;
 	}
@@ -426,77 +432,75 @@ public class StepRecommender {
 			this.latestCause.setWrongPath(false);			
 		}
 		
-		/**
-		 * In this case, user provide an "incorrect" feedback for current node, while the wrong 
-		 * variable in latest buggy node is caused by the definition of suspicious node. If this 
-		 * suspicious node has been checked and the read variables are correct, then the bug
-		 * happens between the suspicious node and buggy node. Therefore, we enter the INSPECT_DETAIL
-		 * state. 
-		 */
-		if(userFeedBack.equals(UserFeedback.CORRECT) && 
-				suspiciousNode.hasChecked() && suspiciousNode.findMarkedReadVariable().isEmpty()){
-			//TODO it could be done in a more intelligent way.
-			this.inspectingRange = new InspectingRange(suspiciousNode, getLatestCause().getBuggyNode());
-			TraceNode recommendedNode = handleDetailInspecting(trace, currentNode, userFeedBack);
-			return recommendedNode;
+		
+		boolean isPathInPattern = false;
+		PathInstance path = null;
+		if(getLatestCause().getBuggyNode() != null){
+			path = new PathInstance(suspiciousNode, getLatestCause().getBuggyNode());
+			isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path);				
+		}
+		
+		if(this.enableLoopInference && isPathInPattern && !shouldStopOnCheckedNode(currentNode, path)){
+			state = DebugState.SKIP;
+			
+			this.loopRange.endNode = path.getEndNode();
+			this.loopRange.skipPoints.clear();
+			//this.range.skipPoints.add(suspiciousNode);
+			
+			TraceNode oldSusiciousNode = suspiciousNode;
+			while(Settings.potentialCorrectPatterns.containsPattern(path) 
+					&& !shouldStopOnCheckedNode(suspiciousNode, path)){
+				
+				Settings.potentialCorrectPatterns.addPathForPattern(path);
+				
+//				PotentialCorrectPattern pattern = Settings.potentialCorrectPatterns.getPattern(path);
+				oldSusiciousNode = suspiciousNode;
+				
+				suspiciousNode = Settings.potentialCorrectPatterns.inferNextSuspiciousNode(oldSusiciousNode);
+				System.currentTimeMillis();
+				
+				if(suspiciousNode == null){
+					break;
+				}
+				else{
+					this.loopRange.skipPoints.add(oldSusiciousNode);
+					path = new PathInstance(suspiciousNode, oldSusiciousNode);					
+				}
+			}
+			
+			this.lastNode = currentNode;
+			return oldSusiciousNode;
 		}
 		else{
+			state = DebugState.SIMPLE_INFERENCE;
 			
-			boolean isPathInPattern = false;
-			PathInstance path = null;
-			if(getLatestCause().getBuggyNode() != null){
-				path = new PathInstance(suspiciousNode, getLatestCause().getBuggyNode());
-				isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path);				
-			}
+			this.lastNode = currentNode;
 			
-			if(this.enableLoopInference && isPathInPattern && !shouldStopOnCheckedNode(currentNode, path)){
-				state = DebugState.SKIP;
-				
-				this.loopRange.endNode = path.getEndNode();
-				this.loopRange.skipPoints.clear();
-				//this.range.skipPoints.add(suspiciousNode);
-				
-				TraceNode oldSusiciousNode = suspiciousNode;
-				while(Settings.potentialCorrectPatterns.containsPattern(path) 
-						&& !shouldStopOnCheckedNode(suspiciousNode, path)){
-					
-					Settings.potentialCorrectPatterns.addPathForPattern(path);
-					
-//					PotentialCorrectPattern pattern = Settings.potentialCorrectPatterns.getPattern(path);
-					oldSusiciousNode = suspiciousNode;
-					
-					suspiciousNode = Settings.potentialCorrectPatterns.inferNextSuspiciousNode(oldSusiciousNode);
-					System.currentTimeMillis();
-					
-					if(suspiciousNode == null){
-						break;
-					}
-					else{
-						this.loopRange.skipPoints.add(oldSusiciousNode);
-						path = new PathInstance(suspiciousNode, oldSusiciousNode);					
-					}
-				}
-				
-				this.lastNode = currentNode;
-				return oldSusiciousNode;
-			}
-			else{
-				state = DebugState.JUMP;
-				
-				this.lastNode = currentNode;
-				
-				return suspiciousNode;				
-			}
+			return suspiciousNode;				
 		}
 		
 	}
 
-	
-	private TraceNode handleJumpBehavior(Trace trace, TraceNode currentNode, String userFeedBack) {
+	/**
+	 * Given the state is simple inference, which means the state is caused by either simple data dominance or simple
+	 * control dominance, this method interpret the user feedback into events to transit to a new state. 
+	 * 
+	 * @param trace
+	 * @param currentNode
+	 * @param userFeedBack
+	 * @return
+	 */
+	private TraceNode handleSimpleInferenceState(Trace trace, TraceNode currentNode, String userFeedBack) {
 		
 		TraceNode node;
 		if(userFeedBack.equals(UserFeedback.WRONG_PATH)){
 			node = handleWrongPath(trace, currentNode, userFeedBack);
+		}
+		else if(userFeedBack.equals(UserFeedback.CORRECT)){
+			//TODO it could be done in a more intelligent way.
+			this.inspectingRange = new InspectingRange(currentNode, getLatestCause().getBuggyNode());
+			TraceNode recommendedNode = handleDetailInspectingState(trace, currentNode, userFeedBack);
+			return recommendedNode;
 		}
 		else{
 			node = handleWrongValue(trace, currentNode, userFeedBack);
@@ -530,7 +534,7 @@ public class StepRecommender {
 		return true;
 	}
 
-	private TraceNode handleDetailInspecting(Trace trace, TraceNode currentNode, String userFeedBack) {
+	private TraceNode handleDetailInspectingState(Trace trace, TraceNode currentNode, String userFeedBack) {
 		
 		if(userFeedBack.equals(UserFeedback.CORRECT)){
 			this.state = DebugState.DETAIL_INSPECT;
@@ -547,7 +551,7 @@ public class StepRecommender {
 			return nextNode;
 		}
 		else{
-			TraceNode node = handleJumpBehavior(trace, currentNode, userFeedBack);
+			TraceNode node = handleSimpleInferenceState(trace, currentNode, userFeedBack);
 			return node;
 		}
 	}
