@@ -123,17 +123,17 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		ExcelReporter reporter = new ExcelReporter(Settings.projectName+".xlsx", this.unclearRates);
+//		ExcelReporter reporter = new ExcelReporter(Settings.projectName+".xlsx", this.unclearRates);
+//		
+//		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
+//		
+//		for(IJavaElement element: testRoot.getChildren()){
+//			if(element instanceof IPackageFragment){
+//				runEvaluation((IPackageFragment)element, reporter);				
+//			}
+//		}
 		
-		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
-		
-		for(IJavaElement element: testRoot.getChildren()){
-			if(element instanceof IPackageFragment){
-				runEvaluation((IPackageFragment)element, reporter);				
-			}
-		}
-		
-//		runSingeTrial();
+		runSingeTrial();
 		
 //		String className = "org.apache.commons.math.analysis.polynomials.PolynomialFunctionLagrangeFormTest";
 //		String methodName = "testLinearFunction";
@@ -154,9 +154,9 @@ public class TestCaseAnalyzer {
 //		double unclearRate = 0;
 //		boolean enableLoopInference = true;
 		
-		String testClassName = "org.apache.commons.math.analysis.BinaryFunctionTest";
-		String testMethodName = "testPow";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\1642_41_1\\FastMath.java";
+		String testClassName = "org.apache.commons.math.analysis.polynomials.PolynomialsUtilsTest";
+		String testMethodName = "testFirstChebyshevPolynomials";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\706_13_1\\BigFraction.java";
 		double unclearRate = 0;
 		boolean enableLoopInference = true;
 		
