@@ -20,6 +20,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -60,7 +62,7 @@ public class DebugFeedbackView extends ViewPart {
 	private TraceNode currentNode;
 //	private TraceNode lastestNode;
 	
-	private StepRecommender recommender = new StepRecommender(true);
+	private StepRecommender recommender = new StepRecommender(Settings.enableLoopInference);
 	
 	private String feedbackType = UserFeedback.INCORRECT;
 	private String lastFeedbackType = null;
@@ -181,6 +183,7 @@ public class DebugFeedbackView extends ViewPart {
 		GridLayout parentLayout = new GridLayout(1, true);
 		parent.setLayout(parentLayout);
 
+		createEnableLoopInferenceGroup(parent);
 		createSubmitGroup(parent);
 		createVariableComposite(parent);
 	}
@@ -484,6 +487,35 @@ public class DebugFeedbackView extends ViewPart {
 		oldValueColumn.setWidth(130);
 		
 		this.consequenceTreeViewer = new CheckboxTreeViewer(tree);
+	}
+	
+	private void createEnableLoopInferenceGroup(Composite parent) {
+		Group feedbackGroup = new Group(parent, SWT.NONE);
+		feedbackGroup.setText("Enable Loop Inference");
+		feedbackGroup.setLayoutData(new GridData(SWT.FILL, SWT.UP, true, false));
+		GridLayout gl = new GridLayout(1, true);
+		gl.makeColumnsEqualWidth = false;
+		gl.marginWidth = 1;
+		feedbackGroup.setLayout(gl);
+		
+		final Button enableButton = new Button(feedbackGroup, SWT.CHECK);
+		enableButton.setSelection(Settings.enableLoopInference);
+		enableButton.setText("Enable Loop Inference?");
+		enableButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
+		enableButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+		    public void widgetSelected(SelectionEvent e)
+		    {
+		        if (enableButton.getSelection()){
+		        	Settings.enableLoopInference = true;
+		        }
+		        else{
+		        	Settings.enableLoopInference = false;	        	
+		        }
+		        
+		        recommender.setEnableLoopInference(Settings.enableLoopInference);
+		    }
+		});
 	}
 
 	private void createSubmitGroup(Composite parent) {

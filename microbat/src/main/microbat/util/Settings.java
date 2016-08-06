@@ -87,4 +87,5 @@ public class Settings {
 	 */
 	public static HashMap<String, CompilationUnit> compilationUnitMap = new HashMap<>();
 	public static HashMap<String, ICompilationUnit> iCompilationUnitMap = new HashMap<>();
+	public static boolean enableLoopInference = true;
 }

@@ -123,7 +123,7 @@ public class StepRecommender {
 	}
 	
 	public StepRecommender(boolean enableLoopInference){
-		this.enableLoopInference = enableLoopInference;
+		this.setEnableLoopInference(enableLoopInference);
 	}
 	
 	private boolean enableLoopInference = true;
@@ -435,7 +435,7 @@ public class StepRecommender {
 			isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path);				
 		}
 		
-		if(this.enableLoopInference && isPathInPattern && !shouldStopOnCheckedNode(currentNode, path)){
+		if(this.isEnableLoopInference() && isPathInPattern && !shouldStopOnCheckedNode(currentNode, path)){
 			state = DebugState.SKIP;
 			
 			this.loopRange.endNode = path.getEndNode();
@@ -586,7 +586,7 @@ public class StepRecommender {
 	
 	@SuppressWarnings("unchecked")
 	public StepRecommender clone(){
-		StepRecommender recommender = new StepRecommender(this.enableLoopInference);
+		StepRecommender recommender = new StepRecommender(this.isEnableLoopInference());
 		recommender.state = this.state;
 		recommender.lastNode = this.lastNode;
 		//recommender.lastRecommendNode = this.lastRecommendNode;
@@ -616,5 +616,13 @@ public class StepRecommender {
 
 	public void setLatestCause(Cause latestCause) {
 		this.latestCause = latestCause;
+	}
+
+	public boolean isEnableLoopInference() {
+		return enableLoopInference;
+	}
+
+	public void setEnableLoopInference(boolean enableLoopInference) {
+		this.enableLoopInference = enableLoopInference;
 	}
 }
