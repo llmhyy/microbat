@@ -48,6 +48,7 @@ import microbat.model.value.ArrayValue;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
+import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
 import microbat.recommendation.Bug;
@@ -1099,6 +1100,9 @@ public class DebugFeedbackView extends ViewPart {
 					return type;
 				case 1: 
 					String name = varValue.getVarName();
+					if(varValue instanceof VirtualValue){
+						name = "return value";
+					}
 					return name;
 				case 2: return varValue.getManifestationValue();
 				}
