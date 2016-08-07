@@ -9,7 +9,6 @@ import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.ClassType;
 import com.sun.jdi.Field;
 import com.sun.jdi.InterfaceType;
-import com.sun.jdi.ReferenceType;
 import com.sun.jdi.Type;
 
 @SuppressWarnings("restriction")
@@ -18,11 +17,13 @@ public class HeuristicIgnoringFieldRule {
 	public static final String ENUM = "enum";
 	public static final String SERIALIZABLE = "java.io.Serializable";
 	public static final String COLLECTION = "java.util.Collection";
+	public static final String HASHMAP = "java.util.HashMap";
 	
 	/**
 	 * for example, I record map(java.util.Stack)=java.io.Collection
 	 */
 	private static Map<String, Boolean> isCollectionMap = new HashMap<>();
+	private static Map<String, Boolean> isHashMapMap = new HashMap<>();
 	private static Map<String, Boolean> isSerializableMap = new HashMap<>();
 	
 	/**
@@ -47,11 +48,23 @@ public class HeuristicIgnoringFieldRule {
 		fieldList1.add("ENUM$VALUES");
 		ignoringMap.put(COLLECTION, fieldList1);
 		
-		String c2 = ENUM;
 		ArrayList<String> fieldList2 = new ArrayList<>();
-		fieldList2.add("ordinal");
-		fieldList2.add("ENUM$VALUES");
-		ignoringMap.put(c2, fieldList2);
+		fieldList2.add("ALTERNATIVE_HASHING_THRESHOLD_DEFAULT");
+		fieldList2.add("DEFAULT_INITIAL_CAPACITY");
+		fieldList2.add("MAXIMUM_CAPACITY");
+		fieldList2.add("DEFAULT_LOAD_FACTOR");
+		fieldList2.add("EMPTY_TABLE");
+		fieldList2.add("modCount");
+		fieldList2.add("threshold");
+		fieldList2.add("hashSeed");
+		fieldList2.add("loadFactor");
+		ignoringMap.put(HASHMAP, fieldList2);
+		
+		String c2 = ENUM;
+		ArrayList<String> fieldList3 = new ArrayList<>();
+		fieldList3.add("ordinal");
+		fieldList3.add("ENUM$VALUES");
+		ignoringMap.put(c2, fieldList3);
 		
 		String[] excArray = new String[]{"java.", "javax.", "sun.", "com.sun.", "org.junit."};
 		for(String exc: excArray){
@@ -94,6 +107,12 @@ public class HeuristicIgnoringFieldRule {
 			
 			if(isCollectionClass(type)){
 				if(isValidField(fieldName, HeuristicIgnoringFieldRule.COLLECTION, ignoringMap)){
+					return true;
+				}
+			}
+			
+			if(isHashMapClass(type)){
+				if(isValidField(fieldName, HeuristicIgnoringFieldRule.HASHMAP, ignoringMap)){
 					return true;
 				}
 			}
@@ -143,6 +162,25 @@ public class HeuristicIgnoringFieldRule {
 		
 		return isCollection;
 	}
+	
+	public static boolean isHashMapClass(ClassType type){
+		String typeName = type.name();
+		Boolean isHashMap = isHashMapMap.get(typeName);
+		
+		if(isHashMap == null){
+			List<Type> allSuperTypes = new ArrayList<>();
+			findAllSuperTypes(type, allSuperTypes);
+			isHashMap = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.HASHMAP);
+			if(isHashMap){
+				isHashMapMap.put(typeName, true);
+			}
+			else{
+				isHashMapMap.put(typeName, false);
+			}
+		}
+		
+		return isHashMap;
+	}
 
 	private static boolean isValidField(String fieldName, String className,
 			Map<String, ArrayList<String>> ignoringMap) {
@@ -170,7 +208,7 @@ public class HeuristicIgnoringFieldRule {
 		Boolean isNeed = parsingTypeMap.get(typeName);
 		if(isNeed == null){
 			if(containPrefix(typeName, prefixExcludes)){
-				isNeed = isCollectionClass(type);
+				isNeed = isCollectionClass(type) || isHashMapClass(type);
 			}
 			else{
 				isNeed = true;				

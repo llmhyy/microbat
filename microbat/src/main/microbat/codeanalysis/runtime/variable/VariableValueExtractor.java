@@ -402,6 +402,10 @@ public class VariableValueExtractor {
 	private void appendClassVarVal(VarValue parent, Variable variable, ObjectReference objRef, 
 			int level, ThreadReference thread, boolean isRoot) {
 		ClassType type = (ClassType) objRef.type();
+//		if(type.name().contains("HashMap")){
+//			System.currentTimeMillis();
+//		}
+		
 		long refID = objRef.uniqueID();
 		
 		/**
