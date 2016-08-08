@@ -117,6 +117,7 @@ public class SimulatedMicroBat {
 			try {
 				Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
 						testCaseName, mutatedFile, unclearRate, enableLoopInference);
+				System.currentTimeMillis();
 				return trial;			
 			} catch (Exception e) {
 				String errorMsg = "Test case: " + testCaseName + 
@@ -194,8 +195,8 @@ public class SimulatedMicroBat {
 						&& !feedbackType.equals(UserFeedback.UNCLEAR)) 
 						|| (jumpingSteps.size() > mutatedTrace.size())){
 //					break;
-					suspiciousNode = findSuspicioiusNode(suspiciousNode, mutatedTrace, feedbackType);
 					
+//					suspiciousNode = findSuspicioiusNode(suspiciousNode, mutatedTrace, feedbackType);
 					if(!confusingStack.isEmpty()){
 						/** recover */
 						StateWrapper stateWrapper = confusingStack.pop();
@@ -221,7 +222,9 @@ public class SimulatedMicroBat {
 						}
 						feedbackType = UserFeedback.INCORRECT;
 						
-						System.currentTimeMillis();
+						pair = pairList.findByMutatedNode(suspiciousNode);
+						referenceNode = (pair==null)? null : pair.getOriginalNode();
+						jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedbackType, referenceNode));
 					}
 					else{
 						break;						
