@@ -93,7 +93,7 @@ public class TraceNodePair {
 					wrongVars.add(value);
 				}
 				
-				return wrongVars;
+//				return wrongVars;
 			}
 		}
 		
@@ -115,7 +115,7 @@ public class TraceNodePair {
 				for(VarValue value: mutatedVarList){
 					wrongVars.add(value);
 				}
-				return wrongVars;
+//				return wrongVars;
 			}
 		}
 		

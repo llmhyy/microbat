@@ -196,7 +196,12 @@ public class SimulatedMicroBat {
 						|| (jumpingSteps.size() > mutatedTrace.size())){
 //					break;
 					
-//					suspiciousNode = findSuspicioiusNode(suspiciousNode, mutatedTrace, feedbackType);
+					System.out.println("=========An attempt fails=========");
+					for(StepOperationTuple t: jumpingSteps){
+						System.err.println(t);				
+					}
+					System.out.println();
+					
 					if(!confusingStack.isEmpty()){
 						/** recover */
 						StateWrapper stateWrapper = confusingStack.pop();

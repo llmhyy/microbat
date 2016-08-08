@@ -19,51 +19,43 @@ public class SimulatedUser {
 	private List<List<String>> otherOptions = new ArrayList<>();
 	private int unclearFeedbackNum = 0;
 	
-	private List<List<VarValue>> checkWrongVariableIDOptions(TraceNodePair pair, Trace mutatedTrace){
+	private List<List<VarValue>> checkWrongVariableOptions(TraceNodePair pair, Trace mutatedTrace){
 		List<List<VarValue>> options = new ArrayList<>();
 		
-		List<VarValue> wrongReadVarIDs = pair.findSingleWrongReadVar(mutatedTrace);
-		List<VarValue> wrongWrittenVarIDs = pair.findSingleWrongWrittenVarID(mutatedTrace);
+		List<VarValue> wrongReadVars = pair.findSingleWrongReadVar(mutatedTrace);
+		List<VarValue> wrongWrittenVars = pair.findSingleWrongWrittenVarID(mutatedTrace);
 		
-		if(wrongReadVarIDs.size() < 2 && wrongWrittenVarIDs.size() < 2){
-			List<VarValue> wrongVars = new ArrayList<>();
-			wrongVars.addAll(wrongReadVarIDs);
-			wrongVars.addAll(wrongWrittenVarIDs);
+		System.currentTimeMillis();
+		
+		if(wrongReadVars.isEmpty() && wrongWrittenVars.isEmpty()){
+			options.add(new ArrayList<VarValue>());
+			return options;
+		}
+		else if(wrongReadVars.isEmpty() || wrongWrittenVars.isEmpty()){
+			for(VarValue var: wrongWrittenVars){
+				List<VarValue> list = new ArrayList<>();
+				list.add(var);
+				options.add(list);
+			}
 			
-			options.add(wrongVars);
+			for(VarValue var: wrongReadVars){
+				List<VarValue> list = new ArrayList<>();
+				list.add(var);
+				options.add(list);
+			}
+			return options;
 		}
 		else{
-			List<VarValue> varListWithLargeSize; 
-			List<VarValue> varListWithSmallSize;
-			if(wrongReadVarIDs.size() == 2){
-				varListWithLargeSize = wrongReadVarIDs;
-				varListWithSmallSize = wrongWrittenVarIDs;
-			}
-			else{
-				varListWithLargeSize = wrongWrittenVarIDs;
-				varListWithSmallSize = wrongReadVarIDs;
-			}
-			
-			for(VarValue wrongVarLarge: varListWithLargeSize){
-				if(varListWithSmallSize.size() > 0){
-					for(VarValue wrongVarSmall: varListWithSmallSize){
-						List<VarValue> wrongVars = new ArrayList<>();
-						wrongVars.add(wrongVarLarge);
-						wrongVars.add(wrongVarSmall);
-						
-						options.add(wrongVars);
-					}
-				}
-				else{
-					List<VarValue> wrongVars = new ArrayList<>();
-					wrongVars.add(wrongVarLarge);
-					
-					options.add(wrongVars);
+			for(VarValue writtenVar: wrongWrittenVars){
+				for(VarValue readVar: wrongReadVars){
+					List<VarValue> list = new ArrayList<>();
+					list.add(readVar);
+					list.add(writtenVar);
+					options.add(list);
 				}
 			}
+			return options;
 		}
-		
-		return options;
 	}
 	
 	public String feedback(TraceNode suspiciousNode, Trace mutatedTrace, PairList pairList, 
@@ -92,7 +84,7 @@ public class SimulatedUser {
 				}
 				
 				List<VarValue> wrongVars = new ArrayList<>();
-				List<List<VarValue>> options = checkWrongVariableIDOptions(pair, mutatedTrace);
+				List<List<VarValue>> options = checkWrongVariableOptions(pair, mutatedTrace);
 				wrongVars = options.get(0); 
 				
 				for(int i=1; i<options.size(); i++){
