@@ -115,7 +115,6 @@ public class TraceNodePair {
 				for(VarValue value: mutatedVarList){
 					wrongVars.add(value);
 				}
-				System.currentTimeMillis();
 				return wrongVars;
 			}
 		}
@@ -155,7 +154,7 @@ public class TraceNodePair {
 						if(((VirtualValue) mutatedVar).isOfPrimitiveType() || mutatedVar.isDefinedToStringMethod()){
 							if(!mutatedVar.getStringValue().equals(originalVar.getStringValue())){
 								differentVarValueList.add(mutatedVar);
-								return differentVarValueList;
+//								return differentVarValueList;
 							}
 						}
 					}
@@ -168,7 +167,7 @@ public class TraceNodePair {
 					if(mutatedVar.getVarName().equals(originalVar.getVarName()) 
 							&& !mutatedVar.getStringValue().equals(originalVar.getStringValue())){
 						differentVarValueList.add(mutatedVar);
-						return differentVarValueList;
+//						return differentVarValueList;
 					}
 				}
 			}
@@ -215,12 +214,12 @@ public class TraceNodePair {
 								}
 							}
 							
-							return differentVarValueList;	
+//							return differentVarValueList;	
 						}
 						else if((mutatedRefVar.getChildren() == null && originalRefVar.getChildren() != null) ||
 								(mutatedRefVar.getChildren() != null && originalRefVar.getChildren() == null)){
 							differentVarValueList.add(mutatedVar);
-							return differentVarValueList;
+//							return differentVarValueList;
 						}
 					}
 				}

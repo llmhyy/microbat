@@ -26,11 +26,11 @@ public class SimulatedUser {
 		List<VarValue> wrongWrittenVarIDs = pair.findSingleWrongWrittenVarID(mutatedTrace);
 		
 		if(wrongReadVarIDs.size() < 2 && wrongWrittenVarIDs.size() < 2){
-			List<VarValue> wrongVarIDs = new ArrayList<>();
-			wrongVarIDs.addAll(wrongReadVarIDs);
-			wrongVarIDs.addAll(wrongWrittenVarIDs);
+			List<VarValue> wrongVars = new ArrayList<>();
+			wrongVars.addAll(wrongReadVarIDs);
+			wrongVars.addAll(wrongWrittenVarIDs);
 			
-			options.add(wrongVarIDs);
+			options.add(wrongVars);
 		}
 		else{
 			List<VarValue> varListWithLargeSize; 
@@ -47,11 +47,11 @@ public class SimulatedUser {
 			for(VarValue wrongVarLarge: varListWithLargeSize){
 				if(varListWithSmallSize.size() > 0){
 					for(VarValue wrongVarSmall: varListWithSmallSize){
-						List<VarValue> wrongVarIDs = new ArrayList<>();
-						wrongVarIDs.add(wrongVarLarge);
-						wrongVarIDs.add(wrongVarSmall);
+						List<VarValue> wrongVars = new ArrayList<>();
+						wrongVars.add(wrongVarLarge);
+						wrongVars.add(wrongVarSmall);
 						
-						options.add(wrongVarIDs);
+						options.add(wrongVars);
 					}
 				}
 				else{
