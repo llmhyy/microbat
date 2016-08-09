@@ -54,7 +54,7 @@ public class MicroBatPerspective implements IPerspectiveFactory {
 				0.75f,
 				factory.getEditorArea());
 //		bottom.addView(IPageLayout.ID_PROBLEM_VIEW);
-		bottom.addView(MicroBatViews.NAVIGATION_HISTORY);
+		bottom.addView(MicroBatViews.REASON);
 		bottom.addPlaceholder(IConsoleConstants.ID_CONSOLE_VIEW);
 	}
 

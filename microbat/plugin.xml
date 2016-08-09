@@ -25,10 +25,10 @@
       </view>
       <view
             category="microbat.category"
-            class="microbat.views.NavigationHistoryView"
+            class="microbat.views.ReasonView"
             icon="icons/navigation_history.png"
-            id="microbat.view.navigationHistory"
-            name="Navigation History"
+            id="microbat.view.reason"
+            name="Recommending Reason"
             restorable="true">
       </view>
    </extension>
