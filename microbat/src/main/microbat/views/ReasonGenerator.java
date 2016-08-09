@@ -41,9 +41,11 @@ public class ReasonGenerator {
 			buffer.append(SKIP);
 			
 			if(!recommender.getLoopRange().getSkipPoints().isEmpty()){
-				buffer.append("Note that I skip following steps because I guess they could be bug-free: \n");
+				buffer.append("Note that I skip following steps because your feedback "
+						+ "indicates similar case in the loop is bug free: \n");
 				for(TraceNode skipPoint: recommender.getLoopRange().getSkipPoints()){
-					String words = "* The " + skipPoint.getOrder() + "th step at line " + skipPoint.getLineNumber() + "\n"; 
+					String words = "* The " + skipPoint.getOrder() + "th step at line " 
+							+ skipPoint.getLineNumber() + "\n"; 
 					buffer.append(words);
 				}
 			}
