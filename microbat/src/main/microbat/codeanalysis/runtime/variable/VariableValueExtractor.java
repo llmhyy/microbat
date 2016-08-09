@@ -197,15 +197,16 @@ public class VariableValueExtractor {
 			appendClassVarVal(bkVal, variable, objRef, 1, thread, true);			
 		}
 		
-		for (Entry<Variable, JDIParam> entry : allVariables.entrySet()) {
-			Variable var = entry.getKey();
-			
-//			String varId = var.getId();
-//			if(var.getScope().equals(VarScope.THIS)){
-//				varId = varId.substring(varId.indexOf("this.")+5, varId.length());						
-//			}
-			 
-			JDIParam param = entry.getValue();
+		List<Variable> vars = new ArrayList<>(allVariables.keySet());
+		Collections.sort(vars, new Comparator<Variable>() {
+			@Override
+			public int compare(Variable o1, Variable o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		});
+		
+		for (Variable var : vars) {
+			JDIParam param = allVariables.get(var);
 			Value value = param.getValue();
 			boolean isField = (param.getField() != null);
 			
