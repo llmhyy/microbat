@@ -147,11 +147,20 @@ public class TraceView extends ViewPart {
 	public void jumpToNode(Trace trace, int order){
 		TraceNode node = trace.getExectionList().get(order-1);
 		
+		
 		List<TraceNode> path = new ArrayList<>();
 		while(node != null){
 			path.add(node);
 			node = node.getAbstractionParent();
 		}
+		
+		/** keep the original expanded list */
+		Object[] expandedElements = listViewer.getExpandedElements();
+		for(Object obj: expandedElements){
+			TraceNode tn = (TraceNode)obj;
+			path.add(tn);
+		}
+		
 		TraceNode[] list = path.toArray(new TraceNode[0]);
 		listViewer.setExpandedElements(list);
 		
