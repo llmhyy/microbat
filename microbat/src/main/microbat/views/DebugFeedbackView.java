@@ -18,6 +18,7 @@ import org.eclipse.jface.viewers.TreeExpansionEvent;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -30,6 +31,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -100,6 +102,8 @@ public class DebugFeedbackView extends ViewPart {
 	private Button wrongPathButton;
 	private Button bugTypeInferenceButton;
 	
+	private StyledText reasonText;
+	
 	public DebugFeedbackView() {
 	}
 	
@@ -135,6 +139,11 @@ public class DebugFeedbackView extends ViewPart {
 		bugTypeInferenceButton.setEnabled(isValidToInferBugType());
 		
 		feedbackType = UserFeedback.INCORRECT;
+		
+		ReasonGenerator reasonGenerator = new ReasonGenerator();
+		String reason  = reasonGenerator.generateReason(recommender);
+		reasonText.setText("** " + reason);
+//		reasonLabel.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
 	}
 	
 	
@@ -184,23 +193,24 @@ public class DebugFeedbackView extends ViewPart {
 		GridLayout parentLayout = new GridLayout(1, true);
 		parent.setLayout(parentLayout);
 
-		createEnableLoopInferenceGroup(parent);
 		createSubmitGroup(parent);
-		createVariableComposite(parent);
+		createBody(parent);
 	}
 
-	private void createVariableComposite(Composite parent) {
+	private void createBody(Composite parent) {
 		SashForm variableForm = new SashForm(parent, SWT.VERTICAL);
 		variableForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 //		createVarGroup(variableForm, "Read Variables: ", INPUT);
 //		createVarGroup(variableForm, "Consequences: ", OUTPUT);
 //		createConsequenceGroup(variableForm, "Consequences: ");
+		
+		createOptionaAndReasonGroup(variableForm);
 		this.writtenVariableTreeViewer = createVarGroup(variableForm, "Written Variables: ");
 		this.readVariableTreeViewer = createVarGroup(variableForm, "Read Variables: ");
 		this.stateTreeViewer = createVarGroup(variableForm, "States: ");
 
-		variableForm.setWeights(new int[] { 3, 3, 4});
+		variableForm.setWeights(new int[] { 2, 3, 3, 4});
 		
 		addListener();
 	}
@@ -490,9 +500,9 @@ public class DebugFeedbackView extends ViewPart {
 		this.consequenceTreeViewer = new CheckboxTreeViewer(tree);
 	}
 	
-	private void createEnableLoopInferenceGroup(Composite parent) {
+	private void createOptionaAndReasonGroup(Composite parent) {
 		Group feedbackGroup = new Group(parent, SWT.NONE);
-		feedbackGroup.setText("Enable Loop Inference");
+		feedbackGroup.setText("Options and Explanation");
 		feedbackGroup.setLayoutData(new GridData(SWT.FILL, SWT.UP, true, false));
 		GridLayout gl = new GridLayout(1, true);
 		gl.makeColumnsEqualWidth = false;
@@ -501,7 +511,7 @@ public class DebugFeedbackView extends ViewPart {
 		
 		final Button enableButton = new Button(feedbackGroup, SWT.CHECK);
 		enableButton.setSelection(Settings.enableLoopInference);
-		enableButton.setText("Enable Loop Inference?");
+		enableButton.setText("Enable Loop Inference");
 		enableButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
 		enableButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -517,6 +527,18 @@ public class DebugFeedbackView extends ViewPart {
 		        recommender.setEnableLoopInference(Settings.enableLoopInference);
 		    }
 		});
+		
+		Label reasonLabel = new Label(feedbackGroup, SWT.None);
+		reasonLabel.setText("Reason: ");
+		reasonLabel.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
+		
+		reasonText = new StyledText(feedbackGroup, SWT.WRAP | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		reasonText.setAlwaysShowScrollBars(true);
+		ReasonGenerator reasonGenerator = new ReasonGenerator();
+		String reason  = reasonGenerator.generateReason(recommender);
+		reasonText.setText("** " + reason);
+		GridData gData = new GridData(SWT.FILL, SWT.FILL, true, true);
+		reasonText.setLayoutData(gData);
 	}
 
 	private void createSubmitGroup(Composite parent) {

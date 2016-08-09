@@ -53,6 +53,10 @@ public class StepRecommender {
 			
 			return loopRange;
 		}
+		
+		public List<TraceNode> getSkipPoints(){
+			return this.skipPoints;
+		}
 
 		public TraceNode findCorrespondingStartNode(TraceNode endNode2) {
 			for(int i=0; i<skipPoints.size(); i++){
