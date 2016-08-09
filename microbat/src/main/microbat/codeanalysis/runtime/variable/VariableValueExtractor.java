@@ -51,11 +51,8 @@ import microbat.util.Settings;
 @SuppressWarnings("restriction")
 public class VariableValueExtractor {
 //	protected static Logger log = LoggerFactory.getLogger(DebugValueExtractor.class);
-//	private static final String TO_STRING_SIGN= "()Ljava/lang/String;";
-//	private static final String TO_STRING_NAME= "toString";
 	private static final Pattern OBJECT_ACCESS_PATTERN = Pattern.compile("^\\.([^.\\[]+)(\\..+)*(\\[.+)*$");
 	private static final Pattern ARRAY_ACCESS_PATTERN = Pattern.compile("^\\[(\\d+)\\](.*)$");
-	//private static final int MAX_ARRAY_ELEMENT_TO_COLLECT = 5;
 
 	/**
 	 * In order to handle the graph structure of objects, this map is used to remember which object has been analyzed
