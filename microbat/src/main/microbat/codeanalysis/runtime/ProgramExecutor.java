@@ -960,10 +960,6 @@ public class ProgramExecutor extends Executor {
 									var.getName(), scope.getStartLine(), scope.getEndLine());
 							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
 							varID = varID + ":" + definingNodeOrder;
-							// varID =
-							// node.getBreakPoint().getClassCanonicalName() +
-							// "[" + scope.getStartLine() + ","
-							// + scope.getEndLine() + "] " + var.getName();
 						}
 						/**
 						 * it means that an implicit "this" variable is visited.
@@ -989,7 +985,8 @@ public class ProgramExecutor extends Executor {
 							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
 							varID = varID + ":" + definingNodeOrder;
 							var.setVarID(varID);
-						} else if (var instanceof ArrayElementVar) {
+						} 
+						else if (var instanceof ArrayElementVar) {
 							String index = var.getSimpleName();
 							ExpressionValue indexValue = retriveExpression(frame, index, node.getBreakPoint());
 							String indexValueString = indexValue.value.toString();

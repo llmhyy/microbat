@@ -519,16 +519,19 @@ public class MicrobatByteCodeAnalyzer{
 			
 			ReadArrayElementRetriever raeRetriever = new ReadArrayElementRetriever(cu, lineNumber, typeName);
 			cu.accept(raeRetriever);
-			String readArrayElement = raeRetriever.arrayElementName;
+			for(String readArrayElement: raeRetriever.arrayElementNameList){
+				ArrayElementVar var = new ArrayElementVar(readArrayElement, typeName);
+				point.addReadVariable(var);											
+			}
 			
-			if(readArrayElement == null){
-				System.err.println("When parsing read array element, I cannot find specific read array element in line " + 
-						lineNumber + " of " + point.getClassCanonicalName());
-			}
-			else{
-				ArrayElementVar var = new ArrayElementVar(readArrayElement, Variable.UNKNOWN_TYPE);
-				point.addReadVariable(var);
-			}
+//			if(readArrayElement == null){
+//				System.err.println("When parsing read array element, I cannot find specific read array element in line " + 
+//						lineNumber + " of " + point.getClassCanonicalName());
+//			}
+//			else{
+//				ArrayElementVar var = new ArrayElementVar(readArrayElement, Variable.UNKNOWN_TYPE);
+//				point.addReadVariable(var);
+//			}
 			
 		}
 		else if(ins instanceof ArrayStoreInstruction){

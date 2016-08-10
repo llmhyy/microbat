@@ -506,7 +506,7 @@ public class Trace {
 				definingOrder = String.valueOf(node.getOrder());				
 			}
 		}
-	
+		
 		return definingOrder;
 	}
 

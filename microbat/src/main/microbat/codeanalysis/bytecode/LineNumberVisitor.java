@@ -125,7 +125,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 	}
 
 	private void parseReadWrittenVariable(BreakPoint point, List<InstructionHandle> correspondingInstructions, Code code, CFG cfg) {
-		if(point.getLineNumber()==39){
+		if(point.getLineNumber()==18){
 			System.currentTimeMillis();
 		}
 		
@@ -211,8 +211,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 				if(insHandle.getInstruction().getName().toLowerCase().contains("load")){
 					ReadArrayElementRetriever raeRetriever = new ReadArrayElementRetriever(cu, point.getLineNumber(), typeName);
 					cu.accept(raeRetriever);
-					String readArrayElement = raeRetriever.arrayElementName;
-					if(readArrayElement != null){
+					for(String readArrayElement: raeRetriever.arrayElementNameList){
 						ArrayElementVar var = new ArrayElementVar(readArrayElement, typeName);
 						point.addReadVariable(var);											
 					}
