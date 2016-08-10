@@ -1,5 +1,6 @@
 package microbat.handler;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +21,10 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import microbat.Activator;
+import microbat.behavior.Behavior;
+import microbat.behavior.BehaviorData;
+import microbat.behavior.BehaviorReader;
+import microbat.behavior.BehaviorReporter;
 import microbat.codeanalysis.ast.LocalVariableScope;
 import microbat.codeanalysis.ast.VariableScopeParser;
 import microbat.codeanalysis.bytecode.BPVariableRetriever;
@@ -67,9 +72,15 @@ public class StartDebugHandler extends AbstractHandler {
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		final ProgramExecutor tcExecutor = new ProgramExecutor();
 		
-//		final String classQulifiedName = Settings.buggyClassName;
-//		final int lineNumber = Integer.valueOf(Settings.buggyLineNumber);
-//		final String methodSign = convertSignature(classQulifiedName, lineNumber);
+		try {
+			new BehaviorReader().readXLSX();
+		} catch (IOException e) {
+			e.printStackTrace();
+		};
+		
+		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+		behavior.increaseGenerateTrace();
+		new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
 		
 		
 		try {

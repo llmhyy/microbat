@@ -3,6 +3,8 @@ package microbat;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import microbat.behavior.Behavior;
+import microbat.behavior.BehaviorReader;
 import microbat.model.trace.Trace;
 import microbat.views.ImageUI;
 

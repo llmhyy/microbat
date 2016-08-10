@@ -35,7 +35,7 @@ public class BehaviorReporter {
 				book = new XSSFWorkbook(excelFileToRead);
 				sheet = book.getSheetAt(0);
 				
-				lastRowNum = sheet.getPhysicalNumberOfRows();
+//				lastRowNum = sheet.getPhysicalNumberOfRows();
 				
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -54,6 +54,8 @@ public class BehaviorReporter {
 			titles.add("additional clicks");
 			titles.add("search forward");
 			titles.add("search backward");
+			titles.add("undo");
+			titles.add("generate trace");
 			
 			Row row = sheet.createRow(0);
 			for(int i = 0; i < titles.size(); i++){
@@ -69,11 +71,11 @@ public class BehaviorReporter {
 		
 		writeToExcel(book, file.getName());
         
-        lastRowNum++;
+//        lastRowNum++;
 	}
 
 	private void fillRowInformation(Row row, HashMap<String, Behavior> data) {
-		Behavior behavior = data.get(Settings.projectName);
+		Behavior behavior = data.get(Settings.lanuchClass);
 		row.createCell(0).setCellValue(behavior.getWrongValueFeedbacks());
 		row.createCell(1).setCellValue(behavior.getWrongPathFeedbacks());
 		row.createCell(2).setCellValue(behavior.getCorrectFeedbacks());
@@ -82,6 +84,8 @@ public class BehaviorReporter {
 		row.createCell(5).setCellValue(behavior.getAdditionalClickOnSteps());
 		row.createCell(6).setCellValue(behavior.getSearchForward());
 		row.createCell(7).setCellValue(behavior.getSearchBackward());
+		row.createCell(8).setCellValue(behavior.getUndo());
+		row.createCell(9).setCellValue(behavior.getGenerateTrace());
 	}
 
 	private void writeToExcel(Workbook book, String fileName){

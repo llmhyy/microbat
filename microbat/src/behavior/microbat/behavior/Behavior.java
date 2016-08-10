@@ -12,6 +12,10 @@ public class Behavior {
 
 	private int searchForward;
 	private int searchBackward;
+	
+	private int undo;
+	
+	private int generateTrace;
 
 	public void increaseWrongValueFeedback(){
 		this.wrongValueFeedbacks++;
@@ -43,6 +47,14 @@ public class Behavior {
 	
 	public void increaseSearchBackward(){
 		this.searchBackward++;
+	}
+	
+	public void increaseUndo(){
+		this.undo++;
+	}
+	
+	public void increaseGenerateTrace(){
+		this.generateTrace++;
 	}
 	
 	public int getWrongValueFeedbacks() {
@@ -107,6 +119,22 @@ public class Behavior {
 
 	public void setSearchBackward(int searchBackward) {
 		this.searchBackward = searchBackward;
+	}
+
+	public int getUndo() {
+		return undo;
+	}
+
+	public void setUndo(int undo) {
+		this.undo = undo;
+	}
+
+	public int getGenerateTrace() {
+		return generateTrace;
+	}
+
+	public void setGenerateTrace(int generateTrace) {
+		this.generateTrace = generateTrace;
 	}
 
 }

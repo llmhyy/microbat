@@ -12,99 +12,88 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
+
+import microbat.util.Settings;
 
 public class BehaviorReader {
 	
-	private String[] getProjectsInWorkspace(){
-		IWorkspace workspace = ResourcesPlugin.getWorkspace();
-		IWorkspaceRoot root = workspace.getRoot();
-		IProject[] projects = root.getProjects();
-		
-		String[] projectStrings = new String[projects.length];
-		for(int i=0; i<projects.length; i++){
-			projectStrings[i] = projects[i].getName();
-		}
-		
-		return projectStrings;
-	}
 	
 	@SuppressWarnings("resource")
 	public void readXLSX() throws IOException {
 		
-		String[] projectNames = getProjectsInWorkspace();
-		for(String projectName: projectNames){
-			String fileName = projectName + "_behavior" + ".xlsx";
+		String fileName = Settings.lanuchClass + "_behavior" + ".xlsx";
+		
+		File file = new File(fileName);
+		if(file.exists()) {
+			InputStream excelFileToRead = new FileInputStream(file);
 			
-			File file = new File(fileName);
-			if(file.exists()) {
-				InputStream excelFileToRead = new FileInputStream(file);
+			XSSFWorkbook wb = new XSSFWorkbook(excelFileToRead);
+			
+			XSSFSheet sheet = wb.getSheetAt(0);
+			XSSFRow row;
+			XSSFCell cell;
+			
+			Iterator<Row> rows = sheet.rowIterator();
+			
+			while (rows.hasNext()) {
+				row = (XSSFRow) rows.next();
 				
-				XSSFWorkbook wb = new XSSFWorkbook(excelFileToRead);
-				
-				XSSFSheet sheet = wb.getSheetAt(0);
-				XSSFRow row;
-				XSSFCell cell;
-				
-				Iterator<Row> rows = sheet.rowIterator();
-				
-				while (rows.hasNext()) {
-					row = (XSSFRow) rows.next();
+				if (row.getRowNum() > 0) {
+					Behavior behavior = new Behavior();
 					
-					if (row.getRowNum() > 0) {
-						Behavior behavior = new Behavior();
+					Iterator<Cell> cells = row.cellIterator();
+					while (cells.hasNext()) {
+						cell = (XSSFCell) cells.next();
+						int i = cell.getColumnIndex();
 						
-						Iterator<Cell> cells = row.cellIterator();
-						while (cells.hasNext()) {
-							cell = (XSSFCell) cells.next();
-							int i = cell.getColumnIndex();
-							
-							switch (i) {
-							case 0:
-								String wrongValueFeedback = cell.getStringCellValue();
-								behavior.setWrongValueFeedbacks(Integer.valueOf(wrongValueFeedback));
-								break;
-							case 1:
-								String wrongPathFeedback = cell.getStringCellValue();
-								behavior.setWrongPathFeedbacks(Integer.valueOf(wrongPathFeedback));
-								break;
-							case 2:
-								String correctFeedback = cell.getStringCellValue();
-								behavior.setCorrectFeedbacks(Integer.valueOf(correctFeedback));
-								break;
-							case 3:
-								String unclearFeedback = cell.getStringCellValue();
-								behavior.setUnclearFeedbacks(Integer.valueOf(unclearFeedback));
-								break;
-							case 4:
-								String skips = cell.getStringCellValue();
-								behavior.setSkips(Integer.valueOf(skips));
-								break;
-							case 5:
-								String additionalClicks = cell.getStringCellValue();
-								behavior.setAdditionalClickOnSteps(Integer.valueOf(additionalClicks));
-								break;
-							case 6:
-								String searchForward = cell.getStringCellValue();
-								behavior.setSearchForward(Integer.valueOf(searchForward));
-								break;
-							case 7:
-								String searchBackward = cell.getStringCellValue();
-								behavior.setSearchBackward(Integer.valueOf(searchBackward));
-								break;
-								
-							}
+						switch (i) {
+						case 0:
+							double wrongValueFeedback = cell.getNumericCellValue();
+							behavior.setWrongValueFeedbacks((int)wrongValueFeedback);
+							break;
+						case 1:
+							double wrongPathFeedback = cell.getNumericCellValue();
+							behavior.setWrongPathFeedbacks((int)wrongPathFeedback);
+							break;
+						case 2:
+							double correctFeedback = cell.getNumericCellValue();
+							behavior.setCorrectFeedbacks((int)correctFeedback);
+							break;
+						case 3:
+							double unclearFeedback = cell.getNumericCellValue();
+							behavior.setUnclearFeedbacks((int)unclearFeedback);
+							break;
+						case 4:
+							double skips = cell.getNumericCellValue();
+							behavior.setSkips((int)skips);
+							break;
+						case 5:
+							double additionalClicks = cell.getNumericCellValue();
+							behavior.setAdditionalClickOnSteps((int)additionalClicks);
+							break;
+						case 6:
+							double searchForward = cell.getNumericCellValue();
+							behavior.setSearchForward((int)searchForward);
+							break;
+						case 7:
+							double searchBackward = cell.getNumericCellValue();
+							behavior.setSearchBackward((int)searchBackward);
+							break;
+						case 8:
+							double undo = cell.getNumericCellValue();
+							behavior.setUndo((int)undo);
+							break;
+						case 9:
+							double generateTrace = cell.getNumericCellValue();
+							behavior.setGenerateTrace((int)generateTrace);
+							break;
 						}
-						
-						BehaviorData.projectBehavior.put(projectName, behavior);
 					}
 					
+					BehaviorData.projectBehavior.put(Settings.lanuchClass, behavior);
 				}
+				
 			}
-			
 		}
 		
 	}

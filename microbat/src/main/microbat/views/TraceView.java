@@ -48,6 +48,9 @@ import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 import microbat.Activator;
+import microbat.behavior.Behavior;
+import microbat.behavior.BehaviorData;
+import microbat.behavior.BehaviorReporter;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -144,6 +147,8 @@ public class TraceView extends ViewPart {
 		
 	}
 	
+	private boolean programmingSelection = false;
+	
 	public void jumpToNode(Trace trace, int order){
 		TraceNode node = trace.getExectionList().get(order-1);
 		
@@ -165,7 +170,10 @@ public class TraceView extends ViewPart {
 		listViewer.setExpandedElements(list);
 		
 		node = trace.getExectionList().get(order-1);
+		
+		programmingSelection = true;
 		listViewer.setSelection(new StructuredSelection(node), true);	
+		programmingSelection = false;
 		
 		listViewer.refresh();
 	}
@@ -251,6 +259,12 @@ public class TraceView extends ViewPart {
 							TraceNode node = (TraceNode)obj;
 							
 //							showDebuggingInfo(node);
+							
+							if(!programmingSelection){
+								Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+								behavior.increaseAdditionalClick();
+								new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
+							}
 							
 							DebugFeedbackView view = (DebugFeedbackView)PlatformUI.getWorkbench().
 									getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.DEBUG_FEEDBACK);

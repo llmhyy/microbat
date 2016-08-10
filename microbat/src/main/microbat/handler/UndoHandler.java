@@ -1,6 +1,9 @@
 package microbat.handler;
 
 import microbat.Activator;
+import microbat.behavior.Behavior;
+import microbat.behavior.BehaviorData;
+import microbat.behavior.BehaviorReporter;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.util.Settings;
@@ -27,6 +30,10 @@ public class UndoHandler extends AbstractHandler {
 				e.printStackTrace();
 			}
 		}
+		
+		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+		behavior.increaseUndo();
+		new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
 		
 		return null;
 	}

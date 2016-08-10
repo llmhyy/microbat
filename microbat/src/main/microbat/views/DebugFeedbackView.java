@@ -42,6 +42,9 @@ import org.eclipse.ui.part.ViewPart;
 
 import microbat.Activator;
 import microbat.algorithm.graphdiff.GraphDiff;
+import microbat.behavior.Behavior;
+import microbat.behavior.BehaviorData;
+import microbat.behavior.BehaviorReporter;
 import microbat.handler.CheckingState;
 import microbat.model.BreakPointValue;
 import microbat.model.trace.Trace;
@@ -55,6 +58,7 @@ import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
 import microbat.recommendation.Bug;
 import microbat.recommendation.BugInferer;
+import microbat.recommendation.DebugState;
 import microbat.recommendation.StepRecommender;
 import microbat.recommendation.UserFeedback;
 import microbat.util.Settings;
@@ -732,8 +736,16 @@ public class DebugFeedbackView extends ViewPart {
 						updateVariableCheckTime(trace, currentNode);
 					}
 					
+					collectBehavior(feedbackType);
+					
 					suspiciousNode = recommender.recommendNode(trace, currentNode, feedbackType);
 					lastFeedbackType = feedbackType;
+					
+					if(recommender.getState()==DebugState.BINARY_SEARCH || recommender.getState()==DebugState.SKIP){
+						Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+						behavior.increaseSkip();
+						new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
+					}
 				}
 				
 				if(suspiciousNode != null){
@@ -741,6 +753,23 @@ public class DebugFeedbackView extends ViewPart {
 				}
 				
 			}
+		}
+		
+		private void collectBehavior(String feedbackType) {
+			Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+			if(feedbackType.equals(UserFeedback.CORRECT)){
+				behavior.increaseCorrectFeedback();
+			}
+			else if(feedbackType.equals(UserFeedback.INCORRECT)){
+				behavior.increaseWrongValueFeedback();
+			}
+			else if(feedbackType.equals(UserFeedback.WRONG_PATH)){
+				behavior.increaseWrongPathFeedback();
+			}
+			else if(feedbackType.equals(UserFeedback.UNCLEAR)){
+				behavior.increaseUnclearFeedback();
+			}
+			new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);;
 		}
 		
 		private void updateVariableCheckTime(Trace trace, TraceNode currentNode) {
