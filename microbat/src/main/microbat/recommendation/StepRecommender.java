@@ -39,6 +39,9 @@ public class StepRecommender {
 			}
 			
 			int index = (startIndex+endIndex)/2;
+			if(index == startIndex){
+				index = endIndex;
+			}
 			
 			return skipPoints.get(index);
 		}
@@ -467,6 +470,7 @@ public class StepRecommender {
 				}
 			}
 			
+//			this.loopRange.skipPoints.add(oldSusiciousNode);
 			this.lastNode = currentNode;
 			return oldSusiciousNode;
 		}
