@@ -36,7 +36,7 @@ public class BPVariableRetriever {
 		StringBuffer buffer = new StringBuffer(originalSystemClassPath);
 		for(String classPath: appClassPath.getClasspaths()){
 			if(!pathList.contains(classPath)){
-				buffer.append(";" + classPath);				
+				buffer.append(File.pathSeparator + classPath);				
 			}
 		}
 		System.setProperty("java.class.path", buffer.toString());
