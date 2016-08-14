@@ -699,8 +699,8 @@ public class DebugFeedbackView extends ViewPart {
 //				openReconfirmDialog(message);
 //				return false;
 //			}
-			else if((existWrittenVariable && writtenVarCorrectness==TraceNode.WRITTEN_VARS_INCORRECT) ||
-					(existReadVariable && readVarCorrectness==TraceNode.READ_VARS_INCORRECT)
+			else if(((existWrittenVariable && writtenVarCorrectness==TraceNode.WRITTEN_VARS_INCORRECT) ||
+					(existReadVariable && readVarCorrectness==TraceNode.READ_VARS_INCORRECT))
 					&& feedbackType.equals(UserFeedback.CORRECT)){
 				String message = "Some variables are marked incorrect, but your feedback is marked correct (\"Yes\" choice), "
 						+ "are you really sure?";
