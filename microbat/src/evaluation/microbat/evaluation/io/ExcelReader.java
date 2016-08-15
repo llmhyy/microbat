@@ -26,22 +26,20 @@ public class ExcelReader {
 	public void readXLSX() throws IOException {
 		
 		String projectName = Settings.projectName;
+		int filePage = 0;
 
-		String fileName = projectName + ".xlsx";
+		String fileName = projectName + filePage + ".xlsx";
 		
 		File file = new File(fileName);
-		if(file.exists()) {
+		while(file.exists()) {
 			InputStream excelFileToRead = new FileInputStream(file);
 			
-			
 			XSSFWorkbook wb = new XSSFWorkbook(excelFileToRead);
-
 			XSSFSheet sheet = wb.getSheetAt(0);
 			XSSFRow row;
 			XSSFCell cell;
 
 			Iterator<Row> rows = sheet.rowIterator();
-
 			while (rows.hasNext()) {
 				row = (XSSFRow) rows.next();
 
@@ -68,11 +66,13 @@ public class ExcelReader {
 							break;
 						}
 					}
-					
 					getSet().add(trial);
 				}
-				
 			}
+			
+			filePage++;
+			fileName = projectName + filePage + ".xlsx";
+			file = new File(fileName);
 		}
 	}
 

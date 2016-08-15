@@ -1,5 +1,7 @@
 package microbat.evaluation.handler;
 
+import java.io.IOException;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -22,7 +24,7 @@ public class EvaluationHandler extends AbstractHandler {
 				TestCaseAnalyzer parser = new TestCaseAnalyzer();
 				try {
 					parser.runEvaluation();
-				} catch (JavaModelException e) {
+				} catch (JavaModelException | IOException e) {
 					e.printStackTrace();
 				}
 				return Status.OK_STATUS;
