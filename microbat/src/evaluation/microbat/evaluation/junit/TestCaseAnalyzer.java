@@ -45,7 +45,6 @@ public class TestCaseAnalyzer {
 	private static final String TMP_DIRECTORY = "C:\\microbat_evaluation\\";
 	
 //	private List<Trial> trials = new ArrayList<>();
-//	private List<Trial> overLongTrials = new ArrayList<>();
 	private IgnoredTestCaseFiles ignoredTestCaseFiles;
 	private ParsedTrials parsedTrials;
 	
@@ -119,21 +118,21 @@ public class TestCaseAnalyzer {
 		}
 	}
 
-	public void runEvaluation() throws JavaModelException{
+	public void runEvaluation() throws JavaModelException, IOException{
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-//		ExcelReporter reporter = new ExcelReporter(Settings.projectName+".xlsx", this.unclearRates);
-//		
-//		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
-//		
-//		for(IJavaElement element: testRoot.getChildren()){
-//			if(element instanceof IPackageFragment){
-//				runEvaluation((IPackageFragment)element, reporter);				
-//			}
-//		}
+		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
 		
-		runSingeTrial();
+		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
+		
+		for(IJavaElement element: testRoot.getChildren()){
+			if(element instanceof IPackageFragment){
+				runEvaluation((IPackageFragment)element, reporter);				
+			}
+		}
+		
+//		runSingeTrial();
 		
 //		String className = "org.apache.commons.math.analysis.polynomials.PolynomialFunctionLagrangeFormTest";
 //		String methodName = "testLinearFunction";
@@ -148,17 +147,17 @@ public class TestCaseAnalyzer {
 //				+ "apache-common-math-2.2\\2081_22_1\\MathUtils.java";
 //		String mutatedClass = "org.apache.commons.math.util.MathUtils";
 		
-//		String testClassName = "test.SimpleCalculatorTest";
-//		String testMethodName = "testCalculator";
-//		String mutationFile = "C:\\microbat_evaluation\\mutation\\73_70_1\\SimpleCalculator.java";
+		String testClassName = "test.SimpleCalculatorTest";
+		String testMethodName = "testCalculator";
+		String mutationFile = "C:\\microbat_evaluation\\mutation\\110_29_1\\SimpleCalculator.java";
+		double unclearRate = 0;
+		boolean enableLoopInference = false;
+		
+//		String testClassName = "org.apache.commons.math.analysis.polynomials.PolynomialsUtilsTest";
+//		String testMethodName = "testFirstChebyshevPolynomials";
+//		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\706_13_1\\BigFraction.java";
 //		double unclearRate = 0;
 //		boolean enableLoopInference = true;
-		
-		String testClassName = "org.apache.commons.math.analysis.polynomials.PolynomialsUtilsTest";
-		String testMethodName = "testFirstChebyshevPolynomials";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\706_13_1\\BigFraction.java";
-		double unclearRate = 0;
-		boolean enableLoopInference = true;
 		
 		try {
 			runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 
