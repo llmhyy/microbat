@@ -170,8 +170,6 @@ public class TestCaseAnalyzer {
 			e.printStackTrace();
 		}
 	}
-	
-	
 
 	private void runEvaluationForSingleTrial(String testClassName,
 			String testMethodName, String mutationFile, double unclearRate, boolean enableLoopInference) 
@@ -519,7 +517,6 @@ public class TestCaseAnalyzer {
 		
 		String originalCodeText = iunit.getSource();
 		
-//		System.out.println("checking mutated class " + iunit.getElementName() + " (line: " + mutatedLine + ")");
 		String mutatedCodeText = FileUtils.readFileToString(mutationFile);
 		
 		iunit.getBuffer().setContents(mutatedCodeText);
@@ -569,22 +566,12 @@ public class TestCaseAnalyzer {
 		List<ClassLocation> locations = new ArrayList<>();
 		
 		for(BreakPoint point: executingStatements){
-			
 			String className = point.getDeclaringCompilationUnitName();
 			if(!JTestUtil.isInTestCase(className)){
 				ClassLocation location = new ClassLocation(className, 
 						null, point.getLineNumber());
 				locations.add(location);
-//				try {
-//					if(!JTestUtil.isLocationInTestPackage(location)){
-//						locations.add(location);		
-//					}
-//				} catch (JavaModelException e) {
-//					e.printStackTrace();
-//				}
 			}
-			
-			
 		}
 		
 		return locations;
@@ -612,21 +599,5 @@ public class TestCaseAnalyzer {
 		classPath.setLaunchClass(TEST_RUNNER);
 		
 		return classPath;
-		
-		
-//		File file = new File(classPath.getClasspathStr());
-//		List<URL> cpList = new ArrayList<>();
-//		for(String cPath: classPath.getClasspaths()){
-//			File file = new File(cPath);
-//			URL url;
-//			try {
-//				url = file.toURI().toURL();
-//				cpList.add(url);
-//			} catch (MalformedURLException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//		URLClassLoader urlcl  = URLClassLoader.newInstance(cpList.toArray(new URL[0]));
-//		return urlcl;
 	}
 }
