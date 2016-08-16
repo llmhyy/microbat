@@ -39,7 +39,10 @@ public class ReadFieldRetriever extends ASTNodeRetriever{
 	}
 	
 	public boolean visit(FieldAccess access){
-		fullFieldName = access.toString();
+		int linNum = cu.getLineNumber(access.getStartPosition());
+		if(linNum == lineNumber){
+			fullFieldName = access.toString();
+		}
 		return false;
 	}
 }

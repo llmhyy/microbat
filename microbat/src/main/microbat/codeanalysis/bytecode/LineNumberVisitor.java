@@ -125,10 +125,6 @@ public class LineNumberVisitor extends EmptyVisitor {
 	}
 
 	private void parseReadWrittenVariable(BreakPoint point, List<InstructionHandle> correspondingInstructions, Code code, CFG cfg) {
-		if(point.getLineNumber()==18){
-			System.currentTimeMillis();
-		}
-		
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getClassCanonicalName());
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool()); 
 		 
@@ -145,12 +141,18 @@ public class LineNumberVisitor extends EmptyVisitor {
 					String type = gIns.getFieldType(pool).getSignature();
 					type = SignatureUtils.signatureToName(type);
 					
+					
+					
 					if(!fullFieldName.contains("$")){
 						/**
 						 * The reason for additionally use ReadFileRetriever and WrittenFieldRetriever is that
 						 * I want to get "a.attr1.attr2" instead of "attr2".
 						 */
 						if(rw){
+							if(point.getLineNumber()==143){
+								System.currentTimeMillis();
+							}
+							
 							ReadFieldRetriever rfRetriever = new ReadFieldRetriever(cu, point.getLineNumber(), fullFieldName);
 							cu.accept(rfRetriever);
 							if(rfRetriever.fullFieldName != null){
