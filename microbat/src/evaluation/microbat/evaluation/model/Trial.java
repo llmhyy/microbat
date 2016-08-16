@@ -78,8 +78,8 @@ public class Trial {
 
 	@Override
 	public String toString() {
-		return "Trial [testCaseName=" + testCaseName + ", mutatedLineNumber="
-				+ mutatedLineNumber + ", isBugFound=" + isBugFound
+		return "Trial [testCaseName=" + testCaseName + ", mutatedFile="
+				+ mutatedFile + ", isBugFound=" + isBugFound
 				+ ", jumpSteps=" + jumpSteps + ", totalSteps=" + totalSteps
 				+ "]";
 	}
