@@ -576,7 +576,6 @@ public class TestCaseAnalyzer {
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
-		
 	}
 
 	private List<ClassLocation> findMutationLocation(List<BreakPoint> executingStatements) {
@@ -585,9 +584,15 @@ public class TestCaseAnalyzer {
 		for(BreakPoint point: executingStatements){
 			String className = point.getDeclaringCompilationUnitName();
 			if(!JTestUtil.isInTestCase(className)){
-				ClassLocation location = new ClassLocation(className, 
-						null, point.getLineNumber());
-				locations.add(location);
+				CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className);
+				LoopInsiderChecker checker = new LoopInsiderChecker(cu, point.getLineNumber());
+				cu.accept(checker);
+				
+				if(checker.isLoopInsider()){
+					ClassLocation location = new ClassLocation(className, 
+							null, point.getLineNumber());
+					locations.add(location);					
+				}
 			}
 		}
 		
