@@ -122,17 +122,17 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-//		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
-//		
-//		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
-//		
-//		for(IJavaElement element: testRoot.getChildren()){
-//			if(element instanceof IPackageFragment){
-//				runEvaluation((IPackageFragment)element, reporter);				
-//			}
-//		}
+		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
 		
-		runSingeTrial();
+		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
+		
+		for(IJavaElement element: testRoot.getChildren()){
+			if(element instanceof IPackageFragment){
+				runEvaluation((IPackageFragment)element, reporter);				
+			}
+		}
+		
+//		runSingeTrial();
 		
 //		String className = "org.apache.commons.math.analysis.polynomials.PolynomialFunctionLagrangeFormTest";
 //		String methodName = "testLinearFunction";
