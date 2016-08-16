@@ -1,9 +1,12 @@
 package microbat.evaluation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import microbat.evaluation.model.ChosenVariableOption;
+import microbat.evaluation.model.OptionComparator;
 import microbat.evaluation.model.PairList;
 import microbat.evaluation.model.TraceNodePair;
 import microbat.model.trace.Trace;
@@ -16,11 +19,11 @@ public class SimulatedUser {
 
 	private HashMap<TraceNode, Integer> labeledUnclearNodeVisitedTimes = new HashMap<>();
 	
-	private List<List<String>> otherOptions = new ArrayList<>();
+	private List<ChosenVariableOption> otherOptions = new ArrayList<>();
 	private int unclearFeedbackNum = 0;
 	
-	private List<List<VarValue>> checkWrongVariableOptions(TraceNodePair pair, Trace mutatedTrace){
-		List<List<VarValue>> options = new ArrayList<>();
+	private List<ChosenVariableOption> checkWrongVariableOptions(TraceNodePair pair, Trace mutatedTrace){
+		List<ChosenVariableOption> options = new ArrayList<>();
 		
 		List<VarValue> wrongReadVars = pair.findSingleWrongReadVar(mutatedTrace);
 		List<VarValue> wrongWrittenVars = pair.findSingleWrongWrittenVarID(mutatedTrace);
@@ -28,30 +31,25 @@ public class SimulatedUser {
 		System.currentTimeMillis();
 		
 		if(wrongReadVars.isEmpty() && wrongWrittenVars.isEmpty()){
-			options.add(new ArrayList<VarValue>());
 			return options;
 		}
 		else if(wrongReadVars.isEmpty() || wrongWrittenVars.isEmpty()){
-			for(VarValue var: wrongWrittenVars){
-				List<VarValue> list = new ArrayList<>();
-				list.add(var);
-				options.add(list);
+			for(VarValue wrongWrittenVar: wrongWrittenVars){
+				ChosenVariableOption option = new ChosenVariableOption(null, wrongWrittenVar);
+				options.add(option);
 			}
 			
-			for(VarValue var: wrongReadVars){
-				List<VarValue> list = new ArrayList<>();
-				list.add(var);
-				options.add(list);
+			for(VarValue wrongReadVar: wrongReadVars){
+				ChosenVariableOption option = new ChosenVariableOption(wrongReadVar, null);
+				options.add(option);
 			}
 			return options;
 		}
 		else{
 			for(VarValue writtenVar: wrongWrittenVars){
 				for(VarValue readVar: wrongReadVars){
-					List<VarValue> list = new ArrayList<>();
-					list.add(readVar);
-					list.add(writtenVar);
-					options.add(list);
+					ChosenVariableOption option = new ChosenVariableOption(readVar, writtenVar);
+					options.add(option);
 				}
 			}
 			return options;
@@ -79,30 +77,13 @@ public class SimulatedUser {
 				feedback = UserFeedback.WRONG_PATH;
 			}
 			else{
-				if(suspiciousNode.getOrder() == 33){
-					System.currentTimeMillis();
-				}
+				List<ChosenVariableOption> options = checkWrongVariableOptions(pair, mutatedTrace);
+				/**
+				 * I prioritize the option so that the feedback number can be quickly reduced.
+				 */
+				Collections.sort(options, new OptionComparator());
 				
-				List<VarValue> wrongVars = new ArrayList<>();
-				List<List<VarValue>> options = checkWrongVariableOptions(pair, mutatedTrace);
-				wrongVars = options.get(0); 
-				
-				for(int i=1; i<options.size(); i++){
-					List<String> ids = new ArrayList<String>();
-					for(VarValue varValue: options.get(i)){
-						ids.add(varValue.getVarID());
-					}
-					otherOptions.add(ids);
-				}
-				
-				if(!wrongVars.isEmpty()){
-					for(VarValue var: wrongVars){
-						String wrongVarID = var.getVarID();
-						Settings.interestedVariables.add(wrongVarID, checkTime);
-					}			
-					feedback = UserFeedback.INCORRECT;
-				}
-				else{
+				if(options.isEmpty()){
 					for(VarValue writtenVar: suspiciousNode.getWrittenVariables()){
 						Settings.interestedVariables.remove(writtenVar.getVarID());
 					}
@@ -111,9 +92,21 @@ public class SimulatedUser {
 					}
 					
 					feedback = UserFeedback.CORRECT;
-					
 				}
-				
+				else{
+					ChosenVariableOption option = options.get(0);
+					
+					for(int i=1; i<options.size(); i++){
+						otherOptions.add(options.get(i));
+					}
+					
+					List<String> wrongVarIDs = option.getIncludedWrongVarID();
+					for(String wrongVarID: wrongVarIDs){
+						Settings.interestedVariables.add(wrongVarID, checkTime);						
+					}
+					
+					feedback = UserFeedback.INCORRECT;
+				}
 			}
 			
 		}
@@ -124,6 +117,11 @@ public class SimulatedUser {
 
 	
 	
+	private List<VarValue> getPriorOption(List<List<VarValue>> options) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	private boolean isClear(TraceNode suspiciousNode, HashMap<TraceNode, Integer> labeledUnclearNodeVisitedTimes, 
 			boolean isFirstTime, int maxUnclearFeedbackNum) {
 		
@@ -159,11 +157,11 @@ public class SimulatedUser {
 		}
 	}
 
-	public List<List<String>> getOtherOptions() {
+	public List<ChosenVariableOption> getOtherOptions() {
 		return otherOptions;
 	}
 
-	public void setOtherOptions(List<List<String>> otherOptions) {
+	public void setOtherOptions(List<ChosenVariableOption> otherOptions) {
 		this.otherOptions = otherOptions;
 	}
 

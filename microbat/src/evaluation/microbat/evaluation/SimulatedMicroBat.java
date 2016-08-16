@@ -11,6 +11,7 @@ import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.evaluation.accuracy.Accuracy;
 import microbat.evaluation.model.LCSMatcher;
+import microbat.evaluation.model.ChosenVariableOption;
 import microbat.evaluation.model.PairList;
 import microbat.evaluation.model.StateWrapper;
 import microbat.evaluation.model.StepOperationTuple;
@@ -328,7 +329,8 @@ public class SimulatedMicroBat {
 			feedbackType = UserFeedback.WRONG_PATH;
 		}
 		
-		for(List<String> wrongVarIDs: user.getOtherOptions()){
+		for(ChosenVariableOption option: user.getOtherOptions()){
+			List<String> wrongVarIDs = option.getIncludedWrongVarID();
 			ArrayList<StepOperationTuple> clonedJumpingSteps = (ArrayList<StepOperationTuple>) jumpingSteps.clone();
 			StateWrapper stateWrapper = new StateWrapper(state, wrongVarIDs, clonedJumpingSteps);
 			confusingStack.push(stateWrapper);
