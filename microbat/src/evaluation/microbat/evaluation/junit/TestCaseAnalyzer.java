@@ -152,6 +152,7 @@ public class TestCaseAnalyzer {
 		String mutationFile = "C:\\microbat_evaluation\\mutation\\110_29_1\\SimpleCalculator.java";
 		double unclearRate = 0;
 		boolean enableLoopInference = false;
+		boolean isReuseTrace = true;
 		
 //		String testClassName = "org.apache.commons.math.analysis.polynomials.PolynomialsUtilsTest";
 //		String testMethodName = "testFirstChebyshevPolynomials";
@@ -161,7 +162,7 @@ public class TestCaseAnalyzer {
 		
 		try {
 			runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 
-					unclearRate, enableLoopInference);
+					unclearRate, enableLoopInference, isReuseTrace);
 		} catch (JavaModelException e) {
 			e.printStackTrace();
 		} catch (MalformedURLException e) {
@@ -171,9 +172,13 @@ public class TestCaseAnalyzer {
 		}
 	}
 
-	private void runEvaluationForSingleTrial(String testClassName,
-			String testMethodName, String mutationFile, double unclearRate, boolean enableLoopInference) 
+	private Trace cachedMutatedTrace;
+	private Trace cachedCorrectTrace;
+	
+	private void runEvaluationForSingleTrial(String testClassName, String testMethodName, String mutationFile, 
+			double unclearRate, boolean enableLoopInference, boolean isReuseTrace) 
 					throws JavaModelException, MalformedURLException, IOException {
+		
 		String testcaseName = testClassName + "#" + testMethodName;
 		AppJavaClassPath testcaseConfig = createProjectClassPath(testClassName, testMethodName);
 		
@@ -187,24 +192,36 @@ public class TestCaseAnalyzer {
 		CompilationUnit cu = JavaUtil.parseCompilationUnit(mutationFile);
 		String mutatedClassName = JavaUtil.getFullNameOfCompilationUnit(cu);
 		
-		MutateInfo info =
-				mutateCode(mutatedClassName, mutatedFile, testcaseConfig, mutatedLine, testcaseName);
+		Trace correctTrace = null;
+		Trace killingMutatantTrace = null;
 		
-		if(info.isTooLong){
-			System.out.println("mutated trace is over long");
-			return;
+		if((cachedMutatedTrace==null || cachedCorrectTrace==null) || !isReuseTrace){
+			MutateInfo info =
+					mutateCode(mutatedClassName, mutatedFile, testcaseConfig, mutatedLine, testcaseName);
+			
+			if(info.isTooLong){
+				System.out.println("mutated trace is over long");
+				return;
+			}
+			
+			killingMutatantTrace = info.killingMutateTrace;
+			TestCaseRunner checker = new TestCaseRunner();
+			
+			List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig);
+			if(checker.isOverLong()){
+				return;
+			}
+			
+			correctTrace = new TraceModelConstructor().
+					constructTraceModel(testcaseConfig, executingStatements);
+			
+			cachedCorrectTrace = correctTrace;
+			cachedMutatedTrace = killingMutatantTrace;
 		}
-		
-		Trace killingMutatantTrace = info.killingMutateTrace;
-		TestCaseRunner checker = new TestCaseRunner();
-		
-		List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig);
-		if(checker.isOverLong()){
-			return;
+		else{
+			correctTrace = cachedCorrectTrace;
+			killingMutatantTrace = cachedMutatedTrace;
 		}
-		
-		Trace correctTrace = new TraceModelConstructor().
-				constructTraceModel(testcaseConfig, executingStatements);
 		
 		SimulatedMicroBat microbat = new SimulatedMicroBat();
 		ClassLocation mutatedLocation = new ClassLocation(mutatedClassName, null, mutatedLine);
