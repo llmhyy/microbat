@@ -153,19 +153,16 @@ public class LineNumberVisitor extends EmptyVisitor {
 						if(rw){
 							ReadFieldRetriever rfRetriever = new ReadFieldRetriever(cu, point.getLineNumber(), fullFieldName);
 							cu.accept(rfRetriever);
-							fullFieldName = rfRetriever.fullFieldName;							
+							if(rfRetriever.fullFieldName != null){
+								fullFieldName = rfRetriever.fullFieldName;															
+							}
 						}
 						else{
 							WrittenFieldRetriever wfRetriever = new WrittenFieldRetriever(cu, point.getLineNumber(), fullFieldName);
 							cu.accept(wfRetriever);
-							AbstractTypeDeclaration atd = (AbstractTypeDeclaration) cu.types().get(0);
-							if(wfRetriever.fullFieldName == null && !(atd instanceof TypeDeclaration)){
-								/** keep original full field name */
-							}
-							else{
+							if(wfRetriever.fullFieldName != null){
 								fullFieldName = wfRetriever.fullFieldName;
 							}
-//							System.currentTimeMillis();
 						}
 					}
 					
