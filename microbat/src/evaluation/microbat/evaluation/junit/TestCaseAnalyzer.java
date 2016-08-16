@@ -122,17 +122,17 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
+//		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
+//		
+//		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
+//		
+//		for(IJavaElement element: testRoot.getChildren()){
+//			if(element instanceof IPackageFragment){
+//				runEvaluation((IPackageFragment)element, reporter);				
+//			}
+//		}
 		
-		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
-		
-		for(IJavaElement element: testRoot.getChildren()){
-			if(element instanceof IPackageFragment){
-				runEvaluation((IPackageFragment)element, reporter);				
-			}
-		}
-		
-//		runSingeTrial();
+		runSingeTrial();
 		
 //		String className = "org.apache.commons.math.analysis.polynomials.PolynomialFunctionLagrangeFormTest";
 //		String methodName = "testLinearFunction";
@@ -147,18 +147,19 @@ public class TestCaseAnalyzer {
 //				+ "apache-common-math-2.2\\2081_22_1\\MathUtils.java";
 //		String mutatedClass = "org.apache.commons.math.util.MathUtils";
 		
-		String testClassName = "test.SimpleCalculatorTest";
-		String testMethodName = "testCalculator";
-		String mutationFile = "C:\\microbat_evaluation\\mutation\\110_29_1\\SimpleCalculator.java";
-		double unclearRate = 0;
-		boolean enableLoopInference = false;
-		boolean isReuseTrace = true;
-		
-//		String testClassName = "org.apache.commons.math.analysis.polynomials.PolynomialsUtilsTest";
-//		String testMethodName = "testFirstChebyshevPolynomials";
-//		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\706_13_1\\BigFraction.java";
+//		String testClassName = "test.SimpleCalculatorTest";
+//		String testMethodName = "testCalculator";
+//		String mutationFile = "C:\\microbat_evaluation\\mutation\\110_29_1\\SimpleCalculator.java";
 //		double unclearRate = 0;
-//		boolean enableLoopInference = true;
+//		boolean enableLoopInference = false;
+//		boolean isReuseTrace = true;
+		
+		String testClassName = "org.apache.commons.math.estimation.GaussNewtonEstimatorTest";
+		String testMethodName = "testMoreEstimatedParametersUnsorted";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\1125_13_1\\ArrayRealVector.java";
+		double unclearRate = 0;
+		boolean enableLoopInference = true;
+		boolean isReuseTrace = true;
 		
 		try {
 			runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 
@@ -172,8 +173,8 @@ public class TestCaseAnalyzer {
 		}
 	}
 
-	private Trace cachedMutatedTrace;
-	private Trace cachedCorrectTrace;
+	private static Trace cachedMutatedTrace;
+	private static Trace cachedCorrectTrace;
 	
 	private void runEvaluationForSingleTrial(String testClassName, String testMethodName, String mutationFile, 
 			double unclearRate, boolean enableLoopInference, boolean isReuseTrace) 
