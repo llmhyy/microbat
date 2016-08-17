@@ -978,10 +978,15 @@ public class ProgramExecutor extends Executor {
 						ObjectReference objRef = (ObjectReference) parentValue;
 
 						if (var instanceof FieldVar) {
-							// String varID = String.valueOf(objRef.uniqueID())
-							// + "." + var.getSimpleName();
-							String varID = Variable.concanateFieldVarID(String.valueOf(objRef.uniqueID()),
-									var.getSimpleName());
+							
+							String varID = null;
+							if(((FieldVar)var).isStatic()){
+								varID = var.getName();
+							}
+							else{
+								varID = Variable.concanateFieldVarID(String.valueOf(objRef.uniqueID()),
+										var.getSimpleName());								
+							}
 							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
 							varID = varID + ":" + definingNodeOrder;
 							var.setVarID(varID);
