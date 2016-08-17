@@ -95,6 +95,11 @@ public class VariableValueExtractor {
 					objRef = frame.thisObject();
 					refType = objRef.referenceType();
 				}
+				
+				if(bkp.getLineNumber()==72){
+					System.currentTimeMillis();
+				}
+				
 				/**
 				 * Local variables MUST BE navigated before fields, because: in
 				 * case a class field and a local variable in method have the
@@ -213,7 +218,7 @@ public class VariableValueExtractor {
 			if(!isField){
 				LocalVar variable = new LocalVar(var.getName(), var.getType(), 
 						bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
-				
+				System.currentTimeMillis();
 				appendVarVal(bkVal, variable, value, 1, thread, true);				
 			}
 			
@@ -322,10 +327,13 @@ public class VariableValueExtractor {
 		
 		if (value == null) {
 			ReferenceValue val = new ReferenceValue(true, false, variable);
-			parent.addChild(val);
-			val.addParent(parent);
-			
 			val.setPrimitiveID(parent);
+			
+			if(val.getVarID()!=null){
+				parent.addChild(val);
+				val.addParent(parent);				
+			}
+			
 			
 			return;
 		}
@@ -337,14 +345,18 @@ public class VariableValueExtractor {
 			if (type instanceof BooleanType) {
 				microbat.model.value.BooleanValue ele = 
 						new microbat.model.value.BooleanValue(((BooleanValue)value).booleanValue(), isRoot, variable);
-				parent.addChild(ele);
-				ele.addParent(parent);
 				ele.setPrimitiveID(parent);
+				if(ele.getVarID()!=null){
+					parent.addChild(ele);
+					ele.addParent(parent);				
+				}
 			} else {
 				PrimitiveValue ele = new PrimitiveValue(value.toString(), isRoot, variable);
-				parent.addChild(ele);
-				ele.addParent(parent);
 				ele.setPrimitiveID(parent);
+				if(ele.getVarID()!=null){
+					parent.addChild(ele);
+					ele.addParent(parent);				
+				}
 			}
 		} else if (type instanceof ArrayType) { 
 			appendArrVarVal(parent, variable, (ArrayReference)value, level, thread, isRoot);

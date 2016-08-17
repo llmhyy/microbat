@@ -592,8 +592,8 @@ public class TestCaseAnalyzer {
 		
 		for(BreakPoint point: executingStatements){
 			String className = point.getDeclaringCompilationUnitName();
-			if(!JTestUtil.isInTestCase(className)){
-				CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className);
+			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className);
+			if(cu != null && !JTestUtil.isInTestCase(className)){
 				LoopInsiderChecker checker = new LoopInsiderChecker(cu, point.getLineNumber());
 				cu.accept(checker);
 				

@@ -15,8 +15,10 @@ public abstract class Variable {
 	 * e.g., 100:33 . 
 	 * <br><br>
 	 * For primitive type:
-	 * if it is a field, its id is: its parent's object id + field name + the order of trace node defining it, 
+	 * if it is a non-static field, its id is: its parent's object id + field name + the order of trace node defining it, 
 	 * e.g., 100.a:33 ;
+	 * if it is a static field, its id is: its field name + the order of trace node defining it,
+	 * e.g., Class.a:33;
 	 * if it is an array element, its id is: its parent's object id + index + the order of trace node defining it,
 	 * e.g., 100[1]:33 ;
 	 * if it is a local variable, its id is: its scope (i.e., class[startLine, endLine]) + variable name + the order
