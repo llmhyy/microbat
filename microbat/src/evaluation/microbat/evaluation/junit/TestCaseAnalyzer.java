@@ -128,7 +128,7 @@ public class TestCaseAnalyzer {
 		
 		for(IJavaElement element: testRoot.getChildren()){
 			if(element instanceof IPackageFragment){
-				runEvaluation((IPackageFragment)element, reporter);				
+				runEvaluation((IPackageFragment)element, reporter, false);				
 			}
 		}
 		
@@ -244,11 +244,12 @@ public class TestCaseAnalyzer {
 		
 	}
 
-	private void runEvaluation(IPackageFragment pack, ExcelReporter reporter) throws JavaModelException {
+	private void runEvaluation(IPackageFragment pack, ExcelReporter reporter, 
+			boolean isLimitTrialNum) throws JavaModelException {
 		
 		for(IJavaElement javaElement: pack.getChildren()){
 			if(javaElement instanceof IPackageFragment){
-				runEvaluation((IPackageFragment)javaElement, reporter);
+				runEvaluation((IPackageFragment)javaElement, reporter, isLimitTrialNum);
 			}
 			else if(javaElement instanceof ICompilationUnit){
 				ICompilationUnit icu = (ICompilationUnit)javaElement;
@@ -261,7 +262,7 @@ public class TestCaseAnalyzer {
 					for(MethodDeclaration testingMethod: testingMethods){
 						String methodName = testingMethod.getName().getIdentifier();
 						try{
-							runEvaluationForSingleTestCase(className, methodName, reporter);							
+							runEvaluationForSingleTestCase(className, methodName, reporter, isLimitTrialNum);							
 						}
 						catch(Exception e){
 							e.printStackTrace();
@@ -274,7 +275,7 @@ public class TestCaseAnalyzer {
 		
 	}
 	
-	private boolean runEvaluationForSingleTestCase(String className, String methodName, ExcelReporter reporter) 
+	private boolean runEvaluationForSingleTestCase(String className, String methodName, ExcelReporter reporter, boolean isLimitTrialNum) 
 			throws JavaModelException {
 		
 		AppJavaClassPath testcaseConfig = createProjectClassPath(className, methodName);
@@ -324,11 +325,11 @@ public class TestCaseAnalyzer {
 									testcaseConfig, line, testCaseName, correctTrace, executingStatements, 
 									reporter, tmpTrial);
 							correctTrace = evalInfo.correctTrace;
-							if(evalInfo.isSuccess){
-//								thisTrialNum++;								
-//								if(thisTrialNum >= trialNumPerTestCase){
-//									break stop;
-//								}
+							if(evalInfo.isSuccess && isLimitTrialNum){
+								thisTrialNum++;								
+								if(thisTrialNum >= trialNumPerTestCase){
+									break stop;
+								}
 							}
 						}
 					}
