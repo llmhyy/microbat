@@ -154,11 +154,11 @@ public class TestCaseAnalyzer {
 //		boolean enableLoopInference = false;
 //		boolean isReuseTrace = true;
 		
-		String testClassName = "org.apache.commons.math.estimation.GaussNewtonEstimatorTest";
-		String testMethodName = "testMoreEstimatedParametersUnsorted";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\1125_13_1\\ArrayRealVector.java";
+		String testClassName = "org.apache.commons.math.analysis.BinaryFunctionTest";
+		String testMethodName = "testPow";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\1377_22_3\\FastMath.java";
 		double unclearRate = 0;
-		boolean enableLoopInference = true;
+		boolean enableLoopInference = false;
 		boolean isReuseTrace = true;
 		
 		try {
@@ -230,8 +230,9 @@ public class TestCaseAnalyzer {
 		Trial trial;
 		try {
 			trial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, mutatedLocation, 
-					testcaseName, mutatedFile.toString(), unclearRate, enableLoopInference);				
+					testcaseName, mutatedFile.toString(), unclearRate, enableLoopInference);	
 			if(trial != null){
+				System.out.println("Jump " + trial.getJumpSteps().size() + " steps in total");
 				if(!trial.isBugFound()){
 					System.err.println("Cannot find bug in Mutated File: " + mutatedFile);
 				}
@@ -324,10 +325,10 @@ public class TestCaseAnalyzer {
 									reporter, tmpTrial);
 							correctTrace = evalInfo.correctTrace;
 							if(evalInfo.isSuccess){
-								thisTrialNum++;								
-								if(thisTrialNum >= trialNumPerTestCase){
-									break stop;
-								}
+//								thisTrialNum++;								
+//								if(thisTrialNum >= trialNumPerTestCase){
+//									break stop;
+//								}
 							}
 						}
 					}
@@ -377,6 +378,8 @@ public class TestCaseAnalyzer {
 				return new EvaluationInfo(false, correctTrace);
 			}
 			
+			boolean isLoopEffective = false;
+			
 			Trace killingMutatantTrace = mutateInfo.killingMutateTrace;
 			if(killingMutatantTrace != null && killingMutatantTrace.size() > 1){
 				if(null == correctTrace){
@@ -407,9 +410,13 @@ public class TestCaseAnalyzer {
 					loopTrial.setTime(killingMutatantTrace.getConstructTime());
 					trialList.add(nonloopTrial);
 					trialList.add(loopTrial);
+					
+					if(i==0 && loopTrial.getJumpSteps().size()<nonloopTrial.getJumpSteps().size()){
+						isLoopEffective = true;
+					}
 				}
 				
-				if(isValid){
+				if(isValid && isLoopEffective){
 					/**
 					 * TODO 
 					 * Note that the potential implementation error could be included. The failed
