@@ -134,9 +134,9 @@ public class TestCaseAnalyzer {
 		
 //		runSingeTrial();
 		
-//		String className = "org.apache.commons.math.analysis.polynomials.PolynomialFunctionLagrangeFormTest";
-//		String methodName = "testLinearFunction";
-//		runEvaluationForSingleTestCase(className, methodName, reporter);
+//		String className = "org.apache.commons.cli.HelpFormatterTest";
+//		String methodName = "testRenderWrappedTextSingleLine";
+//		runEvaluationForSingleTestCase(className, methodName, reporter, false);
 	}
 	
 	private void runSingeTrial(){

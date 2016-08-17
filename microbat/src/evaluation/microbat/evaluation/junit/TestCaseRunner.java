@@ -227,6 +227,7 @@ public class TestCaseRunner extends ExecutionStatementCollector{
 			for (StackFrame frame : thread.frames()) {
 				if (frame.location().equals(location)) {
 					currentFrame = frame;
+					break;
 				}
 			}
 		} catch (IncompatibleThreadStateException e) {
