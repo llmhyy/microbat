@@ -126,7 +126,7 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		int flag = TestCaseAnalyzer.TRIAL;
+		int flag = TestCaseAnalyzer.ALL;
 		boolean isLimitTrialNum = true;
 		
 		runEvaluation(flag, isLimitTrialNum);
