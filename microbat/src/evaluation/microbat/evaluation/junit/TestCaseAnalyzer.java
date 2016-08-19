@@ -122,17 +122,17 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
+//		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
+//		
+//		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
+//		
+//		for(IJavaElement element: testRoot.getChildren()){
+//			if(element instanceof IPackageFragment){
+//				runEvaluation((IPackageFragment)element, reporter, false);				
+//			}
+//		}
 		
-		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
-		
-		for(IJavaElement element: testRoot.getChildren()){
-			if(element instanceof IPackageFragment){
-				runEvaluation((IPackageFragment)element, reporter, false);				
-			}
-		}
-		
-//		runSingeTrial();
+		runSingeTrial();
 		
 //		String className = "org.apache.commons.cli.HelpFormatterTest";
 //		String methodName = "testRenderWrappedTextSingleLine";
@@ -154,11 +154,11 @@ public class TestCaseAnalyzer {
 //		boolean enableLoopInference = false;
 //		boolean isReuseTrace = true;
 		
-		String testClassName = "org.apache.commons.math.analysis.BinaryFunctionTest";
-		String testMethodName = "testPow";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\1377_22_3\\FastMath.java";
+		String testClassName = "org.apache.bcel.CounterVisitorTestCase";
+		String testMethodName = "testAnnotationEntryCount";
+		String mutationFile = "C:\\microbat_evaluation\\commons-bcel\\75_18_1\\ConstantPool.java";
 		double unclearRate = 0;
-		boolean enableLoopInference = false;
+		boolean enableLoopInference = true;
 		boolean isReuseTrace = true;
 		
 		try {
