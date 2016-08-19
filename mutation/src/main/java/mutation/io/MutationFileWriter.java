@@ -41,12 +41,14 @@ public class MutationFileWriter extends AbstractMutationFileWriter {
 	public List<File> write(List<MutationNode> data, String className, int lineNo) {
 		List<File> files = new ArrayList<File>();
 		File javaFile = getJavaSrcFile(className);
+		
+		int count = 1;
 		for (MutationNode muNode : data) {
 			for (int i = 0; i < muNode.getMutatedNodes().size(); i++) {
 				Node node = muNode.getMutatedNodes().get(i);
 				File folder = FileUtils.createFolder(muSrcFolder, 
 						String.format("%d_%d_%d", 
-							lineNo, muNode.getOrgNode().getBeginColumn(), i + 1));
+							lineNo, muNode.getOrgNode().getBeginColumn(), count++));
 				File file = new File(folder, javaFile.getName());
 				List<?> lines;
 				try {
