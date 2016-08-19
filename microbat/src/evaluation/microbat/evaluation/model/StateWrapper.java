@@ -1,19 +1,18 @@
 package microbat.evaluation.model;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import microbat.handler.CheckingState;
 
 public class StateWrapper {
 	private CheckingState state;
-	private List<String> choosingVarID;
+	private ChosenVariableOption variableOption;
 	private ArrayList<StepOperationTuple> jumpingSteps;
 
-	public StateWrapper(CheckingState state, List<String> choosingVarID, ArrayList<StepOperationTuple> jumpingSteps) {
+	public StateWrapper(CheckingState state, ChosenVariableOption option, ArrayList<StepOperationTuple> jumpingSteps) {
 		super();
 		this.state = state;
-		this.choosingVarID = choosingVarID;
+		this.variableOption = option;
 		this.jumpingSteps = jumpingSteps;
 	}
 
@@ -25,20 +24,20 @@ public class StateWrapper {
 		this.state = state;
 	}
 
-	public List<String> getChoosingVarID() {
-		return choosingVarID;
-	}
-
-	public void setChoosingVarID(List<String> choosingVarID) {
-		this.choosingVarID = choosingVarID;
-	}
-
 	public ArrayList<StepOperationTuple> getJumpingSteps() {
 		return jumpingSteps;
 	}
 
 	public void setJumpingSteps(ArrayList<StepOperationTuple> jumpingSteps) {
 		this.jumpingSteps = jumpingSteps;
+	}
+
+	public ChosenVariableOption getVariableOption() {
+		return variableOption;
+	}
+
+	public void setVariableOption(ChosenVariableOption variableOption) {
+		this.variableOption = variableOption;
 	}
 
 	

@@ -122,8 +122,8 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-//		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
-//		
+		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
+		
 //		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
 //		
 //		for(IJavaElement element: testRoot.getChildren()){
@@ -155,11 +155,11 @@ public class TestCaseAnalyzer {
 //		boolean enableLoopInference = false;
 //		boolean isReuseTrace = true;
 		
-		String testClassName = "org.apache.bcel.CounterVisitorTestCase";
-		String testMethodName = "testAnnotationEntryCount";
-		String mutationFile = "C:\\microbat_evaluation\\commons-bcel\\75_18_1\\ConstantPool.java";
+		String testClassName = "org.apache.commons.math.analysis.integration.RombergIntegratorTest";
+		String testMethodName = "testSinFunction";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\100_22_2\\RombergIntegrator.java";
 		double unclearRate = 0;
-		boolean enableLoopInference = true;
+		boolean enableLoopInference = false;
 		boolean isReuseTrace = true;
 		
 		try {
@@ -297,7 +297,7 @@ public class TestCaseAnalyzer {
 				return false;
 			}
 			
-			System.out.println("identifying the possible mutated location for " + testCaseName);
+//			System.out.println("identifying the possible mutated location for " + testCaseName);
 			List<ClassLocation> locationList = findMutationLocation(executingStatements);
 			
 			int thisTrialNum = 0;
@@ -418,7 +418,7 @@ public class TestCaseAnalyzer {
 					}
 				}
 				
-				if(isValid && isLoopEffective){
+				if(isValid){
 					/**
 					 * TODO 
 					 * Note that the potential implementation error could be included. The failed

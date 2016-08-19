@@ -20,7 +20,12 @@ public class ChosenVariableOption {
 		this.readVar = readVar;
 		this.writtenVar = writtenVar;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "ChosenVariableOption [readVar=" + readVar + ", writtenVar=" + writtenVar + "]";
+	}
+
 	public List<String> getIncludedWrongVarID(){
 		List<String> varIDs = new ArrayList<>();
 		if(readVar != null){

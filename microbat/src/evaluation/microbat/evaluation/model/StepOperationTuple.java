@@ -1,16 +1,17 @@
 package microbat.evaluation.model;
 
 import microbat.model.trace.TraceNode;
+import microbat.recommendation.UserFeedback;
 
 public class StepOperationTuple {
 	private TraceNode node;
-	private String userFeedback;
+	private UserFeedback userFeedback;
 	/**
 	 * the corresponding node in correct trace.
 	 */
 	private TraceNode referenceNode;
 	
-	public StepOperationTuple(TraceNode node, String userFeedback, TraceNode referenceNode) {
+	public StepOperationTuple(TraceNode node, UserFeedback userFeedback, TraceNode referenceNode) {
 		super();
 		this.node = node;
 		this.userFeedback = userFeedback;
@@ -23,10 +24,10 @@ public class StepOperationTuple {
 	public void setNode(TraceNode node) {
 		this.node = node;
 	}
-	public String getUserFeedback() {
+	public UserFeedback getUserFeedback() {
 		return userFeedback;
 	}
-	public void setUserFeedback(String userFeedback) {
+	public void setUserFeedback(UserFeedback userFeedback) {
 		this.userFeedback = userFeedback;
 	}
 
@@ -34,6 +35,7 @@ public class StepOperationTuple {
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("StepOperationTuple [node=" + node + ", userFeedback=" + userFeedback);
+		
 		if(getReferenceNode() != null){
 			buffer.append(", reference node=" + getReferenceNode());
 		}

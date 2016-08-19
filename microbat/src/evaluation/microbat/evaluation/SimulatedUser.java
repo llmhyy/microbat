@@ -23,6 +23,7 @@ public class SimulatedUser {
 	private int unclearFeedbackNum = 0;
 	
 	private List<ChosenVariableOption> checkWrongVariableOptions(TraceNodePair pair, Trace mutatedTrace){
+		
 		List<ChosenVariableOption> options = new ArrayList<>();
 		
 		List<VarValue> wrongReadVars = pair.findSingleWrongReadVar(mutatedTrace);
@@ -56,25 +57,25 @@ public class SimulatedUser {
 		}
 	}
 	
-	public String feedback(TraceNode suspiciousNode, Trace mutatedTrace, PairList pairList, 
+	public UserFeedback feedback(TraceNode suspiciousNode, Trace mutatedTrace, PairList pairList, 
 			int checkTime, boolean isFirstTime, int maxUnclearFeedbackNum) {
 		
 		otherOptions.clear();
 		
-		String feedback;
+		UserFeedback feedback = new UserFeedback();
 		
 		boolean isClear = isClear(suspiciousNode, labeledUnclearNodeVisitedTimes, isFirstTime, maxUnclearFeedbackNum);
 //		isClear = true;
 		
 		if(!isClear){
-			feedback = UserFeedback.UNCLEAR;
+			feedback.setFeedbackType(UserFeedback.UNCLEAR);
 			unclearFeedbackNum++;
 		}
 		else{
 			TraceNodePair pair = pairList.findByMutatedNode(suspiciousNode);
 			boolean isWrongPath = (pair==null);
 			if(isWrongPath){
-				feedback = UserFeedback.WRONG_PATH;
+				feedback.setFeedbackType(UserFeedback.WRONG_PATH);
 			}
 			else{
 				List<ChosenVariableOption> options = checkWrongVariableOptions(pair, mutatedTrace);
@@ -91,7 +92,7 @@ public class SimulatedUser {
 						Settings.interestedVariables.remove(readVar.getVarID());
 					}
 					
-					feedback = UserFeedback.CORRECT;
+					feedback.setFeedbackType(UserFeedback.CORRECT);
 				}
 				else{
 					ChosenVariableOption option = options.get(0);
@@ -105,7 +106,8 @@ public class SimulatedUser {
 						Settings.interestedVariables.add(wrongVarID, checkTime);						
 					}
 					
-					feedback = UserFeedback.INCORRECT;
+					feedback.setFeedbackType(UserFeedback.INCORRECT);
+					feedback.setOption(option);
 				}
 			}
 			

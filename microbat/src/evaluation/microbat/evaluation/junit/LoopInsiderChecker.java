@@ -25,7 +25,7 @@ public class LoopInsiderChecker extends ASTVisitor{
 	public boolean visit(IfStatement statement){
 		int start = cu.getLineNumber(statement.getExpression().getStartPosition());
 		int end = cu.getLineNumber(statement.getStartPosition()+statement.getLength());
-		if(start <= lineNumber && lineNumber <= end){
+		if(start < lineNumber && lineNumber <= end){
 			if(isContainedInLoop(statement)){
 				setLoopInsider(true);				
 			}
