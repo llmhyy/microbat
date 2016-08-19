@@ -162,13 +162,13 @@ public class TestCaseRunner extends ExecutionStatementCollector{
 							StepEvent sEvent = (StepEvent)event;
 							Location location = sEvent.location();
 							
-							String path = location.sourcePath();
-							path = path.substring(0, path.indexOf(".java"));
-							path = path.replace("\\", ".");
-							
 							int lineNumber = location.lineNumber();
 							
-							BreakPoint breakPoint = new BreakPoint(path, lineNumber);
+							String path = location.sourcePath();
+							String declaringCompilationUnit = path.replace(".java", "");
+							declaringCompilationUnit = declaringCompilationUnit.replace('\\', '.');
+							
+							BreakPoint breakPoint = new BreakPoint(location.declaringType().name(), declaringCompilationUnit, lineNumber);
 							
 							if(isAboutToFinishTestRunner(breakPoint)){
 								checkTestCaseSucessfulness(((StepEvent) event).thread(), location);
