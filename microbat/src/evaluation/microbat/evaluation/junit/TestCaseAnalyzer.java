@@ -126,7 +126,7 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		int flag = TestCaseAnalyzer.RUN_TEST_CASE;
+		int flag = TestCaseAnalyzer.RUN_TRIAL;
 		boolean isLimitTrialNum = true;
 		
 		runEvaluation(flag, isLimitTrialNum);
@@ -170,11 +170,11 @@ public class TestCaseAnalyzer {
 //		boolean enableLoopInference = false;
 //		boolean isReuseTrace = true;
 		
-		String testClassName = "org.apache.commons.math.analysis.integration.RombergIntegratorTest";
+		String testClassName = "org.apache.commons.math.analysis.integration.SimpsonIntegratorTest";
 		String testMethodName = "testSinFunction";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\100_22_2\\RombergIntegrator.java";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\89_21_1\\SimpsonIntegrator.java";
 		double unclearRate = 0;
-		boolean enableLoopInference = true;
+		boolean enableLoopInference = false;
 		boolean isReuseTrace = true;
 		
 		try {
