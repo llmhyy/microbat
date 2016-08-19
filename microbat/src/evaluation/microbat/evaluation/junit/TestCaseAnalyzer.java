@@ -124,15 +124,15 @@ public class TestCaseAnalyzer {
 		
 		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
 		
-//		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
-//		
-//		for(IJavaElement element: testRoot.getChildren()){
-//			if(element instanceof IPackageFragment){
-//				runEvaluation((IPackageFragment)element, reporter, false);				
-//			}
-//		}
+		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
 		
-		runSingeTrial();
+		for(IJavaElement element: testRoot.getChildren()){
+			if(element instanceof IPackageFragment){
+				runEvaluation((IPackageFragment)element, reporter, false);				
+			}
+		}
+		
+//		runSingeTrial();
 		
 		String className = "org.apache.commons.math.analysis.polynomials.PolynomialFunctionLagrangeFormTest";
 		String methodName = "testLinearFunction";
