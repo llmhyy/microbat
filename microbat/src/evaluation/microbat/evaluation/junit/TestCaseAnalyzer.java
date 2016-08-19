@@ -118,27 +118,43 @@ public class TestCaseAnalyzer {
 		}
 	}
 
+	public static final int RUN_ALL = 0;
+	public static final int RUN_TRIAL = 1;
+	public static final int RUN_TEST_CASE = 2;
+	
 	public void runEvaluation() throws JavaModelException, IOException{
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
-//		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
-//		
-//		for(IJavaElement element: testRoot.getChildren()){
-//			if(element instanceof IPackageFragment){
-//				runEvaluation((IPackageFragment)element, reporter, false);				
-//			}
-//		}
+		int flag = TestCaseAnalyzer.RUN_ALL;
+		boolean isLimitTrialNum = true;
 		
-		runSingeTrial();
-		
-//		String className = "org.apache.commons.cli.HelpFormatterTest";
-//		String methodName = "testRenderWrappedTextSingleLine";
-//		runEvaluationForSingleTestCase(className, methodName, reporter, false);
-
+		runEvaluation(flag, isLimitTrialNum);
 	}
 	
+	private void runEvaluation(int flag, boolean isLimitTrialNum) throws JavaModelException, IOException{
+		if(flag == RUN_ALL){
+			ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
+			IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
+			
+			for(IJavaElement element: testRoot.getChildren()){
+				if(element instanceof IPackageFragment){
+					runEvaluation((IPackageFragment)element, reporter, isLimitTrialNum);				
+				}
+			}
+		}
+		else if(flag == RUN_TRIAL){
+			runSingeTrial();
+		}
+		else if(flag == RUN_TEST_CASE){
+			ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
+			String testClassName = "org.apache.commons.math.analysis.integration.RombergIntegratorTest";
+			String testMethodName = "testSinFunction";
+			runEvaluationForSingleTestCase(testClassName, testMethodName, reporter, false);
+		}
+		
+	}
+
 	private void runSingeTrial(){
 		//TODO BUG TimeOutException in JVM
 //		String testClassName = "org.apache.commons.math.analysis.interpolation.LinearInterpolatorTest";
@@ -158,7 +174,7 @@ public class TestCaseAnalyzer {
 		String testMethodName = "testSinFunction";
 		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\100_22_2\\RombergIntegrator.java";
 		double unclearRate = 0;
-		boolean enableLoopInference = false;
+		boolean enableLoopInference = true;
 		boolean isReuseTrace = true;
 		
 		try {
