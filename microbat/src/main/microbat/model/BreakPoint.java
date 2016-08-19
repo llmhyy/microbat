@@ -35,22 +35,26 @@ public class BreakPoint extends ClassLocation {
 	private ControlScope controlScope;
 	private SourceScope loopScope;
 	private List<ClassLocation> targets = new ArrayList<>();
+	private String declaringCompilationUnitName;
 	
-	public BreakPoint(String className, int linNum){
+	public BreakPoint(String className, String declaringCompilationUnitName, int linNum){
 		super(className, null, linNum);
 		vars = new ArrayList<Variable>();
+		this.declaringCompilationUnitName = declaringCompilationUnitName;
 	}
 	
-	public BreakPoint(String className, String methodSign, int lineNo) {
+	public BreakPoint(String className, String declaringCompilationUnitName, String methodSign, int lineNo) {
 		super(className, methodSign, lineNo);
 		vars = new ArrayList<Variable>();
+		this.declaringCompilationUnitName = declaringCompilationUnitName;
 	}
 	
-	public BreakPoint(String className, int lineNo, Variable... newVars) {
+	public BreakPoint(String className, String declaringCompilationUnitName, int lineNo, Variable... newVars) {
 		this(className, null, lineNo);
 		if (newVars != null) {
 			addVars(newVars);
 		}
+		this.declaringCompilationUnitName = declaringCompilationUnitName;
 	}
 	
 	public void addReadVariable(Variable var){
@@ -170,11 +174,7 @@ public class BreakPoint extends ClassLocation {
 	}
 	
 	public String getDeclaringCompilationUnitName(){
-		String className = super.getClassCanonicalName();
-		if(className.contains("$")){
-			className = className.substring(0, className.indexOf("$"));
-		}
-		return className;
+		return this.declaringCompilationUnitName;
 	}
 	
 	public String getClassCanonicalName(){
@@ -233,5 +233,9 @@ public class BreakPoint extends ClassLocation {
 
 	public void setLoopScope(SourceScope loopScope) {
 		this.loopScope = loopScope;
+	}
+
+	public void setDeclaringCompilationUnitName(String declaringCompilationUnitName) {
+		this.declaringCompilationUnitName = declaringCompilationUnitName;
 	}
 }

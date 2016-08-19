@@ -129,7 +129,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 	}
 
 	private void parseReadWrittenVariable(BreakPoint point, List<InstructionHandle> correspondingInstructions, Code code, CFG cfg) {
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getClassCanonicalName());
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName());
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool()); 
 		 
 		for(int i=0; i<correspondingInstructions.size(); i++){

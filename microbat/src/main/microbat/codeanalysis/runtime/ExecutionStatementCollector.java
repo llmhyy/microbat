@@ -70,7 +70,13 @@ public class ExecutionStatementCollector extends Executor{
 //							path = path.replace(File.separator, ".");
 							
 							int lineNumber = location.lineNumber();
-							BreakPoint breakPoint = new BreakPoint(location.declaringType().name(), lineNumber);
+							
+							String path = location.sourcePath();
+							String declaringCompilationUnit = path.replace(".java", "");
+							declaringCompilationUnit = declaringCompilationUnit.replace('\\', '.');
+							
+							
+							BreakPoint breakPoint = new BreakPoint(location.declaringType().name(), declaringCompilationUnit, lineNumber);
 //							System.out.println(breakPoint);
 
 							if(!isInTestRunner(breakPoint) && !pointList.contains(breakPoint)){
@@ -100,9 +106,9 @@ public class ExecutionStatementCollector extends Executor{
 			} catch (InterruptedException e) {
 				connected = false;
 				e.printStackTrace();
-			} /*catch (AbsentInformationException e) {
+			} catch (AbsentInformationException e) {
 				e.printStackTrace();
-			}*/
+			}
 			
 			
 		}

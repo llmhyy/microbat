@@ -533,7 +533,7 @@ public class JavaUtil {
 	}
 
 	private static List<IMethodBinding> findMethodInvocations(TraceNode prevNode) {
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(prevNode.getClassCanonicalName());
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(prevNode.getDeclaringCompilationUnitName());
 		
 		MethodInvocationFinder finder = new MethodInvocationFinder(cu, prevNode.getLineNumber());
 		cu.accept(finder);
@@ -552,7 +552,7 @@ public class JavaUtil {
 	}
 
 	private static MethodDeclaration findMethodDeclaration(TraceNode postNode) {
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(postNode.getClassCanonicalName());
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(postNode.getDeclaringCompilationUnitName());
 		
 		MethodDeclarationFinder finder = new MethodDeclarationFinder(cu, postNode.getLineNumber());
 		cu.accept(finder);

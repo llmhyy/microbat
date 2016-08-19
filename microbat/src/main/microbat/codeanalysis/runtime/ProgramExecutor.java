@@ -1166,7 +1166,7 @@ public class ProgramExecutor extends Executor {
 	private void collectValueOfPreviousStep(BreakPoint lastSteppingInPoint, ThreadReference thread, Location loc)
 			throws SavException {
 
-		BreakPoint current = new BreakPoint(lastSteppingInPoint.getClassCanonicalName(),
+		BreakPoint current = new BreakPoint(lastSteppingInPoint.getClassCanonicalName(), lastSteppingInPoint.getDeclaringCompilationUnitName(),
 				lastSteppingInPoint.getLineNumber());
 
 		BreakPointValue bkpVal = extractValuesAtLocation(current, thread, loc);
