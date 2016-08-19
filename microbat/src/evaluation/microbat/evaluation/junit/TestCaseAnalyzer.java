@@ -126,7 +126,7 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		int flag = TestCaseAnalyzer.RUN_ALL;
+		int flag = TestCaseAnalyzer.RUN_TEST_CASE;
 		boolean isLimitTrialNum = true;
 		
 		runEvaluation(flag, isLimitTrialNum);
@@ -148,7 +148,7 @@ public class TestCaseAnalyzer {
 		}
 		else if(flag == RUN_TEST_CASE){
 			ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
-			String testClassName = "org.apache.commons.math.analysis.integration.RombergIntegratorTest";
+			String testClassName = "org.apache.commons.math.analysis.integration.SimpsonIntegratorTest";
 			String testMethodName = "testSinFunction";
 			runEvaluationForSingleTestCase(testClassName, testMethodName, reporter, false);
 		}
@@ -321,6 +321,14 @@ public class TestCaseAnalyzer {
 				Map<String, MutationResult> mutations = generateMutationFiles(locationList);
 				System.out.println("mutation done for " + testCaseName);
 				
+				if(!mutations.keySet().isEmpty()){
+					System.out.println("Start executing mutants for " + testCaseName);
+					System.out.println("=======================================");
+				}
+				else{
+					System.out.println("What a pity, no proper mutants generated for " + testCaseName);
+				}
+				
 				stop:
 				for(String tobeMutatedClass: mutations.keySet()){
 					MutationResult result = mutations.get(tobeMutatedClass);
@@ -352,7 +360,7 @@ public class TestCaseAnalyzer {
 				}
 			}
 			else{
-				System.out.println("but " + testCaseName + " cannot be mutated");
+				System.out.println("However, " + testCaseName + " cannot be mutated");
 				this.ignoredTestCaseFiles.addTestCase(testCaseName);
 			}
 		}
@@ -430,6 +438,7 @@ public class TestCaseAnalyzer {
 					
 					if(i==0 && loopTrial.getJumpSteps().size()<nonloopTrial.getJumpSteps().size()){
 						isLoopEffective = true;
+						System.out.println("GOOD NEWS: loop inference takes effect!");
 					}
 				}
 				
@@ -512,20 +521,21 @@ public class TestCaseAnalyzer {
 			checker.checkValidity(testcaseConfig);
 			
 			isKill = !checker.isPassingTest() && !checker.hasCompilationError();
+			String testMethod = testcaseConfig.getOptionalTestClass() + "#" + testcaseConfig.getOptionalTestMethod();
 			
 			if(isKill){
-				String testMethod = testcaseConfig.getOptionalTestClass() + "#" + testcaseConfig.getOptionalTestMethod();
-				
-				System.out.println("generating trace for " + testMethod + " (mutation: " + mutatedFile + ")");
+				System.out.println("KILLED: Now generating trace for " + testMethod + " (mutation: " + mutatedFile + ")");
 				TraceModelConstructor constructor = new TraceModelConstructor();
 				
 				List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig);
 				
 				if(checker.isOverLong()){
+					System.out.println("The trace is over long for " + testMethod + " (mutation: " + mutatedFile + ")");
 					killingMutantTrace = null;
 					isTooLong = true;
 				}
 				else{
+					System.out.println("A valid trace is generated for " + testMethod + " (mutation: " + mutatedFile + ")");
 					killingMutantTrace = null;
 					long t1 = System.currentTimeMillis();
 					killingMutantTrace = constructor.constructTraceModel(testcaseConfig, executingStatements);
@@ -533,6 +543,9 @@ public class TestCaseAnalyzer {
 					int time = (int) ((t2-t1)/1000);
 					killingMutantTrace.setConstructTime(time);
 				}
+			}
+			else{
+				System.out.println("FAIL TO KILL: " + testMethod + " (mutation: " + mutatedFile + ")");
 			}
 			
 		}

@@ -51,7 +51,7 @@ public class ExecutionStatementCollector extends Executor{
 				if(eventSet != null){
 					for(Event event: eventSet){
 						if(event instanceof VMStartEvent){
-							System.out.println("start collecting execution");
+//							System.out.println("start collecting execution");
 							
 							ThreadReference thread = ((VMStartEvent) event).thread();
 							addStepWatch(erm, thread);
@@ -112,7 +112,7 @@ public class ExecutionStatementCollector extends Executor{
 			vm.dispose();
 		}
 		
-		System.out.println("There are totally " + steps + " steps in this execution.");
+//		System.out.println("There are totally " + steps + " steps in this execution.");
 		
 		return pointList;
 	}
