@@ -23,7 +23,7 @@ public class ChosenVariableOption {
 
 	@Override
 	public String toString() {
-		return "ChosenVariableOption [readVar=" + readVar + ", writtenVar=" + writtenVar + "]";
+		return "[readVar=" + readVar + ", writtenVar=" + writtenVar + "]";
 	}
 
 	public List<String> getIncludedWrongVarID(){

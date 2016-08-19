@@ -200,7 +200,8 @@ public class SimulatedMicroBat {
 					
 					System.out.println("=========An attempt fails=========");
 					for(StepOperationTuple t: jumpingSteps){
-						System.err.println(t);				
+						System.err.println(t);	
+						Thread.sleep(10);
 					}
 					System.out.println();
 					
@@ -224,9 +225,6 @@ public class SimulatedMicroBat {
 						recommender = state.getRecommender();
 						
 						ChosenVariableOption option = stateWrapper.getVariableOption();
-						if(option == null){
-							System.currentTimeMillis();
-						}
 						for(String wrongVarID: option.getIncludedWrongVarID()){
 							Settings.interestedVariables.add(wrongVarID, checkTime);
 						}
@@ -245,7 +243,7 @@ public class SimulatedMicroBat {
 					
 					if(!isBugFound){
 						if(suspiciousNode.getOrder() == 132){
-							System.currentTimeMillis();
+//							System.currentTimeMillis();
 						}
 						
 						feedback = operateFeedback(suspiciousNode,
@@ -335,7 +333,9 @@ public class SimulatedMicroBat {
 			feedbackType.setFeedbackType(UserFeedback.WRONG_PATH);
 		}
 		
-		for(ChosenVariableOption option: user.getOtherOptions()){
+		int size = user.getOtherOptions().size();
+		for(int i=size-1; i>=0; i--){
+			ChosenVariableOption option = user.getOtherOptions().get(i);
 			ArrayList<StepOperationTuple> clonedJumpingSteps = (ArrayList<StepOperationTuple>) jumpingSteps.clone();
 			StateWrapper stateWrapper = new StateWrapper(state, option, clonedJumpingSteps);
 			confusingStack.push(stateWrapper);
