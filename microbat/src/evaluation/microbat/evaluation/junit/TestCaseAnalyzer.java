@@ -623,7 +623,7 @@ public class TestCaseAnalyzer {
 			String className = point.getDeclaringCompilationUnitName();
 			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className);
 			if(cu != null && !JTestUtil.isInTestCase(className)){
-				LoopInsiderChecker checker = new LoopInsiderChecker(cu, point.getLineNumber());
+				MutationPointChecker checker = new MutationPointChecker(cu, point.getLineNumber());
 				cu.accept(checker);
 				
 				if(checker.isLoopInsider()){

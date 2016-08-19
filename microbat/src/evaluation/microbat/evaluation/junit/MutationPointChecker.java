@@ -9,14 +9,14 @@ import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
-public class LoopInsiderChecker extends ASTVisitor{
+public class MutationPointChecker extends ASTVisitor{
 	
 	private CompilationUnit cu;
 	private int lineNumber;
 	
 	private boolean isLoopInsider = false;
 	
-	public LoopInsiderChecker(CompilationUnit cu, int lineNumber) {
+	public MutationPointChecker(CompilationUnit cu, int lineNumber) {
 		super();
 		this.cu = cu;
 		this.lineNumber = lineNumber;
