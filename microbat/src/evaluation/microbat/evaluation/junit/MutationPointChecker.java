@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.dom.DoStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IfStatement;
+import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
 public class MutationPointChecker extends ASTVisitor{
@@ -21,6 +22,11 @@ public class MutationPointChecker extends ASTVisitor{
 		this.cu = cu;
 		this.lineNumber = lineNumber;
 	}
+	
+//	@Override
+//	public boolean visit(Statement statement){
+//		return true;
+//	}
 	
 	public boolean visit(IfStatement statement){
 		int start = cu.getLineNumber(statement.getExpression().getStartPosition());
@@ -37,17 +43,20 @@ public class MutationPointChecker extends ASTVisitor{
 	private boolean isContainedInLoop(IfStatement statement) {
 		ASTNode parent = statement.getParent();
 		while(parent != null){
-			if((parent instanceof DoStatement) ||
-					(parent instanceof EnhancedForStatement) ||
-					(parent instanceof ForStatement)||
-					(parent instanceof WhileStatement)){
+			if(isLoopASTNode(parent)){
 				return true;
 			}
-			
 			parent = parent.getParent();
 		}
 		
 		return false;
+	}
+	
+	private boolean isLoopASTNode(ASTNode node){
+		return (node instanceof DoStatement) ||
+				(node instanceof EnhancedForStatement) ||
+				(node instanceof ForStatement)||
+				(node instanceof WhileStatement);
 	}
 
 //	public boolean visit(DoStatement statement){
