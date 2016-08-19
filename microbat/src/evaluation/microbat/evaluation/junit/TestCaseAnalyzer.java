@@ -123,7 +123,6 @@ public class TestCaseAnalyzer {
 		parsedTrials = new ParsedTrials();
 		
 		ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
-		
 //		IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
 //		
 //		for(IJavaElement element: testRoot.getChildren()){
