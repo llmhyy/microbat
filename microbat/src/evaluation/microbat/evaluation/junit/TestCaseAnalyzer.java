@@ -118,22 +118,22 @@ public class TestCaseAnalyzer {
 		}
 	}
 
-	public static final int RUN_ALL = 0;
-	public static final int RUN_TRIAL = 1;
-	public static final int RUN_TEST_CASE = 2;
+	public static final int ALL = 0;
+	public static final int TRIAL = 1;
+	public static final int TEST_CASE = 2;
 	
 	public void runEvaluation() throws JavaModelException, IOException{
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		int flag = TestCaseAnalyzer.RUN_TEST_CASE;
+		int flag = TestCaseAnalyzer.TRIAL;
 		boolean isLimitTrialNum = true;
 		
 		runEvaluation(flag, isLimitTrialNum);
 	}
 	
 	private void runEvaluation(int flag, boolean isLimitTrialNum) throws JavaModelException, IOException{
-		if(flag == RUN_ALL){
+		if(flag == ALL){
 			ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
 			IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
 			
@@ -143,10 +143,10 @@ public class TestCaseAnalyzer {
 				}
 			}
 		}
-		else if(flag == RUN_TRIAL){
+		else if(flag == TRIAL){
 			runSingeTrial();
 		}
-		else if(flag == RUN_TEST_CASE){
+		else if(flag == TEST_CASE){
 			ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
 			String testClassName = "org.apache.commons.math.analysis.integration.SimpsonIntegratorTest";
 			String testMethodName = "testSinFunction";
@@ -170,11 +170,11 @@ public class TestCaseAnalyzer {
 //		boolean enableLoopInference = false;
 //		boolean isReuseTrace = true;
 		
-		String testClassName = "org.apache.commons.math.analysis.integration.RombergIntegratorTest";
-		String testMethodName = "testSinFunction";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\100_22_2\\RombergIntegrator.java";
+		String testClassName = "org.apache.commons.math.analysis.interpolation.SplineInterpolatorTest";
+		String testMethodName = "testInterpolateLinearDegenerateTwoSegment";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\2088_25_2\\MathUtils.java";
 		double unclearRate = 0;
-		boolean enableLoopInference = true;
+		boolean enableLoopInference = false;
 		boolean isReuseTrace = true;
 		
 		try {
