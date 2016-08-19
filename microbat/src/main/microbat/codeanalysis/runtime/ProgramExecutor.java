@@ -1118,19 +1118,32 @@ public class ProgramExecutor extends Executor {
 
 		ExpressionValue eValue = null;
 
+		boolean classPrepare = getClassPrepareRequest().isEnabled();
+		boolean step = getStepRequest().isEnabled();
+		boolean methodEntry = getMethodEntryRequest().isEnabled();
+		boolean methodExit = getMethodExitRequset().isEnabled();
+		boolean exception = getExceptionRequest().isEnabled();
+		
+		getClassPrepareRequest().disable();
+		getStepRequest().disable();
+		getMethodEntryRequest().disable();
+		getMethodExitRequset().disable();
+		getExceptionRequest().disable();
+		
 		try {
 			ExpressionParser.clear();
 
 			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getClassCanonicalName());
 			ExpressionParser.setParameters(cu, point.getLineNumber());
+			
 			Value val = ExpressionParser.evaluate(expression, frame.virtualMachine(), frameGetter);
-
+			
 			eValue = new ExpressionValue(val, ExpressionParser.parentValue, null);
 
 			System.currentTimeMillis();
 
 		} catch (ParseException e) {
-			// e.printStackTrace();
+//			e.printStackTrace();
 		} catch (InvocationException e) {
 			e.printStackTrace();
 		} catch (InvalidTypeException e) {
@@ -1139,6 +1152,12 @@ public class ProgramExecutor extends Executor {
 			e.printStackTrace();
 		} catch (IncompatibleThreadStateException e) {
 			e.printStackTrace();
+		} finally{
+			getClassPrepareRequest().setEnabled(classPrepare);
+			getStepRequest().setEnabled(step);
+			getMethodEntryRequest().setEnabled(methodEntry);
+			getMethodExitRequset().setEnabled(methodExit);
+			getExceptionRequest().setEnabled(exception);
 		}
 
 		return eValue;
