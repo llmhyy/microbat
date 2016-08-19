@@ -175,7 +175,7 @@ public class TestCaseAnalyzer {
 		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\89_21_1\\SimpsonIntegrator.java";
 		double unclearRate = 0;
 		boolean enableLoopInference = false;
-		boolean isReuseTrace = true;
+		boolean isReuseTrace = false;
 		
 		try {
 			runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 
