@@ -70,8 +70,12 @@ public class LineNumberVisitor extends EmptyVisitor {
 		CFG cfg = new CFGConstructor().buildCFGWithControlDomiance(code);
 		if(code != null){
 			for(BreakPoint breakPoint: breakPoints){
+				if(breakPoint.getLineNumber()==43){
+					System.currentTimeMillis();
+				}
+				
 				List<InstructionHandle> correspondingInstructions 
-				= findCorrespondingInstructions(breakPoint.getLineNumber(), code);
+					= findCorrespondingInstructions(breakPoint.getLineNumber(), code);
 				
 				if(!correspondingInstructions.isEmpty()){
 					

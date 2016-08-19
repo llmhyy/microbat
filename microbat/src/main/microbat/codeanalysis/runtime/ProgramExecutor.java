@@ -1,11 +1,3 @@
-/*
- * Copyright (C) 2013 by SUTD (Singapore)
- * All rights reserved.
- *
- * 	Author: SUTD
- *  Version:  $Revision: 1 $
- */
-
 package microbat.codeanalysis.runtime;
 
 import static sav.strategies.junit.SavJunitRunner.ENTER_TC_BKP;
@@ -16,32 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import microbat.codeanalysis.ast.LocalVariableScope;
-import microbat.codeanalysis.ast.VariableScopeParser;
-import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
-import microbat.codeanalysis.runtime.jpda.expr.ParseException;
-import microbat.codeanalysis.runtime.variable.VariableValueExtractor;
-import microbat.model.BreakPoint;
-import microbat.model.BreakPointValue;
-import microbat.model.trace.StepVariableRelationEntry;
-import microbat.model.trace.Trace;
-import microbat.model.trace.TraceNode;
-import microbat.model.value.PrimitiveValue;
-import microbat.model.value.ReferenceValue;
-import microbat.model.value.StringValue;
-import microbat.model.value.VarValue;
-import microbat.model.value.VirtualValue;
-import microbat.model.variable.ArrayElementVar;
-import microbat.model.variable.FieldVar;
-import microbat.model.variable.LocalVar;
-import microbat.model.variable.Param;
-import microbat.model.variable.Variable;
-import microbat.model.variable.VirtualVar;
-import microbat.util.BreakpointUtils;
-import microbat.util.JavaUtil;
-import microbat.util.PrimitiveUtils;
-import microbat.util.Settings;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdi.internal.VoidValueImpl;
@@ -50,12 +16,6 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-
-import sav.common.core.SavException;
-import sav.common.core.utils.CollectionUtils;
-import sav.common.core.utils.SignatureUtils;
-import sav.strategies.dto.AppJavaClassPath;
-import sav.strategies.vm.SimpleDebugger;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
@@ -92,6 +52,36 @@ import com.sun.jdi.request.MethodEntryRequest;
 import com.sun.jdi.request.MethodExitRequest;
 import com.sun.jdi.request.StepRequest;
 
+import microbat.codeanalysis.ast.LocalVariableScope;
+import microbat.codeanalysis.ast.VariableScopeParser;
+import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
+import microbat.codeanalysis.runtime.jpda.expr.ParseException;
+import microbat.codeanalysis.runtime.variable.VariableValueExtractor;
+import microbat.model.BreakPoint;
+import microbat.model.BreakPointValue;
+import microbat.model.trace.StepVariableRelationEntry;
+import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
+import microbat.model.value.PrimitiveValue;
+import microbat.model.value.ReferenceValue;
+import microbat.model.value.StringValue;
+import microbat.model.value.VarValue;
+import microbat.model.value.VirtualValue;
+import microbat.model.variable.ArrayElementVar;
+import microbat.model.variable.FieldVar;
+import microbat.model.variable.LocalVar;
+import microbat.model.variable.Param;
+import microbat.model.variable.Variable;
+import microbat.model.variable.VirtualVar;
+import microbat.util.BreakpointUtils;
+import microbat.util.JavaUtil;
+import microbat.util.PrimitiveUtils;
+import microbat.util.Settings;
+import sav.common.core.SavException;
+import sav.common.core.utils.CollectionUtils;
+import sav.common.core.utils.SignatureUtils;
+import sav.strategies.dto.AppJavaClassPath;
+
 /**
  * @author Yun Lin
  * 
@@ -111,7 +101,7 @@ public class ProgramExecutor extends Executor {
 	 * get the runtime values
 	 */
 	private AppJavaClassPath config;
-	private SimpleDebugger debugger = new SimpleDebugger();
+	
 	/** maps from a given class name to its contained breakpoints */
 	private Map<String, List<BreakPoint>> brkpsMap;
 
@@ -1128,19 +1118,32 @@ public class ProgramExecutor extends Executor {
 
 		ExpressionValue eValue = null;
 
+		boolean classPrepare = getClassPrepareRequest().isEnabled();
+		boolean step = getStepRequest().isEnabled();
+		boolean methodEntry = getMethodEntryRequest().isEnabled();
+		boolean methodExit = getMethodExitRequset().isEnabled();
+		boolean exception = getExceptionRequest().isEnabled();
+		
+		getClassPrepareRequest().disable();
+		getStepRequest().disable();
+		getMethodEntryRequest().disable();
+		getMethodExitRequset().disable();
+		getExceptionRequest().disable();
+		
 		try {
 			ExpressionParser.clear();
 
 			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getClassCanonicalName());
 			ExpressionParser.setParameters(cu, point.getLineNumber());
+			
 			Value val = ExpressionParser.evaluate(expression, frame.virtualMachine(), frameGetter);
-
+			
 			eValue = new ExpressionValue(val, ExpressionParser.parentValue, null);
 
 			System.currentTimeMillis();
 
 		} catch (ParseException e) {
-			// e.printStackTrace();
+//			e.printStackTrace();
 		} catch (InvocationException e) {
 			e.printStackTrace();
 		} catch (InvalidTypeException e) {
@@ -1149,6 +1152,12 @@ public class ProgramExecutor extends Executor {
 			e.printStackTrace();
 		} catch (IncompatibleThreadStateException e) {
 			e.printStackTrace();
+		} finally{
+			getClassPrepareRequest().setEnabled(classPrepare);
+			getStepRequest().setEnabled(step);
+			getMethodEntryRequest().setEnabled(methodEntry);
+			getMethodExitRequset().setEnabled(methodExit);
+			getExceptionRequest().setEnabled(exception);
 		}
 
 		return eValue;
@@ -1217,10 +1226,6 @@ public class ProgramExecutor extends Executor {
 			}
 		}
 		return trace;
-	}
-
-	public String getProccessError() {
-		return debugger.getProccessError();
 	}
 
 	public AppJavaClassPath getConfig() {
