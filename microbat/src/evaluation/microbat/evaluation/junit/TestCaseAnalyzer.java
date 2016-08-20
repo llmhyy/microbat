@@ -351,11 +351,11 @@ public class TestCaseAnalyzer {
 									reporter, tmpTrial);
 							correctTrace = evalInfo.correctTrace;
 							
-							if(!evalInfo.isLoopEffective && evalInfo.isSuccess){
+							if(!evalInfo.isLoopEffective && evalInfo.isValid){
 								break;
 							}
 							
-							if(evalInfo.isSuccess && isLimitTrialNum){
+							if(evalInfo.isValid && isLimitTrialNum){
 								thisTrialNum++;								
 								if(thisTrialNum >= trialNumPerTestCase){
 									break stop;
@@ -381,14 +381,14 @@ public class TestCaseAnalyzer {
 	
 	class EvaluationInfo{
 		boolean isLoopEffective;
-		boolean isSuccess;
+		boolean isValid;
 		/**
 		 * for performance
 		 */
 		Trace correctTrace;
-		public EvaluationInfo(boolean isSuccess, Trace correctTrace, boolean isLoopEffective) {
+		public EvaluationInfo(boolean isValid, Trace correctTrace, boolean isLoopEffective) {
 			super();
-			this.isSuccess = isSuccess;
+			this.isValid = isValid;
 			this.correctTrace = correctTrace;
 			this.isLoopEffective = isLoopEffective;
 		}
