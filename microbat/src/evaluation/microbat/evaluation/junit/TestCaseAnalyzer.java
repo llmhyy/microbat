@@ -148,7 +148,7 @@ public class TestCaseAnalyzer {
 		}
 		else if(flag == TEST_CASE){
 			ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
-			String testClassName = "org.apache.commons.math.analysis.integration.SimpsonIntegratorTest";
+			String testClassName = "org.apache.commons.math.analysis.integration.RombergIntegratorTest";
 			String testMethodName = "testSinFunction";
 			runEvaluationForSingleTestCase(testClassName, testMethodName, reporter, false);
 		}
@@ -351,7 +351,7 @@ public class TestCaseAnalyzer {
 									reporter, tmpTrial);
 							correctTrace = evalInfo.correctTrace;
 							
-							if(!evalInfo.isLoopEffective){
+							if(!evalInfo.isLoopEffective && evalInfo.isSuccess){
 								break;
 							}
 							
