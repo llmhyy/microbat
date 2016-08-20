@@ -126,8 +126,8 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		int flag = TestCaseAnalyzer.ALL;
-		boolean isLimitTrialNum = true;
+		int flag = TestCaseAnalyzer.TRIAL;
+		boolean isLimitTrialNum = false;
 		
 		runEvaluation(flag, isLimitTrialNum);
 	}
@@ -170,12 +170,12 @@ public class TestCaseAnalyzer {
 //		boolean enableLoopInference = false;
 //		boolean isReuseTrace = true;
 		
-		String testClassName = "org.apache.commons.math.analysis.integration.SimpsonIntegratorTest";
-		String testMethodName = "testSinFunction";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\89_21_1\\SimpsonIntegrator.java";
+		String testClassName = "org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolatingFunctionTest";
+		String testMethodName = "testPreconditions";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\124_27_2\\BicubicSplineInterpolatingFunction.java";
 		double unclearRate = 0;
 		boolean enableLoopInference = false;
-		boolean isReuseTrace = false;
+		boolean isReuseTrace = true;
 		
 		try {
 			runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 

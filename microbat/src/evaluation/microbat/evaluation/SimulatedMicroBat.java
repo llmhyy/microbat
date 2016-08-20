@@ -326,10 +326,10 @@ public class SimulatedMicroBat {
 		 * If last feedback is wrong-path, then this step should not be
 		 * a correct step.
 		 */
-		String lastFeedback = jumpingSteps.isEmpty() ? null : 
+		String lastFeedbackType = jumpingSteps.isEmpty() ? null : 
 			jumpingSteps.get(jumpingSteps.size()-1).getUserFeedback().getFeedbackType();
-		if(lastFeedback != null && lastFeedback.equals(UserFeedback.WRONG_PATH) 
-				&& feedbackType.equals(UserFeedback.CORRECT)){
+		if(lastFeedbackType != null && lastFeedbackType.equals(UserFeedback.WRONG_PATH) 
+				&& feedbackType.getFeedbackType().equals(UserFeedback.CORRECT)){
 			feedbackType.setFeedbackType(UserFeedback.WRONG_PATH);
 		}
 		
