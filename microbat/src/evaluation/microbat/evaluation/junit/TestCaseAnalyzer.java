@@ -126,7 +126,7 @@ public class TestCaseAnalyzer {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		int flag = TestCaseAnalyzer.ALL;
+		int flag = TestCaseAnalyzer.TRIAL;
 		boolean isLimitTrialNum = false;
 		
 		runEvaluation(flag, isLimitTrialNum);
@@ -172,10 +172,10 @@ public class TestCaseAnalyzer {
 		
 		String testClassName = "org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolatingFunctionTest";
 		String testMethodName = "testPreconditions";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\124_27_2\\BicubicSplineInterpolatingFunction.java";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\124_27_1\\BicubicSplineInterpolatingFunction.java";
 		double unclearRate = 0;
 		boolean enableLoopInference = false;
-		boolean isReuseTrace = true;
+		boolean isReuseTrace = false;
 		
 		try {
 			runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 

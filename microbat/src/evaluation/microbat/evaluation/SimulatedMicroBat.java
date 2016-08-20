@@ -118,7 +118,7 @@ public class SimulatedMicroBat {
 			try {
 				Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
 						testCaseName, mutatedFile, unclearRate, enableLoopInference);
-				System.currentTimeMillis();
+//				System.currentTimeMillis();
 				return trial;			
 			} catch (Exception e) {
 				String errorMsg = "Test case: " + testCaseName + 
@@ -145,6 +145,28 @@ public class SimulatedMicroBat {
 		}
 		
 		return observedFaultNode;
+	}
+	
+	/** 
+	 * Adjust the effect of constraints. 
+	 * If last feedback is wrong-path, then this step should not be
+	 * a correct step.
+	 */
+	private boolean hasConflicts(ArrayList<StepOperationTuple> jumpingSteps, UserFeedback currentFeedback){
+		
+		if(jumpingSteps.size() < 2){
+			return false;
+		}
+		
+		String lastFeedbackType = jumpingSteps.isEmpty() ? null : 
+			jumpingSteps.get(jumpingSteps.size()-2).getUserFeedback().getFeedbackType();
+		
+		if(lastFeedbackType != null && lastFeedbackType.equals(UserFeedback.WRONG_PATH) 
+				&& currentFeedback.getFeedbackType().equals(UserFeedback.CORRECT)){
+			return true;
+		}
+		
+		return false;
 	}
 	
 	private Trial startSimulation(TraceNode observedFaultNode, TraceNode rootCause, Trace mutatedTrace, 
@@ -174,7 +196,6 @@ public class SimulatedMicroBat {
 			UserFeedback feedback = operateFeedback(observedFaultNode,
 					mutatedTrace, pairList, maxUnclearFeedbackNum, confusingStack,
 					jumpingSteps, true);
-//			String feedbackType = feedback.getFeedbackType();
 			
 			TraceNodePair pair = pairList.findByMutatedNode(suspiciousNode);
 			TraceNode referenceNode = (pair==null)? null : pair.getOriginalNode();
@@ -190,12 +211,15 @@ public class SimulatedMicroBat {
 			
 			boolean isBugFound = rootCause.getLineNumber()==suspiciousNode.getLineNumber();
 			while(!isBugFound){
-				suspiciousNode = findSuspicioiusNode(suspiciousNode, mutatedTrace, feedback.getFeedbackType());
+				if(hasConflicts(jumpingSteps, feedback)){
+					return null;
+				}
+				
+				suspiciousNode = findSuspicioiusNode(suspiciousNode, mutatedTrace, feedback.getFeedbackType());	
 				
 				/** It means that the bug cannot be found now */
-				if((suspiciousNode.getOrder() == lastNode.getOrder() 
-						&& !feedback.getFeedbackType().equals(UserFeedback.UNCLEAR)) 
-						|| (jumpingSteps.size() > mutatedTrace.size())){
+				if((jumpingSteps.size() > mutatedTrace.size()) ||
+						(suspiciousNode.getOrder() == lastNode.getOrder() && !feedback.getFeedbackType().equals(UserFeedback.UNCLEAR))){
 //					break;
 					
 					System.out.println("=========An attempt fails=========");
@@ -320,18 +344,6 @@ public class SimulatedMicroBat {
 		
 		UserFeedback feedbackType = user.feedback(suspiciousNode, mutatedTrace, pairList, 
 				mutatedTrace.getCheckTime(), isFirstTime, maxUnclearFeedbackNum);
-		
-		/** 
-		 * Adjust the effect of constraints. 
-		 * If last feedback is wrong-path, then this step should not be
-		 * a correct step.
-		 */
-		String lastFeedbackType = jumpingSteps.isEmpty() ? null : 
-			jumpingSteps.get(jumpingSteps.size()-1).getUserFeedback().getFeedbackType();
-		if(lastFeedbackType != null && lastFeedbackType.equals(UserFeedback.WRONG_PATH) 
-				&& feedbackType.getFeedbackType().equals(UserFeedback.CORRECT)){
-			feedbackType.setFeedbackType(UserFeedback.WRONG_PATH);
-		}
 		
 		int size = user.getOtherOptions().size();
 		for(int i=size-1; i>=0; i--){
