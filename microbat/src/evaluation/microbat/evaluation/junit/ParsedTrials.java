@@ -21,14 +21,14 @@ public class ParsedTrials {
 	}
 
 	public boolean contains(Trial trial){
-//		return trialSet.contains(trial);
+		return trialSet.contains(trial);
 		
-		for(Trial t: trialSet){
-			if(t.getTestCaseName().equals(trial)){
-				return true;
-			}
-		}
-		
-		return false;
+//		for(Trial t: trialSet){
+//			if(t.getTestCaseName().equals(trial)){
+//				return true;
+//			}
+//		}
+//		
+//		return false;
 	}
 }

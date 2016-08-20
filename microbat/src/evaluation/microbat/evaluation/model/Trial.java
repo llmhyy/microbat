@@ -104,8 +104,6 @@ public class Trial {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result
-				+ ((mutatedFile == null) ? 0 : mutatedFile.hashCode());
 		result = prime * result + mutatedLineNumber;
 		result = prime * result
 				+ ((testCaseName == null) ? 0 : testCaseName.hashCode());
@@ -121,11 +119,6 @@ public class Trial {
 		if (getClass() != obj.getClass())
 			return false;
 		Trial other = (Trial) obj;
-		if (mutatedFile == null) {
-			if (other.mutatedFile != null)
-				return false;
-		} else if (!mutatedFile.equals(other.mutatedFile))
-			return false;
 		if (mutatedLineNumber != other.mutatedLineNumber)
 			return false;
 		if (testCaseName == null) {
