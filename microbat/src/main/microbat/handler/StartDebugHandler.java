@@ -205,8 +205,8 @@ public class StartDebugHandler extends AbstractHandler {
 				private List<String> parseScope(List<BreakPoint> breakpoints) {
 					List<String> classes = new ArrayList<>();
 					for(BreakPoint bp: breakpoints){
-						if(!classes.contains(bp.getClassCanonicalName())){
-							classes.add(bp.getClassCanonicalName());
+						if(!classes.contains(bp.getDeclaringCompilationUnitName())){
+							classes.add(bp.getDeclaringCompilationUnitName());
 						}
 					}
 					return classes;
