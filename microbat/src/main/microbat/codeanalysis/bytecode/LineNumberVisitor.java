@@ -23,9 +23,7 @@ import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Select;
 import org.apache.bcel.generic.StoreInstruction;
-import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import microbat.codeanalysis.ast.LoopHeadParser;
 import microbat.codeanalysis.ast.SourceScopeParser;
@@ -58,6 +56,10 @@ public class LineNumberVisitor extends EmptyVisitor {
 	public void visitMethod(Method method){
 		Code code = method.getCode();
 		
+		if(method.getName().contains("getInstance")){
+			System.currentTimeMillis();
+		}
+		
 		if(code == null){
 			return;
 		}
@@ -70,7 +72,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 		CFG cfg = new CFGConstructor().buildCFGWithControlDomiance(code);
 		if(code != null){
 			for(BreakPoint breakPoint: breakPoints){
-				if(breakPoint.getLineNumber()==43){
+				if(breakPoint.getLineNumber()==43 && breakPoint.getDeclaringCompilationUnitName().contains("SyntheticRepository")){
 					System.currentTimeMillis();
 				}
 				
@@ -78,7 +80,6 @@ public class LineNumberVisitor extends EmptyVisitor {
 					= findCorrespondingInstructions(breakPoint.getLineNumber(), code);
 				
 				if(!correspondingInstructions.isEmpty()){
-					
 					String methodSig = breakPoint.getClassCanonicalName() + "." + method.getName() + method.getSignature();
 					breakPoint.setMethodSign(methodSig);
 					
