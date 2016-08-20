@@ -332,6 +332,7 @@ public class TestCaseAnalyzer {
 				stop:
 				for(String tobeMutatedClass: mutations.keySet()){
 					MutationResult result = mutations.get(tobeMutatedClass);
+					
 					for(Integer line: result.getMutatedFiles().keySet()){
 						List<File> mutatedFileList = result.getMutatedFiles(line);	
 						
@@ -349,6 +350,11 @@ public class TestCaseAnalyzer {
 									testcaseConfig, line, testCaseName, correctTrace, executingStatements, 
 									reporter, tmpTrial);
 							correctTrace = evalInfo.correctTrace;
+							
+							if(!evalInfo.isLoopEffective){
+								break;
+							}
+							
 							if(evalInfo.isSuccess && isLimitTrialNum){
 								thisTrialNum++;								
 								if(thisTrialNum >= trialNumPerTestCase){
@@ -374,15 +380,17 @@ public class TestCaseAnalyzer {
 	}
 	
 	class EvaluationInfo{
+		boolean isLoopEffective;
 		boolean isSuccess;
 		/**
 		 * for performance
 		 */
 		Trace correctTrace;
-		public EvaluationInfo(boolean isSuccess, Trace correctTrace) {
+		public EvaluationInfo(boolean isSuccess, Trace correctTrace, boolean isLoopEffective) {
 			super();
 			this.isSuccess = isSuccess;
 			this.correctTrace = correctTrace;
+			this.isLoopEffective = isLoopEffective;
 		}
 	}
 	
@@ -394,13 +402,13 @@ public class TestCaseAnalyzer {
 					mutateCode(tobeMutatedClass, mutationFile, testcaseConfig, line, testCaseName);
 			
 			if(mutateInfo == null){
-				return new EvaluationInfo(false, correctTrace);
+				return new EvaluationInfo(false, correctTrace, false);
 			}
 			
 			if(mutateInfo.isTimeOut){
 				System.out.println("Timeout, mutated file: " + mutationFile);
 				System.out.println("skip Time Out test case: " + testCaseName);
-				return new EvaluationInfo(false, correctTrace);
+				return new EvaluationInfo(false, correctTrace, false);
 			}
 			
 			boolean isLoopEffective = false;
@@ -449,7 +457,7 @@ public class TestCaseAnalyzer {
 					 * trial with only one step.
 					 */
 					reporter.export(trialList);
-					return new EvaluationInfo(true, correctTrace);
+					return new EvaluationInfo(true, correctTrace, isLoopEffective);
 				}
 				
 			}
@@ -462,7 +470,7 @@ public class TestCaseAnalyzer {
 			System.err.println(tmpTrial);
 		} 
 		
-		return new EvaluationInfo(false, correctTrace);
+		return new EvaluationInfo(false, correctTrace, false);
 	}
 
 	class TraceFilePair{
