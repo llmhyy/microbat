@@ -245,8 +245,8 @@ public class TestCaseAnalyzer {
 				System.out.println("mutation done for " + testCaseName);
 				
 				if(!mutations.keySet().isEmpty()){
-					System.out.println("Start executing mutants for " + testCaseName);
-					System.out.println("=======================================");
+					System.out.println("Start executing mutants for  " + testCaseName);
+					System.out.println("===========the mutation is start=================");
 				}
 				else{
 					System.out.println("What a pity, no proper mutants generated for " + testCaseName);
@@ -287,6 +287,8 @@ public class TestCaseAnalyzer {
 						}
 					}
 				}
+				
+				System.out.println("===========all mutation is done==================");
 			}
 			else{
 				System.out.println("However, " + testCaseName + " cannot be mutated");
@@ -464,7 +466,7 @@ public class TestCaseAnalyzer {
 					int time = (int) ((t2-t1)/1000);
 					killingMutantTrace.setConstructTime(time);
 					System.out.println("A valid trace of " + killingMutantTrace.getExectionList().size() + 
-							"steps is generated for " + testMethod + " (mutation: " + mutatedFile + ")");
+							" steps is generated for " + testMethod + " (mutation: " + mutatedFile + ")");
 				}
 			}
 			else{
