@@ -30,7 +30,7 @@ public class HierarchyGraphDiffer {
 			}
 		}
 		
-		diffChildren(rootBefore, rootAfter);
+		diffChildren(rootBefore, rootAfter);			
 	}
 	
 	public void diff(GraphNode rootBefore, GraphNode rootAfter, boolean isCompareRoot, Matcher matcher){
@@ -49,14 +49,19 @@ public class HierarchyGraphDiffer {
 			
 			if(nodeBefore != null && nodeAfter != null){
 				GraphDiff diff = new GraphDiff(nodeBefore, nodeAfter);
-				if(!nodeBefore.isTheSameWith(nodeAfter)){
-					this.diffs.add(diff);
-				}
-				else{
-					this.getCommons().add(diff);
+				
+				boolean isParsed = isParsed(diff);
+				if(!isParsed){
+					if(!nodeBefore.isTheSameWith(nodeAfter)){
+						this.diffs.add(diff);
+					}
+					else{
+						this.getCommons().add(diff);
+					}
+					
+					diffChildren(nodeBefore, nodeAfter);					
 				}
 				
-				diffChildren(nodeBefore, nodeAfter);
 			}
 			else{
 				GraphDiff diff = new GraphDiff(nodeBefore, nodeAfter);
@@ -66,6 +71,27 @@ public class HierarchyGraphDiffer {
 		
 	}
 	
+	private boolean isParsed(GraphDiff diff) {
+		if(!diff.getNodeBefore().isTheSameWith(diff.getNodeAfter())){
+			for(GraphDiff gd: this.diffs){
+				if(gd.getNodeBefore()==diff.getNodeBefore() &&
+						gd.getNodeAfter()==diff.getNodeAfter()){
+					return true;
+				}
+			}
+		}
+		else{
+			for(GraphDiff common: this.commons){
+				if(common.getNodeBefore()==diff.getNodeBefore() &&
+						common.getNodeAfter()==diff.getNodeAfter()){
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+
 	public List<GraphDiff> getDiffs(){
 		return this.diffs;
 	}
