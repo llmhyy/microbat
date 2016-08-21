@@ -14,14 +14,14 @@ public class ParsedTrials {
 		ExcelReader reader = new ExcelReader();
 		try {
 			reader.readXLSX();
-			trialSet = reader.getSet();
+			setTrialSet(reader.getSet());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public boolean contains(Trial trial){
-		return trialSet.contains(trial);
+		return getTrialSet().contains(trial);
 		
 //		for(Trial t: trialSet){
 //			if(t.getTestCaseName().equals(trial)){
@@ -31,4 +31,13 @@ public class ParsedTrials {
 //		
 //		return false;
 	}
+
+	public Set<Trial> getTrialSet() {
+		return trialSet;
+	}
+
+	public void setTrialSet(Set<Trial> trialSet) {
+		this.trialSet = trialSet;
+	}
+	
 }
