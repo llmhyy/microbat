@@ -459,14 +459,14 @@ public class TestCaseAnalyzer {
 					isTooLong = true;
 				}
 				else{
+					System.out.println("A valid trace of " + checker.getStepNum() + 
+							" steps is to be generated for " + testMethod + " (mutation: " + mutatedFile + ")");
 					killingMutantTrace = null;
 					long t1 = System.currentTimeMillis();
 					killingMutantTrace = constructor.constructTraceModel(testcaseConfig, executingStatements);
 					long t2 = System.currentTimeMillis();
 					int time = (int) ((t2-t1)/1000);
 					killingMutantTrace.setConstructTime(time);
-					System.out.println("A valid trace of " + killingMutantTrace.getExectionList().size() + 
-							" steps is generated for " + testMethod + " (mutation: " + mutatedFile + ")");
 				}
 			}
 			else{
