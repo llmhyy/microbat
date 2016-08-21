@@ -105,9 +105,28 @@ public class SimulatedMicroBat {
 		if(!allWrongNodeMap.isEmpty()){
 			List<TraceNode> wrongNodeList = new ArrayList<>(allWrongNodeMap.values());
 			Collections.sort(wrongNodeList, new TraceNodeReverseOrderComparator());
-			observedFaultNode = findObservedFault(wrongNodeList);
+			observedFaultNode = findObservedFault(wrongNodeList, pairList);
 		}
 		
+	}
+	
+	private TraceNode findObservedFault(List<TraceNode> wrongNodeList, PairList pairList){
+		TraceNode observedFaultNode = null;
+		
+		for(TraceNode node: wrongNodeList){
+			//if(!JTestUtil.isInTestCase(node.getDeclaringCompilationUnitName())){
+				
+			//}
+			TraceNodePair pair = pairList.findByMutatedNode(node);
+			if(pair != null){
+				if(pair.getOriginalNode() != null){
+					observedFaultNode = node;
+					break;					
+				}
+			}
+		}
+		
+		return observedFaultNode;
 	}
 
 	public Trial detectMutatedBug(Trace mutatedTrace, Trace correctTrace, ClassLocation mutatedLocation, 
@@ -130,21 +149,6 @@ public class SimulatedMicroBat {
 		}
 		
 		return null;
-	}
-	
-	
-
-	private TraceNode findObservedFault(List<TraceNode> wrongNodeList){
-		TraceNode observedFaultNode = null;
-		
-		for(TraceNode node: wrongNodeList){
-			//if(!JTestUtil.isInTestCase(node.getDeclaringCompilationUnitName())){
-				observedFaultNode = node;
-				break;
-			//}
-		}
-		
-		return observedFaultNode;
 	}
 	
 	/** 
