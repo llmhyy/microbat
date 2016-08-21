@@ -271,7 +271,7 @@ public class TestCaseAnalyzer {
 							
 							EvaluationInfo evalInfo = runEvaluationForSingleTrial(tobeMutatedClass, mutationFile, 
 									testcaseConfig, line, testCaseName, correctTrace, executingStatements, 
-									reporter, tmpTrial, unclearRates);
+									reporter, tmpTrial, unclearRates, checker.getStepNum());
 							correctTrace = evalInfo.correctTrace;
 							
 							if(!evalInfo.isLoopEffective && evalInfo.isValid){
@@ -321,7 +321,7 @@ public class TestCaseAnalyzer {
 	
 	private EvaluationInfo runEvaluationForSingleTrial(String tobeMutatedClass, File mutationFile, AppJavaClassPath testcaseConfig, 
 			int line, String testCaseName, Trace correctTrace, List<BreakPoint> executingStatements, 
-			ExcelReporter reporter, Trial tmpTrial, double[] unclearRates) throws JavaModelException {
+			ExcelReporter reporter, Trial tmpTrial, double[] unclearRates, int stepNum) throws JavaModelException {
 		try {
 			MutateInfo mutateInfo = 
 					mutateCode(tobeMutatedClass, mutationFile, testcaseConfig, line, testCaseName);
@@ -341,7 +341,7 @@ public class TestCaseAnalyzer {
 			Trace killingMutatantTrace = mutateInfo.killingMutateTrace;
 			if(killingMutatantTrace != null && killingMutatantTrace.size() > 1){
 				if(null == correctTrace){
-					System.out.println("Generating correct trace for " + testCaseName);
+					System.out.println("The correct trace of " + stepNum + " steps is to be generated for " + testCaseName);
 					correctTrace = new TraceModelConstructor().
 							constructTraceModel(testcaseConfig, executingStatements);
 				}

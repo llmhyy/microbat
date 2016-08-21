@@ -4,15 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.codeanalysis.ast.LocalVariableScope;
-import microbat.codeanalysis.ast.VariableScopeParser;
-import microbat.codeanalysis.bytecode.BPVariableRetriever;
-import microbat.codeanalysis.bytecode.MicrobatByteCodeAnalyzer;
-import microbat.codeanalysis.runtime.ProgramExecutor;
-import microbat.model.BreakPoint;
-import microbat.model.trace.Trace;
-import microbat.util.Settings;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -20,6 +11,13 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 
+import microbat.codeanalysis.ast.LocalVariableScope;
+import microbat.codeanalysis.ast.VariableScopeParser;
+import microbat.codeanalysis.bytecode.BPVariableRetriever;
+import microbat.codeanalysis.runtime.ProgramExecutor;
+import microbat.model.BreakPoint;
+import microbat.model.trace.Trace;
+import microbat.util.Settings;
 import sav.common.core.SavException;
 import sav.commons.TestConfiguration;
 import sav.strategies.dto.AppJavaClassPath;
@@ -51,16 +49,6 @@ public class TraceModelConstructor {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-		
-//		MicrobatByteCodeAnalyzer slicer = new MicrobatByteCodeAnalyzer(executingStatements);
-//		List<BreakPoint> runningStatements = null;
-//		try {
-//			System.out.println("start analyzing byte code ...");
-//			runningStatements = slicer.parsingBreakPoints(appClassPath);
-//			System.out.println("finish analyzing byte code ...!");
-//		} catch (Exception e1) {
-//			e1.printStackTrace();
-//		}
 		
 		/**
 		 * 3. find the variable scope for:
