@@ -1,13 +1,7 @@
 package microbat.codeanalysis.runtime;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import microbat.evaluation.junit.TestCaseAnalyzer;
-import microbat.model.BreakPoint;
-import microbat.util.Settings;
-import sav.strategies.dto.AppJavaClassPath;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.Location;
@@ -26,6 +20,11 @@ import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.ExceptionRequest;
 import com.sun.jdi.request.StepRequest;
+
+import microbat.evaluation.junit.TestCaseAnalyzer;
+import microbat.model.BreakPoint;
+import microbat.util.Settings;
+import sav.strategies.dto.AppJavaClassPath;
 
 @SuppressWarnings("restriction")
 public class ExecutionStatementCollector extends Executor{
