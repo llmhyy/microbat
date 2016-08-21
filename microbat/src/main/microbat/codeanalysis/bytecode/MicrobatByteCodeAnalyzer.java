@@ -393,7 +393,7 @@ public class MicrobatByteCodeAnalyzer{
 		int pc = method.getBytecodeIndex(insIndex);
 		int lineNumber = method.getLineNumber(pc);
 		
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getClassCanonicalName());
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName());
 		
 		if(lineNumber == 43){
 			System.currentTimeMillis();

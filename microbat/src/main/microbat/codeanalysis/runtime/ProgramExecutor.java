@@ -1133,7 +1133,7 @@ public class ProgramExecutor extends Executor {
 		try {
 			ExpressionParser.clear();
 
-			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getClassCanonicalName());
+			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName());
 			ExpressionParser.setParameters(cu, point.getLineNumber());
 			
 			Value val = ExpressionParser.evaluate(expression, frame.virtualMachine(), frameGetter);
