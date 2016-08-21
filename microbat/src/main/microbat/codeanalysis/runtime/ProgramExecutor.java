@@ -385,13 +385,16 @@ public class ProgramExecutor extends Executor {
 							try {
 								if (!method.arguments().isEmpty()) {
 									StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
-									String typeSig = method.declaringType().signature();
-									String declaringType = SignatureUtils.signatureToName(typeSig);
+//									String typeSig = method.declaringType().signature();
+//									String declaringType = SignatureUtils.signatureToName(typeSig);
+									String path = location.sourcePath();
+									String declaringCompilationUnit = path.replace(".java", "");
+									declaringCompilationUnit = declaringCompilationUnit.replace('\\', '.');
 
 									int methodLocationLine = method.location().lineNumber();
 									List<Param> paramList = parseParamList(method);
 
-									parseWrittenParameterVariableForMethodInvocation(frame, declaringType,
+									parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
 											methodLocationLine, paramList, lastestNode);
 								}
 							} catch (AbsentInformationException e) {
@@ -711,7 +714,7 @@ public class ProgramExecutor extends Executor {
 	/**
 	 * build the written relations between method invocation
 	 */
-	private void parseWrittenParameterVariableForMethodInvocation(StackFrame frame, String methodDeclaringType,
+	private void parseWrittenParameterVariableForMethodInvocation(StackFrame frame, String methodDeclaringCompilationUnit,
 			int methodLocationLine, List<Param> paramList, TraceNode lastestNode) {
 
 		for (Param param : paramList) {
@@ -728,11 +731,11 @@ public class ProgramExecutor extends Executor {
 						lastestNode.getDeclaringCompilationUnitName(), lastestNode.getLineNumber());
 
 				VariableScopeParser parser = new VariableScopeParser();
-				LocalVariableScope scope = parser.parseMethodScope(methodDeclaringType, methodLocationLine,
+				LocalVariableScope scope = parser.parseMethodScope(methodDeclaringCompilationUnit, methodLocationLine,
 						localVar.getName());
 				String varID;
 				if (scope != null) {
-					varID = Variable.concanateLocalVarID(methodDeclaringType, localVar.getName(), scope.getStartLine(),
+					varID = Variable.concanateLocalVarID(methodDeclaringCompilationUnit, localVar.getName(), scope.getStartLine(),
 							scope.getEndLine());
 					String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, lastestNode, varID);
 					varID = varID + ":" + definingNodeOrder;
@@ -987,6 +990,8 @@ public class ProgramExecutor extends Executor {
 							String indexValueString = indexValue.value.toString();
 							String varID = Variable.concanateArrayElementVarID(String.valueOf(objRef.uniqueID()),
 									indexValueString);
+							
+							System.currentTimeMillis();
 							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
 							varID = varID + ":" + definingNodeOrder;
 							// String varID = String.valueOf(objRef.uniqueID())
