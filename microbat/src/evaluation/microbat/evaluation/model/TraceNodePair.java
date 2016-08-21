@@ -157,7 +157,19 @@ public class TraceNodePair {
 						if(((VirtualValue) mutatedVar).isOfPrimitiveType() || mutatedVar.isDefinedToStringMethod()){
 							if(!mutatedVar.getStringValue().equals(originalVar.getStringValue())){
 								differentVarValueList.add(mutatedVar);
-//								return differentVarValueList;
+							}
+							
+							String mutatedVarContent = mutatedVar.getStringValue();
+							String originalVarContent = originalVar.getStringValue();
+							
+							if((mutatedVarContent!=null && originalVarContent==null) ||
+									(mutatedVarContent==null && originalVarContent!=null)){
+								differentVarValueList.add(mutatedVar);
+							}
+							else if(mutatedVarContent!=null && originalVarContent!=null){
+								if(!mutatedVarContent.equals(originalVarContent)){
+									differentVarValueList.add(mutatedVar);
+								}
 							}
 						}
 					}
@@ -167,10 +179,20 @@ public class TraceNodePair {
 		else if(mutatedVar instanceof PrimitiveValue){
 			for(VarValue originalVar:originalList){
 				if(originalVar instanceof PrimitiveValue){
-					if(mutatedVar.getVarName().equals(originalVar.getVarName()) 
-							&& !mutatedVar.getStringValue().equals(originalVar.getStringValue())){
-						differentVarValueList.add(mutatedVar);
-//						return differentVarValueList;
+					if(mutatedVar.getVarName().equals(originalVar.getVarName())){
+						
+						String mutatedVarContent = mutatedVar.getStringValue();
+						String originalVarContent = originalVar.getStringValue();
+						
+						if((mutatedVarContent!=null && originalVarContent==null) ||
+								(mutatedVarContent==null && originalVarContent!=null)){
+							differentVarValueList.add(mutatedVar);
+						}
+						else if(mutatedVarContent!=null && originalVarContent!=null){
+							if(!mutatedVarContent.equals(originalVarContent)){
+								differentVarValueList.add(mutatedVar);
+							}
+						}
 					}
 				}
 			}
