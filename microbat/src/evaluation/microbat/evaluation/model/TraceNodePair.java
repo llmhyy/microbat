@@ -1,13 +1,16 @@
 package microbat.evaluation.model;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
+import microbat.algorithm.graphdiff.SortedGraphMatcher;
 import microbat.model.BreakPointValue;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.GraphNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
@@ -183,7 +186,16 @@ public class TraceNodePair {
 						
 						if(mutatedRefVar.getChildren() != null && originalRefVar.getChildren() != null){
 							HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
-							differ.diff(mutatedRefVar, originalRefVar, true);
+							SortedGraphMatcher sortedMatcher = new SortedGraphMatcher(new Comparator<GraphNode>() {
+								@Override
+								public int compare(GraphNode o1, GraphNode o2) {
+									if(o1 instanceof VarValue && o2 instanceof VarValue){
+										return ((VarValue)o1).getVarName().compareTo(((VarValue)o2).getVarName());									
+									}
+									return 0;
+								}
+							});
+							differ.diff(mutatedRefVar, originalRefVar, true, sortedMatcher);
 							
 							if(!differ.getDiffs().isEmpty()){
 								differentVarValueList.add(mutatedVar);

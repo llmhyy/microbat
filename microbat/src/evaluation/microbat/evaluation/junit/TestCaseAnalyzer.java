@@ -170,9 +170,9 @@ public class TestCaseAnalyzer {
 //		boolean enableLoopInference = false;
 //		boolean isReuseTrace = true;
 		
-		String testClassName = "org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolatingFunctionTest";
-		String testMethodName = "testPreconditions";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\124_27_1\\BicubicSplineInterpolatingFunction.java";
+		String testClassName = "org.apache.commons.collections.TestExtendedProperties";
+		String testMethodName = "testSaveAndLoad";
+		String mutationFile = "C:\\microbat_evaluation\\apache-collections-3.2.2\\246_20_1\\ExtendedProperties.java";
 		double unclearRate = 0;
 		boolean enableLoopInference = false;
 		boolean isReuseTrace = false;

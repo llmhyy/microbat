@@ -1,12 +1,16 @@
 package microbat.evaluation.util;
 
+import java.util.Comparator;
 import java.util.List;
 
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
+import microbat.algorithm.graphdiff.SortedGraphMatcher;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.GraphNode;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
+import microbat.model.variable.Variable;
 
 /**
  * This class is used to compare the variable difference between two trace node. If two
@@ -135,7 +139,17 @@ public class TraceNodeVariableSimilarityComparator implements TraceNodeSimilarit
 					
 					if(refVar1.getChildren() != null && refVar2.getChildren() != null){
 						HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
-						differ.diff(var1, var2, true);
+						SortedGraphMatcher sortedMatcher = new SortedGraphMatcher(new Comparator<GraphNode>() {
+							@Override
+							public int compare(GraphNode o1, GraphNode o2) {
+								if(o1 instanceof VarValue && o2 instanceof VarValue){
+									return ((VarValue)o1).getVarName().compareTo(((VarValue)o2).getVarName());									
+								}
+								return 0;
+							}
+						});
+						
+						differ.diff(var1, var2, true, sortedMatcher);
 						if(differ.getDiffs().isEmpty()){
 							commonness += 0.5;						
 						}							
