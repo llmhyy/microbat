@@ -18,7 +18,6 @@ import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -43,17 +42,6 @@ public class TestCaseAnalyzer {
 	
 	public static final String TEST_RUNNER = "microbat.evaluation.junit.MicroBatTestRunner";
 	private static final String TMP_DIRECTORY = "C:\\microbat_evaluation\\";
-	
-//	private List<Trial> trials = new ArrayList<>();
-	private IgnoredTestCaseFiles ignoredTestCaseFiles;
-	private ParsedTrials parsedTrials;
-	
-//	private List<String> errorMsgs = new ArrayList<>();
-//	private int trialFileNum = 0;
-	private int trialNumPerTestCase = 3;
-	
-	private double[] unclearRates = {0, 0.005, 0.01, 0.05, 0.1, -1};
-//	private double[] unclearRates = {0};
 	
 	public TestCaseAnalyzer(){
 	}
@@ -118,81 +106,11 @@ public class TestCaseAnalyzer {
 		}
 	}
 
-	public static final int ALL = 0;
-	public static final int TRIAL = 1;
-	public static final int TEST_CASE = 2;
-	
-	public void runEvaluation() throws JavaModelException, IOException{
-		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
-		parsedTrials = new ParsedTrials();
-		
-		int flag = TestCaseAnalyzer.ALL;
-		boolean isLimitTrialNum = false;
-		
-		runEvaluation(flag, isLimitTrialNum);
-	}
-	
-	private void runEvaluation(int flag, boolean isLimitTrialNum) throws JavaModelException, IOException{
-		if(flag == ALL){
-			ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
-			IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
-			
-			for(IJavaElement element: testRoot.getChildren()){
-				if(element instanceof IPackageFragment){
-					runEvaluation((IPackageFragment)element, reporter, isLimitTrialNum);				
-				}
-			}
-		}
-		else if(flag == TRIAL){
-			runSingeTrial();
-		}
-		else if(flag == TEST_CASE){
-			ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
-			String testClassName = "org.apache.commons.math.analysis.integration.RombergIntegratorTest";
-			String testMethodName = "testSinFunction";
-			runEvaluationForSingleTestCase(testClassName, testMethodName, reporter, false);
-		}
-		
-	}
-
-	private void runSingeTrial(){
-		//TODO BUG TimeOutException in JVM
-//		String testClassName = "org.apache.commons.math.analysis.interpolation.LinearInterpolatorTest";
-//		String testMethodName = "testInterpolateLinear";
-//		String mutationFile = "C:\\Users\\YUNLIN~1\\AppData\\Local\\Temp\\"
-//				+ "apache-common-math-2.2\\2081_22_1\\MathUtils.java";
-//		String mutatedClass = "org.apache.commons.math.util.MathUtils";
-		
-//		String testClassName = "test.SimpleCalculatorTest";
-//		String testMethodName = "testCalculator";
-//		String mutationFile = "C:\\microbat_evaluation\\mutation\\110_29_1\\SimpleCalculator.java";
-//		double unclearRate = 0;
-//		boolean enableLoopInference = false;
-//		boolean isReuseTrace = true;
-		
-		String testClassName = "org.apache.commons.collections.TestExtendedProperties";
-		String testMethodName = "testSaveAndLoad";
-		String mutationFile = "C:\\microbat_evaluation\\apache-collections-3.2.2\\246_20_1\\ExtendedProperties.java";
-		double unclearRate = 0;
-		boolean enableLoopInference = false;
-		boolean isReuseTrace = false;
-		
-		try {
-			runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 
-					unclearRate, enableLoopInference, isReuseTrace);
-		} catch (JavaModelException e) {
-			e.printStackTrace();
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 
 	private static Trace cachedMutatedTrace;
 	private static Trace cachedCorrectTrace;
 	
-	private void runEvaluationForSingleTrial(String testClassName, String testMethodName, String mutationFile, 
+	public void runEvaluationForSingleTrial(String testClassName, String testMethodName, String mutationFile, 
 			double unclearRate, boolean enableLoopInference, boolean isReuseTrace) 
 					throws JavaModelException, MalformedURLException, IOException {
 		
@@ -260,12 +178,14 @@ public class TestCaseAnalyzer {
 		
 	}
 
-	private void runEvaluation(IPackageFragment pack, ExcelReporter reporter, 
-			boolean isLimitTrialNum) throws JavaModelException {
+	public void runEvaluation(IPackageFragment pack, ExcelReporter reporter, boolean isLimitTrialNum, 
+			IgnoredTestCaseFiles ignoredTestCaseFiles, ParsedTrials parsedTrials, 
+			int trialNumPerTestCase, double[] unclearRates) throws JavaModelException {
 		
 		for(IJavaElement javaElement: pack.getChildren()){
 			if(javaElement instanceof IPackageFragment){
-				runEvaluation((IPackageFragment)javaElement, reporter, isLimitTrialNum);
+				runEvaluation((IPackageFragment)javaElement, reporter, isLimitTrialNum, 
+						ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates);
 			}
 			else if(javaElement instanceof ICompilationUnit){
 				ICompilationUnit icu = (ICompilationUnit)javaElement;
@@ -278,7 +198,8 @@ public class TestCaseAnalyzer {
 					for(MethodDeclaration testingMethod: testingMethods){
 						String methodName = testingMethod.getName().getIdentifier();
 						try{
-							runEvaluationForSingleTestCase(className, methodName, reporter, isLimitTrialNum);							
+							runEvaluationForSingleTestCase(className, methodName, reporter, 
+									isLimitTrialNum, ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates);							
 						}
 						catch(Exception e){
 							e.printStackTrace();
@@ -291,13 +212,15 @@ public class TestCaseAnalyzer {
 		
 	}
 	
-	private boolean runEvaluationForSingleTestCase(String className, String methodName, ExcelReporter reporter, boolean isLimitTrialNum) 
+	public boolean runEvaluationForSingleTestCase(String className, String methodName, ExcelReporter reporter,
+			boolean isLimitTrialNum, IgnoredTestCaseFiles ignoredTestCaseFiles, ParsedTrials parsedTrials,
+			int trialNumPerTestCase, double[] unclearRates) 
 			throws JavaModelException {
 		
 		AppJavaClassPath testcaseConfig = createProjectClassPath(className, methodName);
 		String testCaseName = className + "#" + methodName;
 		
-		if(this.ignoredTestCaseFiles.contains(testCaseName)){
+		if(ignoredTestCaseFiles.contains(testCaseName)){
 			return false;
 		}
 		
@@ -348,7 +271,7 @@ public class TestCaseAnalyzer {
 							
 							EvaluationInfo evalInfo = runEvaluationForSingleTrial(tobeMutatedClass, mutationFile, 
 									testcaseConfig, line, testCaseName, correctTrace, executingStatements, 
-									reporter, tmpTrial);
+									reporter, tmpTrial, unclearRates);
 							correctTrace = evalInfo.correctTrace;
 							
 							if(!evalInfo.isLoopEffective && evalInfo.isValid){
@@ -367,12 +290,12 @@ public class TestCaseAnalyzer {
 			}
 			else{
 				System.out.println("However, " + testCaseName + " cannot be mutated");
-				this.ignoredTestCaseFiles.addTestCase(testCaseName);
+				ignoredTestCaseFiles.addTestCase(testCaseName);
 			}
 		}
 		else{
 			System.out.println(testCaseName + " is a failed test case");
-			this.ignoredTestCaseFiles.addTestCase(testCaseName);
+			ignoredTestCaseFiles.addTestCase(testCaseName);
 			return false;
 		}
 		
@@ -396,7 +319,7 @@ public class TestCaseAnalyzer {
 	
 	private EvaluationInfo runEvaluationForSingleTrial(String tobeMutatedClass, File mutationFile, AppJavaClassPath testcaseConfig, 
 			int line, String testCaseName, Trace correctTrace, List<BreakPoint> executingStatements, 
-			ExcelReporter reporter, Trial tmpTrial) throws JavaModelException {
+			ExcelReporter reporter, Trial tmpTrial, double[] unclearRates) throws JavaModelException {
 		try {
 			MutateInfo mutateInfo = 
 					mutateCode(tobeMutatedClass, mutationFile, testcaseConfig, line, testCaseName);
@@ -451,18 +374,9 @@ public class TestCaseAnalyzer {
 				}
 				
 				if(isValid){
-					/**
-					 * TODO 
-					 * Note that the potential implementation error could be included. The failed
-					 * trial with only one step.
-					 */
 					reporter.export(trialList);
 					return new EvaluationInfo(true, correctTrace, isLoopEffective);
 				}
-				
-			}
-			else{
-//				System.out.println("No suitable mutants for test case " + testCaseName + "in line " + line);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -543,13 +457,14 @@ public class TestCaseAnalyzer {
 					isTooLong = true;
 				}
 				else{
-					System.out.println("A valid trace is generated for " + testMethod + " (mutation: " + mutatedFile + ")");
 					killingMutantTrace = null;
 					long t1 = System.currentTimeMillis();
 					killingMutantTrace = constructor.constructTraceModel(testcaseConfig, executingStatements);
 					long t2 = System.currentTimeMillis();
 					int time = (int) ((t2-t1)/1000);
 					killingMutantTrace.setConstructTime(time);
+					System.out.println("A valid trace of " + killingMutantTrace.getExectionList().size() + 
+							"steps is generated for " + testMethod + " (mutation: " + mutatedFile + ")");
 				}
 			}
 			else{

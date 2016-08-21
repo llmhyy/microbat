@@ -11,7 +11,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.JavaModelException;
 
-import microbat.evaluation.junit.TestCaseAnalyzer;
+import microbat.evaluation.junit.TestCaseEvaluator;
 
 public class EvaluationHandler extends AbstractHandler {
 
@@ -21,7 +21,7 @@ public class EvaluationHandler extends AbstractHandler {
 		Job job = new Job("Do evaluation") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				TestCaseAnalyzer parser = new TestCaseAnalyzer();
+				TestCaseEvaluator parser = new TestCaseEvaluator();
 				try {
 					parser.runEvaluation();
 				} catch (JavaModelException | IOException e) {
