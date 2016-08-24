@@ -130,13 +130,13 @@ public class SimulatedMicroBat {
 	}
 
 	public Trial detectMutatedBug(Trace mutatedTrace, Trace correctTrace, ClassLocation mutatedLocation, 
-			String testCaseName, String mutatedFile, double unclearRate, boolean enableLoopInference) 
+			String testCaseName, String mutatedFile, double unclearRate, boolean enableLoopInference, int optionSearchLimit) 
 					throws SimulationFailException {
 		mutatedTrace.resetCheckTime();
 		if(observedFaultNode != null){
 			try {
 				Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
-						testCaseName, mutatedFile, unclearRate, enableLoopInference);
+						testCaseName, mutatedFile, unclearRate, enableLoopInference, optionSearchLimit);
 //				System.currentTimeMillis();
 				return trial;			
 			} catch (Exception e) {
@@ -175,7 +175,7 @@ public class SimulatedMicroBat {
 	
 	private Trial startSimulation(TraceNode observedFaultNode, TraceNode rootCause, Trace mutatedTrace, 
 			Map<Integer, TraceNode> allWrongNodeMap, PairList pairList, String testCaseName, String mutatedFile, 
-			double unclearRate, boolean enableLoopInference) 
+			double unclearRate, boolean enableLoopInference, int optionSearchLimit) 
 					throws SimulationFailException {
 		Settings.interestedVariables.clear();
 		Settings.localVariableScopes.clear();
@@ -212,6 +212,7 @@ public class SimulatedMicroBat {
 			}
 			
 			int feedbackTimes = 1;
+			int optionSearchTime = 0;
 			
 			boolean isBugFound = rootCause.getLineNumber()==suspiciousNode.getLineNumber();
 			while(!isBugFound){
@@ -234,6 +235,13 @@ public class SimulatedMicroBat {
 					System.out.println();
 					
 					if(!confusingStack.isEmpty()){
+						if(optionSearchTime > optionSearchLimit){
+							return null;
+						}
+						else{
+							optionSearchTime++;
+						}
+						
 						/** recover */
 						StateWrapper stateWrapper = confusingStack.pop();
 						

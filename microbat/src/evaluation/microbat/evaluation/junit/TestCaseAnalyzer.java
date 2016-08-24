@@ -111,7 +111,7 @@ public class TestCaseAnalyzer {
 	private static Trace cachedCorrectTrace;
 	
 	public void runEvaluationForSingleTrial(String testClassName, String testMethodName, String mutationFile, 
-			double unclearRate, boolean enableLoopInference, boolean isReuseTrace) 
+			double unclearRate, boolean enableLoopInference, boolean isReuseTrace, int optionSearchLimit) 
 					throws JavaModelException, MalformedURLException, IOException {
 		
 		String testcaseName = testClassName + "#" + testMethodName;
@@ -164,7 +164,7 @@ public class TestCaseAnalyzer {
 		Trial trial;
 		try {
 			trial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, mutatedLocation, 
-					testcaseName, mutatedFile.toString(), unclearRate, enableLoopInference);	
+					testcaseName, mutatedFile.toString(), unclearRate, enableLoopInference, optionSearchLimit);	
 			if(trial != null){
 				System.out.println("Jump " + trial.getJumpSteps().size() + " steps in total");
 				if(!trial.isBugFound()){
@@ -180,12 +180,12 @@ public class TestCaseAnalyzer {
 
 	public void runEvaluation(IPackageFragment pack, ExcelReporter reporter, boolean isLimitTrialNum, 
 			IgnoredTestCaseFiles ignoredTestCaseFiles, ParsedTrials parsedTrials, 
-			int trialNumPerTestCase, double[] unclearRates) throws JavaModelException {
+			int trialNumPerTestCase, double[] unclearRates, int optionSearchLimit) throws JavaModelException {
 		
 		for(IJavaElement javaElement: pack.getChildren()){
 			if(javaElement instanceof IPackageFragment){
 				runEvaluation((IPackageFragment)javaElement, reporter, isLimitTrialNum, 
-						ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates);
+						ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit);
 			}
 			else if(javaElement instanceof ICompilationUnit){
 				ICompilationUnit icu = (ICompilationUnit)javaElement;
@@ -199,7 +199,7 @@ public class TestCaseAnalyzer {
 						String methodName = testingMethod.getName().getIdentifier();
 						try{
 							runEvaluationForSingleTestCase(className, methodName, reporter, 
-									isLimitTrialNum, ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates);							
+									isLimitTrialNum, ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit);							
 						}
 						catch(Exception e){
 							e.printStackTrace();
@@ -214,7 +214,7 @@ public class TestCaseAnalyzer {
 	
 	public boolean runEvaluationForSingleTestCase(String className, String methodName, ExcelReporter reporter,
 			boolean isLimitTrialNum, IgnoredTestCaseFiles ignoredTestCaseFiles, ParsedTrials parsedTrials,
-			int trialNumPerTestCase, double[] unclearRates) 
+			int trialNumPerTestCase, double[] unclearRates, int optionSearchLimit) 
 			throws JavaModelException {
 		
 		AppJavaClassPath testcaseConfig = createProjectClassPath(className, methodName);
@@ -271,7 +271,7 @@ public class TestCaseAnalyzer {
 							
 							EvaluationInfo evalInfo = runEvaluationForSingleTrial(tobeMutatedClass, mutationFile, 
 									testcaseConfig, line, testCaseName, correctTrace, executingStatements, 
-									reporter, tmpTrial, unclearRates, checker.getStepNum());
+									reporter, tmpTrial, unclearRates, checker.getStepNum(), optionSearchLimit);
 							correctTrace = evalInfo.correctTrace;
 							
 							if(!evalInfo.isLoopEffective && evalInfo.isValid){
@@ -321,7 +321,7 @@ public class TestCaseAnalyzer {
 	
 	private EvaluationInfo runEvaluationForSingleTrial(String tobeMutatedClass, File mutationFile, AppJavaClassPath testcaseConfig, 
 			int line, String testCaseName, Trace correctTrace, List<BreakPoint> executingStatements, 
-			ExcelReporter reporter, Trial tmpTrial, double[] unclearRates, int stepNum) throws JavaModelException {
+			ExcelReporter reporter, Trial tmpTrial, double[] unclearRates, int stepNum, int optionSearchLimit) throws JavaModelException {
 		try {
 			MutateInfo mutateInfo = 
 					mutateCode(tobeMutatedClass, mutationFile, testcaseConfig, line, testCaseName);
@@ -355,9 +355,9 @@ public class TestCaseAnalyzer {
 				List<Trial> trialList = new ArrayList<>();
 				for(int i=0; i<unclearRates.length; i++){
 					Trial nonloopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
-							mutatedLocation, testCaseName, mutationFile.toString(), unclearRates[i], false);
+							mutatedLocation, testCaseName, mutationFile.toString(), unclearRates[i], false, optionSearchLimit);
 					Trial loopTrial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, 
-							mutatedLocation, testCaseName, mutationFile.toString(), unclearRates[i], true);
+							mutatedLocation, testCaseName, mutationFile.toString(), unclearRates[i], true, optionSearchLimit);
 					
 					if(loopTrial==null || nonloopTrial==null){
 						isValid = false;

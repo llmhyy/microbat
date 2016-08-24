@@ -32,11 +32,12 @@ public class TestCaseEvaluator {
 		
 		int flag = ALL;
 		boolean isLimitTrialNum = false;
+		int optionSearchLimit = 1000;
 		
-		runEvaluation(flag, isLimitTrialNum);
+		runEvaluation(flag, isLimitTrialNum, optionSearchLimit);
 	}
 	
-	private void runEvaluation(int flag, boolean isLimitTrialNum) throws JavaModelException, IOException{
+	private void runEvaluation(int flag, boolean isLimitTrialNum, int optionSearchLimit) throws JavaModelException, IOException{
 		TestCaseAnalyzer analyzer = new TestCaseAnalyzer();
 		
 		if(flag == ALL){
@@ -46,7 +47,7 @@ public class TestCaseEvaluator {
 			for(IJavaElement element: testRoot.getChildren()){
 				if(element instanceof IPackageFragment){
 					analyzer.runEvaluation((IPackageFragment)element, reporter, isLimitTrialNum, 
-							ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates);				
+							ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit);				
 				}
 			}
 		}
@@ -58,7 +59,7 @@ public class TestCaseEvaluator {
 			String testClassName = "org.apache.commons.math.analysis.integration.RombergIntegratorTest";
 			String testMethodName = "testSinFunction";
 			analyzer.runEvaluationForSingleTestCase(testClassName, testMethodName, reporter, false,
-					ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates);
+					ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit);
 		}
 		
 	}
@@ -80,16 +81,17 @@ public class TestCaseEvaluator {
 //		boolean enableLoopInference = false;
 //		boolean isReuseTrace = true;
 		
-		String testClassName = "org.apache.commons.collections.TestMultiHashMap";
-		String testMethodName = "testTotalSize";
-		String mutationFile = "C:\\microbat_evaluation\\apache-collections-3.2.2\\159_21_1\\MultiHashMap.java";
+		String testClassName = "org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolatingFunctionTest";
+		String testMethodName = "testPlane";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\125_34_4\\BicubicSplineInterpolatingFunction.java";
 		double unclearRate = 0;
 		boolean enableLoopInference = false;
 		boolean isReuseTrace = true;
+		int optionSearchLimit = 3;
 		
 		try {
 			analyzer.runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 
-					unclearRate, enableLoopInference, isReuseTrace);
+					unclearRate, enableLoopInference, isReuseTrace, optionSearchLimit);
 		} catch (JavaModelException e) {
 			e.printStackTrace();
 		} catch (MalformedURLException e) {
