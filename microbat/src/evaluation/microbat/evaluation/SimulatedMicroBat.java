@@ -224,7 +224,7 @@ public class SimulatedMicroBat {
 				
 				/** It means that the bug cannot be found now */
 				if((jumpingSteps.size() > mutatedTrace.size()) ||
-						(suspiciousNode.getOrder() == lastNode.getOrder() && !feedback.getFeedbackType().equals(UserFeedback.UNCLEAR))){
+						(isContainedInJump(suspiciousNode, jumpingSteps) && !feedback.getFeedbackType().equals(UserFeedback.UNCLEAR))){
 //					break;
 					
 					System.out.println("=========An attempt fails=========");
@@ -330,6 +330,19 @@ public class SimulatedMicroBat {
 		}
 	}
 	
+	private boolean isContainedInJump(TraceNode suspiciousNode, ArrayList<StepOperationTuple> jumpingSteps) {
+		
+		for(int i=jumpingSteps.size()-1; i>=0; i--){
+			StepOperationTuple tuple = jumpingSteps.get(i);
+			if(tuple.getNode().getOrder() == suspiciousNode.getOrder()){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+
 	@SuppressWarnings("unchecked")
 	/**
 	 * Apart from feedback, this method also back up the state for future re-trial.

@@ -32,7 +32,7 @@ public class TestCaseEvaluator {
 		
 		int flag = ALL;
 		boolean isLimitTrialNum = false;
-		int optionSearchLimit = 1000;
+		int optionSearchLimit = 100;
 		
 		runEvaluation(flag, isLimitTrialNum, optionSearchLimit);
 	}
