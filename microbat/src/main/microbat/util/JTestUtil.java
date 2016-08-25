@@ -37,6 +37,10 @@ public class JTestUtil {
 	}
 
 	public static boolean isSubclassOfTestCase(CompilationUnit cu) {
+		if(cu.types().isEmpty()){
+			return false;
+		}
+		
 		AbstractTypeDeclaration typeDel = (AbstractTypeDeclaration) cu.types().get(0);
 		ITypeBinding binding = typeDel.resolveBinding();
 		

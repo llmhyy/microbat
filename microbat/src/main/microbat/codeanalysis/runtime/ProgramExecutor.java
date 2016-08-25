@@ -220,9 +220,7 @@ public class ProgramExecutor extends Executor {
 			}
 
 			if (trace.getLastestNode() != null) {
-				if (trace.getLastestNode().getOrder() == 96) {
-					System.currentTimeMillis();
-				}
+				//System.out.println("running into " + trace.getLastestNode() +" step");
 			}
 
 			for (Event event : eventSet) {
