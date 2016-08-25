@@ -7,6 +7,7 @@ import java.util.List;
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.algorithm.graphdiff.SortedGraphMatcher;
+import microbat.evaluation.util.EvaluationSettings;
 import microbat.model.BreakPointValue;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -217,7 +218,7 @@ public class TraceNodePair {
 									return 0;
 								}
 							});
-							differ.diff(mutatedRefVar, originalRefVar, true, sortedMatcher);
+							differ.diff(mutatedRefVar, originalRefVar, true, sortedMatcher, /*EvaluationSettings.variableComparisonDepth*/-1);
 							
 							if(!differ.getDiffs().isEmpty()){
 								differentVarValueList.add(mutatedVar);

@@ -45,7 +45,7 @@ public class SimulatedMicroBat {
 		
 		HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
 		differ.diff(mutatedTraceNodeWrapper, correctTraceNodeWrapper, false, 
-				new LCSMatcher(new TraceNodeComprehensiveSimilarityComparator()));
+				new LCSMatcher(new TraceNodeComprehensiveSimilarityComparator()), -1);
 		
 		List<GraphDiff> diffList = differ.getDiffs();
 		List<TraceNodePair> pList = new ArrayList<>();

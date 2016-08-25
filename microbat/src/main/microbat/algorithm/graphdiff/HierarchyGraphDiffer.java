@@ -12,6 +12,11 @@ public class HierarchyGraphDiffer {
 	private List<GraphDiff> commons = new ArrayList<>();
 	
 	/**
+	 * the depth for hierarchical differencing, -1 means compare all the levels.
+	 */
+	private int depth = -1;
+	
+	/**
 	 * This diff result does not contain the difference of rootBefore and rootAfter themselves, only the
 	 * different of their children.
 	 * <p>
@@ -30,19 +35,22 @@ public class HierarchyGraphDiffer {
 			}
 		}
 		
-		diffChildren(rootBefore, rootAfter);			
+		diffChildren(rootBefore, rootAfter, 1);			
 	}
 	
-	public void diff(GraphNode rootBefore, GraphNode rootAfter, boolean isCompareRoot, Matcher matcher){
+	public void diff(GraphNode rootBefore, GraphNode rootAfter, boolean isCompareRoot, Matcher matcher, int depth){
 		this.matcher = matcher;
+		this.depth = depth;
 		diff(rootBefore, rootAfter, isCompareRoot);
 	}
 
-	private void diffChildren(GraphNode rootBefore, GraphNode rootAfter) {
+	private void diffChildren(GraphNode rootBefore, GraphNode rootAfter, int level) {
 		List<? extends GraphNode> childrenBefore = rootBefore.getChildren();
 		List<? extends GraphNode> childrenAfter = rootAfter.getChildren();
 		List<MatchingGraphPair> pairs = matcher.matchList(childrenBefore, childrenAfter);
 
+		int newLevel = level + 1;
+		
 		for(MatchingGraphPair pair: pairs){
 			GraphNode nodeBefore = pair.getNodeBefore();
 			GraphNode nodeAfter = pair.getNodeAfter();
@@ -59,7 +67,9 @@ public class HierarchyGraphDiffer {
 						this.getCommons().add(diff);
 					}
 					
-					diffChildren(nodeBefore, nodeAfter);					
+					if(depth != -1 && newLevel <= depth ){
+						diffChildren(nodeBefore, nodeAfter, newLevel);											
+					}
 				}
 				
 			}
@@ -102,5 +112,13 @@ public class HierarchyGraphDiffer {
 
 	public void setCommons(List<GraphDiff> commons) {
 		this.commons = commons;
+	}
+
+	public int getDepth() {
+		return depth;
+	}
+
+	public void setDepth(int depth) {
+		this.depth = depth;
 	}
 }

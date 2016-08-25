@@ -149,7 +149,7 @@ public class TraceNodeVariableSimilarityComparator implements TraceNodeSimilarit
 							}
 						});
 						
-						differ.diff(var1, var2, true, sortedMatcher);
+						differ.diff(var1, var2, true, sortedMatcher, /*EvaluationSettings.variableComparisonDepth*/-1);
 						if(differ.getDiffs().isEmpty()){
 							commonness += 0.5;						
 						}							
