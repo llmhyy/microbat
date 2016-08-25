@@ -147,6 +147,7 @@ public class TestCaseAnalyzer {
 				return;
 			}
 			
+			System.out.println("The correct consists of " + checker.getStepNum() + " steps");
 			correctTrace = new TraceModelConstructor().
 					constructTraceModel(testcaseConfig, executingStatements);
 			
