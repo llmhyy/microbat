@@ -9,7 +9,9 @@
 package microbat.model.value;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import microbat.codeanalysis.ast.LocalVariableScope;
 import microbat.model.variable.ArrayElementVar;
@@ -108,12 +110,12 @@ public abstract class VarValue implements GraphNode{
 	}
 	
 	public VarValue findVarValue(String varID){
-		ArrayList<String> visitedIDs = new ArrayList<>();
+		Set<String> visitedIDs = new HashSet<>();
 		VarValue value = findVarValue(varID, visitedIDs);
 		return value;
 	}
 	
-	protected VarValue findVarValue(String varID, ArrayList<String> visitedIDs){
+	protected VarValue findVarValue(String varID, Set<String> visitedIDs ){
 		
 		if(getChildren() != null){
 			for(VarValue value: getChildren()){
