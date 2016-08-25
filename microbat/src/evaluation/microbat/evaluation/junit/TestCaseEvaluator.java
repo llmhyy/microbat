@@ -81,13 +81,13 @@ public class TestCaseEvaluator {
 //		boolean enableLoopInference = false;
 //		boolean isReuseTrace = true;
 		
-		String testClassName = "org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolatingFunctionTest";
-		String testMethodName = "testPlane";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\125_34_4\\BicubicSplineInterpolatingFunction.java";
+		String testClassName = "org.apache.commons.collections.set.TestPredicatedSortedSet";
+		String testMethodName = "testComparator";
+		String mutationFile = "C:\\microbat_evaluation\\apache-collections-3.2.2\\116_40_1\\AbstractTestSortedSet.java";
 		double unclearRate = 0;
 		boolean enableLoopInference = false;
 		boolean isReuseTrace = true;
-		int optionSearchLimit = 3;
+		int optionSearchLimit = 1000;
 		
 		try {
 			analyzer.runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 
