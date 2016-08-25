@@ -211,7 +211,6 @@ public class SimulatedMicroBat {
 				updateVariableCheckTime(mutatedTrace, suspiciousNode);
 			}
 			
-			int feedbackTimes = 1;
 			int optionSearchTime = 0;
 			
 			boolean isBugFound = rootCause.getLineNumber()==suspiciousNode.getLineNumber();
@@ -223,8 +222,9 @@ public class SimulatedMicroBat {
 				suspiciousNode = findSuspicioiusNode(suspiciousNode, mutatedTrace, feedback.getFeedbackType());	
 				
 				/** It means that the bug cannot be found now */
-				if((jumpingSteps.size() > mutatedTrace.size()) ||
-						(isContainedInJump(suspiciousNode, jumpingSteps) && !feedback.getFeedbackType().equals(UserFeedback.UNCLEAR))){
+				if((jumpingSteps.size() > mutatedTrace.size())  
+						|| (isContainedInJump(suspiciousNode, jumpingSteps) && unclearRate==0) 
+						|| (lastNode.getOrder()==suspiciousNode.getOrder() && !feedback.getFeedbackType().equals(UserFeedback.UNCLEAR))){
 //					break;
 					
 					System.out.println("=========An attempt fails=========");
@@ -294,12 +294,6 @@ public class SimulatedMicroBat {
 						if(!feedback.getFeedbackType().equals(UserFeedback.UNCLEAR)){
 							setCurrentNodeChecked(mutatedTrace, suspiciousNode);		
 							updateVariableCheckTime(mutatedTrace, suspiciousNode);
-						}
-						
-						feedbackTimes++;
-						
-						if(feedbackTimes > mutatedTrace.size()){
-							break;
 						}
 					}
 					else{
