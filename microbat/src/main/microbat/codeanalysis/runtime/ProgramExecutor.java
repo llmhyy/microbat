@@ -220,7 +220,8 @@ public class ProgramExecutor extends Executor {
 			}
 
 			if (trace.getLastestNode() != null) {
-				//System.out.println("running into " + trace.getLastestNode() +" step");
+//				System.out.println("running into " + trace.getLastestNode());
+//				System.currentTimeMillis();
 			}
 
 			for (Event event : eventSet) {
@@ -483,7 +484,8 @@ public class ProgramExecutor extends Executor {
 
 					if (!methodSignatureStack.isEmpty()) {
 						String peekMethodSig = methodSignatureStack.peek();
-						if (!peekMethodSig.equals(invokedMethodSig)) {
+						TraceNode peekNode = methodNodeStack.peek();
+						if (!peekMethodSig.equals(invokedMethodSig) && peekNode.getOrder()!=prevNode.getOrder()) {
 							System.out.println("compensating side effect of optimization for " + prevNode);
 
 							if (invokedMethodBinding.getParameterTypes().length != 0) {
@@ -714,7 +716,7 @@ public class ProgramExecutor extends Executor {
 	 */
 	private void parseWrittenParameterVariableForMethodInvocation(StackFrame frame, String methodDeclaringCompilationUnit,
 			int methodLocationLine, List<Param> paramList, TraceNode lastestNode) {
-
+		
 		for (Param param : paramList) {
 
 			if (frame == null) {
@@ -754,14 +756,19 @@ public class ProgramExecutor extends Executor {
 				entry.addAliasVariable(localVar);
 				entry.addProducer(lastestNode);
 
-				VarValue varValue;
+				VarValue varValue = null;
 				if (PrimitiveUtils.isPrimitiveType(param.getType())) {
-					varValue = new PrimitiveValue(value.toString(), false, localVar);
+					if(value != null){
+						varValue = new PrimitiveValue(value.toString(), false, localVar);
+					}
+					
 				} else {
 					varValue = new ReferenceValue(true, false, localVar);
 				}
 
-				lastestNode.addWrittenVariable(varValue);
+				if(varValue != null){
+					lastestNode.addWrittenVariable(varValue);					
+				}
 			}
 
 		}
