@@ -67,9 +67,9 @@ public class HierarchyGraphDiffer {
 						this.getCommons().add(diff);
 					}
 					
-					if(depth != -1 && newLevel <= depth ){
+					//if(depth != -1 && newLevel <= depth ){
 						diffChildren(nodeBefore, nodeAfter, newLevel);											
-					}
+					//}
 				}
 				
 			}
