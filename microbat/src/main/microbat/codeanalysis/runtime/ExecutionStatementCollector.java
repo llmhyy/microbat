@@ -5,12 +5,14 @@ import java.util.List;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.Location;
+import com.sun.jdi.Method;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.event.EventSet;
 import com.sun.jdi.event.ExceptionEvent;
+import com.sun.jdi.event.MethodEntryEvent;
 import com.sun.jdi.event.StepEvent;
 import com.sun.jdi.event.VMDeathEvent;
 import com.sun.jdi.event.VMDisconnectEvent;
@@ -19,6 +21,7 @@ import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.ExceptionRequest;
+import com.sun.jdi.request.MethodEntryRequest;
 import com.sun.jdi.request.StepRequest;
 
 import microbat.evaluation.junit.TestCaseAnalyzer;
@@ -31,7 +34,7 @@ public class ExecutionStatementCollector extends Executor{
 	
 	private boolean isOverLong = false;
 	
-	public List<BreakPoint> collectBreakPoints(AppJavaClassPath appClassPath){
+	public List<BreakPoint> collectBreakPoints(AppJavaClassPath appClassPath, boolean isTestcaseEvaluation){
 		steps = 0;
 		List<BreakPoint> pointList = new ArrayList<>();
 		
@@ -55,6 +58,12 @@ public class ExecutionStatementCollector extends Executor{
 							ThreadReference thread = ((VMStartEvent) event).thread();
 							addStepWatch(erm, thread);
 							addExceptionWatch(erm);
+							
+							if(isTestcaseEvaluation){
+								this.stepRequest.disable();
+								addMethodWatch(erm);								
+							}
+							
 						}
 						else if(event instanceof VMDeathEvent
 							|| event instanceof VMDisconnectEvent){
@@ -68,7 +77,7 @@ public class ExecutionStatementCollector extends Executor{
 //							path = path.substring(0, path.indexOf(".java"));
 //							path = path.replace(File.separator, ".");
 							
-							System.out.println(location);
+//							System.out.println(location);
 							
 							int lineNumber = location.lineNumber();
 							
@@ -88,6 +97,17 @@ public class ExecutionStatementCollector extends Executor{
 							if(steps >= Settings.stepLimit){
 								this.setOverLong(true);
 								connected = false;
+							}
+						}
+						else if(event instanceof MethodEntryEvent){
+							Method method = ((MethodEntryEvent) event).method();
+							
+							String declaringTypeName = method.declaringType().name();
+							String methodName = method.name();
+							if(declaringTypeName.contains("junit.framework.TestResult") 
+									&& methodName.contains("run")){
+								this.stepRequest.enable();
+								this.methodEntryRequest.disable();
 							}
 						}
 						else if(event instanceof ExceptionEvent){
@@ -132,13 +152,32 @@ public class ExecutionStatementCollector extends Executor{
 		return false;
 	}
 	
+	private StepRequest stepRequest;
+	
 	protected void addStepWatch(EventRequestManager erm, ThreadReference threadReference) {
-		StepRequest sr = erm.createStepRequest(threadReference,  StepRequest.STEP_LINE, StepRequest.STEP_INTO);
-		sr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+		stepRequest = erm.createStepRequest(threadReference,  StepRequest.STEP_LINE, StepRequest.STEP_INTO);
+		stepRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+		
 		for(String ex: stepWatchExcludes){
-			sr.addClassExclusionFilter(ex);
+			stepRequest.addClassExclusionFilter(ex);
 		}
-		sr.enable();
+		stepRequest.enable();
+	}
+	
+	private MethodEntryRequest methodEntryRequest;
+	/**
+	 * add method enter and exit event
+	 */
+	private void addMethodWatch(EventRequestManager erm) {
+		methodEntryRequest = erm.createMethodEntryRequest();
+		
+		String[] stepWatchExcludes = { "java.*", "java.lang.*", "javax.*", "sun.*", "com.sun.*"};
+		
+		for (String classPattern : stepWatchExcludes) {
+			methodEntryRequest.addClassExclusionFilter(classPattern);
+		}
+		methodEntryRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+		methodEntryRequest.enable();
 	}
 	
 	/** add watch requests **/

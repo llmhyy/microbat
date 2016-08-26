@@ -142,7 +142,7 @@ public class TestCaseAnalyzer {
 			killingMutatantTrace = info.killingMutateTrace;
 			TestCaseRunner checker = new TestCaseRunner();
 			
-			List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig);
+			List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig, true);
 			if(checker.isOverLong()){
 				return;
 			}
@@ -231,7 +231,7 @@ public class TestCaseAnalyzer {
 		Trace correctTrace = null;
 		if(checker.isPassingTest()){
 			System.out.println(testCaseName + " is a passed test case");
-			List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig);
+			List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig, true);
 			if(checker.isOverLong()){
 				return false;
 			}
@@ -452,11 +452,7 @@ public class TestCaseAnalyzer {
 				System.out.println("KILLED: Now generating trace for " + testMethod + " (mutation: " + mutatedFile + ")");
 				TraceModelConstructor constructor = new TraceModelConstructor();
 				
-				List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig);
-				
-				if(isKill){
-					return null;
-				}
+				List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig, true);
 				
 				if(checker.isOverLong()){
 					System.out.println("The trace is over long for " + testMethod + " (mutation: " + mutatedFile + ")");
