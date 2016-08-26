@@ -30,7 +30,7 @@ public class TestCaseEvaluator {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		int flag = TRIAL;
+		int flag = ALL;
 		boolean isLimitTrialNum = false;
 		int optionSearchLimit = 100;
 		
