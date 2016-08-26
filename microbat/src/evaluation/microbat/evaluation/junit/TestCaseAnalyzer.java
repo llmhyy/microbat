@@ -617,6 +617,9 @@ public class TestCaseAnalyzer {
 							}
 							
 							MethodDeclaration declaration = (MethodDeclaration) cuOfDec.findDeclaringNode(declarationBinding);
+							if(declaration == null){
+								return false;
+							}
 							
 							int startMDLine = cuOfDec.getLineNumber(declaration.getStartPosition());
 							int endMDLine = cuOfDec.getLineNumber(declaration.getStartPosition()+declaration.getLength());
