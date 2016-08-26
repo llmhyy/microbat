@@ -31,7 +31,7 @@ public class TestCaseEvaluator {
 		parsedTrials = new ParsedTrials();
 		
 		int flag = ALL;
-		boolean isLimitTrialNum = false;
+		boolean isLimitTrialNum = true;
 		int optionSearchLimit = 100;
 		
 		runEvaluation(flag, isLimitTrialNum, optionSearchLimit);
@@ -56,8 +56,8 @@ public class TestCaseEvaluator {
 		}
 		else if(flag == TEST_CASE){
 			ExcelReporter reporter = new ExcelReporter(Settings.projectName, this.unclearRates);
-			String testClassName = "org.apache.commons.crypto.jna.PositionedCryptoInputStreamJnaTest";
-			String testMethodName = "doTest";
+			String testClassName = "org.apache.commons.math.analysis.interpolation.DividedDifferenceInterpolatorTest";
+			String testMethodName = "testExpm1Function";
 			analyzer.runEvaluationForSingleTestCase(testClassName, testMethodName, reporter, false,
 					ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit);
 		}
@@ -82,8 +82,8 @@ public class TestCaseEvaluator {
 //		boolean isReuseTrace = true;
 //		int optionSearchLimit = 1000;
 		
-		String testClassName = "org.apache.commons.math.linear.BlockRealMatrixTest";
-		String testMethodName = "testMultiply2";
+		String testClassName = "org.apache.commons.math.analysis.interpolation.DividedDifferenceInterpolatorTest";
+		String testMethodName = "testExpm1Function";
 		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\230_33_3\\BlockRealMatrix.java";
 		double unclearRate = 0;
 		boolean enableLoopInference = false;
