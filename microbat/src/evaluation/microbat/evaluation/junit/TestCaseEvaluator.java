@@ -30,7 +30,7 @@ public class TestCaseEvaluator {
 		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
 		parsedTrials = new ParsedTrials();
 		
-		int flag = ALL;
+		int flag = TRIAL;
 		boolean isLimitTrialNum = false;
 		int optionSearchLimit = 100;
 		
@@ -74,21 +74,21 @@ public class TestCaseEvaluator {
 //				+ "apache-common-math-2.2\\2081_22_1\\MathUtils.java";
 //		String mutatedClass = "org.apache.commons.math.util.MathUtils";
 		
-		String testClassName = "test.SimpleCalculatorTest";
-		String testMethodName = "testCalculator";
-		String mutationFile = "C:\\microbat_evaluation\\mutation\\50_121_6\\SimpleCalculator.java";
-		double unclearRate = 0;
-		boolean enableLoopInference = true;
-		boolean isReuseTrace = true;
-		int optionSearchLimit = 1000;
-		
-//		String testClassName = "org.apache.commons.crypto.jna.PositionedCryptoInputStreamJnaTest";
-//		String testMethodName = "doTest";
-//		String mutationFile = "C:\\microbat_evaluation\\commons-crypto\\234_17_1\\CryptoOutputStream.java";
+//		String testClassName = "test.SimpleCalculatorTest";
+//		String testMethodName = "testCalculator";
+//		String mutationFile = "C:\\microbat_evaluation\\mutation\\50_121_6\\SimpleCalculator.java";
 //		double unclearRate = 0;
-//		boolean enableLoopInference = false;
-//		boolean isReuseTrace = false;
+//		boolean enableLoopInference = true;
+//		boolean isReuseTrace = true;
 //		int optionSearchLimit = 1000;
+		
+		String testClassName = "org.apache.commons.math.linear.BlockRealMatrixTest";
+		String testMethodName = "testMultiply2";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\230_33_3\\BlockRealMatrix.java";
+		double unclearRate = 0;
+		boolean enableLoopInference = false;
+		boolean isReuseTrace = false;
+		int optionSearchLimit = 1000;
 		
 		try {
 			analyzer.runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 

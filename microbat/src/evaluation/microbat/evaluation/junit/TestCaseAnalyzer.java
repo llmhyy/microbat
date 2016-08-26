@@ -454,6 +454,10 @@ public class TestCaseAnalyzer {
 				
 				List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig);
 				
+				if(isKill){
+					return null;
+				}
+				
 				if(checker.isOverLong()){
 					System.out.println("The trace is over long for " + testMethod + " (mutation: " + mutatedFile + ")");
 					killingMutantTrace = null;

@@ -50,7 +50,7 @@ public class ExecutionStatementCollector extends Executor{
 				if(eventSet != null){
 					for(Event event: eventSet){
 						if(event instanceof VMStartEvent){
-//							System.out.println("start collecting execution");
+							System.out.println("start collecting execution");
 							
 							ThreadReference thread = ((VMStartEvent) event).thread();
 							addStepWatch(erm, thread);
@@ -67,6 +67,8 @@ public class ExecutionStatementCollector extends Executor{
 //							String path = location.sourcePath();
 //							path = path.substring(0, path.indexOf(".java"));
 //							path = path.replace(File.separator, ".");
+							
+							System.out.println(location);
 							
 							int lineNumber = location.lineNumber();
 							

@@ -503,11 +503,10 @@ public class SimulatedMicroBat {
 			if(node.getDeclaringCompilationUnitName().equals(className) && node.getLineNumber()==lineNo){
 				TraceNodePair pair = pairList.findByMutatedNode(node);
 				
-				if(pair == null){
-					System.currentTimeMillis();
+				if(pair != null){
+					return pair.getMutatedNode();
 				}
 				
-				return pair.getMutatedNode();
 			}
 		}
 		
