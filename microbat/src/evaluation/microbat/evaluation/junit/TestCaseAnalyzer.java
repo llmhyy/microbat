@@ -19,8 +19,14 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 
 import microbat.evaluation.SimulatedMicroBat;
 import microbat.evaluation.TraceModelConstructor;
@@ -560,9 +566,81 @@ public class TestCaseAnalyzer {
 			}
 		}
 		
+		List<ClassLocation> invocationMutationPoints = findInvocationMutations(executingStatements);
+		for(ClassLocation location: invocationMutationPoints){
+			if(!locations.contains(location)){
+				locations.add(location);
+			}
+		}
+		
 		return locations;
 	}
 	
+	private List<ClassLocation> findInvocationMutations(final List<BreakPoint> executingStatements) {
+		final List<ClassLocation> validLocationList = new ArrayList<>();
+		
+		for(final BreakPoint point: executingStatements){
+			final CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName());
+			cu.accept(new ASTVisitor() {
+				public boolean visit(MethodInvocation invocation){
+					int startLine = cu.getLineNumber(invocation.getStartPosition());
+					
+					
+					if(startLine == point.getLineNumber()){
+						if(startLine == 73){
+							System.currentTimeMillis();
+						}
+						
+						/**
+						 * check whether this invocation is above loop
+						 */
+						ASTNode parent = invocation.getParent();
+						while(parent!=null && !(parent instanceof Block)){
+							parent = parent.getParent();
+						}
+						if(parent==null){
+							return false;
+						}
+						
+						LoopStatementChecker checker = new LoopStatementChecker(invocation, cu);
+						parent.accept(checker);
+						
+						if(checker.isValid){
+							IMethodBinding invocationBinding = invocation.resolveMethodBinding();
+							IMethodBinding declarationBinding = invocationBinding.getMethodDeclaration();
+							
+							ITypeBinding type = declarationBinding.getDeclaringClass();
+							CompilationUnit cuOfDec = JavaUtil.findCompilationUnitInProject(type.getQualifiedName());
+							
+							if(cuOfDec == null){
+								return false;
+							}
+							
+							MethodDeclaration declaration = (MethodDeclaration) cuOfDec.findDeclaringNode(declarationBinding);
+							
+							int startMDLine = cuOfDec.getLineNumber(declaration.getStartPosition());
+							int endMDLine = cuOfDec.getLineNumber(declaration.getStartPosition()+declaration.getLength());
+							
+							for(BreakPoint point: executingStatements){
+								if(startMDLine<point.getLineNumber() && point.getLineNumber()<endMDLine){
+									ClassLocation location = 
+											new ClassLocation(point.getDeclaringCompilationUnitName(), null, point.getLineNumber());
+									if(!validLocationList.contains(location)){
+										validLocationList.add(location);
+									}
+								}
+							}
+						}
+					}
+					
+					return false;
+				}
+			});
+		}
+		
+		return validLocationList;
+	}
+
 	private AppJavaClassPath createProjectClassPath(String className, String methodName){
 		AppJavaClassPath classPath = MicroBatUtil.constructClassPaths();
 		

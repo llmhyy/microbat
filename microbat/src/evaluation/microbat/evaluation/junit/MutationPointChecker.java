@@ -104,52 +104,7 @@ public class MutationPointChecker extends ASTVisitor {
 		return checker.isValid;
 	}
 
-	class LoopStatementChecker extends ASTVisitor {
-		CompilationUnit cu;
-		ASTNode node;
-
-		boolean isValid = false;
-
-		public LoopStatementChecker(ASTNode node, CompilationUnit cu) {
-			this.node = node;
-			this.cu = cu;
-		}
-
-		public boolean visit(DoStatement statement) {
-			if(isNodeAboveLoop(node, statement)){
-				this.isValid = true;
-			}
-			return false;
-		}
-
-		public boolean visit(EnhancedForStatement statement) {
-			if(isNodeAboveLoop(node, statement)){
-				this.isValid = true;
-			}
-			return false;
-		}
-
-		public boolean visit(ForStatement statement) {
-			if(isNodeAboveLoop(node, statement)){
-				this.isValid = true;
-			}
-			return false;
-		}
-
-		public boolean visit(WhileStatement statement) {
-			if(isNodeAboveLoop(node, statement)){
-				this.isValid = true;
-			}
-			return false;
-		}
-
-		public boolean isNodeAboveLoop(ASTNode node, Statement loopStatement) {
-			int nodeLineNumber = cu.getLineNumber(node.getStartPosition() + node.getLength());
-			int ifStatementLineNumber = cu.getLineNumber(loopStatement.getStartPosition());
-
-			return nodeLineNumber < ifStatementLineNumber;
-		}
-	}
+	
 
 	/**
 	 * For the following case: for{ if(){ *** } else{ *** } }
