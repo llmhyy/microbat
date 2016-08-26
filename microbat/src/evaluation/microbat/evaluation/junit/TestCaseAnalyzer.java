@@ -236,7 +236,7 @@ public class TestCaseAnalyzer {
 				return false;
 			}
 			
-//			System.out.println("identifying the possible mutated location for " + testCaseName);
+			System.out.println("identifying the possible mutated location for " + testCaseName);
 			List<ClassLocation> locationList = findMutationLocation(executingStatements);
 			
 			int thisTrialNum = 0;

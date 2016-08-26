@@ -104,8 +104,8 @@ public class ExecutionStatementCollector extends Executor{
 							
 							String declaringTypeName = method.declaringType().name();
 							String methodName = method.name();
-							if(declaringTypeName.contains("junit.framework.TestResult") 
-									&& methodName.contains("run")){
+							if((declaringTypeName.equals("junit.framework.TestResult") && methodName.equals("run")) ||
+									(declaringTypeName.equals("org.junit.runners.BlockJUnit4ClassRunner")) && methodName.equals("methodBlock")){
 								this.stepRequest.enable();
 								this.methodEntryRequest.disable();
 							}
