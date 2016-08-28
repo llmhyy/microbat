@@ -31,7 +31,7 @@ public class TestCaseEvaluator {
 		parsedTrials = new ParsedTrials();
 		
 		int flag = ALL;
-		boolean isLimitTrialNum = true;
+		boolean isLimitTrialNum = false;
 		int optionSearchLimit = 100;
 		
 		runEvaluation(flag, isLimitTrialNum, optionSearchLimit);

@@ -551,33 +551,33 @@ public class TestCaseAnalyzer {
 	private List<ClassLocation> findMutationLocation(List<BreakPoint> executingStatements) {
 		List<ClassLocation> locations = new ArrayList<>();
 		
+//		for(BreakPoint point: executingStatements){
+//			ClassLocation location = new ClassLocation(point.getDeclaringCompilationUnitName(), 
+//					null, point.getLineNumber());
+//			locations.add(location);	
+//		}
+		
 		for(BreakPoint point: executingStatements){
-			ClassLocation location = new ClassLocation(point.getDeclaringCompilationUnitName(), 
-					null, point.getLineNumber());
-			locations.add(location);	
+			String className = point.getDeclaringCompilationUnitName();
+			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className);
+			if(cu != null && !JTestUtil.isInTestCase(className)){
+				MutationPointChecker checker = new MutationPointChecker(cu, point.getLineNumber());
+				cu.accept(checker);
+				
+				if(checker.isLoopInsider()){
+					ClassLocation location = new ClassLocation(className, 
+							null, point.getLineNumber());
+					locations.add(location);					
+				}
+			}
 		}
 		
-//		for(BreakPoint point: executingStatements){
-//			String className = point.getDeclaringCompilationUnitName();
-//			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className);
-//			if(cu != null && !JTestUtil.isInTestCase(className)){
-//				MutationPointChecker checker = new MutationPointChecker(cu, point.getLineNumber());
-//				cu.accept(checker);
-//				
-//				if(checker.isLoopInsider()){
-//					ClassLocation location = new ClassLocation(className, 
-//							null, point.getLineNumber());
-//					locations.add(location);					
-//				}
-//			}
-//		}
-//		
-//		List<ClassLocation> invocationMutationPoints = findInvocationMutations(executingStatements);
-//		for(ClassLocation location: invocationMutationPoints){
-//			if(!locations.contains(location)){
-//				locations.add(location);
-//			}
-//		}
+		List<ClassLocation> invocationMutationPoints = findInvocationMutations(executingStatements);
+		for(ClassLocation location: invocationMutationPoints){
+			if(!locations.contains(location)){
+				locations.add(location);
+			}
+		}
 		
 		return locations;
 	}
