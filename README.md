@@ -9,4 +9,4 @@ Microbat is a feedback-based debugger which aims to locate bug by interactively 
 We support four types of feedback, i.e., correct-step, wrong-variable-value, wrong-path, and unclear. Based on these types of feedback, we iteratively and interactively recommend suspicious steps on recoreded trace.
 
 # Evaluation
-The evaluation data can be checked at [http://linyun.info/microbat/index.html] http://linyun.info/microbat/index.html
+The __evaluation results__ can be checked at http://linyun.info/microbat_experiment/index.html
