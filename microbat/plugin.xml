@@ -49,9 +49,9 @@
             name="Start Debugging">
       </command>
       <command
-            defaultHandler="microbat.evaluation.handler.EvaluationHandler"
-            id="microbat.command.evaluate"
-            name="Run Evaluation">
+            defaultHandler="microbat.evaluation.handler.EvaluationAllHandler"
+            id="microbat.command.evaluateAll"
+            name="Run Evaluation for All">
       </command>
       <command
             defaultHandler="microbat.handler.UndoHandler"
@@ -67,6 +67,16 @@
             defaultHandler="microbat.handler.SearchStepBackwardHandler"
             id="microbat.command.searchStepBackward"
             name="Search Step Backward">
+      </command>
+      <command
+            defaultHandler="microbat.evaluation.handler.EvaluationTestCaseHandler"
+            id="microbat.command.evaluationTestCase"
+            name="Run Evaluation for Test Case">
+      </command>
+      <command
+            defaultHandler="microbat.evaluation.handler.EvaluationTrialHandler"
+            id="microbat.command.evaluateTrial"
+            name="Run Evaluation for Trial">
       </command>
    </extension>
    <extension
@@ -88,12 +98,27 @@
                   label="Undo Your Debug Operation"
                   style="push">
             </command>
-            <command
-                  commandId="microbat.command.evaluate"
-                  icon="icons/evaluation.png"
-                  label="Run Evaluation"
-                  style="push">
-            </command>
+            <menu
+                  label="Run Evaluation">
+               <command
+                     commandId="microbat.command.evaluateAll"
+                     icon="icons/evaluation.png"
+                     label="All"
+                     style="push">
+               </command>
+               <command
+                     commandId="microbat.command.evaluationTestCase"
+                     icon="icons/evaluation.png"
+                     label="Test Case"
+                     style="push">
+               </command>
+               <command
+                     commandId="microbat.command.evaluateTrial"
+                     icon="icons/evaluation.png"
+                     label="Trial"
+                     style="push">
+               </command>
+            </menu>
          </menu>
       </menuContribution>
       <menuContribution

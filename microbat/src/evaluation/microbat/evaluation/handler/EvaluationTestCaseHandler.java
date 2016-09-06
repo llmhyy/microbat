@@ -13,17 +13,16 @@ import org.eclipse.jdt.core.JavaModelException;
 
 import microbat.evaluation.junit.TestCaseEvaluator;
 
-public class EvaluationHandler extends AbstractHandler {
+public class EvaluationTestCaseHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		
 		Job job = new Job("Do evaluation") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				TestCaseEvaluator parser = new TestCaseEvaluator();
 				try {
-					parser.runEvaluation();
+					parser.runEvaluation(TestCaseEvaluator.TEST_CASE);
 				} catch (JavaModelException | IOException e) {
 					e.printStackTrace();
 				}
@@ -36,13 +35,4 @@ public class EvaluationHandler extends AbstractHandler {
 		return null;
 	}
 
-	
-//	private void archievedSimulation(){
-//		SimulatedMicroBat simulator = new SimulatedMicroBat();
-//		try {
-//			simulator.startSimulation();
-//		} catch (GenerateRootCauseException e) {
-//			e.printStackTrace();
-//		}
-//	}
 }
