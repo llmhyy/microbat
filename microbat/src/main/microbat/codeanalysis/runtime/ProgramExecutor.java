@@ -374,77 +374,51 @@ public class ProgramExecutor extends Executor {
 				} else if (event instanceof MethodEntryEvent) {
 					MethodEntryEvent mee = (MethodEntryEvent) event;
 					Method method = mee.method();
-//					System.out.println("enter " + method + ":" + ((MethodEntryEvent)event).location());
+					System.out.println("enter " + method + ":" + ((MethodEntryEvent)event).location());
 					
-					if(!method.name().contains("<clinit>")){
-						Location location = ((MethodEntryEvent) event).location();
-						boolean isLocationInRunningStatement = isLocationInRunningStatement(location, locBrpMap);
-						if (isLocationInRunningStatement) {
+					Location location = ((MethodEntryEvent) event).location();
+					if (lastStepEventRecordNode) {
+						TraceNode lastestNode = this.trace.getLastestNode();
 
-							if (lastStepEventRecordNode) {
-								TraceNode lastestNode = this.trace.getLastestNode();
+						try {
+							if (!method.arguments().isEmpty()) {
+								StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
+								String path = location.sourcePath();
+								String declaringCompilationUnit = path.replace(".java", "");
+								declaringCompilationUnit = declaringCompilationUnit.replace('\\', '.');
 
-								try {
-									if (!method.arguments().isEmpty()) {
-										StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
-										String path = location.sourcePath();
-										String declaringCompilationUnit = path.replace(".java", "");
-										declaringCompilationUnit = declaringCompilationUnit.replace('\\', '.');
+								int methodLocationLine = method.location().lineNumber();
+								List<Param> paramList = parseParamList(method);
 
-										int methodLocationLine = method.location().lineNumber();
-										List<Param> paramList = parseParamList(method);
-
-										parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
-												methodLocationLine, paramList, lastestNode);
-									}
-								} catch (AbsentInformationException e) {
-									e.printStackTrace();
-								}
-
-								methodNodeStack.push(lastestNode);
-								String methodSignature = createSignature(method);
-								methodSignatureStack.push(methodSignature);
-								
-								System.currentTimeMillis();
+								parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
+										methodLocationLine, paramList, lastestNode);
 							}
+						} catch (AbsentInformationException e) {
+							e.printStackTrace();
 						}
-						/**
-						 * if not, just shut down the method event listening for
-						 * saving time.
-						 */
-						else {
-//							getMethodEntryRequest().setEnabled(false);
-//							getMethodExitRequset().setEnabled(false);
-						}
+
+						methodNodeStack.push(lastestNode);
+						String methodSignature = createSignature(method);
+						methodSignatureStack.push(methodSignature);
+						
+						System.currentTimeMillis();
 					}
 
 				} else if (event instanceof MethodExitEvent) {
 					MethodExitEvent mee = (MethodExitEvent) event;
 					Method method = mee.method();
-//					System.out.println("exit " + method + ":" + ((MethodExitEvent)event).location());
+					System.out.println("exit " + method + ":" + ((MethodExitEvent)event).location());
 					
-					if(!method.name().contains("<clinit>")){
-						Location location = ((MethodExitEvent) event).location();
-						boolean isLocationInRunningStatement = isLocationInRunningStatement(location, locBrpMap);
-
-						if (isLocationInRunningStatement) {
-
-							if (!methodSignatureStack.isEmpty()) {
-								String peekSig = methodSignatureStack.peek();
-								String thisSig = createSignature(method);
-								if (JavaUtil.isCompatibleMethodSignature(peekSig, thisSig)) {
-									TraceNode node = methodNodeStack.pop();
-									methodNodeJustPopedOut = node;
-									methodSignatureStack.pop();
-									lastestReturnedValue = mee.returnValue();
-								}
-							}
-						} else {
-//							getMethodEntryRequest().setEnabled(false);
-//							getMethodExitRequset().setEnabled(false);
+					if (!methodSignatureStack.isEmpty()) {
+						String peekSig = methodSignatureStack.peek();
+						String thisSig = createSignature(method);
+						if (JavaUtil.isCompatibleMethodSignature(peekSig, thisSig)) {
+							TraceNode node = methodNodeStack.pop();
+							methodNodeJustPopedOut = node;
+							methodSignatureStack.pop();
+							lastestReturnedValue = mee.returnValue();
 						}
 					}
-					
 
 				} else if (event instanceof ExceptionEvent) {
 					ExceptionEvent ee = (ExceptionEvent) event;
