@@ -2,6 +2,7 @@ package microbat.codeanalysis.runtime;
 
 import static sav.strategies.junit.SavJunitRunner.ENTER_TC_BKP;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -131,7 +132,7 @@ public class ProgramExecutor extends Executor {
 	 * @param runningStatements
 	 * @throws SavException
 	 */
-	public void run(List<BreakPoint> runningStatements, IProgressMonitor monitor) throws SavException, TimeoutException {
+	public void run(List<BreakPoint> runningStatements, IProgressMonitor monitor, int stepNum) throws SavException, TimeoutException {
 
 		this.brkpsMap = BreakpointUtils.initBrkpsMap(runningStatements);
 
@@ -139,18 +140,19 @@ public class ProgramExecutor extends Executor {
 		VirtualMachine vm = new VMStarter(this.config).start();
 
 		try{
-			constructTrace(monitor, vm);			
+			constructTrace(monitor, vm, stepNum);			
 		}
 		finally{
 			if(vm != null){
 				vm.exit(0);
 			}
+			System.out.println();
 			System.out.println("JVM is ended.");
 		}
 
 	}
 
-	private void constructTrace(IProgressMonitor monitor, VirtualMachine vm) throws SavException, TimeoutException {
+	private void constructTrace(IProgressMonitor monitor, VirtualMachine vm, int stepNum) throws SavException, TimeoutException {
 		EventRequestManager erm = vm.eventRequestManager();
 
 		/** add class watch, otherwise, I cannot catch the registered event */
@@ -367,6 +369,7 @@ public class ProgramExecutor extends Executor {
 //					getMethodExitRequset().setEnabled(true);
 
 					monitor.worked(1);
+					printProgress(trace.size(), stepNum);
 					if (monitor.isCanceled() || this.trace.getExectionList().size() >= Settings.stepLimit) {
 						stop = true;
 						break cancel;
@@ -437,6 +440,36 @@ public class ProgramExecutor extends Executor {
 			}
 
 			eventSet.resume();
+		}
+	}
+
+	private void printProgress(int size, int stepNum) {
+		double progress = ((double)size)/stepNum;
+		
+		double preProgr = 0;
+		if(size == 1){
+			System.out.print("progress: ");
+		}
+		else{
+			preProgr = ((double)(size-1))/stepNum;
+		}
+		
+		int prog = (int)(progress*100);
+		int preP = (int)(preProgr*100);
+		
+		int diff = prog - preP;
+		StringBuffer buffer = new StringBuffer();
+		for(int i=0; i<diff; i++){
+			buffer.append("=");
+		}
+		System.out.print(buffer.toString());
+		
+		int[] percentiles = {10, 20, 30, 40, 50, 60, 70, 80, 90};
+		for(int i=0; i<percentiles.length; i++){
+			int percentile = percentiles[i];
+			if(preP<percentile && percentile<=prog){
+				System.out.print(prog+"%");
+			}
 		}
 	}
 

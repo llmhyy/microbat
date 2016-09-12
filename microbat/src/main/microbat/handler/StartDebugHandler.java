@@ -164,7 +164,7 @@ public class StartDebugHandler extends AbstractHandler {
 							tcExecutor.setConfig(appClassPath);
 							try {
 //								long t1 = System.currentTimeMillis();
-								tcExecutor.run(runningStatements, monitor);
+								tcExecutor.run(runningStatements, monitor, stepNum);
 //								long t2 = System.currentTimeMillis();
 //								System.out.println("time spent on collecting variables: " + (t2-t1));
 								
