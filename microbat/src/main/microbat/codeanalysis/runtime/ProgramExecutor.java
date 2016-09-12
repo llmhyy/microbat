@@ -185,7 +185,7 @@ public class ProgramExecutor extends Executor {
 		 * that an interesting step event just happened right before. Thus, the
 		 * last recorded trace node should be method invocation.
 		 */
-		boolean isLastStepEventRecordNode = false;
+		boolean lastStepEventRecordNode = false;
 
 		/**
 		 * record the method entrance and exit so that I can build a
@@ -284,6 +284,10 @@ public class ProgramExecutor extends Executor {
 						
 						TraceNode node = recordTrace(bkp, bkpVal);
 						
+						if(node.getOrder()==47){
+							System.currentTimeMillis();
+						}
+						
 						/**
 						 * pop up method after an exception is caught.
 						 */
@@ -296,7 +300,6 @@ public class ProgramExecutor extends Executor {
 									if (!methodNodeStack.isEmpty()) {
 										invocationNode = methodNodeStack.pop();
 										methodNodeJustPopedOut = invocationNode;
-										// methodStack.pop();
 										methodSignatureStack.pop();
 
 										isInvocationEnvironmentContainingLocation = isInvocationEnvironmentContainingLocation(
@@ -309,8 +312,8 @@ public class ProgramExecutor extends Executor {
 							caughtLocationForJustException = null;
 						}
 
-						handleCompensationForMethodEntryExistOptimization(methodNodeStack, methodSignatureStack, event,
-								isContextChange, node);
+//						handleCompensationForMethodEntryExistOptimization(methodNodeStack, methodSignatureStack, event,
+//								isContextChange, node);
 
 						/**
 						 * Build parent-child relation between trace nodes.
@@ -355,13 +358,13 @@ public class ProgramExecutor extends Executor {
 						}
 
 						lastSteppingInPoint = bkp;
-						isLastStepEventRecordNode = true;
+						lastStepEventRecordNode = true;
 					} else {
-						isLastStepEventRecordNode = false;
+						lastStepEventRecordNode = false;
 					}
 
-					getMethodEntryRequest().setEnabled(true);
-					getMethodExitRequset().setEnabled(true);
+//					getMethodEntryRequest().setEnabled(true);
+//					getMethodExitRequset().setEnabled(true);
 
 					monitor.worked(1);
 					if (monitor.isCanceled() || this.trace.getExectionList().size() >= Settings.stepLimit) {
@@ -371,74 +374,77 @@ public class ProgramExecutor extends Executor {
 				} else if (event instanceof MethodEntryEvent) {
 					MethodEntryEvent mee = (MethodEntryEvent) event;
 					Method method = mee.method();
-					// System.out.println(method + ":" + ((MethodEntryEvent)
-					// event).location());
+//					System.out.println("enter " + method + ":" + ((MethodEntryEvent)event).location());
 					
-					Location location = ((MethodEntryEvent) event).location();
-					boolean isLocationInRunningStatement = isLocationInRunningStatement(location, locBrpMap);
-					if (isLocationInRunningStatement) {
+					if(!method.name().contains("<clinit>")){
+						Location location = ((MethodEntryEvent) event).location();
+						boolean isLocationInRunningStatement = isLocationInRunningStatement(location, locBrpMap);
+						if (isLocationInRunningStatement) {
 
-						if (isLastStepEventRecordNode) {
-							TraceNode lastestNode = this.trace.getLastestNode();
+							if (lastStepEventRecordNode) {
+								TraceNode lastestNode = this.trace.getLastestNode();
 
-							try {
-								if (!method.arguments().isEmpty()) {
-									StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
-//									String typeSig = method.declaringType().signature();
-//									String declaringType = SignatureUtils.signatureToName(typeSig);
-									String path = location.sourcePath();
-									String declaringCompilationUnit = path.replace(".java", "");
-									declaringCompilationUnit = declaringCompilationUnit.replace('\\', '.');
+								try {
+									if (!method.arguments().isEmpty()) {
+										StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
+										String path = location.sourcePath();
+										String declaringCompilationUnit = path.replace(".java", "");
+										declaringCompilationUnit = declaringCompilationUnit.replace('\\', '.');
 
-									int methodLocationLine = method.location().lineNumber();
-									List<Param> paramList = parseParamList(method);
+										int methodLocationLine = method.location().lineNumber();
+										List<Param> paramList = parseParamList(method);
 
-									parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
-											methodLocationLine, paramList, lastestNode);
+										parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
+												methodLocationLine, paramList, lastestNode);
+									}
+								} catch (AbsentInformationException e) {
+									e.printStackTrace();
 								}
-							} catch (AbsentInformationException e) {
-								e.printStackTrace();
-							}
 
-							methodNodeStack.push(lastestNode);
-							String methodSignature = createSignature(method);
-							methodSignatureStack.push(methodSignature);
+								methodNodeStack.push(lastestNode);
+								String methodSignature = createSignature(method);
+								methodSignatureStack.push(methodSignature);
+								
+								System.currentTimeMillis();
+							}
 						}
-					}
-					/**
-					 * if not, just shut down the method event listening for
-					 * saving time.
-					 */
-					else {
-						getMethodEntryRequest().setEnabled(false);
-						getMethodExitRequset().setEnabled(false);
+						/**
+						 * if not, just shut down the method event listening for
+						 * saving time.
+						 */
+						else {
+//							getMethodEntryRequest().setEnabled(false);
+//							getMethodExitRequset().setEnabled(false);
+						}
 					}
 
 				} else if (event instanceof MethodExitEvent) {
 					MethodExitEvent mee = (MethodExitEvent) event;
 					Method method = mee.method();
-					// System.out.println(method + ":" + ((MethodExitEvent)
-					// event).location());
+//					System.out.println("exit " + method + ":" + ((MethodExitEvent)event).location());
+					
+					if(!method.name().contains("<clinit>")){
+						Location location = ((MethodExitEvent) event).location();
+						boolean isLocationInRunningStatement = isLocationInRunningStatement(location, locBrpMap);
 
-					Location location = ((MethodExitEvent) event).location();
-					boolean isLocationInRunningStatement = isLocationInRunningStatement(location, locBrpMap);
+						if (isLocationInRunningStatement) {
 
-					if (isLocationInRunningStatement) {
-
-						if (!methodSignatureStack.isEmpty()) {
-							String peekSig = methodSignatureStack.peek();
-							String thisSig = createSignature(method);
-							if (JavaUtil.isCompatibleMethodSignature(peekSig, thisSig)) {
-								TraceNode node = methodNodeStack.pop();
-								methodNodeJustPopedOut = node;
-								methodSignatureStack.pop();
-								lastestReturnedValue = mee.returnValue();
+							if (!methodSignatureStack.isEmpty()) {
+								String peekSig = methodSignatureStack.peek();
+								String thisSig = createSignature(method);
+								if (JavaUtil.isCompatibleMethodSignature(peekSig, thisSig)) {
+									TraceNode node = methodNodeStack.pop();
+									methodNodeJustPopedOut = node;
+									methodSignatureStack.pop();
+									lastestReturnedValue = mee.returnValue();
+								}
 							}
+						} else {
+//							getMethodEntryRequest().setEnabled(false);
+//							getMethodExitRequset().setEnabled(false);
 						}
-					} else {
-						getMethodEntryRequest().setEnabled(false);
-						getMethodExitRequset().setEnabled(false);
 					}
+					
 
 				} else if (event instanceof ExceptionEvent) {
 					ExceptionEvent ee = (ExceptionEvent) event;
@@ -863,43 +869,6 @@ public class ProgramExecutor extends Executor {
 		return null;
 	}
 
-	/**
-	 * add junit relevant classes into VM configuration, i.e., launch the
-	 * program with JUnit Launcher.
-	 * 
-	 * @throws SavException
-	 */
-	// private final void setDebuggingConfiguration() throws SavException {
-
-	// getVmConfig().setLaunchClass(JUNIT_RUNNER_CLASS_NAME);
-	// JunitRunnerProgramArgBuilder builder = new
-	// JunitRunnerProgramArgBuilder();
-	// List<String> args =
-	// builder.methods(allTests)
-	// .testcaseTimeout(getTimeoutInSec(), TimeUnit.SECONDS)
-	// .build();
-	// getVmConfig().setProgramArgs(args);
-	// getVmConfig().resetPort();
-	// }
-
-	// private long getTimeoutInSec() {
-	// return timeout;
-	// }
-
-	// private TraceNode handleBreakpoint(BreakPoint bkp, ThreadReference
-	// thread, Location loc) throws SavException {
-	// BreakPointValue bkpVal = extractValuesAtLocation(bkp, thread, loc);
-	// TraceNode node = recordTrace(bkp, bkpVal);
-	//
-	// if(!this.methodNodeStack.isEmpty()){
-	// TraceNode parentInvocationNode = this.methodNodeStack.peek();
-	// parentInvocationNode.addInvocationChild(node);
-	// node.setInvocationParent(parentInvocationNode);
-	// }
-	//
-	// return node;
-	// }
-
 	private VarValue generateVarValue(StackFrame frame, Variable var0, TraceNode node, String accessType) {
 		VarValue varValue = null;
 		/**
@@ -1162,7 +1131,9 @@ public class ProgramExecutor extends Executor {
 			e.printStackTrace();
 		} catch (IncompatibleThreadStateException e) {
 			e.printStackTrace();
-		} finally{
+		} catch(Exception e){
+			e.printStackTrace();
+		}finally{
 			getClassPrepareRequest().setEnabled(classPrepare);
 			getStepRequest().setEnabled(step);
 			getMethodEntryRequest().setEnabled(methodEntry);
