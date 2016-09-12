@@ -374,7 +374,7 @@ public class ProgramExecutor extends Executor {
 				} else if (event instanceof MethodEntryEvent) {
 					MethodEntryEvent mee = (MethodEntryEvent) event;
 					Method method = mee.method();
-					System.out.println("enter " + method + ":" + ((MethodEntryEvent)event).location());
+//					System.out.println("enter " + method + ":" + ((MethodEntryEvent)event).location());
 					
 					Location location = ((MethodEntryEvent) event).location();
 					if (lastStepEventRecordNode) {
@@ -407,7 +407,7 @@ public class ProgramExecutor extends Executor {
 				} else if (event instanceof MethodExitEvent) {
 					MethodExitEvent mee = (MethodExitEvent) event;
 					Method method = mee.method();
-					System.out.println("exit " + method + ":" + ((MethodExitEvent)event).location());
+//					System.out.println("exit " + method + ":" + ((MethodExitEvent)event).location());
 					
 					if (!methodSignatureStack.isEmpty()) {
 						String peekSig = methodSignatureStack.peek();
