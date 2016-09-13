@@ -25,53 +25,56 @@ public class BehaviorReporter {
 	private int lastRowNum = 1;
 	
 	public BehaviorReporter(String fileName){
-		fileName = fileName + "_behavior" + ".xlsx";
-		file = new File(fileName);
 		
-		if(file.exists()){
-			InputStream excelFileToRead;
-			try {
-				excelFileToRead = new FileInputStream(file);
-				book = new XSSFWorkbook(excelFileToRead);
-				sheet = book.getSheetAt(0);
-				
+		if(BehaviorSettings.enableBehaviorRecording){
+			fileName = fileName + "_behavior" + ".xlsx";
+			file = new File(fileName);
+			
+			if(file.exists()){
+				InputStream excelFileToRead;
+				try {
+					excelFileToRead = new FileInputStream(file);
+					book = new XSSFWorkbook(excelFileToRead);
+					sheet = book.getSheetAt(0);
+					
 //				lastRowNum = sheet.getPhysicalNumberOfRows();
-				
-			} catch (IOException e) {
-				e.printStackTrace();
+					
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
-		}
-		else{
-			book = new XSSFWorkbook();
-			sheet = book.createSheet("data");
+			else{
+				book = new XSSFWorkbook();
+				sheet = book.createSheet("data");
+				
+				List<String> titles = new ArrayList<>();
+				titles.add("wrong value feedback");
+				titles.add("wrong path feedback");
+				titles.add("correct feedback");
+				titles.add("unclear feedback");
+				titles.add("skips");
+				titles.add("additional clicks");
+				titles.add("search forward");
+				titles.add("search backward");
+				titles.add("undo");
+				titles.add("generate trace");
+				
+				Row row = sheet.createRow(0);
+				for(int i = 0; i < titles.size(); i++){
+					row.createCell(i).setCellValue(titles.get(i)); 
+				}
+			}
 			
-			List<String> titles = new ArrayList<>();
-			titles.add("wrong value feedback");
-			titles.add("wrong path feedback");
-			titles.add("correct feedback");
-			titles.add("unclear feedback");
-			titles.add("skips");
-			titles.add("additional clicks");
-			titles.add("search forward");
-			titles.add("search backward");
-			titles.add("undo");
-			titles.add("generate trace");
-			
-			Row row = sheet.createRow(0);
-			for(int i = 0; i < titles.size(); i++){
-	        	row.createCell(i).setCellValue(titles.get(i)); 
-	        }
 		}
+		
 	}
 	
 	public void export(HashMap<String, Behavior> data) {
-		Row row = sheet.createRow(lastRowNum);
-		
-		fillRowInformation(row, data);
-		
-		writeToExcel(book, file.getName());
-        
-//        lastRowNum++;
+		if(BehaviorSettings.enableBehaviorRecording){
+			Row row = sheet.createRow(lastRowNum);
+			fillRowInformation(row, data);
+			writeToExcel(book, file.getName());
+		}
 	}
 
 	private void fillRowInformation(Row row, HashMap<String, Behavior> data) {
