@@ -44,7 +44,7 @@ public class EvaluationTestCaseHandler extends AbstractHandler {
 					String testClassName = "org.apache.commons.math.analysis.interpolation.DividedDifferenceInterpolatorTest";
 					String testMethodName = "testExpm1Function";
 					analyzer.runEvaluationForSingleTestCase(testClassName, testMethodName, reporter, isLimitTrialNum,
-							ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit);
+							ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit, monitor);
 				} catch (JavaModelException | IOException e) {
 					e.printStackTrace();
 				}

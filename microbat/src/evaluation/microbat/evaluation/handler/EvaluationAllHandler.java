@@ -52,7 +52,8 @@ public class EvaluationAllHandler extends AbstractHandler {
 					for(IJavaElement element: testRoot.getChildren()){
 						if(element instanceof IPackageFragment){
 							analyzer.runEvaluation((IPackageFragment)element, reporter, isLimitTrialNum, 
-									ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit);				
+									ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, 
+									optionSearchLimit, monitor);				
 						}
 					}
 				} catch (JavaModelException | IOException e) {

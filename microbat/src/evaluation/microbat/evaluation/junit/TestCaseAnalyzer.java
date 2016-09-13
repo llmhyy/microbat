@@ -13,6 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -187,12 +188,12 @@ public class TestCaseAnalyzer {
 
 	public void runEvaluation(IPackageFragment pack, ExcelReporter reporter, boolean isLimitTrialNum, 
 			IgnoredTestCaseFiles ignoredTestCaseFiles, ParsedTrials parsedTrials, 
-			int trialNumPerTestCase, double[] unclearRates, int optionSearchLimit) throws JavaModelException {
+			int trialNumPerTestCase, double[] unclearRates, int optionSearchLimit, IProgressMonitor monitor) throws JavaModelException {
 		
 		for(IJavaElement javaElement: pack.getChildren()){
 			if(javaElement instanceof IPackageFragment){
 				runEvaluation((IPackageFragment)javaElement, reporter, isLimitTrialNum, 
-						ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit);
+						ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit, monitor);
 			}
 			else if(javaElement instanceof ICompilationUnit){
 				ICompilationUnit icu = (ICompilationUnit)javaElement;
@@ -206,7 +207,8 @@ public class TestCaseAnalyzer {
 						String methodName = testingMethod.getName().getIdentifier();
 						try{
 							runEvaluationForSingleTestCase(className, methodName, reporter, 
-									isLimitTrialNum, ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit);							
+									isLimitTrialNum, ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, 
+									optionSearchLimit, monitor);							
 						}
 						catch(Exception e){
 							e.printStackTrace();
@@ -221,7 +223,7 @@ public class TestCaseAnalyzer {
 	
 	public boolean runEvaluationForSingleTestCase(String className, String methodName, ExcelReporter reporter,
 			boolean isLimitTrialNum, IgnoredTestCaseFiles ignoredTestCaseFiles, ParsedTrials parsedTrials,
-			int trialNumPerTestCase, double[] unclearRates, int optionSearchLimit) 
+			int trialNumPerTestCase, double[] unclearRates, int optionSearchLimit, IProgressMonitor monitor) 
 			throws JavaModelException {
 		
 		AppJavaClassPath testcaseConfig = createProjectClassPath(className, methodName);
@@ -274,6 +276,10 @@ public class TestCaseAnalyzer {
 							
 							if(parsedTrials.contains(tmpTrial)){
 								continue;
+							}
+							
+							if(monitor.isCanceled()){
+								return false;
 							}
 							
 							EvaluationInfo evalInfo = runEvaluationForSingleTrial(tobeMutatedClass, mutationFile, 
