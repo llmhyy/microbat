@@ -54,7 +54,7 @@ public class EvaluationTrialHandler extends AbstractHandler {
 		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\129_17_1\\BicubicSplineInterpolatingFunction.java";
 		double unclearRate = 0;
 		boolean enableLoopInference = false;
-		boolean isReuseTrace = true;
+		boolean isReuseTrace = false;
 		int optionSearchLimit = 1000;
 		
 		try {

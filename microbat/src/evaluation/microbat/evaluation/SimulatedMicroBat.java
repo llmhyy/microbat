@@ -111,20 +111,19 @@ public class SimulatedMicroBat {
 	}
 	
 	private TraceNode findObservedFault(List<TraceNode> wrongNodeList, PairList pairList){
-		TraceNode observedFaultNode = null;
+//		TraceNode observedFaultNode = null;
+//		
+//		for(TraceNode node: wrongNodeList){
+//			TraceNodePair pair = pairList.findByMutatedNode(node);
+//			if(pair != null){
+//				if(pair.getOriginalNode() != null){
+//					observedFaultNode = node;
+//					break;					
+//				}
+//			}
+//		}
 		
-		for(TraceNode node: wrongNodeList){
-			//if(!JTestUtil.isInTestCase(node.getDeclaringCompilationUnitName())){
-				
-			//}
-			TraceNodePair pair = pairList.findByMutatedNode(node);
-			if(pair != null){
-				if(pair.getOriginalNode() != null){
-					observedFaultNode = node;
-					break;					
-				}
-			}
-		}
+		observedFaultNode = wrongNodeList.get(0);
 		
 		return observedFaultNode;
 	}
@@ -219,7 +218,14 @@ public class SimulatedMicroBat {
 					return null;
 				}
 				
+				TraceNode originalSuspiciousNode = suspiciousNode;
 				suspiciousNode = findSuspicioiusNode(suspiciousNode, mutatedTrace, feedback.getFeedbackType());	
+				if(suspiciousNode==null && feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)){
+					UserFeedback f = new UserFeedback();
+					f.setFeedbackType("Missing Control Dominator!");
+					jumpingSteps.add(new StepOperationTuple(originalSuspiciousNode, f, null));
+					break;
+				}
 				
 				/** It means that the bug cannot be found now */
 				if((jumpingSteps.size() > mutatedTrace.size())  
