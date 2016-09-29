@@ -66,8 +66,8 @@ public class Settings {
 	public static UserInterestedVariables interestedVariables = new UserInterestedVariables();
 	
 	/**
-	 * TODO
-	 * the trace order in execution trace that are marked by user as wrong-path.
+	 * the trace order in execution trace that are marked by user as wrong-path, it is used to 
+	 * check whether certain trace node is marked by user as wrong-path.
 	 */
 	public static HashSet<Integer> wrongPathNodeOrder = new HashSet<>();
 	

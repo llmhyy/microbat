@@ -203,7 +203,7 @@ public class SimulatedMicroBat {
 			TraceNodePair pair = pairList.findByMutatedNode(suspiciousNode);
 			TraceNode referenceNode = (pair==null)? null : pair.getOriginalNode();
 			
-			jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedback, referenceNode));
+			jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedback, referenceNode, recommender.getState()));
 			
 			if(!feedback.getFeedbackType().equals(UserFeedback.UNCLEAR)){
 				setCurrentNodeChecked(mutatedTrace, suspiciousNode);		
@@ -223,7 +223,7 @@ public class SimulatedMicroBat {
 				if(suspiciousNode==null && feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)){
 					UserFeedback f = new UserFeedback();
 					f.setFeedbackType("Missing Control Dominator!");
-					jumpingSteps.add(new StepOperationTuple(originalSuspiciousNode, f, null));
+					jumpingSteps.add(new StepOperationTuple(originalSuspiciousNode, f, null, recommender.getState()));
 					break;
 				}
 				
@@ -274,7 +274,7 @@ public class SimulatedMicroBat {
 						
 						pair = pairList.findByMutatedNode(suspiciousNode);
 						referenceNode = (pair==null)? null : pair.getOriginalNode();
-						jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedback, referenceNode));
+						jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedback, referenceNode, recommender.getState()));
 					}
 					else{
 						break;						
@@ -288,14 +288,15 @@ public class SimulatedMicroBat {
 //							System.currentTimeMillis();
 						}
 						
+						
 						feedback = operateFeedback(suspiciousNode,
 								mutatedTrace, pairList, maxUnclearFeedbackNum, confusingStack,
 								jumpingSteps, false);
-						
+
 						pair = pairList.findByMutatedNode(suspiciousNode);
 						referenceNode = (pair==null)? null : pair.getOriginalNode();
 						
-						jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedback, referenceNode));
+						jumpingSteps.add(new StepOperationTuple(suspiciousNode, feedback, referenceNode, recommender.getState()));
 						
 						if(!feedback.getFeedbackType().equals(UserFeedback.UNCLEAR)){
 							setCurrentNodeChecked(mutatedTrace, suspiciousNode);		
@@ -305,7 +306,7 @@ public class SimulatedMicroBat {
 					else{
 						UserFeedback f = new UserFeedback();
 						f.setFeedbackType("Bug Found!");
-						jumpingSteps.add(new StepOperationTuple(suspiciousNode, f, null));
+						jumpingSteps.add(new StepOperationTuple(suspiciousNode, f, null, recommender.getState()));
 					}
 					
 				}
@@ -363,15 +364,15 @@ public class SimulatedMicroBat {
 			ArrayList<StepOperationTuple> jumpingSteps,
 			boolean isFirstTime) {
 		
-		CheckingState state = new CheckingState();
-		state.recordCheckingState(suspiciousNode, recommender, mutatedTrace, 
-				Settings.interestedVariables, Settings.wrongPathNodeOrder, Settings.potentialCorrectPatterns);
-		
 		UserFeedback feedbackType = user.feedback(suspiciousNode, mutatedTrace, pairList, 
 				mutatedTrace.getCheckTime(), isFirstTime, maxUnclearFeedbackNum);
 		
 		int size = user.getOtherOptions().size();
 		for(int i=size-1; i>=0; i--){
+			CheckingState state = new CheckingState();
+			state.recordCheckingState(suspiciousNode, recommender, mutatedTrace, 
+					Settings.interestedVariables, Settings.wrongPathNodeOrder, Settings.potentialCorrectPatterns);
+			
 			ChosenVariableOption option = user.getOtherOptions().get(i);
 			ArrayList<StepOperationTuple> clonedJumpingSteps = (ArrayList<StepOperationTuple>) jumpingSteps.clone();
 			StateWrapper stateWrapper = new StateWrapper(state, option, clonedJumpingSteps);

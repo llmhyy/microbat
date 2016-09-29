@@ -49,12 +49,12 @@ public class EvaluationTrialHandler extends AbstractHandler {
 //		boolean isReuseTrace = true;
 //		int optionSearchLimit = 1000;
 		
-		String testClassName = "org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolatorTest";
-		String testMethodName = "testPreconditions";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\129_17_1\\BicubicSplineInterpolatingFunction.java";
-		double unclearRate = 0;
-		boolean enableLoopInference = false;
-		boolean isReuseTrace = false;
+		String testClassName = "org.apache.commons.math.analysis.polynomials.PolynomialsUtilsTest";
+		String testMethodName = "testFirstLaguerrePolynomials";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\239_13_2\\PolynomialsUtils.java";
+		double unclearRate = 0.005;
+		boolean enableLoopInference = true;
+		boolean isReuseTrace = true;
 		int optionSearchLimit = 1000;
 		
 		try {
