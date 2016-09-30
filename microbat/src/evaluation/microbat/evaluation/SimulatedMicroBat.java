@@ -186,10 +186,17 @@ public class SimulatedMicroBat {
 		public boolean equals(Object obj){
 			if(obj instanceof Attempt){
 				Attempt other = (Attempt)obj;
-				if(this.suspiciousNodeOrder == other.suspiciousNodeOrder &&
-						this.option.getReadVar().getVarID().equals(other.option.getReadVar().getVarID()) &&
-						this.option.getWrittenVar().getVarID().equals(other.option.getWrittenVar().getVarID())){
-					return true;
+				if(this.suspiciousNodeOrder == other.suspiciousNodeOrder){
+					
+					String thisReadVarID = (this.option.getReadVar()!=null)? this.option.getReadVar().getVarID() : "null";
+					String thatReadVarID = (other.option.getReadVar()!=null)? other.option.getReadVar().getVarID() : "null";
+					
+					String thisWrittenVarID = (this.option.getWrittenVar()!=null)? this.option.getWrittenVar().getVarID() : "null";
+					String thatWrittenVarID = (other.option.getWrittenVar()!=null)? other.option.getWrittenVar().getVarID() : "null";
+					
+					if(thisReadVarID.equals(thatReadVarID) && thisWrittenVarID.equals(thatWrittenVarID)){
+						return true;
+					}
 				}
 			}
 			
@@ -198,8 +205,18 @@ public class SimulatedMicroBat {
 		
 		@Override
 		public int hashCode(){
-			return this.suspiciousNodeOrder + this.option.getReadVar().getVarID().hashCode()
-					+ this.option.getWrittenVar().getVarID().hashCode();
+			int readVarCode = (this.option.getReadVar() != null) ? this.option.getReadVar().getVarID().hashCode() : 0;
+			int writtenVarCode = (this.option.getWrittenVar() != null) ? this.option.getWrittenVar().getVarID().hashCode() : 0;
+			
+			return this.suspiciousNodeOrder + readVarCode + writtenVarCode;
+		}
+		
+		@Override
+		public String toString(){
+			StringBuffer buffer = new StringBuffer();
+			buffer.append("order: " + this.suspiciousNodeOrder + "\n");
+			buffer.append(this.option.toString());
+			return buffer.toString();
 		}
 	}
 	
@@ -363,6 +380,7 @@ public class SimulatedMicroBat {
 				lastNode = suspiciousNode;
 			}
 			
+			System.out.println(optionSearchTime);
 			Trial trial = constructTrial(rootCause, mutatedTrace, testCaseName,
 					mutatedFile, isBugFound, jumpingSteps);
 			
@@ -427,10 +445,6 @@ public class SimulatedMicroBat {
 			StateWrapper stateWrapper = new StateWrapper(state, option, clonedJumpingSteps);
 			
 			Attempt newAttempt = new Attempt(suspiciousNode.getOrder(), option);
-			
-			if(failedAttempts.contains(newAttempt)){
-				System.currentTimeMillis();
-			}
 			
 			if(!failedAttempts.contains(newAttempt)){
 				confusingStack.push(stateWrapper);				
