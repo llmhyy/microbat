@@ -3,6 +3,7 @@ package microbat.evaluation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -172,13 +173,53 @@ public class SimulatedMicroBat {
 		return false;
 	}
 	
+	class Attempt{
+		int suspiciousNodeOrder;
+		ChosenVariableOption option;
+		public Attempt(int suspiciousNodeOrder, ChosenVariableOption option) {
+			super();
+			this.suspiciousNodeOrder = suspiciousNodeOrder;
+			this.option = option;
+		}
+		
+		@Override
+		public boolean equals(Object obj){
+			if(obj instanceof Attempt){
+				Attempt other = (Attempt)obj;
+				if(this.suspiciousNodeOrder == other.suspiciousNodeOrder &&
+						this.option.getReadVar().getVarID().equals(other.option.getReadVar().getVarID()) &&
+						this.option.getWrittenVar().getVarID().equals(other.option.getWrittenVar().getVarID())){
+					return true;
+				}
+			}
+			
+			return false;
+		}
+		
+		@Override
+		public int hashCode(){
+			return this.suspiciousNodeOrder + this.option.getReadVar().getVarID().hashCode()
+					+ this.option.getWrittenVar().getVarID().hashCode();
+		}
+	}
+	
 	private Trial startSimulation(TraceNode observedFaultNode, TraceNode rootCause, Trace mutatedTrace, 
 			Map<Integer, TraceNode> allWrongNodeMap, PairList pairList, String testCaseName, String mutatedFile, 
 			double unclearRate, boolean enableLoopInference, int optionSearchLimit) 
 					throws SimulationFailException {
+		
 		Settings.interestedVariables.clear();
 		Settings.localVariableScopes.clear();
 		Settings.potentialCorrectPatterns.clear();
+		
+		/**
+		 * this variable is for optimization. 
+		 * when a suspicious node with certain option (i.e., wrong variables) is popped out
+		 * of the confusing stack, it means that it is not possible to find the mutated bug
+		 * with this option on the suspicious node. Therefore, there is no need to try such
+		 * attempt again.
+		 */
+		HashSet<Attempt> failedAttempts = new HashSet<>();
 		
 		recommender = new StepRecommender(enableLoopInference);
 		user = new SimulatedUser();
@@ -198,7 +239,7 @@ public class SimulatedMicroBat {
 			
 			UserFeedback feedback = operateFeedback(observedFaultNode,
 					mutatedTrace, pairList, maxUnclearFeedbackNum, confusingStack,
-					jumpingSteps, true);
+					jumpingSteps, true, failedAttempts);
 			
 			TraceNodePair pair = pairList.findByMutatedNode(suspiciousNode);
 			TraceNode referenceNode = (pair==null)? null : pair.getOriginalNode();
@@ -211,6 +252,7 @@ public class SimulatedMicroBat {
 			}
 			
 			int optionSearchTime = 0;
+			StateWrapper currentConfusingState = null;
 			
 			boolean isBugFound = rootCause.getLineNumber()==suspiciousNode.getLineNumber();
 			while(!isBugFound){
@@ -233,6 +275,12 @@ public class SimulatedMicroBat {
 						|| (lastNode.getOrder()==suspiciousNode.getOrder() && !feedback.getFeedbackType().equals(UserFeedback.UNCLEAR))){
 //					break;
 					
+					if(currentConfusingState != null){
+						Attempt attempt = new Attempt(currentConfusingState.getState().getCurrentNodeOrder(), 
+								currentConfusingState.getVariableOption());
+						failedAttempts.add(attempt);
+					}
+					
 					System.out.println("=========An attempt fails=========");
 					for(StepOperationTuple t: jumpingSteps){
 						System.err.println(t);	
@@ -250,6 +298,7 @@ public class SimulatedMicroBat {
 						
 						/** recover */
 						StateWrapper stateWrapper = confusingStack.pop();
+						currentConfusingState = stateWrapper;
 						
 						jumpingSteps = stateWrapper.getJumpingSteps();
 
@@ -291,7 +340,7 @@ public class SimulatedMicroBat {
 						
 						feedback = operateFeedback(suspiciousNode,
 								mutatedTrace, pairList, maxUnclearFeedbackNum, confusingStack,
-								jumpingSteps, false);
+								jumpingSteps, false, failedAttempts);
 
 						pair = pairList.findByMutatedNode(suspiciousNode);
 						referenceNode = (pair==null)? null : pair.getOriginalNode();
@@ -362,7 +411,7 @@ public class SimulatedMicroBat {
 			Trace mutatedTrace, PairList pairList, int maxUnclearFeedbackNum,
 			Stack<StateWrapper> confusingStack,
 			ArrayList<StepOperationTuple> jumpingSteps,
-			boolean isFirstTime) {
+			boolean isFirstTime, HashSet<Attempt> failedAttempts) {
 		
 		UserFeedback feedbackType = user.feedback(suspiciousNode, mutatedTrace, pairList, 
 				mutatedTrace.getCheckTime(), isFirstTime, maxUnclearFeedbackNum);
@@ -376,7 +425,17 @@ public class SimulatedMicroBat {
 			ChosenVariableOption option = user.getOtherOptions().get(i);
 			ArrayList<StepOperationTuple> clonedJumpingSteps = (ArrayList<StepOperationTuple>) jumpingSteps.clone();
 			StateWrapper stateWrapper = new StateWrapper(state, option, clonedJumpingSteps);
-			confusingStack.push(stateWrapper);
+			
+			Attempt newAttempt = new Attempt(suspiciousNode.getOrder(), option);
+			
+			if(failedAttempts.contains(newAttempt)){
+				System.currentTimeMillis();
+			}
+			
+			if(!failedAttempts.contains(newAttempt)){
+				confusingStack.push(stateWrapper);				
+			}
+			
 		}
 		
 		return feedbackType;
