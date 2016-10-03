@@ -18,7 +18,7 @@ public class BreakPointChecker {
 		
 	}
 	
-	@Test
+	//@Test
 	public void testBreakPoint() {
 		for(BreakPoint breakpoint: runningStatements){
 			for(BreakPoint breakpoint0: runningStatements0){

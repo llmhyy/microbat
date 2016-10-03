@@ -21,9 +21,6 @@ public class Settings {
 	public static String projectName;
 	public static String lanuchClass;
 	
-	public static String buggyClassName;
-	public static String buggyLineNumber;
-	
 	public static boolean isRecordSnapshot;
 	public static int stepLimit;
 	
@@ -42,8 +39,6 @@ public class Settings {
 			try{
 				projectName = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.TARGET_PORJECT);
 				lanuchClass = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.LANUCH_CLASS);
-				buggyClassName = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.CLASS_NAME);
-				buggyLineNumber = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.LINE_NUMBER);
 				String isRecord = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RECORD_SNAPSHORT);
 				isRecordSnapshot = isRecord.equals("true");
 				String limitNumString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.STEP_LIMIT);
