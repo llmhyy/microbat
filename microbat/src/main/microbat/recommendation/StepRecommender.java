@@ -261,7 +261,7 @@ public class StepRecommender {
 			}
 		}
 		
-		TraceNode lastRecommendNode = getLatestCause().getRecommendedNode();
+		TraceNode lastRecommendNode = latestCause.getRecommendedNode();
 		if(lastRecommendNode!= null && !currentNode.equals(lastRecommendNode)){
 			state = DebugState.SIMPLE_INFERENCE;
 		}
@@ -281,7 +281,7 @@ public class StepRecommender {
 			suspiciousNode = handleDetailInspectingState(trace, currentNode, userFeedBack);
 		}
 		
-		getLatestCause().setRecommendedNode(suspiciousNode);
+		latestCause.setRecommendedNode(suspiciousNode);
 		
 		return suspiciousNode;
 	}
@@ -405,7 +405,7 @@ public class StepRecommender {
 		String wrongVarID = null;
 		
 		if(wrongVar != null){
-			getLatestCause().setWrongVariableID(wrongVar.getVarID());
+			this.latestCause.setWrongVariableID(wrongVar.getVarID());
 			wrongVarID = wrongVar.getVarID();
 		}
 		/**
@@ -437,8 +437,8 @@ public class StepRecommender {
 		
 		boolean isPathInPattern = false;
 		PathInstance path = null;
-		if(getLatestCause().getBuggyNode() != null){
-			path = new PathInstance(suspiciousNode, getLatestCause().getBuggyNode());
+		if(this.latestCause.getBuggyNode() != null){
+			path = new PathInstance(suspiciousNode, this.latestCause.getBuggyNode());
 			isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path);				
 		}
 		
@@ -501,7 +501,7 @@ public class StepRecommender {
 		}
 		else if(userFeedBack.equals(UserFeedback.CORRECT)){
 			//TODO it could be done in a more intelligent way.
-			this.inspectingRange = new InspectingRange(currentNode, getLatestCause().getBuggyNode());
+			this.inspectingRange = new InspectingRange(currentNode, latestCause.getBuggyNode());
 			TraceNode recommendedNode = handleDetailInspectingState(trace, currentNode, userFeedBack);
 			return recommendedNode;
 		}
@@ -598,7 +598,7 @@ public class StepRecommender {
 		recommender.state = this.state;
 		recommender.lastNode = this.lastNode;
 		//recommender.lastRecommendNode = this.lastRecommendNode;
-		recommender.setLatestCause(this.getLatestCause().clone());
+		recommender.setLatestCause(this.latestCause.clone());
 		recommender.latestClearState = this.latestClearState;
 		recommender.loopRange = this.loopRange.clone();
 		if(this.inspectingRange != null){
