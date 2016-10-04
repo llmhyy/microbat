@@ -103,6 +103,13 @@ public class PathInstance {
 				pattern.addAll(range);
 			}
 			
+			/**
+			 * If the source line of a step is deheaded (set isLoopHead as false), then all the steps
+			 * on the same source line should be deheaded as well. 
+			 * 
+			 * In addition, if the merge does not happen, we should dehead all the steps so that the
+			 * loop process is done (i.e., no loop head exists in the path).
+			 */
 			for(SourceLine line: pattern){
 				boolean isDeheadLine = false;
 				for(SourceLine deheadSourceLine: deheadSourceLineList){
