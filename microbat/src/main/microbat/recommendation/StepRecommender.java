@@ -447,7 +447,6 @@ public class StepRecommender {
 			
 			this.loopRange.endNode = path.getEndNode();
 			this.loopRange.skipPoints.clear();
-			//this.range.skipPoints.add(suspiciousNode);
 			
 			TraceNode oldSusiciousNode = suspiciousNode;
 			while(Settings.potentialCorrectPatterns.containsPattern(path) 
@@ -455,7 +454,6 @@ public class StepRecommender {
 				
 				Settings.potentialCorrectPatterns.addPathForPattern(path);
 				
-//				PotentialCorrectPattern pattern = Settings.potentialCorrectPatterns.getPattern(path);
 				oldSusiciousNode = suspiciousNode;
 				
 				suspiciousNode = Settings.potentialCorrectPatterns.inferNextSuspiciousNode(oldSusiciousNode);
@@ -470,7 +468,13 @@ public class StepRecommender {
 				}
 			}
 			
-//			this.loopRange.skipPoints.add(oldSusiciousNode);
+			/**
+			 * In this case, it means that there is actually nothing skipped.
+			 */
+			if(this.loopRange.skipPoints.isEmpty()){
+				state = DebugState.SIMPLE_INFERENCE;
+			}
+			
 			this.lastNode = currentNode;
 			return oldSusiciousNode;
 		}

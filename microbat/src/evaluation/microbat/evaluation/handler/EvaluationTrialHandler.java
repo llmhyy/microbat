@@ -49,9 +49,9 @@ public class EvaluationTrialHandler extends AbstractHandler {
 //		boolean isReuseTrace = true;
 //		int optionSearchLimit = 1000;
 		
-		String testClassName = "org.apache.commons.math.analysis.polynomials.PolynomialsUtilsTest";
-		String testMethodName = "testFirstLaguerrePolynomials";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\239_13_2\\PolynomialsUtils.java";
+		String testClassName = "org.apache.commons.math.analysis.solvers.RiddersSolverTest";
+		String testMethodName = "testDeprecated";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\209_51_1\\RiddersSolver.java";
 		double unclearRate = 0.005;
 		boolean enableLoopInference = true;
 		boolean isReuseTrace = true;
