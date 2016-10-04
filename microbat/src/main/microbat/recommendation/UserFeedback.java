@@ -49,4 +49,18 @@ public class UserFeedback {
 			return "UserFeedback [feedbackType=" + feedbackType + "]";
 		}
 	}
+	
+	@Override
+	public boolean equals(Object obj){
+		if(obj instanceof UserFeedback){
+			UserFeedback otherFeedback = (UserFeedback)obj;
+			
+			String thisString = this.toString();
+			String thatString = otherFeedback.toString();
+			
+			return thisString.equals(thatString);
+		}
+		
+		return false;
+	}
 }

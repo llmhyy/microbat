@@ -289,7 +289,8 @@ public class SimulatedMicroBat {
 				/** It means that the bug cannot be found now */
 				if((jumpingSteps.size() > mutatedTrace.size())  
 						|| (isContainedInJump(suspiciousNode, jumpingSteps) && unclearRate==0) 
-						|| (lastNode.getOrder()==suspiciousNode.getOrder() && !feedback.getFeedbackType().equals(UserFeedback.UNCLEAR))){
+						|| (lastNode.getOrder()==suspiciousNode.getOrder() && !feedback.getFeedbackType().equals(UserFeedback.UNCLEAR))
+						|| cannotConverge(jumpingSteps)){
 //					break;
 					
 					if(currentConfusingState != null){
@@ -380,7 +381,7 @@ public class SimulatedMicroBat {
 				lastNode = suspiciousNode;
 			}
 			
-			System.out.println(optionSearchTime);
+			System.out.println("number of attempts: " + optionSearchTime);
 			Trial trial = constructTrial(rootCause, mutatedTrace, testCaseName,
 					mutatedFile, isBugFound, jumpingSteps);
 			
@@ -398,6 +399,46 @@ public class SimulatedMicroBat {
 		}
 	}
 	
+	private boolean cannotConverge(ArrayList<StepOperationTuple> jumpingSteps) {
+		if(jumpingSteps.size() > 10){
+			int size = jumpingSteps.size();
+			StepOperationTuple checkingStep = jumpingSteps.get(size-1);
+			
+			boolean canFindRecurringStep = canFindRecurringStep(checkingStep, jumpingSteps, size-1);
+			if(canFindRecurringStep){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+
+	private boolean canFindRecurringStep(StepOperationTuple checkingStep, ArrayList<StepOperationTuple> jumpingSteps,
+			int limit) {
+		
+		if(checkingStep.getUserFeedback().getFeedbackType().equals(UserFeedback.UNCLEAR) ||
+				checkingStep.getUserFeedback().getFeedbackType().equals(UserFeedback.CORRECT)){
+			return false;
+		}
+		
+		for(int i=limit-1; i>=0; i--){
+			StepOperationTuple step = jumpingSteps.get(i);
+			
+			
+			if(step.getNode().getOrder() == checkingStep.getNode().getOrder()){
+				if(!step.getUserFeedback().getFeedbackType().equals(UserFeedback.UNCLEAR)){
+					if(step.getUserFeedback().equals(checkingStep.getUserFeedback())){
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+
+
 	private boolean isContainedInJump(TraceNode suspiciousNode, ArrayList<StepOperationTuple> jumpingSteps) {
 		
 		for(int i=jumpingSteps.size()-1; i>=0; i--){
