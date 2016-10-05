@@ -290,7 +290,7 @@ public class SimulatedMicroBat {
 				if((jumpingSteps.size() > mutatedTrace.size())  
 						|| (isContainedInJump(suspiciousNode, jumpingSteps) && unclearRate==0) 
 						|| (lastNode.getOrder()==suspiciousNode.getOrder() && !feedback.getFeedbackType().equals(UserFeedback.UNCLEAR))
-						|| cannotConverge(jumpingSteps)){
+						/*|| cannotConverge(jumpingSteps)*/){
 //					break;
 					
 					if(currentConfusingState != null){
