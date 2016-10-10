@@ -41,21 +41,21 @@ public class EvaluationTrialHandler extends AbstractHandler {
 //				+ "apache-common-math-2.2\\2081_22_1\\MathUtils.java";
 //		String mutatedClass = "org.apache.commons.math.util.MathUtils";
 		
-		String testClassName = "test.SimpleCalculatorTest";
-		String testMethodName = "testCalculator";
-		String mutationFile = "C:\\microbat_evaluation\\mutation\\110_29_1\\SimpleCalculator.java";
-		double unclearRate = 0.1;
-		boolean enableLoopInference = true;
-		boolean isReuseTrace = false;
-		int optionSearchLimit = 1000;
-		
-//		String testClassName = "org.apache.commons.math.analysis.solvers.RiddersSolverTest";
-//		String testMethodName = "testDeprecated";
-//		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\209_51_1\\RiddersSolver.java";
-//		double unclearRate = 0.005;
+//		String testClassName = "test.SimpleCalculatorTest";
+//		String testMethodName = "testCalculator";
+//		String mutationFile = "C:\\microbat_evaluation\\mutation\\110_29_1\\SimpleCalculator.java";
+//		double unclearRate = 0.1;
 //		boolean enableLoopInference = true;
-//		boolean isReuseTrace = true;
+//		boolean isReuseTrace = false;
 //		int optionSearchLimit = 1000;
+		
+		String testClassName = "org.apache.commons.math.distribution.NormalDistributionTest";
+		String testMethodName = "testSetMean";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\1337_39_1\\FastMath.java";
+		double unclearRate = 0.0;
+		boolean enableLoopInference = false;
+		boolean isReuseTrace = true;
+		int optionSearchLimit = 1000;
 		
 		try {
 			analyzer.runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 
