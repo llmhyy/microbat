@@ -19,6 +19,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
@@ -370,6 +371,10 @@ public class JavaUtil {
 			IJavaProject project = JavaCore.create(getSpecificJavaProjectInWorkspace());
 			try {
 				IType type = project.findType(qualifiedName);
+				if(type == null){
+					type = project.findType(qualifiedName, new NullProgressMonitor());
+				}
+				
 				if(type != null){
 					icu = type.getCompilationUnit();
 					Settings.iCompilationUnitMap.put(qualifiedName, icu);
