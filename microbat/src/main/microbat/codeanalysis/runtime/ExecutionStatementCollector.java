@@ -84,7 +84,7 @@ public class ExecutionStatementCollector extends Executor{
 							
 							String path = location.sourcePath();
 							String declaringCompilationUnit = path.replace(".java", "");
-							declaringCompilationUnit = declaringCompilationUnit.replace(File.pathSeparatorChar, '.');
+							declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar, '.');
 							
 							
 							BreakPoint breakPoint = new BreakPoint(location.declaringType().name(), declaringCompilationUnit, lineNumber);
