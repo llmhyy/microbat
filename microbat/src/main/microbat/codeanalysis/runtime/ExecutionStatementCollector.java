@@ -1,5 +1,6 @@
 package microbat.codeanalysis.runtime;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,7 +84,7 @@ public class ExecutionStatementCollector extends Executor{
 							
 							String path = location.sourcePath();
 							String declaringCompilationUnit = path.replace(".java", "");
-							declaringCompilationUnit = declaringCompilationUnit.replace('\\', '.');
+							declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar, '.');
 							
 							
 							BreakPoint breakPoint = new BreakPoint(location.declaringType().name(), declaringCompilationUnit, lineNumber);

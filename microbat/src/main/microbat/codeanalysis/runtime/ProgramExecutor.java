@@ -2,6 +2,7 @@ package microbat.codeanalysis.runtime;
 
 import static sav.strategies.junit.SavJunitRunner.ENTER_TC_BKP;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -389,7 +390,7 @@ public class ProgramExecutor extends Executor {
 									StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
 									String path = location.sourcePath();
 									String declaringCompilationUnit = path.replace(".java", "");
-									declaringCompilationUnit = declaringCompilationUnit.replace('\\', '.');
+									declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar, '.');
 
 									int methodLocationLine = method.location().lineNumber();
 									List<Param> paramList = parseParamList(method);
