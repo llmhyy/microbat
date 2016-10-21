@@ -18,7 +18,6 @@ import org.eclipse.jface.viewers.TreeExpansionEvent;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -31,7 +30,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -888,9 +886,7 @@ public class DebugFeedbackView extends ViewPart {
 					
 					if(vv != null){
 						List<VarValue> retrievedChildren = vv.getAllDescedentChildren();
-						Trace trace = Activator.getDefault().getCurrentTrace();
-						
-						MicroBatUtil.assignWrittenIdentifier(retrievedChildren, currentNode, trace);
+						MicroBatUtil.assignWrittenIdentifier(retrievedChildren, currentNode);
 						
 						parent.setChildren(vv.getChildren());
 						return vv.getChildren().toArray(new VarValue[0]);

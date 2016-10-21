@@ -182,14 +182,14 @@ public class MicroBatUtil {
 	 * @param currentNode
 	 * @param trace
 	 */
-	public static void assignWrittenIdentifier(List<VarValue> retrievedChildren, TraceNode currentNode, Trace trace) {
+	public static void assignWrittenIdentifier(List<VarValue> retrievedChildren, TraceNode currentNode) {
 		for(VarValue var: retrievedChildren){
 			String simpleVarID = var.getVarID();
 			boolean isFound = false;
 			
+			TraceNode node = currentNode.getStepInPrevious();
 			stop:
-			for(int i=currentNode.getOrder()-2; i>=0; i--){
-				TraceNode node = trace.getExectionList().get(i);
+			while(node != null){
 				for(VarValue writtenVar: node.getWrittenVariables()){
 					String varID = writtenVar.getVarID();
 					String prefix = Variable.truncateSimpleID(varID);
@@ -200,6 +200,8 @@ public class MicroBatUtil {
 						break stop;
 					}
 				}
+				
+				node = node.getStepInPrevious();
 			}
 			
 			if(!isFound){
