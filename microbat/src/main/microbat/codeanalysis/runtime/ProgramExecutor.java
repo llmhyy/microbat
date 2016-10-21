@@ -466,7 +466,7 @@ public class ProgramExecutor extends Executor {
 		String className = method.declaringType().name();
 		List<BreakPoint> recordedLines = brkpsMap.get(className);
 		
-		if(!recordedLines.isEmpty()){
+		if(recordedLines!=null && !recordedLines.isEmpty()){
 			try {
 				List<Location> methodLocations = method.allLineLocations();
 				
