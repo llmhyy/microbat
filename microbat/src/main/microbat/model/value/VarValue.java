@@ -145,6 +145,45 @@ public abstract class VarValue implements GraphNode{
 		return children;
 	}
 	
+	@Override
+	public int hashCode(){
+		return variable.getVarID().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj){
+		if(obj instanceof VarValue){
+			VarValue otherVal = (VarValue)obj;
+			
+			if(this.variable!=null && otherVal.getVariable()!=null){
+				return this.variable.getVarID().equals(otherVal.getVariable().getVarID());				
+			}
+			
+		}
+		
+		return false;
+	}
+	
+	public List<VarValue> getAllDescedentChildren(){
+		HashSet<VarValue> valueSet = new HashSet<>();
+		
+		if(this.children != null){
+			increaseVariableSet(valueSet, this.children);			
+		}
+		
+		return new ArrayList<>(valueSet);
+	}
+	
+
+	private void increaseVariableSet(HashSet<VarValue> valueSet, List<VarValue> parsedChildren) {
+		for(VarValue value: parsedChildren){
+			if(!valueSet.contains(value)){
+				valueSet.add(value);
+				increaseVariableSet(valueSet, value.getChildren());
+			}
+		}
+	}
+
 	public String getVarName(){
 		return this.variable.getName();
 	}

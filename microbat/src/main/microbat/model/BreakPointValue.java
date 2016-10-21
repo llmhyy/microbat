@@ -26,6 +26,16 @@ public class BreakPointValue extends VarValue {
 		this.name = name;
 	}
 	
+	@Override
+	public boolean equals(Object obj){
+		if(obj instanceof BreakPointValue){
+			BreakPointValue otherVal = (BreakPointValue)obj;
+			return otherVal.name.equals(this.name);
+		}
+		
+		return false;
+	}
+	
 	public String getName(){
 		return name;
 	}

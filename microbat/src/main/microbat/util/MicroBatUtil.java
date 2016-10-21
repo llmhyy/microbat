@@ -1,7 +1,11 @@
 package microbat.util;
 
 import java.io.File;
+import java.util.List;
 
+import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 
 import org.eclipse.core.resources.IProject;
@@ -170,6 +174,32 @@ public class MicroBatUtil {
 			}
 		
 		return commonLengthTable;
+	}
+
+	/**
+	 * This method is used for solving
+	 * @param retrievedChildren
+	 * @param currentNode
+	 * @param trace
+	 */
+	public static void assignWrittenIdentifier(List<VarValue> retrievedChildren, TraceNode currentNode, Trace trace) {
+		for(VarValue var: retrievedChildren){
+			String simpleVarID = var.getVarID();
+			
+			stop:
+			for(int i=currentNode.getOrder()-2; i>=0; i--){
+				TraceNode node = trace.getExectionList().get(i);
+				for(VarValue writtenVar: node.getWrittenVariables()){
+					String varID = writtenVar.getVarID();
+					String prefix = Variable.truncateSimpleID(varID);
+					
+					if(prefix.equals(simpleVarID)){
+						var.setVarID(varID);
+						break stop;
+					}
+				}
+			}
+		}
 	}
 	
 //	/**

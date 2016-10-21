@@ -113,6 +113,13 @@ public class TraceNode{
 			if(interestedVariables.contains(readVarID)){
 				return TraceNode.READ_VARS_INCORRECT;
 			}
+			
+			List<VarValue> children = var.getAllDescedentChildren();
+			for(VarValue child: children){
+				if(interestedVariables.contains(child.getVarID())){
+					return TraceNode.READ_VARS_INCORRECT;
+				}
+			}
 		}
 		
 		/**
@@ -137,6 +144,13 @@ public class TraceNode{
 			String writtenVarID = var.getVarID();
 			if(interestedVariables.contains(writtenVarID)){
 				return TraceNode.WRITTEN_VARS_INCORRECT;
+			}
+			
+			List<VarValue> children = var.getAllDescedentChildren();
+			for(VarValue child: children){
+				if(interestedVariables.contains(child.getVarID())){
+					return TraceNode.READ_VARS_INCORRECT;
+				}
 			}
 		}
 		

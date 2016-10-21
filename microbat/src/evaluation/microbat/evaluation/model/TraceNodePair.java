@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import microbat.Activator;
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.algorithm.graphdiff.SortedGraphMatcher;
@@ -18,6 +19,7 @@ import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
+import microbat.util.MicroBatUtil;
 
 public class TraceNodePair {
 
@@ -269,7 +271,8 @@ public class TraceNodePair {
 			if(node.getProgramState() != null){
 				
 				String varID = refVar.getVarID();
-				varID = varID.substring(0, varID.indexOf(":"));
+//				varID = varID.substring(0, varID.indexOf(":"));
+				varID = Variable.truncateSimpleID(varID);
 				
 				BreakPointValue programState = node.getProgramState();
 				if(RW.equals(Variable.WRITTEN)){
@@ -281,6 +284,11 @@ public class TraceNodePair {
 				
 				VarValue vv = programState.findVarValue(varID);
 				if(vv != null){
+					List<VarValue> retrievedChildren = vv.getAllDescedentChildren();
+					Trace trace = Activator.getDefault().getCurrentTrace();
+					
+					MicroBatUtil.assignWrittenIdentifier(retrievedChildren, node, trace);
+					
 					refVar.setChildren(vv.getChildren());
 				}				
 			}

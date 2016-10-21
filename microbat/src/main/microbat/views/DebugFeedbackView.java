@@ -61,6 +61,7 @@ import microbat.recommendation.BugInferer;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.StepRecommender;
 import microbat.recommendation.UserFeedback;
+import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 
 
@@ -866,7 +867,8 @@ public class DebugFeedbackView extends ViewPart {
 				List<VarValue> children = ((ReferenceValue)parentElement).getChildren();
 				if(children == null){
 					String varID = parent.getVarID();
-					varID = varID.substring(0, varID.indexOf(":"));
+					varID = Variable.truncateSimpleID(varID);
+//					varID = varID.substring(0, varID.indexOf(":"));
 					
 					VarValue vv = null;
 					/** read */
@@ -885,6 +887,11 @@ public class DebugFeedbackView extends ViewPart {
 					}
 					
 					if(vv != null){
+						List<VarValue> retrievedChildren = vv.getAllDescedentChildren();
+						Trace trace = Activator.getDefault().getCurrentTrace();
+						
+						MicroBatUtil.assignWrittenIdentifier(retrievedChildren, currentNode, trace);
+						
 						parent.setChildren(vv.getChildren());
 						return vv.getChildren().toArray(new VarValue[0]);
 					}

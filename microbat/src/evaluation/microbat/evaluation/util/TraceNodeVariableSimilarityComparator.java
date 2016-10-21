@@ -3,14 +3,17 @@ package microbat.evaluation.util;
 import java.util.Comparator;
 import java.util.List;
 
+import microbat.Activator;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.algorithm.graphdiff.SortedGraphMatcher;
+import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.GraphNode;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
+import microbat.util.MicroBatUtil;
 
 /**
  * This class is used to compare the variable difference between two trace node. If two
@@ -169,10 +172,16 @@ public class TraceNodeVariableSimilarityComparator implements TraceNodeSimilarit
 			if(node.getProgramState() != null){
 				
 				String varID = refVar.getVarID();
-				varID = varID.substring(0, varID.indexOf(":"));
+//				varID = varID.substring(0, varID.indexOf(":"));
+				varID = Variable.truncateSimpleID(varID);
 				
 				VarValue vv = node.getProgramState().findVarValue(varID);
 				if(vv != null){
+					List<VarValue> retrievedChildren = vv.getAllDescedentChildren();
+					Trace trace = Activator.getDefault().getCurrentTrace();
+					
+					MicroBatUtil.assignWrittenIdentifier(retrievedChildren, node, trace);
+					
 					refVar.setChildren(vv.getChildren());
 				}				
 			}
