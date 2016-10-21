@@ -185,6 +185,7 @@ public class MicroBatUtil {
 	public static void assignWrittenIdentifier(List<VarValue> retrievedChildren, TraceNode currentNode, Trace trace) {
 		for(VarValue var: retrievedChildren){
 			String simpleVarID = var.getVarID();
+			boolean isFound = false;
 			
 			stop:
 			for(int i=currentNode.getOrder()-2; i>=0; i--){
@@ -195,9 +196,15 @@ public class MicroBatUtil {
 					
 					if(prefix.equals(simpleVarID)){
 						var.setVarID(varID);
+						isFound = true;
 						break stop;
 					}
 				}
+			}
+			
+			if(!isFound){
+				String varID = simpleVarID + ":0";
+				var.setVarID(varID);				
 			}
 		}
 	}
