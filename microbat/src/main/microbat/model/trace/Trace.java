@@ -185,6 +185,11 @@ public class Trace {
 		Stack<TraceNode> loopParentStack = new Stack<>();
 		
 		for(TraceNode node: this.exectionList){
+			
+			if(node.getOrder() == 69){
+				System.currentTimeMillis();
+			}
+			
 			/**
 			 * if out of the scope the loop parent, pop
 			 */
@@ -205,7 +210,7 @@ public class Trace {
 			 */
 			if(!loopParentStack.isEmpty()){
 				TraceNode loopParent = loopParentStack.peek();
-				if(loopParent.getControlScope().containsNodeScope(node)){
+				if(loopParent.getLoopScope().containsNodeScope(node)){
 					loopParent.addLoopChild(node);
 					node.setLoopParent(loopParent);					
 				}

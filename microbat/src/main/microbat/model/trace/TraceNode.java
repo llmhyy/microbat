@@ -737,8 +737,8 @@ public class TraceNode{
 				parentList.add(node);
 				node = node.getInvocationParent();
 			}
-			
-			Scope scope = getControlScope();
+//			Scope scope = getControlScope();
+			Scope scope = getLoopScope();
 			for(TraceNode parent: parentList){
 				if(scope.containsNodeScope(parent)){
 					return true;
