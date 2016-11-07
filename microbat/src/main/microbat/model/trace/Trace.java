@@ -186,17 +186,25 @@ public class Trace {
 		
 		for(TraceNode node: this.exectionList){
 			
-			if(node.getOrder() == 69){
+			if(node.getOrder() == 14){
 				System.currentTimeMillis();
 			}
 			
 			/**
 			 * if out of the scope the loop parent, pop
+			 * this step decide the influential loop parent.
 			 */
 			if(!loopParentStack.isEmpty()){
 				TraceNode currentLoopParent = loopParentStack.peek();
 				while(!isLoopParentContainDirectlyOrIndirectly(currentLoopParent, node)
-						|| node.getLineNumber() == currentLoopParent.getLineNumber()){
+						                                                                 /**for recursive case*/
+						|| (node.getLineNumber() == currentLoopParent.getLineNumber() && loopParentHaveNotLoopChildOfSomeInvocationParentOfNode(currentLoopParent, node))
+						|| (node.getOrder()==currentLoopParent.getOrder()+1 && !currentLoopParent.getLoopScope().containsNodeScope(node))){
+					if(currentLoopParent.getOrder()==5){
+						System.currentTimeMillis();
+//						loopParentDoesNotContainSomeInvocationParentOfNode(currentLoopParent, node);
+					}
+					
 					loopParentStack.pop();
 					if(loopParentStack.isEmpty()){
 						break;
@@ -207,10 +215,11 @@ public class Trace {
 			
 			/**
 			 * connect loop parent-child relation
+			 * this step decide the direct loop child for the influential loop parent in the peek of the stack
 			 */
 			if(!loopParentStack.isEmpty()){
 				TraceNode loopParent = loopParentStack.peek();
-				if(loopParent.getLoopScope().containsNodeScope(node)){
+				if(loopParent.getLoopScope().containsNodeScope(node) && loopParentHaveNotLoopChildOfSomeInvocationParentOfNode(loopParent, node)){
 					loopParent.addLoopChild(node);
 					node.setLoopParent(loopParent);					
 				}
@@ -223,6 +232,17 @@ public class Trace {
 				loopParentStack.push(node);
 			}
 		}
+	}
+
+	private boolean loopParentHaveNotLoopChildOfSomeInvocationParentOfNode(TraceNode currentLoopParent, TraceNode node) {
+		List<TraceNode> invocationParents = node.findAllInvocationParents();
+		for(TraceNode parent: invocationParents){
+			if(currentLoopParent.getLoopChildren().contains(parent)){
+				return false;
+			}
+		}
+		
+		return true;
 	}
 
 	private boolean isLoopParentContainDirectlyOrIndirectly(TraceNode currentLoopParent, TraceNode node) {

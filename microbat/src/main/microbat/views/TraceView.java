@@ -233,16 +233,47 @@ public class TraceView extends ViewPart {
 //					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
 //				}
 				
-				System.out.println("Control Dominator: ");
-				TraceNode controlDominator = node.getControlDominator();
-				System.out.println(controlDominator);	
+//				System.out.println("Control Dominator: ");
+//				TraceNode controlDominator = node.getControlDominator();
+//				System.out.println(controlDominator);	
+//				System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+//				
+//				System.out.println("Control Dominatee: ");
+//				for(TraceNode dominatee: node.getControlDominatees()){
+//					System.out.println(dominatee);
+//					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+//				}
+				
+				System.out.println("Invocation Parent: ");
+				System.out.println(node.getInvocationParent());
 				System.out.println("~~~~~~~~~~~~~~~~~~~~~");
 				
-				System.out.println("Control Dominatee: ");
-				for(TraceNode dominatee: node.getControlDominatees()){
-					System.out.println(dominatee);
-					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
-				}
+//				System.out.println("Invocation Children: ");
+//				for(TraceNode dominatee: node.getInvocationChildren()){
+//					System.out.println(dominatee);
+//					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+//				}
+				
+				System.out.println("Loop Parent: ");
+				System.out.println(node.getLoopParent());
+				System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+				
+//				System.out.println("Loop Children: ");
+//				for(TraceNode dominatee: node.getLoopChildren()){
+//					System.out.println(dominatee);
+//					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+//				}
+				
+				System.out.println("Abstract Parent: ");
+				System.out.println(node.getAbstractionParent());
+				System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+				
+//				System.out.println("Abstract Children: ");
+//				for(TraceNode dominatee: node.getAbstractChildren()){
+//					System.out.println(dominatee);
+//					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+//				}
+				
 				
 				System.out.println();
 				System.out.println();
@@ -258,7 +289,7 @@ public class TraceView extends ViewPart {
 						if(obj instanceof TraceNode){
 							TraceNode node = (TraceNode)obj;
 							
-//							showDebuggingInfo(node);
+							showDebuggingInfo(node);
 							
 							if(!programmingSelection){
 								Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);

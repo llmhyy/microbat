@@ -289,7 +289,7 @@ public class ProgramExecutor extends Executor {
 						
 						TraceNode node = recordTrace(bkp, bkpVal);
 						
-						if(node.getOrder()==35){
+						if(node.getOrder()==67){
 							System.currentTimeMillis();
 						}
 						
