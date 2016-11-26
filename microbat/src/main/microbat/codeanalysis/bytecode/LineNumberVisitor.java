@@ -132,10 +132,14 @@ public class LineNumberVisitor extends EmptyVisitor {
 	private void parseReadWrittenVariable(BreakPoint point, List<InstructionHandle> correspondingInstructions, Code code, CFG cfg) {
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName());
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool()); 
+		if(point.getLineNumber()==9){
+			System.currentTimeMillis();
+		}
 		 
 		for(int i=0; i<correspondingInstructions.size(); i++){
 			InstructionHandle insHandle = correspondingInstructions.get(i);
 			if(insHandle.getInstruction() instanceof FieldInstruction){
+				
 				FieldInstruction gIns = (FieldInstruction)insHandle.getInstruction();
 				String fullFieldName = gIns.getFieldName(pool);
 				if(fullFieldName != null){
@@ -146,18 +150,12 @@ public class LineNumberVisitor extends EmptyVisitor {
 					String type = gIns.getFieldType(pool).getSignature();
 					type = SignatureUtils.signatureToName(type);
 					
-					
-					
 					if(!fullFieldName.contains("$")){
 						/**
 						 * The reason for additionally use ReadFileRetriever and WrittenFieldRetriever is that
 						 * I want to get "a.attr1.attr2" instead of "attr2".
 						 */
 						if(rw){
-							if(point.getLineNumber()==143){
-								System.currentTimeMillis();
-							}
-							
 							ReadFieldRetriever rfRetriever = new ReadFieldRetriever(cu, point.getLineNumber(), fullFieldName);
 							cu.accept(rfRetriever);
 							if(rfRetriever.fullFieldName != null){
@@ -211,6 +209,10 @@ public class LineNumberVisitor extends EmptyVisitor {
 				ArrayInstruction aIns = (ArrayInstruction)insHandle.getInstruction();
 				String typeSig = aIns.getType(pool).getSignature();
 				String typeName = SignatureUtils.signatureToName(typeSig);
+				
+				if(point.getLineNumber()==9){
+					System.currentTimeMillis();
+				}
 				
 				if(insHandle.getInstruction().getName().toLowerCase().contains("load")){
 					ReadArrayElementRetriever raeRetriever = new ReadArrayElementRetriever(cu, point.getLineNumber(), typeName);
