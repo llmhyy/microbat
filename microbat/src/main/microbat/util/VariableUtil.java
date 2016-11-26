@@ -22,4 +22,19 @@ public class VariableUtil {
 		return isEquivalentVariable;
 	}
 
+	public static String generateSimpleParentVariableID(String variableID){
+		String simpleID = Variable.truncateSimpleID(variableID);
+		String parentID = null;
+		if(simpleID.contains(".")){
+			parentID = simpleID.substring(0, simpleID.lastIndexOf("."));
+		}
+		
+		if(simpleID.contains("[")){
+			parentID = simpleID.substring(0, simpleID.lastIndexOf("["));
+		}
+		
+		return parentID;
+		
+		
+	}
 }

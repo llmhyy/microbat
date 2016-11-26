@@ -828,6 +828,36 @@ public class Trace {
 		}
 		return null;
 	}
+	
+	public TraceNode getLatestProducer(int startOrder, String simpleVarID){
+		int latestOrder = -1;
+		String latestVarID = null;
+		for(String varID: this.stepVariableTable.keySet()){
+			String orderString = varID.substring(varID.indexOf(":")+1);
+			int order = Integer.valueOf(orderString);
+			
+			String simVarID = Variable.truncateSimpleID(varID);
+			if(order > startOrder || !simpleVarID.equals(simVarID)){
+				continue;
+			}
+			
+			if(latestOrder == -1){
+				latestOrder = order;
+				latestVarID = varID;
+			}
+			else{
+				if(latestOrder > order){
+					latestOrder = order;
+					latestVarID = varID;
+				}
+			}
+		}
+		
+		if(latestVarID != null){
+			return getProducer(latestVarID);			
+		}
+		return null;
+	}
 
 	public TraceNode getProducer(String varID) {
 		StepVariableRelationEntry entry = this.stepVariableTable.get(varID);

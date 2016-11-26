@@ -747,9 +747,10 @@ public class ProgramExecutor extends Executor {
 
 		}
 
-		String name = VirtualVar.VIRTUAL_PREFIX + lastestNode.getOrder();
-		VirtualVar var = new VirtualVar(name, returnedType);
-		var.setVarID(name);
+		String virID = VirtualVar.VIRTUAL_PREFIX + lastestNode.getOrder();
+		
+		VirtualVar var = new VirtualVar(virID, returnedType);
+		var.setVarID(virID);
 
 		Map<String, StepVariableRelationEntry> map = this.trace.getStepVariableTable();
 		StepVariableRelationEntry entry = new StepVariableRelationEntry(var.getVarID());
