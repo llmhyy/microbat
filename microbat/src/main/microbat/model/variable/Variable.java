@@ -23,7 +23,7 @@ public abstract class Variable {
 	 * e.g., 100[1]:33 ;
 	 * if it is a local variable, its id is: its scope (i.e., class[startLine, endLine]) + variable name + the order
 	 * of trace node defining it,
-	 * e.g., com.Main[12, 21] a:33 ;
+	 * e.g., com.Main{12, 21} a:33 ;
 	 * if it is a virtual variable, its id is: "virtual var" + the order of the relevant return-trace-node. 
 	 * <br><br>
 	 * Note that if the user want to concanate a variable ID, such as local variable ID, field ID, etc. He
@@ -83,7 +83,7 @@ public abstract class Variable {
 	}
 	
 	public static String concanateLocalVarID(String className, String varName, int startLine, int endLine){
-		return className + "[" + startLine + "," + endLine + "] " + varName;	
+		return className + "{" + startLine + "," + endLine + "} " + varName;	
 	}
 	
 	public static String truncateSimpleID(String completeVarID){
