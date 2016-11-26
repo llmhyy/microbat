@@ -14,8 +14,8 @@ import microbat.model.trace.TraceNode;
 import microbat.model.trace.TraceNodeOrderComparator;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
-import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
+import microbat.util.VariableUtil;
 
 public class StepRecommender {
 	
@@ -355,7 +355,7 @@ public class StepRecommender {
 		List<VarValue> markedReadVars = currentNode.findMarkedReadVariable();
 		for(VarValue readVar: markedReadVars){
 			Variable readVariable = readVar.getVariable();
-			if(MicroBatUtil.isEquivalentVariable(causingVariable, readVariable)){
+			if(VariableUtil.isEquivalentVariable(causingVariable, readVariable)){
 				return readVariable;
 			}
 		}
@@ -585,7 +585,7 @@ public class StepRecommender {
 			for(VarValue writtenVar: dominator.getWrittenVariables()){
 				Variable writtenVariable = writtenVar.getVariable();
 				
-				if(MicroBatUtil.isEquivalentVariable(causingVariable, writtenVariable)){
+				if(VariableUtil.isEquivalentVariable(causingVariable, writtenVariable)){
 					return dominator;					
 				}
 			}

@@ -8,8 +8,8 @@ import java.util.Map;
 import microbat.model.trace.PathInstance.SourceLine;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
-import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
+import microbat.util.VariableUtil;
 
 public class PotentialCorrectPatternList {
 	
@@ -146,7 +146,7 @@ public class PotentialCorrectPatternList {
 			for(VarValue writtenVar: dominator.getWrittenVariables()){
 				Variable writtenVariable = writtenVar.getVariable();
 				
-				if(MicroBatUtil.isEquivalentVariable(causingVar, writtenVariable)){
+				if(VariableUtil.isEquivalentVariable(causingVar, writtenVariable)){
 					return dominator;					
 				}
 			}
