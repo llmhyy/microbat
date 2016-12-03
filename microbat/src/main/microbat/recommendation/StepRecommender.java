@@ -105,29 +105,7 @@ public class StepRecommender {
 		}
 	}
 	
-	public class InspectingRange{
-		TraceNode startNode;
-		TraceNode endNode;
-		
-		private InspectingRange(TraceNode startNode, TraceNode endNode){
-			this.startNode = startNode;
-			this.endNode = endNode;
-		}
-		
-//		public InspectingRange(Map<TraceNode, List<String>> dataDominator,
-//				TraceNode suspiciousNode) {
-//			ArrayList<TraceNode> dominators = new ArrayList<TraceNode>(dataDominator.keySet());
-//			Collections.sort(dominators, new TraceNodeOrderComparator());
-//			
-//			startNode = dominators.get(0);
-//			endNode = suspiciousNode;
-//		}
-
-		public InspectingRange clone(){
-			InspectingRange inspectingRange = new InspectingRange(startNode, endNode);
-			return inspectingRange;
-		}
-	}
+	
 	
 	public StepRecommender(boolean enableLoopInference){
 		this.setEnableLoopInference(enableLoopInference);
@@ -145,7 +123,7 @@ public class StepRecommender {
 //	private TraceNode lastRecommendNode;
 	private Cause latestCause = new Cause();
 	private LoopRange loopRange = new LoopRange();
-	private InspectingRange inspectingRange;
+	private DetailInspector detailInspector = new SimpleDetailInspector();
 	
 	private List<TraceNode> visitedUnclearNodeList = new ArrayList<>();
 	
@@ -515,7 +493,10 @@ public class StepRecommender {
 		}
 		else if(userFeedBack.equals(UserFeedback.CORRECT)){
 			//TODO it could be done in a more intelligent way.
-			this.inspectingRange = new InspectingRange(currentNode, latestCause.getBuggyNode());
+			
+			InspectingRange inspectingRange = new InspectingRange(currentNode, latestCause.getBuggyNode());
+			this.detailInspector.setInspectingRange(inspectingRange);
+			
 			TraceNode recommendedNode = handleDetailInspectingState(trace, currentNode, userFeedBack);
 			return recommendedNode;
 		}
@@ -555,16 +536,7 @@ public class StepRecommender {
 		
 		if(userFeedBack.equals(UserFeedback.CORRECT)){
 			this.state = DebugState.DETAIL_INSPECT;
-			
-			TraceNode nextNode;
-			if(currentNode.getOrder() > this.inspectingRange.endNode.getOrder()){
-				nextNode = this.inspectingRange.startNode;
-			}
-			else{
-				nextNode = trace.getExectionList().get(currentNode.getOrder());
-				
-			}
-			
+			TraceNode nextNode = this.detailInspector.recommendDetailNode(currentNode, trace);
 			return nextNode;
 		}
 		else{
@@ -615,9 +587,10 @@ public class StepRecommender {
 		recommender.setLatestCause(this.latestCause.clone());
 		recommender.latestClearState = this.latestClearState;
 		recommender.loopRange = this.loopRange.clone();
-		if(this.inspectingRange != null){
-			recommender.inspectingRange = this.inspectingRange.clone();			
-		}
+//		if(this.inspectingRange != null){
+//			recommender.inspectingRange = this.inspectingRange.clone();			
+//		}
+		recommender.detailInspector = this.detailInspector.clone();
 		ArrayList<TraceNode> list = (ArrayList<TraceNode>)this.visitedUnclearNodeList;
 		recommender.visitedUnclearNodeList = (ArrayList<TraceNode>) list.clone();
 		
