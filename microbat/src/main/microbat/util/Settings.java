@@ -22,6 +22,7 @@ public class Settings {
 	public static String lanuchClass;
 	
 	public static boolean isRecordSnapshot;
+	public static boolean isApplyAdvancedInspector;
 	public static int stepLimit;
 	
 	public static int referenceFieldLayerInString = 1;
@@ -41,6 +42,8 @@ public class Settings {
 				lanuchClass = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.LANUCH_CLASS);
 				String isRecord = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RECORD_SNAPSHORT);
 				isRecordSnapshot = isRecord.equals("true");
+				String isApplyAInspector = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.APPLY_ADVANCE_INSPECTOR);
+				isApplyAdvancedInspector = isApplyAInspector.equals("true");
 				String limitNumString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.STEP_LIMIT);
 				stepLimit = Integer.valueOf(limitNumString);
 				if(stepLimit == 0){
@@ -83,4 +86,5 @@ public class Settings {
 	public static HashMap<String, CompilationUnit> compilationUnitMap = new HashMap<>();
 	public static HashMap<String, ICompilationUnit> iCompilationUnitMap = new HashMap<>();
 	public static boolean enableLoopInference = true;
+	
 }

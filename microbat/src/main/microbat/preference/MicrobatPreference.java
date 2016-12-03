@@ -45,6 +45,7 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultLineNumber = Activator.getDefault().getPreferenceStore().getString(LINE_NUMBER);
 		this.defaultLanuchClass = Activator.getDefault().getPreferenceStore().getString(LANUCH_CLASS);
 		this.defaultRecordSnapshot = Activator.getDefault().getPreferenceStore().getString(RECORD_SNAPSHORT);
+		this.defaultAdvancedDetailInspector = Activator.getDefault().getPreferenceStore().getString(APPLY_ADVANCE_INSPECTOR);
 		this.defaultStepLimit = Activator.getDefault().getPreferenceStore().getString(STEP_LIMIT);
 	}
 	
@@ -54,6 +55,7 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String LANUCH_CLASS = "lanuchClass";
 	public static final String STEP_LIMIT = "stepLimit";
 	public static final String RECORD_SNAPSHORT = "recordSnapshot";
+	public static final String APPLY_ADVANCE_INSPECTOR = "applyAdvancedInspector";
 
 	
 	private Combo projectCombo;
@@ -62,6 +64,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Text lineNumberText;
 	private Text stepLimitText;
 	private Button recordSnapshotButton;
+	private Button advancedDetailInspectorButton;
 	
 	private String defaultTargetProject = "";
 	private String defaultLanuchClass = "";
@@ -69,6 +72,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultLineNumber = "";
 	private String defaultStepLimit = "5000";
 	private String defaultRecordSnapshot = "true";
+	private String defaultAdvancedDetailInspector = "true";
 	
 	@Override
 	protected Control createContents(Composite parent) {
@@ -116,12 +120,20 @@ public class MicrobatPreference extends PreferencePage implements
 		stepLimitText.setLayoutData(stepLimitTextData);
 		
 		recordSnapshotButton = new Button(settingGroup, SWT.CHECK);
-		recordSnapshotButton.setText("Record Snapshot");
+		recordSnapshotButton.setText("Record snapshot");
 		GridData recordButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		recordButtonData.horizontalSpan = 3;
 		recordSnapshotButton.setLayoutData(recordButtonData);
-		boolean selected = this.defaultRecordSnapshot.equals("true");
-		recordSnapshotButton.setSelection(selected);
+		boolean recordSnapshotSelected = this.defaultRecordSnapshot.equals("true");
+		recordSnapshotButton.setSelection(recordSnapshotSelected);
+		
+		advancedDetailInspectorButton = new Button(settingGroup, SWT.CHECK);
+		advancedDetailInspectorButton.setText("Apply advanced detail inspection");
+		GridData advanceInspectorButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		recordButtonData.horizontalSpan = 3;
+		advancedDetailInspectorButton.setLayoutData(advanceInspectorButtonData);
+		boolean advanceInspectorSelected = this.defaultAdvancedDetailInspector.equals("true");
+		advancedDetailInspectorButton.setSelection(advanceInspectorSelected);
 	}
 	
 	private void createSeedStatementGroup(Composite parent){
@@ -169,6 +181,7 @@ public class MicrobatPreference extends PreferencePage implements
 //		preferences.put(CLASS_NAME, this.classNameText.getText());
 //		preferences.put(LINE_NUMBER, this.lineNumberText.getText());
 		preferences.put(RECORD_SNAPSHORT, String.valueOf(this.recordSnapshotButton.getSelection()));
+		preferences.put(APPLY_ADVANCE_INSPECTOR, String.valueOf(this.advancedDetailInspectorButton.getSelection()));
 		preferences.put(STEP_LIMIT, this.stepLimitText.getText());
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
@@ -176,6 +189,7 @@ public class MicrobatPreference extends PreferencePage implements
 //		Activator.getDefault().getPreferenceStore().putValue(CLASS_NAME, this.classNameText.getText());
 //		Activator.getDefault().getPreferenceStore().putValue(LINE_NUMBER, this.lineNumberText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(RECORD_SNAPSHORT, String.valueOf(this.recordSnapshotButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(APPLY_ADVANCE_INSPECTOR, String.valueOf(this.advancedDetailInspectorButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(STEP_LIMIT, this.stepLimitText.getText());
 		
 		confirmChanges();
@@ -190,6 +204,7 @@ public class MicrobatPreference extends PreferencePage implements
 //		Settings.buggyClassName = this.classNameText.getText();
 //		Settings.buggyLineNumber = this.lineNumberText.getText();
 		Settings.isRecordSnapshot = this.recordSnapshotButton.getSelection();
+		Settings.isApplyAdvancedInspector = this.advancedDetailInspectorButton.getSelection();
 		Settings.stepLimit = Integer.valueOf(this.stepLimitText.getText());
 	}
 	
