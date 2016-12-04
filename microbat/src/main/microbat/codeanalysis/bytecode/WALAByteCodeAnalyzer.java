@@ -18,8 +18,6 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Type;
 
 import com.ibm.wala.classLoader.BinaryDirectoryTreeModule;
 import com.ibm.wala.classLoader.IMethod;
@@ -85,6 +83,7 @@ import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.util.JTestUtil;
 import microbat.util.JavaUtil;
+import microbat.util.MainMethodFinder;
 import sav.common.core.SavException;
 import sav.common.core.utils.Assert;
 import sav.common.core.utils.ClassUtils;
@@ -98,11 +97,13 @@ import sav.strategies.dto.AppJavaClassPath;
  * @author "linyun"
  *
  */
-public class MicrobatByteCodeAnalyzer{
+public class WALAByteCodeAnalyzer{
 	private static final String JAVA_REGRESSION_EXCLUSIONS = "/Java60RegressionExclusions.txt";
 	private List<BreakPoint> executingStatements = new ArrayList<>();
 	
-	public MicrobatByteCodeAnalyzer(List<BreakPoint> executingStatements){
+	public WALAByteCodeAnalyzer(){}
+	
+	public WALAByteCodeAnalyzer(List<BreakPoint> executingStatements){
 		this.executingStatements = executingStatements;
 	}
 	
@@ -132,7 +133,7 @@ public class MicrobatByteCodeAnalyzer{
 		return breakPoints;
 	}
 
-	private List<BreakPoint> parseLanuchPoints(AppJavaClassPath appClassPath) {
+	public static List<BreakPoint> parseLanuchPoints(AppJavaClassPath appClassPath) {
 		List<BreakPoint> points = new ArrayList<>();
 		if(appClassPath.getOptionalTestClass() != null){
 			String testClassName = appClassPath.getOptionalTestClass();
@@ -144,7 +145,8 @@ public class MicrobatByteCodeAnalyzer{
 				if(methodName.equals(appClassPath.getOptionalTestMethod())){
 					IMethodBinding mBinding = md.resolveBinding();
 					String methodSignature = JavaUtil.generateMethodSignature(mBinding);
-					BreakPoint point = new BreakPoint(testClassName, methodSignature, -1);
+					BreakPoint point = new BreakPoint(testClassName, testClassName, -1);
+					point.setMethodSign(methodSignature);
 					points.add(point);
 					break;
 				}
@@ -154,7 +156,8 @@ public class MicrobatByteCodeAnalyzer{
 			for(MethodDeclaration md: setupMdList){
 				IMethodBinding mBinding = md.resolveBinding();
 				String methodSignature = JavaUtil.generateMethodSignature(mBinding);
-				BreakPoint point = new BreakPoint(testClassName, methodSignature, -1);
+				BreakPoint point = new BreakPoint(testClassName, testClassName, -1);
+				point.setMethodSign(methodSignature);
 				points.add(point);
 			}
 		}
@@ -164,50 +167,18 @@ public class MicrobatByteCodeAnalyzer{
 			
 			MainMethodFinder finder = new MainMethodFinder();
 			cu.accept(finder);
-			MethodDeclaration mainMethod = finder.md;
+			MethodDeclaration mainMethod = finder.getMd();
 			
 			if(mainMethod != null){
 				IMethodBinding mBinding = mainMethod.resolveBinding();
 				String methodSignature = JavaUtil.generateMethodSignature(mBinding);
-				BreakPoint point = new BreakPoint(launchClass, methodSignature, -1);
+				BreakPoint point = new BreakPoint(launchClass, launchClass, cu.getLineNumber(mainMethod.getStartPosition()));
+				point.setMethodSign(methodSignature);
 				points.add(point);
 			}
 		}
 		
 		return points;
-	}
-	
-	class MainMethodFinder extends ASTVisitor{
-		private MethodDeclaration md;
-		
-		@SuppressWarnings("rawtypes")
-		public boolean visit(MethodDeclaration md){
-			String methodName = md.getName().getFullyQualifiedName();
-			if(methodName.equals("main")){
-				List list = md.modifiers();
-				if(list != null && list.toString().equals("[public, static]")){
-					String returnedType = md.getReturnType2().toString();
-					if(returnedType.equals("void")){
-						Object obj = md.parameters().get(0);
-						SingleVariableDeclaration svd = (SingleVariableDeclaration)obj;
-						Type type = svd.getType();
-						
-						if(type.toString().equals("String[]")){
-							this.md = md;
-						}
-					}
-				}
-			}
-			return false;
-		}
-
-		public MethodDeclaration getMd() {
-			return md;
-		}
-
-		public void setMd(MethodDeclaration md) {
-			this.md = md;
-		}
 	}
 	
 
@@ -802,7 +773,7 @@ public class MicrobatByteCodeAnalyzer{
 	}
 
 
-	public AnalysisScope makeJ2SEAnalysisScope(AppJavaClassPath appClassPath) throws SavException {
+	public static AnalysisScope makeJ2SEAnalysisScope(AppJavaClassPath appClassPath) {
 		AnalysisScope scope = AnalysisScope.createJavaAnalysisScope();
 		try {
 			/**
@@ -828,20 +799,21 @@ public class MicrobatByteCodeAnalyzer{
 				}
 			}
 			
-			scope.setExclusions(getJavaExclusions());
+			FileOfClasses exclusions = new WALAByteCodeAnalyzer().getJavaExclusions();
+			scope.setExclusions(exclusions);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return scope;
 	}
 
-	private FileOfClasses getJavaExclusions() throws IOException {
+	public FileOfClasses getJavaExclusions() throws IOException {
 		URL url = getClass().getResource(JAVA_REGRESSION_EXCLUSIONS);
 		
 		return new FileOfClasses(url.openStream()); 
 	}
 
-	private Descriptor createDescriptor(String methodSign) {
+	public static Descriptor createDescriptor(String methodSign) {
 		MethodTypeSignature methodTypeSign = MethodTypeSignature.make(methodSign);
 		TypeName[] types;
 		TypeSignature[] arguments = methodTypeSign.getArguments();
@@ -862,17 +834,17 @@ public class MicrobatByteCodeAnalyzer{
 		return Descriptor.findOrCreate(types, returnType);
 	}
 	
-	private TypeName toTypeName(String sign) {
+	public static TypeName toTypeName(String sign) {
 		return TypeName.findOrCreate(trimSignature(sign));
 	}
 	
-	public String trimSignature(String typeSign) {
+	public static String trimSignature(String typeSign) {
 		String newSig = typeSign.replace(";", "");
 		return newSig;
 //		return StringUtils.replace(typeSign, ";", "");
 	}
 	
-	private Iterable<Entrypoint> makeEntrypoints(final ClassLoaderReference loaderRef, final IClassHierarchy cha,
+	public static Iterable<Entrypoint> makeEntrypoints(final ClassLoaderReference loaderRef, final IClassHierarchy cha,
 			List<BreakPoint> breakpoints){
 
 		final List<Entrypoint> entries = new ArrayList<>();
