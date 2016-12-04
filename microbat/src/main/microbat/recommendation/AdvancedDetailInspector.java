@@ -2,6 +2,8 @@ package microbat.recommendation;
 
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.util.MicroBatUtil;
+import sav.strategies.dto.AppJavaClassPath;
 
 public class AdvancedDetailInspector extends DetailInspector {
 
@@ -18,6 +20,11 @@ public class AdvancedDetailInspector extends DetailInspector {
 			inspector.setInspectingRange(this.inspectingRange.clone());			
 		}
 		return inspector;
+	}
+	
+	public void analysis(){
+		AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
+		
 	}
 
 }

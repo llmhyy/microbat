@@ -83,6 +83,11 @@
             id="microbat.command.runTest"
             name="Run Test">
       </command>
+      <command
+            defaultHandler="microbat.handler.StaticAnalysisHandler"
+            id="microbat.command.staticAnalysis"
+            name="Static Analysis">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -128,6 +133,11 @@
                   commandId="microbat.command.runTest"
                   icon="icons/evaluation.png"
                   label="Run Test"
+                  style="push">
+            </command>
+            <command
+                  commandId="microbat.command.staticAnalysis"
+                  label="Static Analysis"
                   style="push">
             </command>
          </menu>
