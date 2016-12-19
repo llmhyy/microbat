@@ -14,18 +14,22 @@ import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.callgraph.CallGraphBuilderCancelException;
 import com.ibm.wala.ipa.callgraph.Entrypoint;
 import com.ibm.wala.ipa.callgraph.impl.Util;
+import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
+import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
 import com.ibm.wala.ipa.callgraph.propagation.SSAPropagationCallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.propagation.cfa.ZeroXInstanceKeys;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
 import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
-import com.ibm.wala.ipa.slicer.NormalStatement;
 import com.ibm.wala.ipa.slicer.Statement;
 import com.ibm.wala.shrikeCT.InvalidClassFileException;
+import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSACFG;
-import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSACFG.BasicBlock;
+import com.ibm.wala.ssa.SSAInstruction;
+import com.ibm.wala.ssa.SymbolTable;
+import com.ibm.wala.types.ClassLoaderReference;
 
 import microbat.codeanalysis.bytecode.WALAByteCodeAnalyzer;
 import microbat.model.BreakPoint;
@@ -70,6 +74,7 @@ public class AdvancedDetailInspector extends DetailInspector {
 		
 		try {
 			CallGraph callGraph = builder.makeCallGraph(options, null);
+			PointerAnalysis<InstanceKey> pointerAnalysis = builder.getPointerAnalysis();
 			
 			for (Iterator<? extends CGNode> it = callGraph.iterator(); it.hasNext();) {
 				CGNode n = it.next();
@@ -80,26 +85,40 @@ public class AdvancedDetailInspector extends DetailInspector {
 					SSACFG cfg = ir.getControlFlowGraph();
 					
 					ShrikeBTMethod btMethod = (ShrikeBTMethod)n.getMethod();
-					SSAInstruction[] instructions = ir.getInstructions();
 					
-					List<Statement> stmts = new ArrayList<Statement>();
-					for (int i = 0; i <= cfg.getMaxNumber(); i++) {
-						BasicBlock bb = cfg.getNode(i);
+					if(!btMethod.getDeclaringClass().getReference().getClassLoader().equals(ClassLoaderReference.Application)){
+						continue;
+					}
+					
+					DefUse defUseRelation = n.getDU();
+					
+					int localVariableNumber = btMethod.getMaxLocals();
+					
+					int startNum = 2;
+					if(method.isStatic()){
+						startNum = 1;
+					}
+					
+					for(int localVarID=startNum; localVarID<=localVariableNumber; localVarID++){
+						SSAInstruction defInstruction = defUseRelation.getDef(localVarID);
+						Iterator<SSAInstruction> iterator = defUseRelation.getUses(localVarID);
 						
-						for(SSAInstruction instruction: bb.getAllInstructions()){
-							try {
-								if(instruction.iindex != -1){
-									int bcIdx = btMethod.getBytecodeIndex(instruction.iindex);
-									int lineNumber = btMethod.getLineNumber(bcIdx);
-									
-									
-									System.currentTimeMillis();
-									
-								}
-								
-							} catch (InvalidClassFileException e) {
-								e.printStackTrace();
+						if(defInstruction!=null && defInstruction.iindex != -1){
+							int bcIdx = btMethod.getBytecodeIndex(defInstruction.iindex);
+							int lineNumber = method.getLineNumber(bcIdx);
+//							String variableName = method.getLocalVariableName(bcIdx, localVarID);
+							String[] variableNames = ir.getLocalNames(defInstruction.iindex, localVarID);
+							
+							StringBuffer buffer = new StringBuffer();
+							if(variableNames != null){
+								for(String str: variableNames){
+									buffer.append(str+";");
+								}								
 							}
+							String vnames = buffer.toString();
+							
+							System.out.println("method name: " + method + ", line number: " + lineNumber + "; variable name: " + vnames);
+							System.currentTimeMillis();
 						}
 					}
 				}
@@ -108,6 +127,8 @@ public class AdvancedDetailInspector extends DetailInspector {
 			
 			
 		} catch (IllegalArgumentException | CallGraphBuilderCancelException e) {
+			e.printStackTrace();
+		} catch (InvalidClassFileException e) {
 			e.printStackTrace();
 		}
 		
