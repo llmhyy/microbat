@@ -84,15 +84,15 @@ public class Activator extends AbstractUIPlugin {
 	/**
 	 * After an execution, its trace should be kept in this field.  
 	 */
-	private Trace currentTrace = new Trace();
-
-	public Trace getCurrentTrace() {
-		return currentTrace;
-	}
-
-	public void setCurrentTrace(Trace currentTrace) {
-		this.currentTrace = currentTrace;
-	}
+//	private Trace currentTrace = new Trace();
+//
+//	public Trace getCurrentTrace() {
+//		return currentTrace;
+//	}
+//
+//	public void setCurrentTrace(Trace currentTrace) {
+//		this.currentTrace = currentTrace;
+//	}
 
 	
 	

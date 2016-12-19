@@ -60,6 +60,8 @@ import microbat.util.Settings;
 
 public class TraceView extends ViewPart {
 	
+	private Trace trace;
+	
 	private TreeViewer listViewer;
 	private Text searchText;
 	private Button searchButton;
@@ -119,7 +121,7 @@ public class TraceView extends ViewPart {
 	}
 	
 	public void jumpToNode(String searchContent, boolean forward){
-		Trace trace = Activator.getDefault().getCurrentTrace();
+//		Trace trace = Activator.getDefault().getCurrentTrace();
 		
 		if(!previousSearchExpression.equals(searchContent)){
 			trace.resetObservingIndex();
@@ -191,7 +193,7 @@ public class TraceView extends ViewPart {
 		listViewer.setContentProvider(new TraceContentProvider());
 		listViewer.setLabelProvider(new TraceLabelProvider());
 		
-		Trace trace = Activator.getDefault().getCurrentTrace();
+//		Trace trace = Activator.getDefault().getCurrentTrace();
 		listViewer.setInput(trace);
 		
 		listViewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -202,7 +204,7 @@ public class TraceView extends ViewPart {
 				System.out.println("=========================");
 				System.out.println("=========================");
 				
-				Trace t = Activator.getDefault().getCurrentTrace();
+//				Trace t = Activator.getDefault().getCurrentTrace();
 //				System.out.println("Data Dominator: ");
 //				for(TraceNode dominator: node.getDataDominator().keySet()){
 //					List<String> varIDs = node.getDataDominator().get(dominator);
@@ -280,55 +282,49 @@ public class TraceView extends ViewPart {
 			}
 			
 			public void selectionChanged(SelectionChangedEvent event) {
-				try {
-					ISelection iSel = event.getSelection();
-					if(iSel instanceof StructuredSelection){
-						StructuredSelection sel = (StructuredSelection)iSel;
-						Object obj = sel.getFirstElement();
-						
-						if(obj instanceof TraceNode){
-							TraceNode node = (TraceNode)obj;
-							
-							showDebuggingInfo(node);
-							
-							if(!programmingSelection){
-								Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
-								behavior.increaseAdditionalClick();
-								new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
-							}
-							
-							DebugFeedbackView view = (DebugFeedbackView)PlatformUI.getWorkbench().
-									getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.DEBUG_FEEDBACK);
-							view.refresh(node);
-
-							markJavaEditor(node);
-							
-							if(jumpFromSearch){
-								jumpFromSearch = false;
-
-								Display.getDefault().asyncExec(new Runnable() {
-									@Override
-									public void run() {
-										try {
-											Thread.sleep(300);
-										} catch (InterruptedException e) {
-											e.printStackTrace();
-										}
-										searchText.setFocus();
-									}
-								});
-								
-							}
-							else{
-								listViewer.getTree().setFocus();								
-							}
-							
-							Activator.getDefault().getCurrentTrace().setObservingIndex(node.getOrder()-1);
-						}
-					}
+				ISelection iSel = event.getSelection();
+				if(iSel instanceof StructuredSelection){
+					StructuredSelection sel = (StructuredSelection)iSel;
+					Object obj = sel.getFirstElement();
 					
-				} catch (PartInitException e) {
-					e.printStackTrace();
+					if(obj instanceof TraceNode){
+						TraceNode node = (TraceNode)obj;
+						
+						showDebuggingInfo(node);
+						
+						if(!programmingSelection){
+							Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+							behavior.increaseAdditionalClick();
+							new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
+						}
+						
+						DebugFeedbackView view = MicroBatViews.getDebugFeedbackView();
+						view.refresh(node);
+
+						markJavaEditor(node);
+						
+						if(jumpFromSearch){
+							jumpFromSearch = false;
+
+							Display.getDefault().asyncExec(new Runnable() {
+								@Override
+								public void run() {
+									try {
+										Thread.sleep(300);
+									} catch (InterruptedException e) {
+										e.printStackTrace();
+									}
+									searchText.setFocus();
+								}
+							});
+							
+						}
+						else{
+							listViewer.getTree().setFocus();								
+						}
+						
+						trace.setObservingIndex(node.getOrder()-1);
+					}
 				}
 				
 			}
@@ -383,7 +379,7 @@ public class TraceView extends ViewPart {
 	}
 	
 	public void updateData(){
-		Trace trace = Activator.getDefault().getCurrentTrace();
+//		Trace trace = Activator.getDefault().getCurrentTrace();
 		listViewer.setInput(trace);
 		listViewer.refresh();
 	}
@@ -393,6 +389,14 @@ public class TraceView extends ViewPart {
 		
 	}
 	
+	public Trace getTrace() {
+		return trace;
+	}
+
+	public void setTrace(Trace trace) {
+		this.trace = trace;
+	}
+
 	class TraceContentProvider implements ITreeContentProvider{
 
 		public void dispose() {

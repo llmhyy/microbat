@@ -39,7 +39,7 @@ public class UndoHandler extends AbstractHandler {
 	}
 
 	private void restore(CheckingState state) throws PartInitException {
-		Trace trace = Activator.getDefault().getCurrentTrace();
+		Trace trace = MicroBatViews.getTraceView().getTrace();
 		trace.setCheckTime(state.getTraceCheckTime());
 		
 		TraceNode currentNode = trace.getExectionList().get(state.getCurrentNodeOrder()-1);

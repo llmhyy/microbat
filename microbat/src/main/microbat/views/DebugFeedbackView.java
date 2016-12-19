@@ -247,7 +247,7 @@ public class DebugFeedbackView extends ViewPart {
 		
 		String varID = ev.getVarID();
 		if(!varID.contains(":") && !varID.contains(VirtualVar.VIRTUAL_PREFIX)){
-			Trace trace = Activator.getDefault().getCurrentTrace();
+			Trace trace = MicroBatViews.getTraceView().getTrace();
 			String order = trace.findDefiningNodeOrder(Variable.READ, currentNode, varID);
 			varID = varID + ":" + order;
 		}
@@ -317,7 +317,7 @@ public class DebugFeedbackView extends ViewPart {
 			VarValue value = null;
 			
 			if(obj instanceof VarValue){
-				Trace trace = Activator.getDefault().getCurrentTrace();
+				Trace trace = MicroBatViews.getTraceView().getTrace();
 				
 				value = (VarValue)obj;
 				String varID = value.getVarID();
@@ -721,7 +721,7 @@ public class DebugFeedbackView extends ViewPart {
 				openChooseFeedbackDialog();
 			} 
 			else {
-				Trace trace = Activator.getDefault().getCurrentTrace();
+				Trace trace = MicroBatViews.getTraceView().getTrace();
 				TraceNode suspiciousNode = null;
 				boolean isValidForRecommendation = isValidForRecommendation();
 				if(isValidForRecommendation){

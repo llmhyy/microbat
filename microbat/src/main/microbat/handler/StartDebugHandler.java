@@ -165,7 +165,9 @@ public class StartDebugHandler extends AbstractHandler {
 							
 							monitor.worked(1);
 							
-							Activator.getDefault().setCurrentTrace(trace);
+//							Activator.getDefault().setCurrentTrace(trace);
+							TraceView view = MicroBatViews.getTraceView();
+							view.setTrace(trace);
 						}
 						finally{
 							monitor.done();
