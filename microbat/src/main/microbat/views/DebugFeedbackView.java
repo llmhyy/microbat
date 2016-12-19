@@ -142,14 +142,9 @@ public class DebugFeedbackView extends ViewPart {
 		feedbackType = UserFeedback.INCORRECT;
 		
 		
-		ReasonView view;
-		try {
-			view = (ReasonView)PlatformUI.getWorkbench().
-					getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.REASON);
-			view.refresh(recommender);
-		} catch (PartInitException e) {
-			e.printStackTrace();
-		}
+		ReasonView view = MicroBatViews.getReasonView();
+		view.refresh(recommender);
+
 	}
 	
 	
@@ -789,14 +784,8 @@ public class DebugFeedbackView extends ViewPart {
 		
 		
 		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
-			TraceView view;
-			try {
-				view = (TraceView)PlatformUI.getWorkbench().
-						getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.TRACE);
-				view.jumpToNode(trace, suspiciousNode.getOrder());
-			} catch (PartInitException e1) {
-				e1.printStackTrace();
-			}
+			TraceView view = MicroBatViews.getTraceView();
+			view.jumpToNode(trace, suspiciousNode.getOrder());
 		}
 	}
 	

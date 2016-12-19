@@ -31,4 +31,16 @@ public class MicroBatViews {
 		
 		return view;
 	}
+	
+	public static ReasonView getReasonView(){
+		ReasonView view = null;
+		try {
+			view = (ReasonView)PlatformUI.getWorkbench().
+					getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.REASON);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		
+		return view;
+	}
 }

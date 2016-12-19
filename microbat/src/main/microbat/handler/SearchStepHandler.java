@@ -49,15 +49,9 @@ public class SearchStepHandler extends AbstractHandler {
 					
 					String expression = Trace.combineTraceNodeExpression(className, lineNumber);
 					
-					try {
-						TraceView traceView = (TraceView)PlatformUI.getWorkbench().
-								getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.TRACE);
-						traceView.setSearchText(expression);
-						traceView.jumpToNode(expression, this.directionDown);
-						
-					} catch (PartInitException e) {
-						e.printStackTrace();
-					}
+					TraceView traceView = MicroBatViews.getTraceView();
+					traceView.setSearchText(expression);
+					traceView.jumpToNode(expression, this.directionDown);
 					
 				}
 				

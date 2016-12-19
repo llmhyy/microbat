@@ -50,12 +50,10 @@ public class UndoHandler extends AbstractHandler {
 		Settings.potentialCorrectPatterns = state.getPotentialCorrectPatterns();
 		Settings.wrongPathNodeOrder = state.getWrongPathNodeOrder();
 		
-		DebugFeedbackView debugFeedbackView = (DebugFeedbackView)PlatformUI.getWorkbench().
-				getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.DEBUG_FEEDBACK);
+		DebugFeedbackView debugFeedbackView = MicroBatViews.getDebugFeedbackView();
 		debugFeedbackView.setRecommender(state.getRecommender());
 		
-		TraceView traceView = (TraceView)PlatformUI.getWorkbench().
-				getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.TRACE);
+		TraceView traceView = MicroBatViews.getTraceView();
 		traceView.jumpToNode(trace, currentNode.getOrder());
 	}
 	

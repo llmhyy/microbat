@@ -17,10 +17,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 
-import microbat.Activator;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReader;
@@ -56,13 +53,8 @@ public class StartDebugHandler extends AbstractHandler {
 		Display.getDefault().asyncExec(new Runnable(){
 			@Override
 			public void run() {
-				try {
-					DebugFeedbackView view = (DebugFeedbackView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().
-							getActivePage().showView(MicroBatViews.DEBUG_FEEDBACK);
-					view.clear();
-				} catch (PartInitException e) {
-					e.printStackTrace();
-				}
+				DebugFeedbackView view = MicroBatViews.getDebugFeedbackView();
+				view.clear();
 			}
 			
 		});
@@ -257,8 +249,7 @@ public class StartDebugHandler extends AbstractHandler {
 	
 	private void updateViews(){
 		try {
-			TraceView traceView = (TraceView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().
-					getActivePage().showView(MicroBatViews.TRACE);
+			TraceView traceView = MicroBatViews.getTraceView();
 			traceView.updateData();
 			
 		} catch (Exception e) {
