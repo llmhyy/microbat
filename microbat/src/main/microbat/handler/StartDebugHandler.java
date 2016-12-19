@@ -125,16 +125,6 @@ public class StartDebugHandler extends AbstractHandler {
 								e1.printStackTrace();
 							}
 							
-//							MicrobatByteCodeAnalyzer slicer = new MicrobatByteCodeAnalyzer(executingStatements);
-//							List<BreakPoint> runningStatements = null;
-//							try {
-//								System.out.println("start analyzing byte code ...");
-//								runningStatements = slicer.parsingBreakPoints(appClassPath);
-//								System.out.println("finish analyzing byte code ...!");
-//							} catch (Exception e1) {
-//								e1.printStackTrace();
-//							}
-							
 							monitor.worked(2);
 							
 							/**
