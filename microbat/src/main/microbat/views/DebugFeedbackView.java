@@ -34,11 +34,9 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
-import microbat.Activator;
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
@@ -67,6 +65,8 @@ public class DebugFeedbackView extends ViewPart {
 
 	private TraceNode currentNode;
 //	private TraceNode lastestNode;
+	
+	private TraceView traceView;
 	
 	private StepRecommender recommender = new StepRecommender(Settings.enableLoopInference);
 	
@@ -242,7 +242,7 @@ public class DebugFeedbackView extends ViewPart {
 		
 		String varID = ev.getVarID();
 		if(!varID.contains(":") && !varID.contains(VirtualVar.VIRTUAL_PREFIX)){
-			Trace trace = MicroBatViews.getTraceView().getTrace();
+			Trace trace = getTraceView().getTrace();
 			String order = trace.findDefiningNodeOrder(Variable.READ, currentNode, varID);
 			varID = varID + ":" + order;
 		}
@@ -312,7 +312,7 @@ public class DebugFeedbackView extends ViewPart {
 			VarValue value = null;
 			
 			if(obj instanceof VarValue){
-				Trace trace = MicroBatViews.getTraceView().getTrace();
+				Trace trace = getTraceView().getTrace();
 				
 				value = (VarValue)obj;
 				String varID = value.getVarID();
@@ -716,7 +716,7 @@ public class DebugFeedbackView extends ViewPart {
 				openChooseFeedbackDialog();
 			} 
 			else {
-				Trace trace = MicroBatViews.getTraceView().getTrace();
+				Trace trace = getTraceView().getTrace();
 				TraceNode suspiciousNode = null;
 				boolean isValidForRecommendation = isValidForRecommendation();
 				if(isValidForRecommendation){
@@ -784,8 +784,8 @@ public class DebugFeedbackView extends ViewPart {
 		
 		
 		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
-			TraceView view = MicroBatViews.getTraceView();
-			view.jumpToNode(trace, suspiciousNode.getOrder());
+//			TraceView view = MicroBatViews.getTraceView();
+			getTraceView().jumpToNode(trace, suspiciousNode.getOrder());
 		}
 	}
 	
@@ -815,6 +815,19 @@ public class DebugFeedbackView extends ViewPart {
 
 	}
 	
+	public TraceView getTraceView() {
+		if(traceView == null){
+			traceView = MicroBatViews.getTraceView();
+		}
+		
+		return traceView;
+	}
+
+	public void setTraceView(TraceView traceView) {
+		this.traceView = traceView;
+	}
+
+
 	@SuppressWarnings("unchecked")
 	class RWVariableContentProvider implements ITreeContentProvider{
 		/**
