@@ -3,15 +3,12 @@ package microbat;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import microbat.behavior.Behavior;
-import microbat.behavior.BehaviorReader;
-import microbat.model.trace.Trace;
-import microbat.views.ImageUI;
-
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+
+import microbat.views.ImageUI;
 
 /**
  * The activator class controls the plug-in life cycle
