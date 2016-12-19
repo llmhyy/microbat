@@ -151,31 +151,28 @@ public class StartDebugHandler extends AbstractHandler {
 							/** 4. construct dominance and loop-parent relation*/
 							monitor.setTaskName("construct dominance and loop-parent relation");
 							
-							Trace trace = tcExecutor.getTrace();
+							final Trace trace = tcExecutor.getTrace();
 							trace.constructDomianceRelation();
 							trace.constructLoopParentRelation();
 							
 							monitor.worked(1);
 							
 //							Activator.getDefault().setCurrentTrace(trace);
-							TraceView view = MicroBatViews.getTraceView();
-							view.setTrace(trace);
+							Display.getDefault().asyncExec(new Runnable(){
+								
+								@Override
+								public void run() {
+									TraceView traceView = MicroBatViews.getTraceView();
+									traceView.setTrace(trace);
+									traceView.updateData();
+								}
+								
+							});
 						}
 						finally{
 							monitor.done();
 						}
 					}
-					
-					
-					Display.getDefault().asyncExec(new Runnable(){
-						
-						@Override
-						public void run() {
-							updateViews();
-						}
-						
-					});
-					
 					
 					return Status.OK_STATUS;
 				}
@@ -247,15 +244,6 @@ public class StartDebugHandler extends AbstractHandler {
 		Settings.localVariableScopes.setVariableScopes(lvsList);
 	}
 	
-	private void updateViews(){
-		try {
-			TraceView traceView = MicroBatViews.getTraceView();
-			traceView.updateData();
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 	
 //	@SuppressWarnings("restriction")
 //	private List<String> getSourceLocation(){
