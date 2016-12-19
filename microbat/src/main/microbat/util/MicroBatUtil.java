@@ -3,11 +3,6 @@ package microbat.util;
 import java.io.File;
 import java.util.List;
 
-import microbat.model.trace.Trace;
-import microbat.model.trace.TraceNode;
-import microbat.model.value.VarValue;
-import microbat.model.variable.Variable;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -16,6 +11,9 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
+import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
+import microbat.model.variable.Variable;
 import sav.commons.TestConfiguration;
 import sav.strategies.dto.AppJavaClassPath;
 
