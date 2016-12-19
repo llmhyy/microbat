@@ -975,7 +975,7 @@ public class ProgramExecutor extends Executor {
 								.getBreakPoint().getLineNumber(), node.getBreakPoint().getDeclaringCompilationUnitName());
 						String varID;
 						if (scope != null) {
-							varID = Variable.concanateLocalVarID(node.getBreakPoint().getClassCanonicalName(),
+							varID = Variable.concanateLocalVarID(node.getBreakPoint().getDeclaringCompilationUnitName(),
 									var.getName(), scope.getStartLine(), scope.getEndLine());
 							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
 							varID = varID + ":" + definingNodeOrder;
