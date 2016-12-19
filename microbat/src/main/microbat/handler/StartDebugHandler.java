@@ -91,8 +91,6 @@ public class StartDebugHandler extends AbstractHandler {
 				protected IStatus run(IProgressMonitor monitor) {
 					/** 0. clear some static common variables **/
 					clearOldData();
-//					BreakPoint ap = new BreakPoint(classQulifiedName, methodSign, lineNumber);
-//					List<BreakPoint> startPoints = Arrays.asList(ap);
 					
 					int stepNum = -1;
 					List<BreakPoint> executingStatements = new ArrayList<>();
@@ -143,10 +141,6 @@ public class StartDebugHandler extends AbstractHandler {
 							}
 							
 							monitor.worked(1);
-							
-//							String methodName = methodSign.substring(0, methodSign.indexOf("("));
-//							List<String> tests = Arrays.asList(classQulifiedName + "." + methodName);
-//							tcExecutor.setup(appClasspath, tests);
 							
 							/** 3. extract runtime variables*/
 							monitor.setTaskName("extract runtime value for variables");
