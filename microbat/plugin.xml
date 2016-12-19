@@ -31,6 +31,26 @@
             name="Recommending Reason"
             restorable="true">
       </view>
+      <category
+            id="microbat.evalCategory"
+            name="Evaluation">
+      </category>
+      <view
+            category="microbat.evalCategory"
+            class="microbat.evaluation.views.BeforeTraceView"
+            icon="icons/before.ico"
+            id="microbat.evalView.beforeTraceView"
+            name="Before Trace"
+            restorable="true">
+      </view>
+      <view
+            category="microbat.evalCategory"
+            class="microbat.evaluation.views.AfterTraceView"
+            icon="icons/after.ico"
+            id="microbat.evalView.afterTraceView"
+            name="After Trace"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">
@@ -39,6 +59,12 @@
             icon="icons/microbat.png"
             id="microbat.perspectives.MicroBatPerspective"
             name="MicroBat">
+      </perspective>
+      <perspective
+            class="microbat.evaluation.perspectives.TraceComparisonPerspective"
+            icon="icons/trace_comparison.png"
+            id="microbat.perspective.traceChecking"
+            name="Trace Comparison">
       </perspective>
    </extension>
    <extension
