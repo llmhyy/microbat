@@ -780,7 +780,7 @@ public class DebugFeedbackView extends ViewPart {
 		
 		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
 //			TraceView view = MicroBatViews.getTraceView();
-			getTraceView().jumpToNode(trace, suspiciousNode.getOrder());
+			getTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
 		}
 	}
 	

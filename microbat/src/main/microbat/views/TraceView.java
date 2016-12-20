@@ -137,7 +137,7 @@ public class TraceView extends ViewPart {
 //		int selectionIndex = trace.searchBackwardTraceNode(searchContent);
 		if(selectionIndex != -1){
 			this.jumpFromSearch = true;
-			jumpToNode(trace, selectionIndex+1);
+			jumpToNode(trace, selectionIndex+1, true);
 		}
 		else{
 			MessageBox box = new MessageBox(PlatformUI.getWorkbench()
@@ -148,11 +148,19 @@ public class TraceView extends ViewPart {
 		
 	}
 	
+	/**
+	 * indicate a node is selected by tool or human users.
+	 */
 	private boolean programmingSelection = false;
 	
-	public void jumpToNode(Trace trace, int order){
+	/**
+	 * indicate whether the program state should be refreshed when a trace
+	 * node is selected programmatically.
+	 */
+	protected boolean refreshProgramState = true;
+	
+	public void jumpToNode(Trace trace, int order, boolean refreshProgramState){
 		TraceNode node = trace.getExectionList().get(order-1);
-		
 		
 		List<TraceNode> path = new ArrayList<>();
 		while(node != null){
@@ -173,8 +181,13 @@ public class TraceView extends ViewPart {
 		node = trace.getExectionList().get(order-1);
 		
 		programmingSelection = true;
+		this.refreshProgramState = refreshProgramState;
+		/**
+		 * This step will trigger a callback function of node selection.
+		 */
 		listViewer.setSelection(new StructuredSelection(node), true);	
 		programmingSelection = false;
+		this.refreshProgramState = true;
 		
 		listViewer.refresh();
 	}
@@ -379,8 +392,11 @@ public class TraceView extends ViewPart {
 	
 	protected void otherViewsBehavior(TraceNode node) {
 		DebugFeedbackView feedbackView = MicroBatViews.getDebugFeedbackView();
-		feedbackView.setTraceView(TraceView.this);
-		feedbackView.refresh(node);
+
+		if(this.refreshProgramState){
+			feedbackView.setTraceView(TraceView.this);
+			feedbackView.refresh(node);
+		}
 		
 		ReasonView reasonView = MicroBatViews.getReasonView();
 		reasonView.refresh(feedbackView.getRecommender());

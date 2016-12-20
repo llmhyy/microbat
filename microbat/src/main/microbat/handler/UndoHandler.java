@@ -54,7 +54,7 @@ public class UndoHandler extends AbstractHandler {
 		debugFeedbackView.setRecommender(state.getRecommender());
 		
 		TraceView traceView = MicroBatViews.getTraceView();
-		traceView.jumpToNode(trace, currentNode.getOrder());
+		traceView.jumpToNode(trace, currentNode.getOrder(), true);
 	}
 	
 	

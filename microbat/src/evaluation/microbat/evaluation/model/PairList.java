@@ -34,6 +34,15 @@ public class PairList {
 		return null;
 	}
 	
+	public TraceNodePair findByOriginalNode(TraceNode node) {
+		for(TraceNodePair pair: pairList){
+			if(pair.getOriginalNode().equals(node)){
+				return pair;
+			}
+		}
+		return null;
+	}
+	
 	public int size(){
 		return pairList.size();
 	}

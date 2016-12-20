@@ -34,6 +34,7 @@ import microbat.evaluation.SimulatedMicroBat;
 import microbat.evaluation.TraceModelConstructor;
 import microbat.evaluation.io.ExcelReporter;
 import microbat.evaluation.io.IgnoredTestCaseFiles;
+import microbat.evaluation.model.PairList;
 import microbat.evaluation.model.Trial;
 import microbat.evaluation.views.AfterTraceView;
 import microbat.evaluation.views.BeforeTraceView;
@@ -190,10 +191,10 @@ public class TestCaseAnalyzer {
 			System.err.println("Mutated File: " + mutatedFile);
 		}
 		
-		visualize(killingMutatantTrace, correctTrace);
+		visualize(killingMutatantTrace, correctTrace, microbat.getPairList());
 	}
 
-	private void visualize(final Trace killingMutatantTrace, final Trace correctTrace) {
+	private void visualize(final Trace killingMutatantTrace, final Trace correctTrace, final PairList pairList) {
 		
 		Display.getDefault().asyncExec(new Runnable(){
 			
@@ -202,10 +203,12 @@ public class TestCaseAnalyzer {
 				BeforeTraceView beforeView = EvaluationViews.getBeforeTraceView();
 				beforeView.setTrace(correctTrace);
 				beforeView.updateData();
+				beforeView.setPairList(pairList);
 				
 				AfterTraceView afterView = EvaluationViews.getAfterTraceView();
 				afterView.setTrace(killingMutatantTrace);
 				afterView.updateData();
+				afterView.setPairList(pairList);
 			}
 			
 		});

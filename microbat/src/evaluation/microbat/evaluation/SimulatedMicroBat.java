@@ -88,7 +88,7 @@ public class SimulatedMicroBat {
 	}
 
 	
-	PairList pairList;
+	private PairList pairList;
 	TraceNode rootCause;
 	Map<Integer, TraceNode> allWrongNodeMap;
 	TraceNode observedFaultNode;
@@ -96,17 +96,17 @@ public class SimulatedMicroBat {
 	public void prepare(Trace mutatedTrace, Trace correctTrace, ClassLocation mutatedLocation, 
 			String testCaseName, String mutatedFile){
 //		PairList pairList = DiffUtil.generateMatchedTraceNodeList(mutatedTrace, correctTrace);
-		pairList = matchTraceNodePair(mutatedTrace, correctTrace); 
+		setPairList(matchTraceNodePair(mutatedTrace, correctTrace)); 
 		
 		rootCause = findRootCause(mutatedLocation.getClassCanonicalName(), 
-				mutatedLocation.getLineNo(), mutatedTrace, pairList);
+				mutatedLocation.getLineNo(), mutatedTrace, getPairList());
 		
-		allWrongNodeMap = findAllWrongNodes(pairList, mutatedTrace);
+		allWrongNodeMap = findAllWrongNodes(getPairList(), mutatedTrace);
 		
 		if(!allWrongNodeMap.isEmpty()){
 			List<TraceNode> wrongNodeList = new ArrayList<>(allWrongNodeMap.values());
 			Collections.sort(wrongNodeList, new TraceNodeReverseOrderComparator());
-			observedFaultNode = findObservedFault(wrongNodeList, pairList);
+			observedFaultNode = findObservedFault(wrongNodeList, getPairList());
 		}
 		
 	}
@@ -135,7 +135,7 @@ public class SimulatedMicroBat {
 		mutatedTrace.resetCheckTime();
 		if(observedFaultNode != null){
 			try {
-				Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, pairList, 
+				Trial trial = startSimulation(observedFaultNode, rootCause, mutatedTrace, allWrongNodeMap, getPairList(), 
 						testCaseName, mutatedFile, unclearRate, enableLoopInference, optionSearchLimit);
 //				System.currentTimeMillis();
 				return trial;			
@@ -666,6 +666,16 @@ public class SimulatedMicroBat {
 		int checkTime = trace.getCheckTime()+1;
 		currentNode.setCheckTime(checkTime);
 		trace.setCheckTime(checkTime);
+	}
+
+
+	public PairList getPairList() {
+		return pairList;
+	}
+
+
+	public void setPairList(PairList pairList) {
+		this.pairList = pairList;
 	}
 
 
