@@ -49,12 +49,12 @@ public class EvaluationTrialHandler extends AbstractHandler {
 //		boolean isReuseTrace = false;
 //		int optionSearchLimit = 1000;
 		
-		String testClassName = "org.apache.commons.math.distribution.NormalDistributionTest";
-		String testMethodName = "testSetMean";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\1337_39_1\\FastMath.java";
+		String testClassName = "org.apache.commons.math.analysis.ComposableFunctionTest";
+		String testMethodName = "testCollector";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\1267_19_1\\FastMath.java";
 		double unclearRate = 0.0;
 		boolean enableLoopInference = false;
-		boolean isReuseTrace = true;
+		boolean isReuseTrace = false;
 		int optionSearchLimit = 1000;
 		
 		try {

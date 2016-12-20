@@ -298,6 +298,7 @@ public class TraceView extends ViewPart {
 						}
 						
 						DebugFeedbackView view = MicroBatViews.getDebugFeedbackView();
+						view.setTraceView(TraceView.this);
 						view.refresh(node);
 
 						markJavaEditor(node);

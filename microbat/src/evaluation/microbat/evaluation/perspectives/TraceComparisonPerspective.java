@@ -30,7 +30,7 @@ public class TraceComparisonPerspective implements IPerspectiveFactory {
 						IPageLayout.LEFT,
 						0.2f,
 						factory.getEditorArea());
-		topLeft.addView(EvaluationViews.BEFORE_TRACE); 
+		topLeft.addView(EvaluationViews.AFTER_TRACE); 
 		topLeft.addView(IPageLayout.ID_PROJECT_EXPLORER);
 		
 		IFolderLayout topRight =
@@ -39,7 +39,7 @@ public class TraceComparisonPerspective implements IPerspectiveFactory {
 						IPageLayout.RIGHT,
 						0.8f,
 						factory.getEditorArea());
-		topRight.addView(EvaluationViews.AFTER_TRACE); 
+		topRight.addView(EvaluationViews.BEFORE_TRACE); 
 		
 		IFolderLayout bottom =
 			factory.createFolder(

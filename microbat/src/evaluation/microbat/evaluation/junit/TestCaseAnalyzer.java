@@ -28,18 +28,24 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.swt.widgets.Display;
 
 import microbat.evaluation.SimulatedMicroBat;
 import microbat.evaluation.TraceModelConstructor;
 import microbat.evaluation.io.ExcelReporter;
 import microbat.evaluation.io.IgnoredTestCaseFiles;
 import microbat.evaluation.model.Trial;
+import microbat.evaluation.views.AfterTraceView;
+import microbat.evaluation.views.BeforeTraceView;
+import microbat.evaluation.views.EvaluationViews;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.util.JTestUtil;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
+import microbat.views.MicroBatViews;
+import microbat.views.TraceView;
 import mutation.mutator.Mutator;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.dto.ClassLocation;
@@ -183,6 +189,30 @@ public class TestCaseAnalyzer {
 			e.printStackTrace();
 			System.err.println("Mutated File: " + mutatedFile);
 		}
+		
+		visualize(killingMutatantTrace, correctTrace);
+	}
+
+	private void visualize(final Trace killingMutatantTrace, final Trace correctTrace) {
+		
+		Display.getDefault().asyncExec(new Runnable(){
+			
+			@Override
+			public void run() {
+				BeforeTraceView beforeView = EvaluationViews.getBeforeTraceView();
+				beforeView.setTrace(correctTrace);
+				beforeView.updateData();
+				
+				AfterTraceView afterView = EvaluationViews.getAfterTraceView();
+				afterView.setTrace(killingMutatantTrace);
+				afterView.updateData();
+			}
+			
+		});
+		
+		
+		
+		
 		
 	}
 
