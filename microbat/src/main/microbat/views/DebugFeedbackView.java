@@ -140,11 +140,6 @@ public class DebugFeedbackView extends ViewPart {
 		bugTypeInferenceButton.setEnabled(isValidToInferBugType());
 		
 		feedbackType = UserFeedback.INCORRECT;
-		
-		
-		ReasonView view = MicroBatViews.getReasonView();
-		view.refresh(recommender);
-
 	}
 	
 	
@@ -1232,6 +1227,10 @@ public class DebugFeedbackView extends ViewPart {
 			return false;
 		}
 		
+	}
+	
+	public StepRecommender getRecommender(){
+		return this.recommender;
 	}
 	
 //	private List<ExecValue> filterVariable(BreakPointValue value, List<Variable> criteria){

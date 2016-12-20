@@ -59,9 +59,9 @@ import microbat.util.Settings;
 
 public class TraceView extends ViewPart {
 	
-	private Trace trace;
+	protected Trace trace;
+	protected TreeViewer listViewer;
 	
-	private TreeViewer listViewer;
 	private Text searchText;
 	private Button searchButton;
 	
@@ -179,6 +179,54 @@ public class TraceView extends ViewPart {
 		listViewer.refresh();
 	}
 
+	@SuppressWarnings("unchecked")
+	protected void markJavaEditor(TraceNode node) {
+		BreakPoint breakPoint = node.getBreakPoint();
+		String qualifiedName = breakPoint.getClassCanonicalName();
+		ICompilationUnit javaUnit = JavaUtil.findICompilationUnitInProject(qualifiedName);
+		
+		try {
+			ITextEditor sourceEditor = (ITextEditor) JavaUI.openInEditor(javaUnit);
+			AnnotationModel annotationModel = (AnnotationModel)sourceEditor.getDocumentProvider().
+					getAnnotationModel(sourceEditor.getEditorInput());
+			/**
+			 * remove all the other annotations
+			 */
+			Iterator<Annotation> annotationIterator = annotationModel.getAnnotationIterator();
+			while(annotationIterator.hasNext()) {
+				Annotation currentAnnotation = annotationIterator.next();
+				annotationModel.removeAnnotation(currentAnnotation);
+			}	
+			
+			IFile javaFile = (IFile)sourceEditor.getEditorInput().getAdapter(IResource.class);
+			IDocumentProvider provider = new TextFileDocumentProvider();
+			provider.connect(javaFile);
+			IDocument document = provider.getDocument(javaFile);
+			IRegion region = document.getLineInformation(breakPoint.getLineNumber()-1);
+			
+			if (region != null) {
+				sourceEditor.selectAndReveal(region.getOffset(), 0);
+			}
+			
+			ReferenceAnnotation annotation = new ReferenceAnnotation(false, "Please check the status of this line");
+			Position position = new Position(region.getOffset(), region.getLength());
+			
+			annotationModel.addAnnotation(annotation, position);
+			
+			
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		} catch (JavaModelException e) {
+			e.printStackTrace();
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
 	@Override
 	public void createPartControl(Composite parent) {
 		GridLayout layout = new GridLayout();
@@ -297,11 +345,7 @@ public class TraceView extends ViewPart {
 							new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
 						}
 						
-						DebugFeedbackView view = MicroBatViews.getDebugFeedbackView();
-						view.setTraceView(TraceView.this);
-						view.refresh(node);
-
-						markJavaEditor(node);
+						otherViewsBehavior(node);
 						
 						if(jumpFromSearch){
 							jumpFromSearch = false;
@@ -329,57 +373,22 @@ public class TraceView extends ViewPart {
 				
 			}
 
-			@SuppressWarnings("unchecked")
-			private void markJavaEditor(TraceNode node) {
-				BreakPoint breakPoint = node.getBreakPoint();
-				String qualifiedName = breakPoint.getClassCanonicalName();
-				ICompilationUnit javaUnit = JavaUtil.findICompilationUnitInProject(qualifiedName);
-				
-				try {
-					ITextEditor sourceEditor = (ITextEditor) JavaUI.openInEditor(javaUnit);
-					AnnotationModel annotationModel = (AnnotationModel)sourceEditor.getDocumentProvider().
-							getAnnotationModel(sourceEditor.getEditorInput());
-					/**
-					 * remove all the other annotations
-					 */
-					Iterator<Annotation> annotationIterator = annotationModel.getAnnotationIterator();
-					while(annotationIterator.hasNext()) {
-						Annotation currentAnnotation = annotationIterator.next();
-						annotationModel.removeAnnotation(currentAnnotation);
-					}	
-					
-					IFile javaFile = (IFile)sourceEditor.getEditorInput().getAdapter(IResource.class);
-					IDocumentProvider provider = new TextFileDocumentProvider();
-					provider.connect(javaFile);
-					IDocument document = provider.getDocument(javaFile);
-					IRegion region = document.getLineInformation(breakPoint.getLineNumber()-1);
-					
-					if (region != null) {
-						sourceEditor.selectAndReveal(region.getOffset(), 0);
-					}
-					
-					ReferenceAnnotation annotation = new ReferenceAnnotation(false, "Please check the status of this line");
-					Position position = new Position(region.getOffset(), region.getLength());
-					
-					annotationModel.addAnnotation(annotation, position);
-					
-					
-				} catch (PartInitException e) {
-					e.printStackTrace();
-				} catch (JavaModelException e) {
-					e.printStackTrace();
-				} catch (BadLocationException e) {
-					e.printStackTrace();
-				} catch (CoreException e) {
-					e.printStackTrace();
-				}
-				
-			}
+			
 		});
 	}
 	
+	protected void otherViewsBehavior(TraceNode node) {
+		DebugFeedbackView feedbackView = MicroBatViews.getDebugFeedbackView();
+		feedbackView.setTraceView(TraceView.this);
+		feedbackView.refresh(node);
+		
+		ReasonView reasonView = MicroBatViews.getReasonView();
+		reasonView.refresh(feedbackView.getRecommender());
+	
+		markJavaEditor(node);
+	}
+
 	public void updateData(){
-//		Trace trace = Activator.getDefault().getCurrentTrace();
 		listViewer.setInput(trace);
 		listViewer.refresh();
 	}
