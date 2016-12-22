@@ -23,11 +23,14 @@ public class AfterTraceView extends TraceView {
 		}
 		
 		TraceNodePair pair = pairList.findByMutatedNode(node);
-		TraceNode originalNode = pair.getOriginalNode();
 		
-		if(originalNode != null){
-			BeforeTraceView view = EvaluationViews.getBeforeTraceView();	
-			view.jumpToNode(view.getTrace(), originalNode.getOrder(), false);
+		if(pair != null){
+			TraceNode originalNode = pair.getOriginalNode();
+			
+			if(originalNode != null){
+				BeforeTraceView view = EvaluationViews.getBeforeTraceView();	
+				view.jumpToNode(view.getTrace(), originalNode.getOrder(), false);
+			}
 		}
 	
 		markJavaEditor(node);
