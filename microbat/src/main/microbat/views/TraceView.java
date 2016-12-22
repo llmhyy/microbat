@@ -350,7 +350,7 @@ public class TraceView extends ViewPart {
 					if(obj instanceof TraceNode){
 						TraceNode node = (TraceNode)obj;
 						
-						showDebuggingInfo(node);
+//						showDebuggingInfo(node);
 						
 						if(!programmingSelection){
 							Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
