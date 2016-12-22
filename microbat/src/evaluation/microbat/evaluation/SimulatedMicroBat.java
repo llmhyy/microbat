@@ -145,6 +145,12 @@ public class SimulatedMicroBat {
 			}
 			
 			observedFaultNode = wrongNodeList.get(index-1);
+			
+			if(observedFaultNode.getControlDominator() == null){
+				if(index < wrongNodeList.size()){
+					observedFaultNode = wrongNodeList.get(index);					
+				}
+			}
 		}
 		
 		return observedFaultNode;
