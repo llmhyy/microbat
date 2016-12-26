@@ -12,6 +12,7 @@ import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.shrikeCT.InvalidClassFileException;
 
 import microbat.recommendation.AdvancedDetailInspector;
+import microbat.recommendation.SootAnalyzer;
 
 public class StaticAnalysisHandler extends AbstractHandler{
 
@@ -22,12 +23,15 @@ public class StaticAnalysisHandler extends AbstractHandler{
 			
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				AdvancedDetailInspector inspector = new AdvancedDetailInspector();
-				try {
-					inspector.analysis();
-				} catch (ClassHierarchyException | InvalidClassFileException e) {
-					e.printStackTrace();
-				}
+//				AdvancedDetailInspector inspector = new AdvancedDetailInspector();
+//				try {
+//					inspector.analysis();
+//				} catch (ClassHierarchyException | InvalidClassFileException e) {
+//					e.printStackTrace();
+//				}
+				
+				SootAnalyzer analyzer = new SootAnalyzer();
+				analyzer.analyze();
 				
 				return Status.OK_STATUS;
 			}
