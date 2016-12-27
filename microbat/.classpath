@@ -14,7 +14,7 @@
 	</classpathentry>
 	<classpathentry kind="src" path="src/evaluation"/>
 	<classpathentry kind="src" path="src/behavior"/>
-	<classpathentry exported="true" kind="lib" path="lib/soot-2.5.0.jar" sourcepath="lib/sootall-2.5.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/soot-2.5.0.jar" sourcepath="lib/sootsrc-2.5.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/bcel-5.2.jar" sourcepath="lib/bcel-5.2-src.zip"/>
 	<classpathentry exported="true" kind="lib" path="lib/poi-ooxml-schemas-3.11-20141221.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/xmlbeans-2.6.0.jar"/>
