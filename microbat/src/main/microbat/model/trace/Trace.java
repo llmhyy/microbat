@@ -271,6 +271,7 @@ public class Trace {
 	private void constructControlDomianceRelation() {
 		TraceNode controlDominator = null;
 		for(TraceNode node: this.exectionList){
+			
 			if(controlDominator != null){
 				if(controlDominator.getControlScope() == null){
 					System.currentTimeMillis();

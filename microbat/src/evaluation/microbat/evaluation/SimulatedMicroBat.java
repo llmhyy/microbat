@@ -111,20 +111,47 @@ public class SimulatedMicroBat {
 		
 	}
 	
-	private TraceNode findObservedFault(List<TraceNode> wrongNodeList, PairList pairList){
-//		TraceNode observedFaultNode = null;
-//		
-//		for(TraceNode node: wrongNodeList){
-//			TraceNodePair pair = pairList.findByMutatedNode(node);
-//			if(pair != null){
-//				if(pair.getOriginalNode() != null){
-//					observedFaultNode = node;
-//					break;					
-//				}
-//			}
-//		}
+	private boolean isObservedFaultWrongPath(TraceNode observableNode, PairList pairList){
+		TraceNodePair pair = pairList.findByMutatedNode(observableNode);
+		if(pair == null){
+			return true;
+		}
 		
-		observedFaultNode = wrongNodeList.get(0);
+		if(pair.getOriginalNode() == null){
+			return true;
+		}
+		
+		return false;
+	}
+	
+	private TraceNode findObservedFault(List<TraceNode> wrongNodeList, PairList pairList){
+		TraceNode observedFaultNode = wrongNodeList.get(0);
+		
+		/**
+		 * If the last portion of steps in trace are all wrong-path nodes, then we choose
+		 * the one at the beginning of this portion as the observable step. 
+		 */
+		if(isObservedFaultWrongPath(observedFaultNode, pairList)){
+			int index = 1;
+			observedFaultNode = wrongNodeList.get(index);
+			while(isObservedFaultWrongPath(observedFaultNode, pairList)){
+				index++;
+				if(index < wrongNodeList.size()){
+					observedFaultNode = wrongNodeList.get(index);					
+				}
+				else{
+					break;
+				}
+			}
+			
+			observedFaultNode = wrongNodeList.get(index-1);
+			
+			if(observedFaultNode.getControlDominator() == null){
+				if(index < wrongNodeList.size()){
+					observedFaultNode = wrongNodeList.get(index);					
+				}
+			}
+		}
 		
 		return observedFaultNode;
 	}

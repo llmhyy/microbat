@@ -269,8 +269,21 @@ public class LineNumberVisitor extends EmptyVisitor {
 			}
 		}
 		
-		LoopHeadParser lhParser = new LoopHeadParser(cu, point.getLineNumber());
+		LoopHeadParser lhParser = new LoopHeadParser(cu, point);
 		cu.accept(lhParser);
+		
+		if(point.getLineNumber()==2572){
+			System.currentTimeMillis();
+		}
+		
+		List<ClassLocation> confirmedList = lhParser.extractLocation();
+		if(null != confirmedList){
+			for(ClassLocation location: confirmedList){
+				if(!list.contains(location)){
+					list.add(location);
+				}
+			}			
+		}
 		
 		point.mergeControlScope(new ControlScope(list, lhParser.isLoop()));
 		if(lhParser.isLoop()){
