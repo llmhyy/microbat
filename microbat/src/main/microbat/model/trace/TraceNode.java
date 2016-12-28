@@ -892,4 +892,24 @@ public class TraceNode{
 	public boolean isWrongPathNode() {
 		return Settings.wrongPathNodeOrder.contains(new Integer(this.getOrder()));
 	}
+	
+	public List<VarValue> getWrongReadVars(UserInterestedVariables interestedVariables) {
+		List<VarValue> vars = new ArrayList<>();
+		for(VarValue var: getReadVariables()){
+			if(interestedVariables.contains(var.getVarID())){
+				vars.add(var);
+			}
+			
+			List<VarValue> children = var.getAllDescedentChildren();
+			for(VarValue child: children){
+				if(interestedVariables.contains(child.getVarID())){
+					if(!vars.contains(child)){
+						vars.add(child);
+					}
+				}
+			}
+		}
+		
+		return vars;
+	}
 }

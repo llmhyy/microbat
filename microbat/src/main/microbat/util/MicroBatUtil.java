@@ -51,7 +51,7 @@ public class MicroBatUtil {
 				String path = classpathEntry.getPath().toOSString();
 				String newPath = path.substring(path.indexOf(File.separator, 1));
 				newPath = projectPath + newPath;
-				appClassPath.addClasspath(path);
+				appClassPath.addClasspath(newPath);
 			}
 		}
 		

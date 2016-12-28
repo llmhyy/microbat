@@ -123,7 +123,7 @@ public class StepRecommender {
 //	private TraceNode lastRecommendNode;
 	private Cause latestCause = new Cause();
 	private LoopRange loopRange = new LoopRange();
-	private DetailInspector detailInspector = new SimpleDetailInspector();
+	private DetailInspector detailInspector = DetailInspectorFactory.createInspector();
 	
 	private List<TraceNode> visitedUnclearNodeList = new ArrayList<>();
 	
