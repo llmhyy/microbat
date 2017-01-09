@@ -3,6 +3,7 @@ package microbat.evaluation.model;
 import java.util.ArrayList;
 
 import microbat.handler.CheckingState;
+import microbat.recommendation.ChosenVariableOption;
 
 public class StateWrapper {
 	private CheckingState state;

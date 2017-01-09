@@ -1,4 +1,4 @@
-package microbat.evaluation.model;
+package microbat.recommendation;
 
 import java.util.ArrayList;
 import java.util.List;

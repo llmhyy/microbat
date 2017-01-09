@@ -5,13 +5,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import microbat.evaluation.model.ChosenVariableOption;
 import microbat.evaluation.model.OptionComparator;
 import microbat.evaluation.model.PairList;
 import microbat.evaluation.model.TraceNodePair;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.Settings;
 

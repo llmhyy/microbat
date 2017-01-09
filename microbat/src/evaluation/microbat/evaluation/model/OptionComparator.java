@@ -3,6 +3,7 @@ package microbat.evaluation.model;
 import java.util.Comparator;
 
 import microbat.model.value.VarValue;
+import microbat.recommendation.ChosenVariableOption;
 import microbat.util.PrimitiveUtils;
 
 /**
