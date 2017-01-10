@@ -106,7 +106,7 @@ public class SimulatedUser {
 						Settings.interestedVariables.add(wrongVarID, checkTime);						
 					}
 					
-					feedback.setFeedbackType(UserFeedback.INCORRECT);
+					feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
 					feedback.setOption(option);
 				}
 			}

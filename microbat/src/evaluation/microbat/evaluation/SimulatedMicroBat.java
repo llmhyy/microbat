@@ -364,7 +364,7 @@ public class SimulatedMicroBat {
 						for(String wrongVarID: option.getIncludedWrongVarID()){
 							Settings.interestedVariables.add(wrongVarID, checkTime);
 						}
-						feedback = new UserFeedback(option, UserFeedback.INCORRECT);
+						feedback = new UserFeedback(option, UserFeedback.WRONG_VARIABLE_VALUE);
 						
 						pair = pairList.findByMutatedNode(suspiciousNode);
 						referenceNode = (pair==null)? null : pair.getOriginalNode();

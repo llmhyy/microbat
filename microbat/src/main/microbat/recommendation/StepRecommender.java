@@ -183,7 +183,7 @@ public class StepRecommender {
 			}
 		}
 		else if((state==DebugState.UNCLEAR || state==DebugState.PARTIAL_CLEAR) && 
-				(feedback.equals(UserFeedback.INCORRECT) || feedback.equals(UserFeedback.WRONG_PATH))){
+				(feedback.equals(UserFeedback.WRONG_VARIABLE_VALUE) || feedback.equals(UserFeedback.WRONG_PATH))){
 			visitedUnclearNodeList.clear();
 			state = latestClearState;
 			TraceNode node = recommendSuspiciousNode(trace, currentNode, feedback);
@@ -416,7 +416,7 @@ public class StepRecommender {
 			}
 		}
 		
-		if(userFeedBack.equals(UserFeedback.INCORRECT)){
+		if(userFeedBack.equals(UserFeedback.WRONG_VARIABLE_VALUE)){
 			this.latestCause.setBuggyNode(currentNode);
 			this.latestCause.setWrongVariableID(wrongVarID);
 			this.latestCause.setWrongPath(false);			

@@ -70,7 +70,7 @@ public class DebugFeedbackView extends ViewPart {
 	
 	private StepRecommender recommender = new StepRecommender(Settings.enableLoopInference);
 	
-	private String feedbackType = UserFeedback.INCORRECT;
+	private String feedbackType = UserFeedback.WRONG_VARIABLE_VALUE;
 	private String lastFeedbackType = null;
 	
 //	public static final String INPUT = "input";
@@ -139,7 +139,7 @@ public class DebugFeedbackView extends ViewPart {
 		wrongPathButton.setSelection(false);
 		bugTypeInferenceButton.setEnabled(isValidToInferBugType());
 		
-		feedbackType = UserFeedback.INCORRECT;
+		feedbackType = UserFeedback.WRONG_VARIABLE_VALUE;
 	}
 	
 	
@@ -557,7 +557,7 @@ public class DebugFeedbackView extends ViewPart {
 			}
 
 			public void mouseDown(MouseEvent e) {
-				feedbackType = UserFeedback.INCORRECT;
+				feedbackType = UserFeedback.WRONG_VARIABLE_VALUE;
 			}
 
 			public void mouseDoubleClick(MouseEvent e) {
@@ -749,7 +749,7 @@ public class DebugFeedbackView extends ViewPart {
 			if(feedbackType.equals(UserFeedback.CORRECT)){
 				behavior.increaseCorrectFeedback();
 			}
-			else if(feedbackType.equals(UserFeedback.INCORRECT)){
+			else if(feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)){
 				behavior.increaseWrongValueFeedback();
 			}
 			else if(feedbackType.equals(UserFeedback.WRONG_PATH)){
