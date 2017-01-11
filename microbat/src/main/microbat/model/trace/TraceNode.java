@@ -107,6 +107,21 @@ public class TraceNode{
 		return writtenCorrect && readCorrect;
 	}
 	
+	public TraceNode findDataDominator(VarValue readVar) {
+		TraceNode dataDominator = null;
+		
+		Map<TraceNode, List<String>> dataDomiators = getDataDominator();
+		for(TraceNode dataDom: dataDomiators.keySet()){
+			List<String> varIDs = dataDomiators.get(dataDom);
+			for(String varID: varIDs){
+				if(varID.equals(readVar.getVarID())){
+					dataDominator = dataDom;
+				}
+			}
+		}
+		return dataDominator;
+	}
+	
 	public int getReadVarCorrectness(UserInterestedVariables interestedVariables, boolean isUICheck){
 		
 		for(VarValue var: getReadVariables()){
