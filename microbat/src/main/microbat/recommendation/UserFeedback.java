@@ -2,7 +2,7 @@ package microbat.recommendation;
 
 public class UserFeedback {
 	public static final String CORRECT = "correct";
-	public static final String WRONG_VARIABLE_VALUE = "incorrect";
+	public static final String WRONG_VARIABLE_VALUE = "wrong variable value";
 	public static final String WRONG_PATH = "wrong path";
 	public static final String UNCLEAR = "unclear";
 	

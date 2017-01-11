@@ -714,7 +714,7 @@ public class ProgramExecutor extends Executor {
 	 * when the last interesting stepping statement is a return statement,
 	 * create a virtual variable.
 	 */
-	private void createVirutalVariableForReturnStatement(ThreadReference thread, TraceNode node, TraceNode lastestNode,
+	private void createVirutalVariableForReturnStatement(ThreadReference thread, TraceNode node, TraceNode returnNode,
 			Value returnedValue) {
 
 		if (returnedValue instanceof VoidValueImpl) {
@@ -747,15 +747,17 @@ public class ProgramExecutor extends Executor {
 
 		}
 
-		String virID = VirtualVar.VIRTUAL_PREFIX + lastestNode.getOrder();
+		String virID = VirtualVar.VIRTUAL_PREFIX + returnNode.getOrder();
 		
-		VirtualVar var = new VirtualVar(virID, returnedType);
+		String virName = VirtualVar.VIRTUAL_PREFIX + getDeclaringMethod(returnNode);
+		
+		VirtualVar var = new VirtualVar(virName, returnedType);
 		var.setVarID(virID);
 
 		Map<String, StepVariableRelationEntry> map = this.trace.getStepVariableTable();
 		StepVariableRelationEntry entry = new StepVariableRelationEntry(var.getVarID());
 		entry.addAliasVariable(var);
-		entry.addProducer(lastestNode);
+		entry.addProducer(returnNode);
 		entry.addConsumer(node);
 
 		VarValue varValue = new VirtualValue(false, var);
@@ -763,10 +765,75 @@ public class ProgramExecutor extends Executor {
 		// lastestNode.getBreakPoint().getMethodName() + "(...))";
 		varValue.setStringValue(returnedStringValue);
 
-		lastestNode.addWrittenVariable(varValue);
+		returnNode.addWrittenVariable(varValue);
 		node.addReadVariable(varValue);
 
 		map.put(var.getVarID(), entry);
+	}
+
+	class MethodNameRetriever extends ASTVisitor{
+		MethodDeclaration innerMostMethod = null;
+		
+		CompilationUnit cu;
+		int lineNumber;
+		
+		public MethodNameRetriever(CompilationUnit cu, int lineNumber){
+			this.cu = cu;
+			this.lineNumber = lineNumber;
+		}
+		
+		public boolean visit(MethodDeclaration md){
+			int start = cu.getLineNumber(md.getStartPosition());
+			int end = cu.getLineNumber(md.getStartPosition()+md.getLength());
+			
+			if(start <= lineNumber && lineNumber <= end){
+				if(innerMostMethod == null){
+					innerMostMethod = md;
+				}
+				else{
+					if(isMoreInner(md, innerMostMethod)){
+						innerMostMethod = md;
+					}
+				}
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
+
+		private boolean isMoreInner(MethodDeclaration oldMD, MethodDeclaration newMD) {
+			int oldStart = cu.getLineNumber(oldMD.getStartPosition());
+			int oldEnd = cu.getLineNumber(oldMD.getStartPosition()+oldMD.getLength());
+			
+			int newStart = cu.getLineNumber(newMD.getStartPosition());
+			int newEnd = cu.getLineNumber(newMD.getStartPosition()+newMD.getLength());
+			
+			if(oldStart<=newStart && newEnd<=oldEnd){
+				return true;
+			}
+			else{
+				return false;					
+			}
+		}
+	}
+	
+	private String getDeclaringMethod(TraceNode returnNode) {
+		int lineNumber = returnNode.getLineNumber();
+		String compilationUnitName = returnNode.getDeclaringCompilationUnitName();
+		final CompilationUnit cu = JavaUtil.findCompilationUnitInProject(compilationUnitName);
+		MethodNameRetriever retriever = new MethodNameRetriever(cu, lineNumber);
+		cu.accept(retriever);
+		
+		MethodDeclaration md = retriever.innerMostMethod;
+		
+		if(md != null){
+			String methodName = md.getName().getIdentifier();
+			return methodName;
+		}
+		else{
+			return compilationUnitName.substring(compilationUnitName.lastIndexOf(".")+1, compilationUnitName.length());
+		}
 	}
 
 	/**

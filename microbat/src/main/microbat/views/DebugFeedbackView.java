@@ -1143,7 +1143,8 @@ public class DebugFeedbackView extends ViewPart {
 				case 1: 
 					String name = varValue.getVarName();
 					if(varValue instanceof VirtualValue){
-						name = "return value";
+						String methodName = name.substring(name.indexOf(":")+1);
+						name = "return from " + methodName + "()";
 					}
 					return name;
 				case 2: return varValue.getManifestationValue();
