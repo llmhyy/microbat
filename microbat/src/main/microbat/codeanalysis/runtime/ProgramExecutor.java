@@ -289,7 +289,7 @@ public class ProgramExecutor extends Executor {
 						
 						TraceNode node = recordTrace(bkp, bkpVal);
 						
-						if(node.getOrder()==67){
+						if(node.getOrder()==5){
 							System.currentTimeMillis();
 						}
 						
@@ -327,6 +327,8 @@ public class ProgramExecutor extends Executor {
 							TraceNode parentInvocationNode = methodNodeStack.peek();
 							parentInvocationNode.addInvocationChild(node);
 							node.setInvocationParent(parentInvocationNode);
+							
+							System.currentTimeMillis();
 						}
 
 						/**
@@ -410,13 +412,21 @@ public class ProgramExecutor extends Executor {
 						}
 					}
 					else{
+						/**
+						 * The reason for push a clinit method is that: when calling the static method of a class,
+						 * JVM will trigger the event of entrying the clinit method of that class, then the JVM will 
+						 * never trigger method entry event of the corresponding method any more. Thus, there will miss
+						 * a method into stack. Therefore, we additionally push the clinit method into stack.
+						 */
 						if (lastStepEventRecordNode && this.methodEntryRequest.isEnabled()) {
-							TraceNode lastestNode = this.trace.getLastestNode();
-							methodNodeStack.push(lastestNode);
+							TraceNode latestNode = this.trace.getLastestNode();
+							
+							methodNodeStack.push(latestNode);
 							String methodSignature = createSignature(method);
 							methodSignatureStack.push(methodSignature);
 						}
 						this.methodEntryRequest.setEnabled(false);
+						this.methodExitRequset.setEnabled(false);
 					}
 					
 
