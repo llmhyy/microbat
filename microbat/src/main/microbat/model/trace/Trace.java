@@ -281,7 +281,8 @@ public class Trace {
 					controlDominator.addControlDominatee(node);
 					node.setControlDominator(controlDominator);
 				}
-				else{/** which means the {@code controlDominator} is no longer effective now */
+				/** which means the {@code controlDominator} is no longer effective now */
+				else{
 					controlDominator = findContainingControlDominator(node, controlDominator);
 					if(controlDominator != null){
 						controlDominator.addControlDominatee(node);

@@ -27,7 +27,6 @@ public class TraceModelConstructor {
 	 * Take care of project name, buggy class name, buggy line number, ...
 	 */
 	private void setup(){
-		//TODO
 	}
 	
 	public Trace constructTraceModel(AppJavaClassPath appClassPath, List<BreakPoint> executingStatements, int stepNum)
