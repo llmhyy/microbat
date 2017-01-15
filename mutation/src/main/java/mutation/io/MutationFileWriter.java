@@ -47,7 +47,7 @@ public class MutationFileWriter extends AbstractMutationFileWriter {
 			for (int i = 0; i < muNode.getMutatedNodes().size(); i++) {
 				Node node = muNode.getMutatedNodes().get(i);
 				File folder = FileUtils.createFolder(muSrcFolder, 
-						String.format("%d_%d_%d", 
+						String.format("%s_%d_%d_%d", className,
 							lineNo, muNode.getOrgNode().getBeginColumn(), count++));
 				File file = new File(folder, javaFile.getName());
 				List<?> lines;
