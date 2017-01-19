@@ -49,15 +49,16 @@ public class EvaluationTrialHandler extends AbstractHandler {
 //		boolean isReuseTrace = false;
 //		int optionSearchLimit = 1000;
 		
-		String testClassName = "org.apache.commons.math.fraction.FractionTest";
-		String testMethodName = "testReciprocal";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\920_17_1\\MathUtils.java";
-		double unclearRate = 0.0;
-		boolean enableLoopInference = false;
-		boolean isReuseTrace = false;
+		String testCase = "org.apache.commons.math.analysis.ComposableFunctionTest#testCollector";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\org.apache.commons.math.util.FastMath_1267_19_1\\FastMath.java";
+		double unclearRate = -1;
+		boolean enableLoopInference = true;
+		boolean isReuseTrace = true;
 		int optionSearchLimit = 1000;
 		
 		try {
+			String testClassName = testCase.substring(0, testCase.indexOf("#"));
+			String testMethodName = testCase.substring(testCase.indexOf("#")+1);
 			analyzer.runEvaluationForSingleTrial(testClassName, testMethodName, mutationFile, 
 					unclearRate, enableLoopInference, isReuseTrace, optionSearchLimit);
 		} catch (JavaModelException e) {

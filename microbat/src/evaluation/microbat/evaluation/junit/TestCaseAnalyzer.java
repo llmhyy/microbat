@@ -136,7 +136,7 @@ public class TestCaseAnalyzer {
 		String[] sections = mutationFile.split("\\\\");
 		String mutatedLineString = sections[sections.length-2];
 		String[] lines = mutatedLineString.split("_");
-		int mutatedLine = Integer.valueOf(lines[0]);
+		int mutatedLine = Integer.valueOf(lines[1]);
 		
 		CompilationUnit cu = JavaUtil.parseCompilationUnit(mutationFile);
 		String mutatedClassName = JavaUtil.getFullNameOfCompilationUnit(cu);

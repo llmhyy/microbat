@@ -22,11 +22,11 @@ public class EvaluationTestCaseHandler extends AbstractHandler {
 	private IgnoredTestCaseFiles ignoredTestCaseFiles;
 	private ParsedTrials parsedTrials;
 	
-	private int trialNumPerTestCase = 3;
+	private int trialNumPerTestCase = 1;
 	private double[] unclearRates = {0, 0.005, 0.01, 0.05, 0.1, -1};
 	
 	
-	private boolean isLimitTrialNum = false;
+	private boolean isLimitTrialNum = true;
 	private int optionSearchLimit = 100;
 	
 	@Override
@@ -41,8 +41,10 @@ public class EvaluationTestCaseHandler extends AbstractHandler {
 				TestCaseAnalyzer analyzer = new TestCaseAnalyzer();
 				try {
 					ExcelReporter reporter = new ExcelReporter(Settings.projectName, unclearRates);
-					String testClassName = "org.apache.commons.math.analysis.interpolation.DividedDifferenceInterpolatorTest";
-					String testMethodName = "testExpm1Function";
+					String testCase = "org.apache.commons.math.analysis.ComposableFunctionTest#testCollector";
+					
+					String testClassName = testCase.substring(0, testCase.indexOf("#"));
+					String testMethodName = testCase.substring(testCase.indexOf("#")+1);
 					analyzer.runEvaluationForSingleTestCase(testClassName, testMethodName, reporter, isLimitTrialNum,
 							ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, optionSearchLimit, monitor);
 				} catch (JavaModelException | IOException e) {
