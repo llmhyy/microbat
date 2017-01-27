@@ -49,8 +49,12 @@ public class EvaluationTrialHandler extends AbstractHandler {
 //		boolean isReuseTrace = false;
 //		int optionSearchLimit = 1000;
 		
-		String testCase = "org.apache.commons.math.analysis.ComposableFunctionTest#testCollector";
-		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\org.apache.commons.math.util.FastMath_1267_19_1\\FastMath.java";
+		String testCase = "org.apache.commons.math.linear.SparseFieldMatrixTest#testScalarAdd";
+		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\"
+				+ "org.apache.commons.math.util.MathUtils_920_17_1\\MathUtils.java";
+		
+//		String testCase = "org.apache.commons.math.analysis.ComposableFunctionTest#testCollector";
+//		String mutationFile = "C:\\microbat_evaluation\\apache-common-math-2.2\\org.apache.commons.math.util.FastMath_1267_19_1\\FastMath.java";
 		double unclearRate = -1;
 		boolean enableLoopInference = true;
 		boolean isReuseTrace = true;

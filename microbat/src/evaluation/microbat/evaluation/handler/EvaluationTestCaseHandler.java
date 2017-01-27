@@ -41,7 +41,8 @@ public class EvaluationTestCaseHandler extends AbstractHandler {
 				TestCaseAnalyzer analyzer = new TestCaseAnalyzer();
 				try {
 					ExcelReporter reporter = new ExcelReporter(Settings.projectName, unclearRates);
-					String testCase = "org.apache.commons.math.analysis.ComposableFunctionTest#testCollector";
+//					String testCase = "org.apache.commons.math.analysis.ComposableFunctionTest#testCollector";
+					String testCase = "org.apache.commons.math.linear.SparseFieldMatrixTest#testScalarAdd";
 					
 					String testClassName = testCase.substring(0, testCase.indexOf("#"));
 					String testMethodName = testCase.substring(testCase.indexOf("#")+1);

@@ -211,7 +211,7 @@ public class ProgramExecutor extends Executor {
 		while (!stop && !eventTimeout) {
 			EventSet eventSet;
 			try {
-				eventSet = eventQueue.remove(10000);
+				eventSet = eventQueue.remove(TIME_OUT);
 			} catch (InterruptedException e) {
 				break;
 			}
@@ -245,6 +245,8 @@ public class ProgramExecutor extends Executor {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
 
+					System.out.println(currentLocation);
+					
 					this.methodEntryRequest.setEnabled(true);
 					this.methodExitRequset.setEnabled(true);
 					
@@ -328,7 +330,7 @@ public class ProgramExecutor extends Executor {
 							parentInvocationNode.addInvocationChild(node);
 							node.setInvocationParent(parentInvocationNode);
 							
-							System.currentTimeMillis();
+//							System.currentTimeMillis();
 						}
 
 						/**
@@ -347,7 +349,7 @@ public class ProgramExecutor extends Executor {
 							returnedValue = lastestReturnedValue;
 						}
 
-						if (currentLocation.lineNumber()==85) {
+						if (currentLocation.lineNumber()==906) {
 							System.currentTimeMillis();
 						}
 						parseReadWrittenVariableInThisStep(thread, currentLocation, node,
@@ -371,7 +373,7 @@ public class ProgramExecutor extends Executor {
 					}
 
 					monitor.worked(1);
-					printProgress(trace.size(), stepNum);
+					//printProgress(trace.size(), stepNum);
 					if (monitor.isCanceled() || this.trace.getExectionList().size() >= Settings.stepLimit) {
 						stop = true;
 						break cancel;

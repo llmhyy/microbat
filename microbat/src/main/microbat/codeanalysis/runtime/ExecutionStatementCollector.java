@@ -9,6 +9,7 @@ import com.sun.jdi.Location;
 import com.sun.jdi.Method;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.event.ClassPrepareEvent;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.event.EventSet;
@@ -23,6 +24,7 @@ import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.ExceptionRequest;
 import com.sun.jdi.request.MethodEntryRequest;
+import com.sun.jdi.request.MethodExitRequest;
 import com.sun.jdi.request.StepRequest;
 
 import microbat.evaluation.junit.TestCaseAnalyzer;
@@ -61,7 +63,7 @@ public class ExecutionStatementCollector extends Executor{
 							addExceptionWatch(erm);
 							
 							if(isTestcaseEvaluation){
-//								this.stepRequest.disable();
+								this.stepRequest.disable();
 								addMethodWatch(erm);								
 							}
 							
@@ -69,6 +71,10 @@ public class ExecutionStatementCollector extends Executor{
 						else if(event instanceof VMDeathEvent
 							|| event instanceof VMDisconnectEvent){
 							connected = false;
+						}
+						else if(event instanceof ClassPrepareEvent){
+							ClassPrepareEvent cEvent = (ClassPrepareEvent)event;
+							System.out.println("prepare " + cEvent.referenceType().signature());
 						}
 						else if(event instanceof StepEvent){
 							StepEvent sEvent = (StepEvent)event;
@@ -79,6 +85,9 @@ public class ExecutionStatementCollector extends Executor{
 //							path = path.replace(File.separator, ".");
 //							
 //							System.out.println(location);
+//							if(location.lineNumber()==906){
+//								System.currentTimeMillis();
+//							}
 							
 							int lineNumber = location.lineNumber();
 							
@@ -105,10 +114,14 @@ public class ExecutionStatementCollector extends Executor{
 							
 							String declaringTypeName = method.declaringType().name();
 							String methodName = method.name();
+							
+							System.out.println("entering " + declaringTypeName + "." + methodName);
+							
 							if((declaringTypeName.equals("junit.framework.TestResult") && methodName.equals("run")) ||
 									(declaringTypeName.equals("org.junit.runners.BlockJUnit4ClassRunner")) && methodName.equals("methodBlock")){
 								this.stepRequest.enable();
 								this.methodEntryRequest.disable();
+								this.methodExitRequest.disable();
 							}
 						}
 						else if(event instanceof ExceptionEvent){
@@ -119,6 +132,7 @@ public class ExecutionStatementCollector extends Executor{
 					eventSet.resume();
 				}
 				else{
+					System.out.println("JVM time out when collecting statement");
 					vm.exit(0);
 					vm.dispose();
 					connected = false;
@@ -140,7 +154,7 @@ public class ExecutionStatementCollector extends Executor{
 			vm.dispose();
 		}
 		
-//		System.out.println("There are totally " + steps + " steps in this execution.");
+		System.out.println("There are totally " + steps + " steps in this execution.");
 		
 		return pointList;
 	}
@@ -162,33 +176,40 @@ public class ExecutionStatementCollector extends Executor{
 		for(String ex: stepWatchExcludes){
 			stepRequest.addClassExclusionFilter(ex);
 		}
+		
 		stepRequest.enable();
 	}
 	
 	private MethodEntryRequest methodEntryRequest;
+	private MethodExitRequest methodExitRequest;
 	/**
 	 * add method enter and exit event
 	 */
 	private void addMethodWatch(EventRequestManager erm) {
 		methodEntryRequest = erm.createMethodEntryRequest();
-		
 		String[] stepWatchExcludes = { "java.*", "java.lang.*", "javax.*", "sun.*", "com.sun.*"};
-		
 		for (String classPattern : stepWatchExcludes) {
 			methodEntryRequest.addClassExclusionFilter(classPattern);
 		}
 		methodEntryRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
 		methodEntryRequest.enable();
+		
+		methodExitRequest = erm.createMethodExitRequest();
+		for (String classPattern : stepWatchExcludes) {
+			methodExitRequest.addClassExclusionFilter(classPattern);
+		}
+		methodExitRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+		methodExitRequest.enable();
 	}
 	
 	/** add watch requests **/
 	protected void addClassWatch(EventRequestManager erm) {
 		ClassPrepareRequest classPrepareRequest = erm.createClassPrepareRequest();
-//		classPrepareRequest.addClassFilter("com.Main");
 		for(String ex: stepWatchExcludes){
 			classPrepareRequest.addClassExclusionFilter(ex);
 		}
 		classPrepareRequest.setEnabled(true);
+		
 	}
 	
 	protected void addExceptionWatch(EventRequestManager erm) {
