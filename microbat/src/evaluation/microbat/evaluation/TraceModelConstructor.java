@@ -60,7 +60,8 @@ public class TraceModelConstructor {
 		/** 4. extract runtime variables*/
 		tcExecutor.setConfig(appClassPath);
 		try {
-			tcExecutor.run(runningStatements, new SubProgressMonitor(new NullProgressMonitor(), 0), stepNum);
+			tcExecutor.run(runningStatements, 
+					new SubProgressMonitor(new NullProgressMonitor(), 0), stepNum, true);
 		} catch (SavException e) {
 			e.printStackTrace();
 		}

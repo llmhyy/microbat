@@ -63,7 +63,7 @@ public class ExecutionStatementCollector extends Executor{
 							addExceptionWatch(erm);
 							
 							if(isTestcaseEvaluation){
-//								this.stepRequest.disable();
+								this.stepRequest.disable();
 								addMethodWatch(erm);								
 							}
 							
@@ -84,7 +84,7 @@ public class ExecutionStatementCollector extends Executor{
 //							path = path.substring(0, path.indexOf(".java"));
 //							path = path.replace(File.separator, ".");
 //							
-							System.out.println(location);
+//							System.out.println(location);
 //							if(location.lineNumber()==906){
 //								System.currentTimeMillis();
 //							}
@@ -112,17 +112,26 @@ public class ExecutionStatementCollector extends Executor{
 						else if(event instanceof MethodEntryEvent){
 							Method method = ((MethodEntryEvent) event).method();
 							
-							String declaringTypeName = method.declaringType().name();
-							String methodName = method.name();
+							if(isTestcaseEvaluation){
+								String declaringTypeName = method.declaringType().name();
+//								String methodName = method.name();
+								
+								if(appClassPath.getOptionalTestClass().equals(declaringTypeName)){
+									this.stepRequest.enable();
+									this.methodEntryRequest.disable();
+									this.methodExitRequest.disable();
+								}
+							}
+							
 							
 //							System.out.println("entering " + declaringTypeName + "." + methodName);
 							
-							if((declaringTypeName.equals("junit.framework.TestResult") && methodName.equals("run")) ||
-									(declaringTypeName.equals("org.junit.runners.BlockJUnit4ClassRunner")) && methodName.equals("methodBlock")){
-								this.stepRequest.enable();
-								this.methodEntryRequest.disable();
-								this.methodExitRequest.disable();
-							}
+//							if((declaringTypeName.equals("junit.framework.TestResult") && methodName.equals("run")) ||
+//									(declaringTypeName.equals("org.junit.runners.BlockJUnit4ClassRunner")) && methodName.equals("methodBlock")){
+//								this.stepRequest.enable();
+//								this.methodEntryRequest.disable();
+//								this.methodExitRequest.disable();
+//							}
 						}
 						else if(event instanceof ExceptionEvent){
 							System.currentTimeMillis();
@@ -154,7 +163,7 @@ public class ExecutionStatementCollector extends Executor{
 			vm.dispose();
 		}
 		
-		System.out.println("There are totally " + steps + " steps in this execution.");
+//		System.out.println("There are totally " + steps + " steps in this execution.");
 		
 		return pointList;
 	}
@@ -187,7 +196,7 @@ public class ExecutionStatementCollector extends Executor{
 	 */
 	private void addMethodWatch(EventRequestManager erm) {
 		methodEntryRequest = erm.createMethodEntryRequest();
-		String[] stepWatchExcludes = { "java.*", "java.lang.*", "javax.*", "sun.*", "com.sun.*"};
+//		String[] stepWatchExcludes = { "java.*", "java.lang.*", "javax.*", "sun.*", "com.sun.*"};
 		for (String classPattern : stepWatchExcludes) {
 			methodEntryRequest.addClassExclusionFilter(classPattern);
 		}
