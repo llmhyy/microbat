@@ -132,7 +132,7 @@ public class ProgramExecutor extends Executor {
 	 * @param runningStatements
 	 * @throws SavException
 	 */
-	public void run(List<BreakPoint> runningStatements, IProgressMonitor monitor, int stepNum) throws SavException, TimeoutException {
+	public void run(List<BreakPoint> runningStatements, IProgressMonitor monitor, int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
 
 		this.brkpsMap = BreakpointUtils.initBrkpsMap(runningStatements);
 
@@ -140,7 +140,7 @@ public class ProgramExecutor extends Executor {
 		VirtualMachine vm = new VMStarter(this.config).start();
 
 		try{
-			constructTrace(monitor, vm, stepNum);			
+			constructTrace(monitor, this.config, vm, stepNum, isTestcaseEvaluation);			
 		}
 		finally{
 			if(vm != null){
@@ -152,7 +152,8 @@ public class ProgramExecutor extends Executor {
 
 	}
 
-	private void constructTrace(IProgressMonitor monitor, VirtualMachine vm, int stepNum) throws SavException, TimeoutException {
+	private void constructTrace(IProgressMonitor monitor, AppJavaClassPath appClassPath, VirtualMachine vm, int stepNum,
+			boolean isTestcaseEvaluation) throws SavException, TimeoutException {
 		EventRequestManager erm = vm.eventRequestManager();
 
 		/** add class watch, otherwise, I cannot catch the registered event */
@@ -188,6 +189,13 @@ public class ProgramExecutor extends Executor {
 		 * last recorded trace node should be method invocation.
 		 */
 		boolean lastStepEventRecordNode = false;
+		
+		/**
+		 * We support recoding the trace in two modes: normal mode and test case mode.
+		 * When in test case mode, a lot of method invocation from JUnit framework is useless,
+		 * so I need to skip some events from JUnit by this variable.
+		 */
+		boolean isInRecording = false;
 
 		/**
 		 * record the method entrance and exit so that I can build a
@@ -232,7 +240,12 @@ public class ProgramExecutor extends Executor {
 					System.out.println("JVM is started...");
 
 					addStepWatch(erm, event);
-					addMethodWatch(erm);
+					
+					if(isTestcaseEvaluation){
+						this.stepRequest.disable();
+						addMethodWatch(erm);
+					}
+					
 					addExceptionWatch(erm);
 				}
 				if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
@@ -245,7 +258,7 @@ public class ProgramExecutor extends Executor {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
 
-					System.out.println(currentLocation);
+//					System.out.println(currentLocation);
 					
 					this.methodEntryRequest.setEnabled(true);
 					this.methodExitRequset.setEnabled(true);
@@ -373,7 +386,7 @@ public class ProgramExecutor extends Executor {
 					}
 
 					monitor.worked(1);
-					//printProgress(trace.size(), stepNum);
+					printProgress(trace.size(), stepNum);
 					if (monitor.isCanceled() || this.trace.getExectionList().size() >= Settings.stepLimit) {
 						stop = true;
 						break cancel;
@@ -382,6 +395,20 @@ public class ProgramExecutor extends Executor {
 					MethodEntryEvent mee = (MethodEntryEvent) event;
 					Method method = mee.method();
 //					System.out.println("enter " + method + ":" + ((MethodEntryEvent)event).location());
+					
+					/**
+					 * See the explanation of isInRcording variable.
+					 */
+					if(isTestcaseEvaluation && !isInRecording){
+						String declaringTypeName = method.declaringType().name();
+						if(declaringTypeName.equals(appClassPath.getOptionalTestClass())){
+							this.stepRequest.enable();
+							isInRecording = true;
+						}
+						else{
+							continue;
+						}
+					}
 					
 					Location location = ((MethodEntryEvent) event).location();
 					
