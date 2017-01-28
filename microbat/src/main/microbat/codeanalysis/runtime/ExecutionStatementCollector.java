@@ -63,7 +63,7 @@ public class ExecutionStatementCollector extends Executor{
 							addExceptionWatch(erm);
 							
 							if(isTestcaseEvaluation){
-								this.stepRequest.disable();
+//								this.stepRequest.disable();
 								addMethodWatch(erm);								
 							}
 							
@@ -73,8 +73,8 @@ public class ExecutionStatementCollector extends Executor{
 							connected = false;
 						}
 						else if(event instanceof ClassPrepareEvent){
-							ClassPrepareEvent cEvent = (ClassPrepareEvent)event;
-							System.out.println("prepare " + cEvent.referenceType().signature());
+//							ClassPrepareEvent cEvent = (ClassPrepareEvent)event;
+//							System.out.println("prepare " + cEvent.referenceType().signature());
 						}
 						else if(event instanceof StepEvent){
 							StepEvent sEvent = (StepEvent)event;
@@ -84,7 +84,7 @@ public class ExecutionStatementCollector extends Executor{
 //							path = path.substring(0, path.indexOf(".java"));
 //							path = path.replace(File.separator, ".");
 //							
-//							System.out.println(location);
+							System.out.println(location);
 //							if(location.lineNumber()==906){
 //								System.currentTimeMillis();
 //							}
@@ -115,7 +115,7 @@ public class ExecutionStatementCollector extends Executor{
 							String declaringTypeName = method.declaringType().name();
 							String methodName = method.name();
 							
-							System.out.println("entering " + declaringTypeName + "." + methodName);
+//							System.out.println("entering " + declaringTypeName + "." + methodName);
 							
 							if((declaringTypeName.equals("junit.framework.TestResult") && methodName.equals("run")) ||
 									(declaringTypeName.equals("org.junit.runners.BlockJUnit4ClassRunner")) && methodName.equals("methodBlock")){
