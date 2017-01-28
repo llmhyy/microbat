@@ -154,7 +154,7 @@ public class ExecutionStatementCollector extends Executor{
 			vm.dispose();
 		}
 		
-		System.out.println("There are totally " + steps + " steps in this execution.");
+//		System.out.println("There are totally " + steps + " steps in this execution.");
 		
 		return pointList;
 	}
