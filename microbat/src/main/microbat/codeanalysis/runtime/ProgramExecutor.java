@@ -243,9 +243,9 @@ public class ProgramExecutor extends Executor {
 					
 					if(isTestcaseEvaluation){
 						this.stepRequest.disable();
-						addMethodWatch(erm);
 					}
 					
+					addMethodWatch(erm);
 					addExceptionWatch(erm);
 				}
 				if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
@@ -967,19 +967,19 @@ public class ProgramExecutor extends Executor {
 	 * add method enter and exit event
 	 */
 	private void addMethodWatch(EventRequestManager erm) {
-		setMethodEntryRequest(erm.createMethodEntryRequest());
+		methodEntryRequest = erm.createMethodEntryRequest();
 		for (String classPattern : stepWatchExcludes) {
-			getMethodEntryRequest().addClassExclusionFilter(classPattern);
+			methodEntryRequest.addClassExclusionFilter(classPattern);
 		}
-		getMethodEntryRequest().setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		getMethodEntryRequest().enable();
+		methodEntryRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+		methodEntryRequest.enable();
 
-		setMethodExitRequset(erm.createMethodExitRequest());
+		methodExitRequset = erm.createMethodExitRequest();
 		for (String classPattern : stepWatchExcludes) {
-			getMethodExitRequset().addClassExclusionFilter(classPattern);
+			methodExitRequset.addClassExclusionFilter(classPattern);
 		}
-		getMethodExitRequset().setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		getMethodExitRequset().enable();
+		methodExitRequset.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+		methodExitRequset.enable();
 	}
 
 	/** add watch requests **/
