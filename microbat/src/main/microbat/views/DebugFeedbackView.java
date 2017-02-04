@@ -706,6 +706,14 @@ public class DebugFeedbackView extends ViewPart {
 					
 					collectBehavior(feedbackType);
 					
+					if(feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) && feedback.getOption() == null){
+						List<VarValue> list = currentNode.getWrongReadVars(Settings.interestedVariables);
+						if(!list.isEmpty()){
+							ChosenVariableOption option = new ChosenVariableOption(list.get(0), null);
+							feedback.setOption(option);
+						}
+					}
+					
 					suspiciousNode = recommender.recommendNode(trace, currentNode, feedback);
 					lastFeedbackType = feedbackType;
 					
