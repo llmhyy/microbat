@@ -300,7 +300,7 @@ public class DebugFeedbackView extends ViewPart {
 					if(this.RWType.equals(Variable.WRITTEN)){
 						option.setWrittenVar(value);
 					}
-					
+					feedback.setOption(option);
 				}
 				else{
 					Settings.interestedVariables.remove(varID);
