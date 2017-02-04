@@ -127,12 +127,13 @@ public class StepRecommender {
 	
 	private List<TraceNode> visitedUnclearNodeList = new ArrayList<>();
 	
-	public TraceNode recommendNode(Trace trace, TraceNode currentNode, String feedback){
-		if(feedback.equals(UserFeedback.WRONG_PATH)){
+	public TraceNode recommendNode(Trace trace, TraceNode currentNode, UserFeedback userFeedback){
+		String feedbackType = userFeedback.getFeedbackType();
+		if(feedbackType.equals(UserFeedback.WRONG_PATH)){
 			Settings.wrongPathNodeOrder.add(currentNode.getOrder());
 		}
 		
-		if(feedback.equals(UserFeedback.UNCLEAR)){
+		if(feedbackType.equals(UserFeedback.UNCLEAR)){
 			
 			if(state==DebugState.SIMPLE_INFERENCE || state==DebugState.SKIP || state==DebugState.BINARY_SEARCH || state==DebugState.DETAIL_INSPECT){
 				latestClearState = state;
@@ -152,7 +153,7 @@ public class StepRecommender {
 			
 			return node;
 		}
-		else if((state==DebugState.UNCLEAR || state==DebugState.PARTIAL_CLEAR) && feedback.equals(UserFeedback.CORRECT)){
+		else if((state==DebugState.UNCLEAR || state==DebugState.PARTIAL_CLEAR) && feedbackType.equals(UserFeedback.CORRECT)){
 			state = DebugState.PARTIAL_CLEAR;
 			
 			Iterator<TraceNode> iter = visitedUnclearNodeList.iterator();
@@ -169,7 +170,7 @@ public class StepRecommender {
 			
 			if(earliestVisitedNode == null){
 				state = latestClearState;
-				TraceNode node = recommendSuspiciousNode(trace, currentNode, feedback);
+				TraceNode node = recommendSuspiciousNode(trace, currentNode, userFeedback);
 				return node;
 			}
 			else{
@@ -183,14 +184,14 @@ public class StepRecommender {
 			}
 		}
 		else if((state==DebugState.UNCLEAR || state==DebugState.PARTIAL_CLEAR) && 
-				(feedback.equals(UserFeedback.WRONG_VARIABLE_VALUE) || feedback.equals(UserFeedback.WRONG_PATH))){
+				(feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE) || feedbackType.equals(UserFeedback.WRONG_PATH))){
 			visitedUnclearNodeList.clear();
 			state = latestClearState;
-			TraceNode node = recommendSuspiciousNode(trace, currentNode, feedback);
+			TraceNode node = recommendSuspiciousNode(trace, currentNode, userFeedback);
 			return node;
 		}
 		else{
-			TraceNode node = recommendSuspiciousNode(trace, currentNode, feedback);
+			TraceNode node = recommendSuspiciousNode(trace, currentNode, userFeedback);
 			return node;
 		}
 	}
@@ -230,7 +231,7 @@ public class StepRecommender {
 		return null;
 	}
 
-	private TraceNode recommendSuspiciousNode(Trace trace, TraceNode currentNode, String userFeedBack){
+	private TraceNode recommendSuspiciousNode(Trace trace, TraceNode currentNode, UserFeedback userFeedBack){
 		
 		if(lastNode != null){
 			PathInstance path = new PathInstance(currentNode, lastNode);
@@ -264,7 +265,7 @@ public class StepRecommender {
 		return suspiciousNode;
 	}
 
-	private TraceNode handleBinarySearchState(Trace trace, TraceNode currentNode, String userFeedback) {
+	private TraceNode handleBinarySearchState(Trace trace, TraceNode currentNode, UserFeedback userFeedback) {
 		TraceNode suspiciousNode = null;
 		
 		boolean isOverSkipping = currentNode.isAllReadWrittenVarCorrect(false);
@@ -341,7 +342,7 @@ public class StepRecommender {
 		return null;
 	}
 
-	private TraceNode handleSkipState(Trace trace, TraceNode currentNode, String userFeedback) {
+	private TraceNode handleSkipState(Trace trace, TraceNode currentNode, UserFeedback userFeedback) {
 		TraceNode suspiciousNode;
 		boolean isOverSkipping = currentNode.isAllReadWrittenVarCorrect(false);
 		if(isOverSkipping){
@@ -376,22 +377,18 @@ public class StepRecommender {
 		return suspiciousNode;
 	}
 	
-	private TraceNode handleWrongValue(Trace trace, TraceNode currentNode, String userFeedBack){
+	private TraceNode handleWrongValue(Trace trace, TraceNode currentNode, UserFeedback userFeedback){
 		
-		List<VarValue> wrongReadVars = currentNode.findMarkedReadVariable();
-		VarValue wrongVar = (wrongReadVars.isEmpty())? null : wrongReadVars.get(0);
-		String wrongVarID = null;
+		String userFeedBackType = userFeedback.getFeedbackType();
 		
-		if(wrongVar != null){
-			this.latestCause.setWrongVariableID(wrongVar.getVarID());
-			wrongVarID = wrongVar.getVarID();
+		VarValue wrongVar = userFeedback.getOption().getReadVar();
+		if(wrongVar == null){
+			return currentNode;
 		}
-		/**
-		 * otherwise, there is two cases: 
-		 */
-		else{
-			wrongVarID = Settings.interestedVariables.getNewestVarID();
-		}
+		
+		String wrongVarID = wrongVar.getVarID();
+		this.latestCause.setWrongVariableID(wrongVar.getVarID());
+		wrongVarID = wrongVar.getVarID();
 		
 		/**
 		 * no variable has been selected yet.
@@ -416,7 +413,7 @@ public class StepRecommender {
 			}
 		}
 		
-		if(userFeedBack.equals(UserFeedback.WRONG_VARIABLE_VALUE)){
+		if(userFeedBackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)){
 			this.latestCause.setBuggyNode(currentNode);
 			this.latestCause.setWrongVariableID(wrongVarID);
 			this.latestCause.setWrongPath(false);			
@@ -485,13 +482,13 @@ public class StepRecommender {
 	 * @param userFeedBack
 	 * @return
 	 */
-	private TraceNode handleSimpleInferenceState(Trace trace, TraceNode currentNode, String userFeedBack) {
+	private TraceNode handleSimpleInferenceState(Trace trace, TraceNode currentNode, UserFeedback userFeedBack) {
 		
 		TraceNode node;
-		if(userFeedBack.equals(UserFeedback.WRONG_PATH)){
-			node = handleWrongPath(trace, currentNode, userFeedBack);
+		if(userFeedBack.getFeedbackType().equals(UserFeedback.WRONG_PATH)){
+			node = handleWrongPath(trace, currentNode, userFeedBack.getFeedbackType());
 		}
-		else if(userFeedBack.equals(UserFeedback.CORRECT)){
+		else if(userFeedBack.getFeedbackType().equals(UserFeedback.CORRECT)){
 			//TODO it could be done in a more intelligent way.
 			
 			InspectingRange inspectingRange = new InspectingRange(currentNode, latestCause.getBuggyNode());
@@ -532,9 +529,9 @@ public class StepRecommender {
 		return true;
 	}
 
-	private TraceNode handleDetailInspectingState(Trace trace, TraceNode currentNode, String userFeedBack) {
+	private TraceNode handleDetailInspectingState(Trace trace, TraceNode currentNode, UserFeedback userFeedBack) {
 		
-		if(userFeedBack.equals(UserFeedback.CORRECT)){
+		if(userFeedBack.getFeedbackType().equals(UserFeedback.CORRECT)){
 			this.state = DebugState.DETAIL_INSPECT;
 			TraceNode nextNode = this.detailInspector.recommendDetailNode(currentNode, trace);
 			return nextNode;

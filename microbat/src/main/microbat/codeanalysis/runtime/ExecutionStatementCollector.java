@@ -67,6 +67,7 @@ public class ExecutionStatementCollector extends Executor{
 								addMethodWatch(erm);								
 							}
 							
+							
 						}
 						else if(event instanceof VMDeathEvent
 							|| event instanceof VMDisconnectEvent){
@@ -79,15 +80,6 @@ public class ExecutionStatementCollector extends Executor{
 						else if(event instanceof StepEvent){
 							StepEvent sEvent = (StepEvent)event;
 							Location location = sEvent.location();
-							
-//							String path = location.sourcePath();
-//							path = path.substring(0, path.indexOf(".java"));
-//							path = path.replace(File.separator, ".");
-//							
-//							System.out.println(location);
-//							if(location.lineNumber()==906){
-//								System.currentTimeMillis();
-//							}
 							
 							int lineNumber = location.lineNumber();
 							
@@ -182,6 +174,7 @@ public class ExecutionStatementCollector extends Executor{
 		stepRequest = erm.createStepRequest(threadReference,  StepRequest.STEP_LINE, StepRequest.STEP_INTO);
 		stepRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
 		
+//		String[] stepWatchExcludes = { "java.*", "java.lang.*", "javax.*", "sun.*", "com.sun.*"};
 		for(String ex: stepWatchExcludes){
 			stepRequest.addClassExclusionFilter(ex);
 		}

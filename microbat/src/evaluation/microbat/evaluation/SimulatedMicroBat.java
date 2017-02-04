@@ -305,7 +305,7 @@ public class SimulatedMicroBat {
 				}
 				
 				TraceNode originalSuspiciousNode = suspiciousNode;
-				suspiciousNode = findSuspicioiusNode(suspiciousNode, mutatedTrace, feedback.getFeedbackType());	
+				suspiciousNode = findSuspicioiusNode(suspiciousNode, mutatedTrace, feedback);	
 				if(suspiciousNode==null && feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)){
 					UserFeedback f = new UserFeedback();
 					f.setFeedbackType("Missing Control Dominator!");
@@ -663,15 +663,15 @@ public class SimulatedMicroBat {
 		return null;
 	}
 
-	private TraceNode findSuspicioiusNode(TraceNode currentNode, Trace trace, String feedbackType) {
+	private TraceNode findSuspicioiusNode(TraceNode currentNode, Trace trace, UserFeedback feedback) {
 		setCurrentNodeCheck(trace, currentNode);
 		
 		
-		if(!feedbackType.equals(UserFeedback.UNCLEAR)){
+		if(!feedback.equals(UserFeedback.UNCLEAR)){
 			setCurrentNodeCheck(trace, currentNode);					
 		}
 		
-		TraceNode suspiciousNode = recommender.recommendNode(trace, currentNode, feedbackType);
+		TraceNode suspiciousNode = recommender.recommendNode(trace, currentNode, feedback);
 		return suspiciousNode;
 		
 //		TraceNode suspiciousNode = null;

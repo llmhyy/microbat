@@ -54,6 +54,7 @@ import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
 import microbat.recommendation.Bug;
 import microbat.recommendation.BugInferer;
+import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.StepRecommender;
 import microbat.recommendation.UserFeedback;
@@ -70,7 +71,7 @@ public class DebugFeedbackView extends ViewPart {
 	
 	private StepRecommender recommender = new StepRecommender(Settings.enableLoopInference);
 	
-	private String feedbackType = UserFeedback.WRONG_VARIABLE_VALUE;
+	private UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 	private String lastFeedbackType = null;
 	
 //	public static final String INPUT = "input";
@@ -139,7 +140,7 @@ public class DebugFeedbackView extends ViewPart {
 		wrongPathButton.setSelection(false);
 		bugTypeInferenceButton.setEnabled(isValidToInferBugType());
 		
-		feedbackType = UserFeedback.WRONG_VARIABLE_VALUE;
+		feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 	}
 	
 	
@@ -262,38 +263,6 @@ public class DebugFeedbackView extends ViewPart {
 	}
 	
 	
-//	class StateListener implements ICheckStateListener{
-//		@Override
-//		public void checkStateChanged(CheckStateChangedEvent event) {
-//			Object obj = event.getElement();
-//			VarValue value = null;
-//			
-//			if(obj instanceof VarValue){
-//				value = (VarValue)obj;
-//				String varID = value.getVarID();
-//				
-//				Trace trace = Activator.getDefault().getCurrentTrace();
-//				String trueVarID = trace.findTrueIDFromStateVariable(varID, currentNode.getOrder());
-//				
-//				if(!Settings.interestedVariables.contains(trueVarID)){
-//					Settings.interestedVariables.add(trueVarID, trace.getCheckTime());							
-//				}
-//				else{
-//					Settings.interestedVariables.remove(trueVarID);
-//				}
-//				
-//				setChecks(writtenVariableTreeViewer, RW);
-//				setChecks(readVariableTreeViewer, RW);
-//				setChecks(stateTreeViewer, STATE);
-//				
-//				writtenVariableTreeViewer.refresh();
-//				readVariableTreeViewer.refresh();
-//				stateTreeViewer.refresh();	
-//			}
-//			
-//		}
-//	}
-	
 	class RWVarListener implements ICheckStateListener{
 		private String RWType;
 		
@@ -318,7 +287,20 @@ public class DebugFeedbackView extends ViewPart {
 				}
 				
 				if(!Settings.interestedVariables.contains(varID)){
-					Settings.interestedVariables.add(varID, trace.getCheckTime());							
+					Settings.interestedVariables.add(varID, trace.getCheckTime());
+					
+					ChosenVariableOption option = feedback.getOption();
+					if(option == null){
+						option = new ChosenVariableOption(null, null);
+					}
+					
+					if(this.RWType.equals(Variable.READ)){
+						option.setReadVar(value);
+					}
+					if(this.RWType.equals(Variable.WRITTEN)){
+						option.setWrittenVar(value);
+					}
+					
 				}
 				else{
 					Settings.interestedVariables.remove(varID);
@@ -410,8 +392,6 @@ public class DebugFeedbackView extends ViewPart {
 			}
 		};
 		
-//		stateListener = new StateListener();
-		
 		this.readVariableTreeViewer.addTreeListener(treeListener);
 		this.writtenVariableTreeViewer.addTreeListener(treeListener);
 		this.stateTreeViewer.addTreeListener(treeListener);
@@ -420,11 +400,6 @@ public class DebugFeedbackView extends ViewPart {
 		this.readVariableTreeViewer.addCheckStateListener(new RWVarListener(Variable.READ));
 		this.stateTreeViewer.addCheckStateListener(new RWVarListener(Variable.READ));
 		
-//		this.consequenceTreeViewer.addTreeListener(treeListener);
-//		this.stateTreeViewer.addTreeListener(treeListener);
-//		
-//		this.consequenceTreeViewer.addCheckStateListener(stateListener);
-//		this.stateTreeViewer.addCheckStateListener(stateListener);
 	}
 
 	private CheckboxTreeViewer createVarGroup(SashForm variableForm, String groupName) {
@@ -542,7 +517,7 @@ public class DebugFeedbackView extends ViewPart {
 			}
 
 			public void mouseDown(MouseEvent e) {
-				feedbackType = UserFeedback.CORRECT;
+				feedback = new UserFeedback(UserFeedback.CORRECT);
 			}
 
 			public void mouseDoubleClick(MouseEvent e) {
@@ -557,7 +532,7 @@ public class DebugFeedbackView extends ViewPart {
 			}
 
 			public void mouseDown(MouseEvent e) {
-				feedbackType = UserFeedback.WRONG_VARIABLE_VALUE;
+				feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 			}
 
 			public void mouseDoubleClick(MouseEvent e) {
@@ -572,7 +547,7 @@ public class DebugFeedbackView extends ViewPart {
 			}
 
 			public void mouseDown(MouseEvent e) {
-				feedbackType = UserFeedback.WRONG_PATH;
+				feedback = new UserFeedback(UserFeedback.WRONG_PATH);
 			}
 
 			public void mouseDoubleClick(MouseEvent e) {
@@ -587,7 +562,7 @@ public class DebugFeedbackView extends ViewPart {
 			}
 
 			public void mouseDown(MouseEvent e) {
-				feedbackType = UserFeedback.UNCLEAR;
+				feedback = new UserFeedback(UserFeedback.UNCLEAR);
 			}
 
 			public void mouseDoubleClick(MouseEvent e) {
@@ -671,6 +646,8 @@ public class DebugFeedbackView extends ViewPart {
 			boolean existWrittenVariable = !currentNode.getWrittenVariables().isEmpty();
 			boolean existReadVariable = !currentNode.getReadVariables().isEmpty();
 			
+			String feedbackType = feedback.getFeedbackType();
+			
 			if(feedbackType.equals(UserFeedback.WRONG_PATH) || feedbackType.equals(UserFeedback.UNCLEAR)){
 				return true;
 			}
@@ -707,7 +684,7 @@ public class DebugFeedbackView extends ViewPart {
 		}
 
 		public void mouseDown(MouseEvent e) {
-			if (feedbackType == null) {
+			if (feedback == null) {
 				openChooseFeedbackDialog();
 			} 
 			else {
@@ -715,6 +692,8 @@ public class DebugFeedbackView extends ViewPart {
 				TraceNode suspiciousNode = null;
 				boolean isValidForRecommendation = isValidForRecommendation();
 				if(isValidForRecommendation){
+					String feedbackType = feedback.getFeedbackType();
+					
 					CheckingState state = new CheckingState();
 					state.recordCheckingState(currentNode, recommender, trace, Settings.interestedVariables, 
 							Settings.wrongPathNodeOrder, Settings.potentialCorrectPatterns);
@@ -727,7 +706,7 @@ public class DebugFeedbackView extends ViewPart {
 					
 					collectBehavior(feedbackType);
 					
-					suspiciousNode = recommender.recommendNode(trace, currentNode, feedbackType);
+					suspiciousNode = recommender.recommendNode(trace, currentNode, feedback);
 					lastFeedbackType = feedbackType;
 					
 					if(recommender.getState()==DebugState.BINARY_SEARCH || recommender.getState()==DebugState.SKIP){
