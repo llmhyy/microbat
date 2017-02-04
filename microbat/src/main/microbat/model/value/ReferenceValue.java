@@ -11,42 +11,24 @@ package microbat.model.value;
 import microbat.model.variable.Variable;
 
 /**
- * @author LLT, modified by Yun Lin
+ * @Yun Lin
  *
  */
 
 public class ReferenceValue extends VarValue {
-//	protected static final String NULL_CODE = "isNull";
 	
-//	private ClassType classType; 
+	private long uniqueID;
 	
 	public ReferenceValue(boolean isNull, boolean isRoot, Variable variable) {
 		super(isRoot, variable);
-		
-//		FieldVar field = new FieldVar(false, "isNull", "boolean");
-//		BooleanValue child = new BooleanValue(isNull, false, field);
-//		child.setVarID("isNull");
-//		addChild(child);
-//		child.addParent(this);
 	}
 	
 	public ReferenceValue(boolean isNull, long referenceID, boolean isRoot, Variable variable) {
 		super(isRoot, variable);
 		this.variable.setVarID(String.valueOf(referenceID));
-		
-//		FieldVar field = new FieldVar(false, "isNull", "boolean");
-//		BooleanValue child = new BooleanValue(isNull, false, field);
-//		child.setVarID("isNull");
-//		addChild(child);
-//		child.addParent(this);
-		
-//		setReferenceID(referenceID);
-//		setClassType(type);
+		this.uniqueID = referenceID;
 	}
 	
-//	public void setClassType(ClassType type) {
-//		this.classType = type;
-//	}
 	
 	public String getClassType(){
 		return this.variable.getType();
@@ -111,48 +93,15 @@ public class ReferenceValue extends VarValue {
 	
 	@Override
 	public String getManifestationValue() {
-//		String manifestation = stringValue;
-//		manifestation = manifestation.substring(0, manifestation.indexOf("("));
-//		manifestation = manifestation + "(id=" + variable.getVarID() + ")";
 		return stringValue;
 	}
-	
-//	@Override
-//	public ReferenceValue clone(){
-//		
-////		ReferenceValue(String id, boolean isNull, long referenceID, ClassType type, 
-////				boolean isRoot, boolean isField, boolean isStatic)
-//		
-//		BooleanValue isNullChild = (BooleanValue) getChildren().get(0);
-//		boolean isNull = isNullChild.getBoolValue();
-//		
-//		ReferenceValue clonedValue = new ReferenceValue(getVarName(), isNull, this.getReferenceID(), this.getClassType(),
-//				isRoot, isField, isStatic);
-//		List<VarValue> clonedChildren = cloneChildren(clonedValue.getChildren());
-//		for(VarValue clonedChild: clonedChildren){
-//			clonedValue.addChild(clonedChild);
-//			clonedChild.addParent(clonedValue);
-//		}
-//		
-//		
-//		return clonedValue;
-//	}
-	
-//	private List<VarValue> cloneChildren(List<VarValue> children){
-//		List<VarValue> clonedList = new ArrayList<>();
-//		for(VarValue child: children){
-//			VarValue clonedChild = child.clone();
-//			clonedList.add(clonedChild);
-//		}
-//		
-//		return clonedList;
-//	}
 
-//	public String getMessageValue() {
-//		return messageValue;
-//	}
-//
-//	public void setMessageValue(String messageValue) {
-//		this.messageValue = messageValue;
-//	}
+	public long getUniqueID() {
+		return uniqueID;
+	}
+
+	public void setUniqueID(long uniqueID) {
+		this.uniqueID = uniqueID;
+	}
+	
 }

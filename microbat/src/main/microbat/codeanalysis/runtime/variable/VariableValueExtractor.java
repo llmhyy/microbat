@@ -412,9 +412,6 @@ public class VariableValueExtractor {
 	private void appendClassVarVal(VarValue parent, Variable variable, ObjectReference objRef, 
 			int level, ThreadReference thread, boolean isRoot) {
 		ClassType type = (ClassType) objRef.type();
-//		if(type.name().contains("HashMap")){
-//			System.currentTimeMillis();
-//		}
 		
 		long refID = objRef.uniqueID();
 		
@@ -424,7 +421,6 @@ public class VariableValueExtractor {
 		ReferenceValue val = this.objectPool.get(refID);
 		if(val == null){
 			val = new ReferenceValue(false, refID, isRoot, variable);	
-//			setMessageValue(thread, val);
 			this.objectPool.put(refID, val);
 			
 			boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);

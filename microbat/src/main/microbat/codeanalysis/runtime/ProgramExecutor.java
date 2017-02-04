@@ -888,12 +888,10 @@ public class ProgramExecutor extends Executor {
 			}
 
 			Value value = JavaUtil.retriveExpression(frame, param.getName());
-
+			LocalVar localVar = new LocalVar(param.getName(), param.getType(),
+					lastestNode.getDeclaringCompilationUnitName(), lastestNode.getLineNumber());
+			
 			if (!(value instanceof ObjectReference) || value == null) {
-
-				LocalVar localVar = new LocalVar(param.getName(), param.getType(),
-						lastestNode.getDeclaringCompilationUnitName(), lastestNode.getLineNumber());
-
 				VariableScopeParser parser = new VariableScopeParser();
 				LocalVariableScope scope = parser.parseMethodScope(methodDeclaringCompilationUnit, methodLocationLine,
 						localVar.getName());
@@ -907,34 +905,36 @@ public class ProgramExecutor extends Executor {
 				} else {
 					System.err.println("cannot find the method when parsing parameter scope");
 				}
-
-				if (localVar.getVarID().contains("158")) {
-					System.currentTimeMillis();
-				}
-
-				StepVariableRelationEntry entry = this.trace.getStepVariableTable().get(localVar.getVarID());
-				if (entry == null) {
-					entry = new StepVariableRelationEntry(localVar.getVarID());
-					this.trace.getStepVariableTable().put(localVar.getVarID(), entry);
-				}
-				entry.addAliasVariable(localVar);
-				entry.addProducer(lastestNode);
-
-				VarValue varValue = null;
-				if (PrimitiveUtils.isPrimitiveType(param.getType())) {
-					if(value != null){
-						varValue = new PrimitiveValue(value.toString(), false, localVar);
-					}
-					
-				} else {
-					varValue = new ReferenceValue(true, false, localVar);
-				}
-
-				if(varValue != null){
-					lastestNode.addWrittenVariable(varValue);					
-				}
+			}
+			else{
+				ObjectReference ref = (ObjectReference)value;
+				String varID = String.valueOf(ref.uniqueID());
+				String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, lastestNode, varID);
+				varID = varID + ":" + definingNodeOrder;
+				localVar.setVarID(varID);
 			}
 
+			StepVariableRelationEntry entry = this.trace.getStepVariableTable().get(localVar.getVarID());
+			if (entry == null) {
+				entry = new StepVariableRelationEntry(localVar.getVarID());
+				this.trace.getStepVariableTable().put(localVar.getVarID(), entry);
+			}
+			entry.addAliasVariable(localVar);
+			entry.addProducer(lastestNode);
+
+			VarValue varValue = null;
+			if (PrimitiveUtils.isPrimitiveType(param.getType())) {
+				if(value != null){
+					varValue = new PrimitiveValue(value.toString(), false, localVar);
+				}
+				
+			} else {
+				varValue = new ReferenceValue(true, false, localVar);
+			}
+
+			if(varValue != null){
+				lastestNode.addWrittenVariable(varValue);					
+			}
 		}
 	}
 

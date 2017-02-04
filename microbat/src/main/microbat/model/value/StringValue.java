@@ -15,16 +15,10 @@ import microbat.model.variable.Variable;
  *
  */
 public class StringValue extends PrimitiveValue {
-//	private static final String LENGTH_CODE = "length";
-//	private static final String IS_EMPTY = "isEmpty";
 	
 	public StringValue(String val, boolean isRoot, Variable var) {
 		super(val, isRoot, var);
 		var.setType("String");
-//		BooleanValue child = new BooleanValue(getChildId(IS_EMPTY), val.isEmpty(), false);
-//		add(child);
-//		child.addParent(this);
-//		add(new PrimitiveValue(getChildId(LENGTH_CODE), String.valueOf(val.length())));
 	}
 	
 	@Override
@@ -33,10 +27,4 @@ public class StringValue extends PrimitiveValue {
 	}
 	
 	
-//	@Override
-//	public PrimitiveValue clone(){
-//		StringValue clonedValue = new StringValue(getVarName(), getStrVal(), 
-//				isRoot, isField, isStatic);
-//		return clonedValue;
-//	}
 }
