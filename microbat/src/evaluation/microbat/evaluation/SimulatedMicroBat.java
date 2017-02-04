@@ -20,6 +20,7 @@ import microbat.evaluation.model.TraceNodeWrapper;
 import microbat.evaluation.model.Trial;
 import microbat.evaluation.util.TraceNodeComprehensiveSimilarityComparator;
 import microbat.handler.CheckingState;
+import microbat.model.UserInterestedVariables;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.trace.TraceNodeReverseOrderComparator;
@@ -498,6 +499,8 @@ public class SimulatedMicroBat {
 			Stack<StateWrapper> confusingStack,
 			ArrayList<StepOperationTuple> jumpingSteps,
 			boolean isFirstTime, HashSet<Attempt> failedAttempts) {
+		
+		UserInterestedVariables interestedVariables = Settings.interestedVariables.clone();
 		
 		UserFeedback feedbackType = user.feedback(suspiciousNode, mutatedTrace, pairList, 
 				mutatedTrace.getCheckTime(), isFirstTime, maxUnclearFeedbackNum);
