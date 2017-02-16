@@ -1255,17 +1255,17 @@ public class ProgramExecutor extends Executor {
 
 		ExpressionValue eValue = null;
 
-		boolean classPrepare = getClassPrepareRequest().isEnabled();
-		boolean step = getStepRequest().isEnabled();
-		boolean methodEntry = getMethodEntryRequest().isEnabled();
-		boolean methodExit = getMethodExitRequset().isEnabled();
-		boolean exception = getExceptionRequest().isEnabled();
-		
-		getClassPrepareRequest().disable();
-		getStepRequest().disable();
-		getMethodEntryRequest().disable();
-		getMethodExitRequset().disable();
-		getExceptionRequest().disable();
+//		boolean classPrepare = getClassPrepareRequest().isEnabled();
+//		boolean step = getStepRequest().isEnabled();
+//		boolean methodEntry = getMethodEntryRequest().isEnabled();
+//		boolean methodExit = getMethodExitRequset().isEnabled();
+//		boolean exception = getExceptionRequest().isEnabled();
+//		
+//		getClassPrepareRequest().disable();
+//		getStepRequest().disable();
+//		getMethodEntryRequest().disable();
+//		getMethodExitRequset().disable();
+//		getExceptionRequest().disable();
 		
 		try {
 			ExpressionParser.clear();
@@ -1292,11 +1292,11 @@ public class ProgramExecutor extends Executor {
 		} catch(Exception e){
 			e.printStackTrace();
 		}finally{
-			getClassPrepareRequest().setEnabled(classPrepare);
-			getStepRequest().setEnabled(step);
-			getMethodEntryRequest().setEnabled(methodEntry);
-			getMethodExitRequset().setEnabled(methodExit);
-			getExceptionRequest().setEnabled(exception);
+//			getClassPrepareRequest().setEnabled(classPrepare);
+//			getStepRequest().setEnabled(step);
+//			getMethodEntryRequest().setEnabled(methodEntry);
+//			getMethodExitRequset().setEnabled(methodExit);
+//			getExceptionRequest().setEnabled(exception);
 		}
 
 		return eValue;
