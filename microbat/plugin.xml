@@ -114,6 +114,16 @@
             id="microbat.command.staticAnalysis"
             name="Static Analysis">
       </command>
+      <command
+            defaultHandler="microbat.handler.StartRecordingHandler"
+            id="microbat.command.startRecording"
+            name="Start Recording">
+      </command>
+      <command
+            defaultHandler="microbat.handler.EndRecordingHandler"
+            id="microbat.command.endRecording"
+            name="End Recording">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -177,6 +187,32 @@
                   commandId="microbat.command.startDebug"
                   icon="icons/microbat.png"
                   label="Start Debug"
+                  style="push">
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.ui.main.toolbar">
+         <toolbar
+               id="microbat.toolbar.startRecording">
+            <command
+                  commandId="microbat.command.startRecording"
+                  icon="icons/play.png"
+                  label="Start Rcording"
+                  style="push">
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.ui.main.toolbar">
+         <toolbar
+               id="microbat.toolbar.endRecording">
+            <command
+                  commandId="microbat.command.endRecording"
+                  icon="icons/stop.png"
+                  label="End Recording"
                   style="push">
             </command>
          </toolbar>
