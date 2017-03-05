@@ -8,22 +8,28 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
+import microbat.util.Settings;
+
 public class StartRecordingHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		
-		Job job = new Job("Preparing for Debugging ...") {
+		if(Settings.isForEclipsePlugin){
+			Job job = new Job("...") {
+				
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					
+					System.out.println("start recording");
+					
+					return Status.OK_STATUS;
+				}
+			};
 			
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
-				
-				
-				return Status.OK_STATUS;
-			}
-		};
-		
-		job.schedule();
+			job.schedule();
+			
+		}
 		
 		return null;
 	}
