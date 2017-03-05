@@ -124,6 +124,11 @@
             id="microbat.command.endRecording"
             name="End Recording">
       </command>
+      <command
+            defaultHandler="microbat.handler.RunAttachableHandler"
+            id="microbat.command.runAttachable"
+            name="Run Attachable">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -195,10 +200,23 @@
             allPopups="false"
             locationURI="toolbar:org.eclipse.ui.main.toolbar">
          <toolbar
+               id="microbat.toolbar.runAttachable">
+            <command
+                  commandId="microbat.command.runAttachable"
+                  icon="icons/play.png"
+                  label="Run Attachable"
+                  style="push">
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.ui.main.toolbar">
+         <toolbar
                id="microbat.toolbar.startRecording">
             <command
                   commandId="microbat.command.startRecording"
-                  icon="icons/play.png"
+                  icon="icons/record.png"
                   label="Start Rcording"
                   style="push">
             </command>
