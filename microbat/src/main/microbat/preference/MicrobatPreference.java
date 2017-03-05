@@ -56,6 +56,7 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String STEP_LIMIT = "stepLimit";
 	public static final String RECORD_SNAPSHORT = "recordSnapshot";
 	public static final String APPLY_ADVANCE_INSPECTOR = "applyAdvancedInspector";
+	public static final String FOR_ECLIPSE_PLUGIN = "forEclipsePlugin";
 
 	
 	private Combo projectCombo;
@@ -65,6 +66,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Text stepLimitText;
 	private Button recordSnapshotButton;
 	private Button advancedDetailInspectorButton;
+	private Button forEclipsePluginButton;
 	
 	private String defaultTargetProject = "";
 	private String defaultLanuchClass = "";
@@ -73,6 +75,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultStepLimit = "5000";
 	private String defaultRecordSnapshot = "true";
 	private String defaultAdvancedDetailInspector = "true";
+	private String defaultEclipsePlugin = "false";
 	
 	@Override
 	protected Control createContents(Composite parent) {
@@ -134,6 +137,14 @@ public class MicrobatPreference extends PreferencePage implements
 		advancedDetailInspectorButton.setLayoutData(advanceInspectorButtonData);
 		boolean advanceInspectorSelected = this.defaultAdvancedDetailInspector.equals("true");
 		advancedDetailInspectorButton.setSelection(advanceInspectorSelected);
+		
+		forEclipsePluginButton = new Button(settingGroup, SWT.CHECK);
+		forEclipsePluginButton.setText("Debug for eclipse plugin");
+		GridData forEclipsePluginButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		forEclipsePluginButtonData.horizontalSpan = 3;
+		forEclipsePluginButton.setLayoutData(forEclipsePluginButtonData);
+		boolean forEclipsePluginSelected = this.forEclipsePluginButton.equals("true");
+		forEclipsePluginButton.setSelection(forEclipsePluginSelected);
 	}
 	
 	private void createSeedStatementGroup(Composite parent){
@@ -182,6 +193,7 @@ public class MicrobatPreference extends PreferencePage implements
 //		preferences.put(LINE_NUMBER, this.lineNumberText.getText());
 		preferences.put(RECORD_SNAPSHORT, String.valueOf(this.recordSnapshotButton.getSelection()));
 		preferences.put(APPLY_ADVANCE_INSPECTOR, String.valueOf(this.advancedDetailInspectorButton.getSelection()));
+		preferences.put(FOR_ECLIPSE_PLUGIN, String.valueOf(this.forEclipsePluginButton.getSelection()));
 		preferences.put(STEP_LIMIT, this.stepLimitText.getText());
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
@@ -190,6 +202,7 @@ public class MicrobatPreference extends PreferencePage implements
 //		Activator.getDefault().getPreferenceStore().putValue(LINE_NUMBER, this.lineNumberText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(RECORD_SNAPSHORT, String.valueOf(this.recordSnapshotButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(APPLY_ADVANCE_INSPECTOR, String.valueOf(this.advancedDetailInspectorButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(FOR_ECLIPSE_PLUGIN, String.valueOf(this.forEclipsePluginButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(STEP_LIMIT, this.stepLimitText.getText());
 		
 		confirmChanges();
@@ -205,6 +218,7 @@ public class MicrobatPreference extends PreferencePage implements
 //		Settings.buggyLineNumber = this.lineNumberText.getText();
 		Settings.isRecordSnapshot = this.recordSnapshotButton.getSelection();
 		Settings.isApplyAdvancedInspector = this.advancedDetailInspectorButton.getSelection();
+		Settings.isForEclipsePlugin = this.forEclipsePluginButton.getSelection();
 		Settings.stepLimit = Integer.valueOf(this.stepLimitText.getText());
 	}
 	

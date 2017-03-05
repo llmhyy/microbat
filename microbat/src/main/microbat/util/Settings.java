@@ -23,6 +23,7 @@ public class Settings {
 	
 	public static boolean isRecordSnapshot;
 	public static boolean isApplyAdvancedInspector;
+	public static boolean isForEclipsePlugin;
 	public static int stepLimit;
 	
 	public static int referenceFieldLayerInString = 1;
@@ -44,6 +45,8 @@ public class Settings {
 				isRecordSnapshot = isRecord.equals("true");
 				String isApplyAInspector = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.APPLY_ADVANCE_INSPECTOR);
 				isApplyAdvancedInspector = isApplyAInspector.equals("true");
+				String isForEclipse = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.FOR_ECLIPSE_PLUGIN);
+				isForEclipsePlugin = isForEclipse.equals("true");
 				String limitNumString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.STEP_LIMIT);
 				stepLimit = Integer.valueOf(limitNumString);
 				if(stepLimit == 0){
@@ -86,5 +89,6 @@ public class Settings {
 	public static HashMap<String, CompilationUnit> compilationUnitMap = new HashMap<>();
 	public static HashMap<String, ICompilationUnit> iCompilationUnitMap = new HashMap<>();
 	public static boolean enableLoopInference = true;
+	
 	
 }
