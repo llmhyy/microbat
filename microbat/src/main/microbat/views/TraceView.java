@@ -51,6 +51,7 @@ import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;
 import microbat.model.BreakPoint;
+import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.util.JavaUtil;
@@ -264,36 +265,36 @@ public class TraceView extends ViewPart {
 				System.out.println("=========================");
 				System.out.println("=========================");
 				
-//				Trace t = Activator.getDefault().getCurrentTrace();
-//				System.out.println("Data Dominator: ");
-//				for(TraceNode dominator: node.getDataDominator().keySet()){
-//					List<String> varIDs = node.getDataDominator().get(dominator);
-//					System.out.println(dominator);
-//					System.out.println("by: ");
-//					
-//					for(String varID: varIDs){
-//						StepVariableRelationEntry entry = t.getStepVariableTable().get(varID);
-//						System.out.println(varID + ":" + entry.getAliasVariables());
-//					}
-//					
-//					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
-//				}
-//				
-//				System.out.println("=========================");
-//				
-//				System.out.println("Data Dominatee: " + node.getDataDominatee());
-//				for(TraceNode dominatee: node.getDataDominatee().keySet()){
-//					List<String> varIDs = node.getDataDominatee().get(dominatee);
-//					System.out.println(dominatee);
-//					System.out.println("by: ");
-//					
-//					for(String varID: varIDs){
-//						StepVariableRelationEntry entry = t.getStepVariableTable().get(varID);
-//						System.out.println(varID + ":" + entry.getAliasVariables());
-//					}
-//					
-//					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
-//				}
+			
+				System.out.println("Data Dominator: ");
+				for(TraceNode dominator: node.getDataDominator().keySet()){
+					List<String> varIDs = node.getDataDominator().get(dominator);
+					System.out.println(dominator);
+					System.out.println("by: ");
+					
+					for(String varID: varIDs){
+						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
+						System.out.println(varID + ":" + entry.getAliasVariables());
+					}
+					
+					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+				}
+				
+				System.out.println("=========================");
+				
+				System.out.println("Data Dominatee: " + node.getDataDominatee());
+				for(TraceNode dominatee: node.getDataDominatee().keySet()){
+					List<String> varIDs = node.getDataDominatee().get(dominatee);
+					System.out.println(dominatee);
+					System.out.println("by: ");
+					
+					for(String varID: varIDs){
+						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
+						System.out.println(varID + ":" + entry.getAliasVariables());
+					}
+					
+					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+				}
 				
 //				System.out.println("Control Dominator: ");
 //				TraceNode controlDominator = node.getControlDominator();
