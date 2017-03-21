@@ -284,6 +284,7 @@ public class DebugFeedbackView extends ViewPart {
 				if(!varID.contains(":") && !varID.contains(VirtualVar.VIRTUAL_PREFIX)){
 					String order = trace.findDefiningNodeOrder(RWType, currentNode, varID);
 					varID = varID + ":" + order;
+					value.setVarID(varID);
 				}
 				
 				if(!Settings.interestedVariables.contains(varID)){
