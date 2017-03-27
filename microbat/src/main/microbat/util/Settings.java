@@ -13,11 +13,10 @@ import microbat.handler.CheckingState;
 import microbat.model.UserInterestedVariables;
 import microbat.model.trace.PotentialCorrectPatternList;
 import microbat.preference.MicrobatPreference;
+import microbat.recommendation.ChosenVariableOption;
 import microbat.views.ImageUI;
 
 public class Settings {
-	
-	
 	public static String projectName;
 	public static String lanuchClass;
 	

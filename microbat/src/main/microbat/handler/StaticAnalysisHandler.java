@@ -13,6 +13,7 @@ import com.ibm.wala.shrikeCT.InvalidClassFileException;
 
 import microbat.recommendation.AdvancedDetailInspector;
 import microbat.recommendation.SootAnalyzer;
+import microbat.util.TempVariableInfo;
 
 public class StaticAnalysisHandler extends AbstractHandler{
 
@@ -31,7 +32,8 @@ public class StaticAnalysisHandler extends AbstractHandler{
 //				}
 				
 				SootAnalyzer analyzer = new SootAnalyzer();
-				analyzer.analyze();
+				
+				analyzer.analyze(TempVariableInfo.variableOption, TempVariableInfo.cu, TempVariableInfo.line);
 				
 				return Status.OK_STATUS;
 			}

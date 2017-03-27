@@ -58,8 +58,10 @@ import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.StepRecommender;
 import microbat.recommendation.UserFeedback;
+import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
+import microbat.util.TempVariableInfo;
 
 
 public class DebugFeedbackView extends ViewPart {
@@ -302,6 +304,11 @@ public class DebugFeedbackView extends ViewPart {
 						option.setWrittenVar(value);
 					}
 					feedback.setOption(option);
+					
+					TempVariableInfo.variableOption = option;
+					TempVariableInfo.line = currentNode.getLineNumber();
+					String cuName = currentNode.getBreakPoint().getDeclaringCompilationUnitName();
+					TempVariableInfo.cu = JavaUtil.findCompilationUnitInProject(cuName);
 				}
 				else{
 					Settings.interestedVariables.remove(varID);
