@@ -11,25 +11,27 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
+import microbat.model.variable.FieldVar;
+import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
-import microbat.util.TempVariableInfo;
 import sav.strategies.dto.AppJavaClassPath;
 import soot.Body;
 import soot.Local;
-import soot.MethodSource;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
+import soot.jimple.ArrayRef;
+import soot.jimple.FieldRef;
+import soot.jimple.internal.JimpleLocal;
 import soot.options.Options;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.Tag;
 import soot.toolkits.graph.ExceptionalUnitGraph;
-import soot.toolkits.graph.MHGDominatorsFinder;
 import soot.toolkits.graph.UnitGraph;
 import soot.util.Chain;
 
@@ -140,12 +142,31 @@ public class SootAnalyzer {
 		parsedUnits.add(unit);
 		for(ValueBox valueBox: unit.getDefBoxes()){
 			Value val = valueBox.getValue();
-			String variableName = val.toString();
-			if(variableName.equals(var.getName())){
-				if(!seeds.contains(unit)){
-					seeds.add(unit);					
+			
+			if((val instanceof JimpleLocal) && (var instanceof LocalVar)){
+				JimpleLocal local = (JimpleLocal)val;
+				if(local.getName().equals(var.getName())){
+					if(!seeds.contains(unit)){
+						seeds.add(unit);					
+					}
+					return;
 				}
-				return;
+			}
+			
+			if((val instanceof FieldRef) && (var instanceof FieldVar)){
+				FieldRef fieldRef = (FieldRef)val;
+				if(fieldRef.getField().getName().equals(var.getName())){
+					if(!seeds.contains(unit)){
+						seeds.add(unit);					
+					}
+					return;
+				}
+			}
+			
+			if(val instanceof ArrayRef){
+				ArrayRef arrayRef = (ArrayRef)val;
+				//TODO
+				System.currentTimeMillis();
 			}
 		}
 		
