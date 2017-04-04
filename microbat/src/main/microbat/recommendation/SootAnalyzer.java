@@ -2,6 +2,7 @@ package microbat.recommendation;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -20,6 +21,7 @@ import microbat.util.MicroBatUtil;
 import sav.strategies.dto.AppJavaClassPath;
 import soot.Body;
 import soot.Local;
+import soot.PointsToAnalysis;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
@@ -31,13 +33,19 @@ import soot.jimple.ArrayRef;
 import soot.jimple.AssignStmt;
 import soot.jimple.FieldRef;
 import soot.jimple.InstanceFieldRef;
+import soot.jimple.internal.JNewArrayExpr;
 import soot.jimple.internal.JimpleLocal;
+import soot.jimple.spark.SparkTransformer;
+import soot.jimple.spark.geom.geomPA.GeomPointsTo;
+import soot.jimple.spark.pag.AllocNode;
+import soot.jimple.spark.pag.Node;
+import soot.jimple.spark.sets.P2SetVisitor;
+import soot.jimple.spark.sets.PointsToSetInternal;
 import soot.options.Options;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.Tag;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.UnitGraph;
-import soot.util.Chain;
 
 public class SootAnalyzer {
 	
@@ -66,18 +74,7 @@ public class SootAnalyzer {
 	}
 	
 	private SootClass getSootClass(String className){
-		SootClass c = null;
-		for(int i=0; i<10; i++){
-			try{
-				c = Scene.v().loadClassAndSupport(className);
-				if(c!=null){
-					break;
-				}
-			}
-			catch(Exception e){}
-		}
-		
-//		SootClass c = Scene.v().loadClassAndSupport(appClassPath.getLaunchClass());
+		SootClass c = Scene.v().loadClassAndSupport(className);
 		c.setApplicationClass();
 		return c;
 	}
@@ -91,11 +88,34 @@ public class SootAnalyzer {
 		
 		Scene.v().setSootClassPath(classPathString);
 		Options.v().set_keep_line_number(true);
+//		Options.v().set_keep_offset(true);
 		Options.v().set_debug(true);
 		Options.v().set_via_shimple(true);
-		Options.v().setPhaseOption("jb", "use-original-names");
+		Options.v().set_app(true);
+		Options.v().set_whole_program(true);
+		Options.v().set_verbose(true);
+		Options.v().set_allow_phantom_refs(true);
+		
+		Options.v().setPhaseOption("jb", "use-original-names:true");
+		
+		Options.v().setPhaseOption("cg","verbose");
+		Options.v().setPhaseOption("cg.spark", "enabled:true");
+		Options.v().setPhaseOption("cg.spark", "geom-pta:true");
+		Options.v().setPhaseOption("cg.spark", "simplify-offline:false");
+		Options.v().setPhaseOption("cg.spark", "geom-runs:5");
 		
 		SootClass c = getSootClass(JavaUtil.getFullNameOfCompilationUnit(cu));
+		Scene.v().loadNecessaryClasses();
+		
+		HashMap<String, String> opt = new HashMap<>();
+		opt.put("verbose","true");
+		opt.put("propagator","worklist");
+		opt.put("simple-edges-bidirectional","false");
+		opt.put("on-fly-cg","true");
+		opt.put("set-impl","double");
+		opt.put("double-set-old","hybrid");
+		opt.put("double-set-new","hybrid");
+		SparkTransformer.v().transform("", opt);
 		
 		MethodFinder finder = new MethodFinder(cu, line);
 		cu.accept(finder);
@@ -112,7 +132,47 @@ public class SootAnalyzer {
 		List<Unit> units = retrieveUnitsAccordingToLineNumber(graph, line);
 		
 		List<Unit> seedStatements = findSeeds(var, graph, units);
-		System.currentTimeMillis();
+		
+		for(Unit seedStatement: seedStatements){
+			ValueBox box = seedStatement.getDefBoxes().get(0);
+			Value val = box.getValue();
+			if(val instanceof Local){
+				PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
+				GeomPointsTo geomPTA = (GeomPointsTo)pta;
+				PointsToSetInternal pts = (PointsToSetInternal)geomPTA.reachingObjects((Local)val);
+
+				pts.forall( new P2SetVisitor() {
+
+				    public void visit(Node n) {
+
+				        // Do what you like with n, which is in the type of AllocNode
+				    	if(n instanceof AllocNode){
+				    		AllocNode allocNode = (AllocNode)n;
+				    		SootMethod method = allocNode.getMethod();
+				    		
+				    		
+				    		for(Local local: method.getActiveBody().getLocals()){
+				    			Object obj = allocNode.getNewExpr();
+				    			if(obj instanceof JNewArrayExpr){
+				    				JNewArrayExpr expr = (JNewArrayExpr)obj;
+				    				System.currentTimeMillis();
+				    			}
+				    			if(local.getNumber()==2){
+				    				System.currentTimeMillis();
+				    			}
+				    		}
+				    	}
+				    	System.currentTimeMillis();
+				    	System.currentTimeMillis();
+				    }
+
+				});
+			}
+			
+			
+		}
+		
+		
 		
 //		MHGDominatorsFinder<Unit> dominatorFinder = new MHGDominatorsFinder<>(graph);
 //		List<Unit> dominators = dominatorFinder.getDominators(unit);
@@ -154,13 +214,12 @@ public class SootAnalyzer {
 
 //		List<VarValue> parentChain = retrieveParentChain(varValue);
 		
-		boolean definingVar = checkUnitDefiningInterestingVariable(unit, graph, seeds, varValue);
-		if(!definingVar){
-			List<Unit> predessors = graph.getPredsOf(unit);
-			for(Unit precessor: predessors){
-				if(!parsedUnits.contains(precessor)){
-					findDefinitions(varValue, precessor, seeds, graph, parsedUnits);				
-				}
+		checkUnitDefiningInterestingVariable(unit, graph, seeds, varValue);
+		
+		List<Unit> predessors = graph.getPredsOf(unit);
+		for(Unit precessor: predessors){
+			if(!parsedUnits.contains(precessor)){
+				findDefinitions(varValue, precessor, seeds, graph, parsedUnits);				
 			}
 		}
 		
@@ -187,7 +246,7 @@ public class SootAnalyzer {
 				/**
 				 * every varValue has a parent node of type BreakPointValue
 				 */
-				if(!(varValue.getParents().get(0) instanceof BreakPointValue)){
+				if(!varValue.getParents().isEmpty() && !(varValue.getParents().get(0) instanceof BreakPointValue)){
 					boolean isRecursiveMatch = resursiveMatch(val, unit, varValue, graph);
 					if(isRecursiveMatch){
 						if(!seeds.contains(unit)){
