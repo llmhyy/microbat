@@ -20,6 +20,7 @@ import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import sav.strategies.dto.AppJavaClassPath;
 import soot.Body;
+import soot.G;
 import soot.Local;
 import soot.PointsToAnalysis;
 import soot.Scene;
@@ -36,9 +37,9 @@ import soot.jimple.InstanceFieldRef;
 import soot.jimple.internal.JNewArrayExpr;
 import soot.jimple.internal.JimpleLocal;
 import soot.jimple.spark.SparkTransformer;
-import soot.jimple.spark.geom.geomPA.GeomPointsTo;
 import soot.jimple.spark.pag.AllocNode;
 import soot.jimple.spark.pag.Node;
+import soot.jimple.spark.pag.PAG;
 import soot.jimple.spark.sets.P2SetVisitor;
 import soot.jimple.spark.sets.PointsToSetInternal;
 import soot.options.Options;
@@ -73,12 +74,8 @@ public class SootAnalyzer {
 		}
 	}
 	
-	private SootClass getSootClass(String className){
-		SootClass c = Scene.v().loadClassAndSupport(className);
-		c.setApplicationClass();
-		return c;
-	}
-
+	static boolean isParsePTA = false;
+	
 	public void analyze(ChosenVariableOption variableOption, CompilationUnit cu, int line) {
 		AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		
@@ -86,9 +83,10 @@ public class SootAnalyzer {
 		String rtJar = appClassPath.getJavaHome() + File.separator + "jre" + File.separator + "lib" + File.separator + "rt.jar";
 		classPathString += File.pathSeparator + rtJar;
 		
+//		G.reset();
+		
 		Scene.v().setSootClassPath(classPathString);
 		Options.v().set_keep_line_number(true);
-//		Options.v().set_keep_offset(true);
 		Options.v().set_debug(true);
 		Options.v().set_via_shimple(true);
 		Options.v().set_app(true);
@@ -98,24 +96,37 @@ public class SootAnalyzer {
 		
 		Options.v().setPhaseOption("jb", "use-original-names:true");
 		
-		Options.v().setPhaseOption("cg","verbose");
-		Options.v().setPhaseOption("cg.spark", "enabled:true");
-		Options.v().setPhaseOption("cg.spark", "geom-pta:true");
-		Options.v().setPhaseOption("cg.spark", "simplify-offline:false");
-		Options.v().setPhaseOption("cg.spark", "geom-runs:5");
+//		Options.v().setPhaseOption("cg","verbose");
+//		Options.v().setPhaseOption("cg.spark", "enabled:true");
+//		Options.v().setPhaseOption("cg.spark", "geom-pta:true");
+//		Options.v().setPhaseOption("cg.spark", "simplify-offline:false");
+//		Options.v().setPhaseOption("cg.spark", "geom-runs:5");
 		
-		SootClass c = getSootClass(JavaUtil.getFullNameOfCompilationUnit(cu));
+		SootClass c = Scene.v().loadClassAndSupport(JavaUtil.getFullNameOfCompilationUnit(cu));
+		c.setApplicationClass();
 		Scene.v().loadNecessaryClasses();
 		
-		HashMap<String, String> opt = new HashMap<>();
-		opt.put("verbose","true");
-		opt.put("propagator","worklist");
-		opt.put("simple-edges-bidirectional","false");
-		opt.put("on-fly-cg","true");
-		opt.put("set-impl","double");
-		opt.put("double-set-old","hybrid");
-		opt.put("double-set-new","hybrid");
-		SparkTransformer.v().transform("", opt);
+		if(!isParsePTA){
+			HashMap<String, String> opt = new HashMap<>();
+			opt.put("verbose","true");
+			opt.put("set-impl","double");
+			opt.put("double-set-old","hybrid");
+			opt.put("double-set-new","hybrid");
+			opt.put("on-fly-cg","true");
+			opt.put("propagator","worklist");
+			opt.put("simple-edges-bidirectional","false");
+			opt.put("simplify-offline","false");
+			opt.put("enabled", "true");
+			
+			opt.put("geom-pta", "true");
+			opt.put("geom-encoding", "geom");
+			opt.put("geom-worklist", "pq");
+			opt.put("geom-runs", "2");
+			
+			SparkTransformer.v().transform("", opt);
+			
+			isParsePTA = true;
+		}
 		
 		MethodFinder finder = new MethodFinder(cu, line);
 		cu.accept(finder);
@@ -138,8 +149,12 @@ public class SootAnalyzer {
 			Value val = box.getValue();
 			if(val instanceof Local){
 				PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
-				GeomPointsTo geomPTA = (GeomPointsTo)pta;
+//				GeomPointsTo geomPTA = (GeomPointsTo)pta;
+//				PointsToSetInternal pts = (PointsToSetInternal)geomPTA.reachingObjects((Local)val);
+				
+				PAG geomPTA = (PAG)pta;
 				PointsToSetInternal pts = (PointsToSetInternal)geomPTA.reachingObjects((Local)val);
+				System.out.println(pts);
 
 				pts.forall( new P2SetVisitor() {
 
