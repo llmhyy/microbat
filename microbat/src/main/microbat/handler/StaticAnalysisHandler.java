@@ -12,7 +12,7 @@ import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.shrikeCT.InvalidClassFileException;
 
 import microbat.recommendation.AdvancedDetailInspector;
-import microbat.recommendation.SootAnalyzer;
+import microbat.recommendation.advanceinspector.SootAnalyzer;
 import microbat.util.TempVariableInfo;
 
 public class StaticAnalysisHandler extends AbstractHandler{

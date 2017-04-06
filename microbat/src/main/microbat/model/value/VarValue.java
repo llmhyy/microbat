@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 import microbat.codeanalysis.ast.LocalVariableScope;
+import microbat.model.BreakPointValue;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
@@ -57,15 +58,7 @@ public abstract class VarValue implements GraphNode{
 		this.isRoot = isRoot;
 		this.variable = variable;
 		
-//		this.varName = name;
-//		this.isField = isField;
-//		this.isStatic = isStatic;
 	}
-	
-//	public String getVariableName(){
-//		String name = varId.substring(varId.lastIndexOf("."), varId.length());
-//		return name;
-//	}
 	
 	public void setPrimitiveID(VarValue parent){
 		if(isField()){
