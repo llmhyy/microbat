@@ -1,8 +1,11 @@
 package microbat.recommendation.advanceinspector;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+
+import javax.management.relation.Relation;
 
 import microbat.model.BreakPointValue;
 import microbat.model.value.VarValue;
@@ -10,8 +13,13 @@ import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.Variable;
 import soot.Local;
+import soot.PointsToSet;
+import soot.Scene;
+import soot.SootClass;
+import soot.SootMethod;
 import soot.Type;
 import soot.Unit;
+import soot.UnitBox;
 import soot.Value;
 import soot.ValueBox;
 import soot.jimple.ArrayRef;
@@ -19,21 +27,84 @@ import soot.jimple.AssignStmt;
 import soot.jimple.FieldRef;
 import soot.jimple.InstanceFieldRef;
 import soot.jimple.internal.JimpleLocal;
+import soot.jimple.spark.SparkTransformer;
+import soot.jimple.spark.geom.geomPA.GeomPointsTo;
+import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.UnitGraph;
 
 public class SeedGenerator {
 	
+	private void setPointToAnalysis() {
+		
+		HashMap<String, String> opt = new HashMap<>();
+		opt.put("verbose", "true");
+		opt.put("set-impl", "double");
+		opt.put("double-set-old", "hybrid");
+		opt.put("double-set-new", "hybrid");
+		opt.put("on-fly-cg", "true");
+		opt.put("propagator", "worklist");
+		opt.put("simple-edges-bidirectional", "false");
+		opt.put("simplify-offline", "false");
+		opt.put("enabled", "true");
+
+		opt.put("geom-pta", "true");
+		opt.put("geom-encoding", "geom");
+		opt.put("geom-worklist", "pq");
+		opt.put("geom-runs", "5");
+		opt.put("geom-app-only", "true");
+
+		SparkTransformer.v().transform("", opt);
+	}
+	
+	private Local findLocal(UnitGraph graph, VarValue var){
+		for(Local local: graph.getBody().getLocals()){
+			if(match(local, var)){
+				return local;
+			}
+		}
+		
+		return null;
+	}
+	
 	public List<Unit> findSeeds(VarValue var, UnitGraph contextGraph){
-		List<Unit> seeds = new ArrayList<>();
+		RelationChain chain = parseRelationChain(var);
 		
-		RelationChain chain = getTopParent(var);
+		VarValue topVar = chain.getTopVar();
+		Local topLocal = findLocal(contextGraph, topVar);
+		chain.topLocal = topLocal;
 		
-		System.currentTimeMillis();
+//		setPointToAnalysis();
+		
+		List<Unit> seeds = findCorrespondingDefsInAllMethods(var, chain);
 		
 		return seeds;
 	}
 	
-	public RelationChain getTopParent(VarValue var){
+	private List<Unit> findCorrespondingDefsInAllMethods(VarValue var, RelationChain chain) {
+		List<Unit> allSeeds = new ArrayList<>();
+		
+		for(SootClass clazz: Scene.v().getApplicationClasses()){
+			if(clazz.getName().contains("sort.quick.QuickSort")){
+				for(SootMethod method: clazz.getMethods()){
+					if(!method.getName().contains("qSort")){
+						continue;
+					}
+					
+					List<Unit> seeds = checkLinearizedDefs(method, var, chain);
+					if(seeds != null && !seeds.isEmpty()){
+						allSeeds.addAll(seeds);						
+					}
+				}
+				
+			}
+			
+		}
+		
+		
+		return allSeeds;
+	}
+
+	public RelationChain parseRelationChain(VarValue var){
 		RelationChain chain = new RelationChain();
 		chain.vars.add(var);
 		
@@ -58,7 +129,6 @@ public class SeedGenerator {
 				parent = null;
 			}
 			else{
-				
 				VarValue child = parent;
 				for(VarValue par: parent.getParents()){
 					if(!chain.vars.contains(par)){
@@ -90,27 +160,47 @@ public class SeedGenerator {
 		return -1;
 	}
 
-	public List<Unit> findSeeds(VarValue var, UnitGraph graph, List<Unit> unitsOfSpecificLineNumber) {
-		
-		
-		
+	private List<Unit> checkLinearizedDefs(SootMethod method, VarValue varValue, RelationChain chain) {
 		HashSet<Unit> parsedUnits = new HashSet<>();
 		List<Unit> allSeeds = new ArrayList<>();
-		for (Unit currentUnit: unitsOfSpecificLineNumber) {
+		
+		UnitGraph graph = new ExceptionalUnitGraph(method.getActiveBody());
+		List<Unit> tails = graph.getTails();
+		for(Unit tail: tails){
+			
 			List<Unit> seeds = new ArrayList<>();
-			if (!parsedUnits.contains(currentUnit)) {
-				seeds = findVarDefsInGraph(var, currentUnit, seeds, graph, parsedUnits);
-			}
-
+			seeds = findVarDefsInGraph(varValue, tail, seeds, chain, graph, parsedUnits);
+			
 			for (Unit seed : seeds) {
 				if (!allSeeds.contains(seed)) {
 					allSeeds.add(seed);
 				}
 			}
+			
 		}
-
+		
+		
 		return allSeeds;
 	}
+	
+//	public List<Unit> findSeeds(VarValue var, UnitGraph graph, List<Unit> unitsOfSpecificLineNumber) {
+//		HashSet<Unit> parsedUnits = new HashSet<>();
+//		List<Unit> allSeeds = new ArrayList<>();
+//		for (Unit currentUnit: unitsOfSpecificLineNumber) {
+//			List<Unit> seeds = new ArrayList<>();
+//			if (!parsedUnits.contains(currentUnit)) {
+//				seeds = findVarDefsInGraph(var, currentUnit, seeds, graph, parsedUnits);
+//			}
+//
+//			for (Unit seed : seeds) {
+//				if (!allSeeds.contains(seed)) {
+//					allSeeds.add(seed);
+//				}
+//			}
+//		}
+//
+//		return allSeeds;
+//	}
 
 	/**
 	 * reverse traverse the CFG, if a CFG node defines the {@code varValue},
@@ -121,21 +211,23 @@ public class SeedGenerator {
 	 * @param varValue
 	 * @param currentUnit
 	 * @param seeds
+	 * @param chain 
 	 * @param graph
 	 * @param parsedUnits
 	 */
-	private List<Unit> findVarDefsInGraph(VarValue varValue, Unit currentUnit, List<Unit> seeds, UnitGraph graph,
-			HashSet<Unit> parsedUnits) {
+	private List<Unit> findVarDefsInGraph(VarValue varValue, Unit currentUnit, List<Unit> seeds, 
+			RelationChain chain, UnitGraph graph, HashSet<Unit> parsedUnits) {
 		parsedUnits.add(currentUnit);
 
 		// List<VarValue> parentChain = retrieveParentChain(varValue);
 
-		checkUnitDefiningInterestingVariable(currentUnit, graph, seeds, varValue);
+//		VarValue varValue = chain.getWorkingVariable();
+		checkUnitDefiningInterestingVariable(currentUnit, graph, seeds, varValue, chain);
 
 		List<Unit> predessors = graph.getPredsOf(currentUnit);
 		for (Unit precessor : predessors) {
 			if (!parsedUnits.contains(precessor)) {
-				findVarDefsInGraph(varValue, precessor, seeds, graph, parsedUnits);
+				findVarDefsInGraph(varValue, precessor, seeds, chain, graph, parsedUnits);
 			}
 		}
 
@@ -155,32 +247,17 @@ public class SeedGenerator {
 	 * @return
 	 */
 	private boolean checkUnitDefiningInterestingVariable(Unit unit, UnitGraph graph, List<Unit> seeds,
-			VarValue varValue) {
+			VarValue varValue, RelationChain chain) {
 
 		for (ValueBox valueBox : unit.getDefBoxes()) {
 			Value val = valueBox.getValue();
-
-			if (isTypeMatch(val, varValue)) {
-				
-				if (!varValue.getParents().isEmpty() && !(varValue.getParents().get(0) instanceof BreakPointValue)) {
-					boolean isRecursiveMatch = resursiveMatch(val, unit, varValue, graph);
-					if (isRecursiveMatch) {
-						if (!seeds.contains(unit)) {
-							seeds.add(unit);
-						}
-						return true;
-					}
-				} else {
-					boolean isMatch = match(val, varValue);
-					if (isMatch) {
-						if (!seeds.contains(unit)) {
-							seeds.add(unit);
-						}
-						return true;
-					}
+			boolean isRecursiveMatch = resursiveMatch(val, unit, graph, chain);
+			if (isRecursiveMatch) {
+				if (!seeds.contains(unit)) {
+					seeds.add(unit);
 				}
+				return true;
 			}
-
 		}
 
 		return false;
@@ -214,31 +291,56 @@ public class SeedGenerator {
 	 * @param definingUnit
 	 * @param varValue
 	 * @param graph
+	 * @param chain 
 	 * @return
 	 */
-	private boolean resursiveMatch(Value val, Unit definingUnit, VarValue varValue, UnitGraph graph) {
-		VarValue parent = varValue.getParents().get(0);
-		System.currentTimeMillis();
-		while (parent != null) {
-			Value parentVal = findParent(val, definingUnit, graph);
-			if (parentVal == null || !match(parentVal, parent)) {
-				return false;
-			} else {
-				if (parent.getParents().isEmpty()) {
-					parent = null;
-				} else {
-					parent = parent.getParents().get(0);
-					if (parent instanceof BreakPointValue) {
-						parent = null;
+	private boolean resursiveMatch(Value val, Unit definingUnit, UnitGraph graph, RelationChain chain) {
+		VarValue workingVar = chain.getWorkingVariable();
+		boolean isMatch = true;
+		while(chain.searchingIndex < chain.vars.size()){
+			if(isTypeMatch(val, workingVar)){
+				if(match(val, workingVar) || aliasMatch(val, chain)){
+					chain.searchingIndex++;
+					if(chain.searchingIndex >= chain.vars.size()){
+						break;
 					}
-					val = parentVal;
+					
+					workingVar = chain.getWorkingVariable();
+					val = findParent(val, definingUnit, graph);
+				}
+				else{
+					isMatch = false;
+					break;
 				}
 			}
+			else{
+				isMatch = false;
+				break;
+			}
 		}
-
-		return true;
+		
+		chain.searchingIndex = 0;
+		
+		return isMatch;
 	}
 	
+	private boolean aliasMatch(Value val, RelationChain chain) {
+		if(val instanceof Local){
+			Local local = (Local)val;
+			GeomPointsTo gpt = (GeomPointsTo) Scene.v().getPointsToAnalysis();
+			PointsToSet set1 = gpt.reachingObjects(local);
+			PointsToSet set2 = gpt.reachingObjects(chain.topLocal);
+			
+			if(set1.hasNonEmptyIntersection(set2)){
+				System.currentTimeMillis();
+			}
+			
+			return set1.hasNonEmptyIntersection(set2);
+		}
+		
+		return false;
+	}
+
 	private boolean match(Value val, VarValue varValue) {
 		Variable var = varValue.getVariable();
 		if ((val instanceof JimpleLocal)) {

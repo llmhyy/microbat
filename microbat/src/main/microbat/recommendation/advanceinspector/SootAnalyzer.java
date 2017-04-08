@@ -67,29 +67,6 @@ public class SootAnalyzer {
 		}
 	}
 
-	private void setPointToAnalysis() {
-//		G.reset();
-		
-		HashMap<String, String> opt = new HashMap<>();
-		opt.put("verbose", "true");
-		opt.put("set-impl", "double");
-		opt.put("double-set-old", "hybrid");
-		opt.put("double-set-new", "hybrid");
-		opt.put("on-fly-cg", "true");
-		opt.put("propagator", "worklist");
-//		opt.put("simple-edges-bidirectional", "false");
-		opt.put("simplify-offline", "false");
-		opt.put("enabled", "true");
-
-		opt.put("geom-pta", "true");
-		opt.put("geom-encoding", "geom");
-		opt.put("geom-worklist", "pq");
-		opt.put("geom-runs", "5");
-		opt.put("geom-app-only", "true");
-
-		SparkTransformer.v().transform("", opt);
-	}
-
 	public void analyze(ChosenVariableOption variableOption, CompilationUnit cu, int line) {
 		AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 
@@ -98,7 +75,7 @@ public class SootAnalyzer {
 				+ "rt.jar";
 		classPathString += File.pathSeparator + rtJar;
 
-		G.reset();
+//		G.reset();
 		Scene.v().setSootClassPath(classPathString);
 		Options.v().set_keep_line_number(true);
 		Options.v().set_debug(true);
@@ -113,8 +90,6 @@ public class SootAnalyzer {
 		SootClass c = Scene.v().loadClassAndSupport(JavaUtil.getFullNameOfCompilationUnit(cu));
 		c.setApplicationClass();
 		Scene.v().loadNecessaryClasses();
-
-//		setPointToAnalysis();
 
 		MethodFinder finder = new MethodFinder(cu, line);
 		cu.accept(finder);
@@ -132,60 +107,62 @@ public class SootAnalyzer {
 
 //		List<Unit> seedStatements = new SeedGenerator().findSeeds(var, graph, unitsOfSpecificLineNumber);
 		List<Unit> seedStatements = new SeedGenerator().findSeeds(var, graph);
+		
+		System.currentTimeMillis();
 
-		for (Unit seedStatement : seedStatements) {
-			ValueBox box = seedStatement.getDefBoxes().get(0);
-			Value val = box.getValue();
-			if (val instanceof Local) {
-				PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
-				// GeomPointsTo geomPTA = (GeomPointsTo)pta;
-				// PointsToSetInternal pts =
-				// (PointsToSetInternal)geomPTA.reachingObjects((Local)val);
-
-				SootMethod method0 = c.getMethodByName("sort");
-				Local l = method0.getActiveBody().getLocals().getFirst();
-//				l = method0.getActiveBody().getLocals().getSuccOf(l);
-				
-				SootField field = c.getFieldByName("arr");
-				
-				PAG geomPTA = (PAG) pta;
-				
-				PointsToSet set = geomPTA.reachingObjects((Local) val);
-				PointsToSet set2 = geomPTA.reachingObjects(l);
-				PointsToSet set3 = geomPTA.reachingObjects(set2, field);
-				
-				DoublePointsToSet pts = (DoublePointsToSet) geomPTA.reachingObjects((Local) val);
-				System.out.println(pts);
-
-				pts.forall(new P2SetVisitor() {
-
-					public void visit(Node n) {
-
-						// Do what you like with n, which is in the type of
-						// AllocNode
-						if (n instanceof AllocNode) {
-							AllocNode allocNode = (AllocNode) n;
-							SootMethod method = allocNode.getMethod();
-
-							for (Local local : method.getActiveBody().getLocals()) {
-								Object obj = allocNode.getNewExpr();
-								if (obj instanceof JNewArrayExpr) {
-									JNewArrayExpr expr = (JNewArrayExpr) obj;
-									System.currentTimeMillis();
-								}
-								if (local.getNumber() == 2) {
-									System.currentTimeMillis();
-								}
-							}
-						}
-						System.currentTimeMillis();
-						System.currentTimeMillis();
-					}
-
-				});
-			}
-
-		}
+//		for (Unit seedStatement : seedStatements) {
+//			ValueBox box = seedStatement.getDefBoxes().get(0);
+//			Value val = box.getValue();
+//			if (val instanceof Local) {
+//				PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
+//				// GeomPointsTo geomPTA = (GeomPointsTo)pta;
+//				// PointsToSetInternal pts =
+//				// (PointsToSetInternal)geomPTA.reachingObjects((Local)val);
+//
+//				SootMethod method0 = c.getMethodByName("sort");
+//				Local l = method0.getActiveBody().getLocals().getFirst();
+////				l = method0.getActiveBody().getLocals().getSuccOf(l);
+//				
+//				SootField field = c.getFieldByName("arr");
+//				
+//				PAG geomPTA = (PAG) pta;
+//				
+//				PointsToSet set = geomPTA.reachingObjects((Local) val);
+//				PointsToSet set2 = geomPTA.reachingObjects(l);
+//				PointsToSet set3 = geomPTA.reachingObjects(set2, field);
+//				
+//				DoublePointsToSet pts = (DoublePointsToSet) geomPTA.reachingObjects((Local) val);
+//				System.out.println(pts);
+//
+//				pts.forall(new P2SetVisitor() {
+//
+//					public void visit(Node n) {
+//
+//						// Do what you like with n, which is in the type of
+//						// AllocNode
+//						if (n instanceof AllocNode) {
+//							AllocNode allocNode = (AllocNode) n;
+//							SootMethod method = allocNode.getMethod();
+//
+//							for (Local local : method.getActiveBody().getLocals()) {
+//								Object obj = allocNode.getNewExpr();
+//								if (obj instanceof JNewArrayExpr) {
+//									JNewArrayExpr expr = (JNewArrayExpr) obj;
+//									System.currentTimeMillis();
+//								}
+//								if (local.getNumber() == 2) {
+//									System.currentTimeMillis();
+//								}
+//							}
+//						}
+//						System.currentTimeMillis();
+//						System.currentTimeMillis();
+//					}
+//
+//				});
+//			}
+//
+//		}
 
 		// MHGDominatorsFinder<Unit> dominatorFinder = new
 		// MHGDominatorsFinder<>(graph);
