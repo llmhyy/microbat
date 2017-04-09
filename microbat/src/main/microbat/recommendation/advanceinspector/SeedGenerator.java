@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-import javax.management.relation.Relation;
-
 import microbat.model.BreakPointValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.ArrayElementVar;
@@ -16,16 +14,17 @@ import soot.Local;
 import soot.PointsToSet;
 import soot.Scene;
 import soot.SootClass;
+import soot.SootField;
 import soot.SootMethod;
 import soot.Type;
 import soot.Unit;
-import soot.UnitBox;
 import soot.Value;
 import soot.ValueBox;
 import soot.jimple.ArrayRef;
 import soot.jimple.AssignStmt;
 import soot.jimple.FieldRef;
 import soot.jimple.InstanceFieldRef;
+import soot.jimple.StaticFieldRef;
 import soot.jimple.internal.JimpleLocal;
 import soot.jimple.spark.SparkTransformer;
 import soot.jimple.spark.geom.geomPA.GeomPointsTo;
@@ -44,6 +43,7 @@ public class SeedGenerator {
 		opt.put("on-fly-cg", "true");
 		opt.put("propagator", "worklist");
 		opt.put("simple-edges-bidirectional", "false");
+		
 		opt.put("simplify-offline", "false");
 		opt.put("enabled", "true");
 
@@ -73,7 +73,7 @@ public class SeedGenerator {
 		Local topLocal = findLocal(contextGraph, topVar);
 		chain.topLocal = topLocal;
 		
-//		setPointToAnalysis();
+		setPointToAnalysis();
 		
 		List<Unit> seeds = findCorrespondingDefsInAllMethods(var, chain);
 		
@@ -86,7 +86,7 @@ public class SeedGenerator {
 		for(SootClass clazz: Scene.v().getApplicationClasses()){
 			if(clazz.getName().contains("sort.quick.QuickSort")){
 				for(SootMethod method: clazz.getMethods()){
-					if(!method.getName().contains("qSort")){
+					if(!method.getName().contains("sort")){
 						continue;
 					}
 					
@@ -325,17 +325,43 @@ public class SeedGenerator {
 	}
 	
 	private boolean aliasMatch(Value val, RelationChain chain) {
+		GeomPointsTo gpt = (GeomPointsTo) Scene.v().getPointsToAnalysis();
+		PointsToSet targetSet = gpt.reachingObjects(chain.topLocal);
 		if(val instanceof Local){
 			Local local = (Local)val;
-			GeomPointsTo gpt = (GeomPointsTo) Scene.v().getPointsToAnalysis();
-			PointsToSet set1 = gpt.reachingObjects(local);
-			PointsToSet set2 = gpt.reachingObjects(chain.topLocal);
+			PointsToSet set = gpt.reachingObjects(local);
 			
-			if(set1.hasNonEmptyIntersection(set2)){
+			if(set.hasNonEmptyIntersection(targetSet)){
 				System.currentTimeMillis();
 			}
 			
-			return set1.hasNonEmptyIntersection(set2);
+			return set.hasNonEmptyIntersection(targetSet);
+		}
+		else if(val instanceof InstanceFieldRef){
+			InstanceFieldRef fieldRef = (InstanceFieldRef)val;
+			SootField field = fieldRef.getField();
+			Value parentValue = fieldRef.getBase();
+			if(parentValue instanceof Local){
+				PointsToSet set = gpt.reachingObjects((Local)parentValue, field);
+				
+				if(set.hasNonEmptyIntersection(targetSet)){
+					System.currentTimeMillis();
+					System.currentTimeMillis();
+				}
+				
+				return set.hasNonEmptyIntersection(targetSet);
+			}
+		}
+		else if(val instanceof StaticFieldRef){
+			StaticFieldRef fieldRef = (StaticFieldRef)val;
+			SootField field = fieldRef.getField();
+			PointsToSet set = gpt.reachingObjects(field);
+			
+			if(set.hasNonEmptyIntersection(targetSet)){
+				System.currentTimeMillis();
+			}
+			
+			return set.hasNonEmptyIntersection(targetSet);
 		}
 		
 		return false;

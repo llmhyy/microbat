@@ -30,7 +30,7 @@ Bundle-ClassPath: .,
  lib/poi-ooxml-schemas-3.11-20141221.jar,
  lib/xmlbeans-2.6.0.jar,
  lib/bcel-5.2.jar,
- lib/soot-2.5.0.jar
+ lib/soot-trunk.jar
 Export-Package: microbat,
  microbat.algorithm.graphdiff,
  microbat.behavior,

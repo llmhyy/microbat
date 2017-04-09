@@ -75,7 +75,7 @@ public class SootAnalyzer {
 				+ "rt.jar";
 		classPathString += File.pathSeparator + rtJar;
 
-//		G.reset();
+		G.reset();
 		Scene.v().setSootClassPath(classPathString);
 		Options.v().set_keep_line_number(true);
 		Options.v().set_debug(true);
@@ -85,7 +85,7 @@ public class SootAnalyzer {
 		Options.v().set_verbose(true);
 		Options.v().set_allow_phantom_refs(true);
 
-		Options.v().setPhaseOption("jb", "use-original-names:true");
+		Options.v().setPhaseOption("jb", "use-original-names");
 
 		SootClass c = Scene.v().loadClassAndSupport(JavaUtil.getFullNameOfCompilationUnit(cu));
 		c.setApplicationClass();
@@ -177,12 +177,14 @@ public class SootAnalyzer {
 			Unit unit = iterator.next();
 			List<Tag> tagList = unit.getTags();
 
-			Tag tag = tagList.get(0);
-			if (tag instanceof LineNumberTag) {
-				LineNumberTag lTag = (LineNumberTag) tag;
-				if (lTag.getLineNumber() == line) {
-					units.add(unit);
-				}
+			if(tagList != null && !tagList.isEmpty()){
+				Tag tag = tagList.get(0);
+				if (tag instanceof LineNumberTag) {
+					LineNumberTag lTag = (LineNumberTag) tag;
+					if (lTag.getLineNumber() == line) {
+						units.add(unit);
+					}
+				}				
 			}
 		}
 
