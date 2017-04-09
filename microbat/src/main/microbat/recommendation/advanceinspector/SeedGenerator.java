@@ -86,9 +86,9 @@ public class SeedGenerator {
 		for(SootClass clazz: Scene.v().getApplicationClasses()){
 			if(clazz.getName().contains("sort.quick.QuickSort")){
 				for(SootMethod method: clazz.getMethods()){
-					if(!method.getName().contains("sort")){
-						continue;
-					}
+//					if(!method.getName().contains("sort")){
+//						continue;
+//					}
 					
 					List<Unit> seeds = checkLinearizedDefs(method, var, chain);
 					if(seeds != null && !seeds.isEmpty()){
@@ -331,10 +331,6 @@ public class SeedGenerator {
 			Local local = (Local)val;
 			PointsToSet set = gpt.reachingObjects(local);
 			
-			if(set.hasNonEmptyIntersection(targetSet)){
-				System.currentTimeMillis();
-			}
-			
 			return set.hasNonEmptyIntersection(targetSet);
 		}
 		else if(val instanceof InstanceFieldRef){
@@ -344,11 +340,6 @@ public class SeedGenerator {
 			if(parentValue instanceof Local){
 				PointsToSet set = gpt.reachingObjects((Local)parentValue, field);
 				
-				if(set.hasNonEmptyIntersection(targetSet)){
-					System.currentTimeMillis();
-					System.currentTimeMillis();
-				}
-				
 				return set.hasNonEmptyIntersection(targetSet);
 			}
 		}
@@ -356,10 +347,6 @@ public class SeedGenerator {
 			StaticFieldRef fieldRef = (StaticFieldRef)val;
 			SootField field = fieldRef.getField();
 			PointsToSet set = gpt.reachingObjects(field);
-			
-			if(set.hasNonEmptyIntersection(targetSet)){
-				System.currentTimeMillis();
-			}
 			
 			return set.hasNonEmptyIntersection(targetSet);
 		}
