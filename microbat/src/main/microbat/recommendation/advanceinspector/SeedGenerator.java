@@ -87,9 +87,9 @@ public class SeedGenerator {
 		for(SootClass clazz: Scene.v().getApplicationClasses()){
 			if(clazz.getName().contains("sort.quick.QuickSort")){
 				for(SootMethod method: clazz.getMethods()){
-					if(!method.getName().contains("swap")){
-						continue;
-					}
+//					if(!method.getName().contains("swap")){
+//						continue;
+//					}
 					
 					List<Unit> seeds = checkLinearizedDefs(method, var, chain);
 					if(seeds != null && !seeds.isEmpty()){
