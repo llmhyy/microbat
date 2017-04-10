@@ -24,6 +24,7 @@ import soot.jimple.ArrayRef;
 import soot.jimple.AssignStmt;
 import soot.jimple.FieldRef;
 import soot.jimple.InstanceFieldRef;
+import soot.jimple.IntConstant;
 import soot.jimple.StaticFieldRef;
 import soot.jimple.internal.JimpleLocal;
 import soot.jimple.spark.SparkTransformer;
@@ -73,7 +74,7 @@ public class SeedGenerator {
 		Local topLocal = findLocal(contextGraph, topVar);
 		chain.topLocal = topLocal;
 		
-		setPointToAnalysis();
+//		setPointToAnalysis();
 		
 		List<Unit> seeds = findCorrespondingDefsInAllMethods(var, chain);
 		
@@ -86,9 +87,9 @@ public class SeedGenerator {
 		for(SootClass clazz: Scene.v().getApplicationClasses()){
 			if(clazz.getName().contains("sort.quick.QuickSort")){
 				for(SootMethod method: clazz.getMethods()){
-//					if(!method.getName().contains("sort")){
-//						continue;
-//					}
+					if(!method.getName().contains("swap")){
+						continue;
+					}
 					
 					List<Unit> seeds = checkLinearizedDefs(method, var, chain);
 					if(seeds != null && !seeds.isEmpty()){
@@ -248,9 +249,14 @@ public class SeedGenerator {
 	 */
 	private boolean checkUnitDefiningInterestingVariable(Unit unit, UnitGraph graph, List<Unit> seeds,
 			VarValue varValue, RelationChain chain) {
+		
+		if(unit.toString().contains("$r3[y] = temp")){
+			System.currentTimeMillis();
+		}
 
 		for (ValueBox valueBox : unit.getDefBoxes()) {
 			Value val = valueBox.getValue();
+			
 			boolean isRecursiveMatch = resursiveMatch(val, unit, graph, chain);
 			if (isRecursiveMatch) {
 				if (!seeds.contains(unit)) {
@@ -295,23 +301,18 @@ public class SeedGenerator {
 	 * @return
 	 */
 	private boolean resursiveMatch(Value val, Unit definingUnit, UnitGraph graph, RelationChain chain) {
-		VarValue workingVar = chain.getWorkingVariable();
+		System.currentTimeMillis();
+		VarValue workingVar = chain.getLeafVar();
 		boolean isMatch = true;
 		while(chain.searchingIndex < chain.vars.size()){
-			if(isTypeMatch(val, workingVar)){
-				if(match(val, workingVar) || aliasMatch(val, chain)){
-					chain.searchingIndex++;
-					if(chain.searchingIndex >= chain.vars.size()){
-						break;
-					}
-					
-					workingVar = chain.getWorkingVariable();
-					val = findParent(val, definingUnit, graph);
-				}
-				else{
-					isMatch = false;
+			if(match(val, workingVar) || (workingVar!=chain.getLeafVar() && aliasMatch(val, chain))){
+				chain.searchingIndex++;
+				if(chain.searchingIndex >= chain.vars.size()){
 					break;
 				}
+				
+				workingVar = chain.getWorkingVariable();
+				val = findParent(val, definingUnit, graph);
 			}
 			else{
 				isMatch = false;
@@ -356,25 +357,38 @@ public class SeedGenerator {
 
 	private boolean match(Value val, VarValue varValue) {
 		Variable var = varValue.getVariable();
-		if ((val instanceof JimpleLocal)) {
-			JimpleLocal local = (JimpleLocal) val;
-			if (local.getName().equals(var.getName())) {
-				return true;
+		if(isTypeMatch(val, varValue)){
+			if ((val instanceof JimpleLocal)) {
+				JimpleLocal local = (JimpleLocal) val;
+				if (local.getName().equals(var.getName())) {
+					return true;
+				}
 			}
-		}
-
-		if ((val instanceof FieldRef) && (var instanceof FieldVar)) {
-			FieldRef fieldRef = (FieldRef) val;
-			if (fieldRef.getField().getName().equals(var.getName())) {
-				return true;
+			
+			if ((val instanceof FieldRef) && (var instanceof FieldVar)) {
+				FieldRef fieldRef = (FieldRef) val;
+				if (fieldRef.getField().getName().equals(var.getName())) {
+					return true;
+				}
 			}
+			
+			if (val instanceof ArrayRef) {
+				if(varValue.isElementOfArray()){
+					ArrayRef arrayRef = (ArrayRef)val;
+					Value arrayElement = arrayRef.getIndex();
+					
+					if(arrayElement instanceof IntConstant){
+						IntConstant cons = (IntConstant)arrayElement;
+						int originalIndex = Integer.valueOf(varValue.getVariable().getName());
+						return cons.value == originalIndex;
+					}
+					
+					return true;
+				}
+			}
+			
 		}
-
-		if (val instanceof ArrayRef) {
-			ArrayRef arrayRef = (ArrayRef) val;
-			// TODO
-			System.currentTimeMillis();
-		}
+		
 		return false;
 	}
 	
