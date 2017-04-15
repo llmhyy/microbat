@@ -90,9 +90,9 @@ public class SeedGenerator {
 			if(clazz.getName().contains("sort.quick.QuickSort")){
 				List<Unit> allSeeds = new ArrayList<>();
 				for(SootMethod method: clazz.getMethods()){
-					if(!method.getName().contains("swap")){
-						continue;
-					}
+//					if(!method.getName().contains("swap")){
+//						continue;
+//					}
 					
 					List<Unit> seeds = checkLinearizedDefs(method, var, chain);
 					if(seeds != null && !seeds.isEmpty()){
