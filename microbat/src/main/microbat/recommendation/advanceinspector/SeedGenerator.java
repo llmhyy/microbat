@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import microbat.model.BreakPointValue;
 import microbat.model.value.VarValue;
@@ -67,7 +68,7 @@ public class SeedGenerator {
 		return null;
 	}
 	
-	public List<Unit> findSeeds(VarValue var, UnitGraph contextGraph){
+	public Map<String, List<Unit>> findSeeds(VarValue var, UnitGraph contextGraph){
 		RelationChain chain = parseRelationChain(var);
 		
 		VarValue topVar = chain.getTopVar();
@@ -76,20 +77,22 @@ public class SeedGenerator {
 		
 //		setPointToAnalysis();
 		
-		List<Unit> seeds = findCorrespondingDefsInAllMethods(var, chain);
+		Map<String, List<Unit>> seeds = findCorrespondingDefsInAllMethods(var, chain);
 		
 		return seeds;
 	}
 	
-	private List<Unit> findCorrespondingDefsInAllMethods(VarValue var, RelationChain chain) {
-		List<Unit> allSeeds = new ArrayList<>();
+	private Map<String, List<Unit>> findCorrespondingDefsInAllMethods(VarValue var, RelationChain chain) {
+		
+		Map<String, List<Unit>> map = new HashMap<>();
 		
 		for(SootClass clazz: Scene.v().getApplicationClasses()){
 			if(clazz.getName().contains("sort.quick.QuickSort")){
+				List<Unit> allSeeds = new ArrayList<>();
 				for(SootMethod method: clazz.getMethods()){
-//					if(!method.getName().contains("swap")){
-//						continue;
-//					}
+					if(!method.getName().contains("swap")){
+						continue;
+					}
 					
 					List<Unit> seeds = checkLinearizedDefs(method, var, chain);
 					if(seeds != null && !seeds.isEmpty()){
@@ -97,12 +100,15 @@ public class SeedGenerator {
 					}
 				}
 				
+				if(!allSeeds.isEmpty()){
+					map.put(clazz.getName(), allSeeds);					
+				}
 			}
 			
 		}
 		
 		
-		return allSeeds;
+		return map;
 	}
 
 	public RelationChain parseRelationChain(VarValue var){
@@ -225,6 +231,8 @@ public class SeedGenerator {
 //		VarValue varValue = chain.getWorkingVariable();
 		checkUnitDefiningInterestingVariable(currentUnit, graph, seeds, varValue, chain);
 
+		System.currentTimeMillis();
+		
 		List<Unit> predessors = graph.getPredsOf(currentUnit);
 		for (Unit precessor : predessors) {
 			if (!parsedUnits.contains(precessor)) {
@@ -250,7 +258,7 @@ public class SeedGenerator {
 	private boolean checkUnitDefiningInterestingVariable(Unit unit, UnitGraph graph, List<Unit> seeds,
 			VarValue varValue, RelationChain chain) {
 		
-		if(unit.toString().contains("$r3[y] = temp")){
+		if(unit.toString().contains("$i1 = $r3[end]")){
 			System.currentTimeMillis();
 		}
 
@@ -301,11 +309,16 @@ public class SeedGenerator {
 	 * @return
 	 */
 	private boolean resursiveMatch(Value val, Unit definingUnit, UnitGraph graph, RelationChain chain) {
-		System.currentTimeMillis();
+		
+		if(chain.vars.size()==1){
+			return aliasMatch(val, chain);
+		}
+		
 		VarValue workingVar = chain.getLeafVar();
 		boolean isMatch = true;
 		while(chain.searchingIndex < chain.vars.size()){
-			if(match(val, workingVar) || (workingVar!=chain.getLeafVar() && aliasMatch(val, chain))){
+			if((workingVar!=chain.getTopVar() && match(val, workingVar)) || 
+					(workingVar==chain.getTopVar() && aliasMatch(val, chain))){
 				chain.searchingIndex++;
 				if(chain.searchingIndex >= chain.vars.size()){
 					break;
@@ -313,6 +326,11 @@ public class SeedGenerator {
 				
 				workingVar = chain.getWorkingVariable();
 				val = findParent(val, definingUnit, graph);
+				if(val == null){
+					isMatch = false;
+					break;
+				}
+				System.currentTimeMillis();
 			}
 			else{
 				isMatch = false;
@@ -354,7 +372,7 @@ public class SeedGenerator {
 		
 		return false;
 	}
-
+	
 	private boolean match(Value val, VarValue varValue) {
 		Variable var = varValue.getVariable();
 		if(isTypeMatch(val, varValue)){
@@ -420,12 +438,35 @@ public class SeedGenerator {
 				}
 			} else if (val instanceof Local) {
 				Local local = (Local) val;
-				// TODO
+				if(isVarDefinedInUnit(local, unit)){
+					if(unit instanceof AssignStmt){
+						AssignStmt assign = (AssignStmt)unit;
+						Value rightOp = assign.getRightOpBox().getValue();
+						if(rightOp instanceof ArrayRef){
+							ArrayRef ref = (ArrayRef)rightOp;
+							return ref.getBase();
+						}
+						else if(rightOp instanceof InstanceFieldRef){
+							InstanceFieldRef ref = (InstanceFieldRef)rightOp;
+							return ref.getBase();
+						}
+					}
+				}
 				System.currentTimeMillis();
 			}
 
-			if (!graph.getPredsOf(predessor).isEmpty()) {
-				predessor = graph.getPredsOf(predessor).get(0);
+			List<Unit> pres = graph.getPredsOf(predessor);
+			if (!pres.isEmpty()) {
+				/**
+				 * because there will be no branches in linearization of a variable.
+				 */
+				if(pres.size()>1){
+					predessor = null;
+				}
+				else{
+					predessor = graph.getPredsOf(predessor).get(0);					
+				}
+				
 			} else {
 				predessor = null;
 			}

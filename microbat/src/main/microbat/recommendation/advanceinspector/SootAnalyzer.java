@@ -2,9 +2,9 @@ package microbat.recommendation.advanceinspector;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -18,23 +18,10 @@ import microbat.util.MicroBatUtil;
 import sav.strategies.dto.AppJavaClassPath;
 import soot.Body;
 import soot.G;
-import soot.Local;
-import soot.PointsToAnalysis;
-import soot.PointsToSet;
 import soot.Scene;
 import soot.SootClass;
-import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
-import soot.Value;
-import soot.ValueBox;
-import soot.jimple.internal.JNewArrayExpr;
-import soot.jimple.spark.SparkTransformer;
-import soot.jimple.spark.pag.AllocNode;
-import soot.jimple.spark.pag.Node;
-import soot.jimple.spark.pag.PAG;
-import soot.jimple.spark.sets.DoublePointsToSet;
-import soot.jimple.spark.sets.P2SetVisitor;
 import soot.options.Options;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.Tag;
@@ -67,7 +54,7 @@ public class SootAnalyzer {
 		}
 	}
 
-	public void analyze(ChosenVariableOption variableOption, CompilationUnit cu, int line) {
+	public List<Unit> analyze(ChosenVariableOption variableOption, CompilationUnit cu, int line) {
 		AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 
 		String classPathString = appClassPath.getClasspathStr();
@@ -106,10 +93,11 @@ public class SootAnalyzer {
 //		List<Unit> unitsOfSpecificLineNumber = retrieveUnitsAccordingToLineNumber(graph, line);
 
 //		List<Unit> seedStatements = new SeedGenerator().findSeeds(var, graph, unitsOfSpecificLineNumber);
-		List<Unit> seedStatements = new SeedGenerator().findSeeds(var, graph);
+		Map<String, List<Unit>> seedMap = new SeedGenerator().findSeeds(var, graph);
 		
-		System.currentTimeMillis();
+		List<Unit> seeds = new SeedsFilter().filter(seedMap, var);
 
+		return seeds;
 		// MHGDominatorsFinder<Unit> dominatorFinder = new
 		// MHGDominatorsFinder<>(graph);
 		// List<Unit> dominators = dominatorFinder.getDominators(unit);
