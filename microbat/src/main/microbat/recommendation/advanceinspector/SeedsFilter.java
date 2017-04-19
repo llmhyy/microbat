@@ -1,6 +1,7 @@
 package microbat.recommendation.advanceinspector;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -89,15 +90,15 @@ public class SeedsFilter {
 		}
 	}
 	
-	public List<Unit> filter(Map<String, List<Unit>> seedMap, VarValue var){
-		List<Unit> validSeeds = new ArrayList<>();
+	public Map<String, List<Unit>> filter(Map<String, List<Unit>> seedMap, VarValue var){
+		Map<String, List<Unit>> validSeeds = new HashMap<>();
 		
 		for(String className: seedMap.keySet()){
 			List<Unit> potentialSeeds = seedMap.get(className);
 			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className);
 			AssignmentChecker checker = new AssignmentChecker(potentialSeeds, cu);
 			cu.accept(checker);
-			validSeeds.addAll(checker.visitedSeeds);
+			validSeeds.put(className, checker.visitedSeeds);
 		}
 		
 		return validSeeds;

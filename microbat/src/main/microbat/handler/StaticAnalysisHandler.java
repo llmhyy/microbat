@@ -1,5 +1,8 @@
 package microbat.handler;
 
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -8,12 +11,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
-import com.ibm.wala.ipa.cha.ClassHierarchyException;
-import com.ibm.wala.shrikeCT.InvalidClassFileException;
-
-import microbat.recommendation.AdvancedDetailInspector;
 import microbat.recommendation.advanceinspector.SootAnalyzer;
 import microbat.util.TempVariableInfo;
+import soot.Unit;
 
 public class StaticAnalysisHandler extends AbstractHandler{
 
@@ -32,8 +32,10 @@ public class StaticAnalysisHandler extends AbstractHandler{
 //				}
 				
 				SootAnalyzer analyzer = new SootAnalyzer();
+				Map<String, List<Unit>> seeds = analyzer.
+						analyzeSeeds(TempVariableInfo.variableOption, TempVariableInfo.cu, TempVariableInfo.line);
 				
-				analyzer.analyze(TempVariableInfo.variableOption, TempVariableInfo.cu, TempVariableInfo.line);
+				
 				
 				return Status.OK_STATUS;
 			}

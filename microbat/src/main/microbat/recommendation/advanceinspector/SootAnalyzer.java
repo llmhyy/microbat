@@ -29,6 +29,8 @@ import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.UnitGraph;
 
 public class SootAnalyzer {
+	
+	public static boolean firstTimeForPointsToAnalysis = true;
 
 	class MethodFinder extends ASTVisitor {
 		private CompilationUnit cu;
@@ -54,7 +56,7 @@ public class SootAnalyzer {
 		}
 	}
 
-	public List<Unit> analyze(ChosenVariableOption variableOption, CompilationUnit cu, int line) {
+	public Map<String, List<Unit>> analyzeSeeds(ChosenVariableOption variableOption, CompilationUnit cu, int line) {
 		AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 
 		String classPathString = appClassPath.getClasspathStr();
@@ -62,7 +64,10 @@ public class SootAnalyzer {
 				+ "rt.jar";
 		classPathString += File.pathSeparator + rtJar;
 
-//		G.reset();
+		if(firstTimeForPointsToAnalysis){
+			G.reset();			
+		}
+		
 		Scene.v().setSootClassPath(classPathString);
 		Options.v().set_keep_line_number(true);
 		Options.v().set_debug(true);
@@ -93,9 +98,11 @@ public class SootAnalyzer {
 //		List<Unit> unitsOfSpecificLineNumber = retrieveUnitsAccordingToLineNumber(graph, line);
 
 //		List<Unit> seedStatements = new SeedGenerator().findSeeds(var, graph, unitsOfSpecificLineNumber);
-		Map<String, List<Unit>> seedMap = new SeedGenerator().findSeeds(var, graph);
+		Map<String, List<Unit>> seedMap = new SeedGenerator().findSeeds(var, graph, firstTimeForPointsToAnalysis);
 		
-		List<Unit> seeds = new SeedsFilter().filter(seedMap, var);
+		Map<String, List<Unit>> seeds = new SeedsFilter().filter(seedMap, var);
+		
+		firstTimeForPointsToAnalysis = false;
 
 		return seeds;
 		// MHGDominatorsFinder<Unit> dominatorFinder = new

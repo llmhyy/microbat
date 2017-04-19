@@ -68,14 +68,16 @@ public class SeedGenerator {
 		return null;
 	}
 	
-	public Map<String, List<Unit>> findSeeds(VarValue var, UnitGraph contextGraph){
+	public Map<String, List<Unit>> findSeeds(VarValue var, UnitGraph contextGraph, boolean reanalysisPointsTo){
 		RelationChain chain = parseRelationChain(var);
 		
 		VarValue topVar = chain.getTopVar();
 		Local topLocal = findLocal(contextGraph, topVar);
 		chain.topLocal = topLocal;
 		
-//		setPointToAnalysis();
+		if(reanalysisPointsTo){
+			setPointToAnalysis();			
+		}
 		
 		Map<String, List<Unit>> seeds = findCorrespondingDefsInAllMethods(var, chain);
 		
