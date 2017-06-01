@@ -1,11 +1,3 @@
-/*
- * Copyright (C) 2013 by SUTD (Singapore)
- * All rights reserved.
- *
- * 	Author: SUTD
- *  Version:  $Revision: 1 $
- */
-
 package microbat.model;
 
 import java.util.ArrayList;
@@ -15,10 +7,6 @@ import java.util.List;
 import microbat.model.variable.Variable;
 import sav.common.core.utils.CollectionUtils;
 
-/**
- * @author LLT
- * 
- */
 public class BreakPoint extends ClassLocation {
 	protected List<Variable> vars; // to keep order
 	private int charStart;

@@ -3,12 +3,15 @@ package microbat.model.trace;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
+import microbat.model.ClassLocation;
 import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
 import microbat.model.value.VarValue;
@@ -893,5 +896,22 @@ public class Trace {
 		return null;
 	}
 
-	
+	public Map<String, List<Integer>> getExecutedLocation(){
+		Map<String, List<Integer>> locationMap = new HashMap<>();
+		for(TraceNode node: this.exectionList){
+			List<Integer> lines = locationMap.get(node.getDeclaringCompilationUnitName());
+			Integer line = node.getLineNumber();
+			if(lines == null){
+				lines = new ArrayList<>();
+			}
+			
+			if(!lines.contains(line)){
+				lines.add(line);
+			}
+			
+			locationMap.put(node.getDeclaringCompilationUnitName(), lines);
+		}
+		
+		return locationMap;
+	}
 }

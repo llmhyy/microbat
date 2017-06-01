@@ -23,8 +23,7 @@ public class MicroBatViews {
 	public static TraceView getTraceView(){
 		TraceView view = null;
 		try {
-			view = (TraceView)PlatformUI.getWorkbench().
-					getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.TRACE);
+			view = (TraceView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.TRACE);
 		} catch (PartInitException e) {
 			e.printStackTrace();
 		}
