@@ -22,6 +22,7 @@ import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.w3c.dom.Node;
 
+import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.dto.ClassLocation;
 
 public class JTestUtil {
@@ -122,12 +123,12 @@ public class JTestUtil {
 	
 	private static HashSet<String> testClass = new HashSet<>(); 
 	
-	public static boolean isInTestCase(String className) {
+	public static boolean isInTestCase(String className, AppJavaClassPath appPath) {
 		if(testClass.contains(className)){
 			return true;
 		}
 		else{
-			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className);
+			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className, appPath);
 			List<MethodDeclaration> mdList = JTestUtil.findTestingMethod(cu);
 			
 			if(!mdList.isEmpty()){

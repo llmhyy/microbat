@@ -95,7 +95,7 @@ public class SeedsFilter {
 		
 		for(String className: seedMap.keySet()){
 			List<Unit> potentialSeeds = seedMap.get(className);
-			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className);
+			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className, null);
 			AssignmentChecker checker = new AssignmentChecker(potentialSeeds, cu);
 			cu.accept(checker);
 			validSeeds.put(className, checker.visitedSeeds);

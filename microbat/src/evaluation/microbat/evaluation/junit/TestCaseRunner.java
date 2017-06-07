@@ -122,99 +122,6 @@ public class TestCaseRunner extends ExecutionStatementCollector{
 		}
 	}
 	
-	/**
-	 * @deprecated
-	 * 
-	 * This method will remove the steps in test case.
-	 * 
-	 * @param appClassPath
-	 * @return
-	 */
-	public List<BreakPoint> collectBreakPoints0(AppJavaClassPath appClassPath){
-		appendStepWatchExcludes(appClassPath);
-		steps = 0;
-		List<BreakPoint> pointList = new ArrayList<>();
-		
-		VirtualMachine vm = new VMStarter(appClassPath).start();
-		
-		EventRequestManager erm = vm.eventRequestManager(); 
-		addClassWatch(erm);
-		
-		EventQueue queue = vm.eventQueue();
-		
-		boolean connected = true;
-		
-		while(connected){
-			try {
-				EventSet eventSet = queue.remove(TIME_OUT);
-				if(eventSet != null){
-					for(Event event: eventSet){
-						if(event instanceof VMStartEvent){
-							ThreadReference thread = ((VMStartEvent) event).thread();
-							addStepWatch(erm, thread);
-							addExceptionWatch(erm);
-						}
-						else if(event instanceof VMDeathEvent
-							|| event instanceof VMDisconnectEvent){
-							connected = false;
-						}
-						else if(event instanceof StepEvent){
-							StepEvent sEvent = (StepEvent)event;
-							Location location = sEvent.location();
-							
-							int lineNumber = location.lineNumber();
-							
-							String path = location.sourcePath();
-							String declaringCompilationUnit = path.replace(".java", "");
-							declaringCompilationUnit = declaringCompilationUnit.replace('\\', '.');
-							
-							BreakPoint breakPoint = new BreakPoint(location.declaringType().name(), declaringCompilationUnit, lineNumber);
-							
-							if(isAboutToFinishTestRunner(breakPoint)){
-								checkTestCaseSucessfulness(((StepEvent) event).thread(), location);
-							}
-							
-							if(!isInTestRunnerOrTestCase(breakPoint) && !pointList.contains(breakPoint)){
-								pointList.add(breakPoint);							
-							}
-							
-							steps++;
-							if(steps >= Settings.stepLimit){
-								connected = false;
-								this.setOverLong(true);
-							}
-							
-						}
-						else if(event instanceof ExceptionEvent){
-							System.currentTimeMillis();
-						}
-					}
-					
-					eventSet.resume();
-				}
-				else{
-					connected = false;
-//					vm.exit(0);
-//					vm.dispose();
-				}
-				
-				
-			} catch (InterruptedException e) {
-				connected = false;
-				e.printStackTrace();
-			} catch (AbsentInformationException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		if(vm != null){
-			vm.exit(0);
-			vm.dispose();
-		}
-		
-		return pointList;
-	}
-	
 	protected void addBreakPointWatch(EventRequestManager erm, ThreadReference threadReference, Location loc) {
 		BreakpointRequest request = erm.createBreakpointRequest(loc);
 		request.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
@@ -261,34 +168,11 @@ public class TestCaseRunner extends ExecutionStatementCollector{
 		}
 	}
 
-	private boolean isAboutToFinishTestRunner(BreakPoint breakPoint) {
-		if(isInTestRunnerOrTestCase(breakPoint)){
-			return breakPoint.getLineNumber() == FINISH_LINE_NO_IN_TEST_RUNNER;
-		}
-		return false;
-	}
+	
 
 	protected HashMap<BreakPoint, Boolean> pointInTestRunnerMap = new HashMap<>(); 
 	
-	protected boolean isInTestRunnerOrTestCase(BreakPoint breakPoint) {
-		if(pointInTestRunnerMap.containsKey(breakPoint)){
-			return pointInTestRunnerMap.get(breakPoint);
-		}
-		
-		
-		String className = breakPoint.getDeclaringCompilationUnitName();
-		if(className.equals(TestCaseAnalyzer.TEST_RUNNER)){
-			pointInTestRunnerMap.put(breakPoint, true);
-			return true;
-		}
-		else{
-			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className);
-			List<MethodDeclaration> mdList = JTestUtil.findTestingMethod(cu);
-			
-			pointInTestRunnerMap.put(breakPoint, !mdList.isEmpty());
-			return !mdList.isEmpty();
-		}
-	}
+	
 
 	private void appendStepWatchExcludes(AppJavaClassPath appClassPath) {
 		List<String> exList = new ArrayList<>();

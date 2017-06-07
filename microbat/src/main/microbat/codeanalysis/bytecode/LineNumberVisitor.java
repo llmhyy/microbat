@@ -134,11 +134,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 
 	private void parseReadWrittenVariable(BreakPoint point, List<InstructionHandle> correspondingInstructions, Code code, CFG cfg) {
 		
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName());
-		if(cu==null && this.appJavaClassPath.getSoureCodePath()!=null){
-			cu = JavaUtil.findCompiltionUnitBySourcePath(this.appJavaClassPath.getSoureCodePath(), 
-					point.getDeclaringCompilationUnitName());
-		}
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), this.appJavaClassPath);
 		
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool()); 
 		if(point.getLineNumber()==9){

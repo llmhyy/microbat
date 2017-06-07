@@ -127,7 +127,7 @@ public class WALAByteCodeAnalyzer{
 		System.out.println("call graph is built!");
 		
 		System.out.println("start analyzing read/written variables...");
-		List<BreakPoint> breakPoints = anlyzeBreakPointsWithDataDependencies(callGraph);
+		List<BreakPoint> breakPoints = anlyzeBreakPointsWithDataDependencies(callGraph, appClassPath);
 		System.out.println("finish analyzing read/written variables...");
 		
 		return breakPoints;
@@ -137,7 +137,7 @@ public class WALAByteCodeAnalyzer{
 		List<BreakPoint> points = new ArrayList<>();
 		if(appClassPath.getOptionalTestClass() != null){
 			String testClassName = appClassPath.getOptionalTestClass();
-			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(testClassName);
+			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(testClassName, appClassPath);
 			
 			List<MethodDeclaration> mdList = JTestUtil.findTestingMethod(cu);
 			for(MethodDeclaration md: mdList){
@@ -163,7 +163,7 @@ public class WALAByteCodeAnalyzer{
 		}
 		else{
 			String launchClass = appClassPath.getLaunchClass();
-			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(launchClass);
+			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(launchClass, appClassPath);
 			
 			MainMethodFinder finder = new MainMethodFinder();
 			cu.accept(finder);
@@ -364,7 +364,7 @@ public class WALAByteCodeAnalyzer{
 		int pc = method.getBytecodeIndex(insIndex);
 		int lineNumber = method.getLineNumber(pc);
 		
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName());
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), null);
 		
 		if(lineNumber == 43){
 			System.currentTimeMillis();
@@ -562,7 +562,7 @@ public class WALAByteCodeAnalyzer{
 		return className;
 	}
 	
-	private List<BreakPoint> anlyzeBreakPointsWithDataDependencies(CallGraph graph){
+	private List<BreakPoint> anlyzeBreakPointsWithDataDependencies(CallGraph graph, AppJavaClassPath appPath){
 		Map<String, BreakPoint> bkpSet = new HashMap<String, BreakPoint>();
 		
 		Iterator<CGNode> iterator = graph.iterator();
@@ -582,7 +582,7 @@ public class WALAByteCodeAnalyzer{
 					String className = SignatureUtils.signatureToName(classSignature);
 					
 					if(isClassContainedInExecution(className) && 
-							isMethodContainedInExection(method)){
+							isMethodContainedInExection(method, appPath)){
 						parseBreakPoints(bkpSet, node);				
 					}
 				}
@@ -595,13 +595,13 @@ public class WALAByteCodeAnalyzer{
 		return result;
 	}
 	
-	private boolean isMethodContainedInExection(IMethod method) {
+	private boolean isMethodContainedInExection(IMethod method, AppJavaClassPath appPath) {
 		String className = getClassCanonicalName(method);
 		if(className.contains("$")){
 			className = className.substring(0, className.indexOf("$"));			
 		}
 		
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className);
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className, appPath);
 		if(cu == null){
 			return false;
 		}

@@ -101,7 +101,7 @@ public class ProgramExecutor extends Executor {
 	 * the class patterns indicating the classes into which I will not step to
 	 * get the runtime values
 	 */
-	private AppJavaClassPath config;
+	private AppJavaClassPath appPath;
 	
 	/** maps from a given class name to its contained breakpoints */
 	private Map<String, List<BreakPoint>> brkpsMap;
@@ -137,10 +137,10 @@ public class ProgramExecutor extends Executor {
 		this.brkpsMap = BreakpointUtils.initBrkpsMap(runningStatements);
 
 		/** start debugger */
-		VirtualMachine vm = new VMStarter(this.config).start();
+		VirtualMachine vm = new VMStarter(this.appPath).start();
 
 		try{
-			constructTrace(monitor, this.config, vm, stepNum, isTestcaseEvaluation);			
+			constructTrace(monitor, this.appPath, vm, stepNum, isTestcaseEvaluation);			
 		}
 		finally{
 			if(vm != null){
@@ -331,9 +331,6 @@ public class ProgramExecutor extends Executor {
 							}
 							caughtLocationForJustException = null;
 						}
-
-//						handleCompensationForMethodEntryExistOptimization(methodNodeStack, methodSignatureStack, event,
-//								isContextChange, node);
 
 						/**
 						 * Build parent-child relation between trace nodes.
@@ -556,63 +553,12 @@ public class ProgramExecutor extends Executor {
 		}
 	}
 
-	/**
-	 * The following code is used for side-effect of optimization, compensating
-	 * the missing method invocation because of disabling some method entry/exit
-	 * event in some cases.
-	 */
-	private void handleCompensationForMethodEntryExistOptimization(Stack<TraceNode> methodNodeStack,
-			Stack<String> methodSignatureStack, Event event, boolean isContextChange, TraceNode node) {
-		if (isContextChange) {
-			TraceNode prevNode = node.getStepInPrevious();
-			if (prevNode != null) {
-				MethodDeclaration invokedMethod = JavaUtil.checkInvocationParentRelation(prevNode, node);
-				if (invokedMethod != null) {
-					IMethodBinding invokedMethodBinding = invokedMethod.resolveBinding();
-					String complexInvokedMethodSig = JavaUtil.convertFullSignature(invokedMethodBinding);
-
-					String invokedMethodSig = trimGenericType(complexInvokedMethodSig);
-
-					StackFrame frame = findFrame(((StepEvent) event).thread(), ((StepEvent) event).location());
-					String declaringType = invokedMethodBinding.getDeclaringClass().getBinaryName();
-					int methodLine = ((StepEvent) event).location().lineNumber();
-					List<Param> paramList = findParamList(invokedMethod);
-
-					if (!methodSignatureStack.isEmpty()) {
-						String peekMethodSig = methodSignatureStack.peek();
-						TraceNode peekNode = methodNodeStack.peek();
-						if (!peekMethodSig.equals(invokedMethodSig) && peekNode.getOrder()!=prevNode.getOrder()) {
-							System.out.println("compensating side effect of optimization for " + prevNode);
-
-							if (invokedMethodBinding.getParameterTypes().length != 0) {
-								parseWrittenParameterVariableForMethodInvocation(frame, declaringType, methodLine,
-										paramList, prevNode);
-							}
-
-							methodSignatureStack.push(invokedMethodSig);
-							methodNodeStack.push(prevNode);
-						}
-					} else {
-						System.out.println("compensating side effect of optimization for " + prevNode);
-						if (invokedMethodBinding.getParameterTypes().length != 0) {
-							parseWrittenParameterVariableForMethodInvocation(frame, declaringType, methodLine,
-									paramList, node);
-						}
-
-						methodSignatureStack.push(invokedMethodSig);
-						methodNodeStack.push(prevNode);
-					}
-				}
-			}
-		}
-	}
-
-	private String trimGenericType(String complexInvokedMethodSig) {
+	public String trimGenericType(String complexInvokedMethodSig) {
 		String simpleSig = complexInvokedMethodSig.replaceAll("<[^<|^>]*>", "");
 		return simpleSig;
 	}
 
-	private List<Param> findParamList(MethodDeclaration invokedMethod) {
+	public List<Param> findParamList(MethodDeclaration invokedMethod) {
 		List<Param> paramList = new ArrayList<>();
 		for (Object obj : invokedMethod.parameters()) {
 			if (obj instanceof SingleVariableDeclaration) {
@@ -701,7 +647,7 @@ public class ProgramExecutor extends Executor {
 			path = path.replace("\\", ".");
 
 			if (qualifiedName.equals(path)) {
-				CompilationUnit cu = JavaUtil.findCompilationUnitInProject(qualifiedName);
+				CompilationUnit cu = JavaUtil.findCompilationUnitInProject(qualifiedName, appPath);
 				if (cu != null) {
 					MethodFinder mFinder = new MethodFinder(cu, lineNumber);
 					cu.accept(mFinder);
@@ -860,7 +806,7 @@ public class ProgramExecutor extends Executor {
 	private String getDeclaringMethod(TraceNode returnNode) {
 		int lineNumber = returnNode.getLineNumber();
 		String compilationUnitName = returnNode.getDeclaringCompilationUnitName();
-		final CompilationUnit cu = JavaUtil.findCompilationUnitInProject(compilationUnitName);
+		final CompilationUnit cu = JavaUtil.findCompilationUnitInProject(compilationUnitName, appPath);
 		MethodNameRetriever retriever = new MethodNameRetriever(cu, lineNumber);
 		cu.accept(retriever);
 		
@@ -894,7 +840,7 @@ public class ProgramExecutor extends Executor {
 			if (!(value instanceof ObjectReference) || value == null) {
 				VariableScopeParser parser = new VariableScopeParser();
 				LocalVariableScope scope = parser.parseMethodScope(methodDeclaringCompilationUnit, methodLocationLine,
-						localVar.getName());
+						localVar.getName(), appPath);
 				String varID;
 				if (scope != null) {
 					varID = Variable.concanateLocalVarID(methodDeclaringCompilationUnit, localVar.getName(), scope.getStartLine(),
@@ -1270,7 +1216,7 @@ public class ProgramExecutor extends Executor {
 		try {
 			ExpressionParser.clear();
 
-			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName());
+			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appPath);
 			ExpressionParser.setParameters(cu, point.getLineNumber());
 			
 			Value val = ExpressionParser.evaluate(expression, frame.virtualMachine(), frameGetter);
@@ -1368,11 +1314,11 @@ public class ProgramExecutor extends Executor {
 	}
 
 	public AppJavaClassPath getConfig() {
-		return config;
+		return appPath;
 	}
 
 	public void setConfig(AppJavaClassPath config) {
-		this.config = config;
+		this.appPath = config;
 	}
 
 	public StepRequest getStepRequest() {

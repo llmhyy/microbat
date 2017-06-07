@@ -25,7 +25,9 @@ public class LocalVariableScopes {
 		
 		for(LocalVariableScope scope: variableScopes){
 			AbstractTypeDeclaration td = (AbstractTypeDeclaration) scope.getCompilationUnit().types().get(0);
-			String typeName = td.resolveBinding().getQualifiedName();
+			String packageName = scope.getCompilationUnit().getPackage().getName().getFullyQualifiedName();
+			String simpleName = td.getName().getIdentifier();
+			String typeName = packageName + "." + simpleName;
 			
 			if(typeName.equals(fullQualifiedTypeName) && scope.getVariableName().equals(variableName) &&
 					appearedLineNum >= scope.getStartLine() && appearedLineNum <= scope.getEndLine()){

@@ -60,6 +60,7 @@ import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
 import microbat.codeanalysis.runtime.jpda.expr.ParseException;
 import microbat.model.trace.TraceNode;
+import sav.strategies.dto.AppJavaClassPath;
 
 @SuppressWarnings("restriction")
 public class JavaUtil {
@@ -342,12 +343,18 @@ public class JavaUtil {
 	}
 	
 	
-	public static CompilationUnit findCompilationUnitInProject(String qualifiedName){
+	public static CompilationUnit findCompilationUnitInProject(String qualifiedName, AppJavaClassPath appPath){
 		CompilationUnit cu = Settings.compilationUnitMap.get(qualifiedName);
 		if(null == cu){
 			try{
 				ICompilationUnit icu = findICompilationUnitInProject(qualifiedName);
-				cu = convertICompilationUnitToASTNode(icu);	
+				if(icu != null){
+					cu = convertICompilationUnitToASTNode(icu);						
+				}
+				else{
+					cu = findCompiltionUnitBySourcePath(appPath.getSoureCodePath(), appPath.getTestCodePath(), qualifiedName);
+				}
+				
 				Settings.compilationUnitMap.put(qualifiedName, cu);
 				return cu;
 			}
@@ -359,9 +366,15 @@ public class JavaUtil {
 		return cu;
 	} 
 	
-	public static CompilationUnit findNonCacheCompilationUnitInProject(String qualifiedName){
+	public static CompilationUnit findNonCacheCompilationUnitInProject(String qualifiedName, AppJavaClassPath appPath){
 		ICompilationUnit icu = findNonCacheICompilationUnitInProject(qualifiedName);
-		CompilationUnit cu = convertICompilationUnitToASTNode(icu);
+		CompilationUnit cu = null;
+		if(icu != null){
+			cu = convertICompilationUnitToASTNode(icu);						
+		}
+		else{
+			cu = findCompiltionUnitBySourcePath(appPath.getSoureCodePath(), appPath.getTestCodePath(), qualifiedName);
+		}
 		
 		return cu;
 	}
@@ -369,20 +382,23 @@ public class JavaUtil {
 	public static ICompilationUnit findICompilationUnitInProject(String qualifiedName){
 		ICompilationUnit icu = Settings.iCompilationUnitMap.get(qualifiedName);
 		if(null == icu){
-			IJavaProject project = JavaCore.create(getSpecificJavaProjectInWorkspace());
-			try {
-				IType type = project.findType(qualifiedName);
-				if(type == null){
-					type = project.findType(qualifiedName, new NullProgressMonitor());
+			IProject iProject = getSpecificJavaProjectInWorkspace();
+			if(iProject != null){
+				IJavaProject project = JavaCore.create(iProject);
+				try {
+					IType type = project.findType(qualifiedName);
+					if(type == null){
+						type = project.findType(qualifiedName, new NullProgressMonitor());
+					}
+					
+					if(type != null){
+						icu = type.getCompilationUnit();
+						Settings.iCompilationUnitMap.put(qualifiedName, icu);
+					}
+					
+				} catch (JavaModelException e1) {
+					e1.printStackTrace();
 				}
-				
-				if(type != null){
-					icu = type.getCompilationUnit();
-					Settings.iCompilationUnitMap.put(qualifiedName, icu);
-				}
-				
-			} catch (JavaModelException e1) {
-				e1.printStackTrace();
 			}
 		}
 		
@@ -390,15 +406,19 @@ public class JavaUtil {
 	}
 	
 	public static ICompilationUnit findNonCacheICompilationUnitInProject(String qualifiedName) {
-		IJavaProject project = JavaCore.create(getSpecificJavaProjectInWorkspace());
-		try {
-			IType type = project.findType(qualifiedName);
-			if(type != null){
-				return  type.getCompilationUnit();
+		IProject iProject = getSpecificJavaProjectInWorkspace();
+		if(iProject != null){
+			IJavaProject project = JavaCore.create(iProject);
+			try {
+				IType type = project.findType(qualifiedName);
+				if(type != null){
+					return  type.getCompilationUnit();
+				}
+				
+			} catch (JavaModelException e1) {
+				e1.printStackTrace();
 			}
 			
-		} catch (JavaModelException e1) {
-			e1.printStackTrace();
 		}
 		
 		return null;
@@ -463,15 +483,15 @@ public class JavaUtil {
 		return null;
 	}
 
-	public static boolean isTheLocationHeadOfClass(String sourceName, int lineNumber) {
-		CompilationUnit cu = findCompilationUnitInProject(sourceName);
+	public static boolean isTheLocationHeadOfClass(String sourceName, int lineNumber, AppJavaClassPath appPath) {
+		CompilationUnit cu = findCompilationUnitInProject(sourceName, appPath);
 		AbstractTypeDeclaration type = (AbstractTypeDeclaration) cu.types().get(0);
 		int headLine = cu.getLineNumber(type.getName().getStartPosition());
 		
 		return headLine==lineNumber;
 	}
 
-	public static boolean isCompatibleMethodSignature(String thisSig, String thatSig) {
+	public static boolean isCompatibleMethodSignature(String thisSig, String thatSig, AppJavaClassPath appPath) {
 		if(thatSig.equals(thisSig)){
 			return true;
 		}
@@ -483,8 +503,8 @@ public class JavaUtil {
 		String thatMethodSig = thatSig.substring(thatSig.indexOf("#")+1, thatSig.length());
 		
 		if(thisMethodSig.equals(thatMethodSig)){
-			CompilationUnit thisCU = JavaUtil.findCompilationUnitInProject(thisClassName);
-			CompilationUnit thatCU = JavaUtil.findCompilationUnitInProject(thatClassName);
+			CompilationUnit thisCU = JavaUtil.findCompilationUnitInProject(thisClassName, appPath);
+			CompilationUnit thatCU = JavaUtil.findCompilationUnitInProject(thatClassName, appPath);
 			
 			if(thisCU==null || thatCU==null){
 				return true;
@@ -520,16 +540,16 @@ public class JavaUtil {
 	 * @param postNode
 	 * @return
 	 */
-	public static MethodDeclaration checkInvocationParentRelation(TraceNode prevNode, TraceNode postNode){
-		List<IMethodBinding> methodInvocationBindings = findMethodInvocations(prevNode);
+	public static MethodDeclaration checkInvocationParentRelation(TraceNode prevNode, TraceNode postNode, AppJavaClassPath appPath){
+		List<IMethodBinding> methodInvocationBindings = findMethodInvocations(prevNode, appPath);
 		if(!methodInvocationBindings.isEmpty()){
-			MethodDeclaration md = findMethodDeclaration(postNode);
+			MethodDeclaration md = findMethodDeclaration(postNode, appPath);
 			if(md == null){
 				return null;
 			}
 			IMethodBinding methodDeclarationBinding = md.resolveBinding();
 			
-			if(canFindCompatibleSig(methodInvocationBindings, methodDeclarationBinding)){
+			if(canFindCompatibleSig(methodInvocationBindings, methodDeclarationBinding, appPath)){
 				//return methodDeclarationBinding;
 				return md;
 			}
@@ -538,8 +558,8 @@ public class JavaUtil {
 		return null;
 	}
 
-	private static List<IMethodBinding> findMethodInvocations(TraceNode prevNode) {
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(prevNode.getDeclaringCompilationUnitName());
+	private static List<IMethodBinding> findMethodInvocations(TraceNode prevNode, AppJavaClassPath appPath) {
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(prevNode.getDeclaringCompilationUnitName(), appPath);
 		
 		MethodInvocationFinder finder = new MethodInvocationFinder(cu, prevNode.getLineNumber());
 		cu.accept(finder);
@@ -557,8 +577,8 @@ public class JavaUtil {
 		return methodInvocations;
 	}
 
-	private static MethodDeclaration findMethodDeclaration(TraceNode postNode) {
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(postNode.getDeclaringCompilationUnitName());
+	private static MethodDeclaration findMethodDeclaration(TraceNode postNode, AppJavaClassPath appPath) {
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(postNode.getDeclaringCompilationUnitName(), appPath);
 		
 		MethodDeclarationFinder finder = new MethodDeclarationFinder(cu, postNode.getLineNumber());
 		cu.accept(finder);
@@ -578,7 +598,7 @@ public class JavaUtil {
 	}
 
 	private static boolean canFindCompatibleSig(
-			List<IMethodBinding> methodInvocationBindings, IMethodBinding methodDeclarationBinding) {
+			List<IMethodBinding> methodInvocationBindings, IMethodBinding methodDeclarationBinding, AppJavaClassPath appPath) {
 		
 		List<String> methodInvocationSigs = new ArrayList<>();
 		for(IMethodBinding binding: methodInvocationBindings){
@@ -592,7 +612,7 @@ public class JavaUtil {
 		}
 		else{
 			for(String methodInvocationSig: methodInvocationSigs){
-				if(isCompatibleMethodSignature(methodInvocationSig, methodDeclarationSig)){
+				if(isCompatibleMethodSignature(methodInvocationSig, methodDeclarationSig, appPath)){
 					return true;
 				}
 			}
@@ -608,12 +628,17 @@ public class JavaUtil {
 		return sig;
 	}
 
-	public static CompilationUnit findCompiltionUnitBySourcePath(String sourceCodePath,
+	private static CompilationUnit findCompiltionUnitBySourcePath(String sourceCodePath, String testCodePath,
 			String declaringCompilationUnitName) {
 		String pathComponents = declaringCompilationUnitName.replace(".", File.separator);
 		String javaFilePath = sourceCodePath + File.separator + pathComponents + ".java";
 		
 		File javaFile = new File(javaFilePath);
+		
+		if(!javaFile.exists()){
+			javaFilePath = testCodePath + File.separator + pathComponents + ".java";
+			javaFile = new File(javaFilePath);
+		}
 		
 		if(javaFile.exists()){
 			

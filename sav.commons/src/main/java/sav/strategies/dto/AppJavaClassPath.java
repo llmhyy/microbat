@@ -27,10 +27,18 @@ public class AppJavaClassPath {
 	
 	private String launchClass;
 	
+	/**
+	 * If Microbat is running a test case (JUnit), user need to specify which test case to be run.
+	 */
 	private String optionalTestClass;
 	private String optionalTestMethod;
 	
+	/**
+	 * if Microbat is not parsing the Java code in eclipse, then, the user need to define paths
+	 * of source code and test source code.
+	 */
 	private String soureCodePath;
+	private String testCodePath;
 	
 	private SystemPreferences preferences;
 
@@ -106,4 +114,13 @@ public class AppJavaClassPath {
 	public void setSourceCodePath(String soureCodePath) {
 		this.soureCodePath = soureCodePath;
 	}
+
+	public String getTestCodePath() {
+		return testCodePath;
+	}
+
+	public void setTestCodePath(String testCodePath) {
+		this.testCodePath = testCodePath;
+	}
+
 }

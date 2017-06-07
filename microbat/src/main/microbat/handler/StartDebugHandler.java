@@ -125,7 +125,7 @@ public class StartDebugHandler extends AbstractHandler {
 							monitor.setTaskName("parse variable scopes");
 							
 							List<String> classScope = parseScope(runningStatements);
-							parseLocalVariables(classScope);
+							parseLocalVariables(classScope, appClassPath);
 							
 							if(runningStatements == null){
 								System.err.println("Cannot find any slice");
@@ -219,8 +219,8 @@ public class StartDebugHandler extends AbstractHandler {
 		}
 	}
 	
-	private String convertSignature(String classQulifiedName, int lineNumber) {
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(classQulifiedName);
+	private String convertSignature(String classQulifiedName, int lineNumber, AppJavaClassPath appPath) {
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(classQulifiedName, appPath);
 		
 		MethodFinder finder = new MethodFinder(cu, lineNumber);
 		cu.accept(finder);
@@ -236,9 +236,9 @@ public class StartDebugHandler extends AbstractHandler {
 	 * This method is used to build the scope of local variables.
 	 * @param classScope
 	 */
-	private void parseLocalVariables(final List<String> classScope) {
+	private void parseLocalVariables(final List<String> classScope, AppJavaClassPath appPath) {
 		VariableScopeParser vsParser = new VariableScopeParser();
-		vsParser.parseLocalVariableScopes(classScope);
+		vsParser.parseLocalVariableScopes(classScope, appPath);
 		List<LocalVariableScope> lvsList = vsParser.getVariableScopeList();
 //		System.out.println(lvsList);
 		Settings.localVariableScopes.setVariableScopes(lvsList);

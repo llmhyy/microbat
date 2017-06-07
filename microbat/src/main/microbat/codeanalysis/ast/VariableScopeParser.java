@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import microbat.util.JavaUtil;
+import sav.strategies.dto.AppJavaClassPath;
 
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -26,18 +27,12 @@ public class VariableScopeParser {
 
 	private List<LocalVariableScope> variableScopeList = new ArrayList<>();
 	
-	public void parseLocalVariableScopes(List<String> interestingClasses){
+	public void parseLocalVariableScopes(List<String> interestingClasses, AppJavaClassPath appPath){
 		System.currentTimeMillis();
 		for(String qualifiedName: interestingClasses){
-			ICompilationUnit iunit = JavaUtil.findICompilationUnitInProject(qualifiedName);
-			if(iunit == null){
-				System.err.println("The class " + qualifiedName + 
-						" does not have its ICompilationUnit in workspace");
-			}
-			else{
-				CompilationUnit cu = JavaUtil.convertICompilationUnitToASTNode(iunit);
-				parseLocalVariables(cu);
-			}
+			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(qualifiedName, appPath);
+			parseLocalVariables(cu);
+			
 		}
 	}
 
@@ -132,8 +127,9 @@ public class VariableScopeParser {
 //		}
 //	}
 
-	public LocalVariableScope parseMethodScope(String typeName, final int lineNumber, final String variableName) {
-		final CompilationUnit cu = JavaUtil.findCompilationUnitInProject(typeName);
+	public LocalVariableScope parseMethodScope(String typeName, final int lineNumber, 
+			final String variableName, AppJavaClassPath appPath) {
+		final CompilationUnit cu = JavaUtil.findCompilationUnitInProject(typeName, appPath);
 		
 		if(cu == null){
 			System.currentTimeMillis();

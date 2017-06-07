@@ -308,7 +308,7 @@ public class DebugFeedbackView extends ViewPart {
 					TempVariableInfo.variableOption = option;
 					TempVariableInfo.line = currentNode.getLineNumber();
 					String cuName = currentNode.getBreakPoint().getDeclaringCompilationUnitName();
-					TempVariableInfo.cu = JavaUtil.findCompilationUnitInProject(cuName);
+					TempVariableInfo.cu = JavaUtil.findCompilationUnitInProject(cuName, null);
 				}
 				else{
 					Settings.interestedVariables.remove(varID);

@@ -55,7 +55,7 @@ public class TraceModelConstructor {
 		 * 2) Generating variable ID for local variable.
 		 */
 		List<String> classScope = parseScope(runningStatements);
-		parseLocalVariables(classScope);
+		parseLocalVariables(classScope, appClassPath);
 		
 		/** 4. extract runtime variables*/
 		tcExecutor.setConfig(appClassPath);
@@ -75,9 +75,9 @@ public class TraceModelConstructor {
 	}
 	
 	
-	private void parseLocalVariables(final List<String> classScope) {
+	private void parseLocalVariables(final List<String> classScope, AppJavaClassPath appPath) {
 		VariableScopeParser vsParser = new VariableScopeParser();
-		vsParser.parseLocalVariableScopes(classScope);
+		vsParser.parseLocalVariableScopes(classScope, appPath);
 		List<LocalVariableScope> lvsList = vsParser.getVariableScopeList();
 		Settings.localVariableScopes.setVariableScopes(lvsList);
 	}
