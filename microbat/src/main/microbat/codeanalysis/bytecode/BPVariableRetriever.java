@@ -51,7 +51,7 @@ public class BPVariableRetriever {
 		Map<String, List<BreakPoint>> class2PointMap = summarize(executingStatements);
 		for(String className: class2PointMap.keySet()){
 			JavaClass clazz = Repository.lookupClass(className);
-			LineNumberVisitor visitor = new LineNumberVisitor(class2PointMap.get(className));
+			LineNumberVisitor visitor = new LineNumberVisitor(class2PointMap.get(className), appClassPath);
 			clazz.accept(new DescendingVisitor(clazz, visitor));
 		}
 		

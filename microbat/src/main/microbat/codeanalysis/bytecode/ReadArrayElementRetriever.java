@@ -31,16 +31,27 @@ public class ReadArrayElementRetriever extends ASTNodeRetriever{
 			if(arrayExp instanceof Name){
 				Name name = (Name)arrayExp;
 				ITypeBinding typeBinding = name.resolveTypeBinding();
-				if(typeBinding.isArray()){
-					String arrayType = typeBinding.getElementType().getName();
-					if(arrayType.equals(typeName)){
-						String arrayElementName = access.toString();
-						if(!arrayElementNameList.contains(arrayElementName)){
-							arrayElementNameList.add(arrayElementName);							
+				if(typeBinding != null){
+					if(typeBinding.isArray()){
+						String arrayType = typeBinding.getElementType().getName();
+						if(arrayType.equals(typeName)){
+							String arrayElementName = access.toString();
+							if(!arrayElementNameList.contains(arrayElementName)){
+								arrayElementNameList.add(arrayElementName);							
+							}
+							return false;
 						}
-						return false;
 					}
 				}
+				//In this case, we are not parsing eclipse project so the binding is not available.
+				else{
+					String arrayElementName = access.toString();
+					if(!arrayElementNameList.contains(arrayElementName)){
+						arrayElementNameList.add(arrayElementName);							
+					}
+					return false;
+				}
+				
 			}
 		}
 		return true;

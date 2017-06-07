@@ -1,5 +1,6 @@
 package microbat.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -605,5 +606,37 @@ public class JavaUtil {
 	public static String createSignature(String className, String methodName, String methodSig) {
 		String sig = className + "#" + methodName + methodSig;
 		return sig;
+	}
+
+	public static CompilationUnit findCompiltionUnitBySourcePath(String sourceCodePath,
+			String declaringCompilationUnitName) {
+		String pathComponents = declaringCompilationUnitName.replace(".", File.separator);
+		String javaFilePath = sourceCodePath + File.separator + pathComponents + ".java";
+		
+		File javaFile = new File(javaFilePath);
+		
+		if(javaFile.exists()){
+			
+			String contents;
+			try {
+				contents = new String(Files.readAllBytes(Paths.get(javaFilePath)));
+				
+				final ASTParser parser = ASTParser.newParser(AST.JLS8);
+				parser.setKind(ASTParser.K_COMPILATION_UNIT);
+				parser.setSource(contents.toCharArray());
+				parser.setResolveBindings(true);
+				
+				CompilationUnit cu = (CompilationUnit)parser.createAST(null);
+				return cu;
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		else{
+			System.err.print("cannot find " + declaringCompilationUnitName + " under " + sourceCodePath);			
+		}
+		
+		return null;
 	}
 }
