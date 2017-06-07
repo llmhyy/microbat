@@ -270,6 +270,10 @@ public class ProgramExecutor extends Executor {
 					if (lastSteppingInPoint != null) {
 						collectValueOfPreviousStep(lastSteppingInPoint, thread, currentLocation);
 
+						if(currentLocation.lineNumber()==96){
+							System.currentTimeMillis();
+						}
+						
 						/**
 						 * Parsing the written variables of last step.
 						 * 
@@ -1101,6 +1105,10 @@ public class ProgramExecutor extends Executor {
 					} else {
 						Value parentValue = expValue.parentValue;
 						ObjectReference objRef = (ObjectReference) parentValue;
+						
+						if(objRef==null){
+							objRef = frame.thisObject();
+						}
 
 						if (var instanceof FieldVar) {
 							
