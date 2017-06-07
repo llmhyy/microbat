@@ -981,6 +981,9 @@ abstract class LValue {
                 			break;
                 		}
                 	}
+                	else{
+                		break;
+                	}
                 	
                 	
             		//first = first + '.' + izer.nextToken();
@@ -998,6 +1001,11 @@ abstract class LValue {
     	cu.accept(finder);
     	
     	String qualifiedType = null;
+    	
+    	if(finder.type==null){
+    		return null;
+    	}
+    	
     	if(finder.type.equals(NameFinder.TYPE)){
     		qualifiedType = finder.qualifiedTypeName;	
     	}
