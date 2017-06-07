@@ -30,6 +30,7 @@ public class AppJavaClassPath {
 	private String optionalTestClass;
 	private String optionalTestMethod;
 	
+	private String soureCodePath;
 	
 	private SystemPreferences preferences;
 
@@ -96,5 +97,13 @@ public class AppJavaClassPath {
 
 	public void setLaunchClass(String launchClass) {
 		this.launchClass = launchClass;
+	}
+
+	public String getSoureCodePath() {
+		return soureCodePath;
+	}
+
+	public void setSourceCodePath(String soureCodePath) {
+		this.soureCodePath = soureCodePath;
 	}
 }

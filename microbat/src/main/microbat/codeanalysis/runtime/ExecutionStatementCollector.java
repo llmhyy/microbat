@@ -104,6 +104,8 @@ public class ExecutionStatementCollector extends Executor{
 						else if(event instanceof MethodEntryEvent){
 							Method method = ((MethodEntryEvent) event).method();
 							
+//							System.out.println(method.name());
+							
 							if(isTestcaseEvaluation){
 								String declaringTypeName = method.declaringType().name();
 //								String methodName = method.name();

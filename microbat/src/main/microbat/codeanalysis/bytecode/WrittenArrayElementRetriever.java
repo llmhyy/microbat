@@ -34,12 +34,18 @@ public class WrittenArrayElementRetriever extends ASTNodeRetriever{
 				if(arrayExp instanceof Name){
 					Name name = (Name)arrayExp;
 					ITypeBinding typeBinding = name.resolveTypeBinding();
-					if(typeBinding.isArray()){
-						String arrayType = typeBinding.getElementType().getName();
-						if(arrayType.equals(typeName)){
-							arrayElementName = access.toString();
-							return false;
-						}
+					if(typeBinding != null){
+						if(typeBinding.isArray()){
+							String arrayType = typeBinding.getElementType().getName();
+							if(arrayType.equals(typeName)){
+								arrayElementName = access.toString();
+								return false;
+							}
+						}						
+					}
+					else{
+						arrayElementName = access.toString();
+						return false;
 					}
 				}
 			}

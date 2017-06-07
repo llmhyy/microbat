@@ -36,6 +36,7 @@ import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.util.JavaUtil;
 import sav.common.core.utils.SignatureUtils;
+import sav.strategies.dto.AppJavaClassPath;
 
 /**
  * collect information such as method signature, and read/written variables in a certain line.
@@ -46,10 +47,12 @@ import sav.common.core.utils.SignatureUtils;
 public class LineNumberVisitor extends EmptyVisitor {
 	
 	private List<BreakPoint> breakPoints;
+	private AppJavaClassPath appJavaClassPath;
 	
-	public LineNumberVisitor(List<BreakPoint> breakPoints) {
+	public LineNumberVisitor(List<BreakPoint> breakPoints, AppJavaClassPath appClassPath) {
 		super();
 		this.breakPoints = breakPoints;
+		this.appJavaClassPath = appClassPath;
 	}
 
 	
@@ -130,7 +133,13 @@ public class LineNumberVisitor extends EmptyVisitor {
 	}
 
 	private void parseReadWrittenVariable(BreakPoint point, List<InstructionHandle> correspondingInstructions, Code code, CFG cfg) {
+		
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName());
+		if(cu==null && this.appJavaClassPath.getSoureCodePath()!=null){
+			cu = JavaUtil.findCompiltionUnitBySourcePath(this.appJavaClassPath.getSoureCodePath(), 
+					point.getDeclaringCompilationUnitName());
+		}
+		
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool()); 
 		if(point.getLineNumber()==9){
 			System.currentTimeMillis();
