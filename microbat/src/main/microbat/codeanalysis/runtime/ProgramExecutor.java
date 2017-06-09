@@ -270,7 +270,7 @@ public class ProgramExecutor extends Executor {
 					if (lastSteppingInPoint != null) {
 						collectValueOfPreviousStep(lastSteppingInPoint, thread, currentLocation);
 
-						if(currentLocation.lineNumber()==96){
+						if(currentLocation.lineNumber()==153){
 							System.currentTimeMillis();
 						}
 						
@@ -308,7 +308,7 @@ public class ProgramExecutor extends Executor {
 						
 						TraceNode node = recordTrace(bkp, bkpVal);
 						
-						if(node.getOrder()==5){
+						if(node.getOrder()==210){
 							System.currentTimeMillis();
 						}
 						
@@ -397,6 +397,10 @@ public class ProgramExecutor extends Executor {
 					Method method = mee.method();
 //					System.out.println("enter " + method + ":" + ((MethodEntryEvent)event).location());
 					
+					if(lastSteppingInPoint!=null && lastSteppingInPoint.getLineNumber()==438){
+						System.currentTimeMillis();
+					}
+					
 					/**
 					 * See the explanation of isInRcording variable.
 					 */
@@ -448,15 +452,15 @@ public class ProgramExecutor extends Executor {
 						 * never trigger method entry event of the corresponding method any more. Thus, there will miss
 						 * a method into stack. Therefore, we additionally push the clinit method into stack.
 						 */
-						if (lastStepEventRecordNode && this.methodEntryRequest.isEnabled()) {
-							TraceNode latestNode = this.trace.getLastestNode();
-							
-							methodNodeStack.push(latestNode);
-							String methodSignature = createSignature(method);
-							methodSignatureStack.push(methodSignature);
-						}
-						this.methodEntryRequest.setEnabled(false);
-						this.methodExitRequset.setEnabled(false);
+//						if (lastStepEventRecordNode && this.methodEntryRequest.isEnabled()) {
+//							TraceNode latestNode = this.trace.getLastestNode();
+//							
+//							methodNodeStack.push(latestNode);
+//							String methodSignature = createSignature(method);
+//							methodSignatureStack.push(methodSignature);
+//						}
+//						this.methodEntryRequest.setEnabled(false);
+//						this.methodExitRequset.setEnabled(false);
 					}
 					
 
