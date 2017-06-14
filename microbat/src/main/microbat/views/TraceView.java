@@ -199,6 +199,10 @@ public class TraceView extends ViewPart {
 		String qualifiedName = breakPoint.getClassCanonicalName();
 		ICompilationUnit javaUnit = JavaUtil.findICompilationUnitInProject(qualifiedName);
 		
+		if(javaUnit==null){
+			return;
+		}
+		
 		try {
 			ITextEditor sourceEditor = (ITextEditor) JavaUI.openInEditor(javaUnit);
 			AnnotationModel annotationModel = (AnnotationModel)sourceEditor.getDocumentProvider().
