@@ -331,50 +331,11 @@ public class DebugFeedbackView extends ViewPart {
 	}
 
 	private void addListener() {
-//		stateListener = new ICheckStateListener() {
-//			@Override
-//			public void checkStateChanged(CheckStateChangedEvent event) {
-//				Object obj = event.getElement();
-//				VarValue value = null;
-//				
-//				if(obj instanceof VarValue){
-//					value = (VarValue)obj;
-//				}
-//				else if(obj instanceof GraphDiff){
-//					GraphDiff diff = (GraphDiff)obj;
-//					value = (VarValue)diff.getChangedNode();
-//				}
-//				String varID = value.getVarID();
-//				
-//				if(!Settings.interestedVariables.contains(varID)){
-//					Settings.interestedVariables.add(varID);							
-//				}
-//				else{
-//					Settings.interestedVariables.remove(varID);
-//				}
-//				
-////				setChecks(consequenceTreeViewer);
-//				setChecks(writtenVariableTreeViewer);
-//				setChecks(readVariableTreeViewer);
-//				setChecks(stateTreeViewer);
-//				
-//				writtenVariableTreeViewer.refresh();
-//				readVariableTreeViewer.refresh();
-//				stateTreeViewer.refresh();	
-//				
-////				consequenceTreeViewer.refresh();	
-//			}
-//		};
 		
 		treeListener = new ITreeViewerListener() {
 			
 			@Override
 			public void treeExpanded(TreeExpansionEvent event) {
-//				setChecks(consequenceTreeViewer);
-//				setChecks(stateTreeViewer);
-//				
-//				stateTreeViewer.refresh();	
-//				consequenceTreeViewer.refresh();
 				
 				setChecks(readVariableTreeViewer, RW);
 				setChecks(writtenVariableTreeViewer, RW);
