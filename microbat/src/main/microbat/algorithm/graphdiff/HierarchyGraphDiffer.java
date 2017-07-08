@@ -45,6 +45,7 @@ public class HierarchyGraphDiffer {
 	}
 
 	private void diffChildren(GraphNode rootBefore, GraphNode rootAfter, int level) {
+		
 		List<? extends GraphNode> childrenBefore = rootBefore.getChildren();
 		List<? extends GraphNode> childrenAfter = rootAfter.getChildren();
 		List<MatchingGraphPair> pairs = matcher.matchList(childrenBefore, childrenAfter);

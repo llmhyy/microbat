@@ -628,7 +628,7 @@ public class JavaUtil {
 		return sig;
 	}
 
-	private static CompilationUnit findCompiltionUnitBySourcePath(String sourceCodePath, String testCodePath,
+	public static CompilationUnit findCompiltionUnitBySourcePath(String sourceCodePath, String testCodePath,
 			String declaringCompilationUnitName) {
 		String pathComponents = declaringCompilationUnitName.replace(".", File.separator);
 		String javaFilePath = sourceCodePath + File.separator + pathComponents + ".java";

@@ -20,6 +20,11 @@ public class ClassLocation {
 	protected String classCanonicalName;
 	protected String methodSign;
 	protected int lineNo = -1; // started with 1?
+	
+	/**
+	 * This field is set for distinguishing src/target file.
+	 */
+	private String locationPrefix;
 
 	public ClassLocation(String className, String methodName, int lineNumber) {
 		this.classCanonicalName = className;
@@ -88,5 +93,13 @@ public class ClassLocation {
 	
 	public String getMethodName() {
 		return SignatureUtils.extractMethodName(methodSign);
+	}
+
+	public String getLocationPrefix() {
+		return locationPrefix;
+	}
+
+	public void setLocationPrefix(String locationPrefix) {
+		this.locationPrefix = locationPrefix;
 	}
 }
