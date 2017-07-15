@@ -20,7 +20,7 @@ public class BreakPoint extends ClassLocation {
 	
 	private boolean isReturnStatement;
 	
-	private boolean isConditioanl;
+	private boolean isConditional;
 	private ControlScope controlScope;
 	private SourceScope loopScope;
 	private List<ClassLocation> targets = new ArrayList<>();
@@ -44,6 +44,22 @@ public class BreakPoint extends ClassLocation {
 			addVars(newVars);
 		}
 		this.declaringCompilationUnitName = declaringCompilationUnitName;
+	}
+	
+	public Object clone(){
+		ClassLocation location = (ClassLocation) super.clone();
+		BreakPoint point = new BreakPoint(location.getClassCanonicalName(), declaringCompilationUnitName, lineNo);
+		point.setAllVisibleVariables(allVisibleVariables);
+		point.setCharEnd(charEnd);
+		point.setCharStart(charStart);
+		point.setControlScope(controlScope);
+		point.setConditional(isConditional);
+		point.setReturnStatement(isReturnStatement);
+		point.setLoopScope(loopScope);
+		point.setTargets(targets);
+		point.setReadVariables(readVariables);
+		point.setWrittenVariables(readVariables);
+		return point;
 	}
 	
 	public void addReadVariable(Variable var){
@@ -171,11 +187,11 @@ public class BreakPoint extends ClassLocation {
 	}
 
 	public void setConditional(boolean isConditional) {
-		this.isConditioanl = isConditional;
+		this.isConditional = isConditional;
 	}
 	
 	public boolean isConditional(){
-		return this.isConditioanl;
+		return this.isConditional;
 	}
 
 	public Scope getControlScope() {

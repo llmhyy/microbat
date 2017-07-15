@@ -25,6 +25,11 @@ public class ClassLocation {
 	 * This field is set for distinguishing src/target file.
 	 */
 	private String locationPrefix;
+	
+	public Object clone(){
+		ClassLocation location = new ClassLocation(classCanonicalName, methodSign, lineNo);
+		return location;
+	}
 
 	public ClassLocation(String className, String methodName, int lineNumber) {
 		this.classCanonicalName = className;

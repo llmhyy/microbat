@@ -269,10 +269,6 @@ public class LineNumberVisitor extends EmptyVisitor {
 		LoopHeadParser lhParser = new LoopHeadParser(cu, point);
 		cu.accept(lhParser);
 		
-		if(point.getLineNumber()==2572){
-			System.currentTimeMillis();
-		}
-		
 		List<ClassLocation> confirmedList = lhParser.extractLocation();
 		if(null != confirmedList){
 			for(ClassLocation location: confirmedList){
