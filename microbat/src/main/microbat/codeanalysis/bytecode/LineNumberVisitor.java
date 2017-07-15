@@ -59,10 +59,6 @@ public class LineNumberVisitor extends EmptyVisitor {
 	public void visitMethod(Method method){
 		Code code = method.getCode();
 		
-		if(method.getName().contains("getInstance")){
-			System.currentTimeMillis();
-		}
-		
 		if(code == null){
 			return;
 		}
@@ -75,10 +71,6 @@ public class LineNumberVisitor extends EmptyVisitor {
 		CFG cfg = new CFGConstructor().buildCFGWithControlDomiance(code);
 		if(code != null){
 			for(BreakPoint breakPoint: breakPoints){
-				if(breakPoint.getLineNumber()==43 && breakPoint.getDeclaringCompilationUnitName().contains("SyntheticRepository")){
-					System.currentTimeMillis();
-				}
-				
 				List<InstructionHandle> correspondingInstructions 
 					= findCorrespondingInstructions(breakPoint.getLineNumber(), code);
 				
