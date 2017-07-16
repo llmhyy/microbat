@@ -12,5 +12,6 @@ public abstract class Executor {
 	public static final int TIME_OUT = 10000;
 	
 	protected String[] stepWatchExcludes = { "java.*", "java.lang.*", "javax.*", "sun.*", "com.sun.*", 
-			"org.junit.*", "junit.*", "junit.framework.*", "org.hamcrest.*", "org.hamcrest.core.*", "org.hamcrest.internal.*"};
+			"org.junit.*", "junit.*", "junit.framework.*", "org.hamcrest.*", "org.hamcrest.core.*", "org.hamcrest.internal.*",
+			"jdk.*", "jdk.internal.*"};
 }
