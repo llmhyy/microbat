@@ -56,6 +56,7 @@ public class BPVariableRetriever {
 		}
 		
 		System.setProperty("java.class.path", originalSystemClassPath);
+		System.currentTimeMillis();
 		
 		return executingStatements;
 	}

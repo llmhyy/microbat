@@ -39,6 +39,7 @@ public class BreakpointUtils {
 					brkp.getClassCanonicalName());
 			bps.add(brkp);
 		}
+		
 		return brkpsMap;
 	}
 	
