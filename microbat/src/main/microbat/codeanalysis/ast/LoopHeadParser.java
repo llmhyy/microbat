@@ -70,7 +70,7 @@ public class LoopHeadParser extends ASTVisitor{
 	}
 	
 	public boolean visit(ForStatement statement){
-		int line = cu.getLineNumber(statement.getExpression().getStartPosition());
+		int line = cu.getLineNumber(statement.getStartPosition());
 		if(line == conditionLineNumber){
 			conditionASTStatement = statement;
 			isLoop = true;

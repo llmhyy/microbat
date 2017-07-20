@@ -48,7 +48,7 @@ public class SourceScopeParser {
 		}
 		
 		public boolean visit(ForStatement statement){
-			int line = cu.getLineNumber(statement.getExpression().getStartPosition());
+			int line = cu.getLineNumber(statement.getStartPosition());
 			if(line == conditionLineNumber){
 				setScope(statement, true);
 				return false;
