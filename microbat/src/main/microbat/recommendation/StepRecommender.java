@@ -406,7 +406,7 @@ public class StepRecommender {
 			parentVarID = VariableUtil.generateSimpleParentVariableID(parentVarID);
 			/** It means that the wrong variable ID has a parent*/
 			if(parentVarID != null){
-				suspiciousNode = trace.getLatestProducer(currentNode.getOrder(), parentVarID);
+				suspiciousNode = trace.getLatestProducerBySimpleVarIDForm(currentNode.getOrder(), parentVarID);
 			}
 			else{
 				return currentNode;			

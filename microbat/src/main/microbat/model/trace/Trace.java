@@ -834,7 +834,7 @@ public class Trace {
 		return null;
 	}
 	
-	public TraceNode getLatestProducer(int startOrder, String simpleVarID){
+	public TraceNode getLatestProducerBySimpleVarIDForm(int startOrder, String simpleVarID){
 		int latestOrder = -1;
 		String latestVarID = null;
 		for(String varID: this.stepVariableTable.keySet()){
