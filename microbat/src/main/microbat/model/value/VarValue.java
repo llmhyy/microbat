@@ -454,6 +454,10 @@ public abstract class VarValue implements GraphNode{
 	}
 	
 	public String getStringValue(){
+		if(stringValue==null) {
+			return "null";
+		}
+		
 		return stringValue;
 	}
 
