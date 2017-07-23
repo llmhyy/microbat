@@ -36,12 +36,15 @@ public class ReferenceValue extends VarValue {
 	
 	public String toString(){
 		StringBuffer buffer = new StringBuffer();
-		if(getClassType() != null){
-			buffer.append(getClassType() + ": ");			
-		}
-		else{
-			buffer.append("unknown type: ");
-		}
+		buffer.append(getVariable());
+		buffer.append(": ");
+		
+//		if(getClassType() != null){
+//			buffer.append(getClassType() + ": ");			
+//		}
+//		else{
+//			buffer.append("unknown type: ");
+//		}
 		
 		buffer.append(getVarID());
 		String print = buffer.toString();
