@@ -270,7 +270,11 @@ public class ProgramExecutor extends Executor {
 					if (lastSteppingInPoint != null) {
 						collectValueOfPreviousStep(lastSteppingInPoint, thread, currentLocation);
 
-						if(currentLocation.lineNumber()==153){
+						if(currentLocation.lineNumber()==1276){
+							System.currentTimeMillis();
+						}
+						
+						if(trace.getExectionList().size()==284){
 							System.currentTimeMillis();
 						}
 						
@@ -307,10 +311,6 @@ public class ProgramExecutor extends Executor {
 						}
 						
 						TraceNode node = recordTrace(bkp, bkpVal);
-						
-						if(node.getOrder()==91){
-							System.currentTimeMillis();
-						}
 						
 						/**
 						 * pop up method after an exception is caught.
@@ -363,9 +363,6 @@ public class ProgramExecutor extends Executor {
 							returnedValue = lastestReturnedValue;
 						}
 
-						if (currentLocation.lineNumber()==906) {
-							System.currentTimeMillis();
-						}
 						parseReadWrittenVariableInThisStep(thread, currentLocation, node,
 								this.trace.getStepVariableTable(), Variable.READ);
 
@@ -1179,6 +1176,10 @@ public class ProgramExecutor extends Executor {
 
 	private void processWrittenVariable(TraceNode node, Map<String, StepVariableRelationEntry> stepVariableTable,
 			StackFrame frame) {
+		if (node.getOrder() == 285) {
+			System.currentTimeMillis();
+		}
+		
 		List<Variable> writtenVariables = node.getBreakPoint().getWrittenVariables();
 		for (Variable writtenVar : writtenVariables) {
 			VarValue varValue = generateVarValue(frame, writtenVar, node, Variable.WRITTEN);
