@@ -79,6 +79,8 @@ public class TraceView extends ViewPart {
 	
 	private void createSearchBox(Composite parent){
 		searchText = new Text(parent, SWT.BORDER);
+		searchText.setToolTipText("search trace node by class name and line number, e.g., ClassName line:20\n"
+				+ "press \"enter\" for forward-search and \"shift+enter\" for backward-search.");
 		FontData searchTextFont = searchText.getFont().getFontData()[0];
 		searchTextFont.setHeight(10);
 		searchText.setFont(new Font(Display.getCurrent(), searchTextFont));
