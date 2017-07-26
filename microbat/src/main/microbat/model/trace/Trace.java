@@ -3,15 +3,12 @@ package microbat.model.trace;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
 
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
-import microbat.model.ClassLocation;
 import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
 import microbat.model.value.VarValue;
@@ -180,6 +177,46 @@ public class Trace {
 		for(int i=0; i<this.exectionList.size(); i++){
 			TraceNode node = this.exectionList.get(i);
 			node.conductStateDiff();
+		}
+		
+	}
+	
+	/**
+	 * Get the step where the read variable is defined. If we cannot find such a 
+	 * step, we find the step defining its (grand)parent of the read variable. 
+	 * @param readVar
+	 * @return
+	 */
+	public TraceNode findDataDominator(TraceNode checkingNode, VarValue readVar) {
+		String varID = readVar.getVarID();
+		StepVariableRelationEntry entry = getStepVariableTable().get(varID);
+		List<TraceNode> producers = entry.getProducers();
+		if(producers.isEmpty()) {
+			/**
+			 * get parent variable id.
+			 */
+			String simpleID = Variable.truncateSimpleID(varID);
+			
+			while(simpleID.contains(".")) {
+				String simpleParentID = simpleID.substring(0, simpleID.lastIndexOf("."));
+				
+				for(int i=checkingNode.getOrder(); i>0; i--) {
+					TraceNode node = this.exectionList.get(i-1);
+					for(VarValue var: node.getWrittenVariables()) {
+						String simpleWrittenID = Variable.truncateSimpleID(var.getVarID());
+						if(simpleWrittenID.equals(simpleParentID)) {
+							return node;
+						}
+					}
+				}
+				
+				simpleID = simpleParentID;
+			}
+			
+			return null;
+		}
+		else {
+			return producers.get(0);
 		}
 		
 	}

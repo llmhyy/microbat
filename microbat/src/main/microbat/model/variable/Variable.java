@@ -97,6 +97,16 @@ public abstract class Variable {
 		}
 	}
 	
+	public static String truncateStepOrder(String completeVarID) {
+		if(completeVarID.contains(":")){
+			String order = completeVarID.substring(completeVarID.indexOf(":")+1, completeVarID.length());
+			return order;			
+		}
+		else{
+			return "";
+		}
+	}
+	
 //	public static boolean isPrimitiveVariable(String varID){
 //		if(varID.contains("[") || varID.contains(".")){
 //			return true;
