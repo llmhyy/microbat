@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -96,10 +95,6 @@ public class VariableValueExtractor {
 					refType = objRef.referenceType();
 				}
 				
-				if(bkp.getLineNumber()==72){
-					System.currentTimeMillis();
-				}
-				
 				/**
 				 * Local variables MUST BE navigated before fields, because: in
 				 * case a class field and a local variable in method have the
@@ -113,7 +108,7 @@ public class VariableValueExtractor {
 				List<Variable> allVisibleVariables = collectAllVariable(visibleVars, allFields);
 				bkp.setAllVisibleVariables(allVisibleVariables);
 				
-				for (Variable bpVar : bkp.getAllVisibleVariables()) {
+				for (Variable bpVar : bkp.getReadVariables()) {
 					// First check local variable
 					LocalVariable matchedLocalVariable = findMatchedLocalVariable(bpVar, visibleVars);
 					
