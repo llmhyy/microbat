@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -352,7 +353,19 @@ public class JavaUtil {
 					cu = convertICompilationUnitToASTNode(icu);						
 				}
 				else{
-					cu = findCompiltionUnitBySourcePath(appPath.getSoureCodePath(), appPath.getTestCodePath(), qualifiedName);
+					String sourceFile = appPath.getSoureCodePath() + File.separator + qualifiedName.replace(".", File.separator) + ".java";
+					String testFile = appPath.getTestCodePath() + File.separator + qualifiedName.replace(".", File.separator) + ".java";
+					
+					if(new File(sourceFile).exists()) {
+						cu = findCompiltionUnitBySourcePath(sourceFile, qualifiedName);
+					}
+					else if(new File(testFile).exists()) {
+						cu = findCompiltionUnitBySourcePath(testFile, qualifiedName);
+					}
+					else {
+						System.err.println("cannot find the source file of " + qualifiedName);
+					}
+					
 				}
 				
 				Settings.compilationUnitMap.put(qualifiedName, cu);
@@ -373,7 +386,18 @@ public class JavaUtil {
 			cu = convertICompilationUnitToASTNode(icu);						
 		}
 		else{
-			cu = findCompiltionUnitBySourcePath(appPath.getSoureCodePath(), appPath.getTestCodePath(), qualifiedName);
+			String sourceFile = appPath.getSoureCodePath() + File.separator + qualifiedName.replace(".", File.separator) + ".java";
+			String testFile = appPath.getTestCodePath() + File.separator + qualifiedName.replace(".", File.separator) + ".java";
+			
+			if(new File(sourceFile).exists()) {
+				cu = findCompiltionUnitBySourcePath(sourceFile, qualifiedName);
+			}
+			else if(new File(testFile).exists()) {
+				cu = findCompiltionUnitBySourcePath(testFile, qualifiedName);
+			}
+			else {
+				System.err.println("cannot find the source file of " + qualifiedName);
+			}
 		}
 		
 		return cu;
@@ -628,17 +652,17 @@ public class JavaUtil {
 		return sig;
 	}
 
-	public static CompilationUnit findCompiltionUnitBySourcePath(String sourceCodePath, String testCodePath,
+	public static HashMap<String, CompilationUnit> sourceFile2CUMap = new HashMap<>();
+	
+	public static CompilationUnit findCompiltionUnitBySourcePath(String javaFilePath, 
 			String declaringCompilationUnitName) {
-		String pathComponents = declaringCompilationUnitName.replace(".", File.separator);
-		String javaFilePath = sourceCodePath + File.separator + pathComponents + ".java";
+		
+		CompilationUnit parsedCU = sourceFile2CUMap.get(javaFilePath);
+		if(parsedCU != null) {
+			return parsedCU;
+		}
 		
 		File javaFile = new File(javaFilePath);
-		
-		if(!javaFile.exists()){
-			javaFilePath = testCodePath + File.separator + pathComponents + ".java";
-			javaFile = new File(javaFilePath);
-		}
 		
 		if(javaFile.exists()){
 			
@@ -652,6 +676,8 @@ public class JavaUtil {
 				parser.setResolveBindings(true);
 				
 				CompilationUnit cu = (CompilationUnit)parser.createAST(null);
+				sourceFile2CUMap.put(javaFilePath, cu);
+				
 				return cu;
 				
 			} catch (IOException e) {
@@ -659,7 +685,7 @@ public class JavaUtil {
 			}
 		}
 		else{
-			System.err.print("cannot find " + declaringCompilationUnitName + " under " + sourceCodePath);			
+			System.err.print("cannot find " + declaringCompilationUnitName + " under " + javaFilePath);			
 		}
 		
 		return null;
