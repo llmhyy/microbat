@@ -648,7 +648,7 @@ public class ProgramExecutor extends Executor {
 		try {
 			String path = caughtLocationForJustException.sourcePath();
 			path = path.substring(0, path.indexOf(".java"));
-			path = path.replace("\\", ".");
+			path = path.replace(File.separatorChar, '.');
 
 			if (qualifiedName.equals(path)) {
 				CompilationUnit cu = JavaUtil.findCompilationUnitInProject(qualifiedName, appPath);
