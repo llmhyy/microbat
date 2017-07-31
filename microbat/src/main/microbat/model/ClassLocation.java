@@ -24,7 +24,7 @@ public class ClassLocation {
 	/**
 	 * This field is set for distinguishing src/target file.
 	 */
-	private String locationPrefix;
+	private String fullJavaFilePath;
 	
 	public Object clone(){
 		ClassLocation location = new ClassLocation(classCanonicalName, methodSign, lineNo);
@@ -100,11 +100,13 @@ public class ClassLocation {
 		return SignatureUtils.extractMethodName(methodSign);
 	}
 
-	public String getLocationPrefix() {
-		return locationPrefix;
+	
+	
+	public String getFullJavaFilePath() {
+		return this.fullJavaFilePath;
 	}
-
-	public void setLocationPrefix(String locationPrefix) {
-		this.locationPrefix = locationPrefix;
+	
+	public void setFullJavaFilePath(String fullJavaFilePath) {
+		this.fullJavaFilePath = fullJavaFilePath;
 	}
 }

@@ -245,8 +245,7 @@ public class BreakPoint extends ClassLocation {
 	}
 
 	public boolean isSourceVersion() {
-		String locationPre = this.getLocationPrefix() + File.separator;
 		String flag = File.separator + "bug" + File.separator;
-		return locationPre.contains(flag);
+		return this.getFullJavaFilePath().contains(flag);
 	}
 }
