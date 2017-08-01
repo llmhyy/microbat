@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CatchClause;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.Scope;
@@ -14,6 +18,7 @@ import microbat.model.UserInterestedVariables;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
+import microbat.util.JavaUtil;
 import microbat.util.Settings;
 
 /**
@@ -308,14 +313,41 @@ public class Trace {
 		constructControlDomianceRelation();
 	}
 	
+	class CatchClauseFinder extends ASTVisitor{
+		CompilationUnit cu;
+		int lineNumber;
+		
+		public CatchClauseFinder(CompilationUnit cu, int lineNumber) {
+			super();
+			this.cu = cu;
+			this.lineNumber = lineNumber;
+		}
+
+		CatchClause containingClause;
+		
+		public boolean visit(CatchClause clause) {
+			int startLine = cu.getLineNumber(clause.getStartPosition());
+			int endLine = cu.getLineNumber(clause.getStartPosition()+clause.getLength());
+			
+			if(startLine<=lineNumber && lineNumber<=endLine) {
+				containingClause = clause;
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+	}
+	
 	private void constructControlDomianceRelation() {
 		TraceNode controlDominator = null;
 		for(TraceNode node: this.exectionList){
 			
+			if(node.getOrder()==24348) {
+				System.currentTimeMillis();
+			}
+			
 			if(controlDominator != null){
-				if(controlDominator.getControlScope() == null){
-					System.currentTimeMillis();
-				}
 				
 				if(isContainedInScope(node, controlDominator.getControlScope())){
 					controlDominator.addControlDominatee(node);
@@ -324,6 +356,7 @@ public class Trace {
 				/** which means the {@code controlDominator} is no longer effective now */
 				else{
 					controlDominator = findContainingControlDominator(node, controlDominator);
+					
 					if(controlDominator != null){
 						controlDominator.addControlDominatee(node);
 						node.setControlDominator(controlDominator);
@@ -331,9 +364,60 @@ public class Trace {
 				}
 			}
 			
+			//add try-catch flow
+			testAndAppendTryCatchControlFlow(node);
+			
 			if(node.isConditional()){
 				controlDominator = node;
 			}
+		}
+	}
+
+	private void testAndAppendTryCatchControlFlow(TraceNode node) {
+		CompilationUnit cu = JavaUtil.findCompiltionUnitBySourcePath(node.getBreakPoint().getFullJavaFilePath(), 
+				node.getDeclaringCompilationUnitName());
+		CatchClauseFinder finder = new CatchClauseFinder(cu, node.getLineNumber());
+		cu.accept(finder);
+		if(finder.containingClause!=null) {
+			TraceNode existingControlDom = node.getControlDominator();
+			if(existingControlDom!=null) {
+				CatchClause clause = finder.containingClause;
+				if (!isClauseContainScope(node, cu, clause, existingControlDom)) {
+					addTryCatchControlFlow(node);
+				}
+			}
+			else {
+				addTryCatchControlFlow(node);
+			}
+			
+		}
+	}
+
+	private boolean isClauseContainScope(TraceNode node, CompilationUnit cu, CatchClause clause, TraceNode existingControlDom) {
+		if(node.getDeclaringCompilationUnitName().equals(existingControlDom.getDeclaringCompilationUnitName())) {
+			int startLine = cu.getLineNumber(clause.getStartPosition());
+			int endLine = cu.getLineNumber(clause.getStartPosition()+clause.getLength());
+			
+			if(startLine<=existingControlDom.getLineNumber() && existingControlDom.getLineNumber()<=endLine) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+	private void addTryCatchControlFlow(TraceNode node) {
+		TraceNode previousNode = node.getStepInPrevious();
+		while(previousNode!=null) {
+			if(previousNode.isException()) {
+				break;
+			}
+			previousNode = previousNode.getStepInPrevious();
+		}
+		
+		if(previousNode!=null) {
+			node.setControlDominator(previousNode);
+			previousNode.addControlDominatee(node);
 		}
 	}
 
