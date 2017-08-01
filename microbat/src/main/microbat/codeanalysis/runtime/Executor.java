@@ -13,5 +13,5 @@ public abstract class Executor {
 	
 	protected String[] stepWatchExcludes = { "java.*", "java.lang.*", "javax.*", "sun.*", "com.sun.*", 
 			"org.junit.*", "junit.*", "junit.framework.*", "org.hamcrest.*", "org.hamcrest.core.*", "org.hamcrest.internal.*",
-			"jdk.*", "jdk.internal.*"};
+			"jdk.*", "jdk.internal.*", "org.GNOME.Accessibility.*"};
 }
