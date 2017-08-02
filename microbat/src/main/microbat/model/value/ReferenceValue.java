@@ -8,6 +8,12 @@
 
 package microbat.model.value;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+
 import microbat.model.variable.Variable;
 
 /**
@@ -68,6 +74,32 @@ public class ReferenceValue extends VarValue {
 		String qualifiedName = getClassType();
 		String conciseName = qualifiedName.substring(qualifiedName.lastIndexOf(".")+1, qualifiedName.length());
 		return conciseName;
+	}
+	
+	public String getStringContainingAllChildren() {
+		StringBuffer buffer = new StringBuffer();
+		String value = this.getVarName() + "=" + this.getStringValue();
+		value = value.replaceAll("\\(id=\\d+\\)", "");
+		buffer.append(value);
+		
+		List<VarValue> children = this.getAllDescedentChildren();
+		Collections.sort(children, new Comparator<VarValue>() {
+			@Override
+			public int compare(VarValue o1, VarValue o2) {
+				String str1 = (o1.stringValue==null)?"null":o1.stringValue;
+				String str2 = (o2.stringValue==null)?"null":o2.stringValue;
+				
+				return str1.compareTo(str2);
+			}
+		});
+		
+		for(VarValue var: children) {
+			String childValue = var.getVarName() + "=" + var.getStringValue();
+			childValue = childValue.replaceAll("\\(id=\\d+\\)", "");
+			buffer.append(childValue);
+		}
+		
+		return buffer.toString();
 	}
 
 	@Override
