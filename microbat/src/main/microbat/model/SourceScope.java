@@ -43,17 +43,7 @@ public class SourceScope implements Scope{
 	}
 
 	public boolean containsNodeScope(TraceNode node) {
-		String nodeClassName = node.getClassCanonicalName();
-		String scopeClassName = JavaUtil.getFullNameOfCompilationUnit(cu);
-
-		if (nodeClassName.equals(scopeClassName)) {
-			int line = node.getLineNumber();
-			if (line >= startLine && line <= endLine) {
-				return true;
-			}
-		}
-
-		return false;
+		return containLocation(node.getBreakPoint());
 	}
 
 	public boolean isLoop() {
@@ -70,6 +60,21 @@ public class SourceScope implements Scope{
 	
 	public boolean hasJumpStatement(){
 		return this.hasJumpStatement;
+	}
+
+	@Override
+	public boolean containLocation(ClassLocation location) {
+		String nodeClassName = location.getClassCanonicalName();
+		String scopeClassName = JavaUtil.getFullNameOfCompilationUnit(cu);
+
+		if (nodeClassName.equals(scopeClassName)) {
+			int line = location.getLineNumber();
+			if (line >= startLine && line <= endLine) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 }

@@ -31,12 +31,13 @@ public class ControlScope implements Scope{
 		this.isLoop = isLoop;
 	}
 
-	public boolean containsLocation(ClassLocation location){
+	@Override
+	public boolean containLocation(ClassLocation location){
 		return this.rangeList.contains(location);
 	}
 
 	public boolean containsNodeScope(TraceNode node) {
-		return containsLocation(node.getBreakPoint());
+		return containLocation(node.getBreakPoint());
 	}
 
 	@Override
@@ -48,6 +49,5 @@ public class ControlScope implements Scope{
 		this.rangeList.add(location);
 		
 	}
-	
 	
 }

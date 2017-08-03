@@ -224,7 +224,7 @@ public class BreakPoint extends ClassLocation {
 			for(ClassLocation location: locationScope.getRangeList()){
 				if(this.controlScope instanceof ControlScope){
 					ControlScope thisScope = (ControlScope)this.controlScope;
-					if(!thisScope.containsLocation(location)){
+					if(!thisScope.containLocation(location)){
 						thisScope.addLocation(location);
 					}
 				}
