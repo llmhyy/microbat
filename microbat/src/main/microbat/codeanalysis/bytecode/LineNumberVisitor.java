@@ -129,8 +129,8 @@ public class LineNumberVisitor extends EmptyVisitor {
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), this.appJavaClassPath);
 		
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool()); 
-		if(point.getLineNumber()==9){
-			System.currentTimeMillis();
+		if(point.getLineNumber()==574){
+//			System.currentTimeMillis();
 		}
 		 
 		for(int i=0; i<correspondingInstructions.size(); i++){
