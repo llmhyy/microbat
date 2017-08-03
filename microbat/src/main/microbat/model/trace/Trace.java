@@ -343,7 +343,7 @@ public class Trace {
 		TraceNode controlDominator = null;
 		for(TraceNode node: this.exectionList){
 			
-			if(node.getOrder()==24348) {
+			if(node.getOrder()==653) {
 				System.currentTimeMillis();
 			}
 			

@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.bcel.generic.ATHROW;
 import org.apache.bcel.generic.GotoInstruction;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.JsrInstruction;
@@ -69,7 +70,7 @@ public class JavaUtil {
 	private static final String TO_STRING_NAME= "toString";
 	
 	public static boolean isNonJumpInstruction(Instruction ins){
-		return !(ins instanceof GotoInstruction) && !(ins instanceof ReturnInstruction) &&
+		return !(ins instanceof GotoInstruction) && !(ins instanceof ReturnInstruction) && !(ins instanceof ATHROW) &&
 				!(ins instanceof JsrInstruction) && !(ins instanceof Select);
 	}
 	
