@@ -3,10 +3,6 @@ package microbat.codeanalysis.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.util.JavaUtil;
-import sav.strategies.dto.AppJavaClassPath;
-
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Block;
@@ -22,6 +18,9 @@ import org.eclipse.jdt.core.dom.SwitchCase;
 import org.eclipse.jdt.core.dom.TryStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.WhileStatement;
+
+import microbat.util.JavaUtil;
+import sav.strategies.dto.AppJavaClassPath;
 
 public class VariableScopeParser {
 
