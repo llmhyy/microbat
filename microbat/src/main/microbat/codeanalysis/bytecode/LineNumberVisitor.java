@@ -71,10 +71,14 @@ public class LineNumberVisitor extends EmptyVisitor {
 		CFG cfg = new CFGConstructor().buildCFGWithControlDomiance(code);
 		if(code != null){
 			for(BreakPoint breakPoint: breakPoints){
-				List<InstructionHandle> correspondingInstructions 
-					= findCorrespondingInstructions(breakPoint.getLineNumber(), code);
+				
+				List<InstructionHandle> correspondingInstructions = findCorrespondingInstructions(breakPoint.getLineNumber(), code);
 				
 				if(!correspondingInstructions.isEmpty()){
+					if(breakPoint.getLineNumber()==1594 && breakPoint.getDeclaringCompilationUnitName().contains("Abstract")) {
+						System.currentTimeMillis();
+					}
+					
 					String methodSig = breakPoint.getClassCanonicalName() + "." + method.getName() + method.getSignature();
 					breakPoint.setMethodSign(methodSig);
 					
@@ -129,8 +133,8 @@ public class LineNumberVisitor extends EmptyVisitor {
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), this.appJavaClassPath);
 		
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool()); 
-		if(point.getLineNumber()==574){
-//			System.currentTimeMillis();
+		if(point.getLineNumber()==134){
+			System.currentTimeMillis();
 		}
 		 
 		for(int i=0; i<correspondingInstructions.size(); i++){

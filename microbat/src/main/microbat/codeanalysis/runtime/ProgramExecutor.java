@@ -853,7 +853,9 @@ public class ProgramExecutor extends Executor {
 					varID = varID + ":" + definingNodeOrder;
 					localVar.setVarID(varID);
 				} else {
-					System.err.println("cannot find the method when parsing parameter scope");
+					System.err.println("cannot find the method when parsing parameter scope of " + localVar +
+							methodDeclaringCompilationUnit + "(line " + methodLocationLine +") ");
+					System.currentTimeMillis();
 				}
 			}
 			else{
@@ -865,25 +867,28 @@ public class ProgramExecutor extends Executor {
 			}
 
 			StepVariableRelationEntry entry = this.trace.getStepVariableTable().get(localVar.getVarID());
-			if (entry == null) {
+			if (entry == null && localVar.getVarID() != null) {
 				entry = new StepVariableRelationEntry(localVar.getVarID());
 				this.trace.getStepVariableTable().put(localVar.getVarID(), entry);
 			}
-			entry.addAliasVariable(localVar);
-			entry.addProducer(lastestNode);
-
-			VarValue varValue = null;
-			if (PrimitiveUtils.isPrimitiveType(param.getType())) {
-				if(value != null){
-					varValue = new PrimitiveValue(value.toString(), false, localVar);
+			
+			if(entry != null) {
+				entry.addAliasVariable(localVar);
+				entry.addProducer(lastestNode);
+				
+				VarValue varValue = null;
+				if (PrimitiveUtils.isPrimitiveType(param.getType())) {
+					if(value != null){
+						varValue = new PrimitiveValue(value.toString(), false, localVar);
+					}
+					
+				} else {
+					varValue = new ReferenceValue(true, false, localVar);
 				}
 				
-			} else {
-				varValue = new ReferenceValue(true, false, localVar);
-			}
-
-			if(varValue != null){
-				lastestNode.addWrittenVariable(varValue);					
+				if(varValue != null && varValue.getVarID()!=null){
+					lastestNode.addWrittenVariable(varValue);					
+				}
 			}
 		}
 	}

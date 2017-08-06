@@ -148,6 +148,11 @@ public class VariableScopeParser {
 			}
 		});
 		
-		return this.variableScopeList.get(0);
+		if(!variableScopeList.isEmpty()) {
+			return this.variableScopeList.get(0);			
+		}
+		else {
+			return null;
+		}
 	}
 }
