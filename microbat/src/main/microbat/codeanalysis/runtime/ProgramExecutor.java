@@ -75,6 +75,7 @@ import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
 import microbat.util.BreakpointUtils;
 import microbat.util.JavaUtil;
+import microbat.util.MicroBatUtil;
 import microbat.util.PrimitiveUtils;
 import microbat.util.Settings;
 import sav.common.core.SavException;
@@ -132,7 +133,8 @@ public class ProgramExecutor extends Executor {
 	 * @throws SavException
 	 */
 	public void run(List<BreakPoint> runningStatements, IProgressMonitor monitor, int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
-
+		List<String> exlcudes = MicroBatUtil.extractExcludeFiles("", appPath.getExternalLibPaths());
+		this.addExcludeList(exlcudes);
 		this.brkpsMap = BreakpointUtils.initBrkpsMap(runningStatements);
 
 		/** start debugger */
@@ -403,6 +405,7 @@ public class ProgramExecutor extends Executor {
 					if(isTestcaseEvaluation && !isInRecording){
 						String declaringTypeName = method.declaringType().name();
 						if(declaringTypeName.equals(appClassPath.getOptionalTestClass())){
+						//if(declaringTypeName.contains("TestExecution") && method.name().equals("run")){
 							this.stepRequest.enable();
 							isInRecording = true;
 						}

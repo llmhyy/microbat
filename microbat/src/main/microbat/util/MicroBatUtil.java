@@ -1,7 +1,12 @@
 package microbat.util;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -52,6 +57,7 @@ public class MicroBatUtil {
 				String newPath = path.substring(path.indexOf(File.separator, 1));
 				newPath = projectPath + newPath;
 				appClassPath.addClasspath(newPath);
+				appClassPath.addExternalLibPath(newPath);
 			}
 		}
 		
@@ -92,6 +98,41 @@ public class MicroBatUtil {
 		
 		return appClassPath;
 		
+	}
+	
+	public static List<String> extractExcludeFiles(String parentDirectory, List<String> libJars) {
+		List<String> excludes = new ArrayList<>();
+		for(String libJar: libJars) {
+			File file = new File(libJar);
+			try {
+				@SuppressWarnings("resource")
+				JarFile jarFile = new JarFile(file);
+				Enumeration<JarEntry> enumeration = jarFile.entries();
+				while(enumeration.hasMoreElements()) {
+					JarEntry entry = enumeration.nextElement();
+					List<String> subExcludes = findSubExcludes(parentDirectory, entry);
+					excludes.addAll(subExcludes);
+				}
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+		}
+		return excludes;
+	}
+
+	private static List<String> findSubExcludes(String parentDirectory, JarEntry entry) {
+		List<String> subExcludes = new ArrayList<>();
+		
+		String classFilePath = entry.getName();
+		if (classFilePath.endsWith(".class")) {
+			classFilePath = classFilePath.substring(0, classFilePath.indexOf(".class"));
+			String className = classFilePath.replace(File.separatorChar, '.');
+			subExcludes.add(className);
+		}
+		
+		return subExcludes;
 	}
 	
 	@SuppressWarnings("unchecked")

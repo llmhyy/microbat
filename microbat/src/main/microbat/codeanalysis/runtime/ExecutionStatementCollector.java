@@ -29,6 +29,7 @@ import com.sun.jdi.request.StepRequest;
 
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.model.BreakPoint;
+import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -38,6 +39,9 @@ public class ExecutionStatementCollector extends Executor{
 	private boolean isOverLong = false;
 	
 	public List<BreakPoint> collectBreakPoints(AppJavaClassPath appClassPath, boolean isTestcaseEvaluation){
+		List<String> exlcudes = MicroBatUtil.extractExcludeFiles("", appClassPath.getExternalLibPaths());
+		this.addExcludeList(exlcudes);
+		
 		steps = 0;
 		List<BreakPoint> pointList = new ArrayList<>();
 		
@@ -104,13 +108,14 @@ public class ExecutionStatementCollector extends Executor{
 						else if(event instanceof MethodEntryEvent){
 							Method method = ((MethodEntryEvent) event).method();
 							
-//							System.out.println(method.name());
+							System.out.println(method.declaringType().name() + "." + method.name());
 							
 							if(isTestcaseEvaluation){
 								String declaringTypeName = method.declaringType().name();
 //								String methodName = method.name();
 								
-								if(appClassPath.getOptionalTestClass().equals(declaringTypeName)){
+								//if(appClassPath.getOptionalTestClass().equals(declaringTypeName)){
+								if(declaringTypeName.contains("TestExecution") && method.name().equals("run")) {
 									this.stepRequest.enable();
 									this.methodEntryRequest.disable();
 									this.methodExitRequest.disable();
