@@ -369,8 +369,12 @@ public class Trace {
 	}
 
 	private void testAndAppendTryCatchControlFlow(TraceNode node) {
-		CompilationUnit cu = JavaUtil.findCompiltionUnitBySourcePath(node.getBreakPoint().getFullJavaFilePath(), 
-				node.getDeclaringCompilationUnitName());
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(node.getClassCanonicalName(), null);
+		if(cu == null) {
+			cu = JavaUtil.findCompiltionUnitBySourcePath(node.getBreakPoint().getFullJavaFilePath(), 
+					node.getDeclaringCompilationUnitName());
+		}
+		 
 		CatchClauseFinder finder = new CatchClauseFinder(cu, node.getLineNumber());
 		cu.accept(finder);
 		if(finder.containingClause!=null) {
