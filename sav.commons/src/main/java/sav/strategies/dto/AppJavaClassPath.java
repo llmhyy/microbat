@@ -17,13 +17,15 @@ import java.util.Set;
 import sav.common.core.utils.StringUtils;
 
 /**
- * @author LLT
+ * @author LLT, modified by Yun Lin.
  * 
  */
 public class AppJavaClassPath {
 	private String javaHome;
 	private String workingDirectory;
 	private Set<String> classpaths;
+	
+	private List<String> externalLibPaths = new ArrayList<>();
 	
 	private String launchClass;
 	
@@ -121,6 +123,18 @@ public class AppJavaClassPath {
 
 	public void setTestCodePath(String testCodePath) {
 		this.testCodePath = testCodePath;
+	}
+
+	public List<String> getExternalLibPaths() {
+		return externalLibPaths;
+	}
+
+	public void setExternalLibPaths(List<String> externalLibPaths) {
+		this.externalLibPaths = externalLibPaths;
+	}
+
+	public void addExternalLibPath(String lib) {
+		this.externalLibPaths.add(lib);
 	}
 
 }
