@@ -220,6 +220,7 @@ public class ProgramExecutor extends Executor {
 		while (!stop && !eventTimeout) {
 			EventSet eventSet;
 			try {
+				TIME_OUT = 1000000;
 				eventSet = eventQueue.remove(TIME_OUT);
 			} catch (InterruptedException e) {
 				break;
@@ -303,6 +304,8 @@ public class ProgramExecutor extends Executor {
 					 * our debugging process
 					 */
 					if (bkp != null) {
+						System.out.println(bkp);
+						
 						BreakPointValue bkpVal;
 						if(this.trace.getLastestNode() != null && !isContextChange){
 							bkpVal = this.trace.getLastestNode().getAfterStepInState();
