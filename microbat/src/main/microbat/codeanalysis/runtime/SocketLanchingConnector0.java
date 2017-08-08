@@ -26,7 +26,7 @@ public class SocketLanchingConnector0 extends SocketLaunchingConnectorImpl {
 	
 
 	/** Time that a launched VM is given to connect to us. */
-	private static final int ACCEPT_TIMEOUT = 10 * 1000;
+	private static final int ACCEPT_TIMEOUT = 30 * 1000;
 
 	/**
 	 * Home directory of the SDK or runtime environment used to launch the
