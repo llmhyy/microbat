@@ -85,12 +85,14 @@ public class StartDebugHandler extends AbstractHandler {
 					clearOldData();
 					
 					int stepNum = -1;
-					List<BreakPoint> executingStatements = new ArrayList<>();
+					List<BreakPoint> executingStatements = null;
+					List<BreakPoint> executionOrderList = null;
 					try{
 						monitor.beginTask("approximating efforts", 1);
 						
 						ExecutionStatementCollector collector = new ExecutionStatementCollector();
 						executingStatements = collector.collectBreakPoints(appClassPath, false);
+						executionOrderList = collector.getExecutionOrderList();
 						stepNum = collector.getStepNum();
 						
 						System.out.println("There are " + stepNum + " steps for this run.");
@@ -140,7 +142,7 @@ public class StartDebugHandler extends AbstractHandler {
 							tcExecutor.setConfig(appClassPath);
 							try {
 //								long t1 = System.currentTimeMillis();
-								tcExecutor.run(runningStatements, monitor, stepNum, false);
+								tcExecutor.run(runningStatements, executionOrderList, monitor, stepNum, false);
 //								long t2 = System.currentTimeMillis();
 //								System.out.println("time spent on collecting variables: " + (t2-t1));
 								

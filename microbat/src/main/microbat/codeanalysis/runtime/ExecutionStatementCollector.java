@@ -37,6 +37,7 @@ import sav.strategies.dto.AppJavaClassPath;
 public class ExecutionStatementCollector extends Executor{
 	
 	private boolean isOverLong = false;
+	private List<BreakPoint> executionOrderList = new ArrayList<>();
 	
 	public List<BreakPoint> collectBreakPoints(AppJavaClassPath appClassPath, boolean isTestcaseEvaluation){
 		List<String> exlcudes = MicroBatUtil.extractExcludeFiles("", appClassPath.getExternalLibPaths());
@@ -93,10 +94,14 @@ public class ExecutionStatementCollector extends Executor{
 							
 							
 							BreakPoint breakPoint = new BreakPoint(location.declaringType().name(), declaringCompilationUnit, lineNumber);
-							System.out.println(breakPoint);
+//							System.out.println(breakPoint);
 
-							if(!isInTestRunner(breakPoint) && !pointList.contains(breakPoint)){
-								pointList.add(breakPoint);							
+							if(!isInTestRunner(breakPoint)){
+								if(!pointList.contains(breakPoint)) {
+									pointList.add(breakPoint);																
+								}
+								
+								this.executionOrderList.add(breakPoint);
 							}
 							
 							steps++;
@@ -245,5 +250,13 @@ public class ExecutionStatementCollector extends Executor{
 
 	public void setOverLong(boolean isOverLong) {
 		this.isOverLong = isOverLong;
+	}
+
+	public List<BreakPoint> getExecutionOrderList() {
+		return executionOrderList;
+	}
+
+	public void setExecutionOrderList(List<BreakPoint> executionOrderList) {
+		this.executionOrderList = executionOrderList;
 	}
 }

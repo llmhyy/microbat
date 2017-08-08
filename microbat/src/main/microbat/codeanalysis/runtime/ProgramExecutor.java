@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.poi.hssf.record.PageBreakRecord.Break;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdi.internal.VoidValueImpl;
@@ -17,6 +18,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
+import com.ibm.wala.shrikeBT.IShiftInstruction;
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
 import com.sun.jdi.ClassNotLoadedException;
@@ -129,21 +131,26 @@ public class ProgramExecutor extends Executor {
 	 * <br>
 	 * See the field <code>trace</code> in this class.
 	 * 
+	 * <br>
+	 * The parameter of executionOrderList is used to make sure the trace is recorded as executionOrderList shows.
+	 * Different from when we record the executionOrderList, we will listen to method entry/exist event, which can
+	 * introduces some steps which executionOrderList does not record. In such case, we just focus on the part of trace
+	 * recorded by executionOrderList.
+	 * 
 	 * @param runningStatements
 	 * @throws SavException
 	 */
-	public void run(List<BreakPoint> runningStatements, IProgressMonitor monitor, int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
+	public void run(List<BreakPoint> runningStatements, List<BreakPoint> executionOrderList, IProgressMonitor monitor, int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
 		List<String> exlcudes = MicroBatUtil.extractExcludeFiles("", appPath.getExternalLibPaths());
 		this.addExcludeList(exlcudes);
 		this.brkpsMap = BreakpointUtils.initBrkpsMap(runningStatements);
 
-		/** start debugger */
-		VirtualMachine vm = new VMStarter(this.appPath).start();
-
-		try{
-			constructTrace(monitor, this.appPath, vm, stepNum, isTestcaseEvaluation);			
-		}
-		finally{
+		List<PointWrapper> wrapperList = convertToPointWrapperList(executionOrderList);
+		
+		VirtualMachine vm = null;
+		try {
+			vm = constructTrace(monitor, wrapperList, this.appPath, stepNum, isTestcaseEvaluation);				
+		} finally {
 			if(vm != null){
 				vm.exit(0);
 			}
@@ -153,8 +160,61 @@ public class ProgramExecutor extends Executor {
 
 	}
 
-	private void constructTrace(IProgressMonitor monitor, AppJavaClassPath appClassPath, VirtualMachine vm, int stepNum,
-			boolean isTestcaseEvaluation) throws SavException, TimeoutException {
+	private List<PointWrapper> convertToPointWrapperList(List<BreakPoint> executionOrderList) {
+		List<PointWrapper> list = new ArrayList<>();
+		for(BreakPoint point: executionOrderList) {
+			PointWrapper pWrapper = new PointWrapper(point);
+			list.add(pWrapper);
+		}
+		return list;
+	}
+
+	class PointWrapper{
+		BreakPoint point;
+		boolean isHit = false;
+		
+		public PointWrapper(BreakPoint point) {
+			this.point = point;
+		}
+
+		public BreakPoint getPoint() {
+			return point;
+		}
+
+		public void setPoint(BreakPoint point) {
+			this.point = point;
+		}
+
+		public boolean isHit() {
+			return isHit;
+		}
+
+		public void setHit(boolean isHit) {
+			this.isHit = isHit;
+		}
+	}
+	
+	/**
+	 * The parameter of executionOrderList is used to make sure the trace is recorded as executionOrderList shows.
+	 * Different from when we record the executionOrderList, we will listen to method entry/exist event, which can
+	 * introduces some steps which executionOrderList does not record. In such case, we just focus on the part of trace
+	 * recorded by executionOrderList.
+	 * 
+	 * @param monitor
+	 * @param executionOrderList
+	 * @param appClassPath
+	 * @param vm
+	 * @param stepNum
+	 * @param isTestcaseEvaluation
+	 * @throws SavException
+	 * @throws TimeoutException
+	 */
+	private VirtualMachine constructTrace(IProgressMonitor monitor, List<PointWrapper> executionOrderList, AppJavaClassPath appClassPath, 
+			int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
+		
+		/** start debugger */
+		VirtualMachine vm = new VMStarter(this.appPath).start();
+		
 		EventRequestManager erm = vm.eventRequestManager();
 
 		/** add class watch, otherwise, I cannot catch the registered event */
@@ -174,23 +234,6 @@ public class ProgramExecutor extends Executor {
 		 */
 		BreakPoint lastSteppingInPoint = null;
 
-		/**
-		 * Yun Lin: <br>
-		 * This variable <code>isLastStepEventRecordNode</code> is used to check
-		 * whether a step performs a method invocation. Based on the
-		 * *observation*, a method entry event happens directly after a step
-		 * event if this step invokes a method. Therefore, if a step event
-		 * contains the statements we need, meanwhile, the next received event
-		 * is a method entry event, then, I will consider the corresponding step
-		 * invokes a method.
-		 * 
-		 * In the implementation, the variable
-		 * <code>isLastStepEventRecordNode</code> is to indicate a method entry
-		 * that an interesting step event just happened right before. Thus, the
-		 * last recorded trace node should be method invocation.
-		 */
-		boolean lastStepEventRecordNode = false;
-		
 		/**
 		 * We support recoding the trace in two modes: normal mode and test case mode.
 		 * When in test case mode, a lot of method invocation from JUnit framework is useless,
@@ -220,7 +263,6 @@ public class ProgramExecutor extends Executor {
 		while (!stop && !eventTimeout) {
 			EventSet eventSet;
 			try {
-				TIME_OUT = 1000000;
 				eventSet = eventQueue.remove(TIME_OUT);
 			} catch (InterruptedException e) {
 				break;
@@ -304,7 +346,10 @@ public class ProgramExecutor extends Executor {
 					 * our debugging process
 					 */
 					if (bkp != null) {
-						System.out.println(bkp);
+						if(bkp.getDeclaringCompilationUnitName().equals("com.google.javascript.jscomp.CompilationLevel") 
+								&& bkp.getLineNumber()==123) {
+							System.currentTimeMillis();
+						}
 						
 						BreakPointValue bkpVal;
 						if(this.trace.getLastestNode() != null && !isContextChange){
@@ -382,10 +427,7 @@ public class ProgramExecutor extends Executor {
 						}
 
 						lastSteppingInPoint = bkp;
-						lastStepEventRecordNode = true;
-					} else {
-						lastStepEventRecordNode = false;
-					}
+					} 
 
 					monitor.worked(1);
 					printProgress(trace.size(), stepNum);
@@ -419,33 +461,34 @@ public class ProgramExecutor extends Executor {
 					
 					Location location = ((MethodEntryEvent) event).location();
 					
-					if(isInterestedMethod(method, this.brkpsMap)){
-						if (lastStepEventRecordNode) {
-							TraceNode lastestNode = this.trace.getLastestNode();
-
+					PointWrapper nextPoint = getNextPoint(executionOrderList);
+					if(isInterestedMethod(location, nextPoint)){
+						nextPoint.setHit(true);
+						TraceNode lastestNode = this.trace.getLastestNode();
+						if (lastestNode!=null) {
 							try {
 								if (!method.arguments().isEmpty()) {
 									StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
 									String path = location.sourcePath();
 									String declaringCompilationUnit = path.replace(".java", "");
 									declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar, '.');
-
+									
 									int methodLocationLine = method.location().lineNumber();
 									List<Param> paramList = parseParamList(method);
-
+									
 									parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
 											methodLocationLine, paramList, lastestNode);
 								}
 							} catch (AbsentInformationException e) {
 								e.printStackTrace();
 							}
-
+							
 							methodNodeStack.push(lastestNode);
 							String methodSignature = createSignature(method);
 							methodSignatureStack.push(methodSignature);
-							
-							System.currentTimeMillis();
 						}
+						
+						System.currentTimeMillis();
 					}
 					else{
 						/**
@@ -461,7 +504,15 @@ public class ProgramExecutor extends Executor {
 //							String methodSignature = createSignature(method);
 //							methodSignatureStack.push(methodSignature);
 //						}
-//						this.methodEntryRequest.setEnabled(false);
+						if(nextPoint.isHit || isInSameMethod(trace.getLastestNode(), nextPoint.getPoint())) {
+							this.methodEntryRequest.setEnabled(false);	
+							this.methodExitRequset.setEnabled(false);
+//							try {
+//								Thread.sleep(1000);
+//							} catch (InterruptedException e) {
+//								e.printStackTrace();
+//							}
+						}
 //						this.methodExitRequset.setEnabled(false);
 					}
 					
@@ -471,7 +522,10 @@ public class ProgramExecutor extends Executor {
 					Method method = mee.method();
 //					System.out.println("exit " + method + ":" + ((MethodExitEvent)event).location());
 					
-					if(isInterestedMethod(method, this.brkpsMap)){
+					PointWrapper lastPoint = findCorrespondingPointWrapper(this.trace.getLastestNode(), executionOrderList);
+					//if(isInterestedMethod(method, this.brkpsMap)){
+					if(isInterestedMethod(((MethodExitEvent)event).location(),lastPoint)){
+						lastPoint.setHit(true);
 						if (!methodSignatureStack.isEmpty()) {
 							//String peekSig = methodSignatureStack.peek();
 							//String thisSig = createSignature(method);
@@ -484,9 +538,11 @@ public class ProgramExecutor extends Executor {
 						}
 					}
 					else{
-						this.methodExitRequset.setEnabled(false);
+						if (lastPoint.isHit) {
+							this.methodEntryRequest.setEnabled(false);	
+							this.methodExitRequset.setEnabled(false);							
+						}
 					}
-					
 
 				} else if (event instanceof ExceptionEvent) {
 					ExceptionEvent ee = (ExceptionEvent) event;
@@ -506,32 +562,59 @@ public class ProgramExecutor extends Executor {
 
 			eventSet.resume();
 		}
+		
+		return vm;
 	}
 
-	private boolean isInterestedMethod(Method method, Map<String, List<BreakPoint>> brkpsMap) {
-		String className = method.declaringType().name();
-		List<BreakPoint> recordedLines = brkpsMap.get(className);
+	private boolean isInSameMethod(TraceNode lastestNode, BreakPoint point) {
+		return lastestNode.getBreakPoint().getMethodSign().equals(point.getMethodSign());
+	}
+
+	private PointWrapper findCorrespondingPointWrapper(TraceNode lastestNode, List<PointWrapper> executionOrderList) {
+		return executionOrderList.get(lastestNode.getOrder()-1);
+	}
+
+	private PointWrapper getNextPoint(List<PointWrapper> executionOrderList) {
+		int index = trace.getExectionList().size();
+		return executionOrderList.get(index);
+	}
+
+	private boolean isInterestedMethod(Location location, PointWrapper lastSteppingInPoint) {
 		
-		if(recordedLines!=null && !recordedLines.isEmpty()){
-			try {
-				List<Location> methodLocations = method.allLineLocations();
-				
-				for(Location location: methodLocations){
-					int locationLine = location.lineNumber();
-					
-					for(BreakPoint point: recordedLines){
-						if(point.getLineNumber()==locationLine){
-							return true;
-						}
-					}
-				}
-			} catch (AbsentInformationException e) {
-				e.printStackTrace();
-			}
+		if(lastSteppingInPoint!=null) {
+			if(location.declaringType().toString().equals(lastSteppingInPoint.getPoint().getClassCanonicalName()) 
+					&& location.lineNumber()==lastSteppingInPoint.getPoint().getLineNumber()) {
+				return true;
+			}			
 		}
 		
 		return false;
 	}
+
+//	private boolean isInterestedMethod(Method method, Map<String, List<BreakPoint>> brkpsMap) {
+//		String className = method.declaringType().name();
+//		List<BreakPoint> recordedLines = brkpsMap.get(className);
+//		
+//		if(recordedLines!=null && !recordedLines.isEmpty()){
+//			try {
+//				List<Location> methodLocations = method.allLineLocations();
+//				
+//				for(Location location: methodLocations){
+//					int locationLine = location.lineNumber();
+//					
+//					for(BreakPoint point: recordedLines){
+//						if(point.getLineNumber()==locationLine){
+//							return true;
+//						}
+//					}
+//				}
+//			} catch (AbsentInformationException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//		
+//		return false;
+//	}
 
 	private void printProgress(int size, int stepNum) {
 		double progress = ((double)size)/stepNum;
@@ -1259,7 +1342,7 @@ public class ProgramExecutor extends Executor {
 		} catch (IncompatibleThreadStateException e) {
 			e.printStackTrace();
 		} catch(Exception e){
-			e.printStackTrace();
+			//e.printStackTrace();
 		}finally{
 //			getClassPrepareRequest().setEnabled(classPrepare);
 //			getStepRequest().setEnabled(step);
