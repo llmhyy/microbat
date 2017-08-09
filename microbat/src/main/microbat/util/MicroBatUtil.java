@@ -104,6 +104,11 @@ public class MicroBatUtil {
 		List<String> excludes = new ArrayList<>();
 		for(String libJar: libJars) {
 			File file = new File(libJar);
+			
+			if(file.toString().contains("junit")) {
+				continue;
+			}
+			
 			try {
 				@SuppressWarnings("resource")
 				JarFile jarFile = new JarFile(file);

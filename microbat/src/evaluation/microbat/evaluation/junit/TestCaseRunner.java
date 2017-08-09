@@ -172,20 +172,18 @@ public class TestCaseRunner extends ExecutionStatementCollector{
 
 	protected HashMap<BreakPoint, Boolean> pointInTestRunnerMap = new HashMap<>(); 
 	
-	
-
-	private void appendStepWatchExcludes(AppJavaClassPath appClassPath) {
-		List<String> exList = new ArrayList<>();
-		for(String ex: stepWatchExcludes){
-			exList.add(ex);
-		}
-		
-		if(appClassPath.getOptionalTestClass() != null){
-			exList.add(appClassPath.getOptionalTestClass());			
-		}
-		
-		this.stepWatchExcludes = exList.toArray(new String[0]);
-	}
+//	private void appendStepWatchExcludes(AppJavaClassPath appClassPath) {
+//		List<String> exList = new ArrayList<>();
+//		for(String ex: libExcludes){
+//			exList.add(ex);
+//		}
+//		
+//		if(appClassPath.getOptionalTestClass() != null){
+//			exList.add(appClassPath.getOptionalTestClass());			
+//		}
+//		
+//		this.libExcludes = exList.toArray(new String[0]);
+//	}
 
 	public boolean isPassingTest() {
 		return isPassingTest;
