@@ -97,6 +97,23 @@ public class BreakPoint extends ClassLocation {
 	public void setWrittenVariables(List<Variable> writtenVariables) {
 		this.writtenVariables = writtenVariables;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		
+		if(obj instanceof BreakPoint){
+			BreakPoint other = (BreakPoint) obj;
+			
+			return declaringCompilationUnitName.equals(other.getDeclaringCompilationUnitName())
+					&& lineNo == other.getLineNumber();			
+		}
+		
+		return false;
+	}
 
 	public void addVars(Variable... newVars) {
 		for (Variable newVar : newVars) {
@@ -153,7 +170,7 @@ public class BreakPoint extends ClassLocation {
 	@Override
 	public String toString() {
 		return "BreakPoint [classCanonicalName=" + classCanonicalName
-				+ ", methodName=" + methodSign + ", lineNo=" + lineNo
+				 + ", lineNo=" + lineNo + ", methodName=" + methodSign
 				+ ", vars=" + vars + ", charStart=" + charStart + ", charEnd="
 				+ charEnd + "]";
 	}
