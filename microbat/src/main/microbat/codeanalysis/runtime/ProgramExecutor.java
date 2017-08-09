@@ -538,7 +538,7 @@ public class ProgramExecutor extends Executor {
 						}
 					}
 					else{
-						if (lastPoint.isHit) {
+						if (lastPoint!=null && lastPoint.isHit) {
 							this.methodEntryRequest.setEnabled(false);	
 							this.methodExitRequset.setEnabled(false);							
 						}
