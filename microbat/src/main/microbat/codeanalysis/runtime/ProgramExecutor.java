@@ -354,19 +354,15 @@ public class ProgramExecutor extends Executor {
 					}
 
 					BreakPoint bkp = locBrpMap.get(currentLocation.toString());
+					BreakPoint supposedBkp = null; 
+					if(trace.size()<executionOrderList.size()) {
+						supposedBkp = executionOrderList.get(trace.size()).getPoint();
+					}
 					/**
 					 * This step is an interesting step (sliced statement) in
 					 * our debugging process
 					 */
-					if (bkp != null) {
-						TraceNode tmp = this.trace.getLastestNode();
-						if(tmp!=null) {
-							BreakPoint cBreakPoint = executionOrderList.get(tmp.getOrder()-1).getPoint();
-							if(!cBreakPoint.equals(tmp.getBreakPoint())) {
-								System.currentTimeMillis();
-							}
-						}
-						
+					if (bkp != null && bkp.equals(supposedBkp)) {
 						BreakPointValue bkpVal;
 						if(this.trace.getLastestNode() != null && !isContextChange){
 							bkpVal = this.trace.getLastestNode().getAfterStepInState();

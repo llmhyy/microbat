@@ -27,6 +27,7 @@ import microbat.codeanalysis.ast.VariableScopeParser;
 import microbat.codeanalysis.bytecode.BPVariableRetriever;
 import microbat.codeanalysis.runtime.ExecutionStatementCollector;
 import microbat.codeanalysis.runtime.ProgramExecutor;
+import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.util.JavaUtil;
@@ -61,7 +62,15 @@ public class StartDebugHandler extends AbstractHandler {
 	}
 	
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		
+		String testClass = "com.google.javascript.jscomp.CommandLineRunnerTest";
+		String testMethod = "testSimpleModeLeavesUnusedParams";
+		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
+		appClassPath.setOptionalTestClass(testClass);
+		appClassPath.setOptionalTestMethod(testMethod);
+		appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
+		
 		final ProgramExecutor tcExecutor = new ProgramExecutor();
 		
 		try {
@@ -91,7 +100,7 @@ public class StartDebugHandler extends AbstractHandler {
 						monitor.beginTask("approximating efforts", 1);
 						
 						ExecutionStatementCollector collector = new ExecutionStatementCollector();
-						executingStatements = collector.collectBreakPoints(appClassPath, false);
+						executingStatements = collector.collectBreakPoints(appClassPath, true);
 						executionOrderList = collector.getExecutionOrderList();
 						stepNum = collector.getStepNum();
 						
