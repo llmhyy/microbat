@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.apache.poi.hssf.record.PageBreakRecord.Break;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdi.internal.VoidValueImpl;
@@ -18,7 +17,6 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
-import com.ibm.wala.shrikeBT.IShiftInstruction;
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
 import com.sun.jdi.ClassNotLoadedException;
@@ -142,7 +140,7 @@ public class ProgramExecutor extends Executor {
 	 */
 	public void run(List<BreakPoint> runningStatements, List<BreakPoint> executionOrderList, IProgressMonitor monitor, int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
 		List<String> exlcudes = MicroBatUtil.extractExcludeFiles("", appPath.getExternalLibPaths());
-		this.addExcludeList(exlcudes);
+		this.addLibExcludeList(exlcudes);
 		this.brkpsMap = BreakpointUtils.initBrkpsMap(runningStatements);
 
 		List<PointWrapper> wrapperList = convertToPointWrapperList(executionOrderList);
@@ -192,6 +190,11 @@ public class ProgramExecutor extends Executor {
 		public void setHit(boolean isHit) {
 			this.isHit = isHit;
 		}
+
+		@Override
+		public String toString() {
+			return "PointWrapper [point=" + point + ", isHit=" + isHit + "]";
+		}
 	}
 	
 	/**
@@ -240,7 +243,9 @@ public class ProgramExecutor extends Executor {
 		 * so I need to skip some events from JUnit by this variable.
 		 */
 		boolean isInRecording = false;
-
+		
+		boolean isRecoverMethodRequest = false;
+		
 		/**
 		 * record the method entrance and exit so that I can build a
 		 * tree-structure for trace node.
@@ -264,7 +269,12 @@ public class ProgramExecutor extends Executor {
 			EventSet eventSet;
 			try {
 				eventSet = eventQueue.remove(TIME_OUT);
-			} catch (InterruptedException e) {
+				if(isRecoverMethodRequest) {
+					this.methodEntryRequest.enable();
+					this.methodExitRequest.enable();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 				break;
 			}
 			if (eventSet == null) {
@@ -279,18 +289,21 @@ public class ProgramExecutor extends Executor {
 			}
 
 			for (Event event : eventSet) {
-				
 				if (event instanceof VMStartEvent) {
 					System.out.println("JVM is started...");
 
 					addStepWatch(erm, event);
+					addMethodWatch(erm);
+					addExceptionWatch(erm);
 					
 					if(isTestcaseEvaluation){
 						this.stepRequest.disable();
 					}
+					else {
+						excludeJUnitLibs(this.stepRequest.isEnabled(), this.methodEntryRequest.isEnabled(), this.methodExitRequest.isEnabled(),
+								this.classPrepareRequest.isEnabled(), this.exceptionRequest.isEnabled());
+					}
 					
-					addMethodWatch(erm);
-					addExceptionWatch(erm);
 				}
 				if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
 					stop = true;
@@ -305,7 +318,7 @@ public class ProgramExecutor extends Executor {
 //					System.out.println(currentLocation);
 					
 					this.methodEntryRequest.setEnabled(true);
-					this.methodExitRequset.setEnabled(true);
+					this.methodExitRequest.setEnabled(true);
 					
 					/**
 					 * collect the variable values after executing previous step
@@ -346,9 +359,12 @@ public class ProgramExecutor extends Executor {
 					 * our debugging process
 					 */
 					if (bkp != null) {
-						if(bkp.getDeclaringCompilationUnitName().equals("com.google.javascript.jscomp.CompilationLevel") 
-								&& bkp.getLineNumber()==123) {
-							System.currentTimeMillis();
+						TraceNode tmp = this.trace.getLastestNode();
+						if(tmp!=null) {
+							BreakPoint cBreakPoint = executionOrderList.get(tmp.getOrder()-1).getPoint();
+							if(!cBreakPoint.equals(tmp.getBreakPoint())) {
+								System.currentTimeMillis();
+							}
 						}
 						
 						BreakPointValue bkpVal;
@@ -449,10 +465,12 @@ public class ProgramExecutor extends Executor {
 					 */
 					if(isTestcaseEvaluation && !isInRecording){
 						String declaringTypeName = method.declaringType().name();
-						if(declaringTypeName.equals(appClassPath.getOptionalTestClass())){
-						//if(declaringTypeName.contains("TestExecution") && method.name().equals("run")){
+						//if(declaringTypeName.equals(appClassPath.getOptionalTestClass())){
+						if(declaringTypeName.contains("junit.framework.TestResult") && method.name().equals("startTest")) {
 							this.stepRequest.enable();
 							isInRecording = true;
+							excludeJUnitLibs(this.stepRequest.isEnabled(), this.methodEntryRequest.isEnabled(), this.methodExitRequest.isEnabled(),
+									this.classPrepareRequest.isEnabled(), this.exceptionRequest.isEnabled());
 						}
 						else{
 							continue;
@@ -492,28 +510,23 @@ public class ProgramExecutor extends Executor {
 					}
 					else{
 						/**
-						 * The reason for push a clinit method is that: when calling the static method of a class,
-						 * JVM will trigger the event of entrying the clinit method of that class, then the JVM will 
-						 * never trigger method entry event of the corresponding method any more. Thus, there will miss
-						 * a method into stack. Therefore, we additionally push the clinit method into stack.
+						 * It check whether a \<clint\> method is visited in 
+						 * previous method entry event. If yes, this variable will be set true. The reason is to
+						 * prevent JVM from being hanged. We observe that calling a \<clint\> method sometimes
+						 * hang the JVM, causing a JVM timeout exception. Therefore, once we meet such a method,
+						 * we try to skip.
 						 */
-//						if (lastStepEventRecordNode && this.methodEntryRequest.isEnabled()) {
-//							TraceNode latestNode = this.trace.getLastestNode();
-//							
-//							methodNodeStack.push(latestNode);
-//							String methodSignature = createSignature(method);
-//							methodSignatureStack.push(methodSignature);
-//						}
-						if(nextPoint.isHit || isInSameMethod(trace.getLastestNode(), nextPoint.getPoint())) {
-							this.methodEntryRequest.setEnabled(false);	
-							this.methodExitRequset.setEnabled(false);
-//							try {
-//								Thread.sleep(1000);
-//							} catch (InterruptedException e) {
-//								e.printStackTrace();
-//							}
+						if(nextPoint!=null) {
+							if(nextPoint.isHit || method.name().equals("<clinit>") || 
+									isInSameMethod(trace.getLastestNode(), nextPoint)) {
+								this.methodEntryRequest.setEnabled(false);	
+								this.methodExitRequest.setEnabled(false);
+								
+								if(method.name().equals("<clinit>")) {
+									isRecoverMethodRequest = true;
+								}
+							}
 						}
-//						this.methodExitRequset.setEnabled(false);
 					}
 					
 
@@ -540,7 +553,7 @@ public class ProgramExecutor extends Executor {
 					else{
 						if (lastPoint!=null && lastPoint.isHit) {
 							this.methodEntryRequest.setEnabled(false);	
-							this.methodExitRequset.setEnabled(false);							
+							this.methodExitRequest.setEnabled(false);							
 						}
 					}
 
@@ -566,8 +579,24 @@ public class ProgramExecutor extends Executor {
 		return vm;
 	}
 
-	private boolean isInSameMethod(TraceNode lastestNode, BreakPoint point) {
-		return lastestNode.getBreakPoint().getMethodSign().equals(point.getMethodSign());
+	private boolean isInSameMethod(TraceNode lastestNode, PointWrapper wrapper) {
+		if(lastestNode==null || wrapper==null) {
+			return false;
+		}
+		
+		BreakPoint point = wrapper.getPoint();
+		
+		String latestMethod = lastestNode.getBreakPoint().getMethodSign();
+		String pointMethod = point.getMethodSign();
+		
+		if(latestMethod==null && pointMethod==null) {
+			return lastestNode.getBreakPoint().getClassCanonicalName().equals(point.getClassCanonicalName());
+		}
+		else if(latestMethod!=null && pointMethod!=null) {
+			return lastestNode.getBreakPoint().getMethodSign().equals(point.getMethodSign());			
+		}
+		
+		return false;
 	}
 
 	private PointWrapper findCorrespondingPointWrapper(TraceNode lastestNode, List<PointWrapper> executionOrderList) {
@@ -580,6 +609,10 @@ public class ProgramExecutor extends Executor {
 
 	private PointWrapper getNextPoint(List<PointWrapper> executionOrderList) {
 		int index = trace.getExectionList().size();
+		if(index >= executionOrderList.size()) {
+			return null;
+		}
+		
 		return executionOrderList.get(index);
 	}
 
@@ -769,24 +802,22 @@ public class ProgramExecutor extends Executor {
 		return false;
 	}
 
-	private ExceptionRequest exceptionRequest;
 	private void addExceptionWatch(EventRequestManager erm) {
 
 		setExceptionRequest(erm.createExceptionRequest(null, true, true));
 		getExceptionRequest().setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		for (String ex : stepWatchExcludes) {
+		for (String ex : libExcludes) {
 			getExceptionRequest().addClassExclusionFilter(ex);
 		}
 		// request.addClassFilter("java.io.FileNotFoundException");
 		getExceptionRequest().enable();
 	}
 
-	private StepRequest stepRequest;
 	private void addStepWatch(EventRequestManager erm, Event event) {
 		stepRequest = erm.createStepRequest(((VMStartEvent) event).thread(), StepRequest.STEP_LINE,
 				StepRequest.STEP_INTO);
 		stepRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		for (String ex : stepWatchExcludes) {
+		for (String ex : libExcludes) {
 			stepRequest.addClassExclusionFilter(ex);
 		}
 		stepRequest.enable();
@@ -1008,26 +1039,26 @@ public class ProgramExecutor extends Executor {
 		}
 	}
 
-	private MethodEntryRequest methodEntryRequest;
-	private MethodExitRequest methodExitRequset;
+//	private MethodEntryRequest methodEntryRequest;
+//	private MethodExitRequest methodExitRequset;
 
 	/**
 	 * add method enter and exit event
 	 */
 	private void addMethodWatch(EventRequestManager erm) {
 		methodEntryRequest = erm.createMethodEntryRequest();
-		for (String classPattern : stepWatchExcludes) {
+		for (String classPattern : libExcludes) {
 			methodEntryRequest.addClassExclusionFilter(classPattern);
 		}
 		methodEntryRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
 		methodEntryRequest.enable();
-
-		methodExitRequset = erm.createMethodExitRequest();
-		for (String classPattern : stepWatchExcludes) {
-			methodExitRequset.addClassExclusionFilter(classPattern);
+		
+		methodExitRequest = erm.createMethodExitRequest();
+		for (String classPattern : libExcludes) {
+			methodExitRequest.addClassExclusionFilter(classPattern);
 		}
-		methodExitRequset.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		methodExitRequset.enable();
+		methodExitRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+		methodExitRequest.enable();
 	}
 
 	/** add watch requests **/
@@ -1040,7 +1071,7 @@ public class ProgramExecutor extends Executor {
 		addClassWatch(erm, ENTER_TC_BKP.getClassCanonicalName());
 	}
 
-	private ClassPrepareRequest classPrepareRequest;
+//	private ClassPrepareRequest classPrepareRequest;
 	private final void addClassWatch(EventRequestManager erm, String className) {
 		setClassPrepareRequest(erm.createClassPrepareRequest());
 		getClassPrepareRequest().addClassFilter(className);
@@ -1448,11 +1479,11 @@ public class ProgramExecutor extends Executor {
 	}
 
 	public MethodExitRequest getMethodExitRequset() {
-		return methodExitRequset;
+		return methodExitRequest;
 	}
 
 	public void setMethodExitRequset(MethodExitRequest methodExitRequset) {
-		this.methodExitRequset = methodExitRequset;
+		this.methodExitRequest = methodExitRequset;
 	}
 
 	public ClassPrepareRequest getClassPrepareRequest() {
