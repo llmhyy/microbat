@@ -64,12 +64,17 @@ public class MicroBatUtil {
 		/**
 		 * setting junit lib into classpath
 		 */
-		String userDir = System.getProperty("user.dir");
+		//String userDir = System.getProperty("user.dir");
+		String eclipseExecutablePath = System.getProperty("eclipse.launcher");
+		String userDir = eclipseExecutablePath.substring(0, eclipseExecutablePath.lastIndexOf("eclipse")-1);
 		String junitDir = userDir + File.separator + "dropins" + File.separator + "junit_lib";
 		String junitPath = junitDir + File.separator + "junit.jar";
 		String hamcrestCorePath = junitDir + File.separator + "org.hamcrest.core.jar";
 		appClassPath.addClasspath(junitPath);
 		appClassPath.addClasspath(hamcrestCorePath);
+		
+		String testRunnerDir = junitDir + File.separator + "testrunner.jar";
+		appClassPath.addClasspath(testRunnerDir);
 		
 		/**
 		 * setting output folder
