@@ -272,6 +272,7 @@ public class ProgramExecutor extends Executor {
 				if(isRecoverMethodRequest) {
 					this.methodEntryRequest.enable();
 					this.methodExitRequest.enable();
+					isRecoverMethodRequest = false;
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -439,10 +440,11 @@ public class ProgramExecutor extends Executor {
 						}
 
 						lastSteppingInPoint = bkp;
+						
+						monitor.worked(1);
+						printProgress(trace.size(), stepNum);
 					} 
 
-					monitor.worked(1);
-					printProgress(trace.size(), stepNum);
 					if (monitor.isCanceled() || this.trace.getExectionList().size() >= Settings.stepLimit) {
 						stop = true;
 						break cancel;
@@ -474,6 +476,9 @@ public class ProgramExecutor extends Executor {
 					}
 					
 					Location location = ((MethodEntryEvent) event).location();
+					if(method.name().equals("make")) {
+						System.currentTimeMillis();
+					}
 					
 					PointWrapper nextPoint = getNextPoint(executionOrderList);
 					if(isInterestedMethod(location, nextPoint)){
