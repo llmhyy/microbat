@@ -571,6 +571,10 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private PointWrapper findCorrespondingPointWrapper(TraceNode lastestNode, List<PointWrapper> executionOrderList) {
+		if (lastestNode==null) {
+			return null;
+		}
+		
 		return executionOrderList.get(lastestNode.getOrder()-1);
 	}
 
