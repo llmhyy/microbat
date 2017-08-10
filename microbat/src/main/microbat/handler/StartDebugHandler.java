@@ -63,13 +63,12 @@ public class StartDebugHandler extends AbstractHandler {
 	
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		
-		String testClass = "com.google.javascript.jscomp.CommandLineRunnerTest";
-		String testMethod = "testSimpleModeLeavesUnusedParams";
-		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
-		appClassPath.setOptionalTestClass(testClass);
-		appClassPath.setOptionalTestMethod(testMethod);
-		appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
+		if (Settings.isRunTest) {
+			appClassPath.setOptionalTestClass(Settings.lanuchClass);
+			appClassPath.setOptionalTestMethod(Settings.testMethod);
+			appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
+		}
 		
 		final ProgramExecutor tcExecutor = new ProgramExecutor();
 		
