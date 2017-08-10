@@ -540,15 +540,36 @@ public class ProgramExecutor extends Executor {
 					//if(isInterestedMethod(method, this.brkpsMap)){
 					if(isInterestedMethod(((MethodExitEvent)event).location(),lastPoint)){
 						lastPoint.setHit(true);
+						String thisSig = createSignature(method);
 						if (!methodSignatureStack.isEmpty()) {
-							//String peekSig = methodSignatureStack.peek();
-							//String thisSig = createSignature(method);
+							String peekSig = methodSignatureStack.peek();
 							//if (JavaUtil.isCompatibleMethodSignature(peekSig, thisSig)) {
+							if (peekSig.equals(thisSig)) {
 								TraceNode node = methodNodeStack.pop();
 								methodNodeJustPopedOut = node;
 								methodSignatureStack.pop();
 								lastestReturnedValue = mee.returnValue();
-							//}
+							}
+							else {
+								int index = -1;
+								for(int i=methodSignatureStack.size()-1; i>=0; i--) {
+									String sig = methodSignatureStack.get(i);
+									if(sig.equals(thisSig)) {
+										index = i;
+										break;
+									}
+								}
+								
+								if(index != -1) {
+									int popNum = methodSignatureStack.size() - index;
+									for(int i=0; i<popNum; i++) {
+										TraceNode node = methodNodeStack.pop();
+										methodNodeJustPopedOut = node;
+										methodSignatureStack.pop();
+										lastestReturnedValue = mee.returnValue();
+									}
+								}
+							}
 						}
 					}
 					else{
