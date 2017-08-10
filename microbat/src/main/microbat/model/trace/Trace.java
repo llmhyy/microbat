@@ -136,10 +136,16 @@ public class Trace {
 			String className = breakPoint.getDeclaringCompilationUnitName();
 			int lineNumber = breakPoint.getLineNumber();
 			
+			String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
 			String exp = combineTraceNodeExpression(className, lineNumber);
 			if(exp.equals(expression)){
 				resultIndex = i;
 				break;
+			}
+			else if(simpleClassName.equals(expression)){
+				if (resultIndex==-1) {
+					resultIndex = i;					
+				}
 			}
 		}
 		
@@ -158,10 +164,16 @@ public class Trace {
 			String className = breakPoint.getDeclaringCompilationUnitName();
 			int lineNumber = breakPoint.getLineNumber();
 			
+			String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
 			String exp = combineTraceNodeExpression(className, lineNumber);
 			if(exp.equals(expression)){
 				resultIndex = i;
 				break;
+			}
+			else if(simpleClassName.equals(expression)){
+				if (resultIndex==-1) {
+					resultIndex = i;					
+				}
 			}
 		}
 		
