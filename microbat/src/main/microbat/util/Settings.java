@@ -13,15 +13,16 @@ import microbat.handler.CheckingState;
 import microbat.model.UserInterestedVariables;
 import microbat.model.trace.PotentialCorrectPatternList;
 import microbat.preference.MicrobatPreference;
-import microbat.recommendation.ChosenVariableOption;
 import microbat.views.ImageUI;
 
 public class Settings {
 	public static String projectName;
 	public static String lanuchClass;
+	public static String testMethod;
 	
 	public static boolean isRecordSnapshot;
 	public static boolean isApplyAdvancedInspector;
+	public static boolean isRunTest;
 	public static int stepLimit;
 	
 	public static int referenceFieldLayerInString = 1;
@@ -39,10 +40,13 @@ public class Settings {
 			try{
 				projectName = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.TARGET_PORJECT);
 				lanuchClass = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.LANUCH_CLASS);
+				testMethod = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.TEST_METHOD);
 				String isRecord = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RECORD_SNAPSHORT);
 				isRecordSnapshot = isRecord.equals("true");
 				String isApplyAInspector = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.APPLY_ADVANCE_INSPECTOR);
 				isApplyAdvancedInspector = isApplyAInspector.equals("true");
+				String isRuntest = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RUN_TEST);
+				isRunTest = isRuntest.equals("true");
 				String limitNumString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.STEP_LIMIT);
 				stepLimit = Integer.valueOf(limitNumString);
 				if(stepLimit == 0){
@@ -85,5 +89,7 @@ public class Settings {
 	public static HashMap<String, CompilationUnit> compilationUnitMap = new HashMap<>();
 	public static HashMap<String, ICompilationUnit> iCompilationUnitMap = new HashMap<>();
 	public static boolean enableLoopInference = true;
+	
+	
 	
 }

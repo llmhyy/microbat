@@ -42,11 +42,13 @@ public class MicrobatPreference extends PreferencePage implements
 	public void init(IWorkbench workbench) {
 		this.defaultTargetProject = Activator.getDefault().getPreferenceStore().getString(TARGET_PORJECT);
 		this.defaultClassName = Activator.getDefault().getPreferenceStore().getString(CLASS_NAME);
+		this.defaultTestMethod = Activator.getDefault().getPreferenceStore().getString(TEST_METHOD);
 		this.defaultLineNumber = Activator.getDefault().getPreferenceStore().getString(LINE_NUMBER);
 		this.defaultLanuchClass = Activator.getDefault().getPreferenceStore().getString(LANUCH_CLASS);
 		this.defaultRecordSnapshot = Activator.getDefault().getPreferenceStore().getString(RECORD_SNAPSHORT);
 		this.defaultAdvancedDetailInspector = Activator.getDefault().getPreferenceStore().getString(APPLY_ADVANCE_INSPECTOR);
 		this.defaultStepLimit = Activator.getDefault().getPreferenceStore().getString(STEP_LIMIT);
+		this.defaultRunTest = Activator.getDefault().getPreferenceStore().getString(RUN_TEST);
 	}
 	
 	public static final String TARGET_PORJECT = "targetProjectName";
@@ -56,23 +58,29 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String STEP_LIMIT = "stepLimit";
 	public static final String RECORD_SNAPSHORT = "recordSnapshot";
 	public static final String APPLY_ADVANCE_INSPECTOR = "applyAdvancedInspector";
+	public static final String TEST_METHOD = "testMethod";
+	public static final String RUN_TEST = "isRunTest";
 
 	
 	private Combo projectCombo;
 	private Text lanuchClassText;
+	private Text testMethodText;
 	private Text classNameText;
 	private Text lineNumberText;
 	private Text stepLimitText;
 	private Button recordSnapshotButton;
 	private Button advancedDetailInspectorButton;
+	private Button runTestButton;
 	
 	private String defaultTargetProject = "";
 	private String defaultLanuchClass = "";
+	private String defaultTestMethod = "";
 	private String defaultClassName = "";
 	private String defaultLineNumber = "";
 	private String defaultStepLimit = "5000";
 	private String defaultRecordSnapshot = "true";
 	private String defaultAdvancedDetailInspector = "true";
+	private String defaultRunTest = "false";
 	
 	@Override
 	protected Control createContents(Composite parent) {
@@ -148,6 +156,14 @@ public class MicrobatPreference extends PreferencePage implements
 		
 		seedStatementGroup.setLayout(layout);
 		
+		runTestButton = new Button(seedStatementGroup, SWT.CHECK);
+		runTestButton.setText("is to run JUnit test?");
+		GridData runTestButtonDataButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		runTestButtonDataButtonData.horizontalSpan = 3;
+		runTestButton.setLayoutData(runTestButtonDataButtonData);
+		boolean runTestSelected = this.defaultRunTest.equals("true");
+		runTestButton.setSelection(runTestSelected);
+		
 		Label lanuchClassLabel = new Label(seedStatementGroup, SWT.NONE);
 		lanuchClassLabel.setText("Lanuch Class: ");
 		lanuchClassText = new Text(seedStatementGroup, SWT.BORDER);
@@ -155,6 +171,14 @@ public class MicrobatPreference extends PreferencePage implements
 		GridData lanuchClassTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		lanuchClassTextData.horizontalSpan = 2;
 		lanuchClassText.setLayoutData(lanuchClassTextData);
+		
+		Label testMethodLabel = new Label(seedStatementGroup, SWT.NONE);
+		testMethodLabel.setText("Test Method: ");
+		testMethodText = new Text(seedStatementGroup, SWT.BORDER);
+		testMethodText.setText(this.defaultTestMethod);
+		GridData testMethoDataData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		testMethoDataData.horizontalSpan = 2;
+		testMethodText.setLayoutData(testMethoDataData);
 		
 //		Label classNameLabel = new Label(seedStatementGroup, SWT.NONE);
 //		classNameLabel.setText("Class Name: ");
@@ -178,19 +202,23 @@ public class MicrobatPreference extends PreferencePage implements
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode("microbat.preference");
 		preferences.put(TARGET_PORJECT, this.projectCombo.getText());
 		preferences.put(LANUCH_CLASS, this.lanuchClassText.getText());
+		preferences.put(TEST_METHOD, this.testMethodText.getText());
 //		preferences.put(CLASS_NAME, this.classNameText.getText());
 //		preferences.put(LINE_NUMBER, this.lineNumberText.getText());
 		preferences.put(RECORD_SNAPSHORT, String.valueOf(this.recordSnapshotButton.getSelection()));
 		preferences.put(APPLY_ADVANCE_INSPECTOR, String.valueOf(this.advancedDetailInspectorButton.getSelection()));
 		preferences.put(STEP_LIMIT, this.stepLimitText.getText());
+		preferences.put(RUN_TEST, String.valueOf(this.runTestButton.getSelection()));
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(LANUCH_CLASS, this.lanuchClassText.getText());
+		Activator.getDefault().getPreferenceStore().putValue(TEST_METHOD, this.testMethodText.getText());
 //		Activator.getDefault().getPreferenceStore().putValue(CLASS_NAME, this.classNameText.getText());
 //		Activator.getDefault().getPreferenceStore().putValue(LINE_NUMBER, this.lineNumberText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(RECORD_SNAPSHORT, String.valueOf(this.recordSnapshotButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(APPLY_ADVANCE_INSPECTOR, String.valueOf(this.advancedDetailInspectorButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(STEP_LIMIT, this.stepLimitText.getText());
+		Activator.getDefault().getPreferenceStore().putValue(RUN_TEST, String.valueOf(this.runTestButton.getSelection()));
 		
 		confirmChanges();
 		
@@ -201,11 +229,13 @@ public class MicrobatPreference extends PreferencePage implements
 	private void confirmChanges(){
 		Settings.projectName = this.projectCombo.getText();
 		Settings.lanuchClass = this.lanuchClassText.getText();
+		Settings.testMethod = this.testMethodText.getText();
 //		Settings.buggyClassName = this.classNameText.getText();
 //		Settings.buggyLineNumber = this.lineNumberText.getText();
 		Settings.isRecordSnapshot = this.recordSnapshotButton.getSelection();
 		Settings.isApplyAdvancedInspector = this.advancedDetailInspectorButton.getSelection();
 		Settings.stepLimit = Integer.valueOf(this.stepLimitText.getText());
+		Settings.isRunTest = this.runTestButton.getSelection();
 	}
 	
 	private String[] getProjectsInWorkspace(){
