@@ -119,16 +119,12 @@ public abstract class Executor {
 		
 		for(int i=0; i<stepRequestList.size(); i++) {
 			StepRequest stepRequest = stepRequestList.get(i);
-			boolean isEnabled = false;
-			while(!isEnabled) {
-				try {
-					stepRequest.setEnabled(stepSwitch.get(i));
-					isEnabled = true;
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			try {
+				stepRequest.setEnabled(stepSwitch.get(i));
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-			System.currentTimeMillis();
+//			System.currentTimeMillis();
 		}
 		methodEntryRequest.setEnabled(methodEntrySwtich);
 		methodExitRequest.setEnabled(methodExistSwtich);
