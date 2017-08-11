@@ -145,9 +145,6 @@ public class ExecutionStatementCollector extends Executor {
 						else if (event instanceof ExceptionEvent) {
 							System.currentTimeMillis();
 						} 
-//						else if (event instanceof BreakpointEvent) {
-//							System.currentTimeMillis();
-//						}
 					}
 
 					eventSet.resume();
