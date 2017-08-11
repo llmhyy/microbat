@@ -33,6 +33,7 @@ import com.sun.jdi.StringReference;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.event.BreakpointEvent;
 import com.sun.jdi.event.ClassPrepareEvent;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.EventQueue;
@@ -41,6 +42,7 @@ import com.sun.jdi.event.ExceptionEvent;
 import com.sun.jdi.event.MethodEntryEvent;
 import com.sun.jdi.event.MethodExitEvent;
 import com.sun.jdi.event.StepEvent;
+import com.sun.jdi.event.ThreadStartEvent;
 import com.sun.jdi.event.VMDeathEvent;
 import com.sun.jdi.event.VMDisconnectEvent;
 import com.sun.jdi.event.VMStartEvent;
@@ -293,18 +295,27 @@ public class ProgramExecutor extends Executor {
 				if (event instanceof VMStartEvent) {
 					System.out.println("JVM is started...");
 
-					addStepWatch(erm, event);
+					ThreadReference thread = ((VMStartEvent) event).thread();
+					addStepWatch(erm, thread);
 					addMethodWatch(erm);
 					addExceptionWatch(erm);
+					addThreadStartWatch(erm);
 					
 					if(isTestcaseEvaluation){
-						this.stepRequest.disable();
+						disableAllStepRequests();
 					}
 					else {
-						excludeJUnitLibs(this.stepRequest.isEnabled(), this.methodEntryRequest.isEnabled(), this.methodExitRequest.isEnabled(),
-								this.classPrepareRequest.isEnabled(), this.exceptionRequest.isEnabled());
+						excludeJUnitLibs();
 					}
 					
+				}
+				else if (event instanceof ThreadStartEvent) {
+					ThreadReference threadReference = ((ThreadStartEvent) event).thread();
+					if(!threadReference.name().equals("main")) {
+						addStepWatch(erm, threadReference);
+						excludeJUnitLibs();		
+						System.currentTimeMillis();
+					}
 				}
 				if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
 					stop = true;
@@ -465,10 +476,9 @@ public class ProgramExecutor extends Executor {
 						String declaringTypeName = method.declaringType().name();
 						//if(declaringTypeName.equals(appClassPath.getOptionalTestClass())){
 						if(declaringTypeName.contains("junit.framework.TestResult") && method.name().equals("startTest")) {
-							this.stepRequest.enable();
+							enableAllStepRequests();
 							isInRecording = true;
-							excludeJUnitLibs(this.stepRequest.isEnabled(), this.methodEntryRequest.isEnabled(), this.methodExitRequest.isEnabled(),
-									this.classPrepareRequest.isEnabled(), this.exceptionRequest.isEnabled());
+							excludeJUnitLibs();
 						}
 						else{
 							continue;
@@ -592,6 +602,9 @@ public class ProgramExecutor extends Executor {
 							caughtLocationForJustException = ee.catchLocation();
 						}						
 					}
+				}
+				else if (event instanceof BreakpointEvent) {
+					System.currentTimeMillis();
 				}
 			}
 
@@ -835,15 +848,15 @@ public class ProgramExecutor extends Executor {
 		getExceptionRequest().enable();
 	}
 
-	private void addStepWatch(EventRequestManager erm, Event event) {
-		stepRequest = erm.createStepRequest(((VMStartEvent) event).thread(), StepRequest.STEP_LINE,
-				StepRequest.STEP_INTO);
-		stepRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		for (String ex : libExcludes) {
-			stepRequest.addClassExclusionFilter(ex);
-		}
-		stepRequest.enable();
-	}
+//	private void addStepWatch(EventRequestManager erm, Event event) {
+//		stepRequest = erm.createStepRequest(((VMStartEvent) event).thread(), StepRequest.STEP_LINE,
+//				StepRequest.STEP_INTO);
+//		stepRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+//		for (String ex : libExcludes) {
+//			stepRequest.addClassExclusionFilter(ex);
+//		}
+//		stepRequest.enable();
+//	}
 
 	/**
 	 * when the last interesting stepping statement is a return statement,
@@ -1484,12 +1497,14 @@ public class ProgramExecutor extends Executor {
 		this.appPath = config;
 	}
 
-	public StepRequest getStepRequest() {
-		return stepRequest;
-	}
-
-	public void setStepRequest(StepRequest stepRequest) {
-		this.stepRequest = stepRequest;
+	public StepRequest getStepRequest(ThreadReference thread) {
+		for(StepRequest stepRequest: this.stepRequestList) {
+			if (stepRequest.thread().equals(thread)) {
+				return stepRequest;				
+			}
+		}
+		
+		return null;
 	}
 
 	public MethodEntryRequest getMethodEntryRequest() {

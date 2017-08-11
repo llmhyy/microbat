@@ -220,13 +220,13 @@ public class JavaUtil {
 		}
 		
 		boolean classPrepare = executor.getClassPrepareRequest().isEnabled();
-		boolean step = executor.getStepRequest().isEnabled();
+		boolean step = executor.getStepRequest(thread).isEnabled();
 		boolean methodEntry = executor.getMethodEntryRequest().isEnabled();
 		boolean methodExit = executor.getMethodExitRequset().isEnabled();
 		boolean exception = executor.getExceptionRequest().isEnabled();
 		
 		executor.getClassPrepareRequest().disable();
-		executor.getStepRequest().disable();
+		executor.getStepRequest(thread).disable();
 		executor.getMethodEntryRequest().disable();
 		executor.getMethodExitRequset().disable();
 		executor.getExceptionRequest().disable();
@@ -243,7 +243,7 @@ public class JavaUtil {
 		}
 		
 		executor.getClassPrepareRequest().setEnabled(classPrepare);
-		executor.getStepRequest().setEnabled(step);
+		executor.getStepRequest(thread).setEnabled(step);
 		executor.getMethodEntryRequest().setEnabled(methodEntry);;
 		executor.getMethodExitRequset().setEnabled(methodExit);;
 		executor.getExceptionRequest().setEnabled(exception);;
