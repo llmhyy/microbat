@@ -108,8 +108,8 @@ public class VariableValueExtractor {
 				List<Variable> allVisibleVariables = collectAllVariable(visibleVars, allFields);
 				bkp.setAllVisibleVariables(allVisibleVariables);
 				
-				//for (Variable bpVar : bkp.getReadVariables()) {
-				for (Variable bpVar : bkp.getAllVisibleVariables()) {
+				for (Variable bpVar : bkp.getReadVariables()) {
+				//for (Variable bpVar : bkp.getAllVisibleVariables()) {
 					// First check local variable
 					LocalVariable matchedLocalVariable = findMatchedLocalVariable(bpVar, visibleVars);
 					

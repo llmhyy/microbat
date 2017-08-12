@@ -1431,6 +1431,8 @@ public class ProgramExecutor extends Executor {
 
 		BreakPoint current = new BreakPoint(lastSteppingInPoint.getClassCanonicalName(), lastSteppingInPoint.getDeclaringCompilationUnitName(),
 				lastSteppingInPoint.getLineNumber());
+		current.setReadVariables(lastSteppingInPoint.getReadVariables());
+		current.setWrittenVariables(lastSteppingInPoint.getWrittenVariables());
 
 		BreakPointValue bkpVal = extractValuesAtLocation(current, thread, loc);
 
