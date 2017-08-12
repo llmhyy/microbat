@@ -73,13 +73,13 @@ public class ExecutionStatementCollector extends Executor {
 							} else {
 								this.methodEntryRequest.disable();
 								this.methodExitRequest.disable();
-								excludeJUnitLibs();
+//								excludeJUnitLibs();
 							}
 
 						} 
 						else if (event instanceof ThreadStartEvent) {
 							ThreadReference threadReference = ((ThreadStartEvent) event).thread();
-							if(!threadReference.name().equals("main")) {
+							if(hasValidThreadName(threadReference)) {
 								addStepWatch(erm, threadReference);
 								excludeJUnitLibs();		
 								System.currentTimeMillis();
