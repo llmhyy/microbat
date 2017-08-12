@@ -99,7 +99,7 @@ public class StartDebugHandler extends AbstractHandler {
 						monitor.beginTask("approximating efforts", 1);
 						
 						ExecutionStatementCollector collector = new ExecutionStatementCollector();
-						executingStatements = collector.collectBreakPoints(appClassPath, true);
+						executingStatements = collector.collectBreakPoints(appClassPath, Settings.isRunTest);
 						executionOrderList = collector.getExecutionOrderList();
 						stepNum = collector.getStepNum();
 						
