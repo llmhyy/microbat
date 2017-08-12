@@ -49,6 +49,7 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultAdvancedDetailInspector = Activator.getDefault().getPreferenceStore().getString(APPLY_ADVANCE_INSPECTOR);
 		this.defaultStepLimit = Activator.getDefault().getPreferenceStore().getString(STEP_LIMIT);
 		this.defaultRunTest = Activator.getDefault().getPreferenceStore().getString(RUN_TEST);
+		this.defaultVariableLayer = Activator.getDefault().getPreferenceStore().getString(VARIABLE_LAYER);
 	}
 	
 	public static final String TARGET_PORJECT = "targetProjectName";
@@ -60,6 +61,7 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String APPLY_ADVANCE_INSPECTOR = "applyAdvancedInspector";
 	public static final String TEST_METHOD = "testMethod";
 	public static final String RUN_TEST = "isRunTest";
+	public static final String VARIABLE_LAYER = "variableLayer";
 
 	
 	private Combo projectCombo;
@@ -68,6 +70,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Text classNameText;
 	private Text lineNumberText;
 	private Text stepLimitText;
+	private Text variableLayerText;
 	private Button recordSnapshotButton;
 	private Button advancedDetailInspectorButton;
 	private Button runTestButton;
@@ -77,6 +80,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultTestMethod = "";
 	private String defaultClassName = "";
 	private String defaultLineNumber = "";
+	private String defaultVariableLayer = "";
 	private String defaultStepLimit = "5000";
 	private String defaultRecordSnapshot = "true";
 	private String defaultAdvancedDetailInspector = "true";
@@ -126,6 +130,15 @@ public class MicrobatPreference extends PreferencePage implements
 		GridData stepLimitTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		stepLimitTextData.horizontalSpan = 2;
 		stepLimitText.setLayoutData(stepLimitTextData);
+		
+		Label variableLayerLabel = new Label(settingGroup, SWT.NONE);
+		variableLayerLabel.setText("Variable Layer: ");
+		variableLayerText = new Text(settingGroup, SWT.BORDER);
+		variableLayerText.setText(this.defaultVariableLayer);
+		GridData variableLayerTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		variableLayerTextData.horizontalSpan = 2;
+		variableLayerText.setLayoutData(variableLayerTextData);
+		variableLayerText.setToolTipText("how many layers of variable children does the debugger need to retrieve, -1 means infinite.");
 		
 		recordSnapshotButton = new Button(settingGroup, SWT.CHECK);
 		recordSnapshotButton.setText("Record snapshot");
@@ -208,6 +221,7 @@ public class MicrobatPreference extends PreferencePage implements
 		preferences.put(RECORD_SNAPSHORT, String.valueOf(this.recordSnapshotButton.getSelection()));
 		preferences.put(APPLY_ADVANCE_INSPECTOR, String.valueOf(this.advancedDetailInspectorButton.getSelection()));
 		preferences.put(STEP_LIMIT, this.stepLimitText.getText());
+		preferences.put(VARIABLE_LAYER, this.variableLayerText.getText());
 		preferences.put(RUN_TEST, String.valueOf(this.runTestButton.getSelection()));
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
@@ -218,6 +232,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Activator.getDefault().getPreferenceStore().putValue(RECORD_SNAPSHORT, String.valueOf(this.recordSnapshotButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(APPLY_ADVANCE_INSPECTOR, String.valueOf(this.advancedDetailInspectorButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(STEP_LIMIT, this.stepLimitText.getText());
+		Activator.getDefault().getPreferenceStore().putValue(VARIABLE_LAYER, this.variableLayerText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(RUN_TEST, String.valueOf(this.runTestButton.getSelection()));
 		
 		confirmChanges();
@@ -235,6 +250,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Settings.isRecordSnapshot = this.recordSnapshotButton.getSelection();
 		Settings.isApplyAdvancedInspector = this.advancedDetailInspectorButton.getSelection();
 		Settings.stepLimit = Integer.valueOf(this.stepLimitText.getText());
+		Settings.variableLayer = Integer.valueOf(this.variableLayerText.getText());
 		Settings.isRunTest = this.runTestButton.getSelection();
 	}
 	

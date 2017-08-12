@@ -24,6 +24,7 @@ public class Settings {
 	public static boolean isApplyAdvancedInspector;
 	public static boolean isRunTest;
 	public static int stepLimit;
+	public static Integer variableLayer;
 	
 	public static int referenceFieldLayerInString = 1;
 	
@@ -52,6 +53,8 @@ public class Settings {
 				if(stepLimit == 0){
 					stepLimit = 5000;
 				}
+				String varLayerString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.VARIABLE_LAYER);
+				variableLayer = Integer.valueOf(varLayerString);
 			}
 			catch(Exception e){
 				e.printStackTrace();
@@ -89,7 +92,5 @@ public class Settings {
 	public static HashMap<String, CompilationUnit> compilationUnitMap = new HashMap<>();
 	public static HashMap<String, ICompilationUnit> iCompilationUnitMap = new HashMap<>();
 	public static boolean enableLoopInference = true;
-	
-	
 	
 }
