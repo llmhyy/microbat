@@ -106,6 +106,14 @@ public class TraceNode{
 		return writtenCorrect && readCorrect;
 	}
 	
+	public String getMethodSign() {
+		return this.getBreakPoint().getMethodSign();
+	}
+	
+	public boolean isReturnNode() {
+		return this.getBreakPoint().isReturnStatement();
+	}
+	
 	public TraceNode findDataDominator(VarValue readVar) {
 		TraceNode dataDominator = null;
 		
