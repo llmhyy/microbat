@@ -12,9 +12,11 @@ import java.util.Stack;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdi.internal.VoidValueImpl;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import com.sun.jdi.AbsentInformationException;
@@ -33,14 +35,12 @@ import com.sun.jdi.StringReference;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 import com.sun.jdi.VirtualMachine;
-import com.sun.jdi.event.BreakpointEvent;
 import com.sun.jdi.event.ClassPrepareEvent;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.event.EventSet;
 import com.sun.jdi.event.ExceptionEvent;
 import com.sun.jdi.event.MethodEntryEvent;
-import com.sun.jdi.event.MethodExitEvent;
 import com.sun.jdi.event.StepEvent;
 import com.sun.jdi.event.ThreadStartEvent;
 import com.sun.jdi.event.VMDeathEvent;
@@ -93,7 +93,7 @@ import sav.strategies.dto.AppJavaClassPath;
  * 
  */
 @SuppressWarnings("restriction")
-public class ProgramExecutor extends Executor {
+public class ProgramExecutor0 extends Executor {
 	public static final long DEFAULT_TIMEOUT = -1;
 
 	/**
@@ -113,7 +113,7 @@ public class ProgramExecutor extends Executor {
 	 */
 	private Trace trace = new Trace();
 
-	public ProgramExecutor() {}
+	public ProgramExecutor0() {}
 
 	/**
 	 * Executing the program, each time of the execution, we catch a JVM event
@@ -144,6 +144,7 @@ public class ProgramExecutor extends Executor {
 		List<String> exlcudes = MicroBatUtil.extractExcludeFiles("", appPath.getExternalLibPaths());
 		this.addLibExcludeList(exlcudes);
 		this.brkpsMap = BreakpointUtils.initBrkpsMap(runningStatements);
+		assignMethodSignature(runningStatements, executionOrderList);
 
 		List<PointWrapper> wrapperList = convertToPointWrapperList(executionOrderList);
 		
@@ -158,6 +159,18 @@ public class ProgramExecutor extends Executor {
 			System.out.println("JVM is ended.");
 		}
 
+	}
+
+	private void assignMethodSignature(List<BreakPoint> runningStatements, List<BreakPoint> executionOrderList) {
+		HashMap<String, BreakPoint> map = new HashMap<>();
+		for(BreakPoint point: runningStatements) {
+			map.put(point.getDeclaringCompilationUnitName()+point.getLineNumber(), point);
+		}
+		
+		for(BreakPoint execution: executionOrderList) {
+			BreakPoint point = map.get(execution.getDeclaringCompilationUnitName()+execution.getLineNumber());
+			execution.setMethodSign(point.getMethodSign());
+		}
 	}
 
 	private List<PointWrapper> convertToPointWrapperList(List<BreakPoint> executionOrderList) {
@@ -196,6 +209,10 @@ public class ProgramExecutor extends Executor {
 		@Override
 		public String toString() {
 			return "PointWrapper [point=" + point + ", isHit=" + isHit + "]";
+		}
+		
+		public int getLineNumber() {
+			return this.point.getLineNumber();
 		}
 	}
 	
@@ -240,15 +257,6 @@ public class ProgramExecutor extends Executor {
 		BreakPoint lastSteppingInPoint = null;
 
 		/**
-		 * We support recoding the trace in two modes: normal mode and test case mode.
-		 * When in test case mode, a lot of method invocation from JUnit framework is useless,
-		 * so I need to skip some events from JUnit by this variable.
-		 */
-		boolean isInRecording = false;
-		
-		boolean isRecoverMethodRequest = false;
-		
-		/**
 		 * record the method entrance and exit so that I can build a
 		 * tree-structure for trace node.
 		 */
@@ -261,8 +269,7 @@ public class ProgramExecutor extends Executor {
 		 * nodes.
 		 */
 		TraceNode methodNodeJustPopedOut = null;
-		Value lastestReturnedValue = null;
-
+		
 		/** this variable is used to handle exception case. */
 		Location caughtLocationForJustException = null;
 
@@ -271,24 +278,16 @@ public class ProgramExecutor extends Executor {
 			EventSet eventSet;
 			try {
 				eventSet = eventQueue.remove(TIME_OUT);
-				if(isRecoverMethodRequest) {
-					this.methodEntryRequest.enable();
-					this.methodExitRequest.enable();
-					isRecoverMethodRequest = false;
-				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				break;
 			}
 			if (eventSet == null) {
 				System.out.println("Time out! Cannot get event set!");
+				System.out.println("method entry/exit enabled: " + this.methodEntryRequest.isEnabled() 
+				+ ", " + this.methodExitRequest.isEnabled());
 				eventTimeout = true;
 				break;
-			}
-
-			if (trace.getLastestNode() != null) {
-//				System.out.println("running into " + trace.getLastestNode());
-//				System.currentTimeMillis();
 			}
 
 			for (Event event : eventSet) {
@@ -305,13 +304,15 @@ public class ProgramExecutor extends Executor {
 						disableAllStepRequests();
 					}
 					else {
+						this.methodEntryRequest.disable();
+						this.methodExitRequest.disable();
 						excludeJUnitLibs();
 					}
 					
 				}
 				else if (event instanceof ThreadStartEvent) {
 					ThreadReference threadReference = ((ThreadStartEvent) event).thread();
-					if(hasValidThreadName(threadReference)) {
+					if(!threadReference.name().equals("main") && !threadReference.name().equals("DestroyJavaVM")) {
 						addStepWatch(erm, threadReference);
 //						excludeJUnitLibs();		
 						System.currentTimeMillis();
@@ -319,34 +320,32 @@ public class ProgramExecutor extends Executor {
 				}
 				if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
 					stop = true;
-					break;
+//					break;
 				} 
 				else if (event instanceof ClassPrepareEvent) {
 					parseBreakpoints(vm, (ClassPrepareEvent) event, locBrpMap);
-				} else if (event instanceof StepEvent) {
+				} 
+				else if (event instanceof StepEvent) {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
-
-//					System.out.println(currentLocation);
 					
-					this.methodEntryRequest.setEnabled(true);
-					this.methodExitRequest.setEnabled(true);
+					TraceNode latestNode = this.trace.getLastestNode();
+					if(latestNode!=null) {
+						TraceNode popupNode = buildMethodStructure(latestNode, executionOrderList, methodNodeStack, methodSignatureStack);
+						if(popupNode!=null) {
+							methodNodeJustPopedOut = popupNode;
+						}
+					}
 					
-					/**
-					 * collect the variable values after executing previous step
-					 */
 					boolean isContextChange = false;
 					if (lastSteppingInPoint != null) {
+						/**
+						 * collect the variable values after executing previous step
+						 */
 						collectValueOfPreviousStep(lastSteppingInPoint, thread, currentLocation);
-
+						
 						/**
 						 * Parsing the written variables of last step.
-						 * 
-						 * If the context changes, the value of some variables
-						 * may not be retrieved. Thus, the variable ID cannot be
-						 * generated. Note that the ID of a variable need
-						 * parsing its heap ID which can only be accessed by
-						 * runtime.
 						 */
 						isContextChange = checkContext(lastSteppingInPoint, currentLocation);
 						if (!isContextChange) {
@@ -358,22 +357,16 @@ public class ProgramExecutor extends Executor {
 					}
 
 					BreakPoint bkp = locBrpMap.get(currentLocation.toString());
-//					BreakPoint supposedBkp = null; 
-//					if(trace.size()<executionOrderList.size()) {
-//						supposedBkp = executionOrderList.get(trace.size()).getPoint();
-//					}
+					BreakPoint supposedBkp = null; 
+					if(trace.size()<executionOrderList.size()) {
+						supposedBkp = executionOrderList.get(trace.size()).getPoint();
+					}
 					/**
 					 * This step is an interesting step (sliced statement) in
 					 * our debugging process
 					 */
 					if (bkp != null /*&& bkp.equals(supposedBkp)*/) {
-						BreakPointValue bkpVal;
-						if(this.trace.getLastestNode() != null && !isContextChange){
-							bkpVal = this.trace.getLastestNode().getAfterStepInState();
-						}
-						else{
-							bkpVal = extractValuesAtLocation(bkp, thread, currentLocation);
-						}
+						BreakPointValue bkpVal = retrieveValue(this.trace.getLastestNode(), isContextChange, bkp, thread, currentLocation);
 						
 						TraceNode node = recordTrace(bkp, bkpVal);
 						
@@ -400,15 +393,12 @@ public class ProgramExecutor extends Executor {
 						 * come back from a method invocation ( i.e.,
 						 * lastestPopedOutMethodNode != null).
 						 */
-						Value returnedValue = null;
 						if (node != null && methodNodeJustPopedOut != null) {
 							methodNodeJustPopedOut.setStepOverNext(node);
 							methodNodeJustPopedOut.setAfterStepOverState(node.getProgramState());
-
 							node.setStepOverPrevious(methodNodeJustPopedOut);
 
 							methodNodeJustPopedOut = null;
-							returnedValue = lastestReturnedValue;
 						}
 
 						parseReadWrittenVariableInThisStep(thread, currentLocation, node,
@@ -420,8 +410,8 @@ public class ProgramExecutor extends Executor {
 						if (this.trace.size() > 1) {
 							TraceNode lastestNode = this.trace.getExectionList().get(this.trace.size() - 2);
 							if (lastestNode.getBreakPoint().isReturnStatement()) {
-								createVirutalVariableForReturnStatement(thread, node,
-										lastestNode, returnedValue);
+								//TODO get the written virtual variable of previous node
+								createVirutalVariableForReturnStatement(thread, node, lastestNode, null);
 							}
 						}
 
@@ -435,136 +425,25 @@ public class ProgramExecutor extends Executor {
 						stop = true;
 						break cancel;
 					}
-				} else if (event instanceof MethodEntryEvent) {
-					MethodEntryEvent mee = (MethodEntryEvent) event;
-					Method method = mee.method();
-//					System.out.println("enter " + method + ":" + ((MethodEntryEvent)event).location());
-					
-					if(lastSteppingInPoint!=null && lastSteppingInPoint.getLineNumber()==438){
-						System.currentTimeMillis();
-					}
-					
-					/**
-					 * See the explanation of isInRcording variable.
-					 */
-					if(isTestcaseEvaluation && !isInRecording){
+				} 
+				else if (event instanceof MethodEntryEvent) {
+					Method method = ((MethodEntryEvent) event).method();
+					// System.out.println(method.declaringType().name() + "." + method.name());
+
+					if (isTestcaseEvaluation) {
 						String declaringTypeName = method.declaringType().name();
-						//if(declaringTypeName.equals(appClassPath.getOptionalTestClass())){
-						if(declaringTypeName.contains("junit.framework.TestResult") && method.name().equals("startTest")) {
+						// if(appClassPath.getOptionalTestClass().equals(declaringTypeName)){
+						if (declaringTypeName.contains("junit.framework.TestResult")
+								&& method.name().equals("startTest")) {
 							enableAllStepRequests();
-							isInRecording = true;
+							this.methodEntryRequest.disable();
+							this.methodExitRequest.disable();
+
 							excludeJUnitLibs();
 						}
-						else{
-							continue;
-						}
 					}
-					
-					Location location = ((MethodEntryEvent) event).location();
-					if(method.name().equals("make")) {
-						System.currentTimeMillis();
-					}
-					
-					PointWrapper nextPoint = getNextPoint(executionOrderList);
-					if(isInterestedMethod(location, nextPoint)){
-						nextPoint.setHit(true);
-						TraceNode lastestNode = this.trace.getLastestNode();
-						if (lastestNode!=null) {
-							try {
-								if (!method.arguments().isEmpty()) {
-									StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
-									String path = location.sourcePath();
-									String declaringCompilationUnit = path.replace(".java", "");
-									declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar, '.');
-									
-									int methodLocationLine = method.location().lineNumber();
-									List<Param> paramList = parseParamList(method);
-									
-									parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
-											methodLocationLine, paramList, lastestNode);
-								}
-							} catch (AbsentInformationException e) {
-								e.printStackTrace();
-							}
-							
-							methodNodeStack.push(lastestNode);
-							String methodSignature = createSignature(method);
-							methodSignatureStack.push(methodSignature);
-						}
-						
-						System.currentTimeMillis();
-					}
-					else{
-						/**
-						 * It check whether a \<clint\> method is visited in 
-						 * previous method entry event. If yes, this variable will be set true. The reason is to
-						 * prevent JVM from being hanged. We observe that calling a \<clint\> method sometimes
-						 * hang the JVM, causing a JVM timeout exception. Therefore, once we meet such a method,
-						 * we try to skip.
-						 */
-						if(nextPoint!=null) {
-							if(nextPoint.isHit || method.name().equals("<clinit>") || 
-									isInSameMethod(trace.getLastestNode(), nextPoint)) {
-								this.methodEntryRequest.setEnabled(false);	
-								this.methodExitRequest.setEnabled(false);
-								
-								if(method.name().equals("<clinit>")) {
-									isRecoverMethodRequest = true;
-								}
-							}
-						}
-					}
-					
-
-				} else if (event instanceof MethodExitEvent) {
-					MethodExitEvent mee = (MethodExitEvent) event;
-					Method method = mee.method();
-//					System.out.println("exit " + method + ":" + ((MethodExitEvent)event).location());
-					
-					PointWrapper lastPoint = findCorrespondingPointWrapper(this.trace.getLastestNode(), executionOrderList);
-					//if(isInterestedMethod(method, this.brkpsMap)){
-					if(isInterestedMethod(((MethodExitEvent)event).location(),lastPoint)){
-						lastPoint.setHit(true);
-						String thisSig = createSignature(method);
-						if (!methodSignatureStack.isEmpty()) {
-							String peekSig = methodSignatureStack.peek();
-							//if (JavaUtil.isCompatibleMethodSignature(peekSig, thisSig)) {
-							if (peekSig.equals(thisSig)) {
-								TraceNode node = methodNodeStack.pop();
-								methodNodeJustPopedOut = node;
-								methodSignatureStack.pop();
-								lastestReturnedValue = mee.returnValue();
-							}
-							else {
-								int index = -1;
-								for(int i=methodSignatureStack.size()-1; i>=0; i--) {
-									String sig = methodSignatureStack.get(i);
-									if(sig.equals(thisSig)) {
-										index = i;
-										break;
-									}
-								}
-								
-								if(index != -1) {
-									int popNum = methodSignatureStack.size() - index;
-									for(int i=0; i<popNum; i++) {
-										TraceNode node = methodNodeStack.pop();
-										methodNodeJustPopedOut = node;
-										methodSignatureStack.pop();
-										lastestReturnedValue = mee.returnValue();
-									}
-								}
-							}
-						}
-					}
-					else{
-						if (lastPoint!=null && lastPoint.isHit) {
-							this.methodEntryRequest.setEnabled(false);	
-							this.methodExitRequest.setEnabled(false);							
-						}
-					}
-
-				} else if (event instanceof ExceptionEvent) {
+				} 
+				else if (event instanceof ExceptionEvent) {
 					ExceptionEvent ee = (ExceptionEvent) event;
 					Location catchLocation = ee.catchLocation();
 					TraceNode lastNode = this.trace.getLastestNode();
@@ -578,9 +457,7 @@ public class ProgramExecutor extends Executor {
 						}						
 					}
 				}
-				else if (event instanceof BreakpointEvent) {
-					System.currentTimeMillis();
-				}
+				
 			}
 
 			eventSet.resume();
@@ -588,7 +465,7 @@ public class ProgramExecutor extends Executor {
 		
 		return vm;
 	}
-	
+
 	private TraceNode popUpMethodCausedByException(Stack<TraceNode> methodNodeStack, Stack<String> methodSignatureStack,
 			TraceNode methodNodeJustPopedOut, Location caughtLocationForJustException) {
 		if (!methodNodeStack.isEmpty()) {
@@ -611,21 +488,271 @@ public class ProgramExecutor extends Executor {
 		return methodNodeJustPopedOut;
 	}
 
-	private boolean isInSameMethod(TraceNode lastestNode, PointWrapper wrapper) {
-		if(lastestNode==null || wrapper==null) {
+	private BreakPointValue retrieveValue(TraceNode lastestNode, boolean isContextChange, BreakPoint bkp,
+			ThreadReference thread, Location currentLocation) throws SavException {
+		BreakPointValue bkpVal = null;
+		if(this.trace.getLastestNode() != null && !isContextChange){
+			bkpVal = this.trace.getLastestNode().getAfterStepInState();
+		}
+		else{
+			bkpVal = extractValuesAtLocation(bkp, thread, currentLocation);
+		}
+		
+		return bkpVal;
+	}
+
+	private TraceNode buildMethodStructure(TraceNode latestNode, List<PointWrapper> executionOrderList, Stack<TraceNode> methodNodeStack,
+			Stack<String> methodSignatureStack) {
+		if (latestNode.getOrder()==56) {
+			System.currentTimeMillis();
+		}
+		
+		PointWrapper nextPoint = getNextPoint(executionOrderList);
+		if(nextPoint==null) {
+			return null;
+		}
+		
+		if (isInSameMethod(latestNode.getBreakPoint(), nextPoint.getPoint())) {
+			return null;
+		}
+		
+		if(isSurroundingMethodDifferentFromTheNext(latestNode, executionOrderList)) {
+			if(isValidExitingMethod(latestNode, executionOrderList)) {
+				if (!methodNodeStack.isEmpty()) {
+					int index = -1;
+					for(int i=methodNodeStack.size()-1; i>=0; i--) {
+						TraceNode node = methodNodeStack.get(i);
+						if(isInSameMethod(node.getBreakPoint(), nextPoint.getPoint())) {
+							index = i;
+							break;
+						}
+					}
+					
+					if(index != -1) {
+						TraceNode node = null;
+						int popNum = methodSignatureStack.size() - index;
+						for(int i=0; i<popNum; i++) {
+							node = methodNodeStack.pop();
+							methodSignatureStack.pop();
+//							methodNodeJustPopedOut = node;
+//							lastestReturnedValue = mee.returnValue();
+						}
+						return node;
+					}
+					
+					if(latestNode.isReturnNode()) {
+						//TODO keep the return value
+					}
+					
+					return null;
+				}
+			}
+			/**
+			 * entering a method
+			 */
+			else {
+				methodNodeStack.push(latestNode);
+				methodSignatureStack.push(latestNode.getMethodSign());
+				//TODO
+//				parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
+//						methodLocationLine, paramList, lastestNode);
+			}
+		}
+		
+		return null;
+	}
+	
+	private boolean isValidExitingMethod(TraceNode latestNode, List<PointWrapper> executionOrderList) {
+		if(latestNode.getOrder()==101) {
+			System.currentTimeMillis();
+		}
+		
+		if(isEndOfMethod(latestNode)) {
+			return true;
+		}
+		
+		PointWrapper nextPoint = getNextPoint(executionOrderList);
+		if(latestNode.isReturnNode()) {
+			if(nextPoint!=null) {
+				if(isNextPointInvokeMethodOfLatestNode(nextPoint, latestNode)) {
+					return true;
+				}
+				
+				if(!isNextPointTheFirstStatementOfAMethod(nextPoint)) {
+					return true;
+				}
+			}
+			else {
+				return true;				
+			}
+		}
+		
+		return false;
+	}
+
+	private boolean isNextPointTheFirstStatementOfAMethod(PointWrapper nextPoint) {
+		CompilationUnit cUnit = JavaUtil.findCompilationUnitInProject(nextPoint.getPoint().getDeclaringCompilationUnitName(), appPath);
+		MethodFinder finder = new MethodFinder(cUnit, nextPoint.getPoint().getLineNumber());
+		cUnit.accept(finder);
+		
+		MethodDeclaration methodDeclaration = finder.candidate;
+		if (methodDeclaration!=null) {
+			@SuppressWarnings("rawtypes")
+			List list = methodDeclaration.getBody().statements();
+			if(list != null && !list.isEmpty()) {
+				ASTNode node = (ASTNode) list.get(0);
+				int startLine = cUnit.getLineNumber(methodDeclaration.getStartPosition());
+				int endLine = cUnit.getLineNumber(node.getStartPosition()+node.getLength());
+				return startLine<=nextPoint.getPoint().getLineNumber() && nextPoint.getPoint().getLineNumber()<=endLine;
+			}
+			
+		}
+		
+		return true;
+	}
+
+	
+	class MethodInvocationFinder extends ASTVisitor{
+		CompilationUnit cUnit;
+		MethodDeclaration assumedInvokedMethod;
+		int invocationLine;
+		
+		boolean isInvoked = false;
+		
+		public MethodInvocationFinder(MethodDeclaration assumedInvokedMethod, 
+				CompilationUnit cUnit, int invocationLine) {
+			super();
+			this.assumedInvokedMethod = assumedInvokedMethod;
+			this.cUnit = cUnit;
+			this.invocationLine = invocationLine;
+		}
+		
+		@Override
+		public boolean visit(MethodDeclaration methodDeclaration) {
+			int start = cUnit.getLineNumber(methodDeclaration.getStartPosition());
+			int end = cUnit.getLineNumber(methodDeclaration.getStartPosition()+methodDeclaration.getLength());
+			if(start<=invocationLine&&invocationLine<=end) {
+				return true;
+			}
+			return false;
+		}
+
+		@Override
+		public boolean visit(MethodInvocation invocation) {
+			int start = cUnit.getLineNumber(invocation.getStartPosition());
+			int end = cUnit.getLineNumber(invocation.getStartPosition()+invocation.getLength());
+			if(start<=invocationLine&&invocationLine<=end) {
+				String methodName = assumedInvokedMethod.getName().getIdentifier();
+				int paramNum = assumedInvokedMethod.parameters().size();
+				if (invocation.getName().toString().equals(methodName) &&
+						paramNum==invocation.arguments().size()) {
+					isInvoked = true;
+					return false;
+				}
+			}
+			
+			return false;
+		}
+	}
+	
+	private boolean isNextPointInvokeMethodOfLatestNode(PointWrapper nextPoint, TraceNode latestNode) {
+		if (latestNode.getOrder()==30) {
+			System.currentTimeMillis();
+		}
+		
+		CompilationUnit assumedInvokingUnit = JavaUtil.findCompilationUnitInProject(nextPoint.getPoint().getDeclaringCompilationUnitName(), appPath);
+		if (nextPoint.getPoint()!=null) {
+			CompilationUnit invokedUnit = JavaUtil.findCompilationUnitInProject(latestNode.getDeclaringCompilationUnitName(), appPath);
+			MethodFinder finder = new MethodFinder(invokedUnit, latestNode.getLineNumber());
+			invokedUnit.accept(finder);
+			MethodDeclaration assumedInvokedMethod = finder.candidate;
+			
+			if (assumedInvokedMethod!=null) {
+				MethodInvocationFinder invocationFinder = 
+						new MethodInvocationFinder(assumedInvokedMethod, assumedInvokingUnit, nextPoint.getLineNumber());
+				assumedInvokingUnit.accept(invocationFinder);
+				return invocationFinder.isInvoked;					
+			}
+		}
+		
+		return false;
+	}
+
+	class MethodEndChecker extends ASTVisitor{
+		CompilationUnit cu;
+		TraceNode latestNode;
+		
+		boolean isMethodEnd = false;
+		
+		public MethodEndChecker(CompilationUnit cu, TraceNode latestNode) {
+			super();
+			this.cu = cu;
+			this.latestNode = latestNode;
+		}
+
+		public boolean visit(MethodDeclaration mDeclaration) {
+			int methodStart = cu.getLineNumber(mDeclaration.getStartPosition());
+			int methodEnd = cu.getLineNumber(mDeclaration.getStartPosition()+mDeclaration.getLength());
+			if(methodStart<=latestNode.getLineNumber() && latestNode.getLineNumber()<=methodEnd) {
+				if (methodEnd==latestNode.getLineNumber()) {
+					isMethodEnd = true;
+					return false;
+				}
+				
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+	}
+	
+	private boolean isEndOfMethod(TraceNode latestNode) {
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(latestNode.getDeclaringCompilationUnitName(), appPath);
+		MethodEndChecker checker = new MethodEndChecker(cu, latestNode);
+		cu.accept(checker);
+		
+		return checker.isMethodEnd;
+	}
+
+	private boolean isSurroundingMethodDifferentFromTheNext(TraceNode latestNode, List<PointWrapper> executionOrderList) {
+		BreakPoint nextPoint = getNextPoint(executionOrderList).getPoint();
+		if(nextPoint==null) {
+			return true;
+		}
+		
+		String surroundingMethod = latestNode.getMethodSign();
+		String nextSurrondingMethod = nextPoint.getMethodSign();
+		
+		if(surroundingMethod==null && nextSurrondingMethod==null) {
+			if (nextPoint.getDeclaringCompilationUnitName().equals(latestNode.getDeclaringCompilationUnitName())) {
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
+		else if(surroundingMethod!=null && nextSurrondingMethod!=null) {
+			return !surroundingMethod.equals(nextSurrondingMethod);
+		}
+		
+		return true;
+	}
+
+	private boolean isInSameMethod(BreakPoint point0, BreakPoint point1) {
+		if(point0==null || point1==null) {
 			return false;
 		}
 		
-		BreakPoint point = wrapper.getPoint();
 		
-		String latestMethod = lastestNode.getBreakPoint().getMethodSign();
-		String pointMethod = point.getMethodSign();
+		String latestMethod = point0.getMethodSign();
+		String pointMethod = point1.getMethodSign();
 		
 		if(latestMethod==null && pointMethod==null) {
-			return lastestNode.getBreakPoint().getClassCanonicalName().equals(point.getClassCanonicalName());
+			return point0.getClassCanonicalName().equals(point1.getClassCanonicalName());
 		}
 		else if(latestMethod!=null && pointMethod!=null) {
-			return lastestNode.getBreakPoint().getMethodSign().equals(point.getMethodSign());			
+			return point0.getMethodSign().equals(point1.getMethodSign());			
 		}
 		
 		return false;
@@ -792,9 +919,10 @@ public class ProgramExecutor extends Executor {
 						candidate = md;
 					}
 				}
+				return true;
 			}
 
-			return true;
+			return false;
 		}
 	}
 
@@ -1392,16 +1520,16 @@ public class ProgramExecutor extends Executor {
 			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appPath);
 			ExpressionParser.setParameters(cu, point.getLineNumber());
 			
-			Value val = null;
-			if (expression.contains("(")) {
-				val = retrieveComplicatedExpressionValue(expression, frame.virtualMachine(), frameGetter);
+			if(expression.contains("(")) {
+				
 			}
 			else {
-				val = ExpressionParser.evaluate(expression, frame.virtualMachine(), frameGetter);				
+				Value val = ExpressionParser.evaluate(expression, frame.virtualMachine(), frameGetter);
+				
+				eValue = new ExpressionValue(val, ExpressionParser.parentValue, null);
 			}
-			
-			eValue = new ExpressionValue(val, ExpressionParser.parentValue, null);
 
+			System.currentTimeMillis();
 
 		} catch (ParseException e) {
 //			e.printStackTrace();
@@ -1463,7 +1591,8 @@ public class ProgramExecutor extends Executor {
 			throws SavException {
 		if (Settings.isRecordSnapshot) {
 			try {
-				VariableValueExtractor extractor = new VariableValueExtractor(bkp, thread, loc, this);
+				//TODO null=>this
+				VariableValueExtractor extractor = new VariableValueExtractor(bkp, thread, loc, null);
 				BreakPointValue bpValue = extractor.extractValue();
 				return bpValue;
 
