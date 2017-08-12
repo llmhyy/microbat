@@ -108,8 +108,8 @@ public class VariableValueExtractor {
 				List<Variable> allVisibleVariables = collectAllVariable(visibleVars, allFields);
 				bkp.setAllVisibleVariables(allVisibleVariables);
 				
-				for (Variable bpVar : bkp.getReadVariables()) {
-				//for (Variable bpVar : bkp.getAllVisibleVariables()) {
+				//for (Variable bpVar : bkp.getReadVariables()) {
+				for (Variable bpVar : bkp.getAllVisibleVariables()) {
 					// First check local variable
 					LocalVariable matchedLocalVariable = findMatchedLocalVariable(bpVar, visibleVars);
 					
@@ -215,7 +215,11 @@ public class VariableValueExtractor {
 				LocalVar variable = new LocalVar(var.getName(), var.getType(), 
 						bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
 				System.currentTimeMillis();
-				appendVarVal(bkVal, variable, value, 1, thread, true);				
+				int level = Settings.variableLayer+1;
+				if(level == 0) {
+					level = -1;
+				}
+				appendVarVal(bkVal, variable, value, level, thread, true);				
 			}
 			
 		}
@@ -319,7 +323,10 @@ public class VariableValueExtractor {
 	 */
 	private void appendVarVal(VarValue parent, Variable variable, Value value, int level, 
 			ThreadReference thread, boolean isRoot) {
-		level++;
+		if(level==0) {
+			return;
+		}
+		level--;
 		
 		if (value == null) {
 			ReferenceValue val = new ReferenceValue(true, false, variable);
