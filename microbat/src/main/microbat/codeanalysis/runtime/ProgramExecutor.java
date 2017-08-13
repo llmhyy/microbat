@@ -111,7 +111,7 @@ public class ProgramExecutor extends Executor {
 	/**
 	 * for recording execution trace
 	 */
-	private Trace trace = new Trace();
+	private Trace trace;
 
 	public ProgramExecutor() {}
 
@@ -141,6 +141,7 @@ public class ProgramExecutor extends Executor {
 	 * @throws SavException
 	 */
 	public void run(List<BreakPoint> runningStatements, List<BreakPoint> executionOrderList, IProgressMonitor monitor, int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
+		this.trace = new Trace(appPath);
 		List<String> exlcudes = MicroBatUtil.extractExcludeFiles("", appPath.getExternalLibPaths());
 		this.addLibExcludeList(exlcudes);
 		this.brkpsMap = BreakpointUtils.initBrkpsMap(runningStatements);
