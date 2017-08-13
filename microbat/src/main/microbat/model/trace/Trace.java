@@ -20,6 +20,7 @@ import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
+import sav.strategies.dto.AppJavaClassPath;
 
 /**
  * This class stands for a trace for an execution
@@ -28,6 +29,11 @@ import microbat.util.Settings;
  */
 public class Trace {
 	private int observingIndex = -1;
+	private AppJavaClassPath appJavaClassPath;
+	
+	public Trace(AppJavaClassPath appJavaClassPath) {
+		this.setAppJavaClassPath(appJavaClassPath);
+	}
 	
 	/**
 	 * This variable indicate the time of user ask for recommendation, in addition, the check time is also used
@@ -381,7 +387,7 @@ public class Trace {
 	}
 
 	private void testAndAppendTryCatchControlFlow(TraceNode node) {
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(node.getClassCanonicalName(), null);
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(node.getClassCanonicalName(), this.appJavaClassPath);
 		if(cu == null) {
 			cu = JavaUtil.findCompiltionUnitBySourcePath(node.getBreakPoint().getFullJavaFilePath(), 
 					node.getDeclaringCompilationUnitName());
@@ -1045,5 +1051,13 @@ public class Trace {
 		}
 		
 		return locationMap;
+	}
+
+	public AppJavaClassPath getAppJavaClassPath() {
+		return appJavaClassPath;
+	}
+
+	public void setAppJavaClassPath(AppJavaClassPath appJavaClassPath) {
+		this.appJavaClassPath = appJavaClassPath;
 	}
 }
