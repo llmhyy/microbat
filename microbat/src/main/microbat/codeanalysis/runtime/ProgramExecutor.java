@@ -312,9 +312,9 @@ public class ProgramExecutor extends Executor {
 				else if (event instanceof ThreadStartEvent) {
 					ThreadReference threadReference = ((ThreadStartEvent) event).thread();
 					if(hasValidThreadName(threadReference)) {
-						addStepWatch(erm, threadReference);
+//						addStepWatch(erm, threadReference);
 //						excludeJUnitLibs();		
-						System.currentTimeMillis();
+//						System.currentTimeMillis();
 					}
 				}
 				if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {

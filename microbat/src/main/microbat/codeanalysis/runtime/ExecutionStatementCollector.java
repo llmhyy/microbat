@@ -36,6 +36,7 @@ import sav.strategies.dto.AppJavaClassPath;
 public class ExecutionStatementCollector extends Executor {
 
 	private boolean isOverLong = false;
+	private boolean isMultiThread = false;
 	private List<BreakPoint> executionOrderList = new ArrayList<>();
 
 	public List<BreakPoint> collectBreakPoints(AppJavaClassPath appClassPath, boolean isTestcaseEvaluation) {
@@ -80,8 +81,9 @@ public class ExecutionStatementCollector extends Executor {
 						else if (event instanceof ThreadStartEvent) {
 							ThreadReference threadReference = ((ThreadStartEvent) event).thread();
 							if(hasValidThreadName(threadReference)) {
-								addStepWatch(erm, threadReference);
-								excludeJUnitLibs();		
+//								addStepWatch(erm, threadReference);
+//								excludeJUnitLibs();	
+								setMultiThread(true);
 								System.currentTimeMillis();
 							}
 						}
@@ -269,6 +271,16 @@ public class ExecutionStatementCollector extends Executor {
 
 	public void setExecutionOrderList(List<BreakPoint> executionOrderList) {
 		this.executionOrderList = executionOrderList;
+	}
+
+
+	public boolean isMultiThread() {
+		return isMultiThread;
+	}
+
+
+	public void setMultiThread(boolean isMultiThread) {
+		this.isMultiThread = isMultiThread;
 	}
 
 }

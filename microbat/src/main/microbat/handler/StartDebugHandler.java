@@ -104,7 +104,11 @@ public class StartDebugHandler extends AbstractHandler {
 						stepNum = collector.getStepNum();
 						
 						System.out.println("There are " + stepNum + " steps for this run.");
-						monitor.worked(1);
+						if (collector.isMultiThread()) {
+							System.out.println("WARNING: It is multi-thread program, "
+									+ "the steps outside the main thread will be missed");
+						}
+						monitor.worked(1);		
 					}
 					finally{
 						monitor.done();
