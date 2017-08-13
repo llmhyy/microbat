@@ -11,6 +11,7 @@ import java.util.jar.JarFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -58,6 +59,16 @@ public class MicroBatUtil {
 				newPath = projectPath + newPath;
 				appClassPath.addClasspath(newPath);
 				appClassPath.addExternalLibPath(newPath);
+			}
+			else if (classpathEntry.getEntryKind()==IClasspathEntry.CPE_VARIABLE) {
+				String varName= classpathEntry.getPath().segment(0);
+				IPath path0 = JavaCore.getClasspathVariable(varName);
+				if(path0!=null) {
+					IPath newPath0 = path0.append(classpathEntry.getPath().removeFirstSegments(1));
+					String path = newPath0.toOSString();
+					appClassPath.addClasspath(path);
+					appClassPath.addExternalLibPath(path);
+				}
 			}
 		}
 		
