@@ -450,7 +450,7 @@ public class ProgramExecutor extends Executor {
 					if(isTestcaseEvaluation && !isInRecording){
 						String declaringTypeName = method.declaringType().name();
 						//if(declaringTypeName.equals(appClassPath.getOptionalTestClass())){
-						if(declaringTypeName.contains("junit.framework.TestResult") && method.name().equals("startTest")) {
+						if(isTagJUnitCall(declaringTypeName, method.name())) {
 							enableAllStepRequests();
 							isInRecording = true;
 							excludeJUnitLibs();

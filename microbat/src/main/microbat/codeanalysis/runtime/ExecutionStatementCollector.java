@@ -74,7 +74,6 @@ public class ExecutionStatementCollector extends Executor {
 							} else {
 								this.methodEntryRequest.disable();
 								this.methodExitRequest.disable();
-//								excludeJUnitLibs();
 							}
 
 						} 
@@ -90,12 +89,6 @@ public class ExecutionStatementCollector extends Executor {
 						else if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
 							connected = false;
 						} else if (event instanceof ClassPrepareEvent) {
-//							ClassPrepareEvent classPrepEvent = (ClassPrepareEvent) event;
-//							ReferenceType refType = classPrepEvent.referenceType();
-//							if(refType.sourceName().contains("RemoveUnusedVars")) {
-//								System.currentTimeMillis();
-//							}
-//							addBreakPointWatch(erm, refType, anchorPoint);
 						} else if (event instanceof StepEvent) {
 							StepEvent sEvent = (StepEvent) event;
 							Location location = sEvent.location();
@@ -108,10 +101,6 @@ public class ExecutionStatementCollector extends Executor {
 
 							BreakPoint breakPoint = new BreakPoint(location.declaringType().name(),
 									declaringCompilationUnit, lineNumber);
-							// System.out.println(breakPoint);
-							if(breakPoint.getDeclaringCompilationUnitName().contains("RemoveUnusedVars")) {
-								System.currentTimeMillis();
-							}
 
 							if (!isInTestRunner(breakPoint)) {
 								if (!pointList.contains(breakPoint)) {
@@ -129,17 +118,16 @@ public class ExecutionStatementCollector extends Executor {
 						} else if (event instanceof MethodEntryEvent) {
 							Method method = ((MethodEntryEvent) event).method();
 
-							// System.out.println(method.declaringType().name() + "." + method.name());
+//							System.out.println(method.declaringType().name() + "." + method.name());
 
 							if (isTestcaseEvaluation) {
 								String declaringTypeName = method.declaringType().name();
 								// if(appClassPath.getOptionalTestClass().equals(declaringTypeName)){
-								if (declaringTypeName.contains("junit.framework.TestResult")
-										&& method.name().equals("startTest")) {
+								if (isTagJUnitCall(declaringTypeName, method.name())) {
 									enableAllStepRequests();
+									Thread.sleep(5000);
 									this.methodEntryRequest.disable();
 									this.methodExitRequest.disable();
-
 									excludeJUnitLibs();
 								}
 							}

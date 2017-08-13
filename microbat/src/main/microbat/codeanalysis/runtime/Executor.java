@@ -193,4 +193,20 @@ public abstract class Executor {
 		
 		return val;
 	}
+	
+	/**
+	 * When analyzing a JUnit test case, we will not record the trace, until the target test
+	 * case is loaded. In order to see whether the target test case is loaded, there is specific
+	 * JUnit method is called. This method returns whether such the specific JUnit method
+	 * has been called. 
+	 * 
+	 * @param declareType
+	 * @param methodName
+	 * @return
+	 */
+	protected boolean isTagJUnitCall(String declareType, String methodName) {
+		return 
+			(declareType.contains("junit.framework.TestResult") && methodName.equals("startTest")) ||
+			(declareType.contains("org.junit.internal.runners.model.ReflectiveCallable") && methodName.equals("run"));
+	}
 }
