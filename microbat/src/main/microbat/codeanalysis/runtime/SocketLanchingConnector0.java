@@ -140,7 +140,7 @@ public class SocketLanchingConnector0 extends SocketLaunchingConnectorImpl {
 
 		// Add Main class.
 		execString += " " + fMain; //$NON-NLS-1$
-//		System.out.println(execString);
+		System.out.println(execString);
 		
 		// Start VM.
 		String[] cmdLine = DebugPlugin.parseArguments(execString);
