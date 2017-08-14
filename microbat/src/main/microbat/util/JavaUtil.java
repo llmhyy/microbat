@@ -422,7 +422,7 @@ public class JavaUtil {
 					}
 					
 				} catch (JavaModelException e1) {
-					e1.printStackTrace();
+					System.out.println(e1);
 				}
 			}
 		}
