@@ -14,12 +14,11 @@ import java.util.List;
 import java.util.Set;
 
 import microbat.codeanalysis.ast.LocalVariableScope;
-import microbat.model.BreakPointValue;
+import microbat.model.trace.Trace;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
-import microbat.util.Settings;
 
 /**
  * @author Yun Lin
@@ -60,7 +59,7 @@ public abstract class VarValue implements GraphNode{
 		
 	}
 	
-	public void setPrimitiveID(VarValue parent){
+	public void setPrimitiveID(VarValue parent, Trace trace){
 		if(isField()){
 			String varID = Variable.concanateFieldVarID(parent.getVarID(), getVarName());
 			setVarID(varID);
@@ -71,7 +70,7 @@ public abstract class VarValue implements GraphNode{
 		}
 		else if(isLocalVariable()){
 			LocalVar localVar = (LocalVar)this.variable;
-			LocalVariableScope scope = Settings.localVariableScopes.findScope(getVarName(), 
+			LocalVariableScope scope = trace.getLocalVariableScopes().findScope(getVarName(), 
 					localVar.getLineNumber(), localVar.getLocationClass());
 			
 			if(scope != null){

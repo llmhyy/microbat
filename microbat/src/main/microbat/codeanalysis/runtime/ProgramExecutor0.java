@@ -1317,7 +1317,7 @@ public class ProgramExecutor0 extends Executor {
 					}
 				} else {
 					if (var instanceof LocalVar) {
-						LocalVariableScope scope = Settings.localVariableScopes.findScope(var.getName(), node
+						LocalVariableScope scope = this.trace.getLocalVariableScopes().findScope(var.getName(), node
 								.getBreakPoint().getLineNumber(), node.getBreakPoint().getDeclaringCompilationUnitName());
 						String varID;
 						if (scope != null) {

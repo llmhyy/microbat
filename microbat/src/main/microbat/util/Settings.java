@@ -8,7 +8,6 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import microbat.Activator;
-import microbat.codeanalysis.ast.LocalVariableScopes;
 import microbat.handler.CheckingState;
 import microbat.model.UserInterestedVariables;
 import microbat.model.trace.PotentialCorrectPatternList;
@@ -75,12 +74,6 @@ public class Settings {
 	 */
 	public static HashSet<Integer> wrongPathNodeOrder = new HashSet<>();
 	
-	/**
-	 * This variable is to trace whether the variables in different lines are the same
-	 * local variable.
-	 */
-	public static LocalVariableScopes localVariableScopes = new LocalVariableScopes();
-
 	/**
 	 * This stack allow user to undo his checking operations.
 	 */

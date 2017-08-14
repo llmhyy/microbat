@@ -142,6 +142,11 @@ public class ProgramExecutor extends Executor {
 	 */
 	public void run(List<BreakPoint> runningStatements, List<BreakPoint> executionOrderList, IProgressMonitor monitor, int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
 		this.trace = new Trace(appPath);
+		
+		List<String> classScope = parseScope(runningStatements);
+		List<LocalVariableScope> lvsList = parseLocalVariables(classScope, this.appPath);
+		this.trace.getLocalVariableScopes().setVariableScopes(lvsList);
+		
 		List<String> exlcudes = MicroBatUtil.extractExcludeFiles("", appPath.getExternalLibPaths());
 		this.addLibExcludeList(exlcudes);
 		this.brkpsMap = BreakpointUtils.initBrkpsMap(runningStatements);
@@ -159,6 +164,27 @@ public class ProgramExecutor extends Executor {
 			System.out.println("JVM is ended.");
 		}
 
+	}
+	
+	/**
+	 * This method is used to build the scope of local variables.
+	 * @param classScope
+	 */
+	private List<LocalVariableScope> parseLocalVariables(final List<String> classScope, AppJavaClassPath appPath) {
+		VariableScopeParser vsParser = new VariableScopeParser();
+		vsParser.parseLocalVariableScopes(classScope, appPath);
+		List<LocalVariableScope> lvsList = vsParser.getVariableScopeList();
+		return lvsList;
+	}
+	
+	private List<String> parseScope(List<BreakPoint> breakpoints) {
+		List<String> classes = new ArrayList<>();
+		for(BreakPoint bp: breakpoints){
+			if(!classes.contains(bp.getDeclaringCompilationUnitName())){
+				classes.add(bp.getDeclaringCompilationUnitName());
+			}
+		}
+		return classes;
 	}
 
 	private List<PointWrapper> convertToPointWrapperList(List<BreakPoint> executionOrderList) {
@@ -1189,8 +1215,9 @@ public class ProgramExecutor extends Executor {
 					}
 				} else {
 					if (var instanceof LocalVar) {
-						LocalVariableScope scope = Settings.localVariableScopes.findScope(var.getName(), node
+						LocalVariableScope scope = this.trace.getLocalVariableScopes().findScope(var.getName(), node
 								.getBreakPoint().getLineNumber(), node.getBreakPoint().getDeclaringCompilationUnitName());
+						System.currentTimeMillis();
 						String varID;
 						if (scope != null) {
 							varID = Variable.concanateLocalVarID(node.getBreakPoint().getDeclaringCompilationUnitName(),
@@ -1314,7 +1341,6 @@ public class ProgramExecutor extends Executor {
 
 			VarValue varValue = generateVarValue(frame, readVar, node, Variable.READ);
 
-			System.currentTimeMillis();
 			if (varValue != null) {
 				node.addReadVariable(varValue);
 				String varID = varValue.getVarID();
@@ -1337,10 +1363,9 @@ public class ProgramExecutor extends Executor {
 
 	private void processWrittenVariable(TraceNode node, Map<String, StepVariableRelationEntry> stepVariableTable,
 			StackFrame frame) {
-		if (node.getOrder() == 285) {
-			System.currentTimeMillis();
-		}
-		
+//		if (node.getOrder() == 154) {
+//			System.currentTimeMillis();
+//		}
 		List<Variable> writtenVariables = node.getBreakPoint().getWrittenVariables();
 		for (Variable writtenVar : writtenVariables) {
 			VarValue varValue = generateVarValue(frame, writtenVar, node, Variable.WRITTEN);

@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
+import microbat.codeanalysis.ast.LocalVariableScopes;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.Scope;
@@ -30,6 +31,11 @@ import sav.strategies.dto.AppJavaClassPath;
 public class Trace {
 	private int observingIndex = -1;
 	private AppJavaClassPath appJavaClassPath;
+	/**
+	 * This variable is to trace whether the variables in different lines are the same
+	 * local variable.
+	 */
+	private LocalVariableScopes localVariableScopes = new LocalVariableScopes();
 	
 	public Trace(AppJavaClassPath appJavaClassPath) {
 		this.setAppJavaClassPath(appJavaClassPath);
@@ -1059,5 +1065,13 @@ public class Trace {
 
 	public void setAppJavaClassPath(AppJavaClassPath appJavaClassPath) {
 		this.appJavaClassPath = appJavaClassPath;
+	}
+
+	public LocalVariableScopes getLocalVariableScopes() {
+		return localVariableScopes;
+	}
+
+	public void setLocalVariableScopes(LocalVariableScopes localVariableScopes) {
+		this.localVariableScopes = localVariableScopes;
 	}
 }

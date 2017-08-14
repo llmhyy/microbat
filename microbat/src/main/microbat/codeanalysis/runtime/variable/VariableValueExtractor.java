@@ -330,7 +330,7 @@ public class VariableValueExtractor {
 		
 		if (value == null) {
 			ReferenceValue val = new ReferenceValue(true, false, variable);
-			val.setPrimitiveID(parent);
+			val.setPrimitiveID(parent, executor.getTrace());
 			
 			if(val.getVarID()!=null){
 				parent.addChild(val);
@@ -348,14 +348,14 @@ public class VariableValueExtractor {
 			if (type instanceof BooleanType) {
 				microbat.model.value.BooleanValue ele = 
 						new microbat.model.value.BooleanValue(((BooleanValue)value).booleanValue(), isRoot, variable);
-				ele.setPrimitiveID(parent);
+				ele.setPrimitiveID(parent, executor.getTrace());
 				if(ele.getVarID()!=null){
 					parent.addChild(ele);
 					ele.addParent(parent);				
 				}
 			} else {
 				PrimitiveValue ele = new PrimitiveValue(value.toString(), isRoot, variable);
-				ele.setPrimitiveID(parent);
+				ele.setPrimitiveID(parent, executor.getTrace());
 				if(ele.getVarID()!=null){
 					parent.addChild(ele);
 					ele.addParent(parent);				

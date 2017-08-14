@@ -254,7 +254,7 @@ public class SimulatedMicroBat {
 					throws SimulationFailException {
 		
 		Settings.interestedVariables.clear();
-		Settings.localVariableScopes.clear();
+//		Settings.localVariableScopes.clear();
 		Settings.potentialCorrectPatterns.clear();
 		
 		/**

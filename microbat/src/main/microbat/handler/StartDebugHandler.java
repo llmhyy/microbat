@@ -1,7 +1,6 @@
 package microbat.handler;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -22,8 +21,6 @@ import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReader;
 import microbat.behavior.BehaviorReporter;
-import microbat.codeanalysis.ast.LocalVariableScope;
-import microbat.codeanalysis.ast.VariableScopeParser;
 import microbat.codeanalysis.bytecode.BPVariableRetriever;
 import microbat.codeanalysis.runtime.ExecutionStatementCollector;
 import microbat.codeanalysis.runtime.ProgramExecutor;
@@ -44,7 +41,7 @@ public class StartDebugHandler extends AbstractHandler {
 	private void clearOldData(){
 		Settings.interestedVariables.clear();
 		Settings.wrongPathNodeOrder.clear();
-		Settings.localVariableScopes.clear();
+//		Settings.localVariableScopes.clear();
 		Settings.potentialCorrectPatterns.clear();
 		Settings.checkingStateStack.clear();
 		
@@ -136,10 +133,9 @@ public class StartDebugHandler extends AbstractHandler {
 							 * 1) Identifying the same local variable in different trace nodes.
 							 * 2) Generating variable ID for local variable.
 							 */
-							monitor.setTaskName("parse variable scopes");
-							
-							List<String> classScope = parseScope(runningStatements);
-							parseLocalVariables(classScope, appClassPath);
+//							monitor.setTaskName("parse variable scopes");
+//							List<String> classScope = parseScope(runningStatements);
+//							parseLocalVariables(classScope, appClassPath);
 							
 							if(runningStatements == null){
 								System.err.println("Cannot find any slice");
@@ -191,15 +187,15 @@ public class StartDebugHandler extends AbstractHandler {
 					return Status.OK_STATUS;
 				}
 
-				private List<String> parseScope(List<BreakPoint> breakpoints) {
-					List<String> classes = new ArrayList<>();
-					for(BreakPoint bp: breakpoints){
-						if(!classes.contains(bp.getDeclaringCompilationUnitName())){
-							classes.add(bp.getDeclaringCompilationUnitName());
-						}
-					}
-					return classes;
-				}
+//				private List<String> parseScope(List<BreakPoint> breakpoints) {
+//					List<String> classes = new ArrayList<>();
+//					for(BreakPoint bp: breakpoints){
+//						if(!classes.contains(bp.getDeclaringCompilationUnitName())){
+//							classes.add(bp.getDeclaringCompilationUnitName());
+//						}
+//					}
+//					return classes;
+//				}
 			};
 			job.schedule();
 			
@@ -250,13 +246,13 @@ public class StartDebugHandler extends AbstractHandler {
 	 * This method is used to build the scope of local variables.
 	 * @param classScope
 	 */
-	private void parseLocalVariables(final List<String> classScope, AppJavaClassPath appPath) {
-		VariableScopeParser vsParser = new VariableScopeParser();
-		vsParser.parseLocalVariableScopes(classScope, appPath);
-		List<LocalVariableScope> lvsList = vsParser.getVariableScopeList();
-//		System.out.println(lvsList);
-		Settings.localVariableScopes.setVariableScopes(lvsList);
-	}
+//	private void parseLocalVariables(final List<String> classScope, AppJavaClassPath appPath) {
+//		VariableScopeParser vsParser = new VariableScopeParser();
+//		vsParser.parseLocalVariableScopes(classScope, appPath);
+//		List<LocalVariableScope> lvsList = vsParser.getVariableScopeList();
+////		System.out.println(lvsList);
+//		Settings.localVariableScopes.setVariableScopes(lvsList);
+//	}
 	
 	
 //	@SuppressWarnings("restriction")
