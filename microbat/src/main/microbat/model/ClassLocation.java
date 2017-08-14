@@ -84,8 +84,8 @@ public class ClassLocation {
 		if(obj instanceof ClassLocation){
 			ClassLocation other = (ClassLocation) obj;
 			
-			return classCanonicalName.equals(other.getClassCanonicalName())
-					&& lineNo == other.getLineNumber();			
+			return classCanonicalName.equals(other.classCanonicalName)
+					&& lineNo == other.lineNo;			
 		}
 		
 		return false;

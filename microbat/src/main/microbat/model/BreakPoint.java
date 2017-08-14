@@ -105,9 +105,15 @@ public class BreakPoint extends ClassLocation {
 		if (obj == null)
 			return false;
 		
+		if(obj instanceof ClassLocation){
+			ClassLocation other = (ClassLocation) obj;
+			
+			return classCanonicalName.equals(other.getClassCanonicalName())
+					&& lineNo == other.getLineNumber();			
+		}
+		
 		if(obj instanceof BreakPoint){
 			BreakPoint other = (BreakPoint) obj;
-			
 			return declaringCompilationUnitName.equals(other.getDeclaringCompilationUnitName())
 					&& lineNo == other.getLineNumber();			
 		}
