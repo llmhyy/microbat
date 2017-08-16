@@ -1040,8 +1040,8 @@ public class ProgramExecutor extends Executor {
 					varID = varID + ":" + definingNodeOrder;
 					localVar.setVarID(varID);
 				} else {
-					System.err.println("cannot find the method when parsing parameter scope of " + localVar +
-							methodDeclaringCompilationUnit + "(line " + methodLocationLine +") ");
+//					System.err.println("cannot find the method when parsing parameter scope of " + localVar +
+//							methodDeclaringCompilationUnit + "(line " + methodLocationLine +") ");
 					System.currentTimeMillis();
 				}
 			}
@@ -1236,8 +1236,8 @@ public class ProgramExecutor extends Executor {
 						else if (var.getName().equals("this")) {
 							varID = String.valueOf(frame.thisObject().uniqueID());
 						} else {
-							System.err.println("the local variable " + var.getName()
-									+ " cannot find its scope to generate its id");
+//							System.err.println("the local variable " + var.getName()
+//									+ " cannot find its scope to generate its id");
 							return null;
 						}
 						var.setVarID(varID);
