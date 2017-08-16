@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -150,13 +151,22 @@ public class Trace {
 			
 			String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
 			String exp = combineTraceNodeExpression(className, lineNumber);
-			if(exp.equals(expression)){
-				resultIndex = i;
-				break;
+			if(StringUtils.isNumeric(expression)){
+				int order = Integer.valueOf(expression);
+				if(node.getOrder()==order){
+					resultIndex = i;
+					break;
+				}
 			}
-			else if(simpleClassName.equals(expression)){
-				if (resultIndex==-1) {
-					resultIndex = i;					
+			else{
+				if(exp.equals(expression)){
+					resultIndex = i;
+					break;
+				}
+				else if(simpleClassName.equals(expression)){
+					if (resultIndex==-1) {
+						resultIndex = i;					
+					}
 				}
 			}
 		}
@@ -178,13 +188,22 @@ public class Trace {
 			
 			String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
 			String exp = combineTraceNodeExpression(className, lineNumber);
-			if(exp.equals(expression)){
-				resultIndex = i;
-				break;
+			if(StringUtils.isNumeric(expression)){
+				int order = Integer.valueOf(expression);
+				if(node.getOrder()==order){
+					resultIndex = i;
+					break;
+				}
 			}
-			else if(simpleClassName.equals(expression)){
-				if (resultIndex==-1) {
-					resultIndex = i;					
+			else{
+				if(exp.equals(expression)){
+					resultIndex = i;
+					break;
+				}
+				else if(simpleClassName.equals(expression)){
+					if (resultIndex==-1) {
+						resultIndex = i;					
+					}
 				}
 			}
 		}
