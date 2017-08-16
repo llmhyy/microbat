@@ -107,7 +107,7 @@ public class ExecutionStatementCollector extends Executor {
 
 							BreakPoint breakPoint = new BreakPoint(location.declaringType().name(),
 									declaringCompilationUnit, lineNumber);
-							System.out.println(breakPoint);
+//							System.out.println(breakPoint);
 
 							if (!isInTestRunner(breakPoint)) {
 								if (!pointList.contains(breakPoint)) {

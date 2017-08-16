@@ -663,6 +663,10 @@ public class ProgramExecutor extends Executor {
 			return null;
 		}
 		
+		if(lastestNode.getOrder()>executionOrderList.size()) {
+			return null;
+		}
+		
 		return executionOrderList.get(lastestNode.getOrder()-1);
 	}
 
