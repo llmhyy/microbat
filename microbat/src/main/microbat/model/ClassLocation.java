@@ -97,6 +97,9 @@ public class ClassLocation {
 	}
 	
 	public String getMethodName() {
+		if(methodSign==null){
+			return null;
+		}
 		return SignatureUtils.extractMethodName(methodSign);
 	}
 
