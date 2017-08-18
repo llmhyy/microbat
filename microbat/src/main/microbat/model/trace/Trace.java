@@ -412,7 +412,7 @@ public class Trace {
 	}
 
 	private void testAndAppendTryCatchControlFlow(TraceNode node) {
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(node.getClassCanonicalName(), this.appJavaClassPath);
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(node.getDeclaringCompilationUnitName(), this.appJavaClassPath);
 		if(cu == null) {
 			cu = JavaUtil.findCompiltionUnitBySourcePath(node.getBreakPoint().getFullJavaFilePath(), 
 					node.getDeclaringCompilationUnitName());
@@ -482,6 +482,10 @@ public class Trace {
 	 * @return
 	 */
 	private boolean isContainedInScope(TraceNode node, Scope conditionScope) {
+		if(conditionScope==null){
+			return false;
+		}
+		
 		List<TraceNode> testingSet = new ArrayList<>();
 		testingSet.add(node);
 		List<TraceNode> invocationParents = node.findAllInvocationParents();
