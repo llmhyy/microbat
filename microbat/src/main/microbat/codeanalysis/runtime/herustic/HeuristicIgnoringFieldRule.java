@@ -2,8 +2,10 @@ package microbat.codeanalysis.runtime.herustic;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.ClassType;
@@ -31,6 +33,11 @@ public class HeuristicIgnoringFieldRule {
 	 * ignored in which class.
 	 */
 	private static Map<String, ArrayList<String>> ignoringMap = new HashMap<>();
+	
+	/**
+	 * specify special JDK class to parse its fields
+	 */
+	private static Set<String> isSpecialToRecordFieldSet = new HashSet<>();
 	
 	private static List<String> prefixExcludes = new ArrayList<>();
 	
@@ -70,6 +77,8 @@ public class HeuristicIgnoringFieldRule {
 		for(String exc: excArray){
 			prefixExcludes.add(exc);
 		}
+		
+		isSpecialToRecordFieldSet.add("java.lang.StringBuilder");
 	}
 	
 	public static boolean isForIgnore(ClassType type, Field field){
@@ -204,6 +213,10 @@ public class HeuristicIgnoringFieldRule {
 	 */
 	public static boolean isNeedParsingFields(ClassType type) {
 		String typeName = type.name();
+		
+		if(isSpecialToRecordFieldSet.contains(typeName)) {
+			return true;
+		}
 		
 		Boolean isNeed = parsingTypeMap.get(typeName);
 		if(isNeed == null){
