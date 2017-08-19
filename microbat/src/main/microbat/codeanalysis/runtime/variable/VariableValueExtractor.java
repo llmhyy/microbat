@@ -192,10 +192,15 @@ public class VariableValueExtractor {
 	protected void collectValue(BreakPointValue bkVal, ObjectReference objRef, ThreadReference thread,
 			Map<Variable, JDIParam> allVariables){
 		
+		int level = Settings.variableLayer+1;
+		if(level == 0) {
+			level = -1;
+		}
+		
 		if(objRef != null){
 			LocalVar variable = new LocalVar("this", objRef.type().toString(), 
 					bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
-			appendClassVarVal(bkVal, variable, objRef, 1, thread, true);			
+			appendClassVarVal(bkVal, variable, objRef, level, thread, true);			
 		}
 		
 		List<Variable> vars = new ArrayList<>(allVariables.keySet());
@@ -209,22 +214,19 @@ public class VariableValueExtractor {
 		for (Variable var : vars) {
 			JDIParam param = allVariables.get(var);
 			Value value = param.getValue();
-			boolean isField = (param.getField() != null);
+			//boolean isField = (param.getField() != null);
 			
-			if(!isField){
+			//if(!isField){
 				LocalVar variable = new LocalVar(var.getName(), var.getType(), 
 						bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
 				System.currentTimeMillis();
-				int level = Settings.variableLayer+1;
-				if(level == 0) {
-					level = -1;
-				}
+				
 				appendVarVal(bkVal, variable, value, level, thread, true);				
-			}
+			//}
 			
 		}
 		
-		System.currentTimeMillis();
+//		System.currentTimeMillis();
 	}
 	
 	protected String extractSubProperty(final String fullName) {
