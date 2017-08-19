@@ -115,7 +115,11 @@ public class VariableValueExtractor {
 					
 					JDIParam param = null;
 					if (matchedLocalVariable != null) {
-						param = recursiveMatch(frame, matchedLocalVariable, bpVar.getName());
+						try {
+							param = recursiveMatch(frame, matchedLocalVariable, bpVar.getName());							
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					} 
 					else {
 						// Then check class fields (static & non static)
