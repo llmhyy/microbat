@@ -250,7 +250,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Settings.isRecordSnapshot = this.recordSnapshotButton.getSelection();
 		Settings.isApplyAdvancedInspector = this.advancedDetailInspectorButton.getSelection();
 		Settings.stepLimit = Integer.valueOf(this.stepLimitText.getText());
-		Settings.variableLayer = Integer.valueOf(this.variableLayerText.getText());
+		Settings.setVariableLayer(Integer.valueOf(this.variableLayerText.getText()));
 		Settings.isRunTest = this.runTestButton.getSelection();
 	}
 	

@@ -23,7 +23,7 @@ public class Settings {
 	public static boolean isApplyAdvancedInspector;
 	public static boolean isRunTest;
 	public static int stepLimit;
-	public static Integer variableLayer;
+	private static Integer variableLayer;
 	
 	public static int referenceFieldLayerInString = 1;
 	
@@ -59,6 +59,18 @@ public class Settings {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public static int getVariableLayer(){
+		int level = Settings.variableLayer+1;
+		if(level == 0) {
+			level = -1;
+		}
+		return level;
+	}
+	
+	public static void setVariableLayer(Integer level){
+		variableLayer = level;
 	}
 	
 	public static PotentialCorrectPatternList potentialCorrectPatterns = new PotentialCorrectPatternList();

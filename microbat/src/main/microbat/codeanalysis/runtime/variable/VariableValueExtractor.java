@@ -196,11 +196,7 @@ public class VariableValueExtractor {
 	protected void collectValue(BreakPointValue bkVal, ObjectReference objRef, ThreadReference thread,
 			Map<Variable, JDIParam> allVariables){
 		
-		int level = Settings.variableLayer+1;
-		if(level == 0) {
-			level = -1;
-		}
-		
+		int level = Settings.getVariableLayer();
 		if(objRef != null){
 			LocalVar variable = new LocalVar("this", objRef.type().toString(), 
 					bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
@@ -327,40 +323,38 @@ public class VariableValueExtractor {
 	 * append execution value
 	 * 
 	 */
-	private void appendVarVal(VarValue parent, Variable variable, Value value, int level, 
+	public void appendVarVal(VarValue parent, Variable childVar, Value childVarValue, int level, 
 			ThreadReference thread, boolean isRoot) {
 		if(level==0) {
 			return;
 		}
 		level--;
 		
-		if (value == null) {
-			ReferenceValue val = new ReferenceValue(true, false, variable);
+		if (childVarValue == null) {
+			ReferenceValue val = new ReferenceValue(true, false, childVar);
 			val.setPrimitiveID(parent, executor.getTrace());
 			
 			if(val.getVarID()!=null){
 				parent.addChild(val);
 				val.addParent(parent);				
 			}
-			
-			
 			return;
 		}
 //		System.out.println(level);
 		
-		Type type = value.type();
+		Type type = childVarValue.type();
 		
 		if (type instanceof PrimitiveType) {
 			if (type instanceof BooleanType) {
 				microbat.model.value.BooleanValue ele = 
-						new microbat.model.value.BooleanValue(((BooleanValue)value).booleanValue(), isRoot, variable);
+						new microbat.model.value.BooleanValue(((BooleanValue)childVarValue).booleanValue(), isRoot, childVar);
 				ele.setPrimitiveID(parent, executor.getTrace());
 				if(ele.getVarID()!=null){
 					parent.addChild(ele);
 					ele.addParent(parent);				
 				}
 			} else {
-				PrimitiveValue ele = new PrimitiveValue(value.toString(), isRoot, variable);
+				PrimitiveValue ele = new PrimitiveValue(childVarValue.toString(), isRoot, childVar);
 				ele.setPrimitiveID(parent, executor.getTrace());
 				if(ele.getVarID()!=null){
 					parent.addChild(ele);
@@ -368,15 +362,15 @@ public class VariableValueExtractor {
 				}
 			}
 		} else if (type instanceof ArrayType) { 
-			appendArrVarVal(parent, variable, (ArrayReference)value, level, thread, isRoot);
+			appendArrVarVal(parent, childVar, (ArrayReference)childVarValue, level, thread, isRoot);
 		} else if (type instanceof ClassType) {
 			/**
 			 * if the class name is "String"
 			 */
 			if (PrimitiveUtils.isString(type.name())) {
-				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)value, thread);
-				StringValue ele = new StringValue(pValue, isRoot, variable);
-				ele.setVarID(String.valueOf(((ObjectReference)value).uniqueID()));
+				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)childVarValue, thread);
+				StringValue ele = new StringValue(pValue, isRoot, childVar);
+				ele.setVarID(String.valueOf(((ObjectReference)childVarValue).uniqueID()));
 				parent.addChild(ele);
 				ele.addParent(parent);
 			} 
@@ -384,9 +378,9 @@ public class VariableValueExtractor {
 			 * if the class name is "Integer", "Float", ...
 			 */
 			else if (PrimitiveUtils.isPrimitiveType(type.name())) {
-				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)value, thread);
-				PrimitiveValue ele = new PrimitiveValue(pValue, isRoot, variable);
-				ele.setVarID(String.valueOf(((ObjectReference)value).uniqueID()));
+				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)childVarValue, thread);
+				PrimitiveValue ele = new PrimitiveValue(pValue, isRoot, childVar);
+				ele.setVarID(String.valueOf(((ObjectReference)childVarValue).uniqueID()));
 				parent.addChild(ele);
 				ele.addParent(parent);
 			} 
@@ -394,7 +388,7 @@ public class VariableValueExtractor {
 			 * if the class is an arbitrary complicated class
 			 */
 			else {
-				appendClassVarVal(parent, variable, (ObjectReference) value, level, thread, isRoot);
+				appendClassVarVal(parent, childVar, (ObjectReference) childVarValue, level, thread, isRoot);
 			}
 		}
 		
@@ -418,7 +412,7 @@ public class VariableValueExtractor {
 	 * @param level
 	 * @param thread
 	 */
-	private void appendClassVarVal(VarValue parent, Variable variable, ObjectReference objRef, 
+	private void appendClassVarVal(VarValue parent, Variable childVar, ObjectReference objRef, 
 			int level, ThreadReference thread, boolean isRoot) {
 		ClassType type = (ClassType) objRef.type();
 		
@@ -429,7 +423,7 @@ public class VariableValueExtractor {
 		 */
 		ReferenceValue val = this.objectPool.get(refID);
 		if(val == null){
-			val = new ReferenceValue(false, refID, isRoot, variable);	
+			val = new ReferenceValue(false, refID, isRoot, childVar);	
 			this.objectPool.put(refID, val);
 			
 			boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);
@@ -478,9 +472,9 @@ public class VariableValueExtractor {
 		/**
 		 * handle the case of alias variable
 		 */
-		else if(!val.getVarName().equals(variable.getName())){
+		else if(!val.getVarName().equals(childVar.getName())){
 			ReferenceValue cachedValue = val/*.clone()*/;
-			val = new ReferenceValue(false, refID, isRoot, variable);	
+			val = new ReferenceValue(false, refID, isRoot, childVar);	
 			val.setChildren(cachedValue.getChildren());
 			for(VarValue child: cachedValue.getChildren()){
 				child.addParent(val);
