@@ -102,6 +102,11 @@ public class ExecutionStatementCollector extends Executor {
 								e.printStackTrace();
 								continue;
 							}
+							
+							if(lineNumber==-1){
+								continue;
+							}
+							
 							String declaringCompilationUnit = path.replace(".java", "");
 							declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar, '.');
 

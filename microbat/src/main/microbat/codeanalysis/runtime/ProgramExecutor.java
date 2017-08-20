@@ -354,6 +354,10 @@ public class ProgramExecutor extends Executor {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
 
+					if(currentLocation.lineNumber()==-1){
+						continue;
+					}
+					
 //					System.out.println(currentLocation);
 					
 					this.methodEntryRequest.setEnabled(true);
