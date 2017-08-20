@@ -1289,6 +1289,9 @@ public class ProgramExecutor extends Executor {
 					// ((PrimitiveValue)varValue).setStrVal(expValue.messageValue.toString());
 				}
 
+//				VariableValueExtractor extractor = 
+//						new VariableValueExtractor(null, frame.thread(), null, this);
+//				extractor.appendVarVal(varValue, var, value, Settings.getVariableLayer(), frame.thread(), true);
 				return varValue;
 			}
 		} catch (Exception e) {
