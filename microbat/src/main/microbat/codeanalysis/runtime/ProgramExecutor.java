@@ -471,16 +471,11 @@ public class ProgramExecutor extends Executor {
 					Method method = mee.method();
 //					System.out.println("enter " + method + ":" + ((MethodEntryEvent)event).location());
 					
-					if(lastSteppingInPoint!=null && lastSteppingInPoint.getLineNumber()==438){
-						System.currentTimeMillis();
-					}
-					
 					/**
 					 * See the explanation of isInRcording variable.
 					 */
 					if(isTestcaseEvaluation && !isInRecording){
 						String declaringTypeName = method.declaringType().name();
-						//if(declaringTypeName.equals(appClassPath.getOptionalTestClass())){
 						if(isTagJUnitCall(declaringTypeName, method.name())) {
 							enableAllStepRequests();
 							isInRecording = true;
@@ -492,10 +487,6 @@ public class ProgramExecutor extends Executor {
 					}
 					
 					Location location = ((MethodEntryEvent) event).location();
-					if(method.name().equals("make")) {
-						System.currentTimeMillis();
-					}
-					
 					PointWrapper nextPoint = getNextPoint(executionOrderList);
 					if(isInterestedMethod(location, nextPoint)){
 						nextPoint.setHit(true);
@@ -534,7 +525,7 @@ public class ProgramExecutor extends Executor {
 						 * we try to skip.
 						 */
 						if(nextPoint!=null) {
-							if(nextPoint.isHit || method.name().equals("<clinit>") || 
+							if(nextPoint.isHit || /*method.name().equals("<clinit>") ||*/ 
 									isInSameMethod(trace.getLastestNode(), nextPoint)) {
 								this.methodEntryRequest.setEnabled(false);	
 								this.methodExitRequest.setEnabled(false);
