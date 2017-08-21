@@ -63,7 +63,15 @@ public class ReadArrayElementRetriever extends ASTNodeRetriever{
 				}
 				
 			}
+			else{
+				String arrayElementName = access.toString();
+				if(!arrayElementNameList.contains(arrayElementName)){
+					arrayElementNameList.add(arrayElementName);							
+				}
+				return true;
+			}
 		}
+		System.currentTimeMillis();
 		return true;
 	}
 	
