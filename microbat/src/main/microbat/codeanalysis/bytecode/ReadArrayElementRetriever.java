@@ -24,10 +24,20 @@ public class ReadArrayElementRetriever extends ASTNodeRetriever{
 		this.typeName = typeName;
 	}
 	
+	private Expression retrieveName(ArrayAccess access){
+		Expression arrayExp = access.getArray();
+		while(arrayExp instanceof ArrayAccess){
+			ArrayAccess childAccess = (ArrayAccess)arrayExp;
+			arrayExp = childAccess.getArray();
+		}
+		
+		return arrayExp;
+	}
+	
 	public boolean visit(ArrayAccess access){
 		int linNum = cu.getLineNumber(access.getStartPosition());
 		if(linNum == lineNumber){
-			Expression arrayExp = access.getArray();
+			Expression arrayExp = retrieveName(access);
 			if(arrayExp instanceof Name){
 				Name name = (Name)arrayExp;
 				ITypeBinding typeBinding = name.resolveTypeBinding();
@@ -49,7 +59,7 @@ public class ReadArrayElementRetriever extends ASTNodeRetriever{
 					if(!arrayElementNameList.contains(arrayElementName)){
 						arrayElementNameList.add(arrayElementName);							
 					}
-					return false;
+					return true;
 				}
 				
 			}

@@ -211,10 +211,6 @@ public class LineNumberVisitor extends EmptyVisitor {
 				String typeSig = aIns.getType(pool).getSignature();
 				String typeName = SignatureUtils.signatureToName(typeSig);
 				
-				if(point.getLineNumber()==9){
-					System.currentTimeMillis();
-				}
-				
 				if(insHandle.getInstruction().getName().toLowerCase().contains("load")){
 					ReadArrayElementRetriever raeRetriever = new ReadArrayElementRetriever(cu, point.getLineNumber(), typeName);
 					cu.accept(raeRetriever);
