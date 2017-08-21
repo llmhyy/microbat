@@ -75,10 +75,6 @@ public class LineNumberVisitor extends EmptyVisitor {
 				List<InstructionHandle> correspondingInstructions = findCorrespondingInstructions(breakPoint.getLineNumber(), code);
 				
 				if(!correspondingInstructions.isEmpty()){
-					if(breakPoint.getLineNumber()==1594 && breakPoint.getDeclaringCompilationUnitName().contains("Abstract")) {
-						System.currentTimeMillis();
-					}
-					
 					String methodSig = breakPoint.getClassCanonicalName() + "." + method.getName() + method.getSignature();
 					breakPoint.setMethodSign(methodSig);
 					
