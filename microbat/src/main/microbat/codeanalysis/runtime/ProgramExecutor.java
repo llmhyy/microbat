@@ -1251,6 +1251,9 @@ public class ProgramExecutor extends Executor {
 						
 						if(objRef==null){
 							objRef = frame.thisObject();
+							if(objRef==null){
+								return null;
+							}
 						}
 
 						if (var instanceof FieldVar) {
@@ -1273,14 +1276,10 @@ public class ProgramExecutor extends Executor {
 							String indexValueString = indexValue.value.toString();
 							String varID = Variable.concanateArrayElementVarID(String.valueOf(objRef.uniqueID()),
 									indexValueString);
-							
-							System.currentTimeMillis();
 							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
 							varID = varID + ":" + definingNodeOrder;
-							// String varID = String.valueOf(objRef.uniqueID())
-							// + "[" + indexValueString + "]";
-
 							var.setVarID(varID);
+							
 						}
 					}
 
@@ -1346,10 +1345,6 @@ public class ProgramExecutor extends Executor {
 		
 		List<Variable> readVariables = node.getBreakPoint().getReadVariables();
 		for (Variable readVar : readVariables) {
-			if (node.getOrder() == 18) {
-				System.currentTimeMillis();
-			}
-
 			VarValue varValue = generateVarValue(frame, readVar, node, Variable.READ);
 
 			if (varValue != null) {

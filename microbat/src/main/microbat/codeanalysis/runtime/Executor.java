@@ -167,7 +167,7 @@ public abstract class Executor {
 		try {
 			val = ExpressionParser.evaluate(expr, vm, frameGetter);
 		} catch (ParseException e1) {
-			e1.printStackTrace();
+			//e1.printStackTrace();
 		} catch (InvocationException e1) {
 			e1.printStackTrace();
 		} catch (InvalidTypeException e1) {
