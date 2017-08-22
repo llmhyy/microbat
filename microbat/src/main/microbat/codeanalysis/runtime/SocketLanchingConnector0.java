@@ -159,7 +159,7 @@ public class SocketLanchingConnector0 extends SocketLaunchingConnectorImpl {
 		}
 
 		virtualMachine.setLaunchedProcess(proc);
-		virtualMachine.setRequestTimeout(60000);
+		virtualMachine.setRequestTimeout(ACCEPT_TIMEOUT);
 		return virtualMachine;
 	}
 
