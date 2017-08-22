@@ -525,7 +525,7 @@ public class ProgramExecutor extends Executor {
 						 * we try to skip.
 						 */
 						if(nextPoint!=null) {
-							if(nextPoint.isHit || /*method.name().equals("<clinit>") ||*/ 
+							if(nextPoint.isHit || method.name().equals("<clinit>") || 
 									isInSameMethod(trace.getLastestNode(), nextPoint)) {
 								this.methodEntryRequest.setEnabled(false);	
 								this.methodExitRequest.setEnabled(false);
