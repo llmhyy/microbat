@@ -142,6 +142,8 @@ public class VariableScopeParser {
 				if(startLine <= lineNumber && endLine >= lineNumber){
 					LocalVariableScope lvs = new LocalVariableScope(variableName, md);
 					variableScopeList.add(lvs);
+					
+					return true;
 				}
 				
 				return false;
@@ -149,7 +151,13 @@ public class VariableScopeParser {
 		});
 		
 		if(!variableScopeList.isEmpty()) {
-			return this.variableScopeList.get(0);			
+			LocalVariableScope minScope = this.variableScopeList.get(0);
+			for(LocalVariableScope scope: this.variableScopeList){
+				if(scope.getStartLine()>minScope.getStartLine() && scope.getEndLine()<minScope.getEndLine()){
+					minScope=scope;
+				}
+			}
+			return minScope;			
 		}
 		else {
 			return null;
