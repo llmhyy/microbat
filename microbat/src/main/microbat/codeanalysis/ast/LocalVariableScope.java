@@ -81,13 +81,18 @@ public class LocalVariableScope {
 		return (CompilationUnit)scope.getRoot();
 	}
 	
+	private String fullNameOfContainingClass;
+	
 	public String getFullNameOfContainingClass(){
-		CompilationUnit cu = getCompilationUnit();
-		PackageDeclaration pack = cu.getPackage();
-		AbstractTypeDeclaration type = (AbstractTypeDeclaration) cu.types().get(0);
+		if(fullNameOfContainingClass==null){
+			CompilationUnit cu = getCompilationUnit();
+			PackageDeclaration pack = cu.getPackage();
+			AbstractTypeDeclaration type = (AbstractTypeDeclaration) cu.types().get(0);
+			
+			fullNameOfContainingClass = pack.getName().getFullyQualifiedName() + "." + type.getName().getIdentifier();
+		}
 		
-		String fullName = pack.getName().getFullyQualifiedName() + "." + type.getName().getIdentifier();
-		return fullName;
+		return fullNameOfContainingClass;
 	}
 	
 	public String getContainingClass(){

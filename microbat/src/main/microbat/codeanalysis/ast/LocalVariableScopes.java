@@ -19,15 +19,13 @@ public class LocalVariableScopes {
 	public LocalVariableScope findScope(String variableName, int appearedLineNum, String fullQualifiedTypeName){
 		LocalVariableScope candScope = null;
 		
-		if(appearedLineNum == 60){
-			System.currentTimeMillis();
-		}
 		
 		for(LocalVariableScope scope: variableScopes){
-			AbstractTypeDeclaration td = (AbstractTypeDeclaration) scope.getCompilationUnit().types().get(0);
-			String packageName = scope.getCompilationUnit().getPackage().getName().getFullyQualifiedName();
-			String simpleName = td.getName().getIdentifier();
-			String typeName = packageName + "." + simpleName;
+//			AbstractTypeDeclaration td = (AbstractTypeDeclaration) scope.getCompilationUnit().types().get(0);
+//			String packageName = scope.getCompilationUnit().getPackage().getName().getFullyQualifiedName();
+//			String simpleName = td.getName().getIdentifier();
+//			String typeName = packageName + "." + simpleName;
+			String typeName = scope.getFullNameOfContainingClass();
 			
 			if(typeName.equals(fullQualifiedTypeName) && scope.getVariableName().equals(variableName) &&
 					appearedLineNum >= scope.getStartLine() && appearedLineNum <= scope.getEndLine()){
