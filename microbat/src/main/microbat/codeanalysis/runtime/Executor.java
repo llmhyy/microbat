@@ -35,7 +35,7 @@ public abstract class Executor {
 	
 	protected int steps = 0;
 	
-	public static int TIME_OUT = 100000;
+	public static int TIME_OUT = 30000;
 	
 	protected List<StepRequest> stepRequestList = new ArrayList<>();
 	protected MethodEntryRequest methodEntryRequest;
