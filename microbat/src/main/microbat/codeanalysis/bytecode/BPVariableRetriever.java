@@ -9,7 +9,6 @@ import java.util.Map;
 import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.DescendingVisitor;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
 import microbat.model.BreakPoint;
@@ -45,7 +44,7 @@ public class BPVariableRetriever {
 		/** current evaluation does not change line number, so we can keep the cache to speed up the progress */
 		if(!isForEvaluation){
 			Repository.clearCache();				
-			ClassPath classPath = new ClassPath(s);
+			ClassPath0 classPath = new ClassPath0(s);
 			Repository.setRepository(SyntheticRepository.getInstance(classPath));
 		}
 		Map<String, List<BreakPoint>> class2PointMap = summarize(executingStatements);
