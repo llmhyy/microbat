@@ -197,11 +197,11 @@ public class VariableValueExtractor {
 			Map<Variable, JDIParam> allVariables){
 		
 		int level = Settings.getVariableLayer();
-		if(objRef != null){
-			LocalVar variable = new LocalVar("this", objRef.type().toString(), 
-					bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
-			appendClassVarVal(bkVal, variable, objRef, level, thread, true);			
-		}
+//		if(objRef != null){
+//			LocalVar variable = new LocalVar("this", objRef.type().toString(), 
+//					bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
+//			appendClassVarVal(bkVal, variable, objRef, level, thread, true);			
+//		}
 		
 		List<Variable> vars = new ArrayList<>(allVariables.keySet());
 		Collections.sort(vars, new Comparator<Variable>() {
