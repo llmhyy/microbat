@@ -444,7 +444,6 @@ public class ProgramExecutor extends Executor {
 
 						parseReadWrittenVariableInThisStep(thread, currentLocation, node,
 								this.trace.getStepVariableTable(), Variable.READ);
-
 						/**
 						 * create virtual variable for return statement
 						 */
@@ -455,7 +454,7 @@ public class ProgramExecutor extends Executor {
 										lastestNode, returnedValue);
 							}
 						}
-
+						
 						lastSteppingInPoint = bkp;
 						
 						monitor.worked(1);
@@ -1203,9 +1202,8 @@ public class ProgramExecutor extends Executor {
 							ArrayReference arrayValue = (ArrayReference) objRef;
 							strValue = JavaUtil.retrieveStringValueOfArray(arrayValue);
 						} else {
-//							strValue = JavaUtil.retrieveToStringValue(frame.thread(), objRef, this);
-							strValue = JavaUtil.retrieveToStringValue(objRef, 
-									Settings.getVariableLayer(), frame.thread());
+							int layer = Settings.getVariableLayer();
+							strValue = JavaUtil.retrieveToStringValue(objRef, layer, frame.thread());
 						}
 
 						varValue = new ReferenceValue(false, false, var);
