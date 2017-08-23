@@ -1016,7 +1016,7 @@ public class ProgramExecutor0 extends Executor {
 			} else if (returnedValue instanceof ObjectReference) {
 //				returnedStringValue = JavaUtil.retrieveToStringValue(thread, (ObjectReference) returnedValue, this);
 				returnedStringValue = JavaUtil.retrieveToStringValue((ObjectReference)returnedValue, 
-						Settings.referenceFieldLayerInString, thread);
+						Settings.getVariableLayer(), thread);
 			}
 
 		}
@@ -1308,7 +1308,7 @@ public class ProgramExecutor0 extends Executor {
 						} else {
 //							strValue = JavaUtil.retrieveToStringValue(frame.thread(), objRef, this);
 							strValue = JavaUtil.retrieveToStringValue(objRef, 
-									Settings.referenceFieldLayerInString, frame.thread());
+									Settings.getVariableLayer(), frame.thread());
 						}
 
 						varValue = new ReferenceValue(false, false, var);

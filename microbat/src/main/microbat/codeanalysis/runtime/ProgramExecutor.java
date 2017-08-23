@@ -368,7 +368,7 @@ public class ProgramExecutor extends Executor {
 					 */
 					boolean isContextChange = false;
 					if (lastSteppingInPoint != null) {
-						collectValueOfPreviousStep(lastSteppingInPoint, thread, currentLocation);
+						//collectValueOfPreviousStep(lastSteppingInPoint, thread, currentLocation);
 
 						/**
 						 * Parsing the written variables of last step.
@@ -398,13 +398,13 @@ public class ProgramExecutor extends Executor {
 					 * our debugging process
 					 */
 					if (bkp != null /*&& bkp.equals(supposedBkp)*/) {
-						BreakPointValue bkpVal;
-						if(this.trace.getLastestNode() != null && !isContextChange){
-							bkpVal = this.trace.getLastestNode().getAfterStepInState();
-						}
-						else{
-							bkpVal = extractValuesAtLocation(bkp, thread, currentLocation);
-						}
+						BreakPointValue bkpVal = null;
+//						if(this.trace.getLastestNode() != null && !isContextChange){
+//							bkpVal = this.trace.getLastestNode().getAfterStepInState();
+//						}
+//						else{
+//							bkpVal = extractValuesAtLocation(bkp, thread, currentLocation);
+//						}
 						
 						TraceNode node = recordTrace(bkp, bkpVal);
 						
@@ -913,7 +913,7 @@ public class ProgramExecutor extends Executor {
 			} else if (returnedValue instanceof ObjectReference) {
 //				returnedStringValue = JavaUtil.retrieveToStringValue(thread, (ObjectReference) returnedValue, this);
 				returnedStringValue = JavaUtil.retrieveToStringValue((ObjectReference)returnedValue, 
-						Settings.referenceFieldLayerInString, thread);
+						Settings.getVariableLayer(), thread);
 			}
 
 		}
@@ -1205,7 +1205,7 @@ public class ProgramExecutor extends Executor {
 						} else {
 //							strValue = JavaUtil.retrieveToStringValue(frame.thread(), objRef, this);
 							strValue = JavaUtil.retrieveToStringValue(objRef, 
-									Settings.referenceFieldLayerInString, frame.thread());
+									Settings.getVariableLayer(), frame.thread());
 						}
 
 						varValue = new ReferenceValue(false, false, var);
