@@ -162,6 +162,8 @@ public abstract class Executor {
 		classPrepareRequest.disable();
 		boolean exceptionSwtich = exceptionRequest.isEnabled();
 		exceptionRequest.disable();
+		boolean threadSwith = threadStartRequest.isEnabled();
+		threadStartRequest.disable();
 		
 		Value val = null;
 		try {
@@ -182,6 +184,7 @@ public abstract class Executor {
 		methodExitRequest.setEnabled(methodExistSwtich);
 		classPrepareRequest.setEnabled(classPrepareSwtich);
 		exceptionRequest.setEnabled(exceptionSwtich);
+		threadStartRequest.setEnabled(threadSwith);
 		for(int i=0; i<stepRequestList.size(); i++) {
 			StepRequest stepRequest = stepRequestList.get(i);
 			try {

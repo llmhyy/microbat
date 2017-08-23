@@ -1417,7 +1417,12 @@ public class ProgramExecutor extends Executor {
 			
 			Value val = null;
 			if (expression.contains("(")) {
-				val = retrieveComplicatedExpressionValue(expression, frame.virtualMachine(), frameGetter);
+				if(expression.contains("[")) {
+					val = null;
+				}
+				else {
+					val = retrieveComplicatedExpressionValue(expression, frame.virtualMachine(), frameGetter);					
+				}
 			}
 			else {
 				val = ExpressionParser.evaluate(expression, frame.virtualMachine(), frameGetter);				
