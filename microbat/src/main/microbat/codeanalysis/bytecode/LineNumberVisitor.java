@@ -187,7 +187,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 					System.currentTimeMillis();
 				}
 				
-				if(variable != null && !variable.getName().equals("this")){
+				if(variable != null /*&& !variable.getName().equals("this")*/){
 					LocalVar var = new LocalVar(variable.getName(), SignatureUtils.signatureToName(variable.getSignature()), 
 							point.getDeclaringCompilationUnitName(), point.getLineNumber());
 					if(insHandle.getInstruction() instanceof IINC){
