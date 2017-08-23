@@ -33,7 +33,7 @@ public class TraceTest {
 		originalSettings.launchClass = Settings.lanuchClass;
 		originalSettings.isRecordSnapshort = Settings.isRecordSnapshot;
 		originalSettings.stepLimit = Settings.stepLimit;
-		originalSettings.referenceFieldLayerInString = Settings.referenceFieldLayerInString;
+		originalSettings.referenceFieldLayerInString = Settings.getVariableLayer();
 	}
 	
 	@After
@@ -42,7 +42,7 @@ public class TraceTest {
 		Settings.lanuchClass = originalSettings.launchClass;
 		Settings.isRecordSnapshot = originalSettings.isRecordSnapshort;
 		Settings.stepLimit = originalSettings.stepLimit;
-		Settings.referenceFieldLayerInString = originalSettings.referenceFieldLayerInString;
+		Settings.setVariableLayer(originalSettings.referenceFieldLayerInString);
 	}
 	
 	@Test

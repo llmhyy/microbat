@@ -137,6 +137,8 @@ public class JavaUtil {
 	}
 	
 	public static String retrieveToStringValue(ObjectReference objValue, int retrieveLayer, ThreadReference thread){
+		retrieveLayer--;
+		
 		ClassType type = (ClassType)objValue.type();
 		String typeName = type.name();
 		
@@ -156,6 +158,11 @@ public class JavaUtil {
 				return o1.name().compareTo(o2.name());
 			}
 		});
+		
+		boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);
+		if(!needParseFields){
+			retrieveLayer=1;
+		}
 		
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("[");
@@ -181,7 +188,7 @@ public class JavaUtil {
 							fieldValueString = fieldValue.toString();
 						}
 						else{
-							fieldValueString = retrieveToStringValue((ObjectReference)fieldValue, retrieveLayer-1, thread);
+							fieldValueString = retrieveToStringValue((ObjectReference)fieldValue, retrieveLayer, thread);
 						}
 					}
 					String fString = field.name() + "=" + fieldValueString + "; ";

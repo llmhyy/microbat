@@ -498,7 +498,7 @@ public class VariableValueExtractor {
 					stringValue = JavaUtil.retrieveStringValueOfArray((ArrayReference)value);
 				}
 				else{
-					stringValue = JavaUtil.retrieveToStringValue(objValue, Settings.referenceFieldLayerInString, thread);					
+					stringValue = JavaUtil.retrieveToStringValue(objValue, Settings.getVariableLayer(), thread);					
 				}
 				
 				val.setStringValue(stringValue);

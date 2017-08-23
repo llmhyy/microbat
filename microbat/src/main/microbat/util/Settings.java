@@ -25,7 +25,7 @@ public class Settings {
 	public static int stepLimit;
 	private static Integer variableLayer;
 	
-	public static int referenceFieldLayerInString = 1;
+//	public static int referenceFieldLayerInString = 1;
 	
 	public static int distribtionLayer = 3;
 	public static ImageUI imageUI = new ImageUI();
