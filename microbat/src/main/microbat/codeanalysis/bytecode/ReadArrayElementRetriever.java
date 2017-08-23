@@ -3,6 +3,7 @@ package microbat.codeanalysis.bytecode;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
@@ -35,8 +36,10 @@ public class ReadArrayElementRetriever extends ASTNodeRetriever{
 	}
 	
 	public boolean visit(ArrayAccess access){
-		int linNum = cu.getLineNumber(access.getStartPosition());
-		if(linNum == lineNumber){
+		ASTNode parent = access.getParent();
+		int startLine = cu.getLineNumber(parent.getStartPosition());
+		int endLine = cu.getLineNumber(parent.getStartPosition()+parent.getLength());
+		if(startLine<=lineNumber&&lineNumber<=endLine){
 			Expression arrayExp = retrieveName(access);
 			if(arrayExp instanceof Name){
 				Name name = (Name)arrayExp;
