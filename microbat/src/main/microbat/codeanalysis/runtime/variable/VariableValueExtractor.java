@@ -516,17 +516,11 @@ public class VariableValueExtractor {
 	private void appendArrVarVal(VarValue parent, Variable variable,
 			ArrayReference value, int level, ThreadReference thread, boolean isRoot) {
 		
-		if(variable.getName().equals("operators")){
-			System.currentTimeMillis();
-		}
-		
 		ArrayValue arrayVal = new ArrayValue(false, isRoot, variable);
-//		arrayVal.setValue(value);
 		String componentType = ((ArrayType)value.type()).componentTypeName();
 		arrayVal.setComponentType(componentType);
 		arrayVal.setReferenceID(value.uniqueID());
 		
-//		setMessageValue(thread, arrayVal);
 		
 		//add value of elements
 		List<Value> list = new ArrayList<>();

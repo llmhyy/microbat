@@ -4,6 +4,8 @@ import static sav.strategies.junit.SavJunitRunner.ENTER_TC_BKP;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,10 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
+import com.sun.jdi.ArrayType;
 import com.sun.jdi.ClassNotLoadedException;
+import com.sun.jdi.ClassType;
+import com.sun.jdi.Field;
 import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.InvalidTypeException;
 import com.sun.jdi.InvocationException;
@@ -56,6 +61,7 @@ import com.sun.jdi.request.StepRequest;
 
 import microbat.codeanalysis.ast.LocalVariableScope;
 import microbat.codeanalysis.ast.VariableScopeParser;
+import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
 import microbat.codeanalysis.runtime.jpda.expr.ParseException;
 import microbat.codeanalysis.runtime.variable.VariableValueExtractor;
@@ -64,6 +70,7 @@ import microbat.model.BreakPointValue;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.ArrayValue;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.StringValue;
@@ -104,7 +111,7 @@ public class ProgramExecutor extends Executor {
 	 * get the runtime values
 	 */
 	private AppJavaClassPath appPath;
-	
+
 	/** maps from a given class name to its contained breakpoints */
 	private Map<String, List<BreakPoint>> brkpsMap;
 
@@ -113,7 +120,8 @@ public class ProgramExecutor extends Executor {
 	 */
 	private Trace trace;
 
-	public ProgramExecutor() {}
+	public ProgramExecutor() {
+	}
 
 	/**
 	 * Executing the program, each time of the execution, we catch a JVM event
@@ -132,32 +140,34 @@ public class ProgramExecutor extends Executor {
 	 * See the field <code>trace</code> in this class.
 	 * 
 	 * <br>
-	 * The parameter of executionOrderList is used to make sure the trace is recorded as executionOrderList shows.
-	 * Different from when we record the executionOrderList, we will listen to method entry/exist event, which can
-	 * introduces some steps which executionOrderList does not record. In such case, we just focus on the part of trace
-	 * recorded by executionOrderList.
+	 * The parameter of executionOrderList is used to make sure the trace is
+	 * recorded as executionOrderList shows. Different from when we record the
+	 * executionOrderList, we will listen to method entry/exist event, which can
+	 * introduces some steps which executionOrderList does not record. In such
+	 * case, we just focus on the part of trace recorded by executionOrderList.
 	 * 
 	 * @param runningStatements
 	 * @throws SavException
 	 */
-	public void run(List<BreakPoint> runningStatements, List<BreakPoint> executionOrderList, IProgressMonitor monitor, int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
+	public void run(List<BreakPoint> runningStatements, List<BreakPoint> executionOrderList, IProgressMonitor monitor,
+			int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
 		this.trace = new Trace(appPath);
-		
+
 		List<String> classScope = parseScope(runningStatements);
 		List<LocalVariableScope> lvsList = parseLocalVariables(classScope, this.appPath);
 		this.trace.getLocalVariableScopes().setVariableScopes(lvsList);
-		
+
 		List<String> exlcudes = MicroBatUtil.extractExcludeFiles("", appPath.getExternalLibPaths());
 		this.addLibExcludeList(exlcudes);
 		this.brkpsMap = BreakpointUtils.initBrkpsMap(runningStatements);
 
 		List<PointWrapper> wrapperList = convertToPointWrapperList(executionOrderList);
-		
+
 		VirtualMachine vm = null;
 		try {
-			vm = constructTrace(monitor, wrapperList, this.appPath, stepNum, isTestcaseEvaluation);				
+			vm = constructTrace(monitor, wrapperList, this.appPath, stepNum, isTestcaseEvaluation);
 		} finally {
-			if(vm != null){
+			if (vm != null) {
 				vm.exit(0);
 			}
 			System.out.println();
@@ -165,9 +175,10 @@ public class ProgramExecutor extends Executor {
 		}
 
 	}
-	
+
 	/**
 	 * This method is used to build the scope of local variables.
+	 * 
 	 * @param classScope
 	 */
 	private List<LocalVariableScope> parseLocalVariables(final List<String> classScope, AppJavaClassPath appPath) {
@@ -176,11 +187,11 @@ public class ProgramExecutor extends Executor {
 		List<LocalVariableScope> lvsList = vsParser.getVariableScopeList();
 		return lvsList;
 	}
-	
+
 	private List<String> parseScope(List<BreakPoint> breakpoints) {
 		List<String> classes = new ArrayList<>();
-		for(BreakPoint bp: breakpoints){
-			if(!classes.contains(bp.getDeclaringCompilationUnitName())){
+		for (BreakPoint bp : breakpoints) {
+			if (!classes.contains(bp.getDeclaringCompilationUnitName())) {
 				classes.add(bp.getDeclaringCompilationUnitName());
 			}
 		}
@@ -189,17 +200,17 @@ public class ProgramExecutor extends Executor {
 
 	private List<PointWrapper> convertToPointWrapperList(List<BreakPoint> executionOrderList) {
 		List<PointWrapper> list = new ArrayList<>();
-		for(BreakPoint point: executionOrderList) {
+		for (BreakPoint point : executionOrderList) {
 			PointWrapper pWrapper = new PointWrapper(point);
 			list.add(pWrapper);
 		}
 		return list;
 	}
 
-	class PointWrapper{
+	class PointWrapper {
 		BreakPoint point;
 		boolean isHit = false;
-		
+
 		public PointWrapper(BreakPoint point) {
 			this.point = point;
 		}
@@ -225,12 +236,13 @@ public class ProgramExecutor extends Executor {
 			return "PointWrapper [point=" + point + ", isHit=" + isHit + "]";
 		}
 	}
-	
+
 	/**
-	 * The parameter of executionOrderList is used to make sure the trace is recorded as executionOrderList shows.
-	 * Different from when we record the executionOrderList, we will listen to method entry/exist event, which can
-	 * introduces some steps which executionOrderList does not record. In such case, we just focus on the part of trace
-	 * recorded by executionOrderList.
+	 * The parameter of executionOrderList is used to make sure the trace is
+	 * recorded as executionOrderList shows. Different from when we record the
+	 * executionOrderList, we will listen to method entry/exist event, which can
+	 * introduces some steps which executionOrderList does not record. In such
+	 * case, we just focus on the part of trace recorded by executionOrderList.
 	 * 
 	 * @param monitor
 	 * @param executionOrderList
@@ -241,12 +253,13 @@ public class ProgramExecutor extends Executor {
 	 * @throws SavException
 	 * @throws TimeoutException
 	 */
-	private VirtualMachine constructTrace(IProgressMonitor monitor, List<PointWrapper> executionOrderList, AppJavaClassPath appClassPath, 
-			int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
-		
+	private VirtualMachine constructTrace(IProgressMonitor monitor, List<PointWrapper> executionOrderList,
+			AppJavaClassPath appClassPath, int stepNum, boolean isTestcaseEvaluation)
+			throws SavException, TimeoutException {
+
 		/** start debugger */
 		VirtualMachine vm = new VMStarter(this.appPath).start();
-		
+
 		EventRequestManager erm = vm.eventRequestManager();
 
 		/** add class watch, otherwise, I cannot catch the registered event */
@@ -267,14 +280,15 @@ public class ProgramExecutor extends Executor {
 		BreakPoint lastSteppingInPoint = null;
 
 		/**
-		 * We support recoding the trace in two modes: normal mode and test case mode.
-		 * When in test case mode, a lot of method invocation from JUnit framework is useless,
-		 * so I need to skip some events from JUnit by this variable.
+		 * We support recoding the trace in two modes: normal mode and test case
+		 * mode. When in test case mode, a lot of method invocation from JUnit
+		 * framework is useless, so I need to skip some events from JUnit by
+		 * this variable.
 		 */
 		boolean isInRecording = false;
-		
+
 		boolean isRecoverMethodRequest = false;
-		
+
 		/**
 		 * record the method entrance and exit so that I can build a
 		 * tree-structure for trace node.
@@ -293,12 +307,11 @@ public class ProgramExecutor extends Executor {
 		/** this variable is used to handle exception case. */
 		Location caughtLocationForJustException = null;
 
-		cancel: 
-		while (!stop && !eventTimeout) {
+		cancel: while (!stop && !eventTimeout) {
 			EventSet eventSet;
 			try {
 				eventSet = eventQueue.remove(TIME_OUT);
-				if(isRecoverMethodRequest) {
+				if (isRecoverMethodRequest) {
 					this.methodEntryRequest.enable();
 					this.methodExitRequest.enable();
 					isRecoverMethodRequest = false;
@@ -314,8 +327,8 @@ public class ProgramExecutor extends Executor {
 			}
 
 			if (trace.getLastestNode() != null) {
-//				System.out.println("running into " + trace.getLastestNode());
-//				System.currentTimeMillis();
+				// System.out.println("running into " + trace.getLastestNode());
+				// System.currentTimeMillis();
 			}
 
 			for (Event event : eventSet) {
@@ -327,48 +340,46 @@ public class ProgramExecutor extends Executor {
 					addMethodWatch(erm);
 					addExceptionWatch(erm);
 					addThreadStartWatch(erm);
-					
-					if(isTestcaseEvaluation){
+
+					if (isTestcaseEvaluation) {
 						disableAllStepRequests();
-					}
-					else {
+					} else {
 						excludeJUnitLibs();
 					}
-					
-				}
-				else if (event instanceof ThreadStartEvent) {
+
+				} else if (event instanceof ThreadStartEvent) {
 					ThreadReference threadReference = ((ThreadStartEvent) event).thread();
-					if(hasValidThreadName(threadReference)) {
-//						addStepWatch(erm, threadReference);
-//						excludeJUnitLibs();		
-//						System.currentTimeMillis();
+					if (hasValidThreadName(threadReference)) {
+						// addStepWatch(erm, threadReference);
+						// excludeJUnitLibs();
+						// System.currentTimeMillis();
 					}
 				}
 				if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
 					stop = true;
 					break;
-				} 
-				else if (event instanceof ClassPrepareEvent) {
+				} else if (event instanceof ClassPrepareEvent) {
 					parseBreakpoints(vm, (ClassPrepareEvent) event, locBrpMap);
 				} else if (event instanceof StepEvent) {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
 
-					if(currentLocation.lineNumber()==-1){
+					if (currentLocation.lineNumber() == -1) {
 						continue;
 					}
-					
-//					System.out.println(currentLocation);
-					
+
+					// System.out.println(currentLocation);
+
 					this.methodEntryRequest.setEnabled(true);
 					this.methodExitRequest.setEnabled(true);
-					
+
 					/**
 					 * collect the variable values after executing previous step
 					 */
 					boolean isContextChange = false;
 					if (lastSteppingInPoint != null) {
-						collectValueOfPreviousStep(lastSteppingInPoint, thread, currentLocation);
+						// collectValueOfPreviousStep(lastSteppingInPoint,
+						// thread, currentLocation);
 
 						/**
 						 * Parsing the written variables of last step.
@@ -381,33 +392,37 @@ public class ProgramExecutor extends Executor {
 						 */
 						isContextChange = checkContext(lastSteppingInPoint, currentLocation);
 						if (!isContextChange) {
-							parseReadWrittenVariableInThisStep(thread, currentLocation,
-									this.trace.getLastestNode(), this.trace.getStepVariableTable(), Variable.WRITTEN);
+							parseReadWrittenVariableInThisStep(thread, currentLocation, this.trace.getLastestNode(),
+									this.trace.getStepVariableTable(), Variable.WRITTEN);
 						}
 
 						lastSteppingInPoint = null;
 					}
 
 					BreakPoint bkp = locBrpMap.get(currentLocation.toString());
-//					BreakPoint supposedBkp = null; 
-//					if(trace.size()<executionOrderList.size()) {
-//						supposedBkp = executionOrderList.get(trace.size()).getPoint();
-//					}
+					// BreakPoint supposedBkp = null;
+					// if(trace.size()<executionOrderList.size()) {
+					// supposedBkp =
+					// executionOrderList.get(trace.size()).getPoint();
+					// }
 					/**
 					 * This step is an interesting step (sliced statement) in
 					 * our debugging process
 					 */
-					if (bkp != null /*&& bkp.equals(supposedBkp)*/) {
+					if (bkp != null /* && bkp.equals(supposedBkp) */) {
 						BreakPointValue bkpVal = null;
-						if(this.trace.getLastestNode() != null && !isContextChange){
-							bkpVal = this.trace.getLastestNode().getAfterStepInState();
-						}
-						else{
-							bkpVal = extractValuesAtLocation(bkp, thread, currentLocation);
-						}
-						
+						// if(this.trace.getLastestNode() != null &&
+						// !isContextChange){
+						// bkpVal =
+						// this.trace.getLastestNode().getAfterStepInState();
+						// }
+						// else{
+						// bkpVal = extractValuesAtLocation(bkp, thread,
+						// currentLocation);
+						// }
+
 						TraceNode node = recordTrace(bkp, bkpVal);
-						
+
 						/**
 						 * pop up method after an exception is caught.
 						 */
@@ -450,16 +465,15 @@ public class ProgramExecutor extends Executor {
 						if (this.trace.size() > 1) {
 							TraceNode lastestNode = this.trace.getExectionList().get(this.trace.size() - 2);
 							if (lastestNode.getBreakPoint().isReturnStatement()) {
-								createVirutalVariableForReturnStatement(thread, node,
-										lastestNode, returnedValue);
+								createVirutalVariableForReturnStatement(thread, node, lastestNode, returnedValue);
 							}
 						}
-						
+
 						lastSteppingInPoint = bkp;
-						
+
 						monitor.worked(1);
 						printProgress(trace.size(), stepNum);
-					} 
+					}
 
 					if (monitor.isCanceled() || this.trace.getExectionList().size() >= Settings.stepLimit) {
 						stop = true;
@@ -468,107 +482,110 @@ public class ProgramExecutor extends Executor {
 				} else if (event instanceof MethodEntryEvent) {
 					MethodEntryEvent mee = (MethodEntryEvent) event;
 					Method method = mee.method();
-//					System.out.println("enter " + method + ":" + ((MethodEntryEvent)event).location());
-					
+					// System.out.println("enter " + method + ":" +
+					// ((MethodEntryEvent)event).location());
+
 					/**
 					 * See the explanation of isInRcording variable.
 					 */
-					if(isTestcaseEvaluation && !isInRecording){
+					if (isTestcaseEvaluation && !isInRecording) {
 						String declaringTypeName = method.declaringType().name();
-						if(isTagJUnitCall(declaringTypeName, method.name())) {
+						if (isTagJUnitCall(declaringTypeName, method.name())) {
 							enableAllStepRequests();
 							isInRecording = true;
 							excludeJUnitLibs();
-						}
-						else{
+						} else {
 							continue;
 						}
 					}
-					
+
 					Location location = ((MethodEntryEvent) event).location();
 					PointWrapper nextPoint = getNextPoint(executionOrderList);
-					if(isInterestedMethod(location, nextPoint)){
+					if (isInterestedMethod(location, nextPoint)) {
 						nextPoint.setHit(true);
 						TraceNode lastestNode = this.trace.getLastestNode();
-						if (lastestNode!=null) {
+						if (lastestNode != null) {
 							try {
 								if (!method.arguments().isEmpty()) {
 									StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
 									String path = location.sourcePath();
 									String declaringCompilationUnit = path.replace(".java", "");
-									declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar, '.');
-									
+									declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar,
+											'.');
+
 									int methodLocationLine = method.location().lineNumber();
 									List<Param> paramList = parseParamList(method);
-									
+
 									parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
 											methodLocationLine, paramList, lastestNode);
 								}
 							} catch (AbsentInformationException e) {
 								e.printStackTrace();
 							}
-							
+
 							methodNodeStack.push(lastestNode);
 							String methodSignature = createSignature(method);
 							methodSignatureStack.push(methodSignature);
 						}
-						
+
 						System.currentTimeMillis();
-					}
-					else{
+					} else {
 						/**
-						 * It check whether a \<clint\> method is visited in 
-						 * previous method entry event. If yes, this variable will be set true. The reason is to
-						 * prevent JVM from being hanged. We observe that calling a \<clint\> method sometimes
-						 * hang the JVM, causing a JVM timeout exception. Therefore, once we meet such a method,
-						 * we try to skip.
+						 * It check whether a \<clint\> method is visited in
+						 * previous method entry event. If yes, this variable
+						 * will be set true. The reason is to prevent JVM from
+						 * being hanged. We observe that calling a \<clint\>
+						 * method sometimes hang the JVM, causing a JVM timeout
+						 * exception. Therefore, once we meet such a method, we
+						 * try to skip.
 						 */
-						if(nextPoint!=null) {
-							if(nextPoint.isHit || method.name().equals("<clinit>") || 
-									isInSameMethod(trace.getLastestNode(), nextPoint)) {
-								this.methodEntryRequest.setEnabled(false);	
+						if (nextPoint != null) {
+							if (nextPoint.isHit || method.name().equals("<clinit>")
+									|| isInSameMethod(trace.getLastestNode(), nextPoint)) {
+								this.methodEntryRequest.setEnabled(false);
 								this.methodExitRequest.setEnabled(false);
-								
-								if(method.name().equals("<clinit>")) {
+
+								if (method.name().equals("<clinit>")) {
 									isRecoverMethodRequest = true;
 								}
 							}
 						}
 					}
-					
 
 				} else if (event instanceof MethodExitEvent) {
 					MethodExitEvent mee = (MethodExitEvent) event;
 					Method method = mee.method();
-//					System.out.println("exit " + method + ":" + ((MethodExitEvent)event).location());
-					
-					PointWrapper lastPoint = findCorrespondingPointWrapper(this.trace.getLastestNode(), executionOrderList);
-					//if(isInterestedMethod(method, this.brkpsMap)){
-					if(isInterestedMethod(((MethodExitEvent)event).location(),lastPoint)){
+					// System.out.println("exit " + method + ":" +
+					// ((MethodExitEvent)event).location());
+
+					PointWrapper lastPoint = findCorrespondingPointWrapper(this.trace.getLastestNode(),
+							executionOrderList);
+					// if(isInterestedMethod(method, this.brkpsMap)){
+					if (isInterestedMethod(((MethodExitEvent) event).location(), lastPoint)) {
 						lastPoint.setHit(true);
 						String thisSig = createSignature(method);
 						if (!methodSignatureStack.isEmpty()) {
 							String peekSig = methodSignatureStack.peek();
-							//if (JavaUtil.isCompatibleMethodSignature(peekSig, thisSig)) {
+							// if (JavaUtil.isCompatibleMethodSignature(peekSig,
+							// thisSig)) {
 							if (peekSig.equals(thisSig)) {
 								TraceNode node = methodNodeStack.pop();
 								methodNodeJustPopedOut = node;
 								methodSignatureStack.pop();
 								lastestReturnedValue = mee.returnValue();
-							}
-							else {
+							} else {
 								int index = -1;
-								for(int i=methodSignatureStack.size()-1; i>=0; i--) {
+								for (int i = methodSignatureStack.size() - 1; i >= 0; i--) {
 									String sig = methodSignatureStack.get(i);
-									if(sig.equals(thisSig)) {
+									if (sig.equals(thisSig)) {
 										index = i;
 										break;
 									}
 								}
-								
-								if(index != -1) {
+
+								if (index != -1) {
 									int popNum = methodSignatureStack.size() - index;
-									for(int i=0; i<popNum; i++) {
+									for (int i = 0; i < popNum; i++) {
 										TraceNode node = methodNodeStack.pop();
 										methodNodeJustPopedOut = node;
 										methodSignatureStack.pop();
@@ -577,11 +594,10 @@ public class ProgramExecutor extends Executor {
 								}
 							}
 						}
-					}
-					else{
-						if (lastPoint!=null && lastPoint.isHit) {
-							this.methodEntryRequest.setEnabled(false);	
-							this.methodExitRequest.setEnabled(false);							
+					} else {
+						if (lastPoint != null && lastPoint.isHit) {
+							this.methodEntryRequest.setEnabled(false);
+							this.methodExitRequest.setEnabled(false);
 						}
 					}
 
@@ -589,27 +605,26 @@ public class ProgramExecutor extends Executor {
 					ExceptionEvent ee = (ExceptionEvent) event;
 					Location catchLocation = ee.catchLocation();
 					TraceNode lastNode = this.trace.getLastestNode();
-					if(lastNode != null){
+					if (lastNode != null) {
 						lastNode.setException(true);
-						
+
 						if (catchLocation == null) {
 							stop = true;
 						} else {
 							caughtLocationForJustException = ee.catchLocation();
-						}						
+						}
 					}
-				}
-				else if (event instanceof BreakpointEvent) {
+				} else if (event instanceof BreakpointEvent) {
 					System.currentTimeMillis();
 				}
 			}
 
 			eventSet.resume();
 		}
-		
+
 		return vm;
 	}
-	
+
 	private TraceNode popUpMethodCausedByException(Stack<TraceNode> methodNodeStack, Stack<String> methodSignatureStack,
 			TraceNode methodNodeJustPopedOut, Location caughtLocationForJustException) {
 		if (!methodNodeStack.isEmpty()) {
@@ -633,109 +648,108 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private boolean isInSameMethod(TraceNode lastestNode, PointWrapper wrapper) {
-		if(lastestNode==null || wrapper==null) {
+		if (lastestNode == null || wrapper == null) {
 			return false;
 		}
-		
+
 		BreakPoint point = wrapper.getPoint();
-		
+
 		String latestMethod = lastestNode.getBreakPoint().getMethodSign();
 		String pointMethod = point.getMethodSign();
-		
-		if(latestMethod==null && pointMethod==null) {
+
+		if (latestMethod == null && pointMethod == null) {
 			return lastestNode.getBreakPoint().getClassCanonicalName().equals(point.getClassCanonicalName());
+		} else if (latestMethod != null && pointMethod != null) {
+			return lastestNode.getBreakPoint().getMethodSign().equals(point.getMethodSign());
 		}
-		else if(latestMethod!=null && pointMethod!=null) {
-			return lastestNode.getBreakPoint().getMethodSign().equals(point.getMethodSign());			
-		}
-		
+
 		return false;
 	}
 
 	private PointWrapper findCorrespondingPointWrapper(TraceNode lastestNode, List<PointWrapper> executionOrderList) {
-		if (lastestNode==null) {
+		if (lastestNode == null) {
 			return null;
 		}
-		
-		if(lastestNode.getOrder()>executionOrderList.size()) {
+
+		if (lastestNode.getOrder() > executionOrderList.size()) {
 			return null;
 		}
-		
-		return executionOrderList.get(lastestNode.getOrder()-1);
+
+		return executionOrderList.get(lastestNode.getOrder() - 1);
 	}
 
 	private PointWrapper getNextPoint(List<PointWrapper> executionOrderList) {
 		int index = trace.getExectionList().size();
-		if(index >= executionOrderList.size()) {
+		if (index >= executionOrderList.size()) {
 			return null;
 		}
-		
+
 		return executionOrderList.get(index);
 	}
 
 	private boolean isInterestedMethod(Location location, PointWrapper lastSteppingInPoint) {
-		
-		if(lastSteppingInPoint!=null) {
-			if(location.declaringType().toString().equals(lastSteppingInPoint.getPoint().getClassCanonicalName()) 
-					&& location.lineNumber()==lastSteppingInPoint.getPoint().getLineNumber()) {
+
+		if (lastSteppingInPoint != null) {
+			if (location.declaringType().toString().equals(lastSteppingInPoint.getPoint().getClassCanonicalName())
+					&& location.lineNumber() == lastSteppingInPoint.getPoint().getLineNumber()) {
 				return true;
-			}			
+			}
 		}
-		
+
 		return false;
 	}
 
-//	private boolean isInterestedMethod(Method method, Map<String, List<BreakPoint>> brkpsMap) {
-//		String className = method.declaringType().name();
-//		List<BreakPoint> recordedLines = brkpsMap.get(className);
-//		
-//		if(recordedLines!=null && !recordedLines.isEmpty()){
-//			try {
-//				List<Location> methodLocations = method.allLineLocations();
-//				
-//				for(Location location: methodLocations){
-//					int locationLine = location.lineNumber();
-//					
-//					for(BreakPoint point: recordedLines){
-//						if(point.getLineNumber()==locationLine){
-//							return true;
-//						}
-//					}
-//				}
-//			} catch (AbsentInformationException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//		
-//		return false;
-//	}
+	// private boolean isInterestedMethod(Method method, Map<String,
+	// List<BreakPoint>> brkpsMap) {
+	// String className = method.declaringType().name();
+	// List<BreakPoint> recordedLines = brkpsMap.get(className);
+	//
+	// if(recordedLines!=null && !recordedLines.isEmpty()){
+	// try {
+	// List<Location> methodLocations = method.allLineLocations();
+	//
+	// for(Location location: methodLocations){
+	// int locationLine = location.lineNumber();
+	//
+	// for(BreakPoint point: recordedLines){
+	// if(point.getLineNumber()==locationLine){
+	// return true;
+	// }
+	// }
+	// }
+	// } catch (AbsentInformationException e) {
+	// e.printStackTrace();
+	// }
+	// }
+	//
+	// return false;
+	// }
 
 	private void printProgress(int size, int stepNum) {
-		double progress = ((double)size)/stepNum;
-		
+		double progress = ((double) size) / stepNum;
+
 		double preProgr = 0;
-		if(size == 1){
+		if (size == 1) {
 			System.out.print("progress: ");
+		} else {
+			preProgr = ((double) (size - 1)) / stepNum;
 		}
-		else{
-			preProgr = ((double)(size-1))/stepNum;
-		}
-		
-		int prog = (int)(progress*100);
-		int preP = (int)(preProgr*100);
-		
+
+		int prog = (int) (progress * 100);
+		int preP = (int) (preProgr * 100);
+
 		int diff = prog - preP;
 		StringBuffer buffer = new StringBuffer();
-		for(int i=0; i<diff; i++){
+		for (int i = 0; i < diff; i++) {
 			buffer.append("=");
 		}
 		System.out.print(buffer.toString());
-		
-		int[] percentiles = {10, 20, 30, 40, 50, 60, 70, 80, 90};
-		for(int i=0; i<percentiles.length; i++){
+
+		int[] percentiles = { 10, 20, 30, 40, 50, 60, 70, 80, 90 };
+		for (int i = 0; i < percentiles.length; i++) {
 			int percentile = percentiles[i];
-			if(preP<percentile && percentile<=prog){
-				System.out.print(prog+"%");
+			if (preP < percentile && percentile <= prog) {
+				System.out.print(prog + "%");
 			}
 		}
 	}
@@ -870,15 +884,16 @@ public class ProgramExecutor extends Executor {
 		getExceptionRequest().enable();
 	}
 
-//	private void addStepWatch(EventRequestManager erm, Event event) {
-//		stepRequest = erm.createStepRequest(((VMStartEvent) event).thread(), StepRequest.STEP_LINE,
-//				StepRequest.STEP_INTO);
-//		stepRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-//		for (String ex : libExcludes) {
-//			stepRequest.addClassExclusionFilter(ex);
-//		}
-//		stepRequest.enable();
-//	}
+	// private void addStepWatch(EventRequestManager erm, Event event) {
+	// stepRequest = erm.createStepRequest(((VMStartEvent) event).thread(),
+	// StepRequest.STEP_LINE,
+	// StepRequest.STEP_INTO);
+	// stepRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+	// for (String ex : libExcludes) {
+	// stepRequest.addClassExclusionFilter(ex);
+	// }
+	// stepRequest.enable();
+	// }
 
 	/**
 	 * when the last interesting stepping statement is a return statement,
@@ -910,17 +925,18 @@ public class ProgramExecutor extends Executor {
 			} else if (returnedValue instanceof ArrayReference) {
 				returnedStringValue = JavaUtil.retrieveStringValueOfArray((ArrayReference) returnedValue);
 			} else if (returnedValue instanceof ObjectReference) {
-//				returnedStringValue = JavaUtil.retrieveToStringValue(thread, (ObjectReference) returnedValue, this);
-				returnedStringValue = JavaUtil.retrieveToStringValue((ObjectReference)returnedValue, 
+				// returnedStringValue = JavaUtil.retrieveToStringValue(thread,
+				// (ObjectReference) returnedValue, this);
+				returnedStringValue = JavaUtil.retrieveToStringValue((ObjectReference) returnedValue,
 						Settings.getVariableLayer(), thread);
 			}
 
 		}
 
 		String virID = VirtualVar.VIRTUAL_PREFIX + returnNode.getOrder();
-		
+
 		String virName = VirtualVar.VIRTUAL_PREFIX + getDeclaringMethod(returnNode);
-		
+
 		VirtualVar var = new VirtualVar(virName, returnedType);
 		var.setVarID(virID);
 
@@ -941,77 +957,75 @@ public class ProgramExecutor extends Executor {
 		map.put(var.getVarID(), entry);
 	}
 
-	class MethodNameRetriever extends ASTVisitor{
+	class MethodNameRetriever extends ASTVisitor {
 		MethodDeclaration innerMostMethod = null;
-		
+
 		CompilationUnit cu;
 		int lineNumber;
-		
-		public MethodNameRetriever(CompilationUnit cu, int lineNumber){
+
+		public MethodNameRetriever(CompilationUnit cu, int lineNumber) {
 			this.cu = cu;
 			this.lineNumber = lineNumber;
 		}
-		
-		public boolean visit(MethodDeclaration md){
+
+		public boolean visit(MethodDeclaration md) {
 			int start = cu.getLineNumber(md.getStartPosition());
-			int end = cu.getLineNumber(md.getStartPosition()+md.getLength());
-			
-			if(start <= lineNumber && lineNumber <= end){
-				if(innerMostMethod == null){
+			int end = cu.getLineNumber(md.getStartPosition() + md.getLength());
+
+			if (start <= lineNumber && lineNumber <= end) {
+				if (innerMostMethod == null) {
 					innerMostMethod = md;
-				}
-				else{
-					if(isMoreInner(md, innerMostMethod)){
+				} else {
+					if (isMoreInner(md, innerMostMethod)) {
 						innerMostMethod = md;
 					}
 				}
 				return true;
-			}
-			else{
+			} else {
 				return false;
 			}
 		}
 
 		private boolean isMoreInner(MethodDeclaration oldMD, MethodDeclaration newMD) {
 			int oldStart = cu.getLineNumber(oldMD.getStartPosition());
-			int oldEnd = cu.getLineNumber(oldMD.getStartPosition()+oldMD.getLength());
-			
+			int oldEnd = cu.getLineNumber(oldMD.getStartPosition() + oldMD.getLength());
+
 			int newStart = cu.getLineNumber(newMD.getStartPosition());
-			int newEnd = cu.getLineNumber(newMD.getStartPosition()+newMD.getLength());
-			
-			if(oldStart<=newStart && newEnd<=oldEnd){
+			int newEnd = cu.getLineNumber(newMD.getStartPosition() + newMD.getLength());
+
+			if (oldStart <= newStart && newEnd <= oldEnd) {
 				return true;
-			}
-			else{
-				return false;					
+			} else {
+				return false;
 			}
 		}
 	}
-	
+
 	private String getDeclaringMethod(TraceNode returnNode) {
 		int lineNumber = returnNode.getLineNumber();
 		String compilationUnitName = returnNode.getDeclaringCompilationUnitName();
 		final CompilationUnit cu = JavaUtil.findCompilationUnitInProject(compilationUnitName, appPath);
 		MethodNameRetriever retriever = new MethodNameRetriever(cu, lineNumber);
 		cu.accept(retriever);
-		
+
 		MethodDeclaration md = retriever.innerMostMethod;
-		
-		if(md != null){
+
+		if (md != null) {
 			String methodName = md.getName().getIdentifier();
 			return methodName;
-		}
-		else{
-			return compilationUnitName.substring(compilationUnitName.lastIndexOf(".")+1, compilationUnitName.length());
+		} else {
+			return compilationUnitName.substring(compilationUnitName.lastIndexOf(".") + 1,
+					compilationUnitName.length());
 		}
 	}
 
 	/**
 	 * build the written relations between method invocation
 	 */
-	private void parseWrittenParameterVariableForMethodInvocation(StackFrame frame, String methodDeclaringCompilationUnit,
-			int methodLocationLine, List<Param> paramList, TraceNode lastestNode) {
-		
+	private void parseWrittenParameterVariableForMethodInvocation(StackFrame frame,
+			String methodDeclaringCompilationUnit, int methodLocationLine, List<Param> paramList,
+			TraceNode lastestNode) {
+
 		for (Param param : paramList) {
 
 			if (frame == null) {
@@ -1021,26 +1035,27 @@ public class ProgramExecutor extends Executor {
 			Value value = JavaUtil.retriveExpression(frame, param.getName());
 			LocalVar localVar = new LocalVar(param.getName(), param.getType(),
 					lastestNode.getDeclaringCompilationUnitName(), lastestNode.getLineNumber());
-			
+
 			if (!(value instanceof ObjectReference) || value == null) {
 				VariableScopeParser parser = new VariableScopeParser();
 				LocalVariableScope scope = parser.parseMethodScope(methodDeclaringCompilationUnit, methodLocationLine,
 						localVar.getName(), appPath);
 				String varID;
 				if (scope != null) {
-					varID = Variable.concanateLocalVarID(methodDeclaringCompilationUnit, localVar.getName(), scope.getStartLine(),
-							scope.getEndLine());
+					varID = Variable.concanateLocalVarID(methodDeclaringCompilationUnit, localVar.getName(),
+							scope.getStartLine(), scope.getEndLine());
 					String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, lastestNode, varID);
 					varID = varID + ":" + definingNodeOrder;
 					localVar.setVarID(varID);
 				} else {
-//					System.err.println("cannot find the method when parsing parameter scope of " + localVar +
-//							methodDeclaringCompilationUnit + "(line " + methodLocationLine +") ");
+					// System.err.println("cannot find the method when parsing
+					// parameter scope of " + localVar +
+					// methodDeclaringCompilationUnit + "(line " +
+					// methodLocationLine +") ");
 					System.currentTimeMillis();
 				}
-			}
-			else{
-				ObjectReference ref = (ObjectReference)value;
+			} else {
+				ObjectReference ref = (ObjectReference) value;
 				String varID = String.valueOf(ref.uniqueID());
 				String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, lastestNode, varID);
 				varID = varID + ":" + definingNodeOrder;
@@ -1052,23 +1067,23 @@ public class ProgramExecutor extends Executor {
 				entry = new StepVariableRelationEntry(localVar.getVarID());
 				this.trace.getStepVariableTable().put(localVar.getVarID(), entry);
 			}
-			
-			if(entry != null) {
+
+			if (entry != null) {
 				entry.addAliasVariable(localVar);
 				entry.addProducer(lastestNode);
-				
+
 				VarValue varValue = null;
 				if (PrimitiveUtils.isPrimitiveType(param.getType())) {
-					if(value != null){
+					if (value != null) {
 						varValue = new PrimitiveValue(value.toString(), false, localVar);
 					}
-					
+
 				} else {
 					varValue = new ReferenceValue(true, false, localVar);
 				}
-				
-				if(varValue != null && varValue.getVarID()!=null){
-					lastestNode.addWrittenVariable(varValue);					
+
+				if (varValue != null && varValue.getVarID() != null) {
+					lastestNode.addWrittenVariable(varValue);
 				}
 			}
 		}
@@ -1076,14 +1091,13 @@ public class ProgramExecutor extends Executor {
 
 	private boolean checkContext(BreakPoint lastSteppingPoint, Location loc) {
 		String methodSign1 = lastSteppingPoint.getMethodSign();
-		if(methodSign1 == null){
+		if (methodSign1 == null) {
 			return true;
 		}
-		methodSign1 = methodSign1.substring(methodSign1.lastIndexOf(".") + 1, methodSign1.length());			
+		methodSign1 = methodSign1.substring(methodSign1.lastIndexOf(".") + 1, methodSign1.length());
 
 		String methodSign2 = loc.method().signature();
 		methodSign2 = loc.method().name() + methodSign2;
-		
 
 		String class1 = loc.declaringType().signature();
 		class1 = SignatureUtils.signatureToName(class1);
@@ -1096,8 +1110,8 @@ public class ProgramExecutor extends Executor {
 		}
 	}
 
-//	private MethodEntryRequest methodEntryRequest;
-//	private MethodExitRequest methodExitRequset;
+	// private MethodEntryRequest methodEntryRequest;
+	// private MethodExitRequest methodExitRequset;
 
 	/**
 	 * add method enter and exit event
@@ -1109,7 +1123,7 @@ public class ProgramExecutor extends Executor {
 		}
 		methodEntryRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
 		methodEntryRequest.enable();
-		
+
 		methodExitRequest = erm.createMethodExitRequest();
 		for (String classPattern : libExcludes) {
 			methodExitRequest.addClassExclusionFilter(classPattern);
@@ -1128,14 +1142,15 @@ public class ProgramExecutor extends Executor {
 		addClassWatch(erm, ENTER_TC_BKP.getClassCanonicalName());
 	}
 
-//	private ClassPrepareRequest classPrepareRequest;
+	// private ClassPrepareRequest classPrepareRequest;
 	private final void addClassWatch(EventRequestManager erm, String className) {
 		setClassPrepareRequest(erm.createClassPrepareRequest());
 		getClassPrepareRequest().addClassFilter(className);
 		getClassPrepareRequest().setEnabled(true);
 	}
 
-	private void parseBreakpoints(VirtualMachine vm, ClassPrepareEvent classPrepEvent, Map<String, BreakPoint> locBrpMap) {
+	private void parseBreakpoints(VirtualMachine vm, ClassPrepareEvent classPrepEvent,
+			Map<String, BreakPoint> locBrpMap) {
 		ReferenceType refType = classPrepEvent.referenceType();
 		List<BreakPoint> brkpList = CollectionUtils.initIfEmpty(brkpsMap.get(refType.name()));
 		for (BreakPoint brkp : brkpList) {
@@ -1163,7 +1178,66 @@ public class ProgramExecutor extends Executor {
 		return null;
 	}
 
-	private VarValue generateVarValue(StackFrame frame, Variable var0, TraceNode node, String accessType) {
+	private VarValue constructReferenceVarValue(ObjectReference objRef, Variable var, ThreadReference thread, BreakPoint point) {
+		VarValue varValue = new ReferenceValue(false, true, var);;
+		
+		ClassType type = (ClassType)objRef.type();
+		boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);
+		if(needParseFields){
+			Map<Field, Value> map = objRef.getValues(type.allFields());
+			List<Field> fieldList = new ArrayList<>(map.keySet());
+			Collections.sort(fieldList, new Comparator<Field>() {
+				@Override
+				public int compare(Field o1, Field o2) {
+					return o1.name().compareTo(o2.name());
+				}
+			});
+			
+			VariableValueExtractor extractor = new VariableValueExtractor(point, thread, null, this);
+			for(Field field: fieldList){
+				if(type.isEnum()){
+					String childTypeName = field.typeName();
+					if(childTypeName.equals(type.name())){
+						continue;
+					}
+				}
+				
+				boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(type, field);
+				if(!isIgnore){
+					FieldVar variable = new FieldVar(false, field.name(), field.typeName());
+					extractor.appendVarVal(varValue, variable, map.get(field), Settings.getVariableLayer(), thread, false);
+				}
+			}
+		}
+		
+		return varValue;
+	}
+	
+	private VarValue constructArrayVarValue(ArrayReference arrayValue, Variable var, ThreadReference thread,
+			BreakPoint point) {
+		ArrayValue arrayVal = new ArrayValue(false, true, var);
+		String componentType = ((ArrayType)arrayValue.type()).componentTypeName();
+		arrayVal.setComponentType(componentType);
+		arrayVal.setReferenceID(arrayValue.uniqueID());
+		
+		VariableValueExtractor extractor = new VariableValueExtractor(point, thread, null, this);
+		//add value of elements
+		List<Value> list = new ArrayList<>();
+		if(arrayValue.length() > 0){
+			list = arrayValue.getValues(0, arrayValue.length()); 
+		}
+		for(int i = 0; i < arrayValue.length(); i++){
+			String varName = String.valueOf(i);
+			Value elementValue = list.get(i);
+			
+			ArrayElementVar varElement = new ArrayElementVar(varName, componentType);
+			extractor.appendVarVal(arrayVal, varElement, elementValue, Settings.getVariableLayer(), thread, false);
+		}
+		
+		return arrayVal;
+	}
+
+	private VarValue generateVarValue(StackFrame frame, Variable var0, TraceNode node, String accessType, BreakPoint point) {
 		VarValue varValue = null;
 		/**
 		 * Note that the read/written variables in breakpoint should be
@@ -1174,125 +1248,125 @@ public class ProgramExecutor extends Executor {
 
 		try {
 			ExpressionValue expValue = retriveExpression(frame, varName, node.getBreakPoint());
+			if (expValue == null) {
+				return null;
+			}
 
-			// Field f = frame.thisObject().referenceType().allFields().get(0);
-			// frame.thisObject().getValue(f);
-			if (expValue != null) {
-				Value value = expValue.value;
+			Value value = expValue.value;
+			if (value instanceof ObjectReference) {
+				ObjectReference objRef = (ObjectReference) value;
+				String varID = String.valueOf(objRef.uniqueID());
 
-				if (value == null) {
-					System.currentTimeMillis();
-				}
+				String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
+				varID = varID + ":" + definingNodeOrder;
+				var.setVarID(varID);
 
-				if (value instanceof ObjectReference) {
-					ObjectReference objRef = (ObjectReference) value;
-					String varID = String.valueOf(objRef.uniqueID());
-
-					String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
-					varID = varID + ":" + definingNodeOrder;
-					var.setVarID(varID);
-
-					if (value.type().toString().equals("java.lang.String")) {
-						String strValue = value.toString();
-						strValue = strValue.substring(1, strValue.length() - 1);
-						varValue = new StringValue(strValue, false, var);
-					} else {
-						String strValue = "$Unknown$";
-						if (objRef instanceof ArrayReference) {
-							ArrayReference arrayValue = (ArrayReference) objRef;
-							strValue = JavaUtil.retrieveStringValueOfArray(arrayValue);
-						} else {
-							int layer = Settings.getVariableLayer();
-							strValue = JavaUtil.retrieveToStringValue(objRef, layer, frame.thread());
-						}
-
-						varValue = new ReferenceValue(false, false, var);
-						((ReferenceValue) varValue).setStringValue(strValue);
-						varValue.setChildren(null);
-					}
+				if (value.type().toString().equals("java.lang.String")) {
+					String strValue = value.toString();
+					strValue = strValue.substring(1, strValue.length() - 1);
+					varValue = new StringValue(strValue, false, var);
 				} else {
-					if (var instanceof LocalVar) {
-						LocalVariableScope scope = this.trace.getLocalVariableScopes().findScope(var.getName(), node
-								.getBreakPoint().getLineNumber(), node.getBreakPoint().getDeclaringCompilationUnitName());
-						System.currentTimeMillis();
-						String varID;
-						if (scope != null) {
-							varID = Variable.concanateLocalVarID(node.getBreakPoint().getDeclaringCompilationUnitName(),
-									var.getName(), scope.getStartLine(), scope.getEndLine());
-							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
-							varID = varID + ":" + definingNodeOrder;
+					if (objRef instanceof ArrayReference) {
+						ArrayReference arrayValue = (ArrayReference) objRef;
+						varValue = constructArrayVarValue(arrayValue, var, frame.thread(), point);
+					} else {
+						varValue = constructReferenceVarValue(objRef, var, frame.thread(), point);
+					}
+					
+					StringBuffer buffer = new StringBuffer();
+					buffer.append("[");
+					for(VarValue child: varValue.getChildren()){
+						buffer.append(child.getVarName() + "=" + child.getStringValue());
+						buffer.append(",");
+					}
+					buffer.append("]");
+					varValue.setStringValue(buffer.toString());
+				}
+			} 
+			/**
+			 * its a primitive type
+			 */
+			else {
+				/**
+				 * see whether its a local variable
+				 */
+				if (var instanceof LocalVar) {
+					LocalVariableScope scope = this.trace.getLocalVariableScopes().findScope(var.getName(),
+							node.getBreakPoint().getLineNumber(),
+							node.getBreakPoint().getDeclaringCompilationUnitName());
+					System.currentTimeMillis();
+					String varID;
+					if (scope != null) {
+						varID = Variable.concanateLocalVarID(node.getBreakPoint().getDeclaringCompilationUnitName(),
+								var.getName(), scope.getStartLine(), scope.getEndLine());
+						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
+						varID = varID + ":" + definingNodeOrder;
+					}
+					/**
+					 * it means that an implicit "this" variable is visited.
+					 */
+					else if (var.getName().equals("this")) {
+						varID = String.valueOf(frame.thisObject().uniqueID());
+					} else {
+						return null;
+					}
+					var.setVarID(varID);
+				} 
+				/**
+				 * It's a field or array element.
+				 */
+				else {
+					Value parentValue = expValue.parentValue;
+					ObjectReference objRef = (ObjectReference) parentValue;
+
+					if (objRef == null) {
+						objRef = null;
+						try {
+							objRef = frame.thisObject();
+						} catch (Exception e) {
 						}
-						/**
-						 * it means that an implicit "this" variable is visited.
-						 * 
-						 */
-						else if (var.getName().equals("this")) {
-							varID = String.valueOf(frame.thisObject().uniqueID());
-						} else {
-//							System.err.println("the local variable " + var.getName()
-//									+ " cannot find its scope to generate its id");
+						if (objRef == null) {
 							return null;
 						}
-						var.setVarID(varID);
-					} else {
-						Value parentValue = expValue.parentValue;
-						ObjectReference objRef = (ObjectReference) parentValue;
-						
-						if(objRef==null){
-							objRef = null;
-							try{
-								objRef = frame.thisObject();
-							}
-							catch(Exception e){
-							}
-							if(objRef==null){
-								return null;
-							}
-						}
-
-						if (var instanceof FieldVar) {
-							
-							String varID = null;
-							if(((FieldVar)var).isStatic()){
-								varID = var.getName();
-							}
-							else{
-								varID = Variable.concanateFieldVarID(String.valueOf(objRef.uniqueID()),
-										var.getSimpleName());								
-							}
-							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
-							varID = varID + ":" + definingNodeOrder;
-							var.setVarID(varID);
-						} 
-						else if (var instanceof ArrayElementVar) {
-							String index = var.getSimpleName();
-							ExpressionValue indexValue = retriveExpression(frame, index, node.getBreakPoint());
-							String indexValueString = indexValue.value.toString();
-							String varID = Variable.concanateArrayElementVarID(String.valueOf(objRef.uniqueID()),
-									indexValueString);
-							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
-							varID = varID + ":" + definingNodeOrder;
-							var.setVarID(varID);
-							
-						}
 					}
 
-					String content = (value == null) ? null : value.toString();
-					varValue = new PrimitiveValue(content, false, var);
-					// ((PrimitiveValue)varValue).setStrVal(expValue.messageValue.toString());
+					if (var instanceof FieldVar) {
+						String varID = null;
+						if (((FieldVar) var).isStatic()) {
+							varID = var.getName();
+						} else {
+							varID = Variable.concanateFieldVarID(String.valueOf(objRef.uniqueID()),
+									var.getSimpleName());
+						}
+						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
+						varID = varID + ":" + definingNodeOrder;
+						var.setVarID(varID);
+					} else if (var instanceof ArrayElementVar) {
+						String index = var.getSimpleName();
+						ExpressionValue indexValue = retriveExpression(frame, index, node.getBreakPoint());
+						String indexValueString = indexValue.value.toString();
+						String varID = Variable.concanateArrayElementVarID(String.valueOf(objRef.uniqueID()),
+								indexValueString);
+						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
+						varID = varID + ":" + definingNodeOrder;
+						var.setVarID(varID);
+
+					}
 				}
 
-//				VariableValueExtractor extractor = 
-//						new VariableValueExtractor(null, frame.thread(), null, this);
-//				extractor.appendVarVal(varValue, var, value, Settings.getVariableLayer(), frame.thread(), true);
-				return varValue;
+				String content = (value == null) ? null : value.toString();
+				varValue = new PrimitiveValue(content, false, var);
 			}
+
+			return varValue;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		return null;
 	}
+
+	
 
 	private StackFrame findFrame(ThreadReference thread, Location location) {
 		StackFrame frame = null;
@@ -1313,11 +1387,21 @@ public class ProgramExecutor extends Executor {
 	private void parseReadWrittenVariableInThisStep(ThreadReference thread, Location location, TraceNode node,
 			Map<String, StepVariableRelationEntry> stepVariableTable, String action) {
 
-//		try {
-//			thread.frames();
-//		} catch (IncompatibleThreadStateException e) {
-//			e.printStackTrace();
-//		}
+		// try {
+		// thread.frames();
+		// } catch (IncompatibleThreadStateException e) {
+		// e.printStackTrace();
+		// }
+
+		if (action.equals(Variable.READ)) {
+			processReadVariable(node, stepVariableTable, thread, location, node.getBreakPoint());
+		} else if (action.equals(Variable.WRITTEN)) {
+			processWrittenVariable(node, stepVariableTable, thread, location, node.getBreakPoint());
+		}
+	}
+
+	private void processReadVariable(TraceNode node, Map<String, StepVariableRelationEntry> stepVariableTable,
+			ThreadReference thread, Location location, BreakPoint point) {
 
 		StackFrame frame = findFrame(thread, location);
 		if (frame == null) {
@@ -1326,62 +1410,49 @@ public class ProgramExecutor extends Executor {
 		}
 
 		synchronized (frame) {
-			if (action.equals(Variable.READ)) {
-				processReadVariable(node, stepVariableTable, frame);
-			} else if (action.equals(Variable.WRITTEN)) {
-				processWrittenVariable(node, stepVariableTable, frame);
-			}
-		}
-	}
+			List<Variable> readVariables = node.getBreakPoint().getReadVariables();
+			for (Variable readVar : readVariables) {
+				VarValue varValue = generateVarValue(frame, readVar, node, Variable.READ, point);
+				if (varValue != null) {
+					node.addReadVariable(varValue);
+					String varID = varValue.getVarID();
 
-	private void processReadVariable(TraceNode node, Map<String, StepVariableRelationEntry> stepVariableTable,
-			StackFrame frame) {
-		
-		List<Variable> readVariables = node.getBreakPoint().getReadVariables();
-		for (Variable readVar : readVariables) {
-			VarValue varValue = generateVarValue(frame, readVar, node, Variable.READ);
-
-			if (varValue != null) {
-				node.addReadVariable(varValue);
-				String varID = varValue.getVarID();
-
-				StepVariableRelationEntry entry = stepVariableTable.get(varID);
-				if (entry == null) {
-					entry = new StepVariableRelationEntry(varID);
-					stepVariableTable.put(varID, entry);
+					StepVariableRelationEntry entry = stepVariableTable.get(varID);
+					if (entry == null) {
+						entry = new StepVariableRelationEntry(varID);
+						stepVariableTable.put(varID, entry);
+					}
+					entry.addAliasVariable(readVar);
+					entry.addConsumer(node);
 				}
-				entry.addAliasVariable(readVar);
-
-				// if(varID.contains("213") && node.getOrder() == 221){
-				// System.currentTimeMillis();
-				// }
-
-				entry.addConsumer(node);
 			}
 		}
 	}
 
 	private void processWrittenVariable(TraceNode node, Map<String, StepVariableRelationEntry> stepVariableTable,
-			StackFrame frame) {
-//		if (node.getOrder() == 154) {
-//			System.currentTimeMillis();
-//		}
-		List<Variable> writtenVariables = node.getBreakPoint().getWrittenVariables();
-		for (Variable writtenVar : writtenVariables) {
-			VarValue varValue = generateVarValue(frame, writtenVar, node, Variable.WRITTEN);
+			ThreadReference thread, Location location, BreakPoint point) {
+		StackFrame frame = findFrame(thread, location);
+		if (frame == null) {
+			System.err.println("get a null frame from thread!");
+			return;
+		}
+		synchronized (frame) {
+			List<Variable> writtenVariables = node.getBreakPoint().getWrittenVariables();
+			for (Variable writtenVar : writtenVariables) {
+				VarValue varValue = generateVarValue(frame, writtenVar, node, Variable.WRITTEN, point);
 
-			if (varValue != null) {
-				node.addWrittenVariable(varValue);
-				String varID = varValue.getVarID();
+				if (varValue != null) {
+					node.addWrittenVariable(varValue);
+					String varID = varValue.getVarID();
 
-				StepVariableRelationEntry entry = stepVariableTable.get(varID);
-				if (entry == null) {
-					entry = new StepVariableRelationEntry(varID);
-					stepVariableTable.put(varID, entry);
+					StepVariableRelationEntry entry = stepVariableTable.get(varID);
+					if (entry == null) {
+						entry = new StepVariableRelationEntry(varID);
+						stepVariableTable.put(varID, entry);
+					}
+					entry.addAliasVariable(writtenVar);
+					entry.addProducer(node);
 				}
-				entry.addAliasVariable(writtenVar);
-
-				entry.addProducer(node);
 			}
 		}
 	}
@@ -1400,42 +1471,40 @@ public class ProgramExecutor extends Executor {
 
 		ExpressionValue eValue = null;
 
-//		boolean classPrepare = getClassPrepareRequest().isEnabled();
-//		boolean step = getStepRequest().isEnabled();
-//		boolean methodEntry = getMethodEntryRequest().isEnabled();
-//		boolean methodExit = getMethodExitRequset().isEnabled();
-//		boolean exception = getExceptionRequest().isEnabled();
-//		
-//		getClassPrepareRequest().disable();
-//		getStepRequest().disable();
-//		getMethodEntryRequest().disable();
-//		getMethodExitRequset().disable();
-//		getExceptionRequest().disable();
-		
+		// boolean classPrepare = getClassPrepareRequest().isEnabled();
+		// boolean step = getStepRequest().isEnabled();
+		// boolean methodEntry = getMethodEntryRequest().isEnabled();
+		// boolean methodExit = getMethodExitRequset().isEnabled();
+		// boolean exception = getExceptionRequest().isEnabled();
+		//
+		// getClassPrepareRequest().disable();
+		// getStepRequest().disable();
+		// getMethodEntryRequest().disable();
+		// getMethodExitRequset().disable();
+		// getExceptionRequest().disable();
+
 		try {
 			ExpressionParser.clear();
 
-			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appPath);
+			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(),
+					appPath);
 			ExpressionParser.setParameters(cu, point.getLineNumber());
-			
+
 			Value val = null;
 			if (expression.contains("(")) {
-				if(expression.contains("[")) {
+				if (expression.contains("[")) {
 					val = null;
+				} else {
+					val = retrieveComplicatedExpressionValue(expression, frame.virtualMachine(), frameGetter);
 				}
-				else {
-					val = retrieveComplicatedExpressionValue(expression, frame.virtualMachine(), frameGetter);					
-				}
+			} else {
+				val = ExpressionParser.evaluate(expression, frame.virtualMachine(), frameGetter);
 			}
-			else {
-				val = ExpressionParser.evaluate(expression, frame.virtualMachine(), frameGetter);				
-			}
-			
+
 			eValue = new ExpressionValue(val, ExpressionParser.parentValue, null);
 
-
 		} catch (ParseException e) {
-//			e.printStackTrace();
+			// e.printStackTrace();
 		} catch (InvocationException e) {
 			e.printStackTrace();
 		} catch (InvalidTypeException e) {
@@ -1444,14 +1513,14 @@ public class ProgramExecutor extends Executor {
 			e.printStackTrace();
 		} catch (IncompatibleThreadStateException e) {
 			e.printStackTrace();
-		} catch(Exception e){
-			//e.printStackTrace();
-		}finally{
-//			getClassPrepareRequest().setEnabled(classPrepare);
-//			getStepRequest().setEnabled(step);
-//			getMethodEntryRequest().setEnabled(methodEntry);
-//			getMethodExitRequset().setEnabled(methodExit);
-//			getExceptionRequest().setEnabled(exception);
+		} catch (Exception e) {
+			// e.printStackTrace();
+		} finally {
+			// getClassPrepareRequest().setEnabled(classPrepare);
+			// getStepRequest().setEnabled(step);
+			// getMethodEntryRequest().setEnabled(methodEntry);
+			// getMethodExitRequset().setEnabled(methodExit);
+			// getExceptionRequest().setEnabled(exception);
 		}
 
 		return eValue;
@@ -1460,8 +1529,8 @@ public class ProgramExecutor extends Executor {
 	private void collectValueOfPreviousStep(BreakPoint lastSteppingInPoint, ThreadReference thread, Location loc)
 			throws SavException {
 
-		BreakPoint current = new BreakPoint(lastSteppingInPoint.getClassCanonicalName(), lastSteppingInPoint.getDeclaringCompilationUnitName(),
-				lastSteppingInPoint.getLineNumber());
+		BreakPoint current = new BreakPoint(lastSteppingInPoint.getClassCanonicalName(),
+				lastSteppingInPoint.getDeclaringCompilationUnitName(), lastSteppingInPoint.getLineNumber());
 		current.setReadVariables(lastSteppingInPoint.getReadVariables());
 		current.setWrittenVariables(lastSteppingInPoint.getWrittenVariables());
 
@@ -1513,14 +1582,6 @@ public class ProgramExecutor extends Executor {
 	}
 
 	public Trace getTrace() {
-		int len = this.trace.size();
-		if(len != 0){
-			TraceNode lastNode = this.trace.getExectionList().get(len - 1);
-			if (lastNode.getAfterState() == null) {
-				BreakPointValue previousState = lastNode.getProgramState();
-				lastNode.setAfterStepInState(previousState);
-			}
-		}
 		return trace;
 	}
 
@@ -1533,12 +1594,12 @@ public class ProgramExecutor extends Executor {
 	}
 
 	public StepRequest getStepRequest(ThreadReference thread) {
-		for(StepRequest stepRequest: this.stepRequestList) {
+		for (StepRequest stepRequest : this.stepRequestList) {
 			if (stepRequest.thread().equals(thread)) {
-				return stepRequest;				
+				return stepRequest;
 			}
 		}
-		
+
 		return null;
 	}
 
