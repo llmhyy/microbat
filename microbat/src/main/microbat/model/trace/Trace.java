@@ -680,28 +680,37 @@ public class Trace {
 		return null;
 	}
 	
+	private Map<String, TraceNode> latestNodeDefiningVariableMap = new HashMap<>();
+	
 	public String findDefiningNodeOrder(String accessType, TraceNode currentNode, String varID) {
 		String definingOrder = "0";
 		if(accessType.equals(Variable.WRITTEN)){
 			definingOrder = String.valueOf(currentNode.getOrder());
+			latestNodeDefiningVariableMap.put(varID, currentNode);
 		}
 		else if(accessType.equals(Variable.READ)){
-			TraceNode node = null;
-			TraceNode stepOverPreviousNode = currentNode.getStepOverPrevious();
-			if(stepOverPreviousNode != null){
-				if(stepOverPreviousNode.getLineNumber() == currentNode.getLineNumber()){
-					node = findLastestNodeDefiningPrimitiveVariable(varID, stepOverPreviousNode.getOrder());
-				}
-				else{
-					node = findLastestNodeDefiningPrimitiveVariable(varID, currentNode.getOrder());
-				}
-			}
-			else{
-				node = findLastestNodeDefiningPrimitiveVariable(varID, currentNode.getOrder());
-			}
+			TraceNode node = latestNodeDefiningVariableMap.get(varID);
 			if(node != null){
-				definingOrder = String.valueOf(node.getOrder());				
+				definingOrder = String.valueOf(node.getOrder());
 			}
+//			else{
+//				TraceNode stepOverPreviousNode = currentNode.getStepOverPrevious();
+//				if(stepOverPreviousNode != null){
+//					if(stepOverPreviousNode.getLineNumber() == currentNode.getLineNumber()){
+//						node = findLastestNodeDefiningPrimitiveVariable(varID, stepOverPreviousNode.getOrder());
+//					}
+//					else{
+//						node = findLastestNodeDefiningPrimitiveVariable(varID, currentNode.getOrder());
+//					}
+//				}
+//				else{
+//					node = findLastestNodeDefiningPrimitiveVariable(varID, currentNode.getOrder());
+//				}
+//				if(node != null){
+//					definingOrder = String.valueOf(node.getOrder());	
+//					latestNodeDefiningVariableMap.put(varID, node);
+//				}
+//			}
 		}
 		
 		return definingOrder;
