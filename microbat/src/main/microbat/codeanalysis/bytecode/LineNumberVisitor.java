@@ -23,7 +23,11 @@ import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Select;
 import org.apache.bcel.generic.StoreInstruction;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Expression;
 
 import microbat.codeanalysis.ast.LoopHeadParser;
 import microbat.codeanalysis.ast.SourceScopeParser;
@@ -132,7 +136,7 @@ public class LineNumberVisitor extends EmptyVisitor {
 		if(point.getLineNumber()==134){
 			System.currentTimeMillis();
 		}
-		 
+		
 		for(int i=0; i<correspondingInstructions.size(); i++){
 			InstructionHandle insHandle = correspondingInstructions.get(i);
 			if(insHandle.getInstruction() instanceof FieldInstruction){
@@ -187,7 +191,11 @@ public class LineNumberVisitor extends EmptyVisitor {
 					System.currentTimeMillis();
 				}
 				
-				if(variable != null /*&& !variable.getName().equals("this")*/){
+				if(variable != null){
+					if(variable.getName().equals("this") && !isThisAppearOnRightHandSide(point)){
+						continue;
+					}
+					
 					LocalVar var = new LocalVar(variable.getName(), SignatureUtils.signatureToName(variable.getSignature()), 
 							point.getDeclaringCompilationUnitName(), point.getLineNumber());
 					if(insHandle.getInstruction() instanceof IINC){
@@ -230,24 +238,19 @@ public class LineNumberVisitor extends EmptyVisitor {
 			}
 			else if(insHandle.getInstruction() instanceof IfInstruction || insHandle.getInstruction() instanceof Select){
 				setConditionalScope(insHandle, point, cfg, code, cu);
-				
-				System.currentTimeMillis();
-//				ClassLocation target0 = transferToLocation(insHandle.getNext(), code);
-//				if(target0 != null){
-//					point.addTarget(target0);					
-//				}
-//				else{
-//					System.currentTimeMillis();
-//				}
-//				
-//				BranchInstruction bIns = (BranchInstruction)insHandle.getInstruction();
-//				InstructionHandle ins1 = bIns.getTarget();
-//				ClassLocation target1 = transferToLocation(ins1, code);
-//				point.addTarget(target1);					
 			}
 		}
 	}
 	
+	private boolean isThisAppearOnRightHandSide(BreakPoint point) {
+		CompilationUnit cu = JavaUtil.findCompiltionUnitBySourcePath(point.getFullJavaFilePath(), 
+				point.getDeclaringCompilationUnitName());
+		ThisChecker checker = new ThisChecker(cu, point);
+		cu.accept(checker);
+		return checker.containsValidThis;
+	}
+
+
 	private void setConditionalScope(InstructionHandle handle, BreakPoint point, CFG cfg, Code code, 
 			CompilationUnit cu){
 		point.setConditional(true);
