@@ -72,6 +72,7 @@ public class ExecutionStatementCollector extends Executor {
 							if (isTestcaseEvaluation) {
 								disableAllStepRequests();
 							} else {
+								excludeJUnitLibs();
 								this.methodEntryRequest.disable();
 								this.methodExitRequest.disable();
 							}
