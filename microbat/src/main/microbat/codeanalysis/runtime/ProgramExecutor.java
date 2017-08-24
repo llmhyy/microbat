@@ -368,7 +368,7 @@ public class ProgramExecutor extends Executor {
 					 */
 					boolean isContextChange = false;
 					if (lastSteppingInPoint != null) {
-						//collectValueOfPreviousStep(lastSteppingInPoint, thread, currentLocation);
+						collectValueOfPreviousStep(lastSteppingInPoint, thread, currentLocation);
 
 						/**
 						 * Parsing the written variables of last step.
@@ -399,12 +399,12 @@ public class ProgramExecutor extends Executor {
 					 */
 					if (bkp != null /*&& bkp.equals(supposedBkp)*/) {
 						BreakPointValue bkpVal = null;
-//						if(this.trace.getLastestNode() != null && !isContextChange){
-//							bkpVal = this.trace.getLastestNode().getAfterStepInState();
-//						}
-//						else{
-//							bkpVal = extractValuesAtLocation(bkp, thread, currentLocation);
-//						}
+						if(this.trace.getLastestNode() != null && !isContextChange){
+							bkpVal = this.trace.getLastestNode().getAfterStepInState();
+						}
+						else{
+							bkpVal = extractValuesAtLocation(bkp, thread, currentLocation);
+						}
 						
 						TraceNode node = recordTrace(bkp, bkpVal);
 						
@@ -1239,7 +1239,12 @@ public class ProgramExecutor extends Executor {
 						ObjectReference objRef = (ObjectReference) parentValue;
 						
 						if(objRef==null){
-							objRef = frame.thisObject();
+							objRef = null;
+							try{
+								objRef = frame.thisObject();
+							}
+							catch(Exception e){
+							}
 							if(objRef==null){
 								return null;
 							}
