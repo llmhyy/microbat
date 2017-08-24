@@ -10,7 +10,6 @@ import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
-import org.eclipse.jdt.internal.compiler.ast.ForeachStatement;
 
 import microbat.model.BreakPoint;
 

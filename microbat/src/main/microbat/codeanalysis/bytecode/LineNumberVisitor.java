@@ -23,11 +23,7 @@ import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Select;
 import org.apache.bcel.generic.StoreInstruction;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.Expression;
 
 import microbat.codeanalysis.ast.LoopHeadParser;
 import microbat.codeanalysis.ast.SourceScopeParser;
