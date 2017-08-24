@@ -411,19 +411,27 @@ public class Trace {
 		}
 	}
 
+	private Map<String, CatchClause> catchClauseMap = new HashMap<>();
+	
 	private void testAndAppendTryCatchControlFlow(TraceNode node) {
+		String key = node.getDeclaringCompilationUnitName()+":"+node.getLineNumber();
+		CatchClause clause = catchClauseMap.get(key);
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(node.getDeclaringCompilationUnitName(), this.appJavaClassPath);
-		if(cu == null) {
-			cu = JavaUtil.findCompiltionUnitBySourcePath(node.getBreakPoint().getFullJavaFilePath(), 
-					node.getDeclaringCompilationUnitName());
+		if(clause==null){
+			if(cu == null) {
+				cu = JavaUtil.findCompiltionUnitBySourcePath(node.getBreakPoint().getFullJavaFilePath(), 
+						node.getDeclaringCompilationUnitName());
+			}
+			 
+			CatchClauseFinder finder = new CatchClauseFinder(cu, node.getLineNumber());
+			cu.accept(finder);
+			catchClauseMap.put(key, finder.containingClause);
 		}
-		 
-		CatchClauseFinder finder = new CatchClauseFinder(cu, node.getLineNumber());
-		cu.accept(finder);
-		if(finder.containingClause!=null) {
+		
+		
+		if(clause!=null) {
 			TraceNode existingControlDom = node.getControlDominator();
 			if(existingControlDom!=null) {
-				CatchClause clause = finder.containingClause;
 				if (!isClauseContainScope(node, cu, clause, existingControlDom)) {
 					addTryCatchControlFlow(node);
 				}
