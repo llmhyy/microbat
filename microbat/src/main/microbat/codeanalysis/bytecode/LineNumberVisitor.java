@@ -239,8 +239,9 @@ public class LineNumberVisitor extends EmptyVisitor {
 	}
 	
 	private boolean isThisAppearOnRightHandSide(BreakPoint point) {
-		CompilationUnit cu = JavaUtil.findCompiltionUnitBySourcePath(point.getFullJavaFilePath(), 
-				point.getDeclaringCompilationUnitName());
+//		CompilationUnit cu = JavaUtil.findCompiltionUnitBySourcePath(point.getFullJavaFilePath(), 
+//				point.getDeclaringCompilationUnitName());
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appJavaClassPath);
 		ThisChecker checker = new ThisChecker(cu, point);
 		cu.accept(checker);
 		return checker.containsValidThis;
