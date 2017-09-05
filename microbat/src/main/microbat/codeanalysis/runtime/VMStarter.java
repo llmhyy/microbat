@@ -69,6 +69,10 @@ public class VMStarter {
     private Map<String, Connector.Argument> connectorArguments(LaunchingConnector connector, 
     		AppJavaClassPath configuration) {
         Map<String, Connector.Argument> arguments = connector.defaultArguments();
+        
+        Connector.Argument argument = arguments.get("home");
+        argument.setValue(configuration.getJavaHome());
+        
         Connector.Argument mainArg = (Connector.Argument)arguments.get("main");
         if (mainArg == null) {
             throw new Error("Bad launching connector");
@@ -93,12 +97,10 @@ public class VMStarter {
             throw new Error("Bad launching connector");
         }
         
-        String OSName = System.getProperty("os.name");
-        String classPathSeparator = OSName.toLowerCase().contains("win") ? ";" : ":";
         
         String classPathString = "";
         for(String classPath: configuration.getClasspaths()){
-        	classPathString += classPath + classPathSeparator;
+        	classPathString += classPath + File.pathSeparator;
         }
         
         if(classPathString.length() != 0){
