@@ -1,7 +1,6 @@
 package microbat.evaluation;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -11,8 +10,6 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 
-import microbat.codeanalysis.ast.LocalVariableScope;
-import microbat.codeanalysis.ast.VariableScopeParser;
 import microbat.codeanalysis.bytecode.BPVariableRetriever;
 import microbat.codeanalysis.runtime.ProgramExecutor;
 import microbat.model.BreakPoint;

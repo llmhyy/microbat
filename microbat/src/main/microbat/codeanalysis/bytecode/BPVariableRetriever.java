@@ -23,7 +23,7 @@ public class BPVariableRetriever {
 		this.setExecutingStatements(executingStatements);
 	}
 
-	public List<BreakPoint> parsingBreakPoints(AppJavaClassPath appClassPath, boolean isForEvaluation) throws Exception {
+	public List<BreakPoint> parsingBreakPoints(AppJavaClassPath appClassPath, boolean isOptimizeByteCodeCompilation) throws Exception {
 		
 		String originalSystemClassPath = System.getProperty("java.class.path");
 		String[] paths = originalSystemClassPath.split(File.pathSeparator);
@@ -41,12 +41,13 @@ public class BPVariableRetriever {
 		System.setProperty("java.class.path", buffer.toString());
 		String s = System.getProperty("java.class.path");
 		
-		/** current evaluation does not change line number, so we can keep the cache to speed up the progress */
-		if(!isForEvaluation){
+		/** when evaluation does not change line number, so we can keep the cache to speed up the progress */
+		if(!isOptimizeByteCodeCompilation){
 			Repository.clearCache();				
 			ClassPath0 classPath = new ClassPath0(s);
 			Repository.setRepository(SyntheticRepository.getInstance(classPath));
 		}
+		
 		Map<String, List<BreakPoint>> class2PointMap = summarize(executingStatements);
 		for(String className: class2PointMap.keySet()){
 			JavaClass clazz = Repository.lookupClass(className);

@@ -22,9 +22,11 @@ import com.sun.jdi.connect.VMStartException;
 public class VMStarter {
 	
 	private AppJavaClassPath configuration;
+	private boolean isRunOnTestCaseMode = false;
 	
-	public VMStarter(AppJavaClassPath classPath){
+	public VMStarter(AppJavaClassPath classPath, boolean isRunOnTestCaseMode){
 		this.configuration = classPath;
+		this.isRunOnTestCaseMode = isRunOnTestCaseMode;
 	}
 	
 	public VirtualMachine start(){
@@ -64,7 +66,8 @@ public class VMStarter {
 	/**
      * Return the launching connector's arguments.
      */
-    private Map<String, Connector.Argument> connectorArguments(LaunchingConnector connector, AppJavaClassPath configuration) {
+    private Map<String, Connector.Argument> connectorArguments(LaunchingConnector connector, 
+    		AppJavaClassPath configuration) {
         Map<String, Connector.Argument> arguments = connector.defaultArguments();
         Connector.Argument mainArg = (Connector.Argument)arguments.get("main");
         if (mainArg == null) {
@@ -72,7 +75,7 @@ public class VMStarter {
         }
         
         String mainValue;
-        if(configuration.getOptionalTestClass() != null && configuration.getOptionalTestMethod() != null){
+        if(isRunOnTestCaseMode && configuration.getOptionalTestClass() != null && configuration.getOptionalTestMethod() != null){
         	mainValue = configuration.getLaunchClass() + " " + configuration.getOptionalTestClass() 
         			+ " " + configuration.getOptionalTestMethod();
         }

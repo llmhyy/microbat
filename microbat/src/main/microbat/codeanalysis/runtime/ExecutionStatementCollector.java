@@ -46,7 +46,7 @@ public class ExecutionStatementCollector extends Executor {
 		steps = 0;
 		List<BreakPoint> pointList = new ArrayList<>();
 
-		VirtualMachine vm = new VMStarter(appClassPath).start();
+		VirtualMachine vm = new VMStarter(appClassPath, isTestcaseEvaluation).start();
 
 		EventRequestManager erm = vm.eventRequestManager();
 		addClassWatch(erm);

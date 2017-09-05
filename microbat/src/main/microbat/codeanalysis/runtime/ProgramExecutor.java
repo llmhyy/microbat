@@ -258,7 +258,7 @@ public class ProgramExecutor extends Executor {
 			throws SavException, TimeoutException {
 
 		/** start debugger */
-		VirtualMachine vm = new VMStarter(this.appPath).start();
+		VirtualMachine vm = new VMStarter(this.appPath, isTestcaseEvaluation).start();
 
 		EventRequestManager erm = vm.eventRequestManager();
 
