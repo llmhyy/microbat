@@ -62,6 +62,7 @@ import microbat.model.trace.TraceNode;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
+import soot.baf.internal.AbstractOpTypeBranchInst;
 
 public class TraceView extends ViewPart {
 
@@ -392,33 +393,42 @@ public class TraceView extends ViewPart {
 
 		});
 
-		final MenuManager menuMgr = new MenuManager("#PopupMenu");
+		appendMenuForTraceStep();
+	}
+
+	protected Action createForSearchAction() {
+		Action action = new Action() {
+			public void run() {
+				if (listViewer.getSelection().isEmpty()) {
+					return;
+				}
+
+				if (listViewer.getSelection() instanceof IStructuredSelection) {
+					IStructuredSelection selection = (IStructuredSelection) listViewer.getSelection();
+					TraceNode node = (TraceNode) selection.getFirstElement();
+					
+					String className = node.getBreakPoint().getDeclaringCompilationUnitName();
+					int lineNumber = node.getBreakPoint().getLineNumber();
+					String searchString = Trace.combineTraceNodeExpression(className, lineNumber);
+					TraceView.this.searchText.setText(searchString);
+				}
+				
+			}
+			
+			public String getText() {
+				return "for search";
+			}
+		};
+		return action;
+	}
+	
+	protected MenuManager menuMgr = new MenuManager("#PopupMenu");
+	protected void appendMenuForTraceStep() {
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
 			@Override
 			public void menuAboutToShow(IMenuManager manager) {
-				Action action = new Action() {
-					public void run() {
-						if (listViewer.getSelection().isEmpty()) {
-							return;
-						}
-
-						if (listViewer.getSelection() instanceof IStructuredSelection) {
-							IStructuredSelection selection = (IStructuredSelection) listViewer.getSelection();
-							TraceNode node = (TraceNode) selection.getFirstElement();
-							
-							String className = node.getBreakPoint().getDeclaringCompilationUnitName();
-							int lineNumber = node.getBreakPoint().getLineNumber();
-							String searchString = Trace.combineTraceNodeExpression(className, lineNumber);
-							TraceView.this.searchText.setText(searchString);
-						}
-						
-					}
-					
-					public String getText() {
-						return "for search";
-					}
-				};
+				Action action = createForSearchAction();
 				menuMgr.add(action);
 				
 			}
