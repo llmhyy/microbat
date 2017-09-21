@@ -14,6 +14,7 @@ public class ImageUI {
 	public static final String WRONG_VALUE_MARK = "icons/cross_mark.png";
 	public static final String WRONG_PATH_MARK = "icons/path_mark.png";
 	public static final String QUESTION_MARK = "icons/question_mark.png";
+	public static final String UNDO_MARK = "icons/undo.png";
 
 //	private Image checkMarkImage;
 //	private Image buggyMarkImage;

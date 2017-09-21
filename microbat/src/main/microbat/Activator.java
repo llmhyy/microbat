@@ -40,6 +40,7 @@ public class Activator extends AbstractUIPlugin {
 		imgReg.put(ImageUI.WRONG_VALUE_MARK, getImageDescriptor(ImageUI.WRONG_VALUE_MARK));
 		imgReg.put(ImageUI.WRONG_PATH_MARK, getImageDescriptor(ImageUI.WRONG_PATH_MARK));
 		imgReg.put(ImageUI.QUESTION_MARK, getImageDescriptor(ImageUI.QUESTION_MARK));
+		imgReg.put(ImageUI.UNDO_MARK, getImageDescriptor(ImageUI.UNDO_MARK));
 	}
 	
 	/**
