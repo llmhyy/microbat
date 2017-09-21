@@ -33,6 +33,10 @@ public class ThisChecker extends ASTVisitor{
 	}
 	
 	private boolean isRelevant(ASTNode node){
+		if(node==null) {
+			return false;
+		}
+		
 		int start = getStartLine(node);
 		int end = getEndLine(node);
 		
