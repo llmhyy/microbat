@@ -96,8 +96,9 @@ public abstract class Executor {
 	protected boolean hasValidThreadName(ThreadReference thread) {
 		return !thread.name().equals("main") && !thread.name().equals("DestroyJavaVM")
 				&& !thread.name().startsWith("Thread") 
-				&& !thread.name().equals("Attach Listener")
-				&& !thread.name().contains("RMI TCP");
+//				&& !thread.name().equals("Attach Listener")
+//				&& !thread.name().contains("RMI TCP")
+				;
 	}
 	
 	protected void addThreadStartWatch(EventRequestManager erm) {
