@@ -364,6 +364,11 @@ public class ProgramExecutor extends Executor {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
 
+					if(isInIncludedLibrary(currentLocation)){
+						continue;
+					}
+					
+					
 					if (currentLocation.lineNumber() == -1) {
 						continue;
 					}
@@ -623,6 +628,19 @@ public class ProgramExecutor extends Executor {
 		}
 
 		return vm;
+	}
+
+	private boolean isInIncludedLibrary(Location currentLocation) {
+		String typeName = currentLocation.declaringType().name();
+		
+		for(String expr: includedLibs){
+			expr = expr.replace("*", "");
+			if(typeName.contains(expr)){
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	private TraceNode popUpMethodCausedByException(Stack<TraceNode> methodNodeStack, Stack<String> methodSignatureStack,
@@ -1132,21 +1150,31 @@ public class ProgramExecutor extends Executor {
 		methodExitRequest.enable();
 	}
 
+//	/** add watch requests **/
+//	private final void addClassWatch(EventRequestManager erm) {
+//		/* class watch request for breakpoint */
+//		for (String className : brkpsMap.keySet()) {
+//			addClassWatch(erm, className);
+//		}
+//		/* class watch request for junitRunner start point */
+//		addClassWatch(erm, ENTER_TC_BKP.getClassCanonicalName());
+//	}
+//
+//	// private ClassPrepareRequest classPrepareRequest;
+//	private final void addClassWatch(EventRequestManager erm, String className) {
+//		setClassPrepareRequest(erm.createClassPrepareRequest());
+//		getClassPrepareRequest().addClassFilter(className);
+//		getClassPrepareRequest().setEnabled(true);
+//	}
+	
 	/** add watch requests **/
-	private final void addClassWatch(EventRequestManager erm) {
-		/* class watch request for breakpoint */
-		for (String className : brkpsMap.keySet()) {
-			addClassWatch(erm, className);
+	protected void addClassWatch(EventRequestManager erm) {
+		classPrepareRequest = erm.createClassPrepareRequest();
+		for (String ex : libExcludes) {
+			classPrepareRequest.addClassExclusionFilter(ex);
 		}
-		/* class watch request for junitRunner start point */
-		addClassWatch(erm, ENTER_TC_BKP.getClassCanonicalName());
-	}
+		classPrepareRequest.setEnabled(true);
 
-	// private ClassPrepareRequest classPrepareRequest;
-	private final void addClassWatch(EventRequestManager erm, String className) {
-		setClassPrepareRequest(erm.createClassPrepareRequest());
-		getClassPrepareRequest().addClassFilter(className);
-		getClassPrepareRequest().setEnabled(true);
 	}
 
 	private void parseBreakpoints(VirtualMachine vm, ClassPrepareEvent classPrepEvent,

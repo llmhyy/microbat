@@ -45,13 +45,37 @@ public abstract class Executor {
 	protected ThreadStartRequest threadStartRequest;
 	protected BreakpointRequest breakpointRequest;
 	
-	protected String[] libExcludes = { "java.*", "java.lang.*", "javax.*", "sun.*", "com.sun.*", 
+	protected String[] libExcludes = { 
+			"java.awt.*",
+			"java.applet.*", 
+			"java.lang.*",
+			"java.beans.*", 
+			"java.io.*", 
+			"java.math.*", 
+			"java.net.*", 
+			"java.nio.*", 
+			"java.rmi.*",
+			"java.security.*", 
+			"java.sql.*", 
+			"java.text.*", 
+			"java.util.concurrent.*", 
+			"java.util.function.*", 
+			"java.util.jar.*", 
+			"java.util.logging.*", 
+			"java.util.prefs.*", 
+			"java.util.regex.*", 
+			"java.util.spi.*",
+			"java.util.stream.*", 
+			"java.util.zip.*", 
+			"javax.*", "sun.*", "com.sun.*", 
 			/*"org.junit.*", "junit.*", "junit.framework.*", "org.hamcrest.*", "org.hamcrest.core.*", "org.hamcrest.internal.*",*/
 			"jdk.*", "jdk.internal.*", "org.GNOME.Accessibility.*"};
 	
 	protected String[] junitExcludes = { 
 			"org.junit.*", "junit.*", "junit.framework.*", "org.hamcrest.*", "org.hamcrest.core.*", "org.hamcrest.internal.*"
 			};
+	
+	protected String[] includedLibs = {"java.util.*"};
 	
 	public void addLibExcludeList(List<String> excludeList) {
 		List<String> existingList = new ArrayList<>();
@@ -88,7 +112,7 @@ public abstract class Executor {
 		for (String ex : libExcludes) {
 			stepRequest.addClassExclusionFilter(ex);
 		}
-
+		
 		stepRequest.enable();
 		this.stepRequestList.add(stepRequest);
 	}

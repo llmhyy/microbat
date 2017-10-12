@@ -124,9 +124,11 @@ public class JavaUtil {
 					if (value instanceof StringReference) {
 						return ((StringReference) value).value();
 					}
-					Value toStringValue = value.invokeMethod(thread, method,
-							new ArrayList<Value>(),
-							ObjectReference.INVOKE_SINGLE_THREADED);
+					Field field = type.fieldByName("value");
+					Value toStringValue = value.getValue(field);
+//					Value toStringValue = value.invokeMethod(thread, method,
+//							new ArrayList<Value>(),
+//							ObjectReference.INVOKE_SINGLE_THREADED);
 					return toStringValue.toString();
 					
 				}

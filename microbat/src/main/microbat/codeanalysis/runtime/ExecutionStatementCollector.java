@@ -24,6 +24,7 @@ import com.sun.jdi.event.VMDisconnectEvent;
 import com.sun.jdi.event.VMStartEvent;
 import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
+import com.sun.jdi.request.StepRequest;
 
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.model.BreakPoint;
@@ -247,6 +248,23 @@ public class ExecutionStatementCollector extends Executor {
 			exceptionRequest.addClassExclusionFilter(ex);
 		}
 		exceptionRequest.enable();
+	}
+	
+	@Override
+	protected void addStepWatch(EventRequestManager erm, ThreadReference threadReference) {
+		StepRequest stepRequest = erm.createStepRequest(threadReference, StepRequest.STEP_LINE, StepRequest.STEP_INTO);
+		stepRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+
+		for (String ex : libExcludes) {
+			stepRequest.addClassExclusionFilter(ex);
+		}
+		
+		for(String ex: includedLibs){
+			stepRequest.addClassExclusionFilter(ex);
+		}
+		
+		stepRequest.enable();
+		this.stepRequestList.add(stepRequest);
 	}
 
 	public int getStepNum() {
