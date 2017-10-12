@@ -264,7 +264,29 @@ public class Trace {
 			return null;
 		}
 		else {
-			return producers.get(0);
+			if(producers.size()==1){
+				return producers.get(0);				
+			}
+			else{
+				int distance = 0;
+				TraceNode producer = null;
+				for(TraceNode n: producers){
+					if(producer==null){
+						int dis = checkingNode.getOrder() - n.getOrder();
+						if(dis>0){
+							producer = n;							
+						}
+					}
+					else{
+						int dis = checkingNode.getOrder() - n.getOrder();
+						if(dis>0 && dis<distance){
+							producer = n;							
+						}
+					}
+				}
+				return producer;
+			}
+			
 		}
 		
 	}
