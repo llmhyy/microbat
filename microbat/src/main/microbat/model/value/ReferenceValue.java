@@ -95,7 +95,9 @@ public class ReferenceValue extends VarValue {
 		
 		for(VarValue var: children) {
 			String childValue = var.getVarName() + "=" + var.getStringValue();
-			childValue = childValue.replaceAll("\\(id=\\d+\\)", "");
+			if(childValue.contains("id=")){
+				childValue = childValue.replaceAll("\\(id=\\d+\\)", "");				
+			}
 			buffer.append(childValue);
 		}
 		
