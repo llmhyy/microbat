@@ -665,10 +665,14 @@ public class TraceNode{
 		return false;
 	}
 
+	private List<TraceNode> allControlDominatees;
 	public List<TraceNode> findAllControlDominatees() {
-		List<TraceNode> controlDominatees = new ArrayList<>();
-		findAllControlDominatees(this, controlDominatees);
-		return controlDominatees;
+		if(allControlDominatees==null){
+			List<TraceNode> controlDominatees = new ArrayList<>();
+			findAllControlDominatees(this, controlDominatees);
+			allControlDominatees = controlDominatees;
+		}
+		return allControlDominatees;
 	}
 
 	private void findAllControlDominatees(TraceNode node, List<TraceNode> controlDominatees) {
