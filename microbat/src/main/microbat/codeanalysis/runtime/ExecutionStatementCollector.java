@@ -22,9 +22,7 @@ import com.sun.jdi.event.ThreadStartEvent;
 import com.sun.jdi.event.VMDeathEvent;
 import com.sun.jdi.event.VMDisconnectEvent;
 import com.sun.jdi.event.VMStartEvent;
-import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
-import com.sun.jdi.request.StepRequest;
 
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.model.BreakPoint;
@@ -94,6 +92,10 @@ public class ExecutionStatementCollector extends Executor {
 						} else if (event instanceof StepEvent) {
 							StepEvent sEvent = (StepEvent) event;
 							Location location = sEvent.location();
+							
+							if(isInIncludedLibrary(location)){
+								continue;
+							}
 
 							int lineNumber = location.lineNumber();
 
@@ -131,6 +133,9 @@ public class ExecutionStatementCollector extends Executor {
 							}
 						} else if (event instanceof MethodEntryEvent) {
 							Method method = ((MethodEntryEvent) event).method();
+							if(isInIncludedLibrary(method.location())){
+								continue;
+							}
 
 //							System.out.println(method.declaringType().name() + "." + method.name());
 
@@ -208,63 +213,6 @@ public class ExecutionStatementCollector extends Executor {
 			}
 		}
 		
-	}
-
-	/**
-	 * add method enter and exit event
-	 */
-	private void addMethodWatch(EventRequestManager erm) {
-		methodEntryRequest = erm.createMethodEntryRequest();
-		// String[] stepWatchExcludes = { "java.*", "java.lang.*", "javax.*", "sun.*",
-		// "com.sun.*"};
-		for (String classPattern : libExcludes) {
-			methodEntryRequest.addClassExclusionFilter(classPattern);
-		}
-		methodEntryRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		methodEntryRequest.enable();
-
-		methodExitRequest = erm.createMethodExitRequest();
-		for (String classPattern : libExcludes) {
-			methodExitRequest.addClassExclusionFilter(classPattern);
-		}
-		methodExitRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		methodExitRequest.enable();
-	}
-
-	/** add watch requests **/
-	protected void addClassWatch(EventRequestManager erm) {
-		classPrepareRequest = erm.createClassPrepareRequest();
-		for (String ex : libExcludes) {
-			classPrepareRequest.addClassExclusionFilter(ex);
-		}
-		classPrepareRequest.setEnabled(true);
-
-	}
-
-	protected void addExceptionWatch(EventRequestManager erm) {
-		exceptionRequest = erm.createExceptionRequest(null, true, true);
-		exceptionRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		for (String ex : libExcludes) {
-			exceptionRequest.addClassExclusionFilter(ex);
-		}
-		exceptionRequest.enable();
-	}
-	
-	@Override
-	protected void addStepWatch(EventRequestManager erm, ThreadReference threadReference) {
-		StepRequest stepRequest = erm.createStepRequest(threadReference, StepRequest.STEP_LINE, StepRequest.STEP_INTO);
-		stepRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-
-		for (String ex : libExcludes) {
-			stepRequest.addClassExclusionFilter(ex);
-		}
-		
-		for(String ex: includedLibs){
-			stepRequest.addClassExclusionFilter(ex);
-		}
-		
-		stepRequest.enable();
-		this.stepRequestList.add(stepRequest);
 	}
 
 	public int getStepNum() {

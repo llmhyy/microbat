@@ -8,6 +8,7 @@ import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.InvalidTypeException;
 import com.sun.jdi.InvocationException;
+import com.sun.jdi.Location;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 import com.sun.jdi.VirtualMachine;
@@ -77,6 +78,19 @@ public abstract class Executor {
 	
 	protected String[] includedLibs = {"java.util.*"};
 	
+	protected boolean isInIncludedLibrary(Location currentLocation) {
+		String typeName = currentLocation.declaringType().name();
+		
+		for(String expr: includedLibs){
+			expr = expr.replace("*", "");
+			if(typeName.contains(expr)){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	public void addLibExcludeList(List<String> excludeList) {
 		List<String> existingList = new ArrayList<>();
 		for (int i = 0; i < libExcludes.length; i++) {
@@ -115,6 +129,44 @@ public abstract class Executor {
 		
 		stepRequest.enable();
 		this.stepRequestList.add(stepRequest);
+	}
+	
+	/** add watch requests **/
+	protected void addClassWatch(EventRequestManager erm) {
+		classPrepareRequest = erm.createClassPrepareRequest();
+		for (String ex : libExcludes) {
+			classPrepareRequest.addClassExclusionFilter(ex);
+		}
+		classPrepareRequest.setEnabled(true);
+
+	}
+	
+	/**
+	 * add method enter and exit event
+	 */
+	protected void addMethodWatch(EventRequestManager erm) {
+		methodEntryRequest = erm.createMethodEntryRequest();
+		for (String classPattern : libExcludes) {
+			methodEntryRequest.addClassExclusionFilter(classPattern);
+		}
+		methodEntryRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+		methodEntryRequest.enable();
+
+		methodExitRequest = erm.createMethodExitRequest();
+		for (String classPattern : libExcludes) {
+			methodExitRequest.addClassExclusionFilter(classPattern);
+		}
+		methodExitRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+		methodExitRequest.enable();
+	}
+	
+	protected void addExceptionWatch(EventRequestManager erm) {
+		exceptionRequest = erm.createExceptionRequest(null, true, true);
+		exceptionRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+		for (String ex : libExcludes) {
+			exceptionRequest.addClassExclusionFilter(ex);
+		}
+		exceptionRequest.enable();
 	}
 	
 	protected boolean hasValidThreadName(ThreadReference thread) {

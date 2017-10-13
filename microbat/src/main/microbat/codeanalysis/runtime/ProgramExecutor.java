@@ -1,7 +1,5 @@
 package microbat.codeanalysis.runtime;
 
-import static sav.strategies.junit.SavJunitRunner.ENTER_TC_BKP;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -331,7 +329,12 @@ public class ProgramExecutor extends Executor {
 				// System.currentTimeMillis();
 			}
 
-			for (Event event : eventSet) {
+			/**
+			 * ensure the step event is parsed before the method entry event
+			 */
+			List<Event> sortedEvents = sortEvents(eventSet);
+			
+			for (Event event : sortedEvents) {
 				if (event instanceof VMStartEvent) {
 					System.out.println("JVM is started...");
 
@@ -367,7 +370,6 @@ public class ProgramExecutor extends Executor {
 					if(isInIncludedLibrary(currentLocation)){
 						continue;
 					}
-					
 					
 					if (currentLocation.lineNumber() == -1) {
 						continue;
@@ -405,27 +407,12 @@ public class ProgramExecutor extends Executor {
 					}
 
 					BreakPoint bkp = locBrpMap.get(currentLocation.toString());
-					// BreakPoint supposedBkp = null;
-					// if(trace.size()<executionOrderList.size()) {
-					// supposedBkp =
-					// executionOrderList.get(trace.size()).getPoint();
-					// }
 					/**
 					 * This step is an interesting step (sliced statement) in
 					 * our debugging process
 					 */
 					if (bkp != null /* && bkp.equals(supposedBkp) */) {
 						BreakPointValue bkpVal = null;
-						// if(this.trace.getLastestNode() != null &&
-						// !isContextChange){
-						// bkpVal =
-						// this.trace.getLastestNode().getAfterStepInState();
-						// }
-						// else{
-						// bkpVal = extractValuesAtLocation(bkp, thread,
-						// currentLocation);
-						// }
-
 						TraceNode node = recordTrace(bkp, bkpVal);
 
 						/**
@@ -490,6 +477,10 @@ public class ProgramExecutor extends Executor {
 					// System.out.println("enter " + method + ":" +
 					// ((MethodEntryEvent)event).location());
 
+					if(isInIncludedLibrary(method.location())){
+						continue;
+					}
+					
 					/**
 					 * See the explanation of isInRcording variable.
 					 */
@@ -562,6 +553,10 @@ public class ProgramExecutor extends Executor {
 					Method method = mee.method();
 					// System.out.println("exit " + method + ":" +
 					// ((MethodExitEvent)event).location());
+					
+					if(isInIncludedLibrary(method.location())){
+						continue;
+					}
 
 					PointWrapper lastPoint = findCorrespondingPointWrapper(this.trace.getLastestNode(),
 							executionOrderList);
@@ -630,17 +625,35 @@ public class ProgramExecutor extends Executor {
 		return vm;
 	}
 
-	private boolean isInIncludedLibrary(Location currentLocation) {
-		String typeName = currentLocation.declaringType().name();
-		
-		for(String expr: includedLibs){
-			expr = expr.replace("*", "");
-			if(typeName.contains(expr)){
-				return true;
-			}
+	private List<Event> sortEvents(EventSet eventSet) {
+		Event[] events = eventSet.toArray(new Event[0]);
+		List<Event> list = new ArrayList<>();
+		for(Event e: events){
+			list.add(e);
 		}
 		
-		return false;
+		Collections.sort(list, new Comparator<Event>() {
+
+			@Override
+			public int compare(Event o1, Event o2) {
+				int score1 = getScore(o1);
+				int score2 = getScore(o2);
+				return score2-score1;
+			}
+
+			private int getScore(Event o) {
+				if(o instanceof StepEvent){
+					return -1;
+				}
+				else if((o instanceof MethodEntryEvent) || (o instanceof MethodExitEvent)){
+					return 1;
+				}
+				
+				return 0;
+			}
+		});
+		
+		return list;
 	}
 
 	private TraceNode popUpMethodCausedByException(Stack<TraceNode> methodNodeStack, Stack<String> methodSignatureStack,
@@ -891,28 +904,6 @@ public class ProgramExecutor extends Executor {
 		return false;
 	}
 
-	private void addExceptionWatch(EventRequestManager erm) {
-
-		setExceptionRequest(erm.createExceptionRequest(null, true, true));
-		getExceptionRequest().setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		for (String ex : libExcludes) {
-			getExceptionRequest().addClassExclusionFilter(ex);
-		}
-		// request.addClassFilter("java.io.FileNotFoundException");
-		getExceptionRequest().enable();
-	}
-
-	// private void addStepWatch(EventRequestManager erm, Event event) {
-	// stepRequest = erm.createStepRequest(((VMStartEvent) event).thread(),
-	// StepRequest.STEP_LINE,
-	// StepRequest.STEP_INTO);
-	// stepRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-	// for (String ex : libExcludes) {
-	// stepRequest.addClassExclusionFilter(ex);
-	// }
-	// stepRequest.enable();
-	// }
-
 	/**
 	 * when the last interesting stepping statement is a return statement,
 	 * create a virtual variable.
@@ -1131,25 +1122,6 @@ public class ProgramExecutor extends Executor {
 	// private MethodEntryRequest methodEntryRequest;
 	// private MethodExitRequest methodExitRequset;
 
-	/**
-	 * add method enter and exit event
-	 */
-	private void addMethodWatch(EventRequestManager erm) {
-		methodEntryRequest = erm.createMethodEntryRequest();
-		for (String classPattern : libExcludes) {
-			methodEntryRequest.addClassExclusionFilter(classPattern);
-		}
-		methodEntryRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		methodEntryRequest.enable();
-
-		methodExitRequest = erm.createMethodExitRequest();
-		for (String classPattern : libExcludes) {
-			methodExitRequest.addClassExclusionFilter(classPattern);
-		}
-		methodExitRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		methodExitRequest.enable();
-	}
-
 //	/** add watch requests **/
 //	private final void addClassWatch(EventRequestManager erm) {
 //		/* class watch request for breakpoint */
@@ -1167,16 +1139,6 @@ public class ProgramExecutor extends Executor {
 //		getClassPrepareRequest().setEnabled(true);
 //	}
 	
-	/** add watch requests **/
-	protected void addClassWatch(EventRequestManager erm) {
-		classPrepareRequest = erm.createClassPrepareRequest();
-		for (String ex : libExcludes) {
-			classPrepareRequest.addClassExclusionFilter(ex);
-		}
-		classPrepareRequest.setEnabled(true);
-
-	}
-
 	private void parseBreakpoints(VirtualMachine vm, ClassPrepareEvent classPrepEvent,
 			Map<String, BreakPoint> locBrpMap) {
 		ReferenceType refType = classPrepEvent.referenceType();
