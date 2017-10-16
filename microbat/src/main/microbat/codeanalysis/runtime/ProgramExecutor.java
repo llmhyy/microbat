@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.bcel.Repository;
+import org.apache.bcel.util.SyntheticRepository;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdi.internal.VoidValueImpl;
@@ -59,16 +61,21 @@ import com.sun.jdi.request.StepRequest;
 
 import microbat.codeanalysis.ast.LocalVariableScope;
 import microbat.codeanalysis.ast.VariableScopeParser;
+import microbat.codeanalysis.bytecode.ClassPath0;
+import microbat.codeanalysis.bytecode.LineNumberVisitor0;
+import microbat.codeanalysis.bytecode.RWVarRetrieverForLine;
 import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
 import microbat.codeanalysis.runtime.jpda.expr.ParseException;
 import microbat.codeanalysis.runtime.variable.VariableValueExtractor;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
+import microbat.model.UserInterestedVariables;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.ArrayValue;
+import microbat.model.value.GraphNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.StringValue;
@@ -149,6 +156,7 @@ public class ProgramExecutor extends Executor {
 	 */
 	public void run(List<BreakPoint> runningStatements, List<BreakPoint> executionOrderList, IProgressMonitor monitor,
 			int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
+		Repository.clearCache();
 		this.trace = new Trace(appPath);
 
 		List<String> classScope = parseScope(runningStatements);
@@ -232,6 +240,20 @@ public class ProgramExecutor extends Executor {
 		@Override
 		public String toString() {
 			return "PointWrapper [point=" + point + ", isHit=" + isHit + "]";
+		}
+	}
+	
+	class UsedVariables{
+		List<VarValue> readVariables = new ArrayList<>();
+		List<VarValue> writtenVariables = new ArrayList<>();
+		
+		Value returnedValue;
+		
+		public UsedVariables(List<VarValue> readVariables, List<VarValue> writtenVariables, Value returnedValue) {
+			super();
+			this.readVariables = readVariables;
+			this.writtenVariables = writtenVariables;
+			this.returnedValue = returnedValue;
 		}
 	}
 
@@ -368,7 +390,13 @@ public class ProgramExecutor extends Executor {
 					Location currentLocation = ((StepEvent) event).location();
 
 					if(isInIncludedLibrary(currentLocation)){
-						continue;
+						if(trace.size()>0){
+							Value returnValue = build3rdPartyLibraryDependency(thread, currentLocation);
+//							returnValue = build3rdPartyLibraryDependency(thread, currentLocation);
+							if(returnValue != null){
+								lastestReturnedValue = returnValue;
+							}
+						}
 					}
 					
 					if (currentLocation.lineNumber() == -1) {
@@ -438,7 +466,7 @@ public class ProgramExecutor extends Executor {
 						 * come back from a method invocation ( i.e.,
 						 * lastestPopedOutMethodNode != null).
 						 */
-						Value returnedValue = null;
+						Value returnedValue = lastestReturnedValue;
 						if (node != null && methodNodeJustPopedOut != null) {
 							methodNodeJustPopedOut.setStepOverNext(node);
 							methodNodeJustPopedOut.setAfterStepOverState(node.getProgramState());
@@ -623,6 +651,139 @@ public class ProgramExecutor extends Executor {
 		}
 
 		return vm;
+	}
+
+	private Value build3rdPartyLibraryDependency(ThreadReference thread, Location currentLocation) {
+		UsedVariables uVars = parseUsedVariable(thread, currentLocation);
+		
+		for(VarValue readVar: uVars.readVariables){
+			StepVariableRelationEntry entry = trace.getStepVariableTable().get(readVar.getVarID());
+			if(entry == null){
+				entry = new StepVariableRelationEntry(readVar.getVarID());
+			}
+			entry.addConsumer(trace.getLastestNode());
+		}
+		
+		for(VarValue writtenVar: uVars.writtenVariables){
+			StepVariableRelationEntry entry = trace.getStepVariableTable().get(writtenVar.getVarID());
+			if(entry == null){
+				entry = new StepVariableRelationEntry(writtenVar.getVarID());
+			}
+			entry.addProducer(trace.getLastestNode());
+		}
+		
+		return uVars.returnedValue;
+	}
+	
+	private HashMap<String, UsedVariables> libraryLine2VariableMap = new HashMap<>();
+
+	private UsedVariables parseUsedVariable(ThreadReference thread, Location currentLocation) {
+		int lineNumber = currentLocation.lineNumber();
+		String className = currentLocation.declaringType().name();
+		int offset = (int)currentLocation.codeIndex();
+		
+		String locationID = className + "$" + lineNumber + "$" + offset;
+		UsedVariables uVars = libraryLine2VariableMap.get(locationID);
+//		UsedVariables uVars = null;
+		if(uVars == null){
+			LineNumberVisitor0 visitor = RWVarRetrieverForLine.parse(className, lineNumber, 
+					offset, appPath);
+			List<Variable> readVars = visitor.getReadVars();
+			List<Variable> writtenVars = visitor.getWrittenVars();
+			
+			List<VarValue> readVarValues = parseValue(readVars, className, thread, Variable.READ);
+			List<VarValue> writtenVarValues = parseValue(writtenVars, className, thread, Variable.WRITTEN);
+			
+			Value returnedValue = parseValue(visitor.getReturnedVar(), thread);
+			
+			uVars = new UsedVariables(readVarValues, writtenVarValues, returnedValue);
+			libraryLine2VariableMap.put(locationID, uVars);
+		}
+		
+		return uVars;
+	}
+
+	private Value parseValue(Variable returnedVar, ThreadReference thread) {
+		if(returnedVar==null){
+			return null;
+		}
+		
+		try {
+			StackFrame frame = thread.frame(0);
+			ExpressionValue expValue = retriveExpression(frame, returnedVar.getName(), null);
+			if(expValue==null){
+				return null;
+			}
+			return expValue.value;
+		} catch (IncompatibleThreadStateException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+
+	private List<VarValue> parseValue(List<Variable> vars, String className, ThreadReference thread, String accessType) {
+		List<VarValue> values = new ArrayList<>();
+		
+		try {
+			StackFrame frame = thread.frame(0);
+			for(Variable var: vars){
+				if(var instanceof FieldVar){
+					ExpressionValue expValue = retriveExpression(frame, var.getName(), null);
+					
+					if(expValue==null){
+						continue;
+					}
+					
+					Value parentValue = expValue.value;
+					String varID = null;
+					if(parentValue != null){
+						if (parentValue instanceof ObjectReference) {
+							ObjectReference ref = (ObjectReference)parentValue;
+							varID = Variable.concanateFieldVarID(String.valueOf(ref.uniqueID()), var.getName());
+						}
+					}
+					else{
+						varID = Variable.concanateFieldVarID(className, var.getName());
+					}
+					
+					if(varID != null){
+						varID = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+						VarValue varValue = new PrimitiveValue(null, false, var);
+						values.add(varValue);
+					}
+				}
+				else if(var instanceof ArrayElementVar){
+//					String varName = var.getName().substring(0, var.getName().indexOf("["));
+					ExpressionValue expValue = retriveExpression(frame, var.getName(), null);
+					
+					if(expValue==null){
+						continue;
+					}
+					
+					Value val = expValue.value;
+					ArrayReference ref = (ArrayReference)val;
+					List<Value> subValues = ref.getValues();
+					int count = 0;
+					for(Value sv: subValues){
+						String varID = Variable.concanateArrayElementVarID(
+								String.valueOf(ref.uniqueID()), String.valueOf(count++));
+						varID = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+						VarValue varValue = new PrimitiveValue(null, false, var);
+						values.add(varValue);
+					}
+					
+				}
+				else if(var instanceof LocalVar){
+					VarValue localVar = new PrimitiveValue(var.getName(), false, var);
+					values.add(localVar);
+				}
+			}
+		} catch (IncompatibleThreadStateException e) {
+			e.printStackTrace();
+		}
+		
+		return values;
 	}
 
 	private List<Event> sortEvents(EventSet eventSet) {
@@ -1476,9 +1637,20 @@ public class ProgramExecutor extends Executor {
 		try {
 			ExpressionParser.clear();
 
-			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(),
-					appPath);
-			ExpressionParser.setParameters(cu, point.getLineNumber());
+			CompilationUnit cu;
+			if(point==null){
+				cu = null;
+			}
+			else{
+				cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appPath);				
+			}
+			
+			int lineNumber = -1;
+			if(point != null){
+				lineNumber = point.getLineNumber();
+			}
+			
+			ExpressionParser.setParameters(cu, lineNumber);
 
 			Value val = null;
 			if (expression.contains("(")) {

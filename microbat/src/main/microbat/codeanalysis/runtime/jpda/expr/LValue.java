@@ -997,8 +997,13 @@ abstract class LValue {
     
     static String findQualifedType(String first, String originalName, StringTokenizer izer){
     	CompilationUnit cu = ExpressionParser.declaringClass;
+    	
+    	if(cu==null){
+    		return null;
+    	}
+    	
     	NameFinder finder = new NameFinder(cu, first);
-    	cu.accept(finder);
+		cu.accept(finder);    
     	
     	String qualifiedType = null;
     	
