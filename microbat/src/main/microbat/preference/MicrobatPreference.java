@@ -50,6 +50,7 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultStepLimit = Activator.getDefault().getPreferenceStore().getString(STEP_LIMIT);
 		this.defaultRunTest = Activator.getDefault().getPreferenceStore().getString(RUN_TEST);
 		this.defaultVariableLayer = Activator.getDefault().getPreferenceStore().getString(VARIABLE_LAYER);
+		this.defaultJava7HomePath = Activator.getDefault().getPreferenceStore().getString(JAVA7HOME_PATH);
 	}
 	
 	public static final String TARGET_PORJECT = "targetProjectName";
@@ -62,6 +63,7 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String TEST_METHOD = "testMethod";
 	public static final String RUN_TEST = "isRunTest";
 	public static final String VARIABLE_LAYER = "variableLayer";
+	public static final String JAVA7HOME_PATH = "java7_path";
 
 	
 	private Combo projectCombo;
@@ -74,6 +76,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Button recordSnapshotButton;
 	private Button advancedDetailInspectorButton;
 	private Button runTestButton;
+	private Text java7HomePathText;
 	
 	private String defaultTargetProject = "";
 	private String defaultLanuchClass = "";
@@ -85,6 +88,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultRecordSnapshot = "true";
 	private String defaultAdvancedDetailInspector = "true";
 	private String defaultRunTest = "false";
+	private String defaultJava7HomePath;
 	
 	@Override
 	protected Control createContents(Composite parent) {
@@ -122,6 +126,14 @@ public class MicrobatPreference extends PreferencePage implements
 		
 		settingGroup.setLayout(layout);
 		
+		Label java7HomeLabel = new Label(settingGroup, SWT.NONE);
+		java7HomeLabel.setText("Java Home Path: ");
+		java7HomePathText = new Text(settingGroup, SWT.BORDER);
+		java7HomePathText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+		java7HomePathText.setText(this.defaultJava7HomePath);
+		GridData javaHomeTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		javaHomeTextData.horizontalSpan = 2;
+		java7HomePathText.setLayoutData(javaHomeTextData);
 		
 		Label stepLimitLabel = new Label(settingGroup, SWT.NONE);
 		stepLimitLabel.setText("Step Limit: ");
@@ -223,6 +235,7 @@ public class MicrobatPreference extends PreferencePage implements
 		preferences.put(STEP_LIMIT, this.stepLimitText.getText());
 		preferences.put(VARIABLE_LAYER, this.variableLayerText.getText());
 		preferences.put(RUN_TEST, String.valueOf(this.runTestButton.getSelection()));
+		preferences.put(JAVA7HOME_PATH, this.java7HomePathText.getText());
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(LANUCH_CLASS, this.lanuchClassText.getText());
@@ -234,6 +247,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Activator.getDefault().getPreferenceStore().putValue(STEP_LIMIT, this.stepLimitText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(VARIABLE_LAYER, this.variableLayerText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(RUN_TEST, String.valueOf(this.runTestButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(JAVA7HOME_PATH, this.java7HomePathText.getText());
 		
 		confirmChanges();
 		

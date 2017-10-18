@@ -10,10 +10,12 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 
+import microbat.Activator;
 import microbat.codeanalysis.bytecode.BPVariableRetriever;
 import microbat.codeanalysis.runtime.ProgramExecutor;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
+import microbat.preference.MicrobatPreference;
 import microbat.util.Settings;
 import sav.common.core.SavException;
 import sav.commons.TestConfiguration;
@@ -106,7 +108,7 @@ public class TraceModelConstructor {
 		String binPath = projectPath + File.separator + "bin"; 
 		
 		AppJavaClassPath appClassPath = new AppJavaClassPath();
-		appClassPath.setJavaHome(TestConfiguration.getJavaHome());
+		appClassPath.setJavaHome(Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.JAVA7HOME_PATH));
 		
 		appClassPath.addClasspath(binPath);
 		appClassPath.setWorkingDirectory(projectPath);

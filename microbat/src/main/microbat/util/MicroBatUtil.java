@@ -17,9 +17,11 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
+import microbat.Activator;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
+import microbat.preference.MicrobatPreference;
 import sav.commons.TestConfiguration;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -107,7 +109,7 @@ public class MicroBatUtil {
 		
 		String outputPath = projectPath + File.separator + outputFolder; 
 		
-		appClassPath.setJavaHome(TestConfiguration.getJavaHome());
+		appClassPath.setJavaHome(Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.JAVA7HOME_PATH));
 		appClassPath.addClasspath(outputPath);
 		appClassPath.setWorkingDirectory(projectPath);
 		appClassPath.setLaunchClass(Settings.lanuchClass);
