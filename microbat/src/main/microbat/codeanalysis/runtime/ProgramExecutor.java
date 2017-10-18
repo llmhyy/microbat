@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.apache.bcel.Repository;
-import org.apache.bcel.util.SyntheticRepository;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdi.internal.VoidValueImpl;
@@ -52,7 +51,6 @@ import com.sun.jdi.event.VMDeathEvent;
 import com.sun.jdi.event.VMDisconnectEvent;
 import com.sun.jdi.event.VMStartEvent;
 import com.sun.jdi.request.ClassPrepareRequest;
-import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.ExceptionRequest;
 import com.sun.jdi.request.MethodEntryRequest;
@@ -61,7 +59,6 @@ import com.sun.jdi.request.StepRequest;
 
 import microbat.codeanalysis.ast.LocalVariableScope;
 import microbat.codeanalysis.ast.VariableScopeParser;
-import microbat.codeanalysis.bytecode.ClassPath0;
 import microbat.codeanalysis.bytecode.LineNumberVisitor0;
 import microbat.codeanalysis.bytecode.RWVarRetrieverForLine;
 import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
@@ -70,12 +67,10 @@ import microbat.codeanalysis.runtime.jpda.expr.ParseException;
 import microbat.codeanalysis.runtime.variable.VariableValueExtractor;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
-import microbat.model.UserInterestedVariables;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.ArrayValue;
-import microbat.model.value.GraphNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.StringValue;
@@ -243,13 +238,13 @@ public class ProgramExecutor extends Executor {
 		}
 	}
 	
-	class UsedVariables{
+	class UsedVarValues{
 		List<VarValue> readVariables = new ArrayList<>();
 		List<VarValue> writtenVariables = new ArrayList<>();
 		
 		Value returnedValue;
 		
-		public UsedVariables(List<VarValue> readVariables, List<VarValue> writtenVariables, Value returnedValue) {
+		public UsedVarValues(List<VarValue> readVariables, List<VarValue> writtenVariables, Value returnedValue) {
 			super();
 			this.readVariables = readVariables;
 			this.writtenVariables = writtenVariables;
@@ -322,7 +317,7 @@ public class ProgramExecutor extends Executor {
 		 * nodes.
 		 */
 		TraceNode methodNodeJustPopedOut = null;
-		Value lastestReturnedValue = null;
+		Value latestReturnedValue = null;
 
 		/** this variable is used to handle exception case. */
 		Location caughtLocationForJustException = null;
@@ -344,11 +339,6 @@ public class ProgramExecutor extends Executor {
 				System.out.println("Time out! Cannot get event set!");
 				eventTimeout = true;
 				break;
-			}
-
-			if (trace.getLastestNode() != null) {
-				// System.out.println("running into " + trace.getLastestNode());
-				// System.currentTimeMillis();
 			}
 
 			/**
@@ -391,10 +381,26 @@ public class ProgramExecutor extends Executor {
 
 					if(isInIncludedLibrary(currentLocation)){
 						if(trace.size()>0){
-							Value returnValue = build3rdPartyLibraryDependency(thread, currentLocation);
-//							returnValue = build3rdPartyLibraryDependency(thread, currentLocation);
+							UsedVarValues uVars = build3rdPartyLibraryDependency(thread, currentLocation);
+							TraceNode latestNode = trace.getLastestNode();
+							for(VarValue varValue: uVars.readVariables){
+								if(!(varValue.getVariable() instanceof LocalVar)){
+									if(!containsVar(latestNode.getReadVariables(), varValue)){
+										latestNode.addReadVariable(varValue);																											
+									}
+								}
+							}
+							for(VarValue varValue: uVars.writtenVariables){
+								if(!(varValue.getVariable() instanceof LocalVar)){
+									if(!containsVar(latestNode.getWrittenVariables(), varValue)){
+										latestNode.addWrittenVariable(varValue);									
+									}
+								}
+							}
+							
+							Value returnValue = uVars.returnedValue;
 							if(returnValue != null){
-								lastestReturnedValue = returnValue;
+								latestReturnedValue = returnValue;
 							}
 						}
 					}
@@ -413,9 +419,6 @@ public class ProgramExecutor extends Executor {
 					 */
 					boolean isContextChange = false;
 					if (lastSteppingInPoint != null) {
-						// collectValueOfPreviousStep(lastSteppingInPoint,
-						// thread, currentLocation);
-
 						/**
 						 * Parsing the written variables of last step.
 						 * 
@@ -466,7 +469,7 @@ public class ProgramExecutor extends Executor {
 						 * come back from a method invocation ( i.e.,
 						 * lastestPopedOutMethodNode != null).
 						 */
-						Value returnedValue = lastestReturnedValue;
+						Value returnedValue = latestReturnedValue;
 						if (node != null && methodNodeJustPopedOut != null) {
 							methodNodeJustPopedOut.setStepOverNext(node);
 							methodNodeJustPopedOut.setAfterStepOverState(node.getProgramState());
@@ -474,7 +477,7 @@ public class ProgramExecutor extends Executor {
 							node.setStepOverPrevious(methodNodeJustPopedOut);
 
 							methodNodeJustPopedOut = null;
-							returnedValue = lastestReturnedValue;
+							returnedValue = latestReturnedValue;
 						}
 
 						parseReadWrittenVariableInThisStep(thread, currentLocation, node,
@@ -600,7 +603,7 @@ public class ProgramExecutor extends Executor {
 								TraceNode node = methodNodeStack.pop();
 								methodNodeJustPopedOut = node;
 								methodSignatureStack.pop();
-								lastestReturnedValue = mee.returnValue();
+								latestReturnedValue = mee.returnValue();
 							} else {
 								int index = -1;
 								for (int i = methodSignatureStack.size() - 1; i >= 0; i--) {
@@ -617,7 +620,7 @@ public class ProgramExecutor extends Executor {
 										TraceNode node = methodNodeStack.pop();
 										methodNodeJustPopedOut = node;
 										methodSignatureStack.pop();
-										lastestReturnedValue = mee.returnValue();
+										latestReturnedValue = mee.returnValue();
 									}
 								}
 							}
@@ -653,8 +656,17 @@ public class ProgramExecutor extends Executor {
 		return vm;
 	}
 
-	private Value build3rdPartyLibraryDependency(ThreadReference thread, Location currentLocation) {
-		UsedVariables uVars = parseUsedVariable(thread, currentLocation);
+	private boolean containsVar(List<VarValue> readVariables, VarValue varValue) {
+		for(VarValue value: readVariables){
+			if(value.getVariable().equals(varValue.getVariable())){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private UsedVarValues build3rdPartyLibraryDependency(ThreadReference thread, Location currentLocation) {
+		UsedVarValues uVars = parseUsedVariable(thread, currentLocation);
 		
 		for(VarValue readVar: uVars.readVariables){
 			StepVariableRelationEntry entry = trace.getStepVariableTable().get(readVar.getVarID());
@@ -662,6 +674,7 @@ public class ProgramExecutor extends Executor {
 				entry = new StepVariableRelationEntry(readVar.getVarID());
 			}
 			entry.addConsumer(trace.getLastestNode());
+			trace.getStepVariableTable().put(readVar.getVarID(), entry);
 		}
 		
 		for(VarValue writtenVar: uVars.writtenVariables){
@@ -670,37 +683,56 @@ public class ProgramExecutor extends Executor {
 				entry = new StepVariableRelationEntry(writtenVar.getVarID());
 			}
 			entry.addProducer(trace.getLastestNode());
+			trace.getStepVariableTable().put(writtenVar.getVarID(), entry);
 		}
 		
-		return uVars.returnedValue;
+		return uVars;
 	}
 	
-	private HashMap<String, UsedVariables> libraryLine2VariableMap = new HashMap<>();
+	
+	private HashMap<String, UsedVariable> libraryLine2VariableMap = new HashMap<>();
 
-	private UsedVariables parseUsedVariable(ThreadReference thread, Location currentLocation) {
+	class UsedVariable{
+		List<Variable> readVariables = new ArrayList<>();
+		List<Variable> writtenVariables = new ArrayList<>();
+		Variable returnedVar;
+		public UsedVariable(List<Variable> readVariables, List<Variable> writtenVariables, Variable returnedVar) {
+			super();
+			this.readVariables = readVariables;
+			this.writtenVariables = writtenVariables;
+			this.returnedVar = returnedVar;
+		}
+	}
+	
+	private UsedVarValues parseUsedVariable(ThreadReference thread, Location currentLocation) {
 		int lineNumber = currentLocation.lineNumber();
 		String className = currentLocation.declaringType().name();
 		int offset = (int)currentLocation.codeIndex();
 		
-		String locationID = className + "$" + lineNumber + "$" + offset;
-		UsedVariables uVars = libraryLine2VariableMap.get(locationID);
-//		UsedVariables uVars = null;
+//		String locationID = className + "$" + lineNumber + "$" + offset;
+		String locationID = className + "$" + lineNumber;
+		UsedVariable uVars = libraryLine2VariableMap.get(locationID);
+//		uVars = null;
 		if(uVars == null){
 			LineNumberVisitor0 visitor = RWVarRetrieverForLine.parse(className, lineNumber, 
 					offset, appPath);
 			List<Variable> readVars = visitor.getReadVars();
 			List<Variable> writtenVars = visitor.getWrittenVars();
+			Variable returnedVar = visitor.getReturnedVar();
 			
-			List<VarValue> readVarValues = parseValue(readVars, className, thread, Variable.READ);
-			List<VarValue> writtenVarValues = parseValue(writtenVars, className, thread, Variable.WRITTEN);
+			uVars = new UsedVariable(readVars, writtenVars, returnedVar);
 			
-			Value returnedValue = parseValue(visitor.getReturnedVar(), thread);
-			
-			uVars = new UsedVariables(readVarValues, writtenVarValues, returnedValue);
 			libraryLine2VariableMap.put(locationID, uVars);
 		}
 		
-		return uVars;
+		List<VarValue> readVarValues = parseValue(uVars.readVariables, className, thread, Variable.READ);
+		List<VarValue> writtenVarValues = parseValue(uVars.writtenVariables, className, thread, Variable.WRITTEN);
+		
+//		System.currentTimeMillis();
+		
+		Value returnedValue = parseValue(uVars.returnedVar, thread);
+		UsedVarValues uValues = new UsedVarValues(readVarValues, writtenVarValues, returnedValue);
+		return uValues;
 	}
 
 	private Value parseValue(Variable returnedVar, ThreadReference thread) {
@@ -727,7 +759,8 @@ public class ProgramExecutor extends Executor {
 		
 		try {
 			StackFrame frame = thread.frame(0);
-			for(Variable var: vars){
+			for(Variable v: vars){
+				Variable var = v.clone();
 				if(var instanceof FieldVar){
 					ExpressionValue expValue = retriveExpression(frame, var.getName(), null);
 					
@@ -735,7 +768,7 @@ public class ProgramExecutor extends Executor {
 						continue;
 					}
 					
-					Value parentValue = expValue.value;
+					Value parentValue = expValue.parentValue;
 					String varID = null;
 					if(parentValue != null){
 						if (parentValue instanceof ObjectReference) {
@@ -748,8 +781,10 @@ public class ProgramExecutor extends Executor {
 					}
 					
 					if(varID != null){
-						varID = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+						String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+						varID = varID + ":" + order;
 						VarValue varValue = new PrimitiveValue(null, false, var);
+						varValue.setVarID(varID);
 						values.add(varValue);
 					}
 				}
@@ -768,8 +803,10 @@ public class ProgramExecutor extends Executor {
 					for(Value sv: subValues){
 						String varID = Variable.concanateArrayElementVarID(
 								String.valueOf(ref.uniqueID()), String.valueOf(count++));
-						varID = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+						String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+						varID = varID + ":" + order;
 						VarValue varValue = new PrimitiveValue(null, false, var);
+						varValue.setVarID(varID);
 						values.add(varValue);
 					}
 					
