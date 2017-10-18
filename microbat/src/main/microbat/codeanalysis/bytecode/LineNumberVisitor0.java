@@ -28,7 +28,7 @@ import sav.strategies.dto.AppJavaClassPath;
 
 public class LineNumberVisitor0 extends ByteCodeVisitor {
 	private int lineNumber;
-	private int offset;
+//	private int offset;
 	private String className;
 	private AppJavaClassPath appJavaClassPath;
 	
@@ -38,7 +38,7 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 		super();
 		this.lineNumber = lineNumber;
 		this.className = className;
-		this.offset = offset;
+//		this.offset = offset;
 		this.appJavaClassPath = appJavaClassPath;
 	}
 
@@ -55,10 +55,10 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 		
 		if(isMethodContainLineNumber(method, lineNumber)){
 			InstructionList list = new InstructionList(code.getCode());
-			InstructionHandle insHandle = list.findHandle(offset);
+			List<InstructionHandle> insHandles = findCorrespondingInstructions(lineNumber, code);
 			
-			if(insHandle!=null){
-				parseReadWrittenVariable(insHandle, method, appJavaClassPath);
+			for(InstructionHandle insHandle: insHandles){
+				parseReadWrittenVariable(insHandle, method, appJavaClassPath);					
 			}
 			
 			parseReturnVariable(list, method);
@@ -160,7 +160,7 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 			String typeSig = aIns.getType(pool).getSignature();
 			String typeName = SignatureUtils.signatureToName(typeSig);
 			
-			List<InstructionHandle> previousInstructions = findPreviousInstructions(lineNumber, offset, code);
+			List<InstructionHandle> previousInstructions = findPreviousInstructions(lineNumber, insHandle.getPosition(), code);
 			if(insHandle.getInstruction().getName().toLowerCase().contains("load")){
 				Variable var0 = parseVariableName(method, previousInstructions);
 				if(var0!=null){
