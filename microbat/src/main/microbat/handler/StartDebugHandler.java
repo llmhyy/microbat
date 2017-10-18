@@ -67,7 +67,7 @@ public class StartDebugHandler extends AbstractHandler {
 			appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
 		}
 		
-		final ProgramExecutor tcExecutor = new ProgramExecutor();
+		
 		
 		try {
 			new BehaviorReader().readXLSX();
@@ -79,13 +79,13 @@ public class StartDebugHandler extends AbstractHandler {
 		behavior.increaseGenerateTrace();
 		new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
 		
-		
 		try {
 			
 			Job job = new Job("Preparing for Debugging ...") {
 				
 				@Override
 				protected IStatus run(IProgressMonitor monitor) {
+					ProgramExecutor tcExecutor = new ProgramExecutor();
 					/** 0. clear some static common variables **/
 					clearOldData();
 					
