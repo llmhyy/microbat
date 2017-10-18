@@ -117,7 +117,7 @@ public class TraceNode{
 	public TraceNode findDataDominator(VarValue readVar) {
 		TraceNode dataDominator = null;
 		
-		Map<TraceNode, List<String>> dataDomiators = getDataDominator();
+		Map<TraceNode, List<String>> dataDomiators = dataDominators;
 		for(TraceNode dataDom: dataDomiators.keySet()){
 			List<String> varIDs = dataDomiators.get(dataDom);
 			for(String varID: varIDs){
