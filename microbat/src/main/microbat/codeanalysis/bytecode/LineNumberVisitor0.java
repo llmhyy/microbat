@@ -9,6 +9,7 @@ import org.apache.bcel.classfile.LineNumber;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.ConstantPushInstruction;
 import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.IINC;
 import org.apache.bcel.generic.Instruction;
@@ -20,6 +21,7 @@ import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.StoreInstruction;
 
 import microbat.model.variable.ArrayElementVar;
+import microbat.model.variable.ConstantVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
@@ -48,7 +50,6 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 	
 	public void visitMethod(Method method){
 		Code code = method.getCode();
-		
 		if(code == null){
 			return;
 		}
@@ -58,7 +59,15 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 			List<InstructionHandle> insHandles = findCorrespondingInstructions(lineNumber, code);
 			
 			for(InstructionHandle insHandle: insHandles){
-				parseReadWrittenVariable(insHandle, method, appJavaClassPath);					
+				VarOp varOp = parseReadWrittenVariable(insHandle, method, appJavaClassPath);
+				if(null!=varOp && !(varOp.var instanceof ConstantVar)){
+					if(varOp.op.equals(Variable.WRITTEN)){
+						writtenVars.add(varOp.var);
+					}
+					else if(varOp.op.equals(Variable.READ)){
+						readVars.add(varOp.var);
+					}
+				}
 			}
 			
 			parseReturnVariable(list, method);
@@ -79,10 +88,22 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 		for(InstructionHandle handle: list){
 			if(handle.getInstruction() instanceof ReturnInstruction){
 				List<InstructionHandle> previousInstructions = findPreviousInstructions(lineNumber, handle.getPosition(), method.getCode());
-				Variable var = parseVariableName(method, previousInstructions);
+				Variable var = parseReturnVariableName(method, previousInstructions);
 				returnedVar = var;
 			}
 		}
+	}
+
+	private Variable parseReturnVariableName(Method method, List<InstructionHandle> previousInstructions) {
+		for(int i=previousInstructions.size()-1; i>=0; i--){
+			InstructionHandle insHandle = previousInstructions.get(i);
+			VarOp varOp = parseReadWrittenVariable(insHandle, method, appJavaClassPath);
+			if(varOp!=null && varOp.op.equals(Variable.READ)){
+				return varOp.var;
+			}
+		}
+		
+		return null;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -103,7 +124,17 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 		return correspondingInstructions;
 	}
 	
-	protected void parseReadWrittenVariable(InstructionHandle insHandle, Method method, AppJavaClassPath appJavaClassPath) {
+	class VarOp{
+		Variable var;
+		String op;
+		public VarOp(Variable var, String op) {
+			super();
+			this.var = var;
+			this.op = op;
+		}
+	}
+	
+	protected VarOp parseReadWrittenVariable(InstructionHandle insHandle, Method method, AppJavaClassPath appJavaClassPath) {
 		Code code = method.getCode();
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool());
 		if(insHandle.getInstruction() instanceof FieldInstruction){
@@ -121,12 +152,12 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 				
 				if(rw){
 					if(!readVars.contains(var)){
-						readVars.add(var);															
+						return new VarOp(var, Variable.READ);															
 					}
 				}
 				else{
 					if(!writtenVars.contains(var)){
-						writtenVars.add(var);						
+						return new VarOp(var, Variable.WRITTEN);						
 					}
 				}
 			}
@@ -138,20 +169,20 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 			LocalVar var = new LocalVar(varName, null, className, lineNumber);
 			if(insHandle.getInstruction() instanceof IINC){
 				if(!readVars.contains(var)){
-					readVars.add(var);					
+					return new VarOp(var, Variable.READ);					
 				}
 				if(!writtenVars.contains(var)){
-					writtenVars.add(var);					
+					return new VarOp(var, Variable.WRITTEN);				
 				}
 			}
 			else if(insHandle.getInstruction() instanceof LoadInstruction){
 				if(!readVars.contains(var)){
-					readVars.add(var);					
+					return new VarOp(var, Variable.READ);						
 				}
 			}
 			else if(insHandle.getInstruction() instanceof StoreInstruction){
 				if(!writtenVars.contains(var)){
-					writtenVars.add(var);					
+					return new VarOp(var, Variable.WRITTEN);					
 				}
 			}
 		}
@@ -162,29 +193,40 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 			
 			List<InstructionHandle> previousInstructions = findPreviousInstructions(lineNumber, insHandle.getPosition(), code);
 			if(insHandle.getInstruction().getName().toLowerCase().contains("load")){
-				Variable var0 = parseVariableName(method, previousInstructions);
+				Variable var0 = parseArrayName(method, previousInstructions);
 				if(var0!=null){
 					String readArrayElement = var0.getName();
 					ArrayElementVar var = new ArrayElementVar(readArrayElement, typeName);
 					if(!readVars.contains(var)){
-						readVars.add(var);												
+						return new VarOp(var, Variable.READ);												
 					}
 				}
 			}
 			else if(insHandle.getInstruction().getName().toLowerCase().contains("store")){
-				Variable var0 = parseVariableName(method, previousInstructions);
+				Variable var0 = parseArrayName(method, previousInstructions);
 				if(var0!=null){
 					String writtenArrayElement = var0.getName();
 					ArrayElementVar var = new ArrayElementVar(writtenArrayElement, typeName);
 					if(!writtenVars.contains(var)){
-						writtenVars.add(var);											
+						return new VarOp(var, Variable.WRITTEN);											
 					}
 				}
 			}
 		}
+		else if(insHandle.getInstruction() instanceof ConstantPushInstruction){
+			ConstantPushInstruction cpIns = (ConstantPushInstruction)(insHandle.getInstruction());
+			Number num = cpIns.getValue();
+			String typeSig = cpIns.getType(pool).getSignature();
+			String typeName = SignatureUtils.signatureToName(typeSig);
+			String value = num.toString();
+			Variable var = new ConstantVar(value, typeName);
+			return new VarOp(var, Variable.READ);
+		}
+		
+		return null;
 	}
 	
-	private Variable parseVariableName(Method method, List<InstructionHandle> previousInstructions){
+	private Variable parseArrayName(Method method, List<InstructionHandle> previousInstructions){
 		Code code = method.getCode();
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool());
 		for(int i=previousInstructions.size()-1; i>=0; i--){
@@ -196,26 +238,35 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 				boolean isStatic = insHandle.getInstruction().getName().toLowerCase().contains("static");
 				String fieldName = fIns.getFieldName(pool);
 				String type = fIns.getFieldType(pool).getSignature();
-				type = SignatureUtils.signatureToName(type);
-				return new FieldVar(isStatic, fieldName, type);
+				if(type.contains("[")){
+					type = SignatureUtils.signatureToName(type);
+					return new FieldVar(isStatic, fieldName, type);					
+				}
 			}
 			else if(ins instanceof LocalVariableInstruction){
 				LocalVariableInstruction lIns = (LocalVariableInstruction)ins;
-				int varIndex = lIns.getIndex();
-				return new LocalVar("$" + varIndex, null, className, lineNumber);
+				String type = lIns.getType(pool).getSignature();
+				if(type.contains("[")){
+					int varIndex = lIns.getIndex();
+					return new LocalVar(String.valueOf(varIndex), null, className, lineNumber);				
+				}
 			}
 			else if(ins instanceof ArrayInstruction){
-				List<InstructionHandle> preIns = new ArrayList<>();
-				for(InstructionHandle handle: previousInstructions){
-					if(handle.getPosition()<insHandle.getPosition()){
-						preIns.add(insHandle);
+				ArrayInstruction aIns = (ArrayInstruction)ins;
+				String type = aIns.getType(pool).getSignature();
+				if(type.contains("[")){
+					List<InstructionHandle> preIns = new ArrayList<>();
+					for(InstructionHandle handle: previousInstructions){
+						if(handle.getPosition()<insHandle.getPosition()){
+							preIns.add(insHandle);
+						}
 					}
-				}
-				
-				Variable var = parseVariableName(method, preIns);
-				if(null != var){
-					String varName = var.getName();
-					return new ArrayElementVar(varName, var.getType());
+					
+					Variable var = parseArrayName(method, preIns);
+					if(null != var){
+						String varName = var.getName();
+						return new ArrayElementVar(varName, var.getType());
+					}		
 				}
 			}
 		}

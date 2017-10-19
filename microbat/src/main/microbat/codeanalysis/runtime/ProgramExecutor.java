@@ -658,7 +658,7 @@ public class ProgramExecutor extends Executor {
 
 	private boolean containsVar(List<VarValue> readVariables, VarValue varValue) {
 		for(VarValue value: readVariables){
-			if(value.getVariable().equals(varValue.getVariable())){
+			if(value.getVariable().getVarID().equals(varValue.getVariable().getVarID())){
 				return true;
 			}
 		}
@@ -709,13 +709,11 @@ public class ProgramExecutor extends Executor {
 		String className = currentLocation.declaringType().name();
 		int offset = (int)currentLocation.codeIndex();
 		
-//		String locationID = className + "$" + lineNumber + "$" + offset;
 		String locationID = className + "$" + lineNumber;
 		UsedVariable uVars = libraryLine2VariableMap.get(locationID);
 //		uVars = null;
 		if(uVars == null){
-			LineNumberVisitor0 visitor = RWVarRetrieverForLine.parse(className, lineNumber, 
-					offset, appPath);
+			LineNumberVisitor0 visitor = RWVarRetrieverForLine.parse(className, lineNumber,  offset, appPath);
 			List<Variable> readVars = visitor.getReadVars();
 			List<Variable> writtenVars = visitor.getWrittenVars();
 			Variable returnedVar = visitor.getReturnedVar();
@@ -727,8 +725,6 @@ public class ProgramExecutor extends Executor {
 		
 		List<VarValue> readVarValues = parseValue(uVars.readVariables, className, thread, Variable.READ);
 		List<VarValue> writtenVarValues = parseValue(uVars.writtenVariables, className, thread, Variable.WRITTEN);
-		
-//		System.currentTimeMillis();
 		
 		Value returnedValue = parseValue(uVars.returnedVar, thread);
 		UsedVarValues uValues = new UsedVarValues(readVarValues, writtenVarValues, returnedValue);
@@ -760,8 +756,8 @@ public class ProgramExecutor extends Executor {
 		try {
 			StackFrame frame = thread.frame(0);
 			for(Variable v: vars){
-				Variable var = v.clone();
-				if(var instanceof FieldVar){
+				if(v instanceof FieldVar){
+					Variable var = v.clone();
 					ExpressionValue expValue = retriveExpression(frame, var.getName(), null);
 					
 					if(expValue==null){
@@ -788,9 +784,9 @@ public class ProgramExecutor extends Executor {
 						values.add(varValue);
 					}
 				}
-				else if(var instanceof ArrayElementVar){
+				else if(v instanceof ArrayElementVar){
 //					String varName = var.getName().substring(0, var.getName().indexOf("["));
-					ExpressionValue expValue = retriveExpression(frame, var.getName(), null);
+					ExpressionValue expValue = retriveExpression(frame, v.getName(), null);
 					
 					if(expValue==null){
 						continue;
@@ -805,13 +801,15 @@ public class ProgramExecutor extends Executor {
 								String.valueOf(ref.uniqueID()), String.valueOf(count++));
 						String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
 						varID = varID + ":" + order;
+						Variable var = v.clone();
 						VarValue varValue = new PrimitiveValue(null, false, var);
 						varValue.setVarID(varID);
 						values.add(varValue);
 					}
 					
 				}
-				else if(var instanceof LocalVar){
+				else if(v instanceof LocalVar){
+					Variable var = v.clone();
 					VarValue localVar = new PrimitiveValue(var.getName(), false, var);
 					values.add(localVar);
 				}
