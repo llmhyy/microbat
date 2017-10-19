@@ -756,63 +756,108 @@ public class ProgramExecutor extends Executor {
 		try {
 			StackFrame frame = thread.frame(0);
 			for(Variable v: vars){
-				if(v instanceof FieldVar){
-					Variable var = v.clone();
-					ExpressionValue expValue = retriveExpression(frame, var.getName(), null);
-					
-					if(expValue==null){
-						continue;
-					}
-					
-					Value parentValue = expValue.parentValue;
-					String varID = null;
-					if(parentValue != null){
-						if (parentValue instanceof ObjectReference) {
-							ObjectReference ref = (ObjectReference)parentValue;
-							varID = Variable.concanateFieldVarID(String.valueOf(ref.uniqueID()), var.getName());
+				Variable var = v.clone();
+				ExpressionValue expValue = retriveExpression(frame, v.getName(), null);
+				if(expValue==null){
+					continue;
+				}
+				
+				VarValue varValue = null;
+				Value value = expValue.value;
+				
+				if (value instanceof ObjectReference) {
+					if(var instanceof ArrayElementVar){
+						ArrayReference ref = (ArrayReference)value;
+						List<Value> subValues = ref.getValues();
+						int count = 0;
+						for(Value sv: subValues){
+							if(sv instanceof ObjectReference){
+								ObjectReference obj = (ObjectReference)sv;
+								String varID = String.valueOf(obj.uniqueID());
+								String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+								varID = varID + ":" + order;
+								Variable subVar = v.clone();
+								VarValue subVarValue = new ReferenceValue(false, obj.uniqueID(), false, subVar);
+								subVarValue.setVarID(varID);
+								values.add(subVarValue);
+							}
+							else if(sv!=null){
+								String varID = Variable.concanateArrayElementVarID(
+										String.valueOf(ref.uniqueID()), String.valueOf(count++));
+								String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+								varID = varID + ":" + order;
+								Variable subVar = v.clone();
+								VarValue subVarValue = new PrimitiveValue(null, false, subVar);
+								subVarValue.setVarID(varID);
+								values.add(subVarValue);
+							}
 						}
 					}
 					else{
-						varID = Variable.concanateFieldVarID(className, var.getName());
-					}
-					
-					if(varID != null){
-						String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
-						varID = varID + ":" + order;
-						VarValue varValue = new PrimitiveValue(null, false, var);
-						varValue.setVarID(varID);
+						ObjectReference objRef = (ObjectReference) value;
+						String varID = String.valueOf(objRef.uniqueID());
+
+						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+						varID = varID + ":" + definingNodeOrder;
+						var.setVarID(varID);
+
+						if (value.type().toString().equals("java.lang.String")) {
+							String strValue = value.toString();
+							strValue = strValue.substring(1, strValue.length() - 1);
+							varValue = new StringValue(strValue, false, var);
+						} else {
+							varValue = new ReferenceValue(false, objRef.uniqueID(), false, var);
+						}
 						values.add(varValue);
 					}
-				}
-				else if(v instanceof ArrayElementVar){
-//					String varName = var.getName().substring(0, var.getName().indexOf("["));
-					ExpressionValue expValue = retriveExpression(frame, v.getName(), null);
-					
-					if(expValue==null){
-						continue;
+				} 
+				/**
+				 * its a primitive type
+				 */
+				else {
+					/**
+					 * see whether its a local variable
+					 */
+					if (var instanceof LocalVar) {
+						//do nothing
+					} 
+					/**
+					 * It's a field or array element.
+					 */
+					else {
+						Value parentValue = expValue.parentValue;
+						ObjectReference objRef = (ObjectReference) parentValue;
+
+						if (objRef == null) {
+							objRef = null;
+							try {
+								objRef = frame.thisObject();
+							} catch (Exception e) {
+							}
+							if (objRef == null) {
+								return null;
+							}
+						}
+
+						if (var instanceof FieldVar) {
+							String varID = null;
+							if (((FieldVar) var).isStatic()) {
+								varID = var.getName();
+							} else {
+								varID = Variable.concanateFieldVarID(String.valueOf(objRef.uniqueID()),
+										var.getSimpleName());
+							}
+							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+							varID = varID + ":" + definingNodeOrder;
+							var.setVarID(varID);
+						} 
 					}
-					
-					Value val = expValue.value;
-					ArrayReference ref = (ArrayReference)val;
-					List<Value> subValues = ref.getValues();
-					int count = 0;
-					for(Value sv: subValues){
-						String varID = Variable.concanateArrayElementVarID(
-								String.valueOf(ref.uniqueID()), String.valueOf(count++));
-						String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
-						varID = varID + ":" + order;
-						Variable var = v.clone();
-						VarValue varValue = new PrimitiveValue(null, false, var);
-						varValue.setVarID(varID);
-						values.add(varValue);
-					}
-					
+
+					String content = (value == null) ? null : value.toString();
+					varValue = new PrimitiveValue(content, false, var);
+					values.add(varValue);
 				}
-				else if(v instanceof LocalVar){
-					Variable var = v.clone();
-					VarValue localVar = new PrimitiveValue(var.getName(), false, var);
-					values.add(localVar);
-				}
+				
 			}
 		} catch (IncompatibleThreadStateException e) {
 			e.printStackTrace();
@@ -1437,7 +1482,7 @@ public class ProgramExecutor extends Executor {
 			if (expValue == null) {
 				return null;
 			}
-
+			
 			Value value = expValue.value;
 			if (value instanceof ObjectReference) {
 				ObjectReference objRef = (ObjectReference) value;
