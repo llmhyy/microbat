@@ -60,12 +60,14 @@ public abstract class VarValue implements GraphNode{
 	}
 	
 	public void setPrimitiveID(VarValue parent, Trace trace){
+		ReferenceValue refValue = (ReferenceValue)parent;
+		String uniqueID = String.valueOf(refValue.getUniqueID());
 		if(isField()){
-			String varID = Variable.concanateFieldVarID(parent.getVarID(), getVarName());
+			String varID = Variable.concanateFieldVarID(uniqueID, getVarName());
 			setVarID(varID);
 		}
 		else if(isElementOfArray()){
-			String varID = Variable.concanateArrayElementVarID(parent.getVarID(), getVarName());
+			String varID = Variable.concanateArrayElementVarID(uniqueID, getVarName());
 			setVarID(varID);
 		}
 		else if(isLocalVariable()){

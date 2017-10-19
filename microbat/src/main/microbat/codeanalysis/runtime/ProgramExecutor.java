@@ -1410,7 +1410,7 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private VarValue constructReferenceVarValue(ObjectReference objRef, Variable var, ThreadReference thread, BreakPoint point) {
-		VarValue varValue = new ReferenceValue(false, true, var);;
+		VarValue varValue = new ReferenceValue(false, objRef.uniqueID(), true, var);;
 		
 		ClassType type = (ClassType)objRef.type();
 		boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);
@@ -1503,7 +1503,7 @@ public class ProgramExecutor extends Executor {
 					} else {
 						varValue = constructReferenceVarValue(objRef, var, frame.thread(), point);
 					}
-					
+					System.currentTimeMillis();
 					StringBuffer buffer = new StringBuffer();
 					buffer.append("[");
 					for(VarValue child: varValue.getChildren()){
