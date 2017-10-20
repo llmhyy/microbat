@@ -1440,8 +1440,12 @@ public class ProgramExecutor extends Executor {
 		return null;
 	}
 
-	private VarValue constructReferenceVarValue(ObjectReference objRef, Variable var, ThreadReference thread, BreakPoint point) {
-		VarValue varValue = new ReferenceValue(false, objRef.uniqueID(), true, var);;
+	private VarValue constructReferenceVarValue(ObjectReference objRef, Variable var0, ThreadReference thread, BreakPoint point) {
+		Variable var = var0.clone();
+		VarValue varValue = new ReferenceValue(false, objRef.uniqueID(), true, var);
+		String order = this.trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID());
+		String varID = var.getVarID() + ":" + order;
+		varValue.setVarID(varID);
 		
 		ClassType type = (ClassType)objRef.type();
 		boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);
@@ -1475,12 +1479,16 @@ public class ProgramExecutor extends Executor {
 		return varValue;
 	}
 	
-	private VarValue constructArrayVarValue(ArrayReference arrayValue, Variable var, ThreadReference thread,
+	private VarValue constructArrayVarValue(ArrayReference arrayValue, Variable var0, ThreadReference thread,
 			BreakPoint point) {
+		Variable var = var0.clone();
 		ArrayValue arrayVal = new ArrayValue(false, true, var);
 		String componentType = ((ArrayType)arrayValue.type()).componentTypeName();
 		arrayVal.setComponentType(componentType);
 		arrayVal.setReferenceID(arrayValue.uniqueID());
+		String order = this.trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID());
+		String varID = var.getVarID() + ":" + order;
+		arrayVal.setVarID(varID);
 		
 		VariableValueExtractor extractor = new VariableValueExtractor(point, thread, null, this);
 		//add value of elements

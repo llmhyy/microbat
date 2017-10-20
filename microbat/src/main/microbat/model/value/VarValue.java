@@ -64,10 +64,14 @@ public abstract class VarValue implements GraphNode{
 		String uniqueID = String.valueOf(refValue.getUniqueID());
 		if(isField()){
 			String varID = Variable.concanateFieldVarID(uniqueID, getVarName());
+			String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), varID);
+			varID = varID + ":" + order;
 			setVarID(varID);
 		}
 		else if(isElementOfArray()){
 			String varID = Variable.concanateArrayElementVarID(uniqueID, getVarName());
+			String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), varID);
+			varID = varID + ":" + order;
 			setVarID(varID);
 		}
 		else if(isLocalVariable()){
@@ -78,6 +82,8 @@ public abstract class VarValue implements GraphNode{
 			if(scope != null){
 				String varID = Variable.concanateLocalVarID(localVar.getLocationClass(), localVar.getName(), 
 						scope.getStartLine(), scope.getEndLine());
+				String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), varID);
+				varID = varID + ":" + order;
 				setVarID(varID);				
 			}
 		}

@@ -35,6 +35,7 @@ import microbat.codeanalysis.runtime.ProgramExecutor;
 import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
+import microbat.model.trace.Trace;
 import microbat.model.value.ArrayValue;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
@@ -64,7 +65,6 @@ public class VariableValueExtractor {
 	private ThreadReference thread;
 	private Location loc;
 	private ProgramExecutor executor;
-	
 	
 	public VariableValueExtractor(BreakPoint bkp, ThreadReference thread,
 			Location loc, ProgramExecutor executor) {
@@ -371,6 +371,7 @@ public class VariableValueExtractor {
 				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)childVarValue, thread);
 				StringValue ele = new StringValue(pValue, isRoot, childVar);
 				ele.setVarID(String.valueOf(((ObjectReference)childVarValue).uniqueID()));
+				appendVarID(childVar, ele);
 				parent.addChild(ele);
 				ele.addParent(parent);
 			} 
@@ -381,6 +382,7 @@ public class VariableValueExtractor {
 				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)childVarValue, thread);
 				PrimitiveValue ele = new PrimitiveValue(pValue, isRoot, childVar);
 				ele.setVarID(String.valueOf(((ObjectReference)childVarValue).uniqueID()));
+				appendVarID(childVar, ele);
 				parent.addChild(ele);
 				ele.addParent(parent);
 			} 
@@ -412,12 +414,12 @@ public class VariableValueExtractor {
 	 * @param level
 	 * @param thread
 	 */
-	private void appendClassVarVal(VarValue parent, Variable childVar, ObjectReference objRef, 
+	private void appendClassVarVal(VarValue parent, Variable childVar0, ObjectReference objRef, 
 			int level, ThreadReference thread, boolean isRoot) {
 		ClassType type = (ClassType) objRef.type();
 		
 		long refID = objRef.uniqueID();
-		
+		Variable childVar = childVar0.clone();
 		/**
 		 * Here, check whether this object has been parsed.
 		 */
@@ -481,8 +483,17 @@ public class VariableValueExtractor {
 			}
 		}
 		
+		appendVarID(childVar, val);
+		
 		parent.addChild(val);
 		val.addParent(parent);
+	}
+
+	private void appendVarID(Variable var, VarValue val) {
+		Trace trace = this.executor.getTrace();
+		String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID());
+		String varID = var.getVarID() + ":" + order;
+		val.setVarID(varID);
 	}
 
 	private synchronized void setMessageValue(ThreadReference thread, ReferenceValue val) {
@@ -513,14 +524,14 @@ public class VariableValueExtractor {
 		} 
 	}
 
-	private void appendArrVarVal(VarValue parent, Variable variable,
+	private void appendArrVarVal(VarValue parent, Variable variable0,
 			ArrayReference value, int level, ThreadReference thread, boolean isRoot) {
-		
+		Variable variable = variable0.clone();
 		ArrayValue arrayVal = new ArrayValue(false, isRoot, variable);
 		String componentType = ((ArrayType)value.type()).componentTypeName();
 		arrayVal.setComponentType(componentType);
 		arrayVal.setReferenceID(value.uniqueID());
-		
+		appendVarID(variable, arrayVal);
 		
 		//add value of elements
 		List<Value> list = new ArrayList<>();
