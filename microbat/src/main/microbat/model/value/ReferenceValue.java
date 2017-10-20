@@ -130,7 +130,8 @@ public class ReferenceValue extends VarValue {
 	
 	@Override
 	public String getManifestationValue() {
-		return stringValue;
+		String str = "(id = " + getVarID() + ")";
+		return stringValue + " " + str;
 	}
 
 	public long getUniqueID() {

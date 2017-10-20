@@ -807,6 +807,7 @@ public class ProgramExecutor extends Executor {
 								Variable subVar = v.clone();
 								VarValue subVarValue = new ReferenceValue(false, obj.uniqueID(), false, subVar);
 								subVarValue.setVarID(varID);
+								subVarValue.setStringValue("$IN_LIB");
 								values.add(subVarValue);
 							}
 							else if(sv!=null){
@@ -817,6 +818,7 @@ public class ProgramExecutor extends Executor {
 								Variable subVar = v.clone();
 								VarValue subVarValue = new PrimitiveValue(null, false, subVar);
 								subVarValue.setVarID(varID);
+								subVarValue.setStringValue("$IN_LIB");
 								values.add(subVarValue);
 							}
 						}
@@ -835,6 +837,7 @@ public class ProgramExecutor extends Executor {
 							varValue = new StringValue(strValue, false, var);
 						} else {
 							varValue = new ReferenceValue(false, objRef.uniqueID(), false, var);
+							varValue.setStringValue("$IN_LIB");
 						}
 						values.add(varValue);
 					}
