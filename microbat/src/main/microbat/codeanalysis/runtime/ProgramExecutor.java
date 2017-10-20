@@ -242,13 +242,16 @@ public class ProgramExecutor extends Executor {
 		List<VarValue> readVariables = new ArrayList<>();
 		List<VarValue> writtenVariables = new ArrayList<>();
 		
+		UsedVariable usedVar;
+		
 		Value returnedValue;
 		
-		public UsedVarValues(List<VarValue> readVariables, List<VarValue> writtenVariables, Value returnedValue) {
+		public UsedVarValues(List<VarValue> readVariables, List<VarValue> writtenVariables, Value returnedValue, UsedVariable usedVar) {
 			super();
 			this.readVariables = readVariables;
 			this.writtenVariables = writtenVariables;
 			this.returnedValue = returnedValue;
+			this.usedVar = usedVar;
 		}
 	}
 
@@ -318,6 +321,8 @@ public class ProgramExecutor extends Executor {
 		 */
 		TraceNode methodNodeJustPopedOut = null;
 		Value latestReturnedValue = null;
+		
+		UsedVariable previousVars = null;
 
 		/** this variable is used to handle exception case. */
 		Location caughtLocationForJustException = null;
@@ -381,19 +386,22 @@ public class ProgramExecutor extends Executor {
 
 					if(isInIncludedLibrary(currentLocation)){
 						if(trace.size()>0){
-							UsedVarValues uVars = build3rdPartyLibraryDependency(thread, currentLocation);
+							UsedVarValues uVars = build3rdPartyLibraryDependency(thread, currentLocation, previousVars);
+							previousVars = uVars.usedVar;
 							TraceNode latestNode = trace.getLastestNode();
 							for(VarValue varValue: uVars.readVariables){
 								if(!(varValue.getVariable() instanceof LocalVar)){
 									if(!containsVar(latestNode.getReadVariables(), varValue)){
-										latestNode.addReadVariable(varValue);																											
+										latestNode.addReadVariable(varValue);	
+//										latestNode.addHiddenReadVariable(varValue);																											
 									}
 								}
 							}
 							for(VarValue varValue: uVars.writtenVariables){
 								if(!(varValue.getVariable() instanceof LocalVar)){
 									if(!containsVar(latestNode.getWrittenVariables(), varValue)){
-										latestNode.addWrittenVariable(varValue);									
+										latestNode.addWrittenVariable(varValue);
+//										latestNode.addHiddenWrittenVariable(varValue);									
 									}
 								}
 							}
@@ -665,8 +673,9 @@ public class ProgramExecutor extends Executor {
 		return false;
 	}
 
-	private UsedVarValues build3rdPartyLibraryDependency(ThreadReference thread, Location currentLocation) {
-		UsedVarValues uVars = parseUsedVariable(thread, currentLocation);
+	private UsedVarValues build3rdPartyLibraryDependency(ThreadReference thread, Location currentLocation, 
+			UsedVariable previousVars) {
+		UsedVarValues uVars = parseUsedVariable(thread, currentLocation, previousVars);
 		
 		for(VarValue readVar: uVars.readVariables){
 			StepVariableRelationEntry entry = trace.getStepVariableTable().get(readVar.getVarID());
@@ -704,7 +713,7 @@ public class ProgramExecutor extends Executor {
 		}
 	}
 	
-	private UsedVarValues parseUsedVariable(ThreadReference thread, Location currentLocation) {
+	private UsedVarValues parseUsedVariable(ThreadReference thread, Location currentLocation, UsedVariable previousVars) {
 		int lineNumber = currentLocation.lineNumber();
 		String className = currentLocation.declaringType().name();
 		int offset = (int)currentLocation.codeIndex();
@@ -724,10 +733,13 @@ public class ProgramExecutor extends Executor {
 		}
 		
 		List<VarValue> readVarValues = parseValue(uVars.readVariables, className, thread, Variable.READ);
-		List<VarValue> writtenVarValues = parseValue(uVars.writtenVariables, className, thread, Variable.WRITTEN);
+		List<VarValue> writtenVarValues = new ArrayList<>();
+		if(previousVars != null){
+			writtenVarValues = parseValue(previousVars.writtenVariables, className, thread, Variable.WRITTEN);
+		}
 		
 		Value returnedValue = parseValue(uVars.returnedVar, thread);
-		UsedVarValues uValues = new UsedVarValues(readVarValues, writtenVarValues, returnedValue);
+		UsedVarValues uValues = new UsedVarValues(readVarValues, writtenVarValues, returnedValue, uVars);
 		return uValues;
 	}
 
@@ -756,6 +768,22 @@ public class ProgramExecutor extends Executor {
 		try {
 			StackFrame frame = thread.frame(0);
 			for(Variable v: vars){
+				/**
+				 * For read variable in library, we only need to record static fields.
+				 */
+				if(accessType.equals(Variable.READ)){
+					if(!(v instanceof FieldVar)){
+						continue;
+					}
+					else{
+						FieldVar field = (FieldVar)v;
+						if(!field.isStatic()){
+							continue;
+						}
+					}
+				}
+				
+				
 				Variable var = v.clone();
 				ExpressionValue expValue = retriveExpression(frame, v.getName(), null);
 				if(expValue==null){
