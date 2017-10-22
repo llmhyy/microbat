@@ -1542,7 +1542,7 @@ public class ProgramExecutor extends Executor {
 					} else {
 						varValue = constructReferenceVarValue(objRef, var, frame.thread(), point);
 					}
-					System.currentTimeMillis();
+					
 					StringBuffer buffer = new StringBuffer();
 					buffer.append("[");
 					for(VarValue child: varValue.getChildren()){
@@ -1564,7 +1564,7 @@ public class ProgramExecutor extends Executor {
 					LocalVariableScope scope = this.trace.getLocalVariableScopes().findScope(var.getName(),
 							node.getBreakPoint().getLineNumber(),
 							node.getBreakPoint().getDeclaringCompilationUnitName());
-					System.currentTimeMillis();
+					
 					String varID;
 					if (scope != null) {
 						varID = Variable.concanateLocalVarID(node.getBreakPoint().getDeclaringCompilationUnitName(),
