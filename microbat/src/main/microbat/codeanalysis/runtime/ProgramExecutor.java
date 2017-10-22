@@ -775,12 +775,12 @@ public class ProgramExecutor extends Executor {
 					if(!(v instanceof FieldVar)){
 						continue;
 					}
-					else{
-						FieldVar field = (FieldVar)v;
-						if(!field.isStatic()){
-							continue;
-						}
-					}
+//					else{
+//						FieldVar field = (FieldVar)v;
+//						if(!field.isStatic()){
+//							continue;
+//						}
+//					}
 				}
 				
 				
