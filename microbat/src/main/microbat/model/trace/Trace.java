@@ -240,26 +240,26 @@ public class Trace {
 		StepVariableRelationEntry entry = getStepVariableTable().get(varID);
 		List<TraceNode> producers = entry.getProducers();
 		if(producers.isEmpty()) {
-			/**
-			 * get parent variable id.
-			 */
-			String simpleID = Variable.truncateSimpleID(varID);
-			
-			while(simpleID.contains(".")) {
-				String simpleParentID = simpleID.substring(0, simpleID.lastIndexOf("."));
-				
-				for(int i=checkingNode.getOrder(); i>0; i--) {
-					TraceNode node = this.exectionList.get(i-1);
-					for(VarValue var: node.getWrittenVariables()) {
-						String simpleWrittenID = Variable.truncateSimpleID(var.getVarID());
-						if(simpleWrittenID.equals(simpleParentID)) {
-							return node;
-						}
-					}
-				}
-				
-				simpleID = simpleParentID;
-			}
+//			/**
+//			 * get parent variable id.
+//			 */
+//			String simpleID = Variable.truncateSimpleID(varID);
+//			
+//			while(simpleID.contains(".")) {
+//				String simpleParentID = simpleID.substring(0, simpleID.lastIndexOf("."));
+//				
+//				for(int i=checkingNode.getOrder(); i>0; i--) {
+//					TraceNode node = this.exectionList.get(i-1);
+//					for(VarValue var: node.getWrittenVariables()) {
+//						String simpleWrittenID = Variable.truncateSimpleID(var.getVarID());
+//						if(simpleWrittenID.equals(simpleParentID)) {
+//							return node;
+//						}
+//					}
+//				}
+//				
+//				simpleID = simpleParentID;
+//			}
 			
 			return null;
 		}
