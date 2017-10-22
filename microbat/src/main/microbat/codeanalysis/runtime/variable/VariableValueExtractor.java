@@ -416,6 +416,10 @@ public class VariableValueExtractor {
 	 */
 	private void appendClassVarVal(VarValue parent, Variable childVar0, ObjectReference objRef, 
 			int level, ThreadReference thread, boolean isRoot) {
+		if(level==0) {
+			return;
+		}
+		level--;
 		ClassType type = (ClassType) objRef.type();
 		
 		long refID = objRef.uniqueID();
@@ -452,7 +456,8 @@ public class VariableValueExtractor {
 //						String childVarID = val.getChildId(field.name());
 						if(childVarValue != null){
 							FieldVar var = new FieldVar(field.isStatic(), field.name(), childVarValue.type().toString());
-							appendVarVal(val, var, childVarValue, level, thread, false);											
+							int newLevel = level - 1;
+							appendVarVal(val, var, childVarValue, newLevel, thread, false);											
 						}
 					}
 				}
@@ -526,6 +531,11 @@ public class VariableValueExtractor {
 
 	private void appendArrVarVal(VarValue parent, Variable variable0,
 			ArrayReference value, int level, ThreadReference thread, boolean isRoot) {
+		if(level==0) {
+			return;
+		}
+		level--;
+		
 		Variable variable = variable0.clone();
 		ArrayValue arrayVal = new ArrayValue(false, isRoot, variable);
 		String componentType = ((ArrayType)value.type()).componentTypeName();
