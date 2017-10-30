@@ -1,3 +1,4 @@
 Manifest-Version: 1.0
-Class-Path: ./lib/bcel-6.0.jar
+Boot-Class-Path: /lib/bcel-6.0.jar
 Premain-Class: microbat.instrumentation.OperandStackRetriever
+Can-Retransform-Classes: true

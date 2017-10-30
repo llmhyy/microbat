@@ -37,6 +37,20 @@ public class OperandRetrievingTransfomer implements ClassFileTransformer {
 	@Override
 	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
+		if(className.startsWith("java/util"))
+			System.out.println("[Interesting] enter " + className);
+//		else
+//			System.out.println("enter " + className);
+//		System.out.println("class file buffer: " + new String(classfileBuffer));
+		
+		if(className.contains("LibTest")){
+			System.out.println("enter " + className);
+		}
+		
+		if(className.length()>0){
+			return classfileBuffer;
+		}
+		
 		if(className.startsWith("java/util/")){
 			InputStream stream = new ByteArrayInputStream(classfileBuffer);
 			ClassParser parser = new ClassParser(stream, className);
@@ -44,6 +58,7 @@ public class OperandRetrievingTransfomer implements ClassFileTransformer {
 				JavaClass clazz = parser.parse();
 				ClassGen classGen = new ClassGen(clazz);
 				for(Method method: classGen.getMethods()){
+//					System.out.println("enter " + method.getName());
 					MethodGen mGen = new MethodGen(method, clazz.getClassName(), classGen.getConstantPool());
 					ConstantPoolGen constantPoolGen = mGen.getConstantPool();
 					InstructionList instructionList = mGen.getInstructionList();
@@ -76,6 +91,8 @@ public class OperandRetrievingTransfomer implements ClassFileTransformer {
 					        
 					        //Invoke the method.
 					        instructionList.append(new INVOKEVIRTUAL(constantPoolGen.addMethodref("java.io.PrintStream", "println", "(Ljava/lang/String;)V")));
+					        
+					        System.out.println("insert print in " + method.getName() + "()");
 						}
 						else if(arrayIns.getName().contains("store")){
 							//TODO
@@ -87,6 +104,8 @@ public class OperandRetrievingTransfomer implements ClassFileTransformer {
 					mGen.setMaxLocals();
 					mGen.setMaxStack();
 				}
+				
+				return classGen.getJavaClass().getBytes();
 			} catch (ClassFormatException | IOException e) {
 				e.printStackTrace();
 			}
