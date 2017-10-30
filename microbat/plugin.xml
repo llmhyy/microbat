@@ -114,6 +114,11 @@
             id="microbat.command.staticAnalysis"
             name="Static Analysis">
       </command>
+      <command
+            defaultHandler="microbat.handler.TransformLibHandler"
+            id="microbat.command.transformRTJar"
+            name="Transform JDK Library">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -164,6 +169,11 @@
             <command
                   commandId="microbat.command.staticAnalysis"
                   label="Static Analysis"
+                  style="push">
+            </command>
+            <command
+                  commandId="microbat.command.transformRTJar"
+                  label="Transform JDK Library"
                   style="push">
             </command>
          </menu>
