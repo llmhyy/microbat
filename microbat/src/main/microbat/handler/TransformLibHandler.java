@@ -27,13 +27,10 @@ import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.ConstantPoolGen;
-import org.apache.bcel.generic.GETSTATIC;
-import org.apache.bcel.generic.INVOKEVIRTUAL;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
-import org.apache.bcel.generic.LDC;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.MethodGen;
@@ -98,7 +95,8 @@ public class TransformLibHandler extends AbstractHandler {
 								toWriteFile.createNewFile();
 							}
 							
-							writtenFiles.add(toWriteFile.getAbsolutePath());
+							String relativePath = toWriteFile.getAbsolutePath().substring(workingDir.length()+1);
+							writtenFiles.add(relativePath);
 
 							InputStream in = new BufferedInputStream(jar.getInputStream(zipEntry));
 							OutputStream out = new BufferedOutputStream(new FileOutputStream(toWriteFile));
@@ -233,13 +231,13 @@ public class TransformLibHandler extends AbstractHandler {
 							handle = instructionList.append(handle, loadValueIns);
 						}
 					}
-					InstructionHandle h = instructionList.getStart();
-					h = instructionList.append(h, new GETSTATIC(constantPoolGen.addFieldref("java.lang.System",
-							"out", "Ljava/io/PrintStream;")));
-					h = instructionList.append(h, new
-							LDC(constantPoolGen.addString("You are a real geek!")));
-					h = instructionList.append(h, new INVOKEVIRTUAL(constantPoolGen.addMethodref("java.io.PrintStream",
-									"println", "(Ljava/lang/String;)V")));
+//					InstructionHandle h = instructionList.getStart();
+//					h = instructionList.append(h, new GETSTATIC(constantPoolGen.addFieldref("java.lang.System",
+//							"out", "Ljava/io/PrintStream;")));
+//					h = instructionList.append(h, new
+//							LDC(constantPoolGen.addString("You are a real geek!")));
+//					h = instructionList.append(h, new INVOKEVIRTUAL(constantPoolGen.addMethodref("java.io.PrintStream",
+//									"println", "(Ljava/lang/String;)V")));
 					instructionList.setPositions();
 
 					System.currentTimeMillis();
