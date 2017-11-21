@@ -24,14 +24,10 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ClassGen;
-import org.apache.bcel.generic.ConstantPoolGen;
-import org.apache.bcel.generic.GETSTATIC;
-import org.apache.bcel.generic.INVOKEVIRTUAL;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
-import org.apache.bcel.generic.LDC;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.MethodGen;
@@ -48,7 +44,7 @@ import microbat.preference.MicrobatPreference;
 
 public class TransformLibHandler extends AbstractHandler {
 
-	public static String tempVariableName = "t_t_t";
+	public static String tempVariableName = "microbat_tmp_var";
 	
 	private byte[] readBytes(InputStream inputStream) throws IOException {
 	    byte[] b = new byte[1024];
@@ -108,6 +104,8 @@ public class TransformLibHandler extends AbstractHandler {
 				}
 				 
 				
+				updateRTJar();
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -119,6 +117,11 @@ public class TransformLibHandler extends AbstractHandler {
 		return null;
 	}
 
+	private void updateRTJar() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	private void instrument(File toWriteFile, byte[] bytes, String className) {
 		InputStream stream = new ByteArrayInputStream(bytes);
 		ClassParser parser = new ClassParser(stream, className);
@@ -128,13 +131,17 @@ public class TransformLibHandler extends AbstractHandler {
 			for(int i=0; i<classGen.getMethods().length; i++){
 				Method method = classGen.getMethodAt(i);
 				MethodGen mGen = new MethodGen(method, clazz.getClassName(), classGen.getConstantPool());
-				ConstantPoolGen constantPoolGen = mGen.getConstantPool();
+//				ConstantPoolGen constantPoolGen = mGen.getConstantPool();
 				InstructionList instructionList = mGen.getInstructionList();
 				
 				
 				LocalVariableGen lvGen = mGen.addLocalVariable(tempVariableName, Type.INT, 
 						instructionList.getStart(), instructionList.getEnd());
 				int index = lvGen.getIndex();
+				
+				LocalVariableGen lvGen0 = mGen.addLocalVariable(tempVariableName+"0", Type.INT, 
+						instructionList.getStart(), instructionList.getEnd());
+				int index0 = lvGen0.getIndex();
 				
 				List<InstructionHandle> arrayHandles = findArrayLoadInstruction(instructionList); 
 				
@@ -157,8 +164,27 @@ public class TransformLibHandler extends AbstractHandler {
 //				        instructionList.append(new INVOKEVIRTUAL(constantPoolGen.addMethodref("java.io.PrintStream", "println", "(Ljava/lang/String;)V")));
 					}
 					else if(arrayIns.getName().contains("store")){
-						//TODO
+						String insName = arrayIns.getName();
+						Type t = getType(insName);
+						if(t!=null){
+							lvGen0.setType(t);
+							
+							LocalVariableInstruction storeValueIns = InstructionFactory.createStore(t, index0);
+							LocalVariableInstruction storeIndexIns = InstructionFactory.createStore(Type.INT, index);
+							
+							LocalVariableInstruction loadIndexIns = InstructionFactory.createLoad(Type.INT, index);
+							LocalVariableInstruction loadValueIns = InstructionFactory.createLoad(t, index0);
+							
+							InstructionHandle handle = instructionList.append(arrayHandle.getPrev(), storeValueIns);
+							handle = instructionList.append(handle, storeIndexIns);
+							handle = instructionList.append(handle, loadIndexIns);
+							handle = instructionList.append(handle, loadValueIns);
+							
+							instructionList.setPositions();
+						}
 					}
+					
+					System.currentTimeMillis();
 				}
 				
 				System.out.println("instrument method " + method.getName());
@@ -174,9 +200,36 @@ public class TransformLibHandler extends AbstractHandler {
 			byte[] newBytes = cl.getBytes();
 			Files.write(newBytes, toWriteFile);
 		} catch (ClassFormatException | IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	private Type getType(String insName) {
+		if(insName.equals("aastore")){
+			return Type.OBJECT;
+		}
+		else if(insName.equals("bastore")){
+			return Type.BYTE;
+		}
+		else if(insName.equals("castore")){
+			return Type.CHAR;
+		}
+		else if(insName.equals("dastore")){
+			return Type.DOUBLE;
+		}
+		else if(insName.equals("fastore")){
+			return Type.FLOAT;
+		}
+		else if(insName.equals("iastore")){
+			return Type.INT;
+		}
+		else if(insName.equals("lastore")){
+			return Type.LONG;
+		}
+		else if(insName.equals("sastore")){
+			return Type.SHORT;
+		}
+		return null;
 	}
 
 		private List<InstructionHandle> findArrayLoadInstruction(InstructionList instructionList) {
