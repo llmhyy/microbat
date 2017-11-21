@@ -25,6 +25,7 @@ import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.ClassType;
 import com.sun.jdi.Field;
 import com.sun.jdi.IncompatibleThreadStateException;
+import com.sun.jdi.IntegerValue;
 import com.sun.jdi.InvalidTypeException;
 import com.sun.jdi.InvocationException;
 import com.sun.jdi.LocalVariable;
@@ -57,6 +58,7 @@ import com.sun.jdi.request.MethodEntryRequest;
 import com.sun.jdi.request.MethodExitRequest;
 import com.sun.jdi.request.StepRequest;
 
+import microbat.Activator;
 import microbat.codeanalysis.ast.LocalVariableScope;
 import microbat.codeanalysis.ast.VariableScopeParser;
 import microbat.codeanalysis.bytecode.LineNumberVisitor0;
@@ -797,31 +799,58 @@ public class ProgramExecutor extends Executor {
 					if(var instanceof ArrayElementVar){
 						ArrayReference ref = (ArrayReference)value;
 						List<Value> subValues = ref.getValues();
-						int count = 0;
-						for(Value sv: subValues){
-							if(sv instanceof ObjectReference){
-								ObjectReference obj = (ObjectReference)sv;
-								String varID = String.valueOf(obj.uniqueID());
-								String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
-								varID = varID + ":" + order;
-								Variable subVar = v.clone();
-								VarValue subVarValue = new ReferenceValue(false, obj.uniqueID(), false, subVar);
-								subVarValue.setVarID(varID);
-								subVarValue.setStringValue("$IN_LIB");
-								values.add(subVarValue);
-							}
-							else if(sv!=null){
-								String varID = Variable.concanateArrayElementVarID(
-										String.valueOf(ref.uniqueID()), String.valueOf(count++));
-								String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
-								varID = varID + ":" + order;
-								Variable subVar = v.clone();
-								VarValue subVarValue = new PrimitiveValue(null, false, subVar);
-								subVarValue.setVarID(varID);
-								subVarValue.setStringValue("$IN_LIB");
-								values.add(subVarValue);
-							}
+						LocalVariable localVariable = frame.visibleVariableByName(Activator.tempVariableName);
+						Value val = frame.getValue(localVariable);
+						IntegerValue intVal = (IntegerValue)val;
+						int index = intVal.value();
+						Value sv = subValues.get(index);
+						if(sv instanceof ObjectReference){
+							ObjectReference obj = (ObjectReference)sv;
+							String varID = String.valueOf(obj.uniqueID());
+							String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+							varID = varID + ":" + order;
+							Variable subVar = v.clone();
+							VarValue subVarValue = new ReferenceValue(false, obj.uniqueID(), false, subVar);
+							subVarValue.setVarID(varID);
+							subVarValue.setStringValue("$IN_LIB");
+							values.add(subVarValue);
 						}
+						else if(sv!=null){
+							String varID = Variable.concanateArrayElementVarID(
+									String.valueOf(ref.uniqueID()), String.valueOf(index));
+							String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+							varID = varID + ":" + order;
+							Variable subVar = v.clone();
+							VarValue subVarValue = new PrimitiveValue(null, false, subVar);
+							subVarValue.setVarID(varID);
+							subVarValue.setStringValue("$IN_LIB");
+							values.add(subVarValue);
+						}
+//						int count = 0;
+//						for(Value sv: subValues){
+//							if(sv instanceof ObjectReference){
+//								ObjectReference obj = (ObjectReference)sv;
+//								String varID = String.valueOf(obj.uniqueID());
+//								String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+//								varID = varID + ":" + order;
+//								Variable subVar = v.clone();
+//								VarValue subVarValue = new ReferenceValue(false, obj.uniqueID(), false, subVar);
+//								subVarValue.setVarID(varID);
+//								subVarValue.setStringValue("$IN_LIB");
+//								values.add(subVarValue);
+//							}
+//							else if(sv!=null){
+//								String varID = Variable.concanateArrayElementVarID(
+//										String.valueOf(ref.uniqueID()), String.valueOf(count++));
+//								String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+//								varID = varID + ":" + order;
+//								Variable subVar = v.clone();
+//								VarValue subVarValue = new PrimitiveValue(null, false, subVar);
+//								subVarValue.setVarID(varID);
+//								subVarValue.setStringValue("$IN_LIB");
+//								values.add(subVarValue);
+//							}
+//						}
 					}
 					else{
 						ObjectReference objRef = (ObjectReference) value;
@@ -890,7 +919,7 @@ public class ProgramExecutor extends Executor {
 				}
 				
 			}
-		} catch (IncompatibleThreadStateException e) {
+		} catch (IncompatibleThreadStateException | AbsentInformationException e) {
 			e.printStackTrace();
 		}
 		
