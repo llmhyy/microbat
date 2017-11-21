@@ -17,6 +17,8 @@ public class Activator extends AbstractUIPlugin {
 
 	// The plug-in ID
 	public static final String PLUGIN_ID = "microbat"; //$NON-NLS-1$
+	
+	public static String tempVariableName = "microbat_tmp_var";
 
 	// The shared instance
 	private static Activator plugin;
