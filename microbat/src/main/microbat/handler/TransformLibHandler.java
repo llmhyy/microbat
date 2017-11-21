@@ -26,7 +26,6 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ClassGen;
-import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.InstructionHandle;
@@ -189,7 +188,7 @@ public class TransformLibHandler extends AbstractHandler {
 			for (int i = 0; i < classGen.getMethods().length; i++) {
 				Method method = classGen.getMethodAt(i);
 				MethodGen mGen = new MethodGen(method, clazz.getClassName(), classGen.getConstantPool());
-				ConstantPoolGen constantPoolGen = mGen.getConstantPool();
+//				ConstantPoolGen constantPoolGen = mGen.getConstantPool();
 				InstructionList instructionList = mGen.getInstructionList();
 
 				LocalVariableGen lvGen = mGen.addLocalVariable(Activator.tempVariableName, Type.INT, instructionList.getStart(),
