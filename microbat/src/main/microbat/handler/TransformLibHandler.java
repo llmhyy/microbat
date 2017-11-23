@@ -42,6 +42,7 @@ import org.eclipse.core.commands.ExecutionException;
 import com.google.common.io.Files;
 
 import microbat.Activator;
+import microbat.codeanalysis.runtime.Executor;
 import microbat.preference.MicrobatPreference;
 
 public class TransformLibHandler extends AbstractHandler {
@@ -86,9 +87,10 @@ public class TransformLibHandler extends AbstractHandler {
 					ZipEntry zipEntry = enumeration.nextElement();
 					if (zipEntry.getName().endsWith(".class")) {
 						String className = zipEntry.getName();
-						if (className.equals("java/util/ArrayList.class")) {
+						if (isValidClass(className)) {
 							File toWriteFile = new File(workingDir, zipEntry.getName());
-
+							System.out.println(toWriteFile);
+							
 							if (!toWriteFile.exists()) {
 								toWriteFile.getParentFile().mkdirs();
 								toWriteFile.createNewFile();
@@ -131,13 +133,42 @@ public class TransformLibHandler extends AbstractHandler {
 		return null;
 	}
 
+	private boolean isValidClass(String className) {
+		String[] libExcludes = Executor.libExcludes;
+		for(String libEx: libExcludes){
+			String prefix = libEx.replace(".", "/");
+			prefix = prefix.replace("*", "");
+			if(className.startsWith(prefix)){
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
 	private void updateRTJar(List<String> files, String workingDir) {
-		for (String file : files) {
+		
+		List<String> topFolders = new ArrayList<>();
+		for(String file: files){
+			int index = findSharedPrefixFolder(topFolders, file);
+			if(index==-1){
+				topFolders.add(file);
+			}
+			else{
+				String topFolder = topFolders.get(index);
+				String sharedPrefix = getSharedPrefix(topFolder, file);
+				files.set(index, sharedPrefix);
+			}
+		}
+		
+		System.currentTimeMillis();
+		
+		for (String topFolder : topFolders) {
 			List<String> command = new ArrayList<>();
 			command.add("jar");
 			command.add("uf");
 			command.add("rt.jar");
-			command.add(file);
+			command.add(topFolder);
 
 			ProcessBuilder builder = new ProcessBuilder(command);
 			builder.directory(new File(workingDir));
@@ -145,23 +176,44 @@ public class TransformLibHandler extends AbstractHandler {
 				Process process = builder.start();
 				int errorCode = process.waitFor();
 				if (errorCode != 0) {
-					System.err.println("updating " + file + " to rt.jar fails.");
+					System.err.println("updating " + topFolder + " to rt.jar fails.");
 					
 					String output = output(process.getErrorStream());
 					System.out.println(output);
 				}
 				else{
-					System.out.println("updating " + file + " to rt.jar successes.");
+					System.out.println("updating " + topFolder + " to rt.jar successes.");
 				}
 
-				String output = output(process.getInputStream());
-				System.out.println(output);
+//				String output = output(process.getInputStream());
+//				System.out.println(output);
 			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();
 			}
 
 		}
 
+	}
+
+	private int findSharedPrefixFolder(List<String> topFolders, String file) {
+		for(int i=0; i<topFolders.size(); i++){
+			String topFolder = topFolders.get(i);
+			String sharedPrefix = getSharedPrefix(topFolder, file);
+			if(sharedPrefix.length()!=0){
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	private String getSharedPrefix(String a, String b) {
+		int minLength = Math.min(a.length(), b.length());
+	    for (int i = 0; i < minLength; i++) {
+	        if (a.charAt(i) != b.charAt(i)) {
+	            return a.substring(0, i);
+	        }
+	    }
+	    return a.substring(0, minLength);
 	}
 
 	private static String output(InputStream inputStream) throws IOException {
@@ -190,6 +242,9 @@ public class TransformLibHandler extends AbstractHandler {
 				MethodGen mGen = new MethodGen(method, clazz.getClassName(), classGen.getConstantPool());
 //				ConstantPoolGen constantPoolGen = mGen.getConstantPool();
 				InstructionList instructionList = mGen.getInstructionList();
+				if(instructionList==null){
+					return;
+				}
 
 				LocalVariableGen lvGen = mGen.addLocalVariable(Activator.tempVariableName, Type.INT, instructionList.getStart(),
 						instructionList.getEnd());
@@ -242,7 +297,7 @@ public class TransformLibHandler extends AbstractHandler {
 					System.currentTimeMillis();
 				}
 
-				System.out.println("instrument method " + method.getName());
+//				System.out.println("instrument method " + method.getName());
 
 				mGen.setMaxLocals();
 				mGen.setMaxStack();

@@ -46,7 +46,7 @@ public abstract class Executor {
 	protected ThreadStartRequest threadStartRequest;
 	protected BreakpointRequest breakpointRequest;
 	
-	protected String[] libExcludes = { 
+	public static String[] libExcludes = { 
 			"java.awt.*",
 			"java.applet.*", 
 			"java.lang.*",
@@ -69,6 +69,13 @@ public abstract class Executor {
 			"java.util.stream.*", 
 			"java.util.zip.*", 
 			"javax.*", "sun.*", "com.sun.*", 
+			"org.omg.*",
+			"com.oracle.*",
+			"org.ietf.*",
+			"org.jcp.*",
+			"org.w3c.*",
+			"org.xml.*",
+			"sunw.*",
 			/*"org.junit.*", "junit.*", "junit.framework.*", "org.hamcrest.*", "org.hamcrest.core.*", "org.hamcrest.internal.*",*/
 			"jdk.*", "jdk.internal.*", "org.GNOME.Accessibility.*"
 			};
@@ -81,7 +88,6 @@ public abstract class Executor {
 	
 	protected boolean isInIncludedLibrary(Location currentLocation) {
 		String typeName = currentLocation.declaringType().name();
-		
 		for(String expr: includedLibs){
 			expr = expr.replace("*", "");
 			if(typeName.contains(expr)){
