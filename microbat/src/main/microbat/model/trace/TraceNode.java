@@ -44,8 +44,8 @@ public class TraceNode{
 	private List<VarValue> readVariables = new ArrayList<>();
 	private List<VarValue> writtenVariables = new ArrayList<>();
 	
-	private List<VarValue> hiddenReadVariables = new ArrayList<>();
-	private List<VarValue> hiddenWrittenVariables = new ArrayList<>();
+//	private List<VarValue> hiddenReadVariables = new ArrayList<>();
+//	private List<VarValue> hiddenWrittenVariables = new ArrayList<>();
 	
 	private Map<TraceNode, List<String>> dataDominators = new HashMap<>();
 	private Map<TraceNode, List<String>> dataDominatees = new HashMap<>();
@@ -435,13 +435,13 @@ public class TraceNode{
 		this.readVariables.add(var);
 	}
 	
-	public void addHiddenReadVariable(VarValue var){
-		this.hiddenReadVariables.add(var);
-	}
-	
-	public void addHiddenWrittenVariable(VarValue var){
-		this.hiddenWrittenVariables.add(var);
-	}
+//	public void addHiddenReadVariable(VarValue var){
+//		this.hiddenReadVariables.add(var);
+//	}
+//	
+//	public void addHiddenWrittenVariable(VarValue var){
+//		this.hiddenWrittenVariables.add(var);
+//	}
 
 	public List<VarValue> getWrittenVariables() {
 		return writtenVariables;
@@ -950,19 +950,19 @@ public class TraceNode{
 		return vars;
 	}
 
-	public List<VarValue> getHiddenReadVariables() {
-		return hiddenReadVariables;
-	}
-
-	public void setHiddenReadVariables(List<VarValue> hiddenReadVariables) {
-		this.hiddenReadVariables = hiddenReadVariables;
-	}
-
-	public List<VarValue> getHiddenWrittenVariables() {
-		return hiddenWrittenVariables;
-	}
-
-	public void setHiddenWrittenVariables(List<VarValue> hiddenWrittenVariables) {
-		this.hiddenWrittenVariables = hiddenWrittenVariables;
-	}
+//	public List<VarValue> getHiddenReadVariables() {
+//		return hiddenReadVariables;
+//	}
+//
+//	public void setHiddenReadVariables(List<VarValue> hiddenReadVariables) {
+//		this.hiddenReadVariables = hiddenReadVariables;
+//	}
+//
+//	public List<VarValue> getHiddenWrittenVariables() {
+//		return hiddenWrittenVariables;
+//	}
+//
+//	public void setHiddenWrittenVariables(List<VarValue> hiddenWrittenVariables) {
+//		this.hiddenWrittenVariables = hiddenWrittenVariables;
+//	}
 }

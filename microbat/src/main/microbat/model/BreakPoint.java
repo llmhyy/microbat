@@ -6,13 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import microbat.model.variable.Variable;
-import sav.common.core.utils.CollectionUtils;
 
 public class BreakPoint extends ClassLocation {
-	protected List<Variable> vars; // to keep order
-	private int charStart;
-	private int charEnd;
-	
 	private List<Variable> readVariables = new ArrayList<>();
 	private List<Variable> writtenVariables = new ArrayList<>();
 	
@@ -28,21 +23,11 @@ public class BreakPoint extends ClassLocation {
 	
 	public BreakPoint(String className, String declaringCompilationUnitName, int linNum){
 		super(className, null, linNum);
-		vars = new ArrayList<Variable>();
 		this.declaringCompilationUnitName = declaringCompilationUnitName;
 	}
 	
 	public BreakPoint(String className, String declaringCompilationUnitName, String methodSign, int lineNo) {
 		super(className, methodSign, lineNo);
-		vars = new ArrayList<Variable>();
-		this.declaringCompilationUnitName = declaringCompilationUnitName;
-	}
-	
-	public BreakPoint(String className, String declaringCompilationUnitName, int lineNo, Variable... newVars) {
-		this(className, null, lineNo);
-		if (newVars != null) {
-			addVars(newVars);
-		}
 		this.declaringCompilationUnitName = declaringCompilationUnitName;
 	}
 	
@@ -50,8 +35,6 @@ public class BreakPoint extends ClassLocation {
 		ClassLocation location = (ClassLocation) super.clone();
 		BreakPoint point = new BreakPoint(location.getClassCanonicalName(), declaringCompilationUnitName, lineNo);
 		point.setAllVisibleVariables(allVisibleVariables);
-		point.setCharEnd(charEnd);
-		point.setCharStart(charStart);
 		point.setControlScope(controlScope);
 		point.setConditional(isConditional);
 		point.setReturnStatement(isReturnStatement);
@@ -121,27 +104,6 @@ public class BreakPoint extends ClassLocation {
 		return false;
 	}
 
-	public void addVars(Variable... newVars) {
-		for (Variable newVar : newVars) {
-			vars.add(newVar);
-		}
-	}
-	
-	public void addVars(List<Variable> newVars) {
-		for (Variable newVar : newVars) {
-			CollectionUtils.addIfNotNullNotExist(vars, newVar);
-			
-		}
-	}
-	
-	public List<Variable> getVars() {
-		return vars;
-	}
-
-	public void setVars(List<Variable> vars) {
-		this.vars = vars;
-	}
-	
 	public boolean valid() {
 		return lineNo > 0;
 	}
@@ -153,22 +115,7 @@ public class BreakPoint extends ClassLocation {
 		return methodSign;
 	}
 	
-	public int getCharStart() {
-		return charStart;
-	}
 
-	public void setCharStart(int charStart) {
-		this.charStart = charStart;
-	}
-
-	public int getCharEnd() {
-		return charEnd;
-	}
-
-	public void setCharEnd(int charEnd) {
-		this.charEnd = charEnd;
-	}
-	
 	public List<Integer> getOrgLineNos() {
 		return Arrays.asList(lineNo);
 	}
@@ -177,8 +124,7 @@ public class BreakPoint extends ClassLocation {
 	public String toString() {
 		return "BreakPoint [classCanonicalName=" + classCanonicalName
 				 + ", lineNo=" + lineNo + ", methodName=" + methodSign
-				+ ", vars=" + vars + ", charStart=" + charStart + ", charEnd="
-				+ charEnd + "]";
+				+ "]";
 	}
 
 	@Override
