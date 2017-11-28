@@ -119,6 +119,11 @@
             id="microbat.command.transformRTJar"
             name="Transform JDK Library">
       </command>
+      <command
+            defaultHandler="microbat.handler.StoreTraceHandler"
+            id="microbat.command.StoreTrace"
+            name="Store Trace">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -174,6 +179,11 @@
             <command
                   commandId="microbat.command.transformRTJar"
                   label="Transform JDK Library"
+                  style="push">
+            </command>
+            <command
+                  commandId="microbat.command.StoreTrace"
+                  label="Store Trace"
                   style="push">
             </command>
          </menu>

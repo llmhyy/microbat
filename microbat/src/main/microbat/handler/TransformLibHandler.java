@@ -161,7 +161,7 @@ public class TransformLibHandler extends AbstractHandler {
 			}
 		}
 		
-		System.currentTimeMillis();
+//		System.currentTimeMillis();
 		
 		for (String topFolder : topFolders) {
 			List<String> command = new ArrayList<>();
