@@ -161,7 +161,7 @@ public class TransformLibHandler extends AbstractHandler {
 			}
 		}
 		
-//		System.currentTimeMillis();
+		System.currentTimeMillis();
 		
 		for (String topFolder : topFolders) {
 			List<String> command = new ArrayList<>();
@@ -243,7 +243,7 @@ public class TransformLibHandler extends AbstractHandler {
 //				ConstantPoolGen constantPoolGen = mGen.getConstantPool();
 				InstructionList instructionList = mGen.getInstructionList();
 				if(instructionList==null){
-					return;
+					continue;
 				}
 
 				LocalVariableGen lvGen = mGen.addLocalVariable(Activator.tempVariableName, Type.INT, instructionList.getStart(),
