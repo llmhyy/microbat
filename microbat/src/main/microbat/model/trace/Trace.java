@@ -587,9 +587,9 @@ public class Trace {
 				//System.err.println("there is no producer for variable " + entry.getAliasVariables());
 			}
 			
-			if(producers.size() > 1){
-				System.err.println("there are more than one producer for variable " + entry.getAliasVariables());
-			}
+//			if(producers.size() > 1){
+//				System.err.println("there are more than one producer for variable " + entry.getAliasVariables());
+//			}
 
 			if(!producers.isEmpty()){
 				TraceNode producer = producers.get(0);
