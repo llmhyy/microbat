@@ -144,7 +144,7 @@ public class ByteCodeVisitor extends EmptyVisitor{
 					ReadArrayElementRetriever raeRetriever = new ReadArrayElementRetriever(cu, point.getLineNumber(), typeName);
 					cu.accept(raeRetriever);
 					for(String readArrayElement: raeRetriever.arrayElementNameList){
-						ArrayElementVar var = new ArrayElementVar(readArrayElement, typeName);
+						ArrayElementVar var = new ArrayElementVar(readArrayElement, typeName, null);
 						point.addReadVariable(var);											
 					}
 				}
@@ -153,7 +153,7 @@ public class ByteCodeVisitor extends EmptyVisitor{
 					cu.accept(waeRetriever);
 					String writtenArrayElement = waeRetriever.arrayElementName;
 					if(writtenArrayElement != null){
-						ArrayElementVar var = new ArrayElementVar(writtenArrayElement, typeName);
+						ArrayElementVar var = new ArrayElementVar(writtenArrayElement, typeName, null);
 						point.addWrittenVariable(var);
 					}
 				}

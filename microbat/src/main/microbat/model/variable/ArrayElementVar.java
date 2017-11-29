@@ -2,8 +2,9 @@ package microbat.model.variable;
 
 public class ArrayElementVar extends Variable {
 
-	public ArrayElementVar(String name, String type) {
+	public ArrayElementVar(String name, String type, String aliasVarID) {
 		super(name, type);
+		this.aliasVarID = aliasVarID;
 	}
 
 	@Override
@@ -47,11 +48,9 @@ public class ArrayElementVar extends Variable {
 
 	@Override
 	public Variable clone() {
-		ArrayElementVar var = new ArrayElementVar(variableName, type);
+		ArrayElementVar var = new ArrayElementVar(variableName, type, aliasVarID);
 		var.setVarID(varID);
 		return var;
 	}
-	
-	
 	
 }

@@ -239,16 +239,17 @@ public class ProgramExecutor extends Executor {
 			return "PointWrapper [point=" + point + ", isHit=" + isHit + "]";
 		}
 	}
-	
-	class UsedVarValues{
+
+	class UsedVarValues {
 		List<VarValue> readVariables = new ArrayList<>();
 		List<VarValue> writtenVariables = new ArrayList<>();
-		
+
 		UsedVariable usedVar;
-		
+
 		Value returnedValue;
-		
-		public UsedVarValues(List<VarValue> readVariables, List<VarValue> writtenVariables, Value returnedValue, UsedVariable usedVar) {
+
+		public UsedVarValues(List<VarValue> readVariables, List<VarValue> writtenVariables, Value returnedValue,
+				UsedVariable usedVar) {
 			super();
 			this.readVariables = readVariables;
 			this.writtenVariables = writtenVariables;
@@ -275,7 +276,7 @@ public class ProgramExecutor extends Executor {
 	 */
 	private VirtualMachine constructTrace(IProgressMonitor monitor, List<PointWrapper> executionOrderList,
 			AppJavaClassPath appClassPath, int stepNum, boolean isTestcaseEvaluation)
-			throws SavException, TimeoutException {
+					throws SavException, TimeoutException {
 
 		/** start debugger */
 		VirtualMachine vm = new VMStarter(this.appPath, isTestcaseEvaluation).start();
@@ -323,7 +324,7 @@ public class ProgramExecutor extends Executor {
 		 */
 		TraceNode methodNodeJustPopedOut = null;
 		Value latestReturnedValue = null;
-		
+
 		UsedVariable previousVars = null;
 
 		/** this variable is used to handle exception case. */
@@ -352,7 +353,7 @@ public class ProgramExecutor extends Executor {
 			 * ensure the step event is parsed before the method entry event
 			 */
 			List<Event> sortedEvents = sortEvents(eventSet);
-			
+
 			for (Event event : sortedEvents) {
 				if (event instanceof VMStartEvent) {
 					System.out.println("JVM is started...");
@@ -386,35 +387,35 @@ public class ProgramExecutor extends Executor {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
 
-					if(isInIncludedLibrary(currentLocation)){
-						if(trace.size()>0){
+					if (isInIncludedLibrary(currentLocation)) {
+						if (trace.size() > 0) {
 							UsedVarValues uVars = build3rdPartyLibraryDependency(thread, currentLocation, previousVars);
 							previousVars = uVars.usedVar;
 							TraceNode latestNode = trace.getLastestNode();
-							for(VarValue varValue: uVars.readVariables){
-								if(!(varValue.getVariable() instanceof LocalVar)){
-									if(!containsVar(latestNode.getReadVariables(), varValue)){
-										latestNode.addReadVariable(varValue);	
-//										latestNode.addHiddenReadVariable(varValue);																											
+							for (VarValue varValue : uVars.readVariables) {
+								if (!(varValue.getVariable() instanceof LocalVar)) {
+									if (!containsVar(latestNode.getReadVariables(), varValue)) {
+										latestNode.addReadVariable(varValue);
+										// latestNode.addHiddenReadVariable(varValue);
 									}
 								}
 							}
-							for(VarValue varValue: uVars.writtenVariables){
-								if(!(varValue.getVariable() instanceof LocalVar)){
-									if(!containsVar(latestNode.getWrittenVariables(), varValue)){
+							for (VarValue varValue : uVars.writtenVariables) {
+								if (!(varValue.getVariable() instanceof LocalVar)) {
+									if (!containsVar(latestNode.getWrittenVariables(), varValue)) {
 										latestNode.addWrittenVariable(varValue);
-//										latestNode.addHiddenWrittenVariable(varValue);									
+										// latestNode.addHiddenWrittenVariable(varValue);
 									}
 								}
 							}
-							
+
 							Value returnValue = uVars.returnedValue;
-							if(returnValue != null){
+							if (returnValue != null) {
 								latestReturnedValue = returnValue;
 							}
 						}
 					}
-					
+
 					if (currentLocation.lineNumber() == -1) {
 						continue;
 					}
@@ -440,10 +441,9 @@ public class ProgramExecutor extends Executor {
 						 */
 						isContextChange = checkContext(lastSteppingInPoint, currentLocation);
 						if (!isContextChange) {
-							parseReadWrittenVariableInThisStep(thread, currentLocation, this.trace.getLastestNode(),
-									this.trace.getStepVariableTable(), Variable.WRITTEN);
+							processWrittenVariable(this.trace.getLastestNode(), this.trace.getStepVariableTable(), thread, currentLocation);
 						}
-
+						processWrittenVariable(this.trace.getLastestNode(), this.trace.getStepVariableTable(), thread, currentLocation);
 						lastSteppingInPoint = null;
 					}
 
@@ -490,8 +490,10 @@ public class ProgramExecutor extends Executor {
 							returnedValue = latestReturnedValue;
 						}
 
-						parseReadWrittenVariableInThisStep(thread, currentLocation, node,
-								this.trace.getStepVariableTable(), Variable.READ);
+						processReadVariable(node, this.trace.getStepVariableTable(), thread, currentLocation);
+						// parseReadWrittenVariableInThisStep(thread,
+						// currentLocation, node,
+						// this.trace.getStepVariableTable(), Variable.READ);
 						/**
 						 * create virtual variable for return statement
 						 */
@@ -518,10 +520,10 @@ public class ProgramExecutor extends Executor {
 					// System.out.println("enter " + method + ":" +
 					// ((MethodEntryEvent)event).location());
 
-					if(isInIncludedLibrary(method.location())){
+					if (isInIncludedLibrary(method.location())) {
 						continue;
 					}
-					
+
 					/**
 					 * See the explanation of isInRcording variable.
 					 */
@@ -571,10 +573,10 @@ public class ProgramExecutor extends Executor {
 						 * It check whether a \<clint\> method is visited in
 						 * previous method entry event. If yes, this variable
 						 * will be set true. The reason is to prevent JVM from
-						 * being hanged. We observe that calling a \<clint\>
-						 * method sometimes hang the JVM, causing a JVM timeout
-						 * exception. Therefore, once we meet such a method, we
-						 * try to skip.
+						 * being hanged. We observe that calling a \
+						 * <clint\> method sometimes hang the JVM, causing a JVM
+						 * timeout exception. Therefore, once we meet such a
+						 * method, we try to skip.
 						 */
 						if (nextPoint != null) {
 							if (nextPoint.isHit || method.name().equals("<clinit>")
@@ -594,8 +596,8 @@ public class ProgramExecutor extends Executor {
 					Method method = mee.method();
 					// System.out.println("exit " + method + ":" +
 					// ((MethodExitEvent)event).location());
-					
-					if(isInIncludedLibrary(method.location())){
+
+					if (isInIncludedLibrary(method.location())) {
 						continue;
 					}
 
@@ -667,46 +669,42 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private boolean containsVar(List<VarValue> readVariables, VarValue varValue) {
-		for(VarValue value: readVariables){
-			if(value.getVariable().getVarID().equals(varValue.getVariable().getVarID())){
+		for (VarValue value : readVariables) {
+			if (value.getVariable().getVarID().equals(varValue.getVariable().getVarID())) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private UsedVarValues build3rdPartyLibraryDependency(ThreadReference thread, Location currentLocation, 
+	private UsedVarValues build3rdPartyLibraryDependency(ThreadReference thread, Location currentLocation,
 			UsedVariable previousVars) {
 		UsedVarValues uVars = parseUsedVariable(thread, currentLocation, previousVars);
-		
-		for(VarValue readVar: uVars.readVariables){
-			StepVariableRelationEntry entry = trace.getStepVariableTable().get(readVar.getVarID());
-			if(entry == null){
-				entry = new StepVariableRelationEntry(readVar.getVarID());
+
+		for (VarValue readVar : uVars.readVariables) {
+			List<StepVariableRelationEntry> entries = constructStepVariableEntry(trace.getStepVariableTable(), readVar);
+			for(StepVariableRelationEntry entry: entries){
+				entry.addConsumer(trace.getLastestNode());
 			}
-			entry.addConsumer(trace.getLastestNode());
-			trace.getStepVariableTable().put(readVar.getVarID(), entry);
 		}
-		
-		for(VarValue writtenVar: uVars.writtenVariables){
-			StepVariableRelationEntry entry = trace.getStepVariableTable().get(writtenVar.getVarID());
-			if(entry == null){
-				entry = new StepVariableRelationEntry(writtenVar.getVarID());
+
+		for (VarValue writtenVar : uVars.writtenVariables) {
+			List<StepVariableRelationEntry> entries = constructStepVariableEntry(trace.getStepVariableTable(), writtenVar);
+			for(StepVariableRelationEntry entry: entries){
+				entry.addProducer(trace.getLastestNode());
 			}
-			entry.addProducer(trace.getLastestNode());
-			trace.getStepVariableTable().put(writtenVar.getVarID(), entry);
 		}
-		
+
 		return uVars;
 	}
-	
-	
+
 	private HashMap<String, UsedVariable> libraryLine2VariableMap = new HashMap<>();
 
-	class UsedVariable{
+	class UsedVariable {
 		List<Variable> readVariables = new ArrayList<>();
 		List<Variable> writtenVariables = new ArrayList<>();
 		Variable returnedVar;
+
 		public UsedVariable(List<Variable> readVariables, List<Variable> writtenVariables, Variable returnedVar) {
 			super();
 			this.readVariables = readVariables;
@@ -714,149 +712,134 @@ public class ProgramExecutor extends Executor {
 			this.returnedVar = returnedVar;
 		}
 	}
-	
-	private UsedVarValues parseUsedVariable(ThreadReference thread, Location currentLocation, UsedVariable previousVars) {
+
+	private UsedVarValues parseUsedVariable(ThreadReference thread, Location currentLocation,
+			UsedVariable previousVars) {
 		int lineNumber = currentLocation.lineNumber();
 		String className = currentLocation.declaringType().name();
-		int offset = (int)currentLocation.codeIndex();
-		
+		int offset = (int) currentLocation.codeIndex();
+
 		String locationID = className + "$" + lineNumber;
 		UsedVariable uVars = libraryLine2VariableMap.get(locationID);
-//		uVars = null;
-		if(uVars == null){
-			LineNumberVisitor0 visitor = RWVarRetrieverForLine.parse(className, lineNumber,  offset, appPath);
+		// uVars = null;
+		if (uVars == null) {
+			LineNumberVisitor0 visitor = RWVarRetrieverForLine.parse(className, lineNumber, offset, appPath);
 			List<Variable> readVars = visitor.getReadVars();
 			List<Variable> writtenVars = visitor.getWrittenVars();
 			Variable returnedVar = visitor.getReturnedVar();
-			
+
 			uVars = new UsedVariable(readVars, writtenVars, returnedVar);
-			
+
 			libraryLine2VariableMap.put(locationID, uVars);
 		}
-		
+
 		List<VarValue> readVarValues = parseValue(uVars.readVariables, className, thread, Variable.READ);
 		List<VarValue> writtenVarValues = new ArrayList<>();
-		if(previousVars != null){
+		if (previousVars != null) {
 			writtenVarValues = parseValue(previousVars.writtenVariables, className, thread, Variable.WRITTEN);
 		}
-		
+
 		Value returnedValue = parseValue(uVars.returnedVar, thread);
 		UsedVarValues uValues = new UsedVarValues(readVarValues, writtenVarValues, returnedValue, uVars);
 		return uValues;
 	}
 
 	private Value parseValue(Variable returnedVar, ThreadReference thread) {
-		if(returnedVar==null){
+		if (returnedVar == null) {
 			return null;
 		}
-		
+
 		try {
 			StackFrame frame = thread.frame(0);
 			ExpressionValue expValue = retriveExpression(frame, returnedVar.getName(), null);
-			if(expValue==null){
+			if (expValue == null) {
 				return null;
 			}
 			return expValue.value;
 		} catch (IncompatibleThreadStateException e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
 
-	private List<VarValue> parseValue(List<Variable> vars, String className, ThreadReference thread, String accessType) {
+	private List<VarValue> parseValue(List<Variable> vars, String className, ThreadReference thread,
+			String accessType) {
 		List<VarValue> values = new ArrayList<>();
-		
+
 		try {
 			StackFrame frame = thread.frame(0);
-			for(Variable v: vars){
+			for (Variable v : vars) {
 				/**
-				 * For read variable in library, we only need to record static fields.
+				 * For read variable in library, we only need to record static
+				 * fields.
 				 */
-				if(accessType.equals(Variable.READ)){
-					if(!(v instanceof FieldVar)){
+				if (accessType.equals(Variable.READ)) {
+					if (!(v instanceof FieldVar)) {
 						continue;
 					}
-//					else{
-//						FieldVar field = (FieldVar)v;
-//						if(!field.isStatic()){
-//							continue;
-//						}
-//					}
+					// else{
+					// FieldVar field = (FieldVar)v;
+					// if(!field.isStatic()){
+					// continue;
+					// }
+					// }
 				}
-				
-				
+
 				Variable var = v.clone();
 				ExpressionValue expValue = retriveExpression(frame, v.getName(), null);
-				if(expValue==null){
+				if (expValue == null) {
 					continue;
 				}
-				
+
 				VarValue varValue = null;
 				Value value = expValue.value;
-				
+
 				if (value instanceof ObjectReference) {
-					if(var instanceof ArrayElementVar){
-						ArrayReference ref = (ArrayReference)value;
+					if (var instanceof ArrayElementVar) {
+						ArrayReference ref = (ArrayReference) value;
 						List<Value> subValues = ref.getValues();
+						
 						LocalVariable localVariable = frame.visibleVariableByName(Activator.tempVariableName);
 						Value val = frame.getValue(localVariable);
-						IntegerValue intVal = (IntegerValue)val;
+						IntegerValue intVal = (IntegerValue) val;
 						int index = intVal.value();
 						Value sv = subValues.get(index);
-						if(sv instanceof ObjectReference){
-							ObjectReference obj = (ObjectReference)sv;
+						
+						String aliasVarID = Variable.concanateArrayElementVarID(String.valueOf(ref.uniqueID()),
+								String.valueOf(index));
+						
+						if (sv instanceof ObjectReference) {
+							ObjectReference obj = (ObjectReference) sv;
 							String varID = String.valueOf(obj.uniqueID());
-							String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+							String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID, var.getAliasVarID());
 							varID = varID + ":" + order;
+							aliasVarID = aliasVarID + ":" + order;
+							
 							Variable subVar = v.clone();
+							subVar.setAliasVarID(aliasVarID);
+							
 							VarValue subVarValue = new ReferenceValue(false, obj.uniqueID(), false, subVar);
 							subVarValue.setVarID(varID);
 							subVarValue.setStringValue("$IN_LIB");
 							values.add(subVarValue);
-						}
-						else if(sv!=null){
-							String varID = Variable.concanateArrayElementVarID(
-									String.valueOf(ref.uniqueID()), String.valueOf(index));
-							String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
-							varID = varID + ":" + order;
+						} else /* if(sv!=null) */ {
+							String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), aliasVarID, var.getAliasVarID());
+							aliasVarID = aliasVarID + ":" + order;
+							
 							Variable subVar = v.clone();
+							subVar.setAliasVarID(aliasVarID);
 							VarValue subVarValue = new PrimitiveValue(null, false, subVar);
-							subVarValue.setVarID(varID);
+							subVarValue.setVarID(aliasVarID);
 							subVarValue.setStringValue("$IN_LIB");
 							values.add(subVarValue);
 						}
-//						int count = 0;
-//						for(Value sv: subValues){
-//							if(sv instanceof ObjectReference){
-//								ObjectReference obj = (ObjectReference)sv;
-//								String varID = String.valueOf(obj.uniqueID());
-//								String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
-//								varID = varID + ":" + order;
-//								Variable subVar = v.clone();
-//								VarValue subVarValue = new ReferenceValue(false, obj.uniqueID(), false, subVar);
-//								subVarValue.setVarID(varID);
-//								subVarValue.setStringValue("$IN_LIB");
-//								values.add(subVarValue);
-//							}
-//							else if(sv!=null){
-//								String varID = Variable.concanateArrayElementVarID(
-//										String.valueOf(ref.uniqueID()), String.valueOf(count++));
-//								String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
-//								varID = varID + ":" + order;
-//								Variable subVar = v.clone();
-//								VarValue subVarValue = new PrimitiveValue(null, false, subVar);
-//								subVarValue.setVarID(varID);
-//								subVarValue.setStringValue("$IN_LIB");
-//								values.add(subVarValue);
-//							}
-//						}
-					}
-					else{
+					} else {
 						ObjectReference objRef = (ObjectReference) value;
 						String varID = String.valueOf(objRef.uniqueID());
 
-						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, trace.getLastestNode(),
+								varID, var.getAliasVarID());
 						varID = varID + ":" + definingNodeOrder;
 						var.setVarID(varID);
 
@@ -870,7 +853,7 @@ public class ProgramExecutor extends Executor {
 						}
 						values.add(varValue);
 					}
-				} 
+				}
 				/**
 				 * its a primitive type
 				 */
@@ -879,8 +862,8 @@ public class ProgramExecutor extends Executor {
 					 * see whether its a local variable
 					 */
 					if (var instanceof LocalVar) {
-						//do nothing
-					} 
+						// do nothing
+					}
 					/**
 					 * It's a field or array element.
 					 */
@@ -907,53 +890,53 @@ public class ProgramExecutor extends Executor {
 								varID = Variable.concanateFieldVarID(String.valueOf(objRef.uniqueID()),
 										var.getSimpleName());
 							}
-							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID);
+							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType,
+									trace.getLastestNode(), varID, null);
 							varID = varID + ":" + definingNodeOrder;
 							var.setVarID(varID);
-						} 
+						}
 					}
 
 					String content = (value == null) ? null : value.toString();
 					varValue = new PrimitiveValue(content, false, var);
 					values.add(varValue);
 				}
-				
+
 			}
 		} catch (IncompatibleThreadStateException | AbsentInformationException e) {
 			e.printStackTrace();
 		}
-		
+
 		return values;
 	}
 
 	private List<Event> sortEvents(EventSet eventSet) {
 		Event[] events = eventSet.toArray(new Event[0]);
 		List<Event> list = new ArrayList<>();
-		for(Event e: events){
+		for (Event e : events) {
 			list.add(e);
 		}
-		
+
 		Collections.sort(list, new Comparator<Event>() {
 
 			@Override
 			public int compare(Event o1, Event o2) {
 				int score1 = getScore(o1);
 				int score2 = getScore(o2);
-				return score2-score1;
+				return score2 - score1;
 			}
 
 			private int getScore(Event o) {
-				if(o instanceof StepEvent){
+				if (o instanceof StepEvent) {
 					return -1;
-				}
-				else if((o instanceof MethodEntryEvent) || (o instanceof MethodExitEvent)){
+				} else if ((o instanceof MethodEntryEvent) || (o instanceof MethodExitEvent)) {
 					return 1;
 				}
-				
+
 				return 0;
 			}
 		});
-		
+
 		return list;
 	}
 
@@ -1354,7 +1337,7 @@ public class ProgramExecutor extends Executor {
 				if (scope != null) {
 					varID = Variable.concanateLocalVarID(methodDeclaringCompilationUnit, localVar.getName(),
 							scope.getStartLine(), scope.getEndLine());
-					String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, lastestNode, varID);
+					String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, lastestNode, varID, localVar.getAliasVarID());
 					varID = varID + ":" + definingNodeOrder;
 					localVar.setVarID(varID);
 				} else {
@@ -1367,7 +1350,7 @@ public class ProgramExecutor extends Executor {
 			} else {
 				ObjectReference ref = (ObjectReference) value;
 				String varID = String.valueOf(ref.uniqueID());
-				String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, lastestNode, varID);
+				String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, lastestNode, varID, null);
 				varID = varID + ":" + definingNodeOrder;
 				localVar.setVarID(varID);
 			}
@@ -1423,23 +1406,24 @@ public class ProgramExecutor extends Executor {
 	// private MethodEntryRequest methodEntryRequest;
 	// private MethodExitRequest methodExitRequset;
 
-//	/** add watch requests **/
-//	private final void addClassWatch(EventRequestManager erm) {
-//		/* class watch request for breakpoint */
-//		for (String className : brkpsMap.keySet()) {
-//			addClassWatch(erm, className);
-//		}
-//		/* class watch request for junitRunner start point */
-//		addClassWatch(erm, ENTER_TC_BKP.getClassCanonicalName());
-//	}
-//
-//	// private ClassPrepareRequest classPrepareRequest;
-//	private final void addClassWatch(EventRequestManager erm, String className) {
-//		setClassPrepareRequest(erm.createClassPrepareRequest());
-//		getClassPrepareRequest().addClassFilter(className);
-//		getClassPrepareRequest().setEnabled(true);
-//	}
-	
+	// /** add watch requests **/
+	// private final void addClassWatch(EventRequestManager erm) {
+	// /* class watch request for breakpoint */
+	// for (String className : brkpsMap.keySet()) {
+	// addClassWatch(erm, className);
+	// }
+	// /* class watch request for junitRunner start point */
+	// addClassWatch(erm, ENTER_TC_BKP.getClassCanonicalName());
+	// }
+	//
+	// // private ClassPrepareRequest classPrepareRequest;
+	// private final void addClassWatch(EventRequestManager erm, String
+	// className) {
+	// setClassPrepareRequest(erm.createClassPrepareRequest());
+	// getClassPrepareRequest().addClassFilter(className);
+	// getClassPrepareRequest().setEnabled(true);
+	// }
+
 	private void parseBreakpoints(VirtualMachine vm, ClassPrepareEvent classPrepEvent,
 			Map<String, BreakPoint> locBrpMap) {
 		ReferenceType refType = classPrepEvent.referenceType();
@@ -1469,16 +1453,17 @@ public class ProgramExecutor extends Executor {
 		return null;
 	}
 
-	private VarValue constructReferenceVarValue(ObjectReference objRef, Variable var0, ThreadReference thread, BreakPoint point) {
+	private VarValue constructReferenceVarValue(ObjectReference objRef, Variable var0, ThreadReference thread,
+			BreakPoint point) {
 		Variable var = var0.clone();
 		VarValue varValue = new ReferenceValue(false, objRef.uniqueID(), true, var);
-		String order = this.trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID());
+		String order = this.trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		varValue.setVarID(varID);
-		
-		ClassType type = (ClassType)objRef.type();
+
+		ClassType type = (ClassType) objRef.type();
 		boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);
-		if(needParseFields){
+		if (needParseFields) {
 			Map<Field, Value> map = objRef.getValues(type.allFields());
 			List<Field> fieldList = new ArrayList<>(map.keySet());
 			Collections.sort(fieldList, new Comparator<Field>() {
@@ -1487,56 +1472,63 @@ public class ProgramExecutor extends Executor {
 					return o1.name().compareTo(o2.name());
 				}
 			});
-			
+
 			VariableValueExtractor extractor = new VariableValueExtractor(point, thread, null, this);
-			for(Field field: fieldList){
-				if(type.isEnum()){
+			for (Field field : fieldList) {
+				if (type.isEnum()) {
 					String childTypeName = field.typeName();
-					if(childTypeName.equals(type.name())){
+					if (childTypeName.equals(type.name())) {
 						continue;
 					}
 				}
-				
+
 				boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(type, field);
-				if(!isIgnore){
+				if (!isIgnore) {
 					FieldVar variable = new FieldVar(false, field.name(), field.typeName());
-					extractor.appendVarVal(varValue, variable, map.get(field), Settings.getVariableLayer(), thread, false);
+					extractor.appendVarVal(varValue, variable, map.get(field), Settings.getVariableLayer(), thread,
+							false);
 				}
 			}
 		}
-		
+
 		return varValue;
 	}
-	
+
 	private VarValue constructArrayVarValue(ArrayReference arrayValue, Variable var0, ThreadReference thread,
 			BreakPoint point) {
 		Variable var = var0.clone();
 		ArrayValue arrayVal = new ArrayValue(false, true, var);
-		String componentType = ((ArrayType)arrayValue.type()).componentTypeName();
+		String componentType = ((ArrayType) arrayValue.type()).componentTypeName();
 		arrayVal.setComponentType(componentType);
 		arrayVal.setReferenceID(arrayValue.uniqueID());
-		String order = this.trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID());
+		String order = this.trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		arrayVal.setVarID(varID);
-		
+
 		VariableValueExtractor extractor = new VariableValueExtractor(point, thread, null, this);
-		//add value of elements
+		// add value of elements
 		List<Value> list = new ArrayList<>();
-		if(arrayValue.length() > 0){
-			list = arrayValue.getValues(0, arrayValue.length()); 
+		if (arrayValue.length() > 0) {
+			list = arrayValue.getValues(0, arrayValue.length());
 		}
-		for(int i = 0; i < arrayValue.length(); i++){
+		for (int i = 0; i < arrayValue.length(); i++) {
+			String parentSimpleID = Variable.truncateSimpleID(arrayVal.getVarID());
+			String aliasVarID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
+			String ord = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID(), aliasVarID);
+			aliasVarID = aliasVarID + ":" + ord;
+
 			String varName = String.valueOf(i);
 			Value elementValue = list.get(i);
-			
-			ArrayElementVar varElement = new ArrayElementVar(varName, componentType);
+
+			ArrayElementVar varElement = new ArrayElementVar(varName, componentType, aliasVarID);
 			extractor.appendVarVal(arrayVal, varElement, elementValue, Settings.getVariableLayer(), thread, false);
 		}
-		
+
 		return arrayVal;
 	}
 
-	private VarValue generateVarValue(StackFrame frame, Variable var0, TraceNode node, String accessType, BreakPoint point) {
+	private VarValue generateVarValue(StackFrame frame, Variable var0, TraceNode node, String accessType,
+			BreakPoint point) {
 		VarValue varValue = null;
 		/**
 		 * Note that the read/written variables in breakpoint should be
@@ -1550,13 +1542,13 @@ public class ProgramExecutor extends Executor {
 			if (expValue == null) {
 				return null;
 			}
-			
+
 			Value value = expValue.value;
 			if (value instanceof ObjectReference) {
 				ObjectReference objRef = (ObjectReference) value;
 				String varID = String.valueOf(objRef.uniqueID());
 
-				String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
+				String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID, var.getAliasVarID());
 				varID = varID + ":" + definingNodeOrder;
 				var.setVarID(varID);
 
@@ -1571,17 +1563,17 @@ public class ProgramExecutor extends Executor {
 					} else {
 						varValue = constructReferenceVarValue(objRef, var, frame.thread(), point);
 					}
-					
+
 					StringBuffer buffer = new StringBuffer();
 					buffer.append("[");
-					for(VarValue child: varValue.getChildren()){
+					for (VarValue child : varValue.getChildren()) {
 						buffer.append(child.getVarName() + "=" + child.getStringValue());
 						buffer.append(",");
 					}
 					buffer.append("]");
 					varValue.setStringValue(buffer.toString());
 				}
-			} 
+			}
 			/**
 			 * its a primitive type
 			 */
@@ -1593,12 +1585,12 @@ public class ProgramExecutor extends Executor {
 					LocalVariableScope scope = this.trace.getLocalVariableScopes().findScope(var.getName(),
 							node.getBreakPoint().getLineNumber(),
 							node.getBreakPoint().getDeclaringCompilationUnitName());
-					
+
 					String varID;
 					if (scope != null) {
 						varID = Variable.concanateLocalVarID(node.getBreakPoint().getDeclaringCompilationUnitName(),
 								var.getName(), scope.getStartLine(), scope.getEndLine());
-						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
+						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID, var.getAliasVarID());
 						varID = varID + ":" + definingNodeOrder;
 					}
 					/**
@@ -1610,7 +1602,7 @@ public class ProgramExecutor extends Executor {
 						return null;
 					}
 					var.setVarID(varID);
-				} 
+				}
 				/**
 				 * It's a field or array element.
 				 */
@@ -1637,7 +1629,7 @@ public class ProgramExecutor extends Executor {
 							varID = Variable.concanateFieldVarID(String.valueOf(objRef.uniqueID()),
 									var.getSimpleName());
 						}
-						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
+						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID, var.getAliasVarID());
 						varID = varID + ":" + definingNodeOrder;
 						var.setVarID(varID);
 					} else if (var instanceof ArrayElementVar) {
@@ -1646,7 +1638,7 @@ public class ProgramExecutor extends Executor {
 						String indexValueString = indexValue.value.toString();
 						String varID = Variable.concanateArrayElementVarID(String.valueOf(objRef.uniqueID()),
 								indexValueString);
-						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID);
+						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID, var.getAliasVarID());
 						varID = varID + ":" + definingNodeOrder;
 						var.setVarID(varID);
 
@@ -1665,8 +1657,6 @@ public class ProgramExecutor extends Executor {
 		return null;
 	}
 
-	
-
 	private StackFrame findFrame(ThreadReference thread, Location location) {
 		StackFrame frame = null;
 		try {
@@ -1683,28 +1673,28 @@ public class ProgramExecutor extends Executor {
 		return frame;
 	}
 
-	private void parseReadWrittenVariableInThisStep(ThreadReference thread, Location location, TraceNode node,
-			Map<String, StepVariableRelationEntry> stepVariableTable, String action) {
-
-		// try {
-		// thread.frames();
-		// } catch (IncompatibleThreadStateException e) {
-		// e.printStackTrace();
-		// }
-
-		if (action.equals(Variable.READ)) {
-			processReadVariable(node, stepVariableTable, thread, location, node.getBreakPoint());
-		} else if (action.equals(Variable.WRITTEN)) {
-			processWrittenVariable(node, stepVariableTable, thread, location, node.getBreakPoint());
-		}
-	}
+	// private void parseReadWrittenVariableInThisStep(ThreadReference thread,
+	// Location location, TraceNode node,
+	// Map<String, StepVariableRelationEntry> stepVariableTable, String action)
+	// {
+	//
+	// if (action.equals(Variable.READ)) {
+	// processReadVariable(node, stepVariableTable, thread, location,
+	// node.getBreakPoint());
+	// } else if (action.equals(Variable.WRITTEN)) {
+	// processWrittenVariable(node, stepVariableTable, thread, location,
+	// node.getBreakPoint());
+	// }
+	// }
 
 	private void processReadVariable(TraceNode node, Map<String, StepVariableRelationEntry> stepVariableTable,
-			ThreadReference thread, Location location, BreakPoint point) {
+			ThreadReference thread, Location location) {
+
+		BreakPoint point = node.getBreakPoint();
 
 		StackFrame frame = findFrame(thread, location);
 		if (frame == null) {
-			System.err.println("get a null frame from thread!");
+			// System.err.println("get a null frame from thread!");
 			return;
 		}
 
@@ -1714,22 +1704,45 @@ public class ProgramExecutor extends Executor {
 				VarValue varValue = generateVarValue(frame, readVar, node, Variable.READ, point);
 				if (varValue != null) {
 					node.addReadVariable(varValue);
-					String varID = varValue.getVarID();
 
-					StepVariableRelationEntry entry = stepVariableTable.get(varID);
-					if (entry == null) {
-						entry = new StepVariableRelationEntry(varID);
-						stepVariableTable.put(varID, entry);
+					List<StepVariableRelationEntry> entries = constructStepVariableEntry(stepVariableTable, varValue);
+					for(StepVariableRelationEntry entry: entries){
+						entry.addConsumer(node);
 					}
-					entry.addAliasVariable(readVar);
-					entry.addConsumer(node);
 				}
 			}
 		}
 	}
 
+	private List<StepVariableRelationEntry> constructStepVariableEntry(Map<String, StepVariableRelationEntry> stepVariableTable,
+			VarValue var) {
+		List<StepVariableRelationEntry> list = new ArrayList<>();
+		StepVariableRelationEntry entry = constructStepVariableEntry(stepVariableTable, var.getVarID(), var.getVariable());
+		list.add(entry);
+		
+		if(var.getAliasVarID()!=null){
+			StepVariableRelationEntry entry0 = constructStepVariableEntry(stepVariableTable, var.getAliasVarID(), var.getVariable());
+			list.add(entry0);
+		}
+		
+		return list;
+	}
+	
+	private StepVariableRelationEntry constructStepVariableEntry(Map<String, StepVariableRelationEntry> stepVariableTable,
+			String varID, Variable var){
+		StepVariableRelationEntry entry = stepVariableTable.get(varID);
+		if (entry == null) {
+			entry = new StepVariableRelationEntry(varID);
+			stepVariableTable.put(varID, entry);
+		}
+		entry.addAliasVariable(var);
+		return entry;
+	}
+
 	private void processWrittenVariable(TraceNode node, Map<String, StepVariableRelationEntry> stepVariableTable,
-			ThreadReference thread, Location location, BreakPoint point) {
+			ThreadReference thread, Location location) {
+		BreakPoint point = node.getBreakPoint();
+
 		StackFrame frame = findFrame(thread, location);
 		if (frame == null) {
 			System.err.println("get a null frame from thread!");
@@ -1742,15 +1755,11 @@ public class ProgramExecutor extends Executor {
 
 				if (varValue != null) {
 					node.addWrittenVariable(varValue);
-					String varID = varValue.getVarID();
-
-					StepVariableRelationEntry entry = stepVariableTable.get(varID);
-					if (entry == null) {
-						entry = new StepVariableRelationEntry(varID);
-						stepVariableTable.put(varID, entry);
+					
+					List<StepVariableRelationEntry> entries = constructStepVariableEntry(stepVariableTable, varValue);
+					for(StepVariableRelationEntry entry: entries){
+						entry.addProducer(node);
 					}
-					entry.addAliasVariable(writtenVar);
-					entry.addProducer(node);
 				}
 			}
 		}
@@ -1786,18 +1795,17 @@ public class ProgramExecutor extends Executor {
 			ExpressionParser.clear();
 
 			CompilationUnit cu;
-			if(point==null){
+			if (point == null) {
 				cu = null;
+			} else {
+				cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appPath);
 			}
-			else{
-				cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appPath);				
-			}
-			
+
 			int lineNumber = -1;
-			if(point != null){
+			if (point != null) {
 				lineNumber = point.getLineNumber();
 			}
-			
+
 			ExpressionParser.setParameters(cu, lineNumber);
 
 			Value val = null;

@@ -11,6 +11,15 @@ public abstract class Variable {
 	protected String variableName;
 	
 	/**
+	 * allow some variable has double variable id, for example, an array element of Object type
+	 * can be 123 (its object unique id) and 122[0] (its parent id + its index).
+	 * 
+	 * using unique id for array element is for dynamic alias analysis; using its parent id+index
+	 * is for set-null-operation for array element, e.g., a[0]=null;
+	 */
+	protected String aliasVarID;
+	
+	/**
 	 * The id of an object (non-primitive type) is its object id + the order of trace node defining it, 
 	 * e.g., 100:33 . 
 	 * <br><br>
@@ -88,6 +97,10 @@ public abstract class Variable {
 	}
 	
 	public static String truncateSimpleID(String completeVarID){
+		if(completeVarID==null){
+			return null;
+		}
+		
 		if(completeVarID.contains(":")){
 			String simpleID = completeVarID.substring(0, completeVarID.indexOf(":"));
 			return simpleID;			
@@ -105,6 +118,14 @@ public abstract class Variable {
 		else{
 			return "";
 		}
+	}
+	
+	public String getAliasVarID() {
+		return aliasVarID;
+	}
+
+	public void setAliasVarID(String aliasVarID) {
+		this.aliasVarID = aliasVarID;
 	}
 	
 //	public static boolean isPrimitiveVariable(String varID){

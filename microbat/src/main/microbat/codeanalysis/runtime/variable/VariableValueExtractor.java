@@ -496,7 +496,7 @@ public class VariableValueExtractor {
 
 	private void appendVarID(Variable var, VarValue val) {
 		Trace trace = this.executor.getTrace();
-		String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID());
+		String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		val.setVarID(varID);
 	}
@@ -549,10 +549,16 @@ public class VariableValueExtractor {
 			list = value.getValues(0, value.length()); 
 		}
 		for(int i = 0; i < value.length(); i++){
+			String parentSimpleID = Variable.truncateSimpleID(arrayVal.getVarID());
+			String aliasVarID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
+			Trace trace = this.executor.getTrace();
+			String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), aliasVarID, aliasVarID);
+			aliasVarID = aliasVarID + ":" + order;
+			
 			String varName = String.valueOf(i);
 			Value elementValue = list.get(i);
 			
-			ArrayElementVar var = new ArrayElementVar(varName, componentType);
+			ArrayElementVar var = new ArrayElementVar(varName, componentType, aliasVarID);
 			appendVarVal(arrayVal, var, elementValue, level, thread, false);
 		}
 		

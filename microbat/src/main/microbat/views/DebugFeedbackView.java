@@ -241,7 +241,7 @@ public class DebugFeedbackView extends ViewPart {
 		String varID = ev.getVarID();
 		if(!varID.contains(":") && !varID.contains(VirtualVar.VIRTUAL_PREFIX)){
 			Trace trace = getTraceView().getTrace();
-			String order = trace.findDefiningNodeOrder(Variable.READ, currentNode, varID);
+			String order = trace.findDefiningNodeOrder(Variable.READ, currentNode, varID, ev.getAliasVarID());
 			varID = varID + ":" + order;
 		}
 		
@@ -284,7 +284,7 @@ public class DebugFeedbackView extends ViewPart {
 				String varID = value.getVarID();
 				
 				if(!varID.contains(":") && !varID.contains(VirtualVar.VIRTUAL_PREFIX)){
-					String order = trace.findDefiningNodeOrder(RWType, currentNode, varID);
+					String order = trace.findDefiningNodeOrder(RWType, currentNode, varID, value.getAliasVarID());
 					varID = varID + ":" + order;
 					value.setVarID(varID);
 				}

@@ -196,7 +196,7 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 				Variable var0 = parseArrayName(method, previousInstructions);
 				if(var0!=null){
 					String readArrayElement = var0.getName();
-					ArrayElementVar var = new ArrayElementVar(readArrayElement, typeName);
+					ArrayElementVar var = new ArrayElementVar(readArrayElement, typeName, null);
 					if(!readVars.contains(var)){
 						return new VarOp(var, Variable.READ);												
 					}
@@ -206,7 +206,7 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 				Variable var0 = parseArrayName(method, previousInstructions);
 				if(var0!=null){
 					String writtenArrayElement = var0.getName();
-					ArrayElementVar var = new ArrayElementVar(writtenArrayElement, typeName);
+					ArrayElementVar var = new ArrayElementVar(writtenArrayElement, typeName, null);
 					if(!writtenVars.contains(var)){
 						return new VarOp(var, Variable.WRITTEN);											
 					}
@@ -265,7 +265,7 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 					Variable var = parseArrayName(method, preIns);
 					if(null != var){
 						String varName = var.getName();
-						return new ArrayElementVar(varName, var.getType());
+						return new ArrayElementVar(varName, var.getType(), null);
 					}		
 				}
 			}

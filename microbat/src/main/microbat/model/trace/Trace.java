@@ -236,31 +236,21 @@ public class Trace {
 	 * @return
 	 */
 	public TraceNode findDataDominator(TraceNode checkingNode, VarValue readVar) {
+		List<TraceNode> producers = new ArrayList<>();
 		String varID = readVar.getVarID();
 		StepVariableRelationEntry entry = getStepVariableTable().get(varID);
-		List<TraceNode> producers = entry.getProducers();
+		if(entry != null){
+			producers.addAll(entry.getProducers());
+		}
+		
+		if(readVar.getAliasVarID()!=null){
+			StepVariableRelationEntry entry0 = getStepVariableTable().get(readVar.getAliasVarID());
+			if(entry0 != null){
+				producers.addAll(entry0.getProducers());				
+			}
+		}
+		
 		if(producers.isEmpty()) {
-//			/**
-//			 * get parent variable id.
-//			 */
-//			String simpleID = Variable.truncateSimpleID(varID);
-//			
-//			while(simpleID.contains(".")) {
-//				String simpleParentID = simpleID.substring(0, simpleID.lastIndexOf("."));
-//				
-//				for(int i=checkingNode.getOrder(); i>0; i--) {
-//					TraceNode node = this.exectionList.get(i-1);
-//					for(VarValue var: node.getWrittenVariables()) {
-//						String simpleWrittenID = Variable.truncateSimpleID(var.getVarID());
-//						if(simpleWrittenID.equals(simpleParentID)) {
-//							return node;
-//						}
-//					}
-//				}
-//				
-//				simpleID = simpleParentID;
-//			}
-			
 			return null;
 		}
 		else {
@@ -622,17 +612,30 @@ public class Trace {
 	
 	private Map<String, TraceNode> latestNodeDefiningVariableMap = new HashMap<>();
 	
-	public String findDefiningNodeOrder(String accessType, TraceNode currentNode, String varID) {
+	public String findDefiningNodeOrder(String accessType, TraceNode currentNode, String varID, String aliasVarID) {
+		varID = Variable.truncateSimpleID(varID);
+		aliasVarID = Variable.truncateSimpleID(aliasVarID);
 		String definingOrder = "0";
 		if(accessType.equals(Variable.WRITTEN)){
 			definingOrder = String.valueOf(currentNode.getOrder());
 			latestNodeDefiningVariableMap.put(varID, currentNode);
 		}
 		else if(accessType.equals(Variable.READ)){
-			TraceNode node = latestNodeDefiningVariableMap.get(varID);
-			if(node != null){
-				definingOrder = String.valueOf(node.getOrder());
+			TraceNode node1 = latestNodeDefiningVariableMap.get(varID);
+			TraceNode node2 = latestNodeDefiningVariableMap.get(aliasVarID);
+			
+			int order = 0;
+			if(node1!=null && node2==null){
+				order = node1.getOrder();
 			}
+			else if(node1==null && node2!=null){
+				order = node2.getOrder();
+			}
+			else if(node1!=null && node2!=null){
+				order = (node1.getOrder()>node2.getOrder())?node1.getOrder():node2.getOrder();
+			}
+			
+			definingOrder = String.valueOf(order);
 		}
 		
 		return definingOrder;

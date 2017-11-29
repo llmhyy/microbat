@@ -491,7 +491,7 @@ public class WALAByteCodeAnalyzer{
 			ReadArrayElementRetriever raeRetriever = new ReadArrayElementRetriever(cu, lineNumber, typeName);
 			cu.accept(raeRetriever);
 			for(String readArrayElement: raeRetriever.arrayElementNameList){
-				ArrayElementVar var = new ArrayElementVar(readArrayElement, typeName);
+				ArrayElementVar var = new ArrayElementVar(readArrayElement, typeName, null);
 				point.addReadVariable(var);											
 			}
 			
@@ -519,7 +519,7 @@ public class WALAByteCodeAnalyzer{
 //						lineNumber + " of " + point.getClassCanonicalName());
 			}
 			else{
-				ArrayElementVar var = new ArrayElementVar(writtenArrayElement, Variable.UNKNOWN_TYPE);
+				ArrayElementVar var = new ArrayElementVar(writtenArrayElement, Variable.UNKNOWN_TYPE, null);
 				point.addWrittenVariable(var);
 			}
 		}
