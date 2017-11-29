@@ -157,7 +157,7 @@ public class TransformLibHandler extends AbstractHandler {
 			else{
 				String topFolder = topFolders.get(index);
 				String sharedPrefix = getSharedPrefix(topFolder, file);
-				files.set(index, sharedPrefix);
+				topFolders.set(index, sharedPrefix);
 			}
 		}
 		
