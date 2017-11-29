@@ -60,6 +60,9 @@ public class TransformLibHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		String javaHomePath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.JAVA7HOME_PATH);
+		if(javaHomePath.endsWith(File.separator)){
+			javaHomePath = javaHomePath.substring(0, javaHomePath.length()-1);
+		}
 		String workingDir = javaHomePath + File.separator + "jre" + File.separator + "lib";
 		String jarFile = workingDir + File.separator + "rt.jar";
 
