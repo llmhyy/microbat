@@ -701,15 +701,17 @@ public class ProgramExecutor extends Executor {
 	private HashMap<String, UsedVariable> libraryLine2VariableMap = new HashMap<>();
 
 	class UsedVariable {
+		String method;
 		List<Variable> readVariables = new ArrayList<>();
 		List<Variable> writtenVariables = new ArrayList<>();
 		Variable returnedVar;
 
-		public UsedVariable(List<Variable> readVariables, List<Variable> writtenVariables, Variable returnedVar) {
+		public UsedVariable(List<Variable> readVariables, List<Variable> writtenVariables, Variable returnedVar, String method) {
 			super();
 			this.readVariables = readVariables;
 			this.writtenVariables = writtenVariables;
 			this.returnedVar = returnedVar;
+			this.method = method;
 		}
 	}
 
@@ -728,15 +730,27 @@ public class ProgramExecutor extends Executor {
 			List<Variable> writtenVars = visitor.getWrittenVars();
 			Variable returnedVar = visitor.getReturnedVar();
 
-			uVars = new UsedVariable(readVars, writtenVars, returnedVar);
+			String method = currentLocation.method().name();
+			uVars = new UsedVariable(readVars, writtenVars, returnedVar, method);
 
 			libraryLine2VariableMap.put(locationID, uVars);
 		}
 
 		List<VarValue> readVarValues = parseValue(uVars.readVariables, className, thread, Variable.READ);
+		System.currentTimeMillis();
 		List<VarValue> writtenVarValues = new ArrayList<>();
-		if (previousVars != null) {
+		String currentMethod = currentLocation.method().name();
+		if (previousVars != null && currentMethod.equals(previousVars.method)) {
 			writtenVarValues = parseValue(previousVars.writtenVariables, className, thread, Variable.WRITTEN);
+			
+			List<Variable> previousReadArrayElements = new ArrayList<>();
+			for(Variable v: previousVars.readVariables){
+				if(v instanceof ArrayElementVar){
+					previousReadArrayElements.add(v);
+				}
+			}
+			List<VarValue> readArrayEleValues = parseValue(previousReadArrayElements, className, thread, Variable.READ);
+			readVarValues.addAll(readArrayEleValues);
 		}
 
 		Value returnedValue = parseValue(uVars.returnedVar, thread);
@@ -775,7 +789,7 @@ public class ProgramExecutor extends Executor {
 				 * fields.
 				 */
 				if (accessType.equals(Variable.READ)) {
-					if (!(v instanceof FieldVar)) {
+					if (v instanceof LocalVar) {
 						continue;
 					}
 					// else{
