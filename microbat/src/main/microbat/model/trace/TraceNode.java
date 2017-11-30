@@ -950,6 +950,15 @@ public class TraceNode{
 		return vars;
 	}
 
+	public boolean containSynonymousReadVar(VarValue readVar) {
+		for(VarValue readVariable: getReadVariables()){
+			if(readVariable.getVarName().equals(readVar.getVarName())){
+				return true;
+			}
+		}
+		return false;
+	}
+
 //	public List<VarValue> getHiddenReadVariables() {
 //		return hiddenReadVariables;
 //	}

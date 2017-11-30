@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -480,17 +481,20 @@ public class ProgramExecutor extends Executor {
 						 * lastestPopedOutMethodNode != null).
 						 */
 						Value returnedValue = latestReturnedValue;
-						if (node != null && methodNodeJustPopedOut != null) {
+						if (node != null && methodNodeJustPopedOut!=null) {
 							methodNodeJustPopedOut.setStepOverNext(node);
 							methodNodeJustPopedOut.setAfterStepOverState(node.getProgramState());
-
+							
 							node.setStepOverPrevious(methodNodeJustPopedOut);
-
+							
 							methodNodeJustPopedOut = null;
 							returnedValue = latestReturnedValue;
 						}
 
 						processReadVariable(node, this.trace.getStepVariableTable(), thread, currentLocation);
+						
+						appendReadVariableFromStepOver(node);
+						
 						// parseReadWrittenVariableInThisStep(thread,
 						// currentLocation, node,
 						// this.trace.getStepVariableTable(), Variable.READ);
@@ -666,6 +670,27 @@ public class ProgramExecutor extends Executor {
 		}
 
 		return vm;
+	}
+
+	private void appendReadVariableFromStepOver(TraceNode node) {
+		TraceNode previousStepInNode = node.getStepInPrevious();
+		if(previousStepInNode!=null && previousStepInNode.getBreakPoint().equals(node.getBreakPoint())){
+			node.setStepOverPrevious(previousStepInNode);
+		}
+		
+		TraceNode previousStepOverNode = node.getStepOverPrevious();
+		if(previousStepOverNode!=null){
+			for(VarValue readVar: previousStepOverNode.getReadVariables()){
+				if(!node.containSynonymousReadVar(readVar)){
+					node.addReadVariable(readVar);
+					List<StepVariableRelationEntry> entries = constructStepVariableEntry(trace.getStepVariableTable(), readVar);
+					for(StepVariableRelationEntry entry: entries){
+						entry.addConsumer(trace.getLastestNode());
+					}
+				}
+			}
+		}
+		
 	}
 
 	private boolean containsVar(List<VarValue> readVariables, VarValue varValue) {
