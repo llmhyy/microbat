@@ -736,8 +736,14 @@ public class ProgramExecutor extends Executor {
 			libraryLine2VariableMap.put(locationID, uVars);
 		}
 
-		List<VarValue> readVarValues = parseValue(uVars.readVariables, className, thread, Variable.READ);
-		System.currentTimeMillis();
+		List<Variable> nonReadArrayElements = new ArrayList<>();
+		for(Variable v: uVars.readVariables){
+			if(!(v instanceof ArrayElementVar)){
+				nonReadArrayElements.add(v);
+			}
+		}
+		
+		List<VarValue> readVarValues = parseValue(nonReadArrayElements, className, thread, Variable.READ);
 		List<VarValue> writtenVarValues = new ArrayList<>();
 		String currentMethod = currentLocation.method().name();
 		if (previousVars != null && currentMethod.equals(previousVars.method)) {
