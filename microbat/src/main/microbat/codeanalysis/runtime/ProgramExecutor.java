@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -849,6 +848,9 @@ public class ProgramExecutor extends Executor {
 						Value val = frame.getValue(localVariable);
 						IntegerValue intVal = (IntegerValue) val;
 						int index = intVal.value();
+						if(index >= subValues.size()){
+							continue;
+						}
 						Value sv = subValues.get(index);
 						
 						String aliasVarID = Variable.concanateArrayElementVarID(String.valueOf(ref.uniqueID()),
