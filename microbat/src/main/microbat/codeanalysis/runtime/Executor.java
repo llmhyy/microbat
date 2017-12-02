@@ -59,6 +59,8 @@ public abstract class Executor {
 			"java.security.*", 
 			"java.sql.*", 
 			"java.text.*", 
+			"java.util.Properties*",
+			"java.util.concurrent.*", 
 			"java.util.concurrent.*", 
 			"java.util.function.*", 
 			"java.util.jar.*", 
