@@ -49,6 +49,9 @@ public class TraceNode{
 	
 	private Map<TraceNode, List<String>> dataDominators = new HashMap<>();
 	private Map<TraceNode, List<String>> dataDominatees = new HashMap<>();
+	
+	private Trace trace;
+	
 	private TraceNode controlDominator;
 	private List<TraceNode> controlDominatees = new ArrayList<>();
 	
@@ -957,6 +960,36 @@ public class TraceNode{
 			}
 		}
 		return false;
+	}
+	
+	public TraceNode getInvocationMethodOrDominator() {
+		TraceNode controlDom = getControlDominator();
+		TraceNode invocationParent = getInvocationParent();
+		
+		if(controlDom!=null && invocationParent!=null) {
+			if(controlDom.getOrder()<invocationParent.getOrder()) {
+				return invocationParent;
+			}
+			else {
+				return controlDom;
+			}
+		}
+		else if(controlDom!=null && invocationParent==null) {
+			return controlDom;
+		}
+		else if(controlDom==null && invocationParent!=null) {
+			return invocationParent;
+		}
+		
+		return null;
+	}
+
+	public Trace getTrace() {
+		return trace;
+	}
+
+	public void setTrace(Trace trace) {
+		this.trace = trace;
 	}
 
 //	public List<VarValue> getHiddenReadVariables() {
