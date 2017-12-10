@@ -443,7 +443,7 @@ public class ProgramExecutor extends Executor {
 						if (!isContextChange) {
 							processWrittenVariable(this.trace.getLastestNode(), this.trace.getStepVariableTable(), thread, currentLocation);
 						}
-						processWrittenVariable(this.trace.getLastestNode(), this.trace.getStepVariableTable(), thread, currentLocation);
+//						processWrittenVariable(this.trace.getLastestNode(), this.trace.getStepVariableTable(), thread, currentLocation);
 						lastSteppingInPoint = null;
 					}
 
@@ -747,7 +747,7 @@ public class ProgramExecutor extends Executor {
 
 		String locationID = className + "$" + lineNumber;
 		UsedVariable uVars = libraryLine2VariableMap.get(locationID);
-		// uVars = null;
+		System.currentTimeMillis();
 		if (uVars == null) {
 			LineNumberVisitor0 visitor = RWVarRetrieverForLine.parse(className, lineNumber, offset, appPath);
 			List<Variable> readVars = visitor.getReadVars();
@@ -779,6 +779,7 @@ public class ProgramExecutor extends Executor {
 					previousReadArrayElements.add(v);
 				}
 			}
+			System.currentTimeMillis();
 			List<VarValue> readArrayEleValues = parseValue(previousReadArrayElements, className, thread, Variable.READ);
 			readVarValues.addAll(readArrayEleValues);
 		}
@@ -878,7 +879,8 @@ public class ProgramExecutor extends Executor {
 							subVar.setAliasVarID(aliasVarID);
 							VarValue subVarValue = new PrimitiveValue(null, false, subVar);
 							subVarValue.setVarID(aliasVarID);
-							subVarValue.setStringValue("$IN_LIB");
+							String stringValue = (sv==null)? "$IN_LIB" : sv.toString();
+							subVarValue.setStringValue(stringValue);
 							values.add(subVarValue);
 						}
 					} else {
@@ -1501,10 +1503,10 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private VarValue constructReferenceVarValue(ObjectReference objRef, Variable var0, ThreadReference thread,
-			BreakPoint point) {
+			BreakPoint point, String accessType) {
 		Variable var = var0.clone();
 		VarValue varValue = new ReferenceValue(false, objRef.uniqueID(), true, var);
-		String order = this.trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID(), var.getAliasVarID());
+		String order = this.trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		varValue.setVarID(varID);
 
@@ -1533,7 +1535,7 @@ public class ProgramExecutor extends Executor {
 				if (!isIgnore) {
 					FieldVar variable = new FieldVar(false, field.name(), field.typeName());
 					extractor.appendVarVal(varValue, variable, map.get(field), Settings.getVariableLayer(), thread,
-							false);
+							false, accessType);
 				}
 			}
 		}
@@ -1542,13 +1544,13 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private VarValue constructArrayVarValue(ArrayReference arrayValue, Variable var0, ThreadReference thread,
-			BreakPoint point) {
+			BreakPoint point, String accessType) {
 		Variable var = var0.clone();
 		ArrayValue arrayVal = new ArrayValue(false, true, var);
 		String componentType = ((ArrayType) arrayValue.type()).componentTypeName();
 		arrayVal.setComponentType(componentType);
 		arrayVal.setReferenceID(arrayValue.uniqueID());
-		String order = this.trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID(), var.getAliasVarID());
+		String order = this.trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		arrayVal.setVarID(varID);
 
@@ -1561,14 +1563,14 @@ public class ProgramExecutor extends Executor {
 		for (int i = 0; i < arrayValue.length(); i++) {
 			String parentSimpleID = Variable.truncateSimpleID(arrayVal.getVarID());
 			String aliasVarID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
-			String ord = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID(), aliasVarID);
+			String ord = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), aliasVarID, aliasVarID);
 			aliasVarID = aliasVarID + ":" + ord;
 
 			String varName = String.valueOf(i);
 			Value elementValue = list.get(i);
 
 			ArrayElementVar varElement = new ArrayElementVar(varName, componentType, aliasVarID);
-			extractor.appendVarVal(arrayVal, varElement, elementValue, Settings.getVariableLayer(), thread, false);
+			extractor.appendVarVal(arrayVal, varElement, elementValue, Settings.getVariableLayer(), thread, false, accessType);
 		}
 
 		return arrayVal;
@@ -1606,9 +1608,9 @@ public class ProgramExecutor extends Executor {
 				} else {
 					if (objRef instanceof ArrayReference) {
 						ArrayReference arrayValue = (ArrayReference) objRef;
-						varValue = constructArrayVarValue(arrayValue, var, frame.thread(), point);
+						varValue = constructArrayVarValue(arrayValue, var, frame.thread(), point, accessType);
 					} else {
-						varValue = constructReferenceVarValue(objRef, var, frame.thread(), point);
+						varValue = constructReferenceVarValue(objRef, var, frame.thread(), point, accessType);
 					}
 
 					StringBuffer buffer = new StringBuffer();
@@ -1801,11 +1803,18 @@ public class ProgramExecutor extends Executor {
 				VarValue varValue = generateVarValue(frame, writtenVar, node, Variable.WRITTEN, point);
 
 				if (varValue != null) {
-					node.addWrittenVariable(varValue);
 					
-					List<StepVariableRelationEntry> entries = constructStepVariableEntry(stepVariableTable, varValue);
-					for(StepVariableRelationEntry entry: entries){
-						entry.addProducer(node);
+					List<VarValue> list = new ArrayList<>();
+					list.add(varValue);
+					List<VarValue> children = varValue.getAllDescedentChildren();
+					list.addAll(children);
+					
+					for(VarValue v: list){
+						node.addWrittenVariable(v);
+						List<StepVariableRelationEntry> entries = constructStepVariableEntry(stepVariableTable, v);
+						for(StepVariableRelationEntry entry: entries){
+							entry.addProducer(node);
+						}
 					}
 				}
 			}
@@ -1931,7 +1940,7 @@ public class ProgramExecutor extends Executor {
 		if (Settings.isRecordSnapshot) {
 			try {
 				VariableValueExtractor extractor = new VariableValueExtractor(bkp, thread, loc, this);
-				BreakPointValue bpValue = extractor.extractValue();
+				BreakPointValue bpValue = extractor.extractValue(Variable.READ);
 				return bpValue;
 
 			} catch (IncompatibleThreadStateException e) {

@@ -74,7 +74,7 @@ public class VariableValueExtractor {
 		this.setExecutor(executor);
 	}
 
-	public final BreakPointValue extractValue()
+	public final BreakPointValue extractValue(String accessType)
 			throws IncompatibleThreadStateException, AbsentInformationException {
 		if (bkp == null) {
 			return null;
@@ -144,7 +144,7 @@ public class VariableValueExtractor {
 				}
 
 				if (!allVariables.isEmpty()) {
-					collectValue(bkVal, objRef, thread, allVariables);
+					collectValue(bkVal, objRef, thread, allVariables, accessType);
 				}
 			}
 		}
@@ -194,7 +194,7 @@ public class VariableValueExtractor {
 	}
 
 	protected void collectValue(BreakPointValue bkVal, ObjectReference objRef, ThreadReference thread,
-			Map<Variable, JDIParam> allVariables){
+			Map<Variable, JDIParam> allVariables, String accessType){
 		
 		int level = Settings.getVariableLayer();
 //		if(objRef != null){
@@ -221,7 +221,7 @@ public class VariableValueExtractor {
 						bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
 				System.currentTimeMillis();
 				
-				appendVarVal(bkVal, variable, value, level, thread, true);				
+				appendVarVal(bkVal, variable, value, level, thread, true, accessType);				
 			//}
 			
 		}
@@ -324,7 +324,7 @@ public class VariableValueExtractor {
 	 * 
 	 */
 	public void appendVarVal(VarValue parent, Variable childVar, Value childVarValue, int level, 
-			ThreadReference thread, boolean isRoot) {
+			ThreadReference thread, boolean isRoot, String accessType) {
 		if(level==0) {
 			return;
 		}
@@ -332,7 +332,7 @@ public class VariableValueExtractor {
 		
 		if (childVarValue == null) {
 			ReferenceValue val = new ReferenceValue(true, false, childVar);
-			val.setPrimitiveID(parent, executor.getTrace());
+			val.setPrimitiveID(parent, executor.getTrace(), accessType);
 			
 			if(val.getVarID()!=null){
 				parent.addChild(val);
@@ -348,21 +348,21 @@ public class VariableValueExtractor {
 			if (type instanceof BooleanType) {
 				microbat.model.value.BooleanValue ele = 
 						new microbat.model.value.BooleanValue(((BooleanValue)childVarValue).booleanValue(), isRoot, childVar);
-				ele.setPrimitiveID(parent, executor.getTrace());
+				ele.setPrimitiveID(parent, executor.getTrace(), accessType);
 				if(ele.getVarID()!=null){
 					parent.addChild(ele);
 					ele.addParent(parent);				
 				}
 			} else {
 				PrimitiveValue ele = new PrimitiveValue(childVarValue.toString(), isRoot, childVar);
-				ele.setPrimitiveID(parent, executor.getTrace());
+				ele.setPrimitiveID(parent, executor.getTrace(), accessType);
 				if(ele.getVarID()!=null){
 					parent.addChild(ele);
 					ele.addParent(parent);				
 				}
 			}
 		} else if (type instanceof ArrayType) { 
-			appendArrVarVal(parent, childVar, (ArrayReference)childVarValue, level, thread, isRoot);
+			appendArrVarVal(parent, childVar, (ArrayReference)childVarValue, level, thread, isRoot, accessType);
 		} else if (type instanceof ClassType) {
 			/**
 			 * if the class name is "String"
@@ -390,7 +390,7 @@ public class VariableValueExtractor {
 			 * if the class is an arbitrary complicated class
 			 */
 			else {
-				appendClassVarVal(parent, childVar, (ObjectReference) childVarValue, level, thread, isRoot);
+				appendClassVarVal(parent, childVar, (ObjectReference) childVarValue, level, thread, isRoot, accessType);
 			}
 		}
 		
@@ -415,7 +415,7 @@ public class VariableValueExtractor {
 	 * @param thread
 	 */
 	private void appendClassVarVal(VarValue parent, Variable childVar0, ObjectReference objRef, 
-			int level, ThreadReference thread, boolean isRoot) {
+			int level, ThreadReference thread, boolean isRoot, String accessType) {
 		if(level==0) {
 			return;
 		}
@@ -457,7 +457,7 @@ public class VariableValueExtractor {
 						if(childVarValue != null){
 							FieldVar var = new FieldVar(field.isStatic(), field.name(), childVarValue.type().toString());
 							int newLevel = level - 1;
-							appendVarVal(val, var, childVarValue, newLevel, thread, false);											
+							appendVarVal(val, var, childVarValue, newLevel, thread, false, accessType);											
 						}
 					}
 				}
@@ -530,7 +530,7 @@ public class VariableValueExtractor {
 	}
 
 	private void appendArrVarVal(VarValue parent, Variable variable0,
-			ArrayReference value, int level, ThreadReference thread, boolean isRoot) {
+			ArrayReference value, int level, ThreadReference thread, boolean isRoot, String accessType) {
 		if(level==0) {
 			return;
 		}
@@ -559,7 +559,7 @@ public class VariableValueExtractor {
 			Value elementValue = list.get(i);
 			
 			ArrayElementVar var = new ArrayElementVar(varName, componentType, aliasVarID);
-			appendVarVal(arrayVal, var, elementValue, level, thread, false);
+			appendVarVal(arrayVal, var, elementValue, level, thread, false, accessType);
 		}
 		
 		StringBuffer buffer = new StringBuffer();
