@@ -15,13 +15,14 @@ import microbat.model.variable.Variable;
  *
  */
 public class BooleanValue extends PrimitiveValue {
+	public static final String TYPE = "boolean";
 	private boolean value;
 
 	public BooleanValue(boolean value, boolean isRoot, Variable variable) {
 		super(String.valueOf(value), isRoot, variable);
 		this.value = value;
 		
-		this.variable.setType("boolean");
+		this.variable.setType(TYPE);
 	}
 
 //	@Override

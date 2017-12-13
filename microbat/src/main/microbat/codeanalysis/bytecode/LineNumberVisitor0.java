@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.LineNumber;
+import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ConstantPoolGen;
@@ -194,6 +195,7 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 			List<InstructionHandle> previousInstructions = findPreviousInstructions(lineNumber, insHandle.getPosition(), code);
 			if(insHandle.getInstruction().getName().toLowerCase().contains("load")){
 				Variable var0 = parseArrayName(method, previousInstructions);
+				System.currentTimeMillis();
 				if(var0!=null){
 					String readArrayElement = var0.getName();
 					ArrayElementVar var = new ArrayElementVar(readArrayElement, typeName, null);
@@ -245,10 +247,21 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 			}
 			else if(ins instanceof LocalVariableInstruction){
 				LocalVariableInstruction lIns = (LocalVariableInstruction)ins;
+				System.currentTimeMillis();
 				String type = lIns.getType(pool).getSignature();
 				if(type.contains("[")){
 					int varIndex = lIns.getIndex();
 					return new LocalVar(String.valueOf(varIndex), null, className, lineNumber);				
+				}
+				else if(type.equals("Ljava/lang/Object;")){
+					int varIndex = lIns.getIndex();
+					LocalVariable lVar = method.getLocalVariableTable().getLocalVariable(varIndex, insHandle.getPosition());
+					if(lVar != null){
+						type = lVar.getSignature();
+						if(type.contains("[")){
+							return new ArrayElementVar(lVar.getName(), type, null);	
+						}						
+					}
 				}
 			}
 			else if(ins instanceof ArrayInstruction){

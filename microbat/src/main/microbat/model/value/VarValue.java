@@ -9,6 +9,8 @@
 package microbat.model.value;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -59,18 +61,18 @@ public abstract class VarValue implements GraphNode{
 		
 	}
 	
-	public void setPrimitiveID(VarValue parent, Trace trace){
+	public void setPrimitiveID(VarValue parent, Trace trace, String accessType){
 		ReferenceValue refValue = (ReferenceValue)parent;
 		String uniqueID = String.valueOf(refValue.getUniqueID());
 		if(isField()){
 			String varID = Variable.concanateFieldVarID(uniqueID, getVarName());
-			String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), varID, refValue.getAliasVarID());
+			String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID, refValue.getAliasVarID());
 			varID = varID + ":" + order;
 			setVarID(varID);
 		}
 		else if(isElementOfArray()){
 			String varID = Variable.concanateArrayElementVarID(uniqueID, getVarName());
-			String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), varID, refValue.getAliasVarID());
+			String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID, refValue.getAliasVarID());
 			varID = varID + ":" + order;
 			setVarID(varID);
 		}
@@ -82,7 +84,7 @@ public abstract class VarValue implements GraphNode{
 			if(scope != null){
 				String varID = Variable.concanateLocalVarID(localVar.getLocationClass(), localVar.getName(), 
 						scope.getStartLine(), scope.getEndLine());
-				String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), varID, refValue.getAliasVarID());
+				String order = trace.findDefiningNodeOrder(accessType, trace.getLastestNode(), varID, refValue.getAliasVarID());
 				varID = varID + ":" + order;
 				setVarID(varID);				
 			}
@@ -171,7 +173,14 @@ public abstract class VarValue implements GraphNode{
 			increaseVariableSet(valueSet, this.children);			
 		}
 		
-		return new ArrayList<>(valueSet);
+		ArrayList<VarValue> list = new ArrayList<>(valueSet);
+		Collections.sort(list, new Comparator<VarValue>() {
+			@Override
+			public int compare(VarValue o1, VarValue o2) {
+				return o1.getVarName().compareTo(o2.getVarName());
+			}
+		});
+		return list;
 	}
 	
 
