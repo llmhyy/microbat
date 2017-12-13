@@ -15,10 +15,11 @@ import microbat.model.variable.Variable;
  *
  */
 public class StringValue extends PrimitiveValue {
+	public static final String TYPE = "String";
 	
 	public StringValue(String val, boolean isRoot, Variable var) {
 		super(val, isRoot, var);
-		var.setType("String");
+		var.setType(TYPE);
 	}
 	
 	@Override
