@@ -848,7 +848,7 @@ public class ProgramExecutor extends Executor {
 						Value val = frame.getValue(localVariable);
 						IntegerValue intVal = (IntegerValue) val;
 						int index = intVal.value();
-						if(index >= subValues.size()){
+						if(index >= subValues.size() || index < 0){
 							continue;
 						}
 						Value sv = subValues.get(index);
@@ -1682,13 +1682,14 @@ public class ProgramExecutor extends Executor {
 					} else if (var instanceof ArrayElementVar) {
 						String index = var.getSimpleName();
 						ExpressionValue indexValue = retriveExpression(frame, index, node.getBreakPoint());
-						String indexValueString = indexValue.value.toString();
-						String varID = Variable.concanateArrayElementVarID(String.valueOf(objRef.uniqueID()),
-								indexValueString);
-						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID, var.getAliasVarID());
-						varID = varID + ":" + definingNodeOrder;
-						var.setVarID(varID);
-
+						if(indexValue!=null && indexValue.value!=null){
+							String indexValueString = indexValue.value.toString();
+							String varID = Variable.concanateArrayElementVarID(String.valueOf(objRef.uniqueID()),
+									indexValueString);
+							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, varID, var.getAliasVarID());
+							varID = varID + ":" + definingNodeOrder;
+							var.setVarID(varID);
+						}
 					}
 				}
 
