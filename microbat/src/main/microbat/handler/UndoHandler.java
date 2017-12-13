@@ -40,7 +40,7 @@ public class UndoHandler extends AbstractHandler {
 		Trace trace = MicroBatViews.getTraceView().getTrace();
 		trace.setCheckTime(state.getTraceCheckTime());
 		
-		TraceNode currentNode = trace.getExectionList().get(state.getCurrentNodeOrder()-1);
+		TraceNode currentNode = trace.getExecutionList().get(state.getCurrentNodeOrder()-1);
 		
 		currentNode.setSuspicousScoreMap(state.getCurrentNodeSuspicousScoreMap());
 		currentNode.setCheckTime(state.getCurrentNodeCheckTime());

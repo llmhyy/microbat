@@ -41,7 +41,7 @@ public class StoreTraceHandler extends AbstractHandler {
 			conn = getConnection();
 			conn.setAutoCommit(false);
 			String traceId = insertTrace(trace, conn, stmts);
-			insertSteps(traceId, trace.getExectionList(), conn, stmts);
+			insertSteps(traceId, trace.getExecutionList(), conn, stmts);
 			insertStepVariableRelation(trace, traceId, conn, stmts);
 			conn.commit();
 		} catch (SQLException e) {
