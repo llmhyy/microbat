@@ -309,7 +309,7 @@ public class ProgramExecutor extends Executor {
 		boolean isInRecording = false;
 
 		boolean isRecoverMethodRequest = false;
-
+		
 		/**
 		 * record the method entrance and exit so that I can build a
 		 * tree-structure for trace node.
@@ -318,6 +318,11 @@ public class ProgramExecutor extends Executor {
 		// Stack<Method> methodStack = new Stack<>();
 		Stack<String> methodSignatureStack = new Stack<>();
 
+		/**
+		 * include the location inside the library code
+		 */
+		BreakPoint latestVisitedLocation = null;
+		
 		/**
 		 * this variable is used to build step-over relation between trace
 		 * nodes.
@@ -353,7 +358,8 @@ public class ProgramExecutor extends Executor {
 			 * ensure the step event is parsed before the method entry event
 			 */
 			List<Event> sortedEvents = sortEvents(eventSet);
-
+			boolean isMethodEntryStepPair = isMethodEntryStepPair(sortedEvents);
+			
 			for (Event event : sortedEvents) {
 				if (event instanceof VMStartEvent) {
 					System.out.println("JVM is started...");
@@ -387,24 +393,32 @@ public class ProgramExecutor extends Executor {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
 
+					if (currentLocation.lineNumber() == -1) {
+						continue;
+					}
+					
+					String clazzName = currentLocation.declaringType().name();
+					latestVisitedLocation = new BreakPoint(clazzName, clazzName, currentLocation.lineNumber());
+					
 					if (isInIncludedLibrary(currentLocation)) {
 						if (trace.size() > 0) {
 							UsedVarValues uVars = build3rdPartyLibraryDependency(thread, currentLocation, previousVars);
 							previousVars = uVars.usedVar;
-							TraceNode latestNode = trace.getLatestNode();
+							TraceNode appendingNode = getAppendingNode(methodNodeStack);
+							if(appendingNode==null) {
+								appendingNode = trace.getLatestNode();
+							}
 							for (VarValue varValue : uVars.readVariables) {
 								if (!(varValue.getVariable() instanceof LocalVar)) {
-									if (!containsVar(latestNode.getReadVariables(), varValue)) {
-										latestNode.addReadVariable(varValue);
-										// latestNode.addHiddenReadVariable(varValue);
+									if (!containsVar(appendingNode.getReadVariables(), varValue)) {
+										appendingNode.addReadVariable(varValue);
 									}
 								}
 							}
 							for (VarValue varValue : uVars.writtenVariables) {
 								if (!(varValue.getVariable() instanceof LocalVar)) {
-									if (!containsVar(latestNode.getWrittenVariables(), varValue)) {
-										latestNode.addWrittenVariable(varValue);
-										// latestNode.addHiddenWrittenVariable(varValue);
+									if (!containsVar(appendingNode.getWrittenVariables(), varValue)) {
+										appendingNode.addWrittenVariable(varValue);
 									}
 								}
 							}
@@ -414,10 +428,6 @@ public class ProgramExecutor extends Executor {
 								latestReturnedValue = returnValue;
 							}
 						}
-					}
-
-					if (currentLocation.lineNumber() == -1) {
-						continue;
 					}
 
 					// System.out.println(currentLocation);
@@ -469,9 +479,11 @@ public class ProgramExecutor extends Executor {
 						 * Build parent-child relation between trace nodes.
 						 */
 						if (!methodNodeStack.isEmpty()) {
-							TraceNode parentInvocationNode = methodNodeStack.peek();
-							parentInvocationNode.addInvocationChild(node);
-							node.setInvocationParent(parentInvocationNode);
+							TraceNode parentInvocationNode = getAppendingNode(methodNodeStack);
+							if(parentInvocationNode != null) {
+								parentInvocationNode.addInvocationChild(node);
+								node.setInvocationParent(parentInvocationNode);								
+							}
 						}
 
 						/**
@@ -520,10 +532,20 @@ public class ProgramExecutor extends Executor {
 				} else if (event instanceof MethodEntryEvent) {
 					MethodEntryEvent mee = (MethodEntryEvent) event;
 					Method method = mee.method();
-					// System.out.println("enter " + method + ":" +
-					// ((MethodEntryEvent)event).location());
 
-					if (isInIncludedLibrary(method.location())) {
+					Location loc = method.location();
+					if (isInIncludedLibrary(loc)) {
+						if(trace.size()>0) {
+							BreakPoint latestRecordedBreakPoint = trace.getLatestNode().getBreakPoint();
+							if(latestRecordedBreakPoint.equals(latestVisitedLocation) && isMethodEntryStepPair) {
+								methodNodeStack.push(trace.getLatestNode());
+							}
+							else {
+								TraceNode dumpNode = new TraceNode(latestVisitedLocation, null, -1);
+								methodNodeStack.push(dumpNode);
+							}
+						}
+						
 						continue;
 					}
 
@@ -545,32 +567,38 @@ public class ProgramExecutor extends Executor {
 					PointWrapper nextPoint = getNextPoint(executionOrderList);
 					if (isInterestedMethod(location, nextPoint)) {
 						nextPoint.setHit(true);
+						
 						TraceNode lastestNode = this.trace.getLatestNode();
 						if (lastestNode != null) {
-							try {
-								if (!method.arguments().isEmpty()) {
-									StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
-									String path = location.sourcePath();
-									String declaringCompilationUnit = path.replace(".java", "");
-									declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar,
-											'.');
+							BreakPoint latestRecordedBreakPoint = trace.getLatestNode().getBreakPoint();
+							if(latestRecordedBreakPoint.equals(latestVisitedLocation)) {
+								try {
+									if (!method.arguments().isEmpty()) {
+										StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
+										String path = location.sourcePath();
+										String declaringCompilationUnit = path.replace(".java", "");
+										declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar, '.');
 
-									int methodLocationLine = method.location().lineNumber();
-									List<Param> paramList = parseParamList(method);
+										int methodLocationLine = method.location().lineNumber();
+										List<Param> paramList = parseParamList(method);
 
-									parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
-											methodLocationLine, paramList, lastestNode);
+										parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
+												methodLocationLine, paramList, lastestNode);
+									}
+								} catch (AbsentInformationException e) {
+									e.printStackTrace();
 								}
-							} catch (AbsentInformationException e) {
-								e.printStackTrace();
+								methodNodeStack.push(lastestNode);
 							}
-
-							methodNodeStack.push(lastestNode);
+							else {
+								TraceNode dumpNode = new TraceNode(latestVisitedLocation, null, -1);
+								methodNodeStack.push(dumpNode);
+							}
+							
 							String methodSignature = createSignature(method);
 							methodSignatureStack.push(methodSignature);
 						}
 
-						System.currentTimeMillis();
 					} else {
 						/**
 						 * It check whether a \<clint\> method is visited in
@@ -597,23 +625,21 @@ public class ProgramExecutor extends Executor {
 				} else if (event instanceof MethodExitEvent) {
 					MethodExitEvent mee = (MethodExitEvent) event;
 					Method method = mee.method();
-					// System.out.println("exit " + method + ":" +
-					// ((MethodExitEvent)event).location());
 
 					if (isInIncludedLibrary(method.location())) {
+						if(!methodNodeStack.isEmpty()) {
+							methodNodeStack.pop();
+						}
 						continue;
 					}
 
 					PointWrapper lastPoint = findCorrespondingPointWrapper(this.trace.getLatestNode(),
 							executionOrderList);
-					// if(isInterestedMethod(method, this.brkpsMap)){
 					if (isInterestedMethod(((MethodExitEvent) event).location(), lastPoint)) {
 						lastPoint.setHit(true);
 						String thisSig = createSignature(method);
 						if (!methodSignatureStack.isEmpty()) {
 							String peekSig = methodSignatureStack.peek();
-							// if (JavaUtil.isCompatibleMethodSignature(peekSig,
-							// thisSig)) {
 							if (peekSig.equals(thisSig)) {
 								TraceNode node = methodNodeStack.pop();
 								methodNodeJustPopedOut = node;
@@ -669,6 +695,23 @@ public class ProgramExecutor extends Executor {
 		}
 
 		return vm;
+	}
+
+	private boolean isMethodEntryStepPair(List<Event> sortedEvents) {
+		if(sortedEvents.size()>=2) {
+			return (sortedEvents.get(0) instanceof MethodEntryEvent) && (sortedEvents.get(1) instanceof StepEvent);
+		}
+		return false;
+	}
+
+	private TraceNode getAppendingNode(Stack<TraceNode> methodNodeStack) {
+		for(int i=methodNodeStack.size()-1; i>=0; i--) {
+			TraceNode node = methodNodeStack.get(i);
+			if(node.getOrder()!=-1) {
+				return node;
+			}
+		}
+		return null;
 	}
 
 	private void appendReadVariableFromStepOver(TraceNode node) {

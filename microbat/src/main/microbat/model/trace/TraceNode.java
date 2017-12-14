@@ -917,6 +917,9 @@ public class TraceNode{
 		List<TraceNode> list = new ArrayList<>();
 		TraceNode parent = this.getInvocationParent();
 		while(parent != null){
+			if(list.contains(parent)) {
+				break;
+			}
 			list.add(parent);
 			parent = parent.getInvocationParent();
 		}
