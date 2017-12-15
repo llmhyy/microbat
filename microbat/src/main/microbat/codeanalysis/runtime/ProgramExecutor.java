@@ -737,7 +737,8 @@ public class ProgramExecutor extends Executor {
 
 	private boolean containsVar(List<VarValue> readVariables, VarValue varValue) {
 		for (VarValue value : readVariables) {
-			if (value.getVariable().getVarID().equals(varValue.getVariable().getVarID())) {
+			if (value.getVariable().getVarID().equals(varValue.getVariable().getVarID())
+					&& value.getVariable().getName().equals(varValue.getVariable().getName())) {
 				return true;
 			}
 		}
