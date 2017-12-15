@@ -11,7 +11,7 @@ public class SimpleDetailInspector extends DetailInspector{
 			nextNode = this.inspectingRange.startNode;
 		}
 		else{
-			nextNode = trace.getExectionList().get(currentNode.getOrder());
+			nextNode = trace.getExecutionList().get(currentNode.getOrder());
 		}
 		return nextNode;
 	}

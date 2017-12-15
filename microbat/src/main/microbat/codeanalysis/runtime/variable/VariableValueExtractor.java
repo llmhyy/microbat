@@ -496,7 +496,7 @@ public class VariableValueExtractor {
 
 	private void appendVarID(Variable var, VarValue val) {
 		Trace trace = this.executor.getTrace();
-		String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID(), var.getAliasVarID());
+		String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLatestNode(), var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		val.setVarID(varID);
 	}
@@ -552,7 +552,7 @@ public class VariableValueExtractor {
 			String parentSimpleID = Variable.truncateSimpleID(arrayVal.getVarID());
 			String aliasVarID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
 			Trace trace = this.executor.getTrace();
-			String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), aliasVarID, aliasVarID);
+			String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLatestNode(), aliasVarID, aliasVarID);
 			aliasVarID = aliasVarID + ":" + order;
 			
 			String varName = String.valueOf(i);

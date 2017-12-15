@@ -1103,7 +1103,13 @@ public class DebugFeedbackView extends ViewPart {
 						name = "return from " + methodName + "()";
 					}
 					return name;
-				case 2: return varValue.getManifestationValue();
+				case 2: 
+					String value = varValue.getManifestationValue();
+					String aliasVarID = varValue.getAliasVarID();
+					if(aliasVarID != null){
+						return value + (" aliasID:" + aliasVarID);
+					}
+					return value;
 				}
 			}
 			

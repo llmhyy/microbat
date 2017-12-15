@@ -269,7 +269,7 @@ public class SimulatedMicroBat {
 		recommender = new StepRecommender(enableLoopInference);
 		user = new SimulatedUser();
 		
-		int traceLength = mutatedTrace.getExectionList().size();
+		int traceLength = mutatedTrace.getExecutionList().size();
 		int maxUnclearFeedbackNum = (int)(traceLength*unclearRate);
 		if(unclearRate == -1){
 			maxUnclearFeedbackNum = traceLength;
@@ -352,7 +352,7 @@ public class SimulatedMicroBat {
 						int checkTime = state.getTraceCheckTime();
 						
 						mutatedTrace.setCheckTime(state.getTraceCheckTime());
-						suspiciousNode = mutatedTrace.getExectionList().get(state.getCurrentNodeOrder()-1);
+						suspiciousNode = mutatedTrace.getExecutionList().get(state.getCurrentNodeOrder()-1);
 						suspiciousNode.setSuspicousScoreMap(state.getCurrentNodeSuspicousScoreMap());
 						suspiciousNode.setCheckTime(state.getCurrentNodeCheckTime());
 						
@@ -578,7 +578,7 @@ public class SimulatedMicroBat {
 	protected List<TraceNode> findAllDominatees(Trace mutationTrace, ClassLocation mutatedLocation){
 		Map<Integer, TraceNode> allDominatees = new HashMap<>();
 		
-		for(TraceNode mutatedNode: mutationTrace.getExectionList()){
+		for(TraceNode mutatedNode: mutationTrace.getExecutionList()){
 			if(mutatedNode.getClassCanonicalName().equals(mutatedLocation.getClassCanonicalName()) 
 					&& mutatedNode.getLineNumber() == mutatedLocation.getLineNo()){
 				
@@ -596,7 +596,7 @@ public class SimulatedMicroBat {
 	
 	private Map<Integer, TraceNode> findAllWrongNodes(PairList pairList, Trace mutatedTrace){
 		Map<Integer, TraceNode> actualWrongNodes = new HashMap<>();
-		for(TraceNode mutatedTraceNode: mutatedTrace.getExectionList()){
+		for(TraceNode mutatedTraceNode: mutatedTrace.getExecutionList()){
 			TraceNodePair foundPair = pairList.findByMutatedNode(mutatedTraceNode);
 			if(foundPair != null){
 				if(!foundPair.isExactSame()){
@@ -650,7 +650,7 @@ public class SimulatedMicroBat {
 	}
 
 	private TraceNode findRootCause(String className, int lineNo, Trace mutatedTrace, PairList pairList) {
-		for(TraceNode node: mutatedTrace.getExectionList()){
+		for(TraceNode node: mutatedTrace.getExecutionList()){
 			if(node.getDeclaringCompilationUnitName().equals(className) && node.getLineNumber()==lineNo){
 				TraceNodePair pair = pairList.findByMutatedNode(node);
 				

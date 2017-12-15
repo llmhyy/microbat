@@ -64,12 +64,12 @@ public class Trace {
 
 	public void resetCheckTime(){
 		this.checkTime = -1;
-		for(TraceNode node: getExectionList()){
+		for(TraceNode node: getExecutionList()){
 			node.resetCheckTime();
 		}
 	}
 	
-	public List<TraceNode> getExectionList() {
+	public List<TraceNode> getExecutionList() {
 		return exectionList;
 	}
 
@@ -118,7 +118,7 @@ public class Trace {
 		return topList;
 	}
 	
-	public TraceNode getLastestNode(){
+	public TraceNode getLatestNode(){
 		int len = size();
 		if(len > 0){
 			return this.exectionList.get(len-1);

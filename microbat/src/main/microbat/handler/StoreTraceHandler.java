@@ -17,14 +17,19 @@ import org.eclipse.core.commands.ExecutionException;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 
+import microbat.handler.xml.VarValueXmlWriter;
 import microbat.model.BreakPoint;
+import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.util.Settings;
 import microbat.views.MicroBatViews;
+import sav.common.core.utils.CollectionUtils;
 
 public class StoreTraceHandler extends AbstractHandler {
+	private static final int READ = 1;
+	private static final int WRITE = 2;
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -36,7 +41,8 @@ public class StoreTraceHandler extends AbstractHandler {
 			conn = getConnection();
 			conn.setAutoCommit(false);
 			String traceId = insertTrace(trace, conn, stmts);
-			insertSteps(traceId, trace.getExectionList(), conn, stmts);
+			insertSteps(traceId, trace.getExecutionList(), conn, stmts);
+			insertStepVariableRelation(trace, traceId, conn, stmts);
 			conn.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -79,7 +85,7 @@ public class StoreTraceHandler extends AbstractHandler {
 	private void insertSteps(String traceId, List<TraceNode> exectionList, Connection conn,
 			List<Statement> stmts) throws SQLException {
 		String sql = "INSERT INTO step (trace_id, step_order, control_dominator, step_in, step_over, invocation_parent, loop_parent,"
-				+ "location_id) VALUES (?,?,?,?,?,?,?,?)";
+				+ "location_id, read_vars, written_vars) VALUES (?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		Set<BreakPoint> locations = new HashSet<>();
 		for (int i = 0; i < exectionList.size(); i++) {
@@ -93,34 +99,44 @@ public class StoreTraceHandler extends AbstractHandler {
 			setNodeOrder(ps, idx++, node.getInvocationParent());
 			setNodeOrder(ps, idx++, node.getLoopParent());
 			ps.setString(idx++, node.getBreakPoint().getId());
+			ps.setString(idx++, generateXmlContent(node.getReadVariables()));
+			ps.setString(idx++, generateXmlContent(node.getWrittenVariables()));
 			ps.addBatch();
 			locations.add(node.getBreakPoint());
 		}
 		ps.executeBatch();
 		stmts.add(ps);
 		insertLocation(traceId, locations, conn, stmts);
-		insertStepVariableRelation(traceId, exectionList, conn, stmts);
+		
 	}
 
-	private void insertStepVariableRelation(String traceId, List<TraceNode> exectionList, Connection conn,
-			List<Statement> stmts) throws SQLException {
+	private String generateXmlContent(List<VarValue> varValues) {
+		if (CollectionUtils.isEmpty(varValues)) {
+			return null;
+		}
+		return VarValueXmlWriter.generateXmlContent(varValues);
+	}
+	
+	private void insertStepVariableRelation(Trace trace, String traceId, Connection conn, List<Statement> stmts)
+			throws SQLException {
 		String sql = "INSERT INTO stepVariableRelation (var_id, trace_id, step_order, rw) VALUES (?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
-		for (TraceNode node : exectionList) {
-			for (VarValue varVal : node.getReadVariables()) {
+		
+		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {
+			for (TraceNode node : entry.getProducers()) {
 				int idx = 1;
-				ps.setString(idx++, varVal.getVarID());
+				ps.setString(idx++, entry.getVarID());
 				ps.setString(idx++, traceId);
 				ps.setInt(idx++, node.getOrder());
-				ps.setInt(idx++, 1);
+				ps.setInt(idx++, WRITE);
 				ps.addBatch();
 			}
-			for (VarValue varVal : node.getReadVariables()) {
+			for (TraceNode node : entry.getConsumers()) {
 				int idx = 1;
-				ps.setString(idx++, varVal.getVarID());
+				ps.setString(idx++, entry.getVarID());
 				ps.setString(idx++, traceId);
 				ps.setInt(idx++, node.getOrder());
-				ps.setInt(idx++, 2);
+				ps.setInt(idx++, READ);
 				ps.addBatch();
 			}
 		}
