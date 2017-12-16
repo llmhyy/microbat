@@ -748,7 +748,7 @@ public class ProgramExecutor extends Executor {
 	private UsedVarValues build3rdPartyLibraryDependency(ThreadReference thread, Location currentLocation,
 			UsedVariable previousVars) {
 		UsedVarValues uVars = parseUsedVariable(thread, currentLocation, previousVars);
-		System.currentTimeMillis();
+		
 		for (VarValue readVar : uVars.readVariables) {
 			List<StepVariableRelationEntry> entries = constructStepVariableEntry(trace.getStepVariableTable(), readVar);
 			for(StepVariableRelationEntry entry: entries){
@@ -903,7 +903,7 @@ public class ProgramExecutor extends Executor {
 						if (sv instanceof ObjectReference) {
 							ObjectReference obj = (ObjectReference) sv;
 							String varID = String.valueOf(obj.uniqueID());
-							String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), varID, var.getAliasVarID());
+							String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), varID, aliasVarID);
 							varID = varID + ":" + order;
 							aliasVarID = aliasVarID + ":" + order;
 							
@@ -942,6 +942,23 @@ public class ProgramExecutor extends Executor {
 						} else {
 							varValue = new ReferenceValue(false, objRef.uniqueID(), false, var);
 							varValue.setStringValue("$IN_LIB");
+							
+							if (objRef instanceof ArrayReference) {
+								ArrayReference arrayValue = (ArrayReference) objRef;
+								varValue = constructArrayVarValue(arrayValue, var, frame.thread(), null, accessType);
+							} else {
+								varValue = constructReferenceVarValue(objRef, var, frame.thread(), null, accessType);
+							}
+
+							StringBuffer buffer = new StringBuffer();
+							buffer.append("[");
+							for (VarValue child : varValue.getChildren()) {
+								buffer.append(child.getVarName() + "=" + child.getStringValue());
+								buffer.append(",");
+							}
+							buffer.append("]");
+							varValue.setStringValue(buffer.toString());
+							
 						}
 						values.add(varValue);
 					}
