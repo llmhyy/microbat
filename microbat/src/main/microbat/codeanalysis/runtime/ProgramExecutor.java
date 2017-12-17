@@ -757,9 +757,16 @@ public class ProgramExecutor extends Executor {
 		}
 
 		for (VarValue writtenVar : uVars.writtenVariables) {
-			List<StepVariableRelationEntry> entries = constructStepVariableEntry(trace.getStepVariableTable(), writtenVar);
-			for(StepVariableRelationEntry entry: entries){
-				entry.addProducer(trace.getLatestNode());
+			List<VarValue> list = new ArrayList<>();
+			list.add(writtenVar);
+			List<VarValue> children = writtenVar.getAllDescedentChildren();
+			list.addAll(children);
+			
+			for(VarValue v: list){
+				List<StepVariableRelationEntry> entries = constructStepVariableEntry(trace.getStepVariableTable(), v);
+				for(StepVariableRelationEntry entry: entries){
+					entry.addProducer(trace.getLatestNode());
+				}
 			}
 		}
 
