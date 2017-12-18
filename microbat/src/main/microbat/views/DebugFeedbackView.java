@@ -51,7 +51,6 @@ import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
-import microbat.model.variable.VirtualVar;
 import microbat.recommendation.Bug;
 import microbat.recommendation.BugInferer;
 import microbat.recommendation.ChosenVariableOption;
@@ -239,19 +238,6 @@ public class DebugFeedbackView extends ViewPart {
 		}
 		
 		String varID = ev.getVarID();
-		if(!varID.contains(":") && !varID.contains(VirtualVar.VIRTUAL_PREFIX)){
-			Trace trace = getTraceView().getTrace();
-			String order = trace.findDefiningNodeOrder(Variable.READ, currentNode, varID, ev.getAliasVarID());
-			varID = varID + ":" + order;
-		}
-		
-//		if(type.equals(STATE)){
-//			Trace trace = Activator.getDefault().getCurrentTrace();
-//			varID = trace.findTrueIDFromStateVariable(varID, currentNode.getOrder());
-//		}
-		
-		System.currentTimeMillis();
-		
 		if(Settings.interestedVariables.contains(varID)){
 			item.setChecked(true);
 		}
@@ -282,12 +268,6 @@ public class DebugFeedbackView extends ViewPart {
 				
 				value = (VarValue)obj;
 				String varID = value.getVarID();
-				
-				if(!varID.contains(":") && !varID.contains(VirtualVar.VIRTUAL_PREFIX)){
-					String order = trace.findDefiningNodeOrder(RWType, currentNode, varID, value.getAliasVarID());
-					varID = varID + ":" + order;
-					value.setVarID(varID);
-				}
 				
 				if(!Settings.interestedVariables.contains(varID)){
 					Settings.interestedVariables.add(varID, trace.getCheckTime());

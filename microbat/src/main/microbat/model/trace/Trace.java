@@ -612,15 +612,16 @@ public class Trace {
 	
 	private Map<String, TraceNode> latestNodeDefiningVariableMap = new HashMap<>();
 	
-	public String findDefiningNodeOrder(String accessType, TraceNode currentNode, String varID, String aliasVarID) {
+	public String findDefiningNodeOrder(String accessType, TraceNode currentNode, boolean isSubValue,
+			String varID, String aliasVarID) {
 		varID = Variable.truncateSimpleID(varID);
 		aliasVarID = Variable.truncateSimpleID(aliasVarID);
 		String definingOrder = "0";
-		if(accessType.equals(Variable.WRITTEN)){
+		if(accessType.equals(Variable.WRITTEN) && !isSubValue){
 			definingOrder = String.valueOf(currentNode.getOrder());
 			latestNodeDefiningVariableMap.put(varID, currentNode);
 		}
-		else if(accessType.equals(Variable.READ)){
+		else {
 			TraceNode node1 = latestNodeDefiningVariableMap.get(varID);
 			TraceNode node2 = latestNodeDefiningVariableMap.get(aliasVarID);
 			
