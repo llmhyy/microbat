@@ -12,13 +12,13 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.osgi.service.prefs.BackingStoreException;
 
 import microbat.Activator;
 import microbat.handler.DBSettings;
+import microbat.ui.component.SWTFactory;
 import microbat.util.MessageDialogs;
 
 public class DatabasePreference extends PreferencePage implements IWorkbenchPreferencePage {
@@ -48,8 +48,8 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		contents.setLayout(layout);
 		contents.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
-		createLabel(contents, "MySql Database Configuration:", 1);
-		Group group = createGroup(contents, "", 2);
+		SWTFactory.createLabel(contents, "MySql Database Configuration:", 1);
+		Group group = SWTFactory.createGroup(contents, "", 2);
 		hostField = new StringFieldEditor(HOST, "Host Name", group);
 		portField = new IntegerFieldEditor(PORT, "Port", group);
 		databaseNameField = new StringFieldEditor(DATABASE, "Database Name", group);
@@ -93,24 +93,4 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		return true;
 	}
 
-	public static Group createGroup(Composite parent, String text, int colNum) {
-		Group group = new Group(parent, SWT.SHADOW_ETCHED_OUT);
-		group.setText(text);
-		group.setLayout(new GridLayout(colNum, false));
-		GridData gridData = new GridData(GridData.FILL_HORIZONTAL
-				| GridData.GRAB_HORIZONTAL);
-		gridData.horizontalIndent = 3; 
-		gridData.verticalAlignment = GridData.BEGINNING;
-		group.setLayoutData(gridData);
-		return group;
-	}
-
-	public static Label createLabel(Composite parent, String text, int colSpan) {
-		Label label = new Label(parent, SWT.NONE);
-		label.setText(text);
-		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
-		gridData.horizontalSpan = colSpan;
-		label.setLayoutData(gridData);
-		return label;
-	}
 }
