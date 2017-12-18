@@ -6,11 +6,11 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import microbat.Activator;
 
 public class DBSettings {
-	public String dbAddress = "localhost";
-	public int dbPort = 3306;
-	public String username = "root";
-	public String password = "123456";
-	public String dbName = "trace";
+	public static String dbAddress = "localhost";
+	public static int dbPort = 3306;
+	public static String username = "root";
+	public static String password = "123456";
+	public static String dbName = "trace";
 	
 	static {
 		updateFromPreference();
