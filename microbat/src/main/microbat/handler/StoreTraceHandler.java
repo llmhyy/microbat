@@ -23,9 +23,11 @@ import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.util.MessageDialogs;
 import microbat.util.Settings;
 import microbat.views.MicroBatViews;
 import sav.common.core.utils.CollectionUtils;
+import sav.common.core.utils.StringUtils;
 
 public class StoreTraceHandler extends AbstractHandler {
 	private static final int READ = 1;
@@ -47,10 +49,13 @@ public class StoreTraceHandler extends AbstractHandler {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			try {
-				conn.rollback();
+				if (conn != null) {
+					conn.rollback();
+				}
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				// ignore
 			}
+			MessageDialogs.showErrorInUI(StringUtils.spaceJoin("Cannot store trace: ", e.getMessage()));
 		} finally {
 			closeDb(conn, stmts, rs);
 		}
@@ -58,7 +63,7 @@ public class StoreTraceHandler extends AbstractHandler {
 		System.out.println("test");
 		return null;
 	}
-
+	
 	private String insertTrace(Trace trace, Connection conn, List<Statement> stmts)
 			throws SQLException {
 		PreparedStatement ps;
@@ -173,12 +178,11 @@ public class StoreTraceHandler extends AbstractHandler {
 	
 	private Connection getConnection() throws SQLException {
 		MysqlDataSource dataSource = new MysqlDataSource();
-		DBSettings settings = new DBSettings();
-		dataSource.setServerName(settings.dbAddress);
-		dataSource.setPort(settings.dbPort);
-		dataSource.setUser(settings.username);
-		dataSource.setPassword(settings.password);
-		dataSource.setDatabaseName(settings.dbName);
+		dataSource.setServerName(DBSettings.dbAddress);
+		dataSource.setPort(DBSettings.dbPort);
+		dataSource.setUser(DBSettings.username);
+		dataSource.setPassword(DBSettings.password);
+		dataSource.setDatabaseName(DBSettings.dbName);
 		Connection conn = dataSource.getConnection();
 		return conn;
 	}
