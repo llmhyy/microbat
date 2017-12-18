@@ -612,6 +612,23 @@ public class Trace {
 	
 	private Map<String, TraceNode> latestNodeDefiningVariableMap = new HashMap<>();
 	
+	/**
+	 * if we are finding defining step of a read variable, v, the defining step is the latest
+	 * step defining v.
+	 * 
+	 * if we are finding defining step of a written variable:
+	 * (1) if it is not a field/index of an object/array, the defining step is the latest step.
+	 * (2) if it is a sub-value, sv, let the latest step be s1, the defining step of the sub-value sv is 
+	 * (2-1) s1 if the variable id of sv is never defined before 
+	 * (2-2) s2, s2 is the latest step defining sv.
+	 * 
+	 * @param accessType
+	 * @param currentNode
+	 * @param isSubValue
+	 * @param varID
+	 * @param aliasVarID
+	 * @return
+	 */
 	public String findDefiningNodeOrder(String accessType, TraceNode currentNode, boolean isSubValue,
 			String varID, String aliasVarID) {
 		varID = Variable.truncateSimpleID(varID);
