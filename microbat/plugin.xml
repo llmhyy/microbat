@@ -265,6 +265,18 @@
             id="microbat.preference"
             name="Microbat Debugging">
       </page>
+      <page
+            category="microbat.preference"
+            class="microbat.preference.DatabasePreference"
+            id="microbat.preference.database"
+            name="Database">
+      </page>
+      <page
+            category="microbat.preference"
+            class="microbat.preference.AnalysisScopePreference"
+            id="microbat.preference.analysisScope"
+            name="Analysis Scope">
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.editors.annotationTypes">

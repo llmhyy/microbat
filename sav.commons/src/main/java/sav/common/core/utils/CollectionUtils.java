@@ -10,6 +10,7 @@ package sav.common.core.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -256,6 +257,13 @@ public class CollectionUtils {
 
 	public static int getSize(List<?> list) {
 		return list == null ? 0 : list.size();
+	}
+
+	public static <T> List<T> nullToEmpty(List<T> list) {
+		if (list == null) {
+			return Collections.emptyList();
+		}
+		return list;
 	}
 	
 }
