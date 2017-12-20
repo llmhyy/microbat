@@ -86,11 +86,24 @@ public abstract class Executor {
 			"org.junit.*", "junit.*", "junit.framework.*", "org.hamcrest.*", "org.hamcrest.core.*", "org.hamcrest.internal.*"
 			};
 	
-	protected String[] includedLibs = {"java.util.*"};
+	public static String[] libIncludes = {"java.util.*"};
+	
+	/**
+	 * This method derive more detailed libExcludes with libIncludes, for example, 
+	 * when libExcludes has a pattern as java.* while libIncludes has a pattern as java.util.*,
+	 * then the method can split java.* into a list including java.awt.*, java.lang.*, ..., except
+	 * java.util.*. 
+	 *
+	 * @return
+	 */
+	public String[] deriveLibExcludePatterns() {
+		//TODO
+		return null;
+	}
 	
 	protected boolean isInIncludedLibrary(Location currentLocation) {
 		String typeName = currentLocation.declaringType().name();
-		for(String expr: includedLibs){
+		for(String expr: libIncludes){
 			expr = expr.replace("*", "");
 			if(typeName.contains(expr)){
 				return true;
