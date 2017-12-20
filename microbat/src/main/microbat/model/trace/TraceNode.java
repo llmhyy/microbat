@@ -309,7 +309,16 @@ public class TraceNode{
 	}
 
 	public TraceNode getStepOverNext() {
-		return stepOverNext;
+		if(stepOverNext!=null){
+			return stepInNext;
+		}
+		else if(stepInNext!=null){
+			if(stepInNext.getLineNumber()==this.getLineNumber()){
+				return stepInNext;
+			}
+		}
+		
+		return null;
 	}
 
 	public void setStepOverNext(TraceNode stepOverNext) {
@@ -317,7 +326,15 @@ public class TraceNode{
 	}
 
 	public TraceNode getStepOverPrevious() {
-		return stepOverPrevious;
+		if(stepOverPrevious!=null){
+			return stepOverPrevious;
+		}
+		else if(stepInPrevious!=null){
+			if(stepInPrevious.getLineNumber()==this.getLineNumber()){
+				return stepInPrevious;
+			}
+		}
+		return null;
 	}
 
 	public void setStepOverPrevious(TraceNode stepOverPrevious) {
