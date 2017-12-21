@@ -16,6 +16,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.osgi.service.prefs.BackingStoreException;
 
 import microbat.Activator;
+import microbat.codeanalysis.runtime.Executor;
 import microbat.ui.component.SWTFactory;
 import microbat.util.MessageDialogs;
 import sav.common.core.utils.StringUtils;
@@ -49,6 +50,21 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 		return content;
 	}
 
+	private String transformArrayToString(String[] array) {
+		StringBuffer buffer = new StringBuffer();
+		for(String str: array) {
+			buffer.append(str+";");
+		}
+		String lib = buffer.toString();
+		lib = lib.substring(0, lib.length()-1);
+		return lib;
+	}
+	
+	private String[] transformStringToArray(String string) {
+		String[] array = string.split(";");
+		return array;
+	}
+	
 	private void setDefaultValues() {
 		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
 		String excludedStr = pref.getString(EXCLUDED_LIBS);
@@ -56,10 +72,17 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 			String[] filters = excludedStr.split(LIBS_SEPARATOR);
 			excludedTable.setValue(filters);
 		}
+		else {
+			excludedTable.setValue(Executor.libExcludes);
+		}
+		
 		String includedStr = pref.getString(INCLUDED_LIBS);
 		if (!StringUtils.isEmpty(includedStr)) {
 			String[] filters = includedStr.split(LIBS_SEPARATOR);
 			includedTable.setValue(filters);
+		}
+		else {
+			includedTable.setValue(Executor.libIncludes);
 		}
 	}
 	
