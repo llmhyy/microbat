@@ -493,10 +493,18 @@ public class ProgramExecutor extends Executor {
 						 */
 						Value returnedValue = latestReturnedValue;
 						if (node != null && methodNodeJustPopedOut!=null) {
-							methodNodeJustPopedOut.setStepOverNext(node);
-							methodNodeJustPopedOut.setAfterStepOverState(node.getProgramState());
+							TraceNode stepOverPrev = methodNodeJustPopedOut;
+//							if(methodNodeJustPopedOut.getOrder()==-1) {//means that the invocation happens inside the library
+//								TraceNode methodNode = getAppendingNode(methodNodeStack);
+//								if(methodNode!=null) {
+//									stepOverPrev = methodNode;
+//								}
+//							}
 							
-							node.setStepOverPrevious(methodNodeJustPopedOut);
+							stepOverPrev.setStepOverNext(node);
+							stepOverPrev.setAfterStepOverState(node.getProgramState());
+							
+							node.setStepOverPrevious(stepOverPrev);
 							
 							methodNodeJustPopedOut = null;
 							returnedValue = latestReturnedValue;
@@ -628,7 +636,10 @@ public class ProgramExecutor extends Executor {
 
 					if (isInIncludedLibrary(method.location())) {
 						if(!methodNodeStack.isEmpty()) {
-							methodNodeStack.pop();
+							TraceNode node = methodNodeStack.pop();
+							if(node.getOrder()!=-1) {
+								methodNodeJustPopedOut = node;
+							}
 						}
 						continue;
 					}
