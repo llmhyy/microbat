@@ -975,7 +975,8 @@ public class TraceNode{
 
 	public boolean containSynonymousReadVar(VarValue readVar) {
 		for(VarValue readVariable: getReadVariables()){
-			if(readVariable.getVarName().equals(readVar.getVarName())){
+			if(readVariable.getVarName().equals(readVar.getVarName())
+					&& readVariable.getClass().equals(readVar.getClass())){
 				return true;
 			}
 		}
