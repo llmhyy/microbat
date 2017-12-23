@@ -875,13 +875,13 @@ public class ProgramExecutor extends Executor {
 
 		try {
 			StackFrame frame = thread.frame(0);
-			for (Variable v : vars) {
+			for (Variable v1 : vars) {
 				/**
 				 * For read variable in library, we only need to record static
 				 * fields.
 				 */
 				if (accessType.equals(Variable.READ)) {
-					if (v instanceof LocalVar) {
+					if (v1 instanceof LocalVar) {
 						continue;
 					}
 					// else{
@@ -892,8 +892,8 @@ public class ProgramExecutor extends Executor {
 					// }
 				}
 
-				Variable var = v.clone();
-				ExpressionValue expValue = retriveExpression(frame, v.getName(), null);
+				Variable var = v1.clone();
+				ExpressionValue expValue = retriveExpression(frame, var.getName(), null);
 				if (expValue == null) {
 					continue;
 				}
@@ -912,7 +912,11 @@ public class ProgramExecutor extends Executor {
 						int index = intVal.value();
 						if(index >= subValues.size()){
 							continue;
-						}
+						}						
+						
+						String newVarName = var.getName() + "[" + index + "]";
+						var.setName(newVarName);
+						
 						Value sv = subValues.get(index);
 						
 						String aliasVarID = Variable.concanateArrayElementVarID(String.valueOf(ref.uniqueID()),
@@ -925,7 +929,7 @@ public class ProgramExecutor extends Executor {
 							varID = varID + ":" + order;
 							aliasVarID = aliasVarID + ":" + order;
 							
-							Variable subVar = v.clone();
+							Variable subVar = var.clone();
 							subVar.setAliasVarID(aliasVarID);
 							
 							VarValue subVarValue = new ReferenceValue(false, obj.uniqueID(), false, subVar);
@@ -936,7 +940,7 @@ public class ProgramExecutor extends Executor {
 							String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), false, aliasVarID, var.getAliasVarID());
 							aliasVarID = aliasVarID + ":" + order;
 							
-							Variable subVar = v.clone();
+							Variable subVar = var.clone();
 							subVar.setAliasVarID(aliasVarID);
 							VarValue subVarValue = new PrimitiveValue(null, false, subVar);
 							subVarValue.setVarID(aliasVarID);
