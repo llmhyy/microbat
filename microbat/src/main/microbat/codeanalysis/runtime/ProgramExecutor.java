@@ -552,6 +552,8 @@ public class ProgramExecutor extends Executor {
 								TraceNode dumpNode = new TraceNode(latestVisitedLocation, null, -1);
 								methodNodeStack.push(dumpNode);
 							}
+							String methodSignature = createSignature(method);
+							methodSignatureStack.push(methodSignature);
 						}
 						
 						continue;
@@ -637,6 +639,7 @@ public class ProgramExecutor extends Executor {
 					if (isInIncludedLibrary(method.location())) {
 						if(!methodNodeStack.isEmpty()) {
 							TraceNode node = methodNodeStack.pop();
+							methodSignatureStack.pop();
 							if(node.getOrder()!=-1) {
 								methodNodeJustPopedOut = node;
 							}
