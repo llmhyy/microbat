@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.ui.IJavaElementSearchConstants;
 import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnWeightData;
@@ -40,20 +41,30 @@ import org.eclipse.ui.dialogs.SelectionDialog;
 import org.eclipse.ui.progress.IProgressService;
 
 import microbat.ui.component.SWTFactory;
+import microbat.util.FilterUtils;
 import microbat.util.JavaUtil;
 import sav.common.core.utils.CollectionUtils;
+import sav.common.core.utils.StringUtils;
 
 /**
  * @author LLT
  *
  */
 public class AnalysisScopesTablePanel extends TableViewerEditablePanel<String> {
+	private Button addFilterTextBtn;
 	private Button addPackageBtn;
 	private Button addTypeBtn;
 	private List<String> filterTexts = new ArrayList<String>();
 	
 	public AnalysisScopesTablePanel(Composite parent) {
+		this(parent, false);
+	}
+	
+	public AnalysisScopesTablePanel(Composite parent, boolean enableFilterTextBtn) {
 		super(parent);
+		if (!enableFilterTextBtn) {
+			hide(addFilterTextBtn);
+		}
 	}
 	
 	@Override
@@ -85,6 +96,23 @@ public class AnalysisScopesTablePanel extends TableViewerEditablePanel<String> {
 	
 	@Override
 	protected void addButtons() {
+		addFilterTextBtn = SWTFactory.createBtnAlignFill(btnGroup, "Add Filter Text...");
+		addFilterTextBtn.addListener(SWT.Selection, new Listener() {
+			
+			@Override
+			public void handleEvent(Event event) {
+				InputDialog dialog = new InputDialog(getShell(), "Add Filter Text", "Ex: \njava.util.* : include all types and packages under java.util package, "
+						+ "\njava.util.*\\ : include all types only under java.util package, "
+						+ "\njava.util.Arrays : include type Arrays only"
+						+ "\njava.util.Arrays\\ : include type Arrays and its inner types", "", null);
+				if (dialog.open() == Window.OK) {
+					if (StringUtils.isEmpty(dialog.getValue())) {
+						return;
+					}
+					onAdd(dialog.getValue());
+				}    
+			}
+		});
 		addBtn = addPackageBtn = SWTFactory.createBtnAlignFill(btnGroup, "Add Package...");
 		addTypeBtn = SWTFactory.createBtnAlignFill(btnGroup, "Add Type...");
 		editBtn = SWTFactory.createBtnAlignFill(btnGroup, "Edit...");
@@ -145,7 +173,7 @@ public class AnalysisScopesTablePanel extends TableViewerEditablePanel<String> {
 			}
 			for (Object obj : dialog.getResult()) {
 				IJavaElement jele = (IJavaElement) obj;
-				String filterText = jele.getElementName() + ".*";
+				String filterText = FilterUtils.toFilterText(jele.getElementName());
 				onAdd(filterText);
 			}
 		}             
@@ -183,7 +211,7 @@ public class AnalysisScopesTablePanel extends TableViewerEditablePanel<String> {
 	@Override
 	protected void onRemove(List<String> elements) {
 		super.onRemove(elements);
-		filterTexts.remove(elements);
+		filterTexts.removeAll(elements);
 	}
 
 	@Override

@@ -151,6 +151,10 @@ public abstract class TableViewerEditablePanel<T> {
 	 */
 	public void hide(int kind) {
 		Button btn = getButton(kind);
+		hide(btn);
+	}
+
+	protected void hide(Button btn) {
 		btn.setVisible(false);
 		if (btn != removeBtn) {
 			btn.moveBelow(removeBtn);

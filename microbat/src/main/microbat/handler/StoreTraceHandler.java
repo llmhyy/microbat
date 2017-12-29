@@ -1,12 +1,18 @@
 package microbat.handler;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,14 +23,17 @@ import org.eclipse.core.commands.ExecutionException;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 
+import microbat.Activator;
 import microbat.handler.xml.VarValueXmlWriter;
 import microbat.model.BreakPoint;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.util.IResourceUtils;
 import microbat.util.MessageDialogs;
 import microbat.util.Settings;
+import microbat.util.WorkbenchUtils;
 import microbat.views.MicroBatViews;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.StringUtils;
@@ -184,7 +193,54 @@ public class StoreTraceHandler extends AbstractHandler {
 		dataSource.setPassword(DBSettings.password);
 		dataSource.setDatabaseName(DBSettings.dbName);
 		Connection conn = dataSource.getConnection();
+		verifyDatabase(conn);
 		return conn;
+	}
+	
+	private void verifyDatabase(Connection conn) throws SQLException {
+		DatabaseMetaData metaData = conn.getMetaData();
+		ResultSet rs = metaData.getTables(null, null, "%", new String[]{"TABLE"});
+		Set<String> expectedTables = new HashSet<String>(Arrays.asList("Location", "MendingRecord", "Regression", "RegressionMatch",
+				"Step", "StepVariableRelation"));
+		while (rs.next()) {
+			expectedTables.remove(rs.getString(3));
+		}
+		if (!expectedTables.isEmpty()) {
+			/**/
+			System.out.println("Missing tables: " + expectedTables.toString());
+			boolean confirmed = MessageDialogs.warningConfirm(WorkbenchUtils.getActiveWorkbenchWindow().getShell(),
+					String.format("Missing tables: %s. Run sql script to create tables?", expectedTables.toString()));
+			if (confirmed) {
+				String s;
+				StringBuffer sb = new StringBuffer();
+				try {
+					for (String tableName : expectedTables) {
+						FileReader fr = new FileReader(new File(
+								IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, tableName + ".sql")));
+						BufferedReader br = new BufferedReader(fr);
+						while ((s = br.readLine()) != null) {
+							if ("USE trace".equals(s)) {
+								s = s.replace("trace", DBSettings.dbName);
+							}
+							sb.append(s);
+						}
+						br.close();
+					}
+					String[] inst = sb.toString().split(";");
+					Statement st = conn.createStatement();
+					conn.setAutoCommit(false);
+					for (int i = 0; i < inst.length; i++) {
+						if (!inst[i].trim().equals("")) {
+							st.executeUpdate(inst[i]);
+							System.out.println(">>" + inst[i]);
+						}
+					}
+					conn.commit();
+				} catch (IOException e) {
+					throw new SQLException(e);
+				}
+			}
+		}
 	}
 
 	protected void closeDb(Connection connection, List<Statement> stmts, ResultSet resultSet) {

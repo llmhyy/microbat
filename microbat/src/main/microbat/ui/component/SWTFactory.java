@@ -116,4 +116,15 @@ public class SWTFactory {
 		radio.setText(text);
 		return radio;
 	}
+	
+	public static Label createWrapLabel(Composite parent, String text, int hspan, int wrapwidth) {
+		Label l = new Label(parent, SWT.NONE | SWT.WRAP);
+		l.setFont(parent.getFont());
+		l.setText(text);
+		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		gd.horizontalSpan = hspan;
+		gd.widthHint = wrapwidth;
+		l.setLayoutData(gd);
+		return l;
+	}
 }
