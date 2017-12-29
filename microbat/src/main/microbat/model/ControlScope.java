@@ -34,10 +34,6 @@ public class ControlScope implements Scope{
 	@Override
 	public boolean containLocation(ClassLocation location){
 		for(ClassLocation loc: rangeList) {
-			if(loc.getLineNumber()==location.getLineNumber()) {
-				System.currentTimeMillis();
-			}
-			
 			if (loc.getClassCanonicalName().equals(location.getClassCanonicalName()) && loc.getLineNumber()==location.getLineNumber()) {
 				return true;
 			}
