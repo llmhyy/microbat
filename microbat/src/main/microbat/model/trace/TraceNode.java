@@ -312,9 +312,13 @@ public class TraceNode{
 		if(stepOverNext!=null){
 			return stepInNext;
 		}
-		else if(stepInNext!=null){
-			if(stepInNext.getLineNumber()==this.getLineNumber()){
-				return stepInNext;
+		else{
+			TraceNode n = stepInNext;
+			while(n!=null) {
+				if(n.getInvocationParent().getOrder()==this.getInvocationParent().getOrder()) {
+					return n;
+				}
+				n = n.getStepInNext();
 			}
 		}
 		
@@ -330,8 +334,12 @@ public class TraceNode{
 			return stepOverPrevious;
 		}
 		else if(stepInPrevious!=null){
-			if(stepInPrevious.getLineNumber()==this.getLineNumber()){
-				return stepInPrevious;
+			TraceNode n = stepInPrevious;
+			while(n!=null) {
+				if(n.getInvocationParent().getOrder()==this.getInvocationParent().getOrder()) {
+					return n;
+				}
+				n = n.getStepInPrevious();
 			}
 		}
 		return null;
