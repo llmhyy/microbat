@@ -514,7 +514,7 @@ public class ProgramExecutor extends Executor {
 						 */
 						Value returnedValue = latestReturnedValue;
 						if (node != null && methodNodeJustPopedOut!=null) {
-							TraceNode stepOverPrev = methodNodeJustPopedOut;
+//							TraceNode stepOverPrev = methodNodeJustPopedOut;
 //							if(methodNodeJustPopedOut.getOrder()==-1) {//means that the invocation happens inside the library
 //								TraceNode methodNode = getAppendingNode(methodNodeStack);
 //								if(methodNode!=null) {
@@ -522,10 +522,10 @@ public class ProgramExecutor extends Executor {
 //								}
 //							}
 							
-							stepOverPrev.setStepOverNext(node);
-							stepOverPrev.setAfterStepOverState(node.getProgramState());
+							methodNodeJustPopedOut.setStepOverNext(node);
+							methodNodeJustPopedOut.setAfterStepOverState(node.getProgramState());
 							
-							node.setStepOverPrevious(stepOverPrev);
+							node.setStepOverPrevious(methodNodeJustPopedOut);
 							
 							methodNodeJustPopedOut = null;
 							returnedValue = latestReturnedValue;
@@ -1154,24 +1154,32 @@ public class ProgramExecutor extends Executor {
 
 	private TraceNode popUpMethodCausedByException(Stack<TraceNode> methodNodeStack, Stack<String> methodSignatureStack,
 			TraceNode methodNodeJustPopedOut, Location caughtLocationForJustException) {
-		if (!methodNodeStack.isEmpty()) {
-			TraceNode invocationNode = this.trace.findLastestExceptionNode();
-			boolean isInvocationEnvironmentContainingLocation = isInvocationEnvironmentContainingLocation(
-					invocationNode, caughtLocationForJustException);
-			while (!isInvocationEnvironmentContainingLocation) {
+		
+		if(!isInIncludedLibrary(caughtLocationForJustException)) {
+			return null;
+		}
+		
+		TraceNode methodNodeJustPopedOutmethodNodeStack = null;
+		if(!methodNodeStack.isEmpty()) {
+			String sig = caughtLocationForJustException.method().signature();
+			String peek = methodSignatureStack.peek();
+			while(!peek.contains(sig)) {
 				if (!methodNodeStack.isEmpty()) {
-					invocationNode = methodNodeStack.pop();
-					methodNodeJustPopedOut = invocationNode;
-					methodSignatureStack.pop();
-
-					isInvocationEnvironmentContainingLocation = isInvocationEnvironmentContainingLocation(
-							invocationNode, caughtLocationForJustException);
-				} else {
+					methodNodeJustPopedOutmethodNodeStack = methodNodeStack.pop();
+					methodSignatureStack.pop();					
+				}
+				else {
 					break;
 				}
 			}
 		}
-		return methodNodeJustPopedOut;
+		
+		if(methodNodeJustPopedOut.getOrder()!=-1) {
+			return methodNodeJustPopedOutmethodNodeStack;			
+		}
+		else {
+			return null;
+		}
 	}
 
 	private boolean isInSameMethod(TraceNode lastestNode, PointWrapper wrapper) {
