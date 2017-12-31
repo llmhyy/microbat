@@ -10,6 +10,11 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.apache.bcel.Repository;
+import org.apache.bcel.classfile.ConstantPool;
+import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.Instruction;
+import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.InvokeInstruction;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdi.internal.VoidValueImpl;
@@ -311,6 +316,22 @@ public class ProgramExecutor extends Executor {
 		boolean isRecoverMethodRequest = false;
 		
 		/**
+		 * We divide the library code into two categories: the interesting ones (e.g., 
+		 * those in java.util.*) and the normal ones. We only capture the data and control
+		 * dependency for our interested library code. However, it is possible that the
+		 * interested library code is called by some normal library code, of course, these
+		 * normal library code is called by application code. In such case, we will not
+		 * capture the data/control dependencies of the library code called by normal library
+		 * code.
+		 * 
+		 * To this end, when we detect the library code is called/accessed by some normal
+		 * library code, we set the flag <code>isIndirectAccess</code> to be true. Then, we
+		 * will not further analyze the runtime variables even if the code is in our interested
+		 * library.
+		 */
+		boolean isIndirectAccess = false;
+		
+		/**
 		 * record the method entrance and exit so that I can build a
 		 * tree-structure for trace node.
 		 */
@@ -401,7 +422,7 @@ public class ProgramExecutor extends Executor {
 					latestVisitedLocation = new BreakPoint(clazzName, clazzName, currentLocation.lineNumber());
 					
 					if (isInIncludedLibrary(currentLocation)) {
-						if (trace.size() > 0) {
+						if (trace.size() > 0 && !isIndirectAccess) {
 							UsedVarValues uVars = build3rdPartyLibraryDependency(thread, currentLocation, previousVars);
 							previousVars = uVars.usedVar;
 							TraceNode appendingNode = getAppendingNode(methodNodeStack);
@@ -554,6 +575,7 @@ public class ProgramExecutor extends Executor {
 							}
 							String methodSignature = createSignature(method);
 							methodSignatureStack.push(methodSignature);
+							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
 						}
 						
 						continue;
@@ -607,6 +629,7 @@ public class ProgramExecutor extends Executor {
 							
 							String methodSignature = createSignature(method);
 							methodSignatureStack.push(methodSignature);
+							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
 						}
 
 					} else {
@@ -640,6 +663,7 @@ public class ProgramExecutor extends Executor {
 						if(!methodNodeStack.isEmpty()) {
 							TraceNode node = methodNodeStack.pop();
 							methodSignatureStack.pop();
+							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
 							if(node.getOrder()!=-1) {
 								methodNodeJustPopedOut = node;
 							}
@@ -658,6 +682,7 @@ public class ProgramExecutor extends Executor {
 								TraceNode node = methodNodeStack.pop();
 								methodNodeJustPopedOut = node;
 								methodSignatureStack.pop();
+								isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
 								latestReturnedValue = mee.returnValue();
 							} else {
 								int index = -1;
@@ -677,6 +702,7 @@ public class ProgramExecutor extends Executor {
 										methodSignatureStack.pop();
 										latestReturnedValue = mee.returnValue();
 									}
+									isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
 								}
 							}
 						}
@@ -709,6 +735,58 @@ public class ProgramExecutor extends Executor {
 		}
 
 		return vm;
+	}
+
+	private boolean checkIndirectAccess(Stack<String> methodSignatureStack, Stack<TraceNode> methodNodeStack) {
+		if(methodSignatureStack.size()<=1) {
+			return false;
+		}
+		
+		int size = methodSignatureStack.size();
+		
+		for(int i=size; i>=2; i--) {
+			String oldPeek = methodSignatureStack.get(i-2);
+			String className = oldPeek.substring(0, oldPeek.indexOf("#"));
+			int lineNumber = methodNodeStack.get(i-1).getBreakPoint().getLineNumber();
+			String locationID = className + "$" + lineNumber;
+			LineNumberVisitor0 visitor = libraryLine2VisitorMap.get(locationID);
+			if(visitor==null) {
+				visitor = RWVarRetrieverForLine.parse(className, lineNumber, 0, appPath);
+				libraryLine2VisitorMap.put(locationID, visitor);
+			}
+			
+//			LineNumberVisitor0 visitor = RWVarRetrieverForLine.parse(className, lineNumber, 0, appPath);
+			
+			List<InstructionHandle> peekList = visitor.getInstructionList();
+			String invokedMethod = methodSignatureStack.get(i-1);
+			String invokedMethodName = invokedMethod.substring(invokedMethod.indexOf("#")+1, invokedMethod.indexOf("("));
+			boolean isOk = findInvokingMethod(invokedMethodName, visitor, peekList);
+			if(!isOk) {
+				return true;
+			}
+		}
+		
+		
+		return false;
+	}
+
+	private boolean findInvokingMethod(String invokedMethodName, LineNumberVisitor0 visitor,
+			List<InstructionHandle> peekList) {
+		for(InstructionHandle handle: peekList) {
+			Instruction ins = handle.getInstruction();
+			if(ins instanceof InvokeInstruction) {
+				InvokeInstruction iIns = (InvokeInstruction)ins;
+				ConstantPool pool = visitor.getMethod().getConstantPool();
+				ConstantPoolGen gen = new ConstantPoolGen(pool);
+				String methodName = iIns.getMethodName(gen);
+				
+				if(methodName.equals(invokedMethodName)) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
 	}
 
 	private boolean isMethodEntryStepPair(List<Event> sortedEvents) {
@@ -787,7 +865,7 @@ public class ProgramExecutor extends Executor {
 		return uVars;
 	}
 
-	private HashMap<String, UsedVariable> libraryLine2VariableMap = new HashMap<>();
+	private HashMap<String, LineNumberVisitor0> libraryLine2VisitorMap = new HashMap<>();
 
 	class UsedVariable {
 		String method;
@@ -811,18 +889,18 @@ public class ProgramExecutor extends Executor {
 		int offset = (int) currentLocation.codeIndex();
 
 		String locationID = className + "$" + lineNumber;
-		UsedVariable uVars = libraryLine2VariableMap.get(locationID);
-		if (uVars == null) {
-			LineNumberVisitor0 visitor = RWVarRetrieverForLine.parse(className, lineNumber, offset, appPath);
-			List<Variable> readVars = visitor.getReadVars();
-			List<Variable> writtenVars = visitor.getWrittenVars();
-			Variable returnedVar = visitor.getReturnedVar();
-
-			String method = currentLocation.method().name();
-			uVars = new UsedVariable(readVars, writtenVars, returnedVar, method);
-
-			libraryLine2VariableMap.put(locationID, uVars);
+		LineNumberVisitor0 visitor = libraryLine2VisitorMap.get(locationID);
+		if (visitor == null) {
+			visitor = RWVarRetrieverForLine.parse(className, lineNumber, offset, appPath);
+			libraryLine2VisitorMap.put(locationID, visitor);
 		}
+		
+		List<Variable> readVars = visitor.getReadVars();
+		List<Variable> writtenVars = visitor.getWrittenVars();
+		Variable returnedVar = visitor.getReturnedVar();
+
+		String method = currentLocation.method().name();
+		UsedVariable uVars = new UsedVariable(readVars, writtenVars, returnedVar, method);
 
 		List<Variable> nonReadArrayElements = new ArrayList<>();
 		for(Variable v: uVars.readVariables){

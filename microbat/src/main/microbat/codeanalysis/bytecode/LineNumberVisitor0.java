@@ -48,6 +48,8 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 	private List<Variable> readVars = new ArrayList<>();
 	private List<Variable> writtenVars = new ArrayList<>();
 	private Variable returnedVar;
+	private List<InstructionHandle> instructionList = new ArrayList<>();
+	private Method method;
 	
 	public void visitMethod(Method method){
 		Code code = method.getCode();
@@ -58,6 +60,8 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 		if(isMethodContainLineNumber(method, lineNumber)){
 			InstructionList list = new InstructionList(code.getCode());
 			List<InstructionHandle> insHandles = findCorrespondingInstructions(lineNumber, code);
+			this.setInstructionList(insHandles);
+			this.setMethod(method);
 			
 			for(InstructionHandle insHandle: insHandles){
 				VarOp varOp = parseReadWrittenVariable(insHandle, method, appJavaClassPath);
@@ -309,5 +313,21 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 
 	public void setReturnedVar(Variable returnedVar) {
 		this.returnedVar = returnedVar;
+	}
+
+	public List<InstructionHandle> getInstructionList() {
+		return instructionList;
+	}
+
+	public void setInstructionList(List<InstructionHandle> instructionList) {
+		this.instructionList = instructionList;
+	}
+
+	public Method getMethod() {
+		return method;
+	}
+
+	public void setMethod(Method method) {
+		this.method = method;
 	}
 }
