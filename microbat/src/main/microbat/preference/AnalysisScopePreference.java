@@ -61,7 +61,8 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 			String[] filters = excludedStr.split(LIBS_SEPARATOR);
 			excludedTable.setValue(filters);
 		} else {
-			Executor.deriveLibExcludePatterns();
+			String[] strs = Executor.deriveLibExcludePatterns();
+			System.currentTimeMillis();
 //			excludedTable.setValue(Executor.deriveLibExcludePatterns());
 		}
 
@@ -76,6 +77,10 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 	
 	@Override
 	public boolean performOk() {
+//		Executor.libIncludes = includedTable.getFilterTexts().toArray(new String[0]);
+//		String[] strs = Executor.deriveLibExcludePatterns();
+//		Executor.libExcludes = strs;
+		
 		String excludedFilters = StringUtils.join(excludedTable.getFilterTexts(), LIBS_SEPARATOR);
 		String includedFilters = StringUtils.join(includedTable.getFilterTexts(), LIBS_SEPARATOR);
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(ID);
