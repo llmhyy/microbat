@@ -759,9 +759,11 @@ public class ProgramExecutor extends Executor {
 			
 			List<InstructionHandle> peekList = visitor.getInstructionList();
 			String invokedMethod = methodSignatureStack.get(i-1);
+			
 			String invokedMethodName = invokedMethod.substring(invokedMethod.indexOf("#")+1, invokedMethod.indexOf("("));
 			boolean isOk = findInvokingMethod(invokedMethodName, visitor, peekList);
-			if(!isOk) {
+			boolean isPossibleRefection = oldPeek.contains("java.util.ResourceBundle#getBundle");
+			if(!isOk && !isPossibleRefection) {
 				return true;
 			}
 		}
