@@ -41,6 +41,8 @@ import sav.common.core.utils.StringUtils;
 public class StoreTraceHandler extends AbstractHandler {
 	private static final int READ = 1;
 	private static final int WRITE = 2;
+	private static final List<String> MICROBAT_TABLES = Arrays.asList("Location", "MendingRecord", "Regression", "RegressionMatch",
+			"Step", "StepVariableRelation");
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -200,8 +202,7 @@ public class StoreTraceHandler extends AbstractHandler {
 	private void verifyDatabase(Connection conn) throws SQLException {
 		DatabaseMetaData metaData = conn.getMetaData();
 		ResultSet rs = metaData.getTables(null, null, "%", new String[]{"TABLE"});
-		Set<String> expectedTables = new HashSet<String>(Arrays.asList("Location", "MendingRecord", "Regression", "RegressionMatch",
-				"Step", "StepVariableRelation"));
+		Set<String> expectedTables = new HashSet<String>(MICROBAT_TABLES);
 		while (rs.next()) {
 			expectedTables.remove(rs.getString(3));
 		}

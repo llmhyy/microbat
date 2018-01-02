@@ -8,25 +8,31 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.eclipse.core.internal.resources.Workspace;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.JarEntryFile;
 
 import microbat.Activator;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.preference.MicrobatPreference;
-import sav.commons.TestConfiguration;
+import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 
 public class MicroBatUtil {
+	private MicroBatUtil(){}
 	
 	public static String getProjectPath(){
 		IWorkspaceRoot myWorkspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
@@ -116,6 +122,44 @@ public class MicroBatUtil {
 		
 		return appClassPath;
 		
+	}
+	
+	public static IPackageFragmentRoot getRtPackageFragmentRoot() {
+		JarFile jar = null;
+		try {
+			jar = new JarFile(getRtJarPathInDefinedJavaHome());
+			Enumeration<? extends JarEntry> enumeration = jar.entries();
+			int i = 0;
+			while (enumeration.hasMoreElements()) {
+				JarEntry jarEntry = enumeration.nextElement();
+				System.out.println(jarEntry.toString());
+				i++;
+			}
+			System.out.println("total: " + i);
+		} catch(IOException ex) {
+			System.out.println(ex.getMessage());
+		} finally {
+			if (jar != null) {
+				try {
+					jar.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+		return null;
+	}
+	
+	public static String getRtJarPathInDefinedJavaHome() {
+		String javaHomePath = getDefinedJavaHomeFolder();
+		return StringUtils.join(File.separator, javaHomePath, "jre", "lib", "rt.jar");
+	}
+
+	public static String getDefinedJavaHomeFolder() {
+		String javaHomePath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.JAVA7HOME_PATH);
+		if (javaHomePath.endsWith(File.separator)) {
+			javaHomePath = javaHomePath.substring(0, javaHomePath.length() - 1);
+		}
+		return javaHomePath;
 	}
 	
 	public static List<String> extractExcludeFiles(String parentDirectory, List<String> libJars) {

@@ -43,7 +43,7 @@ import com.google.common.io.Files;
 
 import microbat.Activator;
 import microbat.codeanalysis.runtime.Executor;
-import microbat.preference.MicrobatPreference;
+import microbat.util.MicroBatUtil;
 
 public class TransformLibHandler extends AbstractHandler {
 
@@ -59,10 +59,7 @@ public class TransformLibHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		String javaHomePath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.JAVA7HOME_PATH);
-		if(javaHomePath.endsWith(File.separator)){
-			javaHomePath = javaHomePath.substring(0, javaHomePath.length()-1);
-		}
+		String javaHomePath = MicroBatUtil.getDefinedJavaHomeFolder();
 		String workingDir = javaHomePath + File.separator + "jre" + File.separator + "lib";
 		String jarFile = workingDir + File.separator + "rt.jar";
 
