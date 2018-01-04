@@ -3,6 +3,7 @@ package microbat.codeanalysis.runtime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.IncompatibleThreadStateException;
@@ -25,7 +26,11 @@ import com.sun.jdi.request.ThreadStartRequest;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser.GetFrame;
 import microbat.codeanalysis.runtime.jpda.expr.ParseException;
+import microbat.preference.AnalysisScopePreference;
 import microbat.util.FilterUtils;
+import microbat.util.FilterUtils.ExtJarPackagesContainer;
+import microbat.util.MicroBatUtil;
+import sav.common.core.utils.StringUtils;
 
 /**
  * This class is used to locate all the executor classes in this project
@@ -100,7 +105,14 @@ public abstract class Executor {
 	 * @return
 	 */
 	public static String[] deriveLibExcludePatterns() {
-		return FilterUtils.deriveLibExcludePatternsUnderRtJar(libExcludes, libIncludes);
+		String[] excludedLibs = AnalysisScopePreference.getExcludedLibs();
+		String[] includedLibs = AnalysisScopePreference.getIncludedLibs();
+		ExtJarPackagesContainer pkgsContainer = new ExtJarPackagesContainer();
+		List<String> excludeJars = new ArrayList<>(MicroBatUtil.constructClassPaths().getExternalLibPaths());
+		excludeJars.add(MicroBatUtil.getRtJarPathInDefinedJavaHome());
+		pkgsContainer.reset(excludeJars, true);
+		Set<String> expandedExcludes = FilterUtils.deriveLibExcludePatterns(pkgsContainer, excludedLibs, includedLibs);
+		return StringUtils.sortAlphanumericStrings(new ArrayList<>(expandedExcludes)).toArray(new String[0]);
 	}
 	
 	protected boolean isInIncludedLibrary(Location currentLocation) {

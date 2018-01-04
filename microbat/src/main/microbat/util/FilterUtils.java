@@ -25,9 +25,9 @@ import org.eclipse.jdt.internal.core.PackageFragment;
 
 import sav.common.core.SavRtException;
 import sav.common.core.utils.CollectionUtils;
-import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
 
+@SuppressWarnings("restriction")
 public class FilterUtils {
 	private FilterUtils(){}
 	private static final String SUFFIX = ".*";
@@ -80,16 +80,11 @@ public class FilterUtils {
 		return false;
 	}
 	
-	public static String[] deriveLibExcludePatterns(String[] libExcludes, String[] libIncludes) {
+	public static Set<String> deriveLibExcludePatterns(String[] libExcludes, String[] libIncludes) {
 		IJavaProject ijavaProject = JavaCore.create(JavaUtil.getSpecificJavaProjectInWorkspace());
 		return deriveLibExcludePatterns(new IJavaProjectPkgContainer(ijavaProject), libExcludes, libIncludes);
 	}
-	
-	public static String[] deriveLibExcludePatternsUnderRtJar(String[] libExcludes, String[] libIncludes) {
-		return deriveLibExcludePatterns(new ExtJarPackagesContainer(MicroBatUtil.getRtJarPathInDefinedJavaHome()),
-				libExcludes, libIncludes);
-	}
-	
+
 	/**
 	 * This method derive more detailed libExcludes with libIncludes, for example, 
 	 * when libExcludes has a pattern as java.* while libIncludes has a pattern as java.util.*,
@@ -100,8 +95,10 @@ public class FilterUtils {
 	 *
 	 * @return
 	 */
-	public static <T> String[] deriveLibExcludePatterns(PackagesContainer<T> pkgsContainer, String[] libExcludes, String[] libIncludes) {
+	public static <T> Set<String> deriveLibExcludePatterns(PackagesContainer<T> pkgsContainer, String[] libExcludes,
+			String[] libIncludes) {
 		Set<String> newExcludeCol = CollectionUtils.toHashSet(libExcludes);
+		newExcludeCol.addAll(pkgsContainer.getDefaultExcludes());
 		for (String incl : libIncludes) {
 			Set<String> expandedExclSet = new HashSet<String>();
 			for (Iterator<String> it = newExcludeCol.iterator(); it.hasNext();) {
@@ -117,7 +114,7 @@ public class FilterUtils {
 			}
 			newExcludeCol.addAll(expandedExclSet);
 		}
-		return StringUtils.sortAlphanumericStrings(new ArrayList<>(newExcludeCol)).toArray(new String[0]);
+		return newExcludeCol;
 	}
 	
 	/**
@@ -131,8 +128,10 @@ public class FilterUtils {
 		try {
 			String pkgName = FilterUtils.getPrefix(pkgFilter);
 			/* find packages match pkgFilter */
-			System.out.println();
 			List<T> matches = container.getMatchPkgs(pkgName);
+			if (matches.isEmpty()) {
+				return;
+			}
 			/* get include package */
 			String[] inclFrags;
 			String inclTypeSimpleName = null;
@@ -161,7 +160,14 @@ public class FilterUtils {
 						}
 					}
 					if (i == otherPkgFrags.length) {
-						/* ignore include package's parent */
+						if (i != inclFrags.length) {
+							String otherPkgName = StringUtils.dotJoin((Object[]) otherPkgFrags);
+							/* add all classes under include_package's parent to exclude list */
+							for (String type : container.getTypeUnderPkg(otherPkg)) {
+								String typeSimpleName = type.replace(".class", "");
+								expandedExclSet.add(StringUtils.dotJoin(otherPkgName, typeSimpleName));
+							}
+						}
 						continue;
 					}
 					if (i < inclFrags.length) {
@@ -228,13 +234,29 @@ public class FilterUtils {
 			}
 			return types;
 		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public Set<String> getDefaultExcludes() {
+			return Collections.EMPTY_SET;
+		}
 	}
 	
-	private static class ExtJarPackagesContainer implements PackagesContainer<String> {
+	public static class ExtJarPackagesContainer implements PackagesContainer<String> {
 		private Map<String, List<String>> pkgTypesMap = new HashMap<String, List<String>>();
-		private List<String> allPkgPaths = new ArrayList<>();
+		private Map<String, List<String>> pkgRootsMap = new HashMap<>();
+		private boolean isCollectDefaultExcludes;
 		
-		public ExtJarPackagesContainer(String jarPath) {
+		public void reset(List<String> jarPaths, boolean initDefaultExcludes) {
+			pkgTypesMap.clear();
+			pkgRootsMap.clear();
+			this.isCollectDefaultExcludes = initDefaultExcludes;
+			for (String jarPath : jarPaths) {
+				appendJar(jarPath);
+			}
+		}
+
+		private void appendJar(String jarPath) {
 			JarFile jar = null;
 			try {
 				jar = new JarFile(jarPath);
@@ -247,7 +269,7 @@ public class FilterUtils {
 					}
 					int idx = entryName.indexOf(".");
 					if (idx < 0) {
-						allPkgPaths.add(entryName);
+						addPkgPath(entryName);
 					} else {
 						int typeNameStartIdx = entryName.lastIndexOf("/");
 						String pkgPath = entryName.substring(0, typeNameStartIdx);
@@ -256,7 +278,7 @@ public class FilterUtils {
 							if (classes == null) {
 								classes = new ArrayList<>();
 								pkgTypesMap.put(pkgPath, classes);
-								allPkgPaths.add(pkgPath);
+								addPkgPath(pkgPath);
 							}
 							classes.add(entryName.substring(typeNameStartIdx + 1));
 						}
@@ -273,10 +295,37 @@ public class FilterUtils {
 				}
 			}
 		}
+		
+		private void addPkgPath(String entryName) {
+			String rootPkg = getPkgRoot(entryName);
+			CollectionUtils.getListInitIfEmpty(pkgRootsMap, rootPkg).add(entryName);
+		}
 
+		private String getPkgRoot(String entryName) {
+			int idx = entryName.indexOf("/");
+			String rootPkg = entryName;
+			if (idx >= 0) {
+				rootPkg = entryName.substring(0, idx);
+			}
+			return rootPkg;
+		}
+		
+		@SuppressWarnings("unchecked")
+		@Override
+		public Set<String> getDefaultExcludes() {
+			if (!isCollectDefaultExcludes) {
+				return Collections.EMPTY_SET;
+			}
+			Set<String> excludes = new HashSet<>();
+			for (String pkgRoot : pkgRootsMap.keySet()) {
+				excludes.add(FilterUtils.toFilterText(pkgRoot));
+			}
+			return excludes;
+		}
+		
 		@Override
 		public Collection<String> getAllPkgsUnderPkgRoot(String pkg) throws JavaModelException {
-			return allPkgPaths;
+			return CollectionUtils.nullToEmpty(pkgRootsMap.get(getPkgRoot(pkg)));
 		}
 
 		@Override
@@ -289,12 +338,14 @@ public class FilterUtils {
 			return otherPkg.split("/");
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public List<String> getMatchPkgs(String pkgName) throws JavaModelException {
 			String pkgPath = pkgName.replace(".", "/");
-			for (String pkg : allPkgPaths) {
+			List<String> pkgsUnderSameRoot = pkgRootsMap.get(getPkgRoot(pkgPath));
+			for (String pkg : CollectionUtils.nullToEmpty(pkgsUnderSameRoot)) {
 				if (pkg.startsWith(pkgPath)) {
-					return CollectionUtils.listOf(pkg);
+					return CollectionUtils.listOf(pkgPath);
 				}
 			}
 			return Collections.EMPTY_LIST;
@@ -304,6 +355,8 @@ public class FilterUtils {
 	private static interface PackagesContainer<T> {
 
 		Collection<T> getAllPkgsUnderPkgRoot(T pkg) throws JavaModelException;
+
+		Set<String> getDefaultExcludes();
 
 		List<T> getMatchPkgs(String pkgName) throws JavaModelException;
 
