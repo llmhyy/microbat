@@ -37,8 +37,8 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 	protected Control createContents(Composite parent) {
 		Label hintLbl = SWTFactory.createWrapLabel(parent,
 				"By default, only classes in source code are included, while all other classes in references are excluded. \n"
-				+ "More packages and classes to be analyzed can be added "
-				+ "as well as filters on includes in the tables below. (Invalid filters will be ingored)",
+				+ "More packages and classes to be analyzed as well as exclude filters can be added "
+				+ "in the tables below.",
 				1, 300);
 		hintLbl.setFont(JFaceResources.getFontRegistry().getItalic(hintLbl.getFont().toString()));
 		Composite content = new Composite(parent, SWT.NONE);
@@ -48,39 +48,37 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 		content.setLayoutData(new GridData(GridData.FILL_BOTH));
 		SWTFactory.createLabel(content, "Add more packages/types to analyze:");
 		includedTable = new AnalysisScopesTablePanel(content, true);
-		SWTFactory.createLabel(content, "Filters on includes");
+		SWTFactory.createLabel(content, "Add more exclude filters");
 		excludedTable = new AnalysisScopesTablePanel(content);
 		setDefaultValues();
 		return content;
 	}
 	
 	private void setDefaultValues() {
+		includedTable.setValue(getIncludedLibs());
+		excludedTable.setValue(getExcludedLibs());
+	}
+	
+	public static String[] getIncludedLibs() {
+		return getFilterLibs(INCLUDED_LIBS);
+	}
+	
+	public static String[] getExcludedLibs() {
+		return getFilterLibs(EXCLUDED_LIBS);
+	}
+	
+	private static String[] getFilterLibs(String key) {
 		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
-		String excludedStr = pref.getString(EXCLUDED_LIBS);
+		String excludedStr = pref.getString(key);
 		if (!StringUtils.isEmpty(excludedStr)) {
 			String[] filters = excludedStr.split(LIBS_SEPARATOR);
-			excludedTable.setValue(filters);
-		} else {
-			String[] strs = Executor.deriveLibExcludePatterns();
-			System.currentTimeMillis();
-//			excludedTable.setValue(Executor.deriveLibExcludePatterns());
+			return filters;
 		}
-
-		String includedStr = pref.getString(INCLUDED_LIBS);
-		if (!StringUtils.isEmpty(includedStr)) {
-			String[] filters = includedStr.split(LIBS_SEPARATOR);
-			includedTable.setValue(filters);
-		} else {
-			includedTable.setValue(Executor.libIncludes);
-		}
+		return new String[0];
 	}
 	
 	@Override
 	public boolean performOk() {
-//		Executor.libIncludes = includedTable.getFilterTexts().toArray(new String[0]);
-//		String[] strs = Executor.deriveLibExcludePatterns();
-//		Executor.libExcludes = strs;
-		
 		String excludedFilters = StringUtils.join(excludedTable.getFilterTexts(), LIBS_SEPARATOR);
 		String includedFilters = StringUtils.join(includedTable.getFilterTexts(), LIBS_SEPARATOR);
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(ID);
@@ -95,6 +93,9 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
 		pref.putValue(EXCLUDED_LIBS, excludedFilters);
 		pref.putValue(INCLUDED_LIBS, includedFilters);
+		
+		String[] strs = Executor.deriveLibExcludePatterns();
+		Executor.libExcludes = strs;
 		return true;
 	}
 }
