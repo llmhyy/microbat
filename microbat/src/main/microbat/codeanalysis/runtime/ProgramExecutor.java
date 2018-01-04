@@ -809,13 +809,8 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private void appendReadVariableFromStepOver(TraceNode node) {
-		TraceNode previousStepInNode = node.getStepInPrevious();
-		if(previousStepInNode!=null && previousStepInNode.getBreakPoint().equals(node.getBreakPoint())){
-			node.setStepOverPrevious(previousStepInNode);
-		}
-		
 		TraceNode previousStepOverNode = node.getStepOverPrevious();
-		if(previousStepOverNode!=null){
+		if(previousStepOverNode!=null && node.getLineNumber()==previousStepOverNode.getLineNumber()){
 			for(VarValue readVar: previousStepOverNode.getReadVariables()){
 				if(!node.containSynonymousReadVar(readVar)){
 					node.addReadVariable(readVar);
