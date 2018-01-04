@@ -283,12 +283,8 @@ public class Trace {
 	
 	public void constructLoopParentRelation(){
 		Stack<TraceNode> loopParentStack = new Stack<>();
-		
+		System.currentTimeMillis();
 		for(TraceNode node: this.exectionList){
-			
-			if(node.getOrder() == 14){
-				System.currentTimeMillis();
-			}
 			
 			/**
 			 * if out of the scope the loop parent, pop
@@ -300,10 +296,6 @@ public class Trace {
 						                                                                 /**for recursive case*/
 						|| (node.getLineNumber() == currentLoopParent.getLineNumber() && loopParentHaveNotLoopChildOfSomeInvocationParentOfNode(currentLoopParent, node))
 						|| (node.getOrder()==currentLoopParent.getOrder()+1 && !currentLoopParent.getLoopScope().containsNodeScope(node))){
-					if(currentLoopParent.getOrder()==5){
-						System.currentTimeMillis();
-//						loopParentDoesNotContainSomeInvocationParentOfNode(currentLoopParent, node);
-					}
 					
 					loopParentStack.pop();
 					if(loopParentStack.isEmpty()){
