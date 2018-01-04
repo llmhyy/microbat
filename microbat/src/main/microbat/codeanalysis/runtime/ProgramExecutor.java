@@ -422,7 +422,7 @@ public class ProgramExecutor extends Executor {
 					latestVisitedLocation = new BreakPoint(clazzName, clazzName, currentLocation.lineNumber());
 					
 					if (isInIncludedLibrary(currentLocation)) {
-						if (trace.size() > 0 && !isIndirectAccess) {
+						if (trace.size() > 0 && (!isIndirectAccess || !Settings.applyLibraryOptimization)) {
 							UsedVarValues uVars = build3rdPartyLibraryDependency(thread, currentLocation, previousVars);
 							previousVars = uVars.usedVar;
 							TraceNode appendingNode = getAppendingNode(methodNodeStack);

@@ -25,6 +25,11 @@ public class Settings {
 	public static int stepLimit;
 	private static Integer variableLayer;
 	
+	/**
+	 * 
+	 */
+	public static boolean applyLibraryOptimization = false;
+	
 //	public static int referenceFieldLayerInString = 1;
 	
 	public static int distribtionLayer = 3;
