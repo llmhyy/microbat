@@ -148,7 +148,7 @@ public class FilterUtils {
 			for (T pkg : matches) {
 				String[] matchPkgFrags = container.getPkgFragments(pkg);
 				/* add exclude packages */
-				for (T otherPkg : container.getAllPkgsUnderSamePkgRoot(pkg)) {
+				for (T otherPkg : container.getSubPackages(pkg)) {
 					String[] otherPkgFrags = container.getPkgFragments(otherPkg);
 					int i = 0;
 					for (i = 0; i < inclFrags.length && i < otherPkgFrags.length; i++) {
@@ -224,13 +224,12 @@ public class FilterUtils {
 		}
 
 		@Override
-		public Collection<IPackageFragment> getAllPkgsUnderSamePkgRoot(IPackageFragment pkg) throws JavaModelException {
+		public Collection<IPackageFragment> getSubPackages(IPackageFragment pkg) throws JavaModelException {
 			IJavaElement[] pkgRootChildren = ((IPackageFragmentRoot) pkg.getParent()).getChildren();
 			List<IPackageFragment> pkgs = new ArrayList<>(pkgRootChildren.length);
-			String root = StringUtils.nullToEmpty(CollectionUtils.getFirstElement(getPkgFragments(pkg)));
 			for (IJavaElement child : pkgRootChildren) {
 				if (child.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
-					if (child.getElementName().startsWith(root)) {
+					if (child.getElementName().startsWith(pkg.getElementName())) {
 						pkgs.add((IPackageFragment) child);
 					}
 				}
@@ -266,6 +265,7 @@ public class FilterUtils {
 		private Map<String, List<String>> pkgTypesMap = new HashMap<String, List<String>>(); // map of pkg and its types.
 		private Map<String, List<String>> pkgRootsMap = new HashMap<>(); // map of pkgRoot and its packages.
 		private boolean isCollectDefaultExcludes;
+		private Set<Object> sortedSet = new HashSet<>();
 		
 		public void reset(List<String> jarPaths, boolean initDefaultExcludes) {
 			pkgTypesMap.clear();
@@ -322,6 +322,9 @@ public class FilterUtils {
 		
 		private void addPkgPath(String entryName) {
 			String rootPkg = getPkgRoot(entryName);
+			if (entryName.endsWith("/")) {
+				entryName = entryName.substring(0, entryName.length() - 1);
+			}
 			CollectionUtils.getListInitIfEmpty(pkgRootsMap, rootPkg).add(entryName);
 		}
 
@@ -347,9 +350,23 @@ public class FilterUtils {
 			return excludes;
 		}
 		
+		@SuppressWarnings("unchecked")
 		@Override
-		public Collection<String> getAllPkgsUnderSamePkgRoot(String pkg) throws JavaModelException {
-			return CollectionUtils.nullToEmpty(pkgRootsMap.get(getPkgRoot(pkg)));
+		public Collection<String> getSubPackages(String pkgPath) throws JavaModelException {
+			List<String> pkgs = getPkgsUnderSameRoot(pkgPath);
+			int firstIdx = Collections.binarySearch(pkgs, pkgPath);
+			if (firstIdx < 0) {
+				return Collections.EMPTY_LIST;
+			}
+			List<String> subPkgs = new ArrayList<>();
+			for (int i = firstIdx; i < pkgs.size(); i++) {
+				String otherPkg = pkgs.get(i);
+				if (!otherPkg.startsWith(pkgPath)) {
+					break;
+				}
+				subPkgs.add(otherPkg);
+			}
+			return subPkgs;
 		}
 
 		@Override
@@ -366,19 +383,30 @@ public class FilterUtils {
 		@Override
 		public List<String> getMatchPkgs(String pkgName) throws JavaModelException {
 			String pkgPath = pkgName.replace(".", "/");
-			List<String> pkgsUnderSameRoot = pkgRootsMap.get(getPkgRoot(pkgPath));
-			for (String pkg : CollectionUtils.nullToEmpty(pkgsUnderSameRoot)) {
-				if (pkg.startsWith(pkgPath)) {
-					return CollectionUtils.listOf(pkgPath);
-				}
+			List<String> pkgsUnderSameRoot = getPkgsUnderSameRoot(pkgPath);
+			if (pkgsUnderSameRoot == null) {
+				return Collections.EMPTY_LIST;
+			}
+			if (pkgName.equals(pkgPath) || Collections.binarySearch(pkgsUnderSameRoot, pkgPath) >= 0) {
+				return CollectionUtils.listOf(pkgPath);
 			}
 			return Collections.EMPTY_LIST;
+		}
+
+		private List<String> getPkgsUnderSameRoot(String pkgPath) {
+			String pkgRoot = getPkgRoot(pkgPath);
+			List<String> pkgsUnderSameRoot = pkgRootsMap.get(pkgRoot);
+			if (pkgsUnderSameRoot != null && !sortedSet.contains(pkgRoot)) {
+				Collections.sort(pkgsUnderSameRoot);
+				sortedSet.add(pkgRoot);
+			}
+			return pkgsUnderSameRoot;
 		}
 	}
 	
 	private static interface PackagesContainer<T> {
 
-		Collection<T> getAllPkgsUnderSamePkgRoot(T pkg) throws JavaModelException;
+		Collection<T> getSubPackages(T pkg) throws JavaModelException;
 
 		Set<String> getDefaultExcludes();
 
