@@ -2,7 +2,6 @@ package microbat.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -15,19 +14,17 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.core.PackageFragment;
 
 import sav.common.core.SavRtException;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.StringUtils;
 
-@SuppressWarnings("restriction")
 public class FilterUtils {
 	private FilterUtils(){}
 	private static final String SUFFIX = ".*";
@@ -80,11 +77,6 @@ public class FilterUtils {
 		return false;
 	}
 	
-	public static Set<String> deriveLibExcludePatterns(String[] libExcludes, String[] libIncludes) {
-		IJavaProject ijavaProject = JavaCore.create(JavaUtil.getSpecificJavaProjectInWorkspace());
-		return deriveLibExcludePatterns(new IJavaProjectPkgContainer(ijavaProject), libExcludes, libIncludes);
-	}
-
 	/**
 	 * This method derive more detailed libExcludes with libIncludes, for example, 
 	 * when libExcludes has a pattern as java.* while libIncludes has a pattern as java.util.*,
@@ -108,8 +100,9 @@ public class FilterUtils {
 					break;
 				}
 				if (FilterUtils.isSubFilter(incl, excl)) {
-					it.remove();
-					expandPkgFilter(pkgsContainer, excl, incl, expandedExclSet);
+					if (expandPkgFilter(pkgsContainer, excl, incl, expandedExclSet)) {
+						it.remove();
+					}
 				}
 			}
 			newExcludeCol.addAll(expandedExclSet);
@@ -123,14 +116,14 @@ public class FilterUtils {
 	 *  java.util.Arrays : include type Arrays only
 	 *  java.util.Arrays\ : include type Arrays and its inner types
 	 */
-	private static <T>void expandPkgFilter(PackagesContainer<T> container, String pkgFilter, String incl,
+	private static <T>boolean expandPkgFilter(PackagesContainer<T> container, String pkgFilter, String incl,
 			Set<String> expandedExclSet) {
 		try {
 			String pkgName = FilterUtils.getPrefix(pkgFilter);
 			/* find packages match pkgFilter */
 			List<T> matches = container.getMatchPkgs(pkgName);
 			if (matches.isEmpty()) {
-				return;
+				return false;
 			}
 			/* get include package */
 			String[] inclFrags;
@@ -150,8 +143,9 @@ public class FilterUtils {
 			} 
 			/* build up exclude list */
 			for (T pkg : matches) {
+				String[] matchPkgFrags = container.getPkgFragments(pkg);
 				/* add exclude packages */
-				for (T otherPkg : container.getAllPkgsUnderPkgRoot(pkg)) {
+				for (T otherPkg : container.getAllPkgsUnderSamePkgRoot(pkg)) {
 					String[] otherPkgFrags = container.getPkgFragments(otherPkg);
 					int i = 0;
 					for (i = 0; i < inclFrags.length && i < otherPkgFrags.length; i++) {
@@ -159,13 +153,31 @@ public class FilterUtils {
 							break;
 						}
 					}
+					/* parent or incl package itself */
 					if (i == otherPkgFrags.length) {
-						if (i != inclFrags.length) {
-							String otherPkgName = StringUtils.dotJoin((Object[]) otherPkgFrags);
-							/* add all classes under include_package's parent to exclude list */
-							for (String type : container.getTypeUnderPkg(otherPkg)) {
-								String typeSimpleName = type.replace(".class", "");
-								expandedExclSet.add(StringUtils.dotJoin(otherPkgName, typeSimpleName));
+						String otherPkgName = StringUtils.dotJoin((Object[]) otherPkgFrags);
+						/* parent */
+						if (i < inclFrags.length) {
+							// only expand types in case otherPkg is matchPkg (exclude pkg) or its sub package.
+							if (otherPkgFrags.length >= matchPkgFrags.length) { 
+								/* add all classes under include_package's parent to exclude list */
+								for (String type : container.getTypeUnderPkg(otherPkg)) {
+									String typeSimpleName = type.substring(0, type.lastIndexOf("."));
+									expandedExclSet.add(StringUtils.dotJoin(otherPkgName, typeSimpleName));
+								}
+							}
+						} else {
+							/* same package */
+							/* add exclude types */
+							if (inclTypeSimpleName != null) {
+								for (String type : container.getTypeUnderPkg(otherPkg)) {
+									String typeSimpleName = type.substring(0, type.lastIndexOf("."));
+									if (inclTypeSimpleName.isEmpty() || inclTypeSimpleName.equals(typeSimpleName)
+											|| (subTypePrefix != null && typeSimpleName.startsWith(subTypePrefix))) {
+										continue;
+									}
+									expandedExclSet.add(StringUtils.dotJoin(otherPkgName, typeSimpleName));
+								}
 							}
 						}
 						continue;
@@ -177,25 +189,15 @@ public class FilterUtils {
 						expandedExclSet.add(FilterUtils.toPkgFilterText(otherPkgFrags, 0, i));
 					} 
 				}
-				/* add exclude types */
-				if (inclTypeSimpleName != null) {
-					for (String type : container.getTypeUnderPkg(pkg)) {
-						String typeSimpleName = type.replace(".class", "");
-						if (inclTypeSimpleName.isEmpty() || inclTypeSimpleName.equals(typeSimpleName)
-								|| (subTypePrefix != null && typeSimpleName.startsWith(subTypePrefix))) {
-							continue;
-						}
-						expandedExclSet.add(StringUtils.dotJoin(pkgName, typeSimpleName));
-					}
-				}
 			}
 		} catch (JavaModelException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		return true;
 	}
 	
-	private static class IJavaProjectPkgContainer implements PackagesContainer<IPackageFragment> {
+	public static class IJavaProjectPkgContainer implements PackagesContainer<IPackageFragment> {
 		private IJavaProject project;
 
 		public IJavaProjectPkgContainer(IJavaProject ijavaProject) {
@@ -205,30 +207,45 @@ public class FilterUtils {
 		@Override
 		public List<IPackageFragment> getMatchPkgs(String pkgName) throws JavaModelException {
 			List<IPackageFragment> matches = new ArrayList<>();
-			for (IPackageFragmentRoot pkgRoot : project.getAllPackageFragmentRoots()) {
-				IPackageFragment pkg = pkgRoot.getPackageFragment(pkgName);
-				if (pkg.exists()) {
-					matches.add(pkg);
+			for (IClasspathEntry entry : project.getRawClasspath()) {
+				if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
+					for (IPackageFragmentRoot pkgRoot : project.findPackageFragmentRoots(entry)) {
+						IPackageFragment pkg = pkgRoot.getPackageFragment(pkgName);
+						if (pkg.exists()) {
+							matches.add(pkg);
+						}
+					}
 				}
 			}
 			return matches;
 		}
 
 		@Override
-		public Collection<IPackageFragment> getAllPkgsUnderPkgRoot(IPackageFragment pkg) throws JavaModelException {
-			return Arrays.asList((IPackageFragment[])((IPackageFragmentRoot) pkg.getParent()).getChildren());
+		public Collection<IPackageFragment> getAllPkgsUnderSamePkgRoot(IPackageFragment pkg) throws JavaModelException {
+			IJavaElement[] pkgRootChildren = ((IPackageFragmentRoot) pkg.getParent()).getChildren();
+			List<IPackageFragment> pkgs = new ArrayList<>(pkgRootChildren.length);
+			String root = StringUtils.nullToEmpty(CollectionUtils.getFirstElement(getPkgFragments(pkg)));
+			for (IJavaElement child : pkgRootChildren) {
+				if (child.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
+					if (child.getElementName().startsWith(root)) {
+						pkgs.add((IPackageFragment) child);
+					}
+				}
+			}
+			return pkgs;
 		}
 
 		@Override
 		public String[] getPkgFragments(IPackageFragment otherPkg) {
-			return ((PackageFragment) otherPkg).names;
+			return StringUtils.dotSplit(otherPkg.getElementName());
 		}
 
 		@Override
 		public List<String> getTypeUnderPkg(IPackageFragment pkg) throws JavaModelException {
 			List<String> types = new ArrayList<>();
 			for (IJavaElement child : pkg.getChildren()) {
-				if (child.getElementType() == IJavaElement.CLASS_FILE) {
+				if (CollectionUtils.existIn(child.getElementType(), IJavaElement.CLASS_FILE,
+						IJavaElement.COMPILATION_UNIT, IJavaElement.TYPE)) {
 					types.add(child.getElementName());
 				}
 			}
@@ -243,8 +260,8 @@ public class FilterUtils {
 	}
 	
 	public static class ExtJarPackagesContainer implements PackagesContainer<String> {
-		private Map<String, List<String>> pkgTypesMap = new HashMap<String, List<String>>();
-		private Map<String, List<String>> pkgRootsMap = new HashMap<>();
+		private Map<String, List<String>> pkgTypesMap = new HashMap<String, List<String>>(); // map of pkg and its types.
+		private Map<String, List<String>> pkgRootsMap = new HashMap<>(); // map of pkgRoot and its packages.
 		private boolean isCollectDefaultExcludes;
 		
 		public void reset(List<String> jarPaths, boolean initDefaultExcludes) {
@@ -324,7 +341,7 @@ public class FilterUtils {
 		}
 		
 		@Override
-		public Collection<String> getAllPkgsUnderPkgRoot(String pkg) throws JavaModelException {
+		public Collection<String> getAllPkgsUnderSamePkgRoot(String pkg) throws JavaModelException {
 			return CollectionUtils.nullToEmpty(pkgRootsMap.get(getPkgRoot(pkg)));
 		}
 
@@ -354,7 +371,7 @@ public class FilterUtils {
 	
 	private static interface PackagesContainer<T> {
 
-		Collection<T> getAllPkgsUnderPkgRoot(T pkg) throws JavaModelException;
+		Collection<T> getAllPkgsUnderSamePkgRoot(T pkg) throws JavaModelException;
 
 		Set<String> getDefaultExcludes();
 

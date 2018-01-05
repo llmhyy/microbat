@@ -1,5 +1,7 @@
 package microbat.preference;
 
+import java.util.Arrays;
+
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -93,9 +95,9 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
 		pref.putValue(EXCLUDED_LIBS, excludedFilters);
 		pref.putValue(INCLUDED_LIBS, includedFilters);
-		
 		String[] strs = Executor.deriveLibExcludePatterns();
 		Executor.libExcludes = strs;
+		System.out.println(StringUtils.join("\n", (Object[])strs));
 		return true;
 	}
 }
