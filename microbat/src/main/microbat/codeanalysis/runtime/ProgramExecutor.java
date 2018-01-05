@@ -988,7 +988,7 @@ public class ProgramExecutor extends Executor {
 						Value val = frame.getValue(localVariable);
 						IntegerValue intVal = (IntegerValue) val;
 						int index = intVal.value();
-						if(index >= subValues.size()){
+						if(index >= subValues.size() || index < 0){
 							continue;
 						}						
 						
@@ -1867,7 +1867,6 @@ public class ProgramExecutor extends Executor {
 								false, varID, var.getAliasVarID());
 						varID = varID + ":" + definingNodeOrder;
 						var.setVarID(varID);
-
 					}
 				}
 
