@@ -146,30 +146,9 @@ public class Trace {
 		int resultIndex = -1;
 		
 		for(int i=observingIndex-1; i>=0; i--){
-			TraceNode node = exectionList.get(i);
-			BreakPoint breakPoint = node.getBreakPoint();
-			String className = breakPoint.getDeclaringCompilationUnitName();
-			int lineNumber = breakPoint.getLineNumber();
-			
-			String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
-			String exp = combineTraceNodeExpression(className, lineNumber);
-			if(StringUtils.isNumeric(expression)){
-				int order = Integer.valueOf(expression);
-				if(node.getOrder()==order){
-					resultIndex = i;
-					break;
-				}
-			}
-			else{
-				if(exp.equals(expression)){
-					resultIndex = i;
-					break;
-				}
-				else if(simpleClassName.equals(expression)){
-					if (resultIndex==-1) {
-						resultIndex = i;					
-					}
-				}
+			resultIndex = searchTraceNode(expression, i);
+			if(resultIndex != -1){
+				break;
 			}
 		}
 		
@@ -183,49 +162,55 @@ public class Trace {
 		int resultIndex = -1;
 		
 		for(int i=observingIndex+1; i<exectionList.size(); i++){
-			TraceNode node = exectionList.get(i);
-			BreakPoint breakPoint = node.getBreakPoint();
-			String className = breakPoint.getDeclaringCompilationUnitName();
-			int lineNumber = breakPoint.getLineNumber();
-			
-			String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
-			if(StringUtils.isNumeric(expression)){
-				int order = Integer.valueOf(expression);
-				if(node.getOrder()==order){
-					resultIndex = i;
-					break;
-				}
-			}
-			else if(expression.matches("id=(\\w|\\W)+:\\d+")){
-				String id = expression.replace("id=", "");
-				for(VarValue readVar: node.getReadVariables()){
-					if(readVar.getVarID().equals(id)){
-						resultIndex = i;
-						break;
-					}
-					else if(readVar.getAliasVarID()!=null && readVar.getAliasVarID().equals(id)){
-						resultIndex = i;
-						break;
-					}
-				}
-			}
-			else{
-				String exp = combineTraceNodeExpression(className, lineNumber);
-				if(exp.equals(expression)){
-					resultIndex = i;
-					break;
-				}
-				else if(simpleClassName.equals(expression)){
-					if (resultIndex==-1) {
-						resultIndex = i;					
-					}
-				}
+			resultIndex = searchTraceNode(expression, i);
+			if(resultIndex != -1){
+				break;
 			}
 		}
 		
 		if(resultIndex != -1){
 			this.observingIndex = resultIndex;			
 		}
+		return resultIndex;
+	}
+
+	private int searchTraceNode(String expression, int i) {
+		int resultIndex = -1;
+		TraceNode node = exectionList.get(i);
+		BreakPoint breakPoint = node.getBreakPoint();
+		String className = breakPoint.getDeclaringCompilationUnitName();
+		int lineNumber = breakPoint.getLineNumber();
+		
+		String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
+		if(StringUtils.isNumeric(expression)){
+			int order = Integer.valueOf(expression);
+			if(node.getOrder()==order){
+				resultIndex = i;
+			}
+		}
+		else if(expression.matches("id=(\\w|\\W)+:\\d+")){
+			String id = expression.replace("id=", "");
+			for(VarValue readVar: node.getReadVariables()){
+				if(readVar.getVarID().equals(id)){
+					resultIndex = i;
+				}
+				else if(readVar.getAliasVarID()!=null && readVar.getAliasVarID().equals(id)){
+					resultIndex = i;
+				}
+			}
+		}
+		else{
+			String exp = combineTraceNodeExpression(className, lineNumber);
+			if(exp.equals(expression)){
+				resultIndex = i;
+			}
+			else if(simpleClassName.equals(expression)){
+				if (resultIndex==-1) {
+					resultIndex = i;					
+				}
+			}
+		}
+		
 		return resultIndex;
 	}
 	
