@@ -25,6 +25,20 @@ public class Settings {
 	public static int stepLimit;
 	private static Integer variableLayer;
 	
+	/**
+	 * We divide the library code into two categories: the interesting ones (e.g., 
+	 * those in java.util.*) and the normal ones. We only capture the data and control
+	 * dependency for our interested library code. However, it is possible that the
+	 * interested library code is called by some normal library code, of course, these
+	 * normal library code is called by application code. In such case, we will not
+	 * capture the data/control dependencies of the library code called by normal library
+	 * code. By this means, many of the library variables will not be visited, saving 
+	 * the time for recording the trace.
+	 * 
+	 * We use this field to decide whether such an optimization is enabled or not.
+	 */
+	public static boolean applyLibraryOptimization = true;
+	
 //	public static int referenceFieldLayerInString = 1;
 	
 	public static int distribtionLayer = 3;

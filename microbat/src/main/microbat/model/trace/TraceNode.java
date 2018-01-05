@@ -309,7 +309,29 @@ public class TraceNode{
 	}
 
 	public TraceNode getStepOverNext() {
-		return stepOverNext;
+		if(stepOverNext!=null){
+			return stepInNext;
+		}
+		else{
+			TraceNode n = stepInNext;
+			while(n!=null) {
+				TraceNode p1 = n.getInvocationParent();
+				TraceNode p2 = this.getInvocationParent();
+				if(p1==null && p2==null) {
+					stepOverNext = n;
+					return n;
+				}
+				else if(p1!=null && p2!=null) {
+					if(p1.getOrder()==p2.getOrder()) {
+						stepOverNext = n;
+						return n;
+					}					
+				}
+				n = n.getStepInNext();
+			}
+		}
+		
+		return null;
 	}
 
 	public void setStepOverNext(TraceNode stepOverNext) {
@@ -317,7 +339,28 @@ public class TraceNode{
 	}
 
 	public TraceNode getStepOverPrevious() {
-		return stepOverPrevious;
+		if(stepOverPrevious!=null){
+			return stepOverPrevious;
+		}
+		else if(stepInPrevious!=null){
+			TraceNode n = stepInPrevious;
+			while(n!=null) {
+				TraceNode p1 = n.getInvocationParent();
+				TraceNode p2 = this.getInvocationParent();
+				if(p1==null && p2==null) {
+					stepOverPrevious = n;
+					return n;
+				}
+				else if(p1!=null && p2!=null) {
+					if(p1.getOrder()==p2.getOrder()) {
+						stepOverPrevious = n;
+						return n;
+					}					
+				}
+				n = n.getStepInPrevious();
+			}
+		}
+		return null;
 	}
 
 	public void setStepOverPrevious(TraceNode stepOverPrevious) {
@@ -917,6 +960,9 @@ public class TraceNode{
 		List<TraceNode> list = new ArrayList<>();
 		TraceNode parent = this.getInvocationParent();
 		while(parent != null){
+			if(list.contains(parent)) {
+				break;
+			}
 			list.add(parent);
 			parent = parent.getInvocationParent();
 		}
@@ -955,7 +1001,8 @@ public class TraceNode{
 
 	public boolean containSynonymousReadVar(VarValue readVar) {
 		for(VarValue readVariable: getReadVariables()){
-			if(readVariable.getVarName().equals(readVar.getVarName())){
+			if(readVariable.getVarName().equals(readVar.getVarName())
+					&& readVariable.getClass().equals(readVar.getClass())){
 				return true;
 			}
 		}

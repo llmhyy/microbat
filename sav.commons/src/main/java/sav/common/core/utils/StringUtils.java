@@ -12,6 +12,7 @@ package sav.common.core.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import sav.common.core.Constants;
@@ -118,5 +119,14 @@ public class StringUtils {
 		}
 		return dotJoin(new String(packageName), dotJoin(enclosing),
 				new String(simpleTypeName));
+	}
+	
+	public static String[] dotSplit(String str) {
+		return str.split("\\.");
+	}
+	
+	public static List<String> sortAlphanumericStrings(List<String> list) {
+		Collections.sort(list, new AlphanumComparator());
+		return list;
 	}
 }

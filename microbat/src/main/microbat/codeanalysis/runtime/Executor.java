@@ -1,8 +1,13 @@
 package microbat.codeanalysis.runtime;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 
 import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.IncompatibleThreadStateException;
@@ -25,6 +30,13 @@ import com.sun.jdi.request.ThreadStartRequest;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser.GetFrame;
 import microbat.codeanalysis.runtime.jpda.expr.ParseException;
+import microbat.preference.AnalysisScopePreference;
+import microbat.util.FilterUtils;
+import microbat.util.FilterUtils.ExtJarPackagesContainer;
+import microbat.util.FilterUtils.IJavaProjectPkgContainer;
+import microbat.util.JavaUtil;
+import microbat.util.MicroBatUtil;
+import sav.common.core.utils.StringUtils;
 
 /**
  * This class is used to locate all the executor classes in this project
@@ -70,6 +82,7 @@ public abstract class Executor {
 			"java.util.spi.*",
 			"java.util.stream.*", 
 			"java.util.zip.*", 
+//			"java.util.*",
 			"javax.*", "sun.*", "com.sun.*", 
 			"org.omg.*",
 			"com.oracle.*",
@@ -86,11 +99,37 @@ public abstract class Executor {
 			"org.junit.*", "junit.*", "junit.framework.*", "org.hamcrest.*", "org.hamcrest.core.*", "org.hamcrest.internal.*"
 			};
 	
-	protected String[] includedLibs = {"java.util.*"};
+	public static String[] libIncludes = {"java.util.*"};
+//	public static String[] libIncludes = {"java.util.*\\"};
+	
+	/**
+	 * This method derive more detailed libExcludes with libIncludes, for example, 
+	 * when libExcludes has a pattern as java.* while libIncludes has a pattern as java.util.*,
+	 * then the method can split java.* into a list including java.awt.*, java.lang.*, ..., except
+	 * java.util.*. 
+	 *
+	 * @return
+	 */
+	public static String[] deriveLibExcludePatterns() {
+		String[] excludedLibs = AnalysisScopePreference.getExcludedLibs();
+		String[] includedLibs = AnalysisScopePreference.getIncludedLibs();
+		/* project source code */
+		IJavaProject ijavaProject = JavaCore.create(JavaUtil.getSpecificJavaProjectInWorkspace());
+		Set<String> expandedExcludes = FilterUtils.deriveLibExcludePatterns(new IJavaProjectPkgContainer(ijavaProject),
+				excludedLibs, includedLibs);
+		excludedLibs = new ArrayList<>(expandedExcludes).toArray(new String[0]);
+		/* project reference jars */
+		ExtJarPackagesContainer pkgsContainer = new ExtJarPackagesContainer();
+		List<String> excludeJars = new ArrayList<>(MicroBatUtil.constructClassPaths().getExternalLibPaths());
+		excludeJars.add(MicroBatUtil.getRtJarPathInDefinedJavaHome());
+		pkgsContainer.reset(excludeJars, true);
+		expandedExcludes = FilterUtils.deriveLibExcludePatterns(pkgsContainer, excludedLibs, includedLibs);
+		return StringUtils.sortAlphanumericStrings(new ArrayList<>(expandedExcludes)).toArray(new String[0]);
+	}
 	
 	protected boolean isInIncludedLibrary(Location currentLocation) {
 		String typeName = currentLocation.declaringType().name();
-		for(String expr: includedLibs){
+		for(String expr: libIncludes){
 			expr = expr.replace("*", "");
 			if(typeName.contains(expr)){
 				return true;
@@ -147,7 +186,6 @@ public abstract class Executor {
 			classPrepareRequest.addClassExclusionFilter(ex);
 		}
 		classPrepareRequest.setEnabled(true);
-
 	}
 	
 	/**

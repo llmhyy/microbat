@@ -10,10 +10,6 @@ CREATE TABLE Regression
 	root_cause_step INTEGER,
 	is_overskip INTEGER,
 	over_skip_number INTEGER,
-	control_mending_start INTEGER,
-	data_mending_start INTEGER,
-	mending_corresponding_step INTEGER,
-	mending_returning_point INTEGER,
 	PRIMARY KEY (regression_id)
 ) 
 ;

@@ -371,7 +371,7 @@ public class VariableValueExtractor {
 				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)childVarValue, thread);
 				StringValue ele = new StringValue(pValue, isRoot, childVar);
 				ele.setVarID(String.valueOf(((ObjectReference)childVarValue).uniqueID()));
-				appendVarID(childVar, ele);
+				appendVarID(childVar, ele, accessType);
 				parent.addChild(ele);
 				ele.addParent(parent);
 			} 
@@ -382,7 +382,7 @@ public class VariableValueExtractor {
 				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)childVarValue, thread);
 				PrimitiveValue ele = new PrimitiveValue(pValue, isRoot, childVar);
 				ele.setVarID(String.valueOf(((ObjectReference)childVarValue).uniqueID()));
-				appendVarID(childVar, ele);
+				appendVarID(childVar, ele, accessType);
 				parent.addChild(ele);
 				ele.addParent(parent);
 			} 
@@ -488,15 +488,15 @@ public class VariableValueExtractor {
 			}
 		}
 		
-		appendVarID(childVar, val);
+		appendVarID(childVar, val, accessType);
 		
 		parent.addChild(val);
 		val.addParent(parent);
 	}
 
-	private void appendVarID(Variable var, VarValue val) {
+	private void appendVarID(Variable var, VarValue val, String accessType) {
 		Trace trace = this.executor.getTrace();
-		String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), var.getVarID(), var.getAliasVarID());
+		String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), true, var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		val.setVarID(varID);
 	}
@@ -541,7 +541,7 @@ public class VariableValueExtractor {
 		String componentType = ((ArrayType)value.type()).componentTypeName();
 		arrayVal.setComponentType(componentType);
 		arrayVal.setReferenceID(value.uniqueID());
-		appendVarID(variable, arrayVal);
+		appendVarID(variable, arrayVal, accessType);
 		
 		//add value of elements
 		List<Value> list = new ArrayList<>();
@@ -552,7 +552,7 @@ public class VariableValueExtractor {
 			String parentSimpleID = Variable.truncateSimpleID(arrayVal.getVarID());
 			String aliasVarID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
 			Trace trace = this.executor.getTrace();
-			String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLastestNode(), aliasVarID, aliasVarID);
+			String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), true, aliasVarID, aliasVarID);
 			aliasVarID = aliasVarID + ":" + order;
 			
 			String varName = String.valueOf(i);

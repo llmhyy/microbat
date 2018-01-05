@@ -10,6 +10,7 @@ package sav.common.core.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -54,6 +55,14 @@ public class CollectionUtils {
 		return list;
 	}
 	
+	public static <T> Set<T> toHashSet(T[] vals) {
+		Set<T> set = new HashSet<T>();
+		for (T val : vals) {
+			set.add(val);
+		}
+		return set;
+	}
+	
 	public static <T> List<T> join(List<T>... lists) {
 		List<T> result = new ArrayList<T>();
 		for (List<T> list : lists) {
@@ -96,6 +105,17 @@ public class CollectionUtils {
 		}
 		for (T val : arr) {
 			addIfNotNullNotExist(col, val);
+		}
+	}
+	
+	public static <T> void addIfNotExist(Collection<T> col, Collection<T> vals) {
+		if (isEmpty(vals)) {
+			return;
+		}
+		for (T val : vals) {
+			if (!col.contains(val)) {
+				col.add(val);
+			}
 		}
 	}
 	
@@ -257,5 +277,12 @@ public class CollectionUtils {
 	public static int getSize(List<?> list) {
 		return list == null ? 0 : list.size();
 	}
-	
+
+	public static <T> List<T> nullToEmpty(List<T> list) {
+		if (list == null) {
+			return Collections.emptyList();
+		}
+		return list;
+	}
+
 }

@@ -19,8 +19,8 @@ public class DiffUtil {
 	@Deprecated
 	public static PairList generateMatchedTraceNodeList(Trace mutatedTrace, Trace correctTrace) {
 		
-		TraceNode[] mutatedTraceArray = mutatedTrace.getExectionList().toArray(new TraceNode[0]);
-		TraceNode[] correctTraceArray = correctTrace.getExectionList().toArray(new TraceNode[0]);
+		TraceNode[] mutatedTraceArray = mutatedTrace.getExecutionList().toArray(new TraceNode[0]);
+		TraceNode[] correctTraceArray = correctTrace.getExecutionList().toArray(new TraceNode[0]);
 		
 		return generateMatchedTraceNodeList(mutatedTraceArray, correctTraceArray, new TraceNodeComprehensiveSimilarityComparator());
 	}

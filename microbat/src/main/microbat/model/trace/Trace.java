@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -64,12 +66,12 @@ public class Trace {
 
 	public void resetCheckTime(){
 		this.checkTime = -1;
-		for(TraceNode node: getExectionList()){
+		for(TraceNode node: getExecutionList()){
 			node.resetCheckTime();
 		}
 	}
 	
-	public List<TraceNode> getExectionList() {
+	public List<TraceNode> getExecutionList() {
 		return exectionList;
 	}
 
@@ -118,7 +120,7 @@ public class Trace {
 		return topList;
 	}
 	
-	public TraceNode getLastestNode(){
+	public TraceNode getLatestNode(){
 		int len = size();
 		if(len > 0){
 			return this.exectionList.get(len-1);
@@ -144,30 +146,9 @@ public class Trace {
 		int resultIndex = -1;
 		
 		for(int i=observingIndex-1; i>=0; i--){
-			TraceNode node = exectionList.get(i);
-			BreakPoint breakPoint = node.getBreakPoint();
-			String className = breakPoint.getDeclaringCompilationUnitName();
-			int lineNumber = breakPoint.getLineNumber();
-			
-			String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
-			String exp = combineTraceNodeExpression(className, lineNumber);
-			if(StringUtils.isNumeric(expression)){
-				int order = Integer.valueOf(expression);
-				if(node.getOrder()==order){
-					resultIndex = i;
-					break;
-				}
-			}
-			else{
-				if(exp.equals(expression)){
-					resultIndex = i;
-					break;
-				}
-				else if(simpleClassName.equals(expression)){
-					if (resultIndex==-1) {
-						resultIndex = i;					
-					}
-				}
+			resultIndex = searchTraceNode(expression, i);
+			if(resultIndex != -1){
+				break;
 			}
 		}
 		
@@ -181,36 +162,55 @@ public class Trace {
 		int resultIndex = -1;
 		
 		for(int i=observingIndex+1; i<exectionList.size(); i++){
-			TraceNode node = exectionList.get(i);
-			BreakPoint breakPoint = node.getBreakPoint();
-			String className = breakPoint.getDeclaringCompilationUnitName();
-			int lineNumber = breakPoint.getLineNumber();
-			
-			String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
-			String exp = combineTraceNodeExpression(className, lineNumber);
-			if(StringUtils.isNumeric(expression)){
-				int order = Integer.valueOf(expression);
-				if(node.getOrder()==order){
-					resultIndex = i;
-					break;
-				}
-			}
-			else{
-				if(exp.equals(expression)){
-					resultIndex = i;
-					break;
-				}
-				else if(simpleClassName.equals(expression)){
-					if (resultIndex==-1) {
-						resultIndex = i;					
-					}
-				}
+			resultIndex = searchTraceNode(expression, i);
+			if(resultIndex != -1){
+				break;
 			}
 		}
 		
 		if(resultIndex != -1){
 			this.observingIndex = resultIndex;			
 		}
+		return resultIndex;
+	}
+
+	private int searchTraceNode(String expression, int i) {
+		int resultIndex = -1;
+		TraceNode node = exectionList.get(i);
+		BreakPoint breakPoint = node.getBreakPoint();
+		String className = breakPoint.getDeclaringCompilationUnitName();
+		int lineNumber = breakPoint.getLineNumber();
+		
+		String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
+		if(StringUtils.isNumeric(expression)){
+			int order = Integer.valueOf(expression);
+			if(node.getOrder()==order){
+				resultIndex = i;
+			}
+		}
+		else if(expression.matches("id=(\\w|\\W)+:\\d+")){
+			String id = expression.replace("id=", "");
+			for(VarValue readVar: node.getReadVariables()){
+				if(readVar.getVarID().equals(id)){
+					resultIndex = i;
+				}
+				else if(readVar.getAliasVarID()!=null && readVar.getAliasVarID().equals(id)){
+					resultIndex = i;
+				}
+			}
+		}
+		else{
+			String exp = combineTraceNodeExpression(className, lineNumber);
+			if(exp.equals(expression)){
+				resultIndex = i;
+			}
+			else if(simpleClassName.equals(expression)){
+				if (resultIndex==-1) {
+					resultIndex = i;					
+				}
+			}
+		}
+		
 		return resultIndex;
 	}
 	
@@ -283,12 +283,8 @@ public class Trace {
 	
 	public void constructLoopParentRelation(){
 		Stack<TraceNode> loopParentStack = new Stack<>();
-		
+		System.currentTimeMillis();
 		for(TraceNode node: this.exectionList){
-			
-			if(node.getOrder() == 14){
-				System.currentTimeMillis();
-			}
 			
 			/**
 			 * if out of the scope the loop parent, pop
@@ -300,10 +296,6 @@ public class Trace {
 						                                                                 /**for recursive case*/
 						|| (node.getLineNumber() == currentLoopParent.getLineNumber() && loopParentHaveNotLoopChildOfSomeInvocationParentOfNode(currentLoopParent, node))
 						|| (node.getOrder()==currentLoopParent.getOrder()+1 && !currentLoopParent.getLoopScope().containsNodeScope(node))){
-					if(currentLoopParent.getOrder()==5){
-						System.currentTimeMillis();
-//						loopParentDoesNotContainSomeInvocationParentOfNode(currentLoopParent, node);
-					}
 					
 					loopParentStack.pop();
 					if(loopParentStack.isEmpty()){
@@ -612,15 +604,33 @@ public class Trace {
 	
 	private Map<String, TraceNode> latestNodeDefiningVariableMap = new HashMap<>();
 	
-	public String findDefiningNodeOrder(String accessType, TraceNode currentNode, String varID, String aliasVarID) {
+	/**
+	 * if we are finding defining step of a read variable, v, the defining step is the latest
+	 * step defining v.
+	 * 
+	 * if we are finding defining step of a written variable:
+	 * (1) if it is not a field/index of an object/array, the defining step is the latest step.
+	 * (2) if it is a sub-value, sv, let the latest step be s1, the defining step of the sub-value sv is 
+	 * (2-1) s1 if the variable id of sv is never defined before 
+	 * (2-2) s2, s2 is the latest step defining sv.
+	 * 
+	 * @param accessType
+	 * @param currentNode
+	 * @param isSubValue
+	 * @param varID
+	 * @param aliasVarID
+	 * @return
+	 */
+	public String findDefiningNodeOrder(String accessType, TraceNode currentNode, boolean isSubValue,
+			String varID, String aliasVarID) {
 		varID = Variable.truncateSimpleID(varID);
 		aliasVarID = Variable.truncateSimpleID(aliasVarID);
 		String definingOrder = "0";
-		if(accessType.equals(Variable.WRITTEN)){
+		if(accessType.equals(Variable.WRITTEN) && !isSubValue){
 			definingOrder = String.valueOf(currentNode.getOrder());
 			latestNodeDefiningVariableMap.put(varID, currentNode);
 		}
-		else if(accessType.equals(Variable.READ)){
+		else {
 			TraceNode node1 = latestNodeDefiningVariableMap.get(varID);
 			TraceNode node2 = latestNodeDefiningVariableMap.get(aliasVarID);
 			
@@ -1030,5 +1040,9 @@ public class Trace {
 
 	public void setLocalVariableScopes(LocalVariableScopes localVariableScopes) {
 		this.localVariableScopes = localVariableScopes;
+	}
+	
+	public TraceNode getTraceNode(int order){
+		return this.exectionList.get(order-1);
 	}
 }

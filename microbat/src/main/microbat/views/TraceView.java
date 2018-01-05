@@ -166,7 +166,7 @@ public class TraceView extends ViewPart {
 	protected boolean refreshProgramState = true;
 
 	public void jumpToNode(Trace trace, int order, boolean refreshProgramState) {
-		TraceNode node = trace.getExectionList().get(order - 1);
+		TraceNode node = trace.getExecutionList().get(order - 1);
 
 		List<TraceNode> path = new ArrayList<>();
 		while (node != null) {
@@ -184,7 +184,7 @@ public class TraceView extends ViewPart {
 		TraceNode[] list = path.toArray(new TraceNode[0]);
 		listViewer.setExpandedElements(list);
 
-		node = trace.getExectionList().get(order - 1);
+		node = trace.getExecutionList().get(order - 1);
 
 		programmingSelection = true;
 		this.refreshProgramState = refreshProgramState;
@@ -356,7 +356,7 @@ public class TraceView extends ViewPart {
 					if (obj instanceof TraceNode) {
 						TraceNode node = (TraceNode) obj;
 
-						// showDebuggingInfo(node);
+//						 showDebuggingInfo(node);
 
 						if (!programmingSelection) {
 							Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
