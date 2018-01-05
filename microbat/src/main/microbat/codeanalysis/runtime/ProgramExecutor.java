@@ -597,7 +597,16 @@ public class ProgramExecutor extends Executor {
 
 					Location location = ((MethodEntryEvent) event).location();
 					PointWrapper nextPoint = getNextPoint(executionOrderList);
-					if (isInterestedMethod(location, nextPoint)) {
+					boolean firstTry = isInterestedMethod(location, nextPoint);
+					PointWrapper nextNextPoint = getNextNextPoint(executionOrderList);
+					boolean secondTry = (nextNextPoint != null) && isInterestedMethod(location, nextNextPoint);
+					
+					if(!firstTry && secondTry){
+						executionOrderList.remove(nextPoint);
+						nextPoint = nextNextPoint;
+					}
+					
+					if (firstTry || secondTry) {
 						nextPoint.setHit(true);
 						
 						TraceNode lastestNode = this.trace.getLatestNode();
@@ -635,7 +644,7 @@ public class ProgramExecutor extends Executor {
 					} else {
 						/**
 						 * It check whether a \<clint\> method is visited in
-						 * previous method entry event. If yes, this variable
+						 * previous method entry event. If yes, variable <code>isRecoverMethodRequest</code>
 						 * will be set true. The reason is to prevent JVM from
 						 * being hanged. We observe that calling a \
 						 * <clint\> method sometimes hang the JVM, causing a JVM
@@ -1218,12 +1227,23 @@ public class ProgramExecutor extends Executor {
 
 		return executionOrderList.get(index);
 	}
+	
+	private PointWrapper getNextNextPoint(List<PointWrapper> executionOrderList) {
+		int index = trace.getExecutionList().size() + 1;
+		if (index >= executionOrderList.size()) {
+			return null;
+		}
+
+		return executionOrderList.get(index);
+	}
 
 	private boolean isInterestedMethod(Location location, PointWrapper lastSteppingInPoint) {
-
+		
 		if (lastSteppingInPoint != null) {
-			if (location.declaringType().toString().equals(lastSteppingInPoint.getPoint().getClassCanonicalName())
-					&& location.lineNumber() == lastSteppingInPoint.getPoint().getLineNumber()) {
+			String locationString = location.declaringType().toString();
+			if ((locationString.equals(lastSteppingInPoint.getPoint().getClassCanonicalName()) ||
+					(locationString.equals(lastSteppingInPoint.getPoint().getDeclaringCompilationUnitName()))
+					&& location.lineNumber() == lastSteppingInPoint.getPoint().getLineNumber())) {
 				return true;
 			}
 		}
