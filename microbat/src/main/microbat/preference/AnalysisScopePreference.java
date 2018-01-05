@@ -1,13 +1,12 @@
 package microbat.preference;
 
-import java.util.Arrays;
-
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -43,15 +42,10 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 				+ "in the tables below.",
 				1, 300);
 		hintLbl.setFont(JFaceResources.getFontRegistry().getItalic(hintLbl.getFont().toString()));
-		Composite content = new Composite(parent, SWT.NONE);
-		GridLayout layout= new GridLayout();
-		layout.numColumns = 1;
-		content.setLayout(layout);
+		SashForm content = new SashForm(parent, SWT.VERTICAL);
 		content.setLayoutData(new GridData(GridData.FILL_BOTH));
-		SWTFactory.createLabel(content, "Add more packages/types to analyze:");
-		includedTable = new AnalysisScopesTablePanel(content, true);
-		SWTFactory.createLabel(content, "Add more exclude filters");
-		excludedTable = new AnalysisScopesTablePanel(content);
+		includedTable = new AnalysisScopesTablePanel(content, "Add more packages/types to analyze:", false);
+		excludedTable = new AnalysisScopesTablePanel(content, "Add more exclude filters", true);
 		setDefaultValues();
 		return content;
 	}

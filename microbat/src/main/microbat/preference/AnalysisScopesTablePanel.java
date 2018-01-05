@@ -55,16 +55,11 @@ public class AnalysisScopesTablePanel extends TableViewerEditablePanel<String> {
 	private Button addPackageBtn;
 	private Button addTypeBtn;
 	private List<String> filterTexts = new ArrayList<String>();
+	private boolean isExcludeTable;
 	
-	public AnalysisScopesTablePanel(Composite parent) {
-		this(parent, false);
-	}
-	
-	public AnalysisScopesTablePanel(Composite parent, boolean enableFilterTextBtn) {
-		super(parent);
-		if (!enableFilterTextBtn) {
-			hide(addFilterTextBtn);
-		}
+	public AnalysisScopesTablePanel(Composite parent, String title, boolean isExcludeTable) {
+		super(parent, title);
+		this.isExcludeTable = isExcludeTable;
 	}
 	
 	@Override
@@ -101,10 +96,17 @@ public class AnalysisScopesTablePanel extends TableViewerEditablePanel<String> {
 			
 			@Override
 			public void handleEvent(Event event) {
-				InputDialog dialog = new InputDialog(getShell(), "Add Filter Text", "Ex: \njava.util.* : include all types and packages under java.util package, "
-						+ "\njava.util.*\\ : include all types only under java.util package, "
-						+ "\njava.util.Arrays : include type Arrays only"
-						+ "\njava.util.Arrays\\ : include type Arrays and its inner types", "", null);
+				String hint;
+				if (isExcludeTable) {
+					hint = "Ex: \njava.util.* : exclude all types and packages under package java.util, "
+							+ "\njava.util.Arrays : exclude type Arrays";
+				} else {
+					hint = "Ex: \njava.util.* : include all types and packages under package java.util, "
+							+ "\njava.util.*\\ : include all types only under package java.util, "
+							+ "\njava.util.Arrays : include type Arrays only"
+							+ "\njava.util.Arrays\\ : include type Arrays and its inner types";
+				}
+				InputDialog dialog = new InputDialog(getShell(), "Add Filter Text", hint, "", null);
 				if (dialog.open() == Window.OK) {
 					if (StringUtils.isEmpty(dialog.getValue())) {
 						return;

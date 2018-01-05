@@ -39,8 +39,10 @@ public abstract class TableViewerEditablePanel<T> {
 	protected Button addBtn;
 	protected Button editBtn;
 	protected Button removeBtn; 
+	private String title;
 	
-	public TableViewerEditablePanel(Composite parent) {
+	public TableViewerEditablePanel(Composite parent, String title) {
+		this.title = title;
 		/* table on the left */
 		panel = createContentPanel(parent);
 		GridData data;
@@ -81,7 +83,9 @@ public abstract class TableViewerEditablePanel<T> {
 	}
 
 	protected Composite createContentPanel(Composite parent) {
-		return SWTFactory.createGridPanel(parent, 2);
+		Composite group = SWTFactory.createGridPanel(parent, 1);
+		SWTFactory.createLabel(group, title);
+		return SWTFactory.createGridPanel(group, 2);
 	}
 	
 	@SuppressWarnings("unchecked")
