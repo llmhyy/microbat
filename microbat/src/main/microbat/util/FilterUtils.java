@@ -20,12 +20,15 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import sav.common.core.SavRtException;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.StringUtils;
 
 public class FilterUtils {
+	private static final Logger log = LoggerFactory.getLogger(FilterUtils.class);
 	private FilterUtils(){}
 	private static final String SUFFIX = ".*";
 	
@@ -289,6 +292,10 @@ public class FilterUtils {
 						addPkgPath(entryName);
 					} else {
 						int typeNameStartIdx = entryName.lastIndexOf("/");
+						if (typeNameStartIdx < 0) {
+							log.debug("ingore jar entry: {} in {}", entryName, jarPath);
+							continue;
+						}
 						String pkgPath = entryName.substring(0, typeNameStartIdx);
 						if (entryName.endsWith(".class")) {
 							List<String> classes = pkgTypesMap.get(pkgPath);
