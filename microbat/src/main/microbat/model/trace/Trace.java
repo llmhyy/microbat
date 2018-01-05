@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -187,7 +189,6 @@ public class Trace {
 			int lineNumber = breakPoint.getLineNumber();
 			
 			String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
-			String exp = combineTraceNodeExpression(className, lineNumber);
 			if(StringUtils.isNumeric(expression)){
 				int order = Integer.valueOf(expression);
 				if(node.getOrder()==order){
@@ -195,7 +196,21 @@ public class Trace {
 					break;
 				}
 			}
+			else if(expression.matches("id=(\\w|\\W)+:\\d+")){
+				String id = expression.replace("id=", "");
+				for(VarValue readVar: node.getReadVariables()){
+					if(readVar.getVarID().equals(id)){
+						resultIndex = i;
+						break;
+					}
+					else if(readVar.getAliasVarID()!=null && readVar.getAliasVarID().equals(id)){
+						resultIndex = i;
+						break;
+					}
+				}
+			}
 			else{
+				String exp = combineTraceNodeExpression(className, lineNumber);
 				if(exp.equals(expression)){
 					resultIndex = i;
 					break;
