@@ -90,7 +90,7 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 		pref.putValue(EXCLUDED_LIBS, excludedFilters);
 		pref.putValue(INCLUDED_LIBS, includedFilters);
 		String[] strs = Executor.deriveLibExcludePatterns();
-		Executor.libExcludes = strs;
+//		Executor.libExcludes = strs;
 		System.out.println(StringUtils.join("\n", (Object[])strs));
 		return true;
 	}
