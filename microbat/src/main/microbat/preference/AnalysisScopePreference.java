@@ -89,9 +89,15 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
 		pref.putValue(EXCLUDED_LIBS, excludedFilters);
 		pref.putValue(INCLUDED_LIBS, includedFilters);
-		String[] strs = Executor.deriveLibExcludePatterns();
-//		Executor.libExcludes = strs;
-		System.out.println(StringUtils.join("\n", (Object[])strs));
+		String[] excludePatterns = Executor.deriveLibExcludePatterns();
+		Executor.libExcludes = excludePatterns;
+		String[] includePatterns = AnalysisScopePreference.getIncludedLibs();
+		for(int i=0; i<includePatterns.length; i++){
+			String includePattern = includePatterns[i];
+			includePatterns[i] = includePattern.replace("\\", "");
+		}
+		Executor.libIncludes = includePatterns;
+//		System.out.println(StringUtils.join("\n", (Object[])strs));
 		return true;
 	}
 }
