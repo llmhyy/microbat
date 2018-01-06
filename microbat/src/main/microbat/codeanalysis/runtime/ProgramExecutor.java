@@ -896,6 +896,7 @@ public class ProgramExecutor extends Executor {
 
 		String locationID = className + "$" + lineNumber;
 		LineNumberVisitor0 visitor = libraryLine2VisitorMap.get(locationID);
+//		visitor = null;
 		if (visitor == null) {
 			visitor = RWVarRetrieverForLine.parse(className, lineNumber, offset, appPath);
 			libraryLine2VisitorMap.put(locationID, visitor);

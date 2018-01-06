@@ -5,6 +5,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.bcel.classfile.Code;
+import org.apache.bcel.classfile.Constant;
+import org.apache.bcel.classfile.ConstantPool;
+import org.apache.bcel.classfile.ConstantUtf8;
 import org.apache.bcel.classfile.LineNumber;
 import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.Method;
@@ -16,10 +19,12 @@ import org.apache.bcel.generic.IINC;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.LoadInstruction;
 import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.StoreInstruction;
+import org.apache.bcel.generic.Type;
 
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.ConstantVar;
@@ -129,6 +134,22 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 		return correspondingInstructions;
 	}
 	
+	@SuppressWarnings("rawtypes")
+	protected List<InstructionHandle> findPreviousInstructions(long offset, Code code) {
+		List<InstructionHandle> correspondingInstructions = new ArrayList<>();
+		
+		InstructionList list = new InstructionList(code.getCode());
+		Iterator iter = list.iterator();
+		while(iter.hasNext()){
+			InstructionHandle insHandle = (InstructionHandle) iter.next();
+			if(insHandle.getPosition()<offset){
+				correspondingInstructions.add(insHandle);
+			}
+		}
+		
+		return correspondingInstructions;
+	}
+	
 	class VarOp{
 		Variable var;
 		String op;
@@ -196,10 +217,10 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 			String typeSig = aIns.getType(pool).getSignature();
 			String typeName = SignatureUtils.signatureToName(typeSig);
 			
-			List<InstructionHandle> previousInstructions = findPreviousInstructions(lineNumber, insHandle.getPosition(), code);
+			List<InstructionHandle> previousInstructions = findPreviousInstructions(insHandle.getPosition(), code);
 			if(insHandle.getInstruction().getName().toLowerCase().contains("load")){
 				Variable var0 = parseArrayName(method, previousInstructions);
-				System.currentTimeMillis();
+//				System.currentTimeMillis();
 				if(var0!=null){
 					String readArrayElement = var0.getName();
 					ArrayElementVar var = new ArrayElementVar(readArrayElement, typeName, null);
@@ -232,12 +253,27 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 		return null;
 	}
 	
+	/**
+	 * Scan the previous instructions to look for which variable used before stands for the array
+	 * name. The basic idea is that, given an array instruction AINS such as aaload or aastore, we find
+	 * its nearest previous instruction handling an array variable. The name of handled array variable is 
+	 * assumed to be the name of the given array. However, we should take care that the instructions
+	 * popping an array out of frame stack. If we detect k such instructions, the name of variable 
+	 * handled by k-th instruction from AINS should be the name we need. We record k in a local variable
+	 * <code>popArrayTime</code>. 
+	 *  
+	 * @param method
+	 * @param previousInstructions
+	 * @return
+	 */
 	private Variable parseArrayName(Method method, List<InstructionHandle> previousInstructions){
+		
+		int popArrayTime = 0;
+		
 		Code code = method.getCode();
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool());
 		for(int i=previousInstructions.size()-1; i>=0; i--){
 			InstructionHandle insHandle = previousInstructions.get(i);
-			//TODO
 			Instruction ins = insHandle.getInstruction();
 			if(ins instanceof FieldInstruction){
 				FieldInstruction fIns = (FieldInstruction)ins;
@@ -245,17 +281,44 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 				String fieldName = fIns.getFieldName(pool);
 				String type = fIns.getFieldType(pool).getSignature();
 				if(type.contains("[")){
-					type = SignatureUtils.signatureToName(type);
-					return new FieldVar(isStatic, fieldName, type);					
+					if(fIns.getName().contains("get")){
+						if(popArrayTime==0){
+							type = SignatureUtils.signatureToName(type);
+							return new FieldVar(isStatic, fieldName, type);											
+						}
+						else{
+							popArrayTime--;
+						}
+					}
+					else{
+						popArrayTime++;
+					}
 				}
 			}
 			else if(ins instanceof LocalVariableInstruction){
 				LocalVariableInstruction lIns = (LocalVariableInstruction)ins;
-				System.currentTimeMillis();
-				String type = lIns.getType(pool).getSignature();
+				int localVarIndex = lIns.getIndex();
+				LocalVariable localVariable = code.getLocalVariableTable().getLocalVariable(localVarIndex, insHandle.getPosition());
+				if(localVariable==null){
+					continue;
+				}
+				String type = localVariable.getSignature();
 				if(type.contains("[")){
-					int varIndex = lIns.getIndex();
-					return new LocalVar(String.valueOf(varIndex), null, className, lineNumber);				
+					if(lIns.getName().contains("load")){
+						if(popArrayTime==0){
+							int varIndex = localVariable.getNameIndex();
+							ConstantPool pool0 = localVariable.getConstantPool();
+							Constant cons = pool0.getConstant(varIndex);
+							String varaibleName =((ConstantUtf8) cons).getBytes();
+							return new LocalVar(varaibleName, type, className, lineNumber);							
+						}
+						else{
+							popArrayTime--;
+						}
+					}
+					else if(lIns.getName().contains("store")){
+						popArrayTime++;
+					}
 				}
 				else if(type.equals("Ljava/lang/Object;")){
 					int varIndex = lIns.getIndex();
@@ -263,7 +326,17 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 					if(lVar != null){
 						type = lVar.getSignature();
 						if(type.contains("[")){
-							return new ArrayElementVar(lVar.getName(), type, null);	
+							if(lIns.getName().contains("load")){
+								if(popArrayTime==0){
+									return new ArrayElementVar(lVar.getName(), type, null);									
+								}
+								else{
+									popArrayTime--;
+								}
+							}
+							else if(lIns.getName().contains("store")){
+								popArrayTime++;
+							}
 						}						
 					}
 				}
@@ -272,6 +345,7 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 				ArrayInstruction aIns = (ArrayInstruction)ins;
 				String type = aIns.getType(pool).getSignature();
 				if(type.contains("[")){
+					
 					List<InstructionHandle> preIns = new ArrayList<>();
 					for(InstructionHandle handle: previousInstructions){
 						if(handle.getPosition()<insHandle.getPosition()){
@@ -281,10 +355,24 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 					
 					Variable var = parseArrayName(method, preIns);
 					if(null != var){
-						String varName = var.getName();
-						return new ArrayElementVar(varName, var.getType(), null);
+						if(aIns.getName().contains("load")){
+							if(popArrayTime==0){
+								String varName = var.getName();
+								return new ArrayElementVar(varName, var.getType(), null);							
+							}
+							else{
+								popArrayTime--;
+							}
+						}
 					}		
 				}
+				
+				popArrayTime++;
+			}
+			else if(ins instanceof InvokeInstruction){
+				InvokeInstruction iIns = (InvokeInstruction)ins;
+				Type type = iIns.getReturnType(pool);
+				//TODO handle the returned array by method invocation.
 			}
 		}
 		
