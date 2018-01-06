@@ -54,6 +54,20 @@ public class ByteCodeVisitor extends EmptyVisitor{
 		
 		return correspondingInstructions;
 	}
+	
+	@SuppressWarnings("rawtypes")
+	protected List<InstructionHandle> findCorrespondingInstructions(Code code) {
+		List<InstructionHandle> correspondingInstructions = new ArrayList<>();
+		
+		InstructionList list = new InstructionList(code.getCode());
+		Iterator iter = list.iterator();
+		while(iter.hasNext()){
+			InstructionHandle insHandle = (InstructionHandle) iter.next();
+			correspondingInstructions.add(insHandle);
+		}
+		
+		return correspondingInstructions;
+	}
 
 	protected void parseReadWrittenVariable(BreakPoint point, List<InstructionHandle> correspondingInstructions, 
 			Code code, CFG cfg, AppJavaClassPath appJavaClassPath) {

@@ -11,8 +11,8 @@ import org.apache.bcel.util.SyntheticRepository;
 
 import sav.strategies.dto.AppJavaClassPath;
 
-public class RWVarRetrieverForLine{
-	public static LineNumberVisitor0 parse(String className, int lineNumber, int offset, AppJavaClassPath appClassPath){
+public class ByteCodeParser{
+	public static void parse(String className, ByteCodeVisitor visitor, AppJavaClassPath appClassPath){
 		String originalSystemClassPath = System.getProperty("java.class.path");
 		String[] paths = originalSystemClassPath.split(File.pathSeparator);
 		List<String> pathList = new ArrayList<>();
@@ -42,17 +42,14 @@ public class RWVarRetrieverForLine{
 		ClassPath0 classPath = new ClassPath0(s);
 		Repository.setRepository(SyntheticRepository.getInstance(classPath));
 		
-		LineNumberVisitor0 visitor = null;
 		JavaClass clazz;
 		try {
 			clazz = Repository.lookupClass(className);
-			visitor = new LineNumberVisitor0(lineNumber, className, offset, appClassPath);
 			clazz.accept(new DescendingVisitor(clazz, visitor));
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 		
 		System.setProperty("java.class.path", originalSystemClassPath);
-		return visitor;
 	}
 }
