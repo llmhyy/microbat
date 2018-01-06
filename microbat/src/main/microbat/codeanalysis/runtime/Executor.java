@@ -98,6 +98,18 @@ public abstract class Executor {
 	public static String[] libIncludes = {"java.util.*"};
 //	public static String[] libIncludes = {"java.util.*\\"};
 	
+	static{
+		String[] excludePatterns = Executor.deriveLibExcludePatterns();
+		Executor.libExcludes = excludePatterns;
+		String[] includePatterns = AnalysisScopePreference.getIncludedLibs();
+		for(int i=0; i<includePatterns.length; i++){
+			String includePattern = includePatterns[i];
+			includePatterns[i] = includePattern.replace("\\", "");
+		}
+		Executor.libIncludes = includePatterns;
+	}
+	
+	
 	/**
 	 * This method derive more detailed libExcludes with libIncludes, for example, 
 	 * when libExcludes has a pattern as java.* while libIncludes has a pattern as java.util.*,
