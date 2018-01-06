@@ -51,6 +51,7 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultRunTest = Activator.getDefault().getPreferenceStore().getString(RUN_TEST);
 		this.defaultVariableLayer = Activator.getDefault().getPreferenceStore().getString(VARIABLE_LAYER);
 		this.defaultJava7HomePath = Activator.getDefault().getPreferenceStore().getString(JAVA7HOME_PATH);
+		this.defaultApplyRecodingOptimization = Activator.getDefault().getPreferenceStore().getString(RECORDING_OPTIMIZATION);
 	}
 	
 	public static final String TARGET_PORJECT = "targetProjectName";
@@ -64,7 +65,7 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String RUN_TEST = "isRunTest";
 	public static final String VARIABLE_LAYER = "variableLayer";
 	public static final String JAVA7HOME_PATH = "java7_path";
-
+	public static final String RECORDING_OPTIMIZATION = "recording_optimization";
 	
 	private Combo projectCombo;
 	private Text lanuchClassText;
@@ -74,6 +75,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Text stepLimitText;
 	private Text variableLayerText;
 	private Button recordSnapshotButton;
+	private Button recordingOptimizationButton;
 	private Button advancedDetailInspectorButton;
 	private Button runTestButton;
 	private Text java7HomePathText;
@@ -89,6 +91,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultAdvancedDetailInspector = "true";
 	private String defaultRunTest = "false";
 	private String defaultJava7HomePath;
+	private String defaultApplyRecodingOptimization;
 	
 	@Override
 	protected Control createContents(Composite parent) {
@@ -167,6 +170,14 @@ public class MicrobatPreference extends PreferencePage implements
 		advancedDetailInspectorButton.setLayoutData(advanceInspectorButtonData);
 		boolean advanceInspectorSelected = this.defaultAdvancedDetailInspector.equals("true");
 		advancedDetailInspectorButton.setSelection(advanceInspectorSelected);
+		
+		recordingOptimizationButton = new Button(settingGroup, SWT.CHECK);
+		recordingOptimizationButton.setText("Apply trace recording optimization");
+		GridData recordingOptimizationButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		recordingOptimizationButtonData.horizontalSpan = 3;
+		recordingOptimizationButton.setLayoutData(recordingOptimizationButtonData);
+		boolean recordingOptimizationSelected = this.defaultApplyRecodingOptimization.equals("true");
+		recordingOptimizationButton.setSelection(recordingOptimizationSelected);
 	}
 	
 	private void createSeedStatementGroup(Composite parent){
@@ -236,6 +247,7 @@ public class MicrobatPreference extends PreferencePage implements
 		preferences.put(VARIABLE_LAYER, this.variableLayerText.getText());
 		preferences.put(RUN_TEST, String.valueOf(this.runTestButton.getSelection()));
 		preferences.put(JAVA7HOME_PATH, this.java7HomePathText.getText());
+		preferences.put(RECORDING_OPTIMIZATION, String.valueOf(this.recordingOptimizationButton.getSelection()));
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(LANUCH_CLASS, this.lanuchClassText.getText());
@@ -248,6 +260,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Activator.getDefault().getPreferenceStore().putValue(VARIABLE_LAYER, this.variableLayerText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(RUN_TEST, String.valueOf(this.runTestButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(JAVA7HOME_PATH, this.java7HomePathText.getText());
+		Activator.getDefault().getPreferenceStore().putValue(RECORDING_OPTIMIZATION, String.valueOf(this.recordingOptimizationButton.getSelection()));
 		
 		confirmChanges();
 		
