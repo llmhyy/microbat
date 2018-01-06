@@ -67,7 +67,8 @@ import microbat.Activator;
 import microbat.codeanalysis.ast.LocalVariableScope;
 import microbat.codeanalysis.ast.VariableScopeParser;
 import microbat.codeanalysis.bytecode.LineNumberVisitor0;
-import microbat.codeanalysis.bytecode.RWVarRetrieverForLine;
+import microbat.codeanalysis.bytecode.ByteCodeParser;
+import microbat.codeanalysis.bytecode.InstructionVisitor;
 import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
 import microbat.codeanalysis.runtime.jpda.expr.ParseException;
@@ -756,22 +757,25 @@ public class ProgramExecutor extends Executor {
 		for(int i=size; i>=2; i--) {
 			String oldPeek = methodSignatureStack.get(i-2);
 			String className = oldPeek.substring(0, oldPeek.indexOf("#"));
-			int lineNumber = methodNodeStack.get(i-1).getBreakPoint().getLineNumber();
-			String locationID = className + "$" + lineNumber;
-			LineNumberVisitor0 visitor = libraryLine2VisitorMap.get(locationID);
+			InstructionVisitor visitor = libraryLine2InstructionVisitorMap.get(oldPeek);
 			if(visitor==null) {
-				visitor = RWVarRetrieverForLine.parse(className, lineNumber, 0, appPath);
-				libraryLine2VisitorMap.put(locationID, visitor);
+				visitor = new InstructionVisitor(oldPeek, appPath);
+				ByteCodeParser.parse(className, visitor, appPath);
+				libraryLine2InstructionVisitorMap.put(oldPeek, visitor);
 			}
-			
-//			LineNumberVisitor0 visitor = RWVarRetrieverForLine.parse(className, lineNumber, 0, appPath);
 			
 			List<InstructionHandle> peekList = visitor.getInstructionList();
 			String invokedMethod = methodSignatureStack.get(i-1);
 			
+			System.currentTimeMillis();
+			
 			String invokedMethodName = invokedMethod.substring(invokedMethod.indexOf("#")+1, invokedMethod.indexOf("("));
 			boolean isOk = findInvokingMethod(invokedMethodName, visitor, peekList);
-			boolean isPossibleRefection = oldPeek.contains("java.util.ResourceBundle#getBundle");
+			/**
+			 * reflection and static constructor
+			 */
+			boolean isPossibleRefection = oldPeek.contains("java.util.ResourceBundle#getBundle") 
+					|| oldPeek.contains("<clinit>") || invokedMethodName.contains("<clinit>");
 			if(!isOk && !isPossibleRefection) {
 				return true;
 			}
@@ -781,7 +785,7 @@ public class ProgramExecutor extends Executor {
 		return false;
 	}
 
-	private boolean findInvokingMethod(String invokedMethodName, LineNumberVisitor0 visitor,
+	private boolean findInvokingMethod(String invokedMethodName, InstructionVisitor visitor,
 			List<InstructionHandle> peekList) {
 		for(InstructionHandle handle: peekList) {
 			Instruction ins = handle.getInstruction();
@@ -871,7 +875,8 @@ public class ProgramExecutor extends Executor {
 		return uVars;
 	}
 
-	private HashMap<String, LineNumberVisitor0> libraryLine2VisitorMap = new HashMap<>();
+	private HashMap<String, LineNumberVisitor0> libraryLine2LineVisitorMap = new HashMap<>();
+	private HashMap<String, InstructionVisitor> libraryLine2InstructionVisitorMap = new HashMap<>();
 
 	class UsedVariable {
 		String method;
@@ -895,11 +900,12 @@ public class ProgramExecutor extends Executor {
 		int offset = (int) currentLocation.codeIndex();
 
 		String locationID = className + "$" + lineNumber;
-		LineNumberVisitor0 visitor = libraryLine2VisitorMap.get(locationID);
+		LineNumberVisitor0 visitor = libraryLine2LineVisitorMap.get(locationID);
 //		visitor = null;
 		if (visitor == null) {
-			visitor = RWVarRetrieverForLine.parse(className, lineNumber, offset, appPath);
-			libraryLine2VisitorMap.put(locationID, visitor);
+			visitor = new LineNumberVisitor0(lineNumber, className, offset, appPath);
+			ByteCodeParser.parse(className, visitor, appPath);
+			libraryLine2LineVisitorMap.put(locationID, visitor);
 		}
 		
 		List<Variable> readVars = visitor.getReadVars();
