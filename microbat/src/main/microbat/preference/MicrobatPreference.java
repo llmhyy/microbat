@@ -172,7 +172,7 @@ public class MicrobatPreference extends PreferencePage implements
 		advancedDetailInspectorButton.setSelection(advanceInspectorSelected);
 		
 		recordingOptimizationButton = new Button(settingGroup, SWT.CHECK);
-		recordingOptimizationButton.setText("Apply trace recording optimization");
+		recordingOptimizationButton.setText("Apply trace recording optimization for interested library code");
 		GridData recordingOptimizationButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		recordingOptimizationButtonData.horizontalSpan = 3;
 		recordingOptimizationButton.setLayoutData(recordingOptimizationButtonData);
@@ -279,6 +279,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Settings.stepLimit = Integer.valueOf(this.stepLimitText.getText());
 		Settings.setVariableLayer(Integer.valueOf(this.variableLayerText.getText()));
 		Settings.isRunTest = this.runTestButton.getSelection();
+		Settings.applyLibraryOptimization = this.recordingOptimizationButton.getSelection();
 	}
 	
 	private String[] getProjectsInWorkspace(){
