@@ -110,9 +110,36 @@ public class FilterUtils {
 			}
 			newExcludeCol.addAll(expandedExclSet);
 		}
+		
+		newExcludeCol = applyHeuristicRules(newExcludeCol);
+		
 		return newExcludeCol;
 	}
 	
+	/**
+	 * com.* and org.* are too popular package name, so we need to make it more specific.
+	 * @param newExcludeCol
+	 * @return
+	 */
+	private static Set<String> applyHeuristicRules(Set<String> newExcludeCol) {
+		if(newExcludeCol.contains("com.*")){
+			newExcludeCol.remove("com.*");
+			newExcludeCol.add("com.oracle.*");
+			newExcludeCol.add("com.sun.*");
+		}
+		
+		if(newExcludeCol.contains("org.*")){
+			newExcludeCol.remove("org.*");
+			newExcludeCol.add("org.ietf.*");
+			newExcludeCol.add("org.jcp.*");
+			newExcludeCol.add("org.omg.*");
+			newExcludeCol.add("org.w3c.*");
+			newExcludeCol.add("org.xml.*");
+		}
+		
+		return newExcludeCol;
+	}
+
 	/**
 	 *  java.util.* : include all types and packages under java.util package
 	 *  java.util.*\ : include all types only under java.util package
