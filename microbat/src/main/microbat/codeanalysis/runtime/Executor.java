@@ -1,13 +1,9 @@
 package microbat.codeanalysis.runtime;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
 
 import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.IncompatibleThreadStateException;
@@ -33,8 +29,6 @@ import microbat.codeanalysis.runtime.jpda.expr.ParseException;
 import microbat.preference.AnalysisScopePreference;
 import microbat.util.FilterUtils;
 import microbat.util.FilterUtils.ExtJarPackagesContainer;
-import microbat.util.FilterUtils.IJavaProjectPkgContainer;
-import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import sav.common.core.utils.StringUtils;
 
@@ -113,16 +107,9 @@ public abstract class Executor {
 	public static String[] deriveLibExcludePatterns() {
 		String[] excludedLibs = AnalysisScopePreference.getExcludedLibs();
 		String[] includedLibs = AnalysisScopePreference.getIncludedLibs();
-		/* project source code */
-		IJavaProject ijavaProject = JavaCore.create(JavaUtil.getSpecificJavaProjectInWorkspace());
-		Set<String> expandedExcludes = FilterUtils.deriveLibExcludePatterns(new IJavaProjectPkgContainer(ijavaProject),
-				excludedLibs, includedLibs);
-		excludedLibs = new ArrayList<>(expandedExcludes).toArray(new String[0]);
-		/* project reference jars */
-		ExtJarPackagesContainer pkgsContainer = new ExtJarPackagesContainer();
-		List<String> excludeJars = new ArrayList<>(MicroBatUtil.constructClassPaths().getExternalLibPaths());
-		excludeJars.add(MicroBatUtil.getRtJarPathInDefinedJavaHome());
-		pkgsContainer.reset(excludeJars, true);
+		Set<String> expandedExcludes;
+		ExtJarPackagesContainer pkgsContainer = new ExtJarPackagesContainer(
+				MicroBatUtil.getRtJarPathInDefinedJavaHome(), true);
 		expandedExcludes = FilterUtils.deriveLibExcludePatterns(pkgsContainer, excludedLibs, includedLibs);
 		return StringUtils.sortAlphanumericStrings(new ArrayList<>(expandedExcludes)).toArray(new String[0]);
 	}

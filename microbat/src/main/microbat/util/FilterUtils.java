@@ -263,11 +263,15 @@ public class FilterUtils {
 	
 	public static class ExtJarPackagesContainer implements PackagesContainer<String> {
 		private Map<String, List<String>> pkgTypesMap = new HashMap<String, List<String>>(); // map of pkg and its types.
-		private Map<String, List<String>> pkgRootsMap = new HashMap<>(); // map of pkgRoot and its packages.
+		private Map<String, Collection<String>> pkgRootsMap = new HashMap<>(); // map of pkgRoot and its packages.
 		private boolean isCollectDefaultExcludes;
-		private Set<Object> sortedSet = new HashSet<>();
 		
-		public void reset(List<String> jarPaths, boolean initDefaultExcludes) {
+		public ExtJarPackagesContainer(String jarPath, boolean initDefaultExcludes) {
+			this.isCollectDefaultExcludes = initDefaultExcludes;
+			appendJar(jarPath);
+		}
+		
+		public ExtJarPackagesContainer(List<String> jarPaths, boolean initDefaultExcludes) {
 			pkgTypesMap.clear();
 			pkgRootsMap.clear();
 			this.isCollectDefaultExcludes = initDefaultExcludes;
@@ -293,7 +297,7 @@ public class FilterUtils {
 					} else {
 						int typeNameStartIdx = entryName.lastIndexOf("/");
 						if (typeNameStartIdx < 0) {
-							log.debug("ingore jar entry: {} in {}", entryName, jarPath);
+							System.out.println(String.format("ingore jar entry: %s in %s", entryName, jarPath));
 							continue;
 						}
 						String pkgPath = entryName.substring(0, typeNameStartIdx);
@@ -325,7 +329,13 @@ public class FilterUtils {
 			if (entryName.endsWith("/")) {
 				entryName = entryName.substring(0, entryName.length() - 1);
 			}
-			CollectionUtils.getListInitIfEmpty(pkgRootsMap, rootPkg).add(entryName);
+			Collection<String> subPkgs = pkgRootsMap.get(rootPkg);
+			if (subPkgs == null) {
+				subPkgs = new HashSet<>();
+				subPkgs.add(rootPkg);
+				pkgRootsMap.put(rootPkg, subPkgs);
+			}
+			subPkgs.add(entryName);
 		}
 
 		private String getPkgRoot(String entryName) {
@@ -354,7 +364,7 @@ public class FilterUtils {
 		@Override
 		public Collection<String> getSubPackages(String pkgPath) throws JavaModelException {
 			List<String> pkgs = getPkgsUnderSameRoot(pkgPath);
-			int firstIdx = Collections.binarySearch(pkgs, pkgPath);
+			int firstIdx = getMatchIdx(pkgs, pkgPath);
 			if (firstIdx < 0) {
 				return Collections.EMPTY_LIST;
 			}
@@ -387,20 +397,42 @@ public class FilterUtils {
 			if (pkgsUnderSameRoot == null) {
 				return Collections.EMPTY_LIST;
 			}
-			if (pkgName.equals(pkgPath) || Collections.binarySearch(pkgsUnderSameRoot, pkgPath) >= 0) {
-				return CollectionUtils.listOf(pkgPath);
+			if (pkgName.equals(pkgPath) /* pkg root */ || (getMatchIdx(pkgsUnderSameRoot, pkgPath) >= 0)) { 
+				return CollectionUtils.listOf(pkgPath); 
 			}
 			return Collections.EMPTY_LIST;
+		}
+		
+		/**
+		 * @return exact idx of pkgPath in list,
+		 * or in case pkgPath is not defined, idx of its first subPkgPath will be returned;
+		 */
+		private int getMatchIdx(List<String> pkgsUnderSameRoot, String pkgPath) {
+			// idx = -(insertion point) - 1
+			int idx = Collections.binarySearch(pkgsUnderSameRoot, pkgPath);
+			if (idx >= 0) {
+				return idx;
+			}
+			int insertPoint = -1 - idx; // insertion point idx
+			if (insertPoint < pkgsUnderSameRoot.size() && pkgsUnderSameRoot.get(insertPoint).startsWith(pkgPath)) {
+				return insertPoint;
+			}
+			return idx;
 		}
 
 		private List<String> getPkgsUnderSameRoot(String pkgPath) {
 			String pkgRoot = getPkgRoot(pkgPath);
-			List<String> pkgsUnderSameRoot = pkgRootsMap.get(pkgRoot);
-			if (pkgsUnderSameRoot != null && !sortedSet.contains(pkgRoot)) {
-				Collections.sort(pkgsUnderSameRoot);
-				sortedSet.add(pkgRoot);
+			Collection<String> pkgsUnderSameRoot = pkgRootsMap.get(pkgRoot);
+			if (pkgsUnderSameRoot instanceof List) {
+				return (List<String>) pkgsUnderSameRoot;
 			}
-			return pkgsUnderSameRoot;
+			if (pkgsUnderSameRoot != null) {
+				List<String> pkgList = new ArrayList<>(pkgsUnderSameRoot);
+				Collections.sort(pkgList);
+				pkgRootsMap.put(pkgRoot, pkgList);
+				return pkgList;
+			}
+			return null;
 		}
 	}
 	
