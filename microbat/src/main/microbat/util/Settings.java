@@ -68,6 +68,9 @@ public class Settings {
 				}
 				String varLayerString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.VARIABLE_LAYER);
 				variableLayer = Integer.valueOf(varLayerString);
+				
+				String applyRecordingOptimization = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RECORDING_OPTIMIZATION);
+				applyLibraryOptimization = applyRecordingOptimization.equals("true");
 			}
 			catch(Exception e){
 				e.printStackTrace();
