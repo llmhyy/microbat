@@ -1023,7 +1023,7 @@ public class ProgramExecutor extends Executor {
 						if (sv instanceof ObjectReference) {
 							ObjectReference obj = (ObjectReference) sv;
 							String varID = String.valueOf(obj.uniqueID());
-							String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), false, varID, aliasVarID);
+							String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), varID, aliasVarID);
 							varID = varID + ":" + order;
 							aliasVarID = aliasVarID + ":" + order;
 							
@@ -1035,7 +1035,7 @@ public class ProgramExecutor extends Executor {
 							subVarValue.setStringValue("$IN_LIB");
 							values.add(subVarValue);
 						} else /* if(sv!=null) */ {
-							String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), false, aliasVarID, var.getAliasVarID());
+							String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), aliasVarID, var.getAliasVarID());
 							aliasVarID = aliasVarID + ":" + order;
 							
 							Variable subVar = var.clone();
@@ -1051,7 +1051,7 @@ public class ProgramExecutor extends Executor {
 						String varID = String.valueOf(objRef.uniqueID());
 
 						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, trace.getLatestNode(),
-								false, varID, var.getAliasVarID());
+								 varID, var.getAliasVarID());
 						varID = varID + ":" + definingNodeOrder;
 						var.setVarID(varID);
 
@@ -1120,7 +1120,7 @@ public class ProgramExecutor extends Executor {
 										var.getSimpleName());
 							}
 							String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType,
-									trace.getLatestNode(), false, varID, null);
+									trace.getLatestNode(), varID, null);
 							varID = varID + ":" + definingNodeOrder;
 							var.setVarID(varID);
 						}
@@ -1586,7 +1586,7 @@ public class ProgramExecutor extends Executor {
 					varID = Variable.concanateLocalVarID(methodDeclaringCompilationUnit, localVar.getName(),
 							scope.getStartLine(), scope.getEndLine());
 					String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, lastestNode, 
-							false, varID, localVar.getAliasVarID());
+							varID, localVar.getAliasVarID());
 					varID = varID + ":" + definingNodeOrder;
 					localVar.setVarID(varID);
 				} else {
@@ -1600,7 +1600,7 @@ public class ProgramExecutor extends Executor {
 				ObjectReference ref = (ObjectReference) value;
 				String varID = String.valueOf(ref.uniqueID());
 				String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, lastestNode, 
-						false, varID, null);
+						varID, null);
 				varID = varID + ":" + definingNodeOrder;
 				localVar.setVarID(varID);
 			}
@@ -1707,7 +1707,7 @@ public class ProgramExecutor extends Executor {
 			BreakPoint point, String accessType) {
 		Variable var = var0.clone();
 		VarValue varValue = new ReferenceValue(false, objRef.uniqueID(), true, var);
-		String order = this.trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), false,
+		String order = this.trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), 
 				var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		varValue.setVarID(varID);
@@ -1737,7 +1737,7 @@ public class ProgramExecutor extends Executor {
 				if (!isIgnore) {
 					FieldVar variable = new FieldVar(false, field.name(), field.typeName());
 					extractor.appendVarVal(varValue, variable, map.get(field), Settings.getVariableLayer(), thread,
-							false, accessType);
+							false);
 				}
 			}
 		}
@@ -1753,7 +1753,7 @@ public class ProgramExecutor extends Executor {
 		arrayVal.setComponentType(componentType);
 		arrayVal.setReferenceID(arrayValue.uniqueID());
 		String order = this.trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), 
-				false, var.getVarID(), var.getAliasVarID());
+				var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		arrayVal.setVarID(varID);
 
@@ -1766,15 +1766,18 @@ public class ProgramExecutor extends Executor {
 		for (int i = 0; i < arrayValue.length(); i++) {
 			String parentSimpleID = Variable.truncateSimpleID(arrayVal.getVarID());
 			String aliasVarID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
-			String ord = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), false,
-					aliasVarID, aliasVarID);
-			aliasVarID = aliasVarID + ":" + ord;
+//			String subValueDefOrder = trace.findDefiningNodeOrder(Variable.READ, trace.getLatestNode(), false,
+//					aliasVarID, aliasVarID);
+//			if(subValueDefOrder.equals("0")){
+//				subValueDefOrder = order;
+//			}
+//			aliasVarID = aliasVarID + ":" + subValueDefOrder;
 
 			String varName = String.valueOf(i);
 			Value elementValue = list.get(i);
 
 			ArrayElementVar varElement = new ArrayElementVar(varName, componentType, aliasVarID);
-			extractor.appendVarVal(arrayVal, varElement, elementValue, Settings.getVariableLayer(), thread, false, accessType);
+			extractor.appendVarVal(arrayVal, varElement, elementValue, Settings.getVariableLayer(), thread, false);
 		}
 
 		return arrayVal;
@@ -1802,7 +1805,7 @@ public class ProgramExecutor extends Executor {
 				String varID = String.valueOf(objRef.uniqueID());
 
 				String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, 
-						false, varID, var.getAliasVarID());
+						varID, var.getAliasVarID());
 				varID = varID + ":" + definingNodeOrder;
 				var.setVarID(varID);
 
@@ -1845,7 +1848,7 @@ public class ProgramExecutor extends Executor {
 						varID = Variable.concanateLocalVarID(node.getBreakPoint().getDeclaringCompilationUnitName(),
 								var.getName(), scope.getStartLine(), scope.getEndLine());
 						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, 
-								false, varID, var.getAliasVarID());
+								varID, var.getAliasVarID());
 						varID = varID + ":" + definingNodeOrder;
 					}
 					/**
@@ -1885,7 +1888,7 @@ public class ProgramExecutor extends Executor {
 									var.getSimpleName());
 						}
 						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, 
-								false, varID, var.getAliasVarID());
+								varID, var.getAliasVarID());
 						varID = varID + ":" + definingNodeOrder;
 						var.setVarID(varID);
 					} else if (var instanceof ArrayElementVar) {
@@ -1895,7 +1898,7 @@ public class ProgramExecutor extends Executor {
 						String varID = Variable.concanateArrayElementVarID(String.valueOf(objRef.uniqueID()),
 								indexValueString);
 						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, 
-								false, varID, var.getAliasVarID());
+								varID, var.getAliasVarID());
 						varID = varID + ":" + definingNodeOrder;
 						var.setVarID(varID);
 					}

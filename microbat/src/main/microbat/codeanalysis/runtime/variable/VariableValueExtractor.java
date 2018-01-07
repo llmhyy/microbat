@@ -31,6 +31,7 @@ import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Type;
 import com.sun.jdi.Value;
 
+import microbat.codeanalysis.ast.LocalVariableScope;
 import microbat.codeanalysis.runtime.ProgramExecutor;
 import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
 import microbat.model.BreakPoint;
@@ -221,7 +222,7 @@ public class VariableValueExtractor {
 						bkp.getDeclaringCompilationUnitName(), bkp.getLineNumber());
 				System.currentTimeMillis();
 				
-				appendVarVal(bkVal, variable, value, level, thread, true, accessType);				
+				appendVarVal(bkVal, variable, value, level, thread, true);				
 			//}
 			
 		}
@@ -324,7 +325,7 @@ public class VariableValueExtractor {
 	 * 
 	 */
 	public void appendVarVal(VarValue parent, Variable childVar, Value childVarValue, int level, 
-			ThreadReference thread, boolean isRoot, String accessType) {
+			ThreadReference thread, boolean isRoot) {
 		if(level==0) {
 			return;
 		}
@@ -332,7 +333,7 @@ public class VariableValueExtractor {
 		
 		if (childVarValue == null) {
 			ReferenceValue val = new ReferenceValue(true, false, childVar);
-			val.setPrimitiveID(parent, executor.getTrace(), accessType);
+			setPrimitiveID(parent, val, executor.getTrace());
 			
 			if(val.getVarID()!=null){
 				parent.addChild(val);
@@ -348,21 +349,21 @@ public class VariableValueExtractor {
 			if (type instanceof BooleanType) {
 				microbat.model.value.BooleanValue ele = 
 						new microbat.model.value.BooleanValue(((BooleanValue)childVarValue).booleanValue(), isRoot, childVar);
-				ele.setPrimitiveID(parent, executor.getTrace(), accessType);
+				setPrimitiveID(parent, ele, executor.getTrace());
 				if(ele.getVarID()!=null){
 					parent.addChild(ele);
 					ele.addParent(parent);				
 				}
 			} else {
 				PrimitiveValue ele = new PrimitiveValue(childVarValue.toString(), isRoot, childVar);
-				ele.setPrimitiveID(parent, executor.getTrace(), accessType);
+				setPrimitiveID(parent, ele, executor.getTrace());
 				if(ele.getVarID()!=null){
 					parent.addChild(ele);
 					ele.addParent(parent);				
 				}
 			}
 		} else if (type instanceof ArrayType) { 
-			appendArrVarVal(parent, childVar, (ArrayReference)childVarValue, level, thread, isRoot, accessType);
+			appendArrVarVal(parent, childVar, (ArrayReference)childVarValue, level, thread, isRoot);
 		} else if (type instanceof ClassType) {
 			/**
 			 * if the class name is "String"
@@ -371,7 +372,7 @@ public class VariableValueExtractor {
 				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)childVarValue, thread);
 				StringValue ele = new StringValue(pValue, isRoot, childVar);
 				ele.setVarID(String.valueOf(((ObjectReference)childVarValue).uniqueID()));
-				appendVarID(childVar, ele, accessType);
+				appendVarID(ele);
 				parent.addChild(ele);
 				ele.addParent(parent);
 			} 
@@ -382,7 +383,7 @@ public class VariableValueExtractor {
 				String pValue = JavaUtil.toPrimitiveValue((ClassType) type, (ObjectReference)childVarValue, thread);
 				PrimitiveValue ele = new PrimitiveValue(pValue, isRoot, childVar);
 				ele.setVarID(String.valueOf(((ObjectReference)childVarValue).uniqueID()));
-				appendVarID(childVar, ele, accessType);
+				appendVarID(ele);
 				parent.addChild(ele);
 				ele.addParent(parent);
 			} 
@@ -390,19 +391,37 @@ public class VariableValueExtractor {
 			 * if the class is an arbitrary complicated class
 			 */
 			else {
-				appendClassVarVal(parent, childVar, (ObjectReference) childVarValue, level, thread, isRoot, accessType);
+				appendClassVarVal(parent, childVar, (ObjectReference) childVarValue, level, thread, isRoot);
+			}
+		}
+	}
+	
+	private void setPrimitiveID(VarValue parent, VarValue child, Trace trace){
+		ReferenceValue refValue = (ReferenceValue)parent;
+		String uniqueID = String.valueOf(refValue.getUniqueID());
+		String rawChildVarID = null;
+		if(child.isField()){
+			rawChildVarID = Variable.concanateFieldVarID(uniqueID, child.getVarName());
+		}
+		else if(child.isElementOfArray()){
+			rawChildVarID = Variable.concanateArrayElementVarID(uniqueID, child.getVarName());
+		}
+		else if(child.isLocalVariable()){
+			LocalVar localVar = (LocalVar)child.getVariable();
+			LocalVariableScope scope = trace.getLocalVariableScopes().findScope(child.getVarName(), 
+					localVar.getLineNumber(), localVar.getLocationClass());
+			
+			if(scope != null){
+				rawChildVarID = Variable.concanateLocalVarID(localVar.getLocationClass(), localVar.getName(), 
+						scope.getStartLine(), scope.getEndLine());
 			}
 		}
 		
-		
+		if(rawChildVarID != null){
+			child.setVarID(rawChildVarID);
+			appendVarID(child);
+		}
 	}
-	
-//	private void appendNullVarVal(VarValue parent, Variable variable) {
-//		ReferenceValue val = new ReferenceValue(true, false, variable);
-//		parent.addChild(val);
-//		val.addParent(parent);
-//	}
-	
 	
 
 	/**
@@ -415,7 +434,7 @@ public class VariableValueExtractor {
 	 * @param thread
 	 */
 	private void appendClassVarVal(VarValue parent, Variable childVar0, ObjectReference objRef, 
-			int level, ThreadReference thread, boolean isRoot, String accessType) {
+			int level, ThreadReference thread, boolean isRoot) {
 		if(level==0) {
 			return;
 		}
@@ -457,7 +476,7 @@ public class VariableValueExtractor {
 						if(childVarValue != null){
 							FieldVar var = new FieldVar(field.isStatic(), field.name(), childVarValue.type().toString());
 							int newLevel = level - 1;
-							appendVarVal(val, var, childVarValue, newLevel, thread, false, accessType);											
+							appendVarVal(val, var, childVarValue, newLevel, thread, false);											
 						}
 					}
 				}
@@ -488,17 +507,32 @@ public class VariableValueExtractor {
 			}
 		}
 		
-		appendVarID(childVar, val, accessType);
+		appendVarID(val);
 		
 		parent.addChild(val);
 		val.addParent(parent);
 	}
 
-	private void appendVarID(Variable var, VarValue val, String accessType) {
+	/**
+	 * given a variable with a raw variable id (i.e., a variable id without order), this 
+	 * method generates an order for it.
+	 * @param val
+	 * @param accessType
+	 */
+	private void appendVarID(VarValue val) {
+		Variable var = val.getVariable();
 		Trace trace = this.executor.getTrace();
-		String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), true, var.getVarID(), var.getAliasVarID());
+		String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLatestNode(), var.getVarID(), var.getAliasVarID());
+		if(order.equals("0")){
+			order = trace.findDefiningNodeOrder(Variable.WRITTEN, trace.getLatestNode(), var.getVarID(), var.getAliasVarID());
+		}
 		String varID = var.getVarID() + ":" + order;
 		val.setVarID(varID);
+		
+		if(var.getAliasVarID()!=null){
+			String aliasID = var.getAliasVarID() + ":" + order;
+			val.setAliasVarID(aliasID);			
+		}
 	}
 
 	private synchronized void setMessageValue(ThreadReference thread, ReferenceValue val) {
@@ -529,8 +563,17 @@ public class VariableValueExtractor {
 		} 
 	}
 
+	/**
+	 * append a array variable (namely, varaible0) to its parent.
+	 * @param parent
+	 * @param variable0
+	 * @param value
+	 * @param level
+	 * @param thread
+	 * @param isRoot
+	 */
 	private void appendArrVarVal(VarValue parent, Variable variable0,
-			ArrayReference value, int level, ThreadReference thread, boolean isRoot, String accessType) {
+			ArrayReference value, int level, ThreadReference thread, boolean isRoot) {
 		if(level==0) {
 			return;
 		}
@@ -541,7 +584,7 @@ public class VariableValueExtractor {
 		String componentType = ((ArrayType)value.type()).componentTypeName();
 		arrayVal.setComponentType(componentType);
 		arrayVal.setReferenceID(value.uniqueID());
-		appendVarID(variable, arrayVal, accessType);
+		appendVarID(arrayVal);
 		
 		//add value of elements
 		List<Value> list = new ArrayList<>();
@@ -551,15 +594,16 @@ public class VariableValueExtractor {
 		for(int i = 0; i < value.length(); i++){
 			String parentSimpleID = Variable.truncateSimpleID(arrayVal.getVarID());
 			String aliasVarID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
-			Trace trace = this.executor.getTrace();
-			String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), true, aliasVarID, aliasVarID);
-			aliasVarID = aliasVarID + ":" + order;
+//			variable0.setAliasVarID(aliasVarID);
+//			Trace trace = this.executor.getTrace();
+//			String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), true, aliasVarID, aliasVarID);
+//			aliasVarID = aliasVarID + ":" + order;
 			
 			String varName = String.valueOf(i);
 			Value elementValue = list.get(i);
 			
 			ArrayElementVar var = new ArrayElementVar(varName, componentType, aliasVarID);
-			appendVarVal(arrayVal, var, elementValue, level, thread, false, accessType);
+			appendVarVal(arrayVal, var, elementValue, level, thread, false);
 		}
 		
 		StringBuffer buffer = new StringBuffer();

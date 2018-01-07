@@ -61,37 +61,6 @@ public abstract class VarValue implements GraphNode{
 		
 	}
 	
-	public void setPrimitiveID(VarValue parent, Trace trace, String accessType){
-		ReferenceValue refValue = (ReferenceValue)parent;
-		String uniqueID = String.valueOf(refValue.getUniqueID());
-		if(isField()){
-			String varID = Variable.concanateFieldVarID(uniqueID, getVarName());
-			String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), true, varID, refValue.getAliasVarID());
-			varID = varID + ":" + order;
-			setVarID(varID);
-		}
-		else if(isElementOfArray()){
-			String varID = Variable.concanateArrayElementVarID(uniqueID, getVarName());
-			String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), true, varID, refValue.getAliasVarID());
-			varID = varID + ":" + order;
-			setVarID(varID);
-		}
-		else if(isLocalVariable()){
-			LocalVar localVar = (LocalVar)this.variable;
-			LocalVariableScope scope = trace.getLocalVariableScopes().findScope(getVarName(), 
-					localVar.getLineNumber(), localVar.getLocationClass());
-			
-			if(scope != null){
-				String varID = Variable.concanateLocalVarID(localVar.getLocationClass(), localVar.getName(), 
-						scope.getStartLine(), scope.getEndLine());
-				String order = trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), true,
-						varID, refValue.getAliasVarID());
-				varID = varID + ":" + order;
-				setVarID(varID);				
-			}
-		}
-	}
-	
 	/**
 	 * if the toString() of an object is undefined, the default toString() may return something like
 	 * "pack.Class@12fa231". Based on this observation, I build this method.
@@ -207,6 +176,10 @@ public abstract class VarValue implements GraphNode{
 			System.currentTimeMillis();
 		}
 		this.variable.setVarID(varID);
+	}
+	
+	public void setAliasVarID(String aliasVarID) {
+		this.variable.setAliasVarID(aliasVarID);
 	}
 
 	public String getVariablePath() {

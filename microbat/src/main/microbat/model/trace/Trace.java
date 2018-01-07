@@ -621,16 +621,19 @@ public class Trace {
 	 * @param aliasVarID
 	 * @return
 	 */
-	public String findDefiningNodeOrder(String accessType, TraceNode currentNode, boolean isSubValue,
+	public String findDefiningNodeOrder(String accessType, TraceNode currentNode,
 			String varID, String aliasVarID) {
 		varID = Variable.truncateSimpleID(varID);
 		aliasVarID = Variable.truncateSimpleID(aliasVarID);
 		String definingOrder = "0";
-		if(accessType.equals(Variable.WRITTEN) && !isSubValue){
+		if(accessType.equals(Variable.WRITTEN)){
 			definingOrder = String.valueOf(currentNode.getOrder());
 			latestNodeDefiningVariableMap.put(varID, currentNode);
+			if(aliasVarID!=null){
+				latestNodeDefiningVariableMap.put(aliasVarID, currentNode);				
+			}
 		}
-		else {
+		else if(accessType.equals(Variable.READ)){
 			TraceNode node1 = latestNodeDefiningVariableMap.get(varID);
 			TraceNode node2 = latestNodeDefiningVariableMap.get(aliasVarID);
 			
@@ -642,7 +645,8 @@ public class Trace {
 				order = node2.getOrder();
 			}
 			else if(node1!=null && node2!=null){
-				order = (node1.getOrder()>node2.getOrder())?node1.getOrder():node2.getOrder();
+//				order = (node1.getOrder()>node2.getOrder())?node1.getOrder():node2.getOrder();
+				order = node2.getOrder();
 			}
 			
 			definingOrder = String.valueOf(order);
