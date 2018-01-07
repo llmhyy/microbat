@@ -43,6 +43,7 @@ import com.google.common.io.Files;
 
 import microbat.Activator;
 import microbat.codeanalysis.runtime.Executor;
+import microbat.preference.AnalysisScopePreference;
 import microbat.util.MicroBatUtil;
 
 public class TransformLibHandler extends AbstractHandler {
@@ -80,6 +81,8 @@ public class TransformLibHandler extends AbstractHandler {
 			}
 			
 			try {
+				String[] invalidPrefixes = transferToPrefix(Executor.libExcludes);
+				
 				JarFile jar = new JarFile(rtJarFile);
 				Enumeration<? extends JarEntry> enumeration = jar.entries();
 				List<String> writtenFiles = new ArrayList<>();
@@ -87,7 +90,7 @@ public class TransformLibHandler extends AbstractHandler {
 					ZipEntry zipEntry = enumeration.nextElement();
 					if (zipEntry.getName().endsWith(".class")) {
 						String className = zipEntry.getName();
-						if (isValidClass(className)) {
+						if (isValidClass(className, invalidPrefixes)) {
 							File toWriteFile = new File(workingDir, zipEntry.getName());
 							System.out.println(toWriteFile);
 							
@@ -132,12 +135,22 @@ public class TransformLibHandler extends AbstractHandler {
 
 		return null;
 	}
-
-	private boolean isValidClass(String className) {
-		String[] libExcludes = Executor.libExcludes;
-		for(String libEx: libExcludes){
-			String prefix = libEx.replace(".", "/");
+	
+	private String[] transferToPrefix(String[] libExcludes){
+		String[] prefixes = new String[libExcludes.length];
+		for(int i=0; i<libExcludes.length; i++){
+			String libEx = libExcludes[i];
+			String prefix = libEx.replace("\\", "");
+			prefix = prefix.replace(".", "/");
 			prefix = prefix.replace("*", "");
+			prefixes[i] = prefix;
+		}
+		
+		return prefixes;
+	}
+	
+	private boolean isValidClass(String className, String[] prefixes) {
+		for(String prefix: prefixes){
 			if(className.startsWith(prefix)){
 				return false;
 			}
@@ -161,7 +174,7 @@ public class TransformLibHandler extends AbstractHandler {
 			}
 		}
 		
-		System.currentTimeMillis();
+//		System.currentTimeMillis();
 		
 		for (String topFolder : topFolders) {
 			List<String> command = new ArrayList<>();
@@ -207,13 +220,28 @@ public class TransformLibHandler extends AbstractHandler {
 	}
 
 	private String getSharedPrefix(String a, String b) {
-		int minLength = Math.min(a.length(), b.length());
+		String[] aFolders = a.split("\\\\");
+		String[] bFolders = b.split("\\\\");
+		
+		List<String> list = new ArrayList<>();
+		
+		int minLength = Math.min(aFolders.length, bFolders.length);
 	    for (int i = 0; i < minLength; i++) {
-	        if (a.charAt(i) != b.charAt(i)) {
-	            return a.substring(0, i);
+	        if (aFolders[i].equals(bFolders[i])) {
+	        	list.add(aFolders[i]);
+	        }
+	        else{
+	        	break;
 	        }
 	    }
-	    return a.substring(0, minLength);
+	    
+	    StringBuffer buffer = new StringBuffer();
+	    for(String str: list){
+	    	buffer.append(str);
+	    	buffer.append("\\");
+	    }
+	    
+	    return buffer.toString();
 	}
 
 	private static String output(InputStream inputStream) throws IOException {
