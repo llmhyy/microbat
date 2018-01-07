@@ -998,6 +998,10 @@ public class ProgramExecutor extends Executor {
 				if (value instanceof ObjectReference) {
 					if (var instanceof ArrayElementVar) {
 						ArrayReference ref = (ArrayReference) value;
+						if(ref.length()==0){
+							continue;
+						}
+						
 						List<Value> subValues = ref.getValues();
 						
 						LocalVariable localVariable = frame.visibleVariableByName(Activator.tempVariableName);
