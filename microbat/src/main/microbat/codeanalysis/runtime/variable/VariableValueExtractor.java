@@ -522,7 +522,16 @@ public class VariableValueExtractor {
 	private void appendVarID(VarValue val) {
 		Variable var = val.getVariable();
 		Trace trace = this.executor.getTrace();
-		String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLatestNode(), var.getVarID(), var.getAliasVarID());
+		
+		/**
+		 * if the variable is an array element, we favor the alias ID.
+		 */
+		String varID0 = var.getVarID();
+		if(val.getVariable() instanceof ArrayElementVar){
+			varID0 = null;
+		}
+		
+		String order = trace.findDefiningNodeOrder(Variable.READ, trace.getLatestNode(), varID0, var.getAliasVarID());
 		if(order.equals("0")){
 			order = trace.findDefiningNodeOrder(Variable.WRITTEN, trace.getLatestNode(), var.getVarID(), var.getAliasVarID());
 		}

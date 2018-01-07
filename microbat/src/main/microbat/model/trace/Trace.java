@@ -645,8 +645,8 @@ public class Trace {
 				order = node2.getOrder();
 			}
 			else if(node1!=null && node2!=null){
-//				order = (node1.getOrder()>node2.getOrder())?node1.getOrder():node2.getOrder();
-				order = node2.getOrder();
+				order = (node1.getOrder()>node2.getOrder())?node1.getOrder():node2.getOrder();
+//				order = node2.getOrder();
 			}
 			
 			definingOrder = String.valueOf(order);
