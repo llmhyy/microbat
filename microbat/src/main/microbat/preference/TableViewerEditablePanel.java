@@ -23,7 +23,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 
-import microbat.ui.component.SWTFactory;
+import microbat.util.SWTFactory;
 
 /**
  * @author LLT

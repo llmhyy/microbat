@@ -6,7 +6,7 @@
  *  Version:  $Revision: 1 $
  */
 
-package microbat.ui.component;
+package microbat.util;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;

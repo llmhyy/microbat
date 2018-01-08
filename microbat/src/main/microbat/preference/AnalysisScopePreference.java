@@ -17,8 +17,8 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import microbat.Activator;
 import microbat.codeanalysis.runtime.Executor;
-import microbat.ui.component.SWTFactory;
 import microbat.util.MessageDialogs;
+import microbat.util.SWTFactory;
 import sav.common.core.utils.StringUtils;
 
 public class AnalysisScopePreference extends PreferencePage implements IWorkbenchPreferencePage {

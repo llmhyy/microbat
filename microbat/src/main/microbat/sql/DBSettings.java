@@ -1,4 +1,4 @@
-package microbat.handler;
+package microbat.sql;
 
 import static microbat.preference.DatabasePreference.*;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -11,6 +11,7 @@ public class DBSettings {
 	public static String username = "root";
 	public static String password = "123456";
 	public static String dbName = "trace";
+	public static boolean forceRunCreateScript = false;
 	
 	static {
 		updateFromPreference();

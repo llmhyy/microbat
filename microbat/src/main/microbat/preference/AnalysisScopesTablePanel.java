@@ -40,9 +40,9 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.SelectionDialog;
 import org.eclipse.ui.progress.IProgressService;
 
-import microbat.ui.component.SWTFactory;
 import microbat.util.FilterUtils;
 import microbat.util.JavaUtil;
+import microbat.util.SWTFactory;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.StringUtils;
 

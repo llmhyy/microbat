@@ -1,3 +1,7 @@
+USE trace
+;
+DROP TABLE IF EXISTS MendingRecord
+;
 CREATE TABLE MendingRecord
 (
 	regression_id INTEGER,

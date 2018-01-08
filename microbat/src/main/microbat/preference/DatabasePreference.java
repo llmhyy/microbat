@@ -17,9 +17,9 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.osgi.service.prefs.BackingStoreException;
 
 import microbat.Activator;
-import microbat.handler.DBSettings;
-import microbat.ui.component.SWTFactory;
+import microbat.sql.DBSettings;
 import microbat.util.MessageDialogs;
+import microbat.util.SWTFactory;
 
 public class DatabasePreference extends PreferencePage implements IWorkbenchPreferencePage {
 	private static final String ID = "microbat.preference.database";
