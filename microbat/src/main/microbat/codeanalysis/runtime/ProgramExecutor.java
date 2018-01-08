@@ -536,16 +536,13 @@ public class ProgramExecutor extends Executor {
 						
 						appendReadVariableFromStepOver(node);
 						
-						// parseReadWrittenVariableInThisStep(thread,
-						// currentLocation, node,
-						// this.trace.getStepVariableTable(), Variable.READ);
 						/**
 						 * create virtual variable for return statement
 						 */
 						if (this.trace.size() > 1) {
-							TraceNode lastestNode = this.trace.getExecutionList().get(this.trace.size() - 2);
-							if (lastestNode.getBreakPoint().isReturnStatement()) {
-								createVirutalVariableForReturnStatement(thread, node, lastestNode, returnedValue);
+							TraceNode latestNode = this.trace.getExecutionList().get(this.trace.size() - 2);
+							if (latestNode.getBreakPoint().isReturnStatement()) {
+								createVirutalVariableForReturnStatement(thread, node, latestNode, returnedValue);
 							}
 						}
 
@@ -1475,6 +1472,10 @@ public class ProgramExecutor extends Executor {
 		}
 
 		String virID = VirtualVar.VIRTUAL_PREFIX + returnNode.getOrder();
+		
+		if(returnedValue instanceof ObjectReference){
+			virID = String.valueOf(((ObjectReference)returnedValue).uniqueID()) + ":" + returnNode.getOrder();
+		}
 
 		String virName = VirtualVar.VIRTUAL_PREFIX + getDeclaringMethod(returnNode);
 
