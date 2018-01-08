@@ -10,6 +10,7 @@ CREATE TABLE Regression
 	root_cause_step INTEGER,
 	is_overskip INTEGER,
 	over_skip_number INTEGER,
+	bug_id VARCHAR(50),
 	PRIMARY KEY (regression_id)
 ) 
 ;
