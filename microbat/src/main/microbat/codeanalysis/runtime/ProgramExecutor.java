@@ -1246,16 +1246,17 @@ public class ProgramExecutor extends Executor {
 
 	private TraceNode popUpMethodCausedByException(Stack<TraceNode> methodNodeStack, Stack<String> methodSignatureStack,
 			TraceNode methodNodeJustPopedOut, Location caughtLocationForJustException) {
-		
-		if(!isInIncludedLibrary(caughtLocationForJustException)) {
+		if(isInIncludedLibrary(caughtLocationForJustException)) {
 			return null;
 		}
 		
 		TraceNode methodNodeJustPopedOutmethodNodeStack = null;
 		if(!methodNodeStack.isEmpty()) {
+			String name = caughtLocationForJustException.method().name();
 			String sig = caughtLocationForJustException.method().signature();
+			String m = name + sig;
 			String peek = methodSignatureStack.peek();
-			while(!peek.contains(sig)) {
+			while(!peek.contains(m)) {
 				if (!methodNodeStack.isEmpty()) {
 					methodNodeJustPopedOutmethodNodeStack = methodNodeStack.pop();
 					methodSignatureStack.pop();					
@@ -1266,12 +1267,7 @@ public class ProgramExecutor extends Executor {
 			}
 		}
 		
-		if(methodNodeJustPopedOut.getOrder()!=-1) {
-			return methodNodeJustPopedOutmethodNodeStack;			
-		}
-		else {
-			return null;
-		}
+		return methodNodeJustPopedOutmethodNodeStack;
 	}
 
 	private boolean isInSameMethod(TraceNode lastestNode, PointWrapper wrapper) {
