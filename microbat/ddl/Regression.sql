@@ -11,6 +11,8 @@ CREATE TABLE Regression
 	is_overskip INTEGER,
 	over_skip_number INTEGER,
 	bug_id VARCHAR(50),
+	project_name VARCHAR(255),
+	project_version VARCHAR(50),
 	PRIMARY KEY (regression_id)
 ) 
 ;
