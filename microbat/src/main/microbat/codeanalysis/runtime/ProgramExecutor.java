@@ -487,7 +487,6 @@ public class ProgramExecutor extends Executor {
 					if (bkp != null /* && bkp.equals(supposedBkp) */) {
 						BreakPointValue bkpVal = null;
 						TraceNode node = recordTrace(bkp, bkpVal);
-
 						/**
 						 * pop up method after an exception is caught.
 						 */
@@ -552,14 +551,25 @@ public class ProgramExecutor extends Executor {
 						printProgress(trace.size(), stepNum);
 					}
 
-					if (monitor.isCanceled() || this.trace.getExecutionList().size() >= Settings.stepLimit) {
+					if (monitor.isCanceled() || this.trace.size() >= Settings.stepLimit
+							|| this.trace.size() >= executionOrderList.size()) {
 						stop = true;
 						break cancel;
 					}
 				} else if (event instanceof MethodEntryEvent) {
+//					if(trace.size()==0){
+//						this.methodEntryRequest.disable();
+//					}
 					MethodEntryEvent mee = (MethodEntryEvent) event;
 					Method method = mee.method();
-
+					
+					ThreadReference threadRef =((MethodEntryEvent) event).thread();
+					boolean isInterestedTrack = isInterestedTrack(threadRef, method, methodSignatureStack, true);
+					if(!isInterestedTrack){
+						continue;
+					}
+					
+					
 					Location loc = method.location();
 					if (isInIncludedLibrary(loc)) {
 						if(trace.size()>0) {
@@ -609,30 +619,32 @@ public class ProgramExecutor extends Executor {
 						
 						TraceNode lastestNode = this.trace.getLatestNode();
 						if (lastestNode != null) {
-							BreakPoint latestRecordedBreakPoint = trace.getLatestNode().getBreakPoint();
-							if(latestRecordedBreakPoint.equals(latestVisitedLocation)) {
-								try {
-									if (!method.arguments().isEmpty()) {
-										StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
-										String path = location.sourcePath();
-										String declaringCompilationUnit = path.replace(".java", "");
-										declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar, '.');
+//							BreakPoint latestRecordedBreakPoint = trace.getLatestNode().getBreakPoint();
+//							if(latestRecordedBreakPoint.equals(latestVisitedLocation)) {
+//								
+//							}
+//							else {
+//								TraceNode dumpNode = new TraceNode(latestVisitedLocation, null, -1);
+//								methodNodeStack.push(dumpNode);
+//							}
+							
+							try {
+								if (!method.arguments().isEmpty()) {
+									StackFrame frame = findFrame(((MethodEntryEvent) event).thread(), mee.location());
+									String path = location.sourcePath();
+									String declaringCompilationUnit = path.replace(".java", "");
+									declaringCompilationUnit = declaringCompilationUnit.replace(File.separatorChar, '.');
 
-										int methodLocationLine = method.location().lineNumber();
-										List<Param> paramList = parseParamList(method);
+									int methodLocationLine = method.location().lineNumber();
+									List<Param> paramList = parseParamList(method);
 
-										parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
-												methodLocationLine, paramList, lastestNode);
-									}
-								} catch (AbsentInformationException e) {
-									e.printStackTrace();
+									parseWrittenParameterVariableForMethodInvocation(frame, declaringCompilationUnit,
+											methodLocationLine, paramList, lastestNode);
 								}
-								methodNodeStack.push(lastestNode);
+							} catch (AbsentInformationException e) {
+								e.printStackTrace();
 							}
-							else {
-								TraceNode dumpNode = new TraceNode(latestVisitedLocation, null, -1);
-								methodNodeStack.push(dumpNode);
-							}
+							methodNodeStack.push(lastestNode);
 							
 							String methodSignature = createSignature(method);
 							methodSignatureStack.push(methodSignature);
@@ -663,8 +675,18 @@ public class ProgramExecutor extends Executor {
 					}
 
 				} else if (event instanceof MethodExitEvent) {
+//					if(trace.size()==0){
+//						this.methodExitRequest.disable();
+//					}
 					MethodExitEvent mee = (MethodExitEvent) event;
 					Method method = mee.method();
+					
+					ThreadReference threadRef =((MethodExitEvent) event).thread();
+					boolean isInterestedTrack = isInterestedTrack(threadRef, method, methodSignatureStack, false);
+					if(!isInterestedTrack){
+						continue;
+					}
+					
 
 					if (isInIncludedLibrary(method.location())) {
 						if(!methodNodeStack.isEmpty()) {
@@ -742,6 +764,62 @@ public class ProgramExecutor extends Executor {
 		}
 
 		return vm;
+	}
+
+	private boolean isInterestedTrack(ThreadReference threadRef, Method method, Stack<String> methodSignatureStack, boolean isEntry) {
+		try {
+			List<StackFrame> frames = threadRef.frames();
+			for(StackFrame frame: frames){
+				Location location = frame.location();
+				String name = location.declaringType().name();
+				if(name.contains("ClassLoader")){
+					return false;
+				}
+			}
+			
+			if(!methodSignatureStack.isEmpty()){
+				String methodSignature = methodSignatureStack.peek();
+				String className = methodSignature.substring(0, methodSignature.indexOf("#"));
+				
+				String invokedMethodName = method.name();
+				
+				if(isEntry){
+					InstructionVisitor visitor = libraryLine2InstructionVisitorMap.get(methodSignature);
+					if(visitor==null) {
+						visitor = new InstructionVisitor(methodSignature, appPath);
+						ByteCodeParser.parse(className, visitor, appPath);
+						libraryLine2InstructionVisitorMap.put(methodSignature, visitor);
+					}
+					
+					List<InstructionHandle> list = visitor.getInstructionList();
+					boolean isOk = findInvokingMethod(invokedMethodName, visitor, list);
+					
+					/**
+					 * reflection and static constructor
+					 */
+					boolean isPossibleRefection = methodSignature.contains("java.util.ResourceBundle#getBundle") 
+							|| methodSignature.contains("<clinit>") || invokedMethodName.contains("<clinit>");
+					if(isOk || isPossibleRefection) {
+						return true;
+					}
+				}
+				else{
+					String peekMethodName = methodSignature.substring(methodSignature.indexOf("#")+1, methodSignature.length());
+					String invokedMethodSig = method.signature();
+					String invokedM = invokedMethodName + invokedMethodSig;
+					return peekMethodName.equals(invokedM);
+				}
+				
+				return false;
+				
+			}
+			
+		} catch (IncompatibleThreadStateException e) {
+			e.printStackTrace();
+		}
+		
+		
+		return true;
 	}
 
 	private boolean checkIndirectAccess(Stack<String> methodSignatureStack, Stack<TraceNode> methodNodeStack) {
