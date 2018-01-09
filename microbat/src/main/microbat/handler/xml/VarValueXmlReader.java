@@ -14,6 +14,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import microbat.model.value.ArrayValue;
@@ -31,10 +32,15 @@ import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
 import microbat.util.PrimitiveUtils;
 import sav.common.core.SavRtException;
+import sav.common.core.utils.StringUtils;
+import org.w3c.dom.CharacterData;
 
 public class VarValueXmlReader {
 	
 	public static List<VarValue> read(String str) {
+		if (StringUtils.isEmpty(str)) {
+			return null;
+		}
 		VarValueXmlReader reader = new VarValueXmlReader();
 		ByteArrayInputStream in = new ByteArrayInputStream(str.getBytes());
 		return reader.read(in);
@@ -85,7 +91,9 @@ public class VarValueXmlReader {
 			}
 			varValueIdMap.put(valueEleId, value);
 			String childIds = getProperty(valueEle, VALUE_CHILDREN_PROP);
-			childrenMap.put(value, childIds.split(VALUE_CHILDREN_SEPARATOR));
+			if (!StringUtils.isEmpty(childIds)) {
+				childrenMap.put(value, childIds.split(VALUE_CHILDREN_SEPARATOR));
+			}
 			if (isRoot) {
 				result.add(value);
 			}
@@ -152,7 +160,12 @@ public class VarValueXmlReader {
 		if (nList == null || nList.getLength() == 0) {
 			return null;
 		}
-		return nList.item(0).getTextContent();
+		Node item = nList.item(0);
+		if (item instanceof CharacterData) {
+			CharacterData child = (CharacterData) item;
+			return child.getData();
+		}
+		return item.getTextContent();
 	}
 	
 	private long getLongProperty(Element element, String propTagName) {

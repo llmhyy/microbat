@@ -12,17 +12,25 @@ public class DBSettings {
 	public static String password = "123456";
 	public static String dbName = "trace";
 	public static boolean forceRunCreateScript = false;
+	private static int version = -1; //keep track for the update
 	
 	static {
 		updateFromPreference();
 	}
 	
 	public static void updateFromPreference() {
-		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
-		dbAddress = pref.getString(HOST);
-		dbPort = pref.getInt(PORT);
-		dbName = pref.getString(DATABASE);
-		username = pref.getString(USER_NAME);
-		password = pref.getString(PASSWORD);
+		synchronized (DBSettings.class) {
+			IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
+			dbAddress = pref.getString(HOST);
+			dbPort = pref.getInt(PORT);
+			dbName = pref.getString(DATABASE);
+			username = pref.getString(USER_NAME);
+			password = pref.getString(PASSWORD);
+			version++;
+		}
+	}
+	
+	public static int getVersion() {
+		return version;
 	}
 }

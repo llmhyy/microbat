@@ -6,9 +6,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import microbat.handler.xml.VarValueXmlWriter;
 import microbat.model.BreakPoint;
@@ -19,8 +19,8 @@ import microbat.model.value.VarValue;
 import sav.common.core.utils.CollectionUtils;
 
 public class TraceRecorder extends DbService {
-	private static final int READ = 1;
-	private static final int WRITE = 2;
+	public static final int READ = 1;
+	public static final int WRITE = 2;
 	
 	public void storeTrace(Trace trace) throws SQLException {
 		Connection conn = null;
@@ -41,19 +41,18 @@ public class TraceRecorder extends DbService {
 	
 	public int insertTrace(Trace trace, Connection conn, List<Statement> stmts)
 			throws SQLException {
-		return insertTrace(trace, null, null, null, null, null, conn, stmts);
+		return insertTrace(trace, null, null, null, null, conn, stmts);
 	}
 	
-	public int insertTrace(Trace trace, String projectName, String projectVersion, String bugId, String launchClass,
+	public int insertTrace(Trace trace, String projectName, String projectVersion, String launchClass,
 			String launchMethod, Connection conn, List<Statement> stmts) throws SQLException {
 		PreparedStatement ps;
-		String sql = "INSERT INTO trace (project_name, project_version, bug_id, launch_class, launch_method, generated_time) "
-				+ "VALUES (?, ?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO trace (project_name, project_version, launch_class, launch_method, generated_time) "
+				+ "VALUES (?, ?, ?, ?, ?)";
 		ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 		int idx = 1;
 		ps.setString(idx++, projectName);
 		ps.setString(idx++, projectVersion);
-		ps.setString(idx++, bugId);
 		ps.setString(idx++, launchClass);
 		ps.setString(idx++, launchMethod);
 		ps.setTimestamp(idx++, new Timestamp(System.currentTimeMillis()));
@@ -70,7 +69,7 @@ public class TraceRecorder extends DbService {
 		String sql = "INSERT INTO step (trace_id, step_order, control_dominator, step_in, step_over, invocation_parent, loop_parent,"
 				+ "location_id, read_vars, written_vars) VALUES (?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
-		Set<BreakPoint> locations = new HashSet<>();
+		Map<BreakPoint, Integer> locationIdMap = insertLocation(traceId, exectionList, conn, stmts);
 		for (int i = 0; i < exectionList.size(); i++) {
 			TraceNode node = exectionList.get(i);
 			int idx = 1;
@@ -81,15 +80,13 @@ public class TraceRecorder extends DbService {
 			setNodeOrder(ps, idx++, node.getStepOverNext());
 			setNodeOrder(ps, idx++, node.getInvocationParent());
 			setNodeOrder(ps, idx++, node.getLoopParent());
-			ps.setInt(idx++, node.getBreakPoint().getLineNumber());
+			ps.setInt(idx++, locationIdMap.get(node.getBreakPoint()));
 			ps.setString(idx++, generateXmlContent(node.getReadVariables()));
 			ps.setString(idx++, generateXmlContent(node.getWrittenVariables()));
 			ps.addBatch();
-			locations.add(node.getBreakPoint());
 		}
 		ps.executeBatch();
 		stmts.add(ps);
-		insertLocation(traceId, locations, conn, stmts);
 	}
 
 	protected String generateXmlContent(List<VarValue> varValues) {
@@ -134,15 +131,15 @@ public class TraceRecorder extends DbService {
 		}
 	}
 	
-	private void insertLocation(int traceId, Set<BreakPoint> locations, Connection conn, List<Statement> stmts)
-			throws SQLException {
-		String sql = "INSERT INTO location (trace_id, location_id, class_name, line_number, is_conditional, is_return) "
-				+ "VALUES (?, ?, ?, ?, ?, ?)";
-		PreparedStatement ps = conn.prepareStatement(sql);
-		for (BreakPoint location : locations) {
+	private Map<BreakPoint, Integer> insertLocation(int traceId, List<TraceNode> nodes, Connection conn,
+			List<Statement> stmts) throws SQLException {
+		String sql = "INSERT INTO location (trace_id, class_name, line_number, is_conditional, is_return) "
+				+ "VALUES (?, ?, ?, ?, ?)";
+		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		for (TraceNode node : nodes) {
+			BreakPoint location = node.getBreakPoint();
 			int idx = 1;
 			ps.setInt(idx++, traceId);
-			ps.setString(idx++, location.getId());
 			ps.setString(idx++, location.getDeclaringCompilationUnitName());
 			ps.setInt(idx++, location.getLineNumber());
 			ps.setBoolean(idx++, location.isConditional());
@@ -150,7 +147,16 @@ public class TraceRecorder extends DbService {
 			ps.addBatch();
 		}
 		ps.executeBatch();
+		List<Integer> ids = getGeneratedIntIds(ps);
+		if (ids.size() != nodes.size()) {
+			throw new SQLException("Insert locations & locations are inconsistent!");
+		}
+		Map<BreakPoint, Integer> result = new HashMap<>();
+		for (int i = 0; i < nodes.size(); i++) {
+			result.put(nodes.get(i).getBreakPoint(), ids.get(i));
+		}
 		stmts.add(ps);
+		return result;
 	}
 	
 }

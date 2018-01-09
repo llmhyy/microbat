@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,13 +25,14 @@ import sav.common.core.utils.CollectionUtils;
 
 public class DbService {
 	private static final List<String> MICROBAT_TABLES;
-	private static boolean verified = false;
+	private static int dbSettingsVersion = -1;
+	private static MysqlDataSource dataSource;
 	
 	static {
-		MICROBAT_TABLES = collectCreateScript();
+		MICROBAT_TABLES = collectDbTables();
 	}
 	
-	public static List<String> collectCreateScript() {
+	public static List<String> collectDbTables() {
 		try {
 			File ddlFolder = new File(IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "ddl"));
 			final List<String> tables = new ArrayList<>();
@@ -55,15 +57,66 @@ public class DbService {
 	}
 	
 	public Connection getConnection() throws SQLException {
-		MysqlDataSource dataSource = new MysqlDataSource();
-		dataSource.setServerName(DBSettings.dbAddress);
-		dataSource.setPort(DBSettings.dbPort);
-		dataSource.setUser(DBSettings.username);
-		dataSource.setPassword(DBSettings.password);
-		dataSource.setDatabaseName(DBSettings.dbName);
-		Connection conn = dataSource.getConnection();
-		verifyDatabase(conn);
-		return conn;
+		if (!verifyDatasource()) {
+			Connection conn = dataSource.getConnection();
+			verifyDbTables(conn);
+			return conn;
+		} else {
+			return dataSource.getConnection();
+		}
+	}
+	
+	/**
+	 * return whether datasource is verified or not;
+	 * */
+	private boolean verifyDatasource() throws SQLException {
+		synchronized (DBSettings.class) {
+			int dbVersion = DBSettings.getVersion();
+			if (dbVersion == dbSettingsVersion) {
+				return true; // verified!
+			}
+			// verify database
+			dataSource = new MysqlDataSource();
+			dataSource.setServerName(DBSettings.dbAddress);
+			dataSource.setPort(DBSettings.dbPort);
+			dataSource.setUser(DBSettings.username);
+			dataSource.setPassword(DBSettings.password);
+			String dbName = DBSettings.dbName;
+			Connection conn = null;
+			Statement stmt = null;
+			ResultSet rs = null;
+			try {
+				conn = dataSource.getConnection();
+				conn.setAutoCommit(true);
+				rs = conn.getMetaData().getCatalogs();
+				boolean exist = false;
+				while(rs.next()) {
+					String database = rs.getString(1);
+					if (database.equals(dbName)) {
+						exist = true;
+						break;
+					}
+				}
+				rs.close();
+				if (!exist) {
+					stmt = conn.createStatement();
+					int row = stmt.executeUpdate("CREATE DATABASE " + dbName);
+					if (row <= 0) {
+						throw new SQLException("Cannot create database " + dbName);
+					}
+				}
+				dataSource.setDatabaseName(dbName);
+				conn.close();
+				dbSettingsVersion = dbVersion;
+				DBSettings.forceRunCreateScript = false;
+				return false;
+			} finally {
+				closeDb(conn, Arrays.asList(stmt), rs);
+				if (conn != null) {
+					conn.close();
+				}
+			}
+		}
 	}
 	
 	public void rollback(Connection conn) {
@@ -76,10 +129,7 @@ public class DbService {
 		}
 	}
 	
-	protected void verifyDatabase(Connection conn) throws SQLException {
-		if (verified) {
-			return;
-		}
+	protected void verifyDbTables(Connection conn) throws SQLException {
 		DatabaseMetaData metaData = conn.getMetaData();
 		ResultSet rs = metaData.getTables(null, null, "%", new String[]{"TABLE"});
 		Set<String> expectedTables = new HashSet<String>(MICROBAT_TABLES);
@@ -113,10 +163,21 @@ public class DbService {
 					}
 				}
 				conn.commit();
-				verified = true;
 			} catch (IOException e) {
 				throw new SQLException(e);
 			}
+		}
+	}
+	
+	protected int countNumberOfRows(ResultSet rs) throws SQLException {
+		if (rs == null) {
+			return 0;
+		}
+		try {
+			rs.last();
+			return rs.getRow();
+		} finally {
+			rs.beforeFirst();
 		}
 	}
 	
@@ -133,6 +194,16 @@ public class DbService {
 			throw new SQLException("Insert trace failed, no traceId obtained.");
 		}
 		return id;
+	}
+	
+	protected List<Integer> getGeneratedIntIds(PreparedStatement ps) throws SQLException {
+		List<Integer> generatedIds = new ArrayList<>();
+		try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+			while (generatedKeys.next()) {
+				generatedIds.add(generatedKeys.getInt("GENERATED_KEY"));
+			}
+		}
+		return generatedIds;
 	}
 
 	public void closeDb(Connection connection, List<Statement> stmts, ResultSet resultSet) {

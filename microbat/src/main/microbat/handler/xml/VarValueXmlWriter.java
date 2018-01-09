@@ -129,7 +129,7 @@ public class VarValueXmlWriter {
 			addAttribute(valueEle, VALUE_VAR_TYPE_ATT, varValue.getType());
 			/* variable */
 			appendVariable(valueEle, varValue.getVariable());
-			addProperty(valueEle, VALUE_STRING_VALUE_PROP, varValue.getStringValue());
+			addProperty(valueEle, VALUE_STRING_VALUE_PROP, varValue.getStringValue(), true);
 			if (varValue instanceof ArrayValue) {
 				addProperty(valueEle, VALUE_ARR_COMPONENT_TYPE_PROP, ((ArrayValue) varValue).getComponentType());
 				addProperty(valueEle, VALUE_IS_ARRAY_PROP, true);
@@ -177,11 +177,19 @@ public class VarValueXmlWriter {
 		}
 		
 		private void addProperty(Element parent, String tagName, Object value) {
+			addProperty(parent, tagName, value, false);
+		}
+		
+		private void addProperty(Element parent, String tagName, Object value, boolean isCDATA) {
 			if (value == null) {
 				return;
 			}
 			Element propertyEle = addChild(parent, tagName);
-			propertyEle.appendChild(doc.createTextNode(value.toString()));
+			if (isCDATA) {
+				propertyEle.appendChild(doc.createCDATASection(value.toString()));
+			} else {
+				propertyEle.appendChild(doc.createTextNode(value.toString()));
+			}
 		}
 
 		private void addAttribute(Element element, String attName, Object attVal) {
