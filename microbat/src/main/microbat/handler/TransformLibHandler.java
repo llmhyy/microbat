@@ -174,7 +174,7 @@ public class TransformLibHandler extends AbstractHandler {
 			}
 		}
 		
-//		System.currentTimeMillis();
+		System.currentTimeMillis();
 		
 		for (String topFolder : topFolders) {
 			List<String> command = new ArrayList<>();
@@ -220,8 +220,9 @@ public class TransformLibHandler extends AbstractHandler {
 	}
 
 	private String getSharedPrefix(String a, String b) {
-		String[] aFolders = a.split("\\\\");
-		String[] bFolders = b.split("\\\\");
+		String regex = String.valueOf(File.separatorChar);
+		String[] aFolders = a.split(regex);
+		String[] bFolders = b.split(regex);
 		
 		List<String> list = new ArrayList<>();
 		
@@ -238,7 +239,7 @@ public class TransformLibHandler extends AbstractHandler {
 	    StringBuffer buffer = new StringBuffer();
 	    for(String str: list){
 	    	buffer.append(str);
-	    	buffer.append("\\");
+	    	buffer.append(regex);
 	    }
 	    
 	    return buffer.toString();
