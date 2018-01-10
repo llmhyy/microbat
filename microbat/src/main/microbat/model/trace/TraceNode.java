@@ -310,7 +310,7 @@ public class TraceNode{
 
 	public TraceNode getStepOverNext() {
 		if(stepOverNext!=null){
-			return stepInNext;
+			return stepOverNext;
 		}
 		else{
 			TraceNode n = stepInNext;
