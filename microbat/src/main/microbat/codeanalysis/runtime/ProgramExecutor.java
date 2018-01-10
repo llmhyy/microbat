@@ -709,8 +709,22 @@ public class ProgramExecutor extends Executor {
 							String peekSig = methodSignatureStack.peek();
 							if (peekSig.equals(thisSig)) {
 								TraceNode node = methodNodeStack.pop();
-								methodNodeJustPopedOut = node;
 								methodSignatureStack.pop();
+								
+								/**
+								 * because \<clinit\> method has not no method exit event.
+								 */
+								if(!methodSignatureStack.isEmpty()){
+									TraceNode peekNode = methodNodeStack.peek();
+									String peekSigature = methodSignatureStack.peek();
+									if(peekNode.getOrder()==node.getOrder() && peekSigature.contains("<clinit>")){
+										node = methodNodeStack.pop();
+										methodSignatureStack.pop();
+									}
+								}
+								
+								methodNodeJustPopedOut = node;
+								
 								isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
 								latestReturnedValue = mee.returnValue();
 							} else {
