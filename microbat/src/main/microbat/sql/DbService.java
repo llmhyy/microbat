@@ -42,7 +42,7 @@ public class DbService {
 				public boolean accept(File dir, String name) {
 					if (name.endsWith(".sql") || name.endsWith(".SQL")) {
 						tables.add(name.substring(0,
-								name.length() - 4 /* ".sql".length */));
+								name.length() - 4 /* ".sql".length */).toLowerCase());
 						return true;
 					}
 					return false;
@@ -216,7 +216,9 @@ public class DbService {
 		}
 		for (Statement stmt : CollectionUtils.nullToEmpty(stmts)) {
 			try {
-				stmt.close();
+				if (stmt != null) {
+					stmt.close();
+				}
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
