@@ -69,7 +69,7 @@ public class TraceRecorder extends DbService {
 		String sql = "INSERT INTO step (trace_id, step_order, control_dominator, step_in, step_over, invocation_parent, loop_parent,"
 				+ "location_id, read_vars, written_vars) VALUES (?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
-		Map<BreakPoint, Integer> locationIdMap = insertLocation(traceId, exectionList, conn, stmts);
+		Map<TraceNode, Integer> locationIdMap = insertLocation(traceId, exectionList, conn, stmts);
 		for (int i = 0; i < exectionList.size(); i++) {
 			TraceNode node = exectionList.get(i);
 			int idx = 1;
@@ -80,7 +80,7 @@ public class TraceRecorder extends DbService {
 			setNodeOrder(ps, idx++, node.getStepOverNext());
 			setNodeOrder(ps, idx++, node.getInvocationParent());
 			setNodeOrder(ps, idx++, node.getLoopParent());
-			ps.setInt(idx++, locationIdMap.get(node.getBreakPoint()));
+			ps.setInt(idx++, locationIdMap.get(node));
 			ps.setString(idx++, generateXmlContent(node.getReadVariables()));
 			ps.setString(idx++, generateXmlContent(node.getWrittenVariables()));
 			ps.addBatch();
@@ -131,7 +131,7 @@ public class TraceRecorder extends DbService {
 		}
 	}
 	
-	private Map<BreakPoint, Integer> insertLocation(int traceId, List<TraceNode> nodes, Connection conn,
+	private Map<TraceNode, Integer> insertLocation(int traceId, List<TraceNode> nodes, Connection conn,
 			List<Statement> stmts) throws SQLException {
 		String sql = "INSERT INTO location (trace_id, class_name, line_number, is_conditional, is_return) "
 				+ "VALUES (?, ?, ?, ?, ?)";
@@ -151,9 +151,9 @@ public class TraceRecorder extends DbService {
 		if (ids.size() != nodes.size()) {
 			throw new SQLException("Insert locations & locations are inconsistent!");
 		}
-		Map<BreakPoint, Integer> result = new HashMap<>();
+		Map<TraceNode, Integer> result = new HashMap<>();
 		for (int i = 0; i < nodes.size(); i++) {
-			result.put(nodes.get(i).getBreakPoint(), ids.get(i));
+			result.put(nodes.get(i), ids.get(i));
 		}
 		stmts.add(ps);
 		return result;

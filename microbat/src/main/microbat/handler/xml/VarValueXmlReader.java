@@ -39,7 +39,7 @@ public class VarValueXmlReader {
 	
 	public static List<VarValue> read(String str) {
 		if (StringUtils.isEmpty(str)) {
-			return null;
+			return new ArrayList<>();
 		}
 		VarValueXmlReader reader = new VarValueXmlReader();
 		ByteArrayInputStream in = new ByteArrayInputStream(str.getBytes());
@@ -81,6 +81,10 @@ public class VarValueXmlReader {
 			} else if (BooleanValue.TYPE.endsWith(varType)) {
 				value = new BooleanValue(Boolean.valueOf(stringVal), isRoot, variable);
 			} else if (PrimitiveUtils.isPrimitiveType(varType)) {
+				if ("char".equals(variable.getType())) {
+					char ch = (char)(int)Integer.valueOf(stringVal);
+					stringVal = Character.toString(ch);
+				}
 				value = new PrimitiveValue(stringVal, isRoot, variable);
 			} else if (isArray) {
 				value = new ArrayValue(false, isRoot, variable);

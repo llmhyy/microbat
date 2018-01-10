@@ -23,7 +23,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import fj.Primitive;
 import microbat.model.value.ArrayValue;
+import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.FieldVar;
@@ -129,12 +131,21 @@ public class VarValueXmlWriter {
 			addAttribute(valueEle, VALUE_VAR_TYPE_ATT, varValue.getType());
 			/* variable */
 			appendVariable(valueEle, varValue.getVariable());
-			addProperty(valueEle, VALUE_STRING_VALUE_PROP, varValue.getStringValue(), true);
+			
 			if (varValue instanceof ArrayValue) {
 				addProperty(valueEle, VALUE_ARR_COMPONENT_TYPE_PROP, ((ArrayValue) varValue).getComponentType());
 				addProperty(valueEle, VALUE_IS_ARRAY_PROP, true);
 			} else if (varValue instanceof ReferenceValue) {
 				addProperty(valueEle, VALUE_REF_UNIQUE_ID_PROP, ((ReferenceValue) varValue).getUniqueID());
+			} else if(varValue instanceof PrimitiveValue) {
+				String strVal = varValue.getStringValue();
+				if ("char".equals(varValue.getVariable().getType())) {
+					if (!StringUtils.isEmpty(varValue.getStringValue())) {
+						int numericValue = Character.getNumericValue(varValue.getStringValue().charAt(0));
+						strVal = String.valueOf(numericValue);
+					}
+				}
+				addProperty(valueEle, VALUE_STRING_VALUE_PROP, strVal, true);
 			}
 			if (CollectionUtils.isNotEmpty(varValue.getChildren())) {
 				List<String> childIds = new ArrayList<String>(varValue.getChildren().size());
