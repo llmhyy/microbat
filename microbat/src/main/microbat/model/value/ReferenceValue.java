@@ -141,5 +141,16 @@ public class ReferenceValue extends VarValue {
 	public void setUniqueID(long uniqueID) {
 		this.uniqueID = uniqueID;
 	}
+
+	public void buildStringValue() {
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("[");
+		for (VarValue child : getChildren()) {
+			buffer.append(child.getVarName() + "=" + child.getStringValue());
+			buffer.append(",");
+		}
+		buffer.append("]");
+		setStringValue(buffer.toString());
+	}
 	
 }

@@ -80,6 +80,13 @@ public class StringUtils {
 		return val;
 	}
 	
+	public static String emptyToNull(String val) {
+		if (val != null && val.isEmpty()) {
+			return null;
+		}
+		return val;
+	}
+	
 	public static String[] nullToEmpty(String[] val) {
 		if (val == null) {
 			return new String[0];

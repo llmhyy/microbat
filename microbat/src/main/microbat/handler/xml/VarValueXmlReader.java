@@ -60,7 +60,7 @@ public class VarValueXmlReader {
 
 	private List<VarValue> parse(Document doc) {
 		NodeList nList = doc.getElementsByTagName(VALUE_TAG);
-		List<VarValue> result = new ArrayList<VarValue>(nList.getLength());
+		List<VarValue> allVarValues = new ArrayList<VarValue>(nList.getLength());
 		Map<VarValue, String[]> childrenMap = new HashMap<VarValue, String[]>();
 		Map<String, VarValue> varValueIdMap = new HashMap<String, VarValue>();
 		for (int i = 0; i < nList.getLength(); i++) {
@@ -76,6 +76,7 @@ public class VarValueXmlReader {
 			VarValue value = null;
 			if (varType == null) {
 				value = new VirtualValue(isRoot, variable);
+				value.setStringValue(stringVal);
 			} else if (StringValue.TYPE.equals(varType)) {
 				value = new StringValue(stringVal, isRoot, variable);
 			} else if (BooleanValue.TYPE.endsWith(varType)) {
@@ -98,15 +99,24 @@ public class VarValueXmlReader {
 			if (!StringUtils.isEmpty(childIds)) {
 				childrenMap.put(value, childIds.split(VALUE_CHILDREN_SEPARATOR));
 			}
-			if (isRoot) {
-				result.add(value);
+			allVarValues.add(value);
+		}
+		List<VarValue> result = updateVarValueChildren(allVarValues , childrenMap, varValueIdMap);
+		for (int i = allVarValues.size() - 1; i >= 0; i--) {
+			VarValue value = allVarValues.get(i);
+			if (value instanceof ReferenceValue) {
+				((ReferenceValue) value).buildStringValue();
 			}
 		}
-		updateVarValueChildren(childrenMap, varValueIdMap);
 		return result;
 	}
 	
-	private void updateVarValueChildren(Map<VarValue, String[]> childrenMap, Map<String, VarValue> varValueIdMap) {
+	/**
+	 * return only root values.
+	 */
+	private List<VarValue> updateVarValueChildren(List<VarValue> allVarValues, Map<VarValue, String[]> childrenMap,
+			Map<String, VarValue> varValueIdMap) {
+		List<VarValue> result = new ArrayList<>(allVarValues);
 		for (VarValue varValue : childrenMap.keySet()) {
 			String[] childIds = childrenMap.get(varValue);
 			if (childIds == null) {
@@ -116,15 +126,17 @@ public class VarValueXmlReader {
 				VarValue child = varValueIdMap.get(childId);
 				varValue.addChild(child);
 				child.addParent(varValue);
+				result.remove(child);
 			}
 		}
+		return result;
 	}
 
 	private Variable parseVariable(Element ele) {
 		String cat = ele.getAttribute(VAR_CAT_ATT);
 		String name = ele.getAttribute(VAR_NAME_ATT);
 		String type = ele.getAttribute(VAR_TYPE_ATT);
-		String aliasId = ele.getAttribute(VAR_ALIAS_ID_ATT);
+		String aliasId = StringUtils.emptyToNull(ele.getAttribute(VAR_ALIAS_ID_ATT));
 		String varId = ele.getAttribute(VAR_ID_ATT);
 		Variable variable = null;
 		if (isOfType(cat, ArrayElementVar.class)) {
