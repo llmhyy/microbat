@@ -6,9 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -24,6 +22,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import microbat.model.value.ArrayValue;
+import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.FieldVar;
@@ -108,7 +107,6 @@ public class VarValueXmlWriter {
 		private Document doc;
 		private Element root;
 		private Element valuesEle;
-		private Map<VarValue, String> varValueIdMap = new HashMap<VarValue, String>();
 		private int valueIdCounter = 0;
 		
 		public XmlBuilder(Document doc) {
@@ -119,9 +117,6 @@ public class VarValueXmlWriter {
 		}
 
 		private String appendVarValue(VarValue varValue) {
-			if (varValueIdMap.containsKey(varValue)) {
-				return varValueIdMap.get(varValue);
-			}
 			Element valueEle = addChild(valuesEle, VALUE_TAG);
 			String valueId = generateValueId(varValue);
 			addAttribute(valueEle, VALUE_ID_ATT, valueId);
@@ -129,12 +124,23 @@ public class VarValueXmlWriter {
 			addAttribute(valueEle, VALUE_VAR_TYPE_ATT, varValue.getType());
 			/* variable */
 			appendVariable(valueEle, varValue.getVariable());
-			addProperty(valueEle, VALUE_STRING_VALUE_PROP, varValue.getStringValue(), true);
+			
 			if (varValue instanceof ArrayValue) {
 				addProperty(valueEle, VALUE_ARR_COMPONENT_TYPE_PROP, ((ArrayValue) varValue).getComponentType());
 				addProperty(valueEle, VALUE_IS_ARRAY_PROP, true);
 			} else if (varValue instanceof ReferenceValue) {
 				addProperty(valueEle, VALUE_REF_UNIQUE_ID_PROP, ((ReferenceValue) varValue).getUniqueID());
+			} else if(varValue instanceof PrimitiveValue) {
+				String strVal = varValue.getStringValue();
+				if ("char".equals(varValue.getVariable().getType())) {
+					if (!StringUtils.isEmpty(varValue.getStringValue())) {
+						int intVal = (int)(varValue.getStringValue().charAt(0));
+						strVal = String.valueOf(intVal);
+					}
+				}
+				addProperty(valueEle, VALUE_STRING_VALUE_PROP, strVal);
+			} else {
+				addProperty(valueEle, VALUE_STRING_VALUE_PROP, varValue.getStringValue());
 			}
 			if (CollectionUtils.isNotEmpty(varValue.getChildren())) {
 				List<String> childIds = new ArrayList<String>(varValue.getChildren().size());
@@ -148,7 +154,6 @@ public class VarValueXmlWriter {
 		
 		private String generateValueId(VarValue varValue) {
 			String id = Integer.toString(++valueIdCounter);
-			varValueIdMap.put(varValue, id);
 			return id;
 		}
 
