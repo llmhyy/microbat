@@ -16,6 +16,13 @@ public class BreakPoint extends ClassLocation {
 	private boolean isReturnStatement;
 	
 	private boolean isConditional;
+	
+	/**
+	 * The reason to differentiate control scope and loop scope is that
+	 * (1) control scope include more than a code block, e.g., a statement outside a block
+	 * can be control dependent on a statement inside a block.
+	 * (2) in contrast, loop scope can only include the statements inside a code block.
+	 */
 	private ControlScope controlScope;
 	private SourceScope loopScope;
 	private List<ClassLocation> targets = new ArrayList<>();

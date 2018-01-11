@@ -1,6 +1,7 @@
 package microbat.codeanalysis.ast;
 
 import microbat.model.SourceScope;
+import microbat.util.JavaUtil;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.BreakStatement;
@@ -15,6 +16,7 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SwitchStatement;
 import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
+import org.eclipse.jdt.ui.JavaUI;
 
 public class SourceScopeParser {
 	
@@ -85,7 +87,8 @@ public class SourceScopeParser {
 		
 		private void setScope(Statement statement, boolean isLoop){
 			scope = new SourceScope();
-			scope.setCompilationUnit(cu);
+			String className = JavaUtil.getFullNameOfCompilationUnit(cu);
+			scope.setClassName(className);
 			scope.setStartLine(cu.getLineNumber(statement.getStartPosition())); 
 			scope.setEndLine(cu.getLineNumber(statement.getStartPosition()+statement.getLength())); 
 			scope.setLoopScope(isLoop);

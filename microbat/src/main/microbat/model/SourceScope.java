@@ -1,12 +1,9 @@
 package microbat.model;
 
 import microbat.model.trace.TraceNode;
-import microbat.util.JavaUtil;
-
-import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class SourceScope implements Scope{
-	private CompilationUnit cu;
+	private String className;
 	private int startLine;
 	private int endLine;
 	
@@ -17,14 +14,6 @@ public class SourceScope implements Scope{
 	private boolean hasJumpStatement;
 
 	private boolean isLoopScope;
-
-	public CompilationUnit getCompilationUnit() {
-		return cu;
-	}
-
-	public void setCompilationUnit(CompilationUnit cu) {
-		this.cu = cu;
-	}
 
 	public int getStartLine() {
 		return startLine;
@@ -65,9 +54,8 @@ public class SourceScope implements Scope{
 	@Override
 	public boolean containLocation(ClassLocation location) {
 		String nodeClassName = location.getClassCanonicalName();
-		String scopeClassName = JavaUtil.getFullNameOfCompilationUnit(cu);
 
-		if (nodeClassName.equals(scopeClassName)) {
+		if (nodeClassName.equals(className)) {
 			int line = location.getLineNumber();
 			if (line >= startLine && line <= endLine) {
 				return true;
@@ -75,6 +63,14 @@ public class SourceScope implements Scope{
 		}
 
 		return false;
+	}
+
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
 	}
 
 }
