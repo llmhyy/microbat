@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -40,8 +41,13 @@ public class DbService {
 				@Override
 				public boolean accept(File dir, String name) {
 					if (name.endsWith(".sql") || name.endsWith(".SQL")) {
-						tables.add(name.substring(0,
-								name.length() - 4 /* ".sql".length */).toLowerCase());
+						String tableName = name.substring(0, name.length() - 4 /* ".sql".length */);
+						String os = System.getProperty("os.name");
+						if(os.toLowerCase().contains("win")){
+							tableName = tableName.toLowerCase();
+						}
+						
+						tables.add(tableName);
 						return true;
 					}
 					return false;
@@ -133,7 +139,15 @@ public class DbService {
 		ResultSet rs = metaData.getTables(null, null, "%", new String[]{"TABLE"});
 		Set<String> expectedTables = new HashSet<String>(MICROBAT_TABLES);
 		while (rs.next()) {
-			expectedTables.remove(rs.getString(3));
+			String rsString = rs.getString(3);
+			Iterator<String> iterator = expectedTables.iterator();
+			while(iterator.hasNext()){
+				String table = iterator.next();
+				if(table.toLowerCase().equals(rsString)){
+					iterator.remove();					
+				}				
+			}
+			
 		}
 		if (!expectedTables.isEmpty() || DBSettings.forceRunCreateScript) {
 			System.out.println("Missing tables: " + expectedTables.toString());
