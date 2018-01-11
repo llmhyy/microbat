@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -111,7 +110,7 @@ public class DbService {
 				DBSettings.forceRunCreateScript = false;
 				return false;
 			} finally {
-				closeDb(conn, Arrays.asList(stmt), rs);
+				closeDb(conn, CollectionUtils.<AutoCloseable>listOf(stmt, rs));
 				if (conn != null) {
 					conn.close();
 				}
@@ -206,28 +205,21 @@ public class DbService {
 		return generatedIds;
 	}
 
-	public void closeDb(Connection connection, List<Statement> stmts, ResultSet resultSet) {
-		if (resultSet != null) {
-			try {
-				resultSet.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-		for (Statement stmt : CollectionUtils.nullToEmpty(stmts)) {
-			try {
-				if (stmt != null) {
-					stmt.close();
+	public void closeDb(Connection connection, List<AutoCloseable> closableList) {
+		for (AutoCloseable obj : CollectionUtils.nullToEmpty(closableList)) {
+			if (obj != null) {
+				try {
+					obj.close();
+				} catch (Exception e) {
+					// ignore
 				}
-			} catch (SQLException e) {
-				e.printStackTrace();
 			}
 		}
 		if (connection != null) {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				// ignore
 			}
 		}
 	}

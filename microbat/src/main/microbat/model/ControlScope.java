@@ -9,6 +9,10 @@ public class ControlScope implements Scope{
 	private List<ClassLocation> rangeList = new ArrayList<>();
 	private boolean isLoop;
 	
+	public ControlScope() {
+		
+	}
+	
 	public ControlScope(List<ClassLocation> rangeList, boolean isLoop) {
 		super();
 		this.rangeList = rangeList;

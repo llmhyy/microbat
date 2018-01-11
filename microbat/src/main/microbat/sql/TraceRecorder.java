@@ -9,9 +9,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import microbat.handler.xml.VarValueXmlWriter;
 import microbat.model.BreakPoint;
+import microbat.model.ClassLocation;
+import microbat.model.ControlScope;
+import microbat.model.SourceScope;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -24,52 +28,53 @@ public class TraceRecorder extends DbService {
 	
 	public void storeTrace(Trace trace) throws SQLException {
 		Connection conn = null;
-		List<Statement> stmts = new ArrayList<Statement>();
+		List<AutoCloseable> closables = new ArrayList<AutoCloseable>();
 		try {
 			conn = getConnection();
 			conn.setAutoCommit(false);
-			insertTrace(trace, conn, stmts);
+			insertTrace(trace, conn, closables);
 			conn.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			rollback(conn);;
 			throw e;
 		} finally {
-			closeDb(conn, stmts, null);
+			closeDb(conn, closables);
 		}
 	}
 	
-	public int insertTrace(Trace trace, Connection conn, List<Statement> stmts)
+	public int insertTrace(Trace trace, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
-		return insertTrace(trace, null, null, null, null, conn, stmts);
+		return insertTrace(trace, null, null, null, null, conn, closables);
 	}
 	
 	public int insertTrace(Trace trace, String projectName, String projectVersion, String launchClass,
-			String launchMethod, Connection conn, List<Statement> stmts) throws SQLException {
+			String launchMethod, Connection conn, List<AutoCloseable> closables) throws SQLException {
 		PreparedStatement ps;
 		String sql = "INSERT INTO trace (project_name, project_version, launch_class, launch_method, generated_time) "
 				+ "VALUES (?, ?, ?, ?, ?)";
 		ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		closables.add(ps);
 		int idx = 1;
 		ps.setString(idx++, projectName);
 		ps.setString(idx++, projectVersion);
 		ps.setString(idx++, launchClass);
 		ps.setString(idx++, launchMethod);
 		ps.setTimestamp(idx++, new Timestamp(System.currentTimeMillis()));
-		stmts.add(ps);
 		ps.execute();
 		int traceId = getFirstGeneratedIntCol(ps);
-		insertSteps(traceId, trace.getExecutionList(), conn, stmts);
-		insertStepVariableRelation(trace, traceId, conn, stmts);
+		insertSteps(traceId, trace.getExecutionList(), conn, closables);
+		insertStepVariableRelation(trace, traceId, conn, closables);
 		return traceId;
 	}
 	
 	private void insertSteps(int traceId, List<TraceNode> exectionList, Connection conn,
-			List<Statement> stmts) throws SQLException {
+			List<AutoCloseable> closables) throws SQLException {
 		String sql = "INSERT INTO step (trace_id, step_order, control_dominator, step_in, step_over, invocation_parent, loop_parent,"
 				+ "location_id, read_vars, written_vars) VALUES (?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
-		Map<TraceNode, Integer> locationIdMap = insertLocation(traceId, exectionList, conn, stmts);
+		closables.add(ps);
+		Map<TraceNode, Integer> locationIdMap = insertLocation(traceId, exectionList, conn, closables);
 		for (int i = 0; i < exectionList.size(); i++) {
 			TraceNode node = exectionList.get(i);
 			int idx = 1;
@@ -86,7 +91,6 @@ public class TraceRecorder extends DbService {
 			ps.addBatch();
 		}
 		ps.executeBatch();
-		stmts.add(ps);
 	}
 
 	protected String generateXmlContent(List<VarValue> varValues) {
@@ -96,11 +100,11 @@ public class TraceRecorder extends DbService {
 		return VarValueXmlWriter.generateXmlContent(varValues);
 	}
 	
-	private void insertStepVariableRelation(Trace trace, int traceId, Connection conn, List<Statement> stmts)
+	private void insertStepVariableRelation(Trace trace, int traceId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
 		String sql = "INSERT INTO stepVariableRelation (var_id, trace_id, step_order, rw) VALUES (?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
-		
+		closables.add(ps);
 		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {
 			for (TraceNode node : entry.getProducers()) {
 				int idx = 1;
@@ -120,7 +124,6 @@ public class TraceRecorder extends DbService {
 			}
 		}
 		ps.executeBatch();
-		stmts.add(ps);
 	}
 
 	private void setNodeOrder(PreparedStatement ps, int idx, TraceNode node) throws SQLException {
@@ -132,10 +135,11 @@ public class TraceRecorder extends DbService {
 	}
 	
 	private Map<TraceNode, Integer> insertLocation(int traceId, List<TraceNode> nodes, Connection conn,
-			List<Statement> stmts) throws SQLException {
+			List<AutoCloseable> closables) throws SQLException {
 		String sql = "INSERT INTO location (trace_id, class_name, line_number, is_conditional, is_return) "
 				+ "VALUES (?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		closables.add(ps);
 		for (TraceNode node : nodes) {
 			BreakPoint location = node.getBreakPoint();
 			int idx = 1;
@@ -149,14 +153,64 @@ public class TraceRecorder extends DbService {
 		ps.executeBatch();
 		List<Integer> ids = getGeneratedIntIds(ps);
 		if (ids.size() != nodes.size()) {
-			throw new SQLException("Insert locations & locations are inconsistent!");
+			throw new SQLException("Number of locations is incorrect!");
 		}
 		Map<TraceNode, Integer> result = new HashMap<>();
 		for (int i = 0; i < nodes.size(); i++) {
-			result.put(nodes.get(i), ids.get(i));
+			Integer locId = ids.get(i);
+			result.put(nodes.get(i), locId);
 		}
-		stmts.add(ps);
+		insertControlScope(traceId, result, conn, closables);
+		insertLoopScope(traceId, result, conn, closables);
 		return result;
 	}
+	
+	private void insertControlScope(int traceId, Map<TraceNode, Integer> locationIdMap, Connection conn,
+			List<AutoCloseable> closables) throws SQLException {
+		String sql = "INSERT INTO controlScope (trace_id, location_id, class_name, line_number, is_loop) VALUES (?, ?, ?, ?, ?)";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		closables.add(ps);
+		for (Entry<TraceNode, Integer> entry : locationIdMap.entrySet()) {
+			ControlScope controlScope = entry.getKey().getBreakPoint().getControlScope();
+			if (controlScope != null && !controlScope.getRangeList().isEmpty()) {
+				int locationId = entry.getValue();
+				for (ClassLocation controlLoc : controlScope.getRangeList()) {
+					int idx = 1;
+					ps.setInt(idx++, traceId);
+					ps.setInt(idx++, locationId);
+					ps.setString(idx++, controlLoc.getClassCanonicalName());
+					ps.setInt(idx++, controlLoc.getLineNumber());
+					ps.setBoolean(idx++, controlScope.isLoop());
+					ps.addBatch();
+				}
+			}
+		}
+		int[] rs = ps.executeBatch();
+		if (rs.length > 1000) {
+			System.out.println("total controlScope batches: " + rs.length);
+		}
+	}
+	
+	private void insertLoopScope(int traceId, Map<TraceNode, Integer> locationIdMap, Connection conn,
+			List<AutoCloseable> closables) throws SQLException {
+		String sql = "INSERT INTO loopScope (trace_id, location_id, class_name, start_line, end_line) VALUES (?, ?, ?, ?, ?)";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		closables.add(ps);
+		for (Entry<TraceNode, Integer> entry : locationIdMap.entrySet()) {
+			SourceScope loopScope = entry.getKey().getBreakPoint().getLoopScope();
+			if (loopScope != null) {
+				int locationId = entry.getValue();
+				int idx = 1;
+				ps.setInt(idx++, traceId);
+				ps.setInt(idx++, locationId);
+				ps.setString(idx++, loopScope.getClassName());
+				ps.setInt(idx++, loopScope.getStartLine());
+				ps.setInt(idx++, loopScope.getEndLine());
+				ps.addBatch();
+			}
+		}
+		ps.executeBatch();
+	}
+
 	
 }

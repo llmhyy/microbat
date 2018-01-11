@@ -170,7 +170,7 @@ public class BreakPoint extends ClassLocation {
 		return this.isConditional;
 	}
 
-	public Scope getControlScope() {
+	public ControlScope getControlScope() {
 		return controlScope;
 	}
 
