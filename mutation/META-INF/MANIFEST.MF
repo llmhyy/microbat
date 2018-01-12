@@ -12,7 +12,12 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: lib/javaparser-1.0.11.jar,
  .
-Export-Package: mutation,
+Export-Package: japa.parser,
+ japa.parser.ast,
+ japa.parser.ast.expr,
+ japa.parser.ast.stmt,
+ japa.parser.ast.visitor,
+ mutation,
  mutation.io,
  mutation.mutator,
  mutation.mutator.insertdebugline,

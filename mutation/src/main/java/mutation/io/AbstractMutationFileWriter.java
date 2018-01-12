@@ -8,16 +8,14 @@
 
 package mutation.io;
 
-import japa.parser.ast.Node;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import japa.parser.ast.Node;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.StringUtils;
-import mutation.utils.FileUtils;
 
 /**
  * @author LLT

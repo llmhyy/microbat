@@ -1,7 +1,5 @@
 package mutation.mutator;
 
-import japa.parser.ast.CompilationUnit;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -10,6 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.eclipse.core.runtime.Platform;
+import org.osgi.framework.Bundle;
+
+import japa.parser.ast.CompilationUnit;
 import mutation.io.DebugLineFileWriter;
 import mutation.io.MutationFileWriter;
 import mutation.mutator.MutationVisitor.MutationNode;
@@ -19,10 +21,6 @@ import mutation.mutator.mapping.MutationMap;
 import mutation.parser.ClassAnalyzer;
 import mutation.parser.ClassDescriptor;
 import mutation.parser.JParser;
-
-import org.eclipse.core.runtime.Platform;
-import org.osgi.framework.Bundle;
-
 import sav.common.core.utils.BreakpointUtils;
 import sav.strategies.dto.ClassLocation;
 import sav.strategies.mutanbug.DebugLineInsertionResult;
@@ -35,7 +33,6 @@ import sav.strategies.mutanbug.MutationResult;
 public class Mutator implements IMutator {
 	//TODO LLT: correct the configuration file path, temporary fix for running in eclipse
 	private static final String OPERATOR_MAP_FILE = "\\src\\main\\resources\\MuMap.txt";
-	
 	
 	private Map<String, List<String>> opMapConfig;
 	private String srcFolder;
@@ -51,14 +48,16 @@ public class Mutator implements IMutator {
 	}
 	
 	@Override
-	public <T extends ClassLocation> Map<String, MutationResult> mutate(
-			List<T> locs) {
+	public <T extends ClassLocation> Map<String, MutationResult> mutate(List<T> locs) {
+		return mutate(locs, new DefaultMutationVisitor());
+	}
+	
+	public <T extends ClassLocation> Map<String, MutationResult> mutate(List<T> locs, MutationVisitor mutationVisitor) {
 		Map<String, List<Integer>> classLocationMap = BreakpointUtils.initLineNoMap(locs);
 		JParser cuParser = new JParser(srcFolder, classLocationMap.keySet());
 		ClassAnalyzer classAnalyzer = new ClassAnalyzer(srcFolder, cuParser);
-		
 		Map<String, List<String>> opMapConfig = getOpMapConfig();
-		MutationVisitor mutationVisitor = new MutationVisitor(new MutationMap(opMapConfig), classAnalyzer);
+		mutationVisitor.init(new MutationMap(opMapConfig), classAnalyzer);
 		
 		Map<String, MutationResult> result = new HashMap<String, MutationResult>();
 		MutationFileWriter fileWriter = new MutationFileWriter(srcFolder, tmpMutationFolder);

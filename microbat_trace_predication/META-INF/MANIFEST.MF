@@ -5,5 +5,7 @@ Bundle-SymbolicName: microbat_trace_predication;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Require-Bundle: org.eclipse.ui,
  microbat;bundle-version="1.0.0",
- tregression;bundle-version="1.0.0"
+ tregression;bundle-version="1.0.0",
+ mutation;bundle-version="1.0.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Import-Package: sav.common.core.utils
