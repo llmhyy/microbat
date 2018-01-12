@@ -51,7 +51,7 @@ public class TraceRecorder extends DbService {
 	public int insertTrace(Trace trace, String projectName, String projectVersion, String launchClass,
 			String launchMethod, Connection conn, List<AutoCloseable> closables) throws SQLException {
 		PreparedStatement ps;
-		String sql = "INSERT INTO trace (project_name, project_version, launch_class, launch_method, generated_time) "
+		String sql = "INSERT INTO Trace (project_name, project_version, launch_class, launch_method, generated_time) "
 				+ "VALUES (?, ?, ?, ?, ?)";
 		ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 		closables.add(ps);
@@ -70,7 +70,7 @@ public class TraceRecorder extends DbService {
 	
 	private void insertSteps(int traceId, List<TraceNode> exectionList, Connection conn,
 			List<AutoCloseable> closables) throws SQLException {
-		String sql = "INSERT INTO step (trace_id, step_order, control_dominator, step_in, step_over, invocation_parent, loop_parent,"
+		String sql = "INSERT INTO Step (trace_id, step_order, control_dominator, step_in, step_over, invocation_parent, loop_parent,"
 				+ "location_id, read_vars, written_vars) VALUES (?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
@@ -102,7 +102,7 @@ public class TraceRecorder extends DbService {
 	
 	private void insertStepVariableRelation(Trace trace, int traceId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
-		String sql = "INSERT INTO stepVariableRelation (var_id, trace_id, step_order, rw) VALUES (?, ?, ?, ?)";
+		String sql = "INSERT INTO StepVariableRelation (var_id, trace_id, step_order, rw) VALUES (?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {
@@ -136,7 +136,7 @@ public class TraceRecorder extends DbService {
 	
 	private Map<TraceNode, Integer> insertLocation(int traceId, List<TraceNode> nodes, Connection conn,
 			List<AutoCloseable> closables) throws SQLException {
-		String sql = "INSERT INTO location (trace_id, class_name, line_number, is_conditional, is_return) "
+		String sql = "INSERT INTO Location (trace_id, class_name, line_number, is_conditional, is_return) "
 				+ "VALUES (?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 		closables.add(ps);
@@ -167,7 +167,7 @@ public class TraceRecorder extends DbService {
 	
 	private void insertControlScope(int traceId, Map<TraceNode, Integer> locationIdMap, Connection conn,
 			List<AutoCloseable> closables) throws SQLException {
-		String sql = "INSERT INTO controlScope (trace_id, location_id, class_name, line_number, is_loop) VALUES (?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO ControlScope (trace_id, location_id, class_name, line_number, is_loop) VALUES (?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		for (Entry<TraceNode, Integer> entry : locationIdMap.entrySet()) {
@@ -193,7 +193,7 @@ public class TraceRecorder extends DbService {
 	
 	private void insertLoopScope(int traceId, Map<TraceNode, Integer> locationIdMap, Connection conn,
 			List<AutoCloseable> closables) throws SQLException {
-		String sql = "INSERT INTO loopScope (trace_id, location_id, class_name, start_line, end_line) VALUES (?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO LoopScope (trace_id, location_id, class_name, start_line, end_line) VALUES (?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		for (Entry<TraceNode, Integer> entry : locationIdMap.entrySet()) {
