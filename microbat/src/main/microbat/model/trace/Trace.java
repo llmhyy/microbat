@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -32,6 +30,7 @@ import sav.strategies.dto.AppJavaClassPath;
  *
  */
 public class Trace {
+	
 	private int observingIndex = -1;
 	private AppJavaClassPath appJavaClassPath;
 	/**
@@ -63,6 +62,8 @@ public class Trace {
 	 * the time used to construct the trace, which is used for evaluation.
 	 */
 	private int constructTime = 0;
+	
+	private boolean isMultiThread = false;
 
 	public void resetCheckTime(){
 		this.checkTime = -1;
@@ -1048,5 +1049,13 @@ public class Trace {
 	
 	public TraceNode getTraceNode(int order){
 		return this.exectionList.get(order-1);
+	}
+
+	public boolean isMultiThread() {
+		return isMultiThread;
+	}
+
+	public void setMultiThread(boolean isMultiThread) {
+		this.isMultiThread = isMultiThread;
 	}
 }
