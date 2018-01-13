@@ -143,7 +143,7 @@ public class DbService {
 			Iterator<String> iterator = expectedTables.iterator();
 			while(iterator.hasNext()){
 				String table = iterator.next();
-				if(table.toLowerCase().equals(rsString)){
+				if(table.toLowerCase().equals(rsString.toLowerCase())){
 					iterator.remove();					
 				}				
 			}
