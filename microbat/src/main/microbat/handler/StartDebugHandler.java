@@ -90,6 +90,7 @@ public class StartDebugHandler extends AbstractHandler {
 					clearOldData();
 					
 					int stepNum = -1;
+					boolean isMultiThread = false;
 					List<BreakPoint> executingStatements = null;
 					List<BreakPoint> executionOrderList = null;
 					try{
@@ -102,6 +103,7 @@ public class StartDebugHandler extends AbstractHandler {
 						
 						System.out.println("There are " + stepNum + " steps for this run.");
 						if (collector.isMultiThread()) {
+							isMultiThread = true;
 							System.out.println("WARNING: It is multi-thread program, "
 									+ "the steps outside the main thread will be missed");
 						}
@@ -162,6 +164,7 @@ public class StartDebugHandler extends AbstractHandler {
 							monitor.setTaskName("construct dominance and loop-parent relation");
 							
 							final Trace trace = tcExecutor.getTrace();
+							trace.setMultiThread(isMultiThread);
 							trace.constructDomianceRelation();
 							trace.constructLoopParentRelation();
 							
