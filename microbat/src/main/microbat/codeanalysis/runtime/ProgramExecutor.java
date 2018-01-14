@@ -569,9 +569,22 @@ public class ProgramExecutor extends Executor {
 					MethodEntryEvent mee = (MethodEntryEvent) event;
 					Method method = mee.method();
 					
+					PointWrapper nextPoint = getNextPoint(executionOrderList);
+					
 					ThreadReference threadRef =((MethodEntryEvent) event).thread();
 					boolean isInterestedTrack = isInterestedTrack(threadRef, method, methodSignatureStack, true);
 					if(!isInterestedTrack){
+						if (nextPoint != null) {
+							if (method.name().equals("<clinit>")
+									/*|| isInSameMethod(trace.getLatestNode(), nextPoint)*/) {
+								this.methodEntryRequest.setEnabled(false);
+								this.methodExitRequest.setEnabled(false);
+
+								if (method.name().equals("<clinit>")) {
+									isRecoverMethodRequest = true;
+								}
+							}
+						}
 						continue;
 					}
 					
@@ -610,7 +623,7 @@ public class ProgramExecutor extends Executor {
 					}
 
 					Location location = ((MethodEntryEvent) event).location();
-					PointWrapper nextPoint = getNextPoint(executionOrderList);
+//					PointWrapper nextPoint = getNextPoint(executionOrderList);
 					boolean firstTry = isInterestedMethod(location, nextPoint);
 					PointWrapper nextNextPoint = getNextNextPoint(executionOrderList);
 					boolean secondTry = (nextNextPoint != null) && isInterestedMethod(location, nextNextPoint);
