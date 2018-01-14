@@ -37,6 +37,7 @@ public class ExecutionStatementCollector extends Executor {
 	private boolean isOverLong = false;
 	private boolean isMultiThread = false;
 	private List<BreakPoint> executionOrderList = new ArrayList<>();
+	private List<BreakPoint> executionStatements = new ArrayList<>();
 
 	public List<BreakPoint> collectBreakPoints(AppJavaClassPath appClassPath, boolean isTestcaseEvaluation) {
 		List<String> excludes = MicroBatUtil.extractExcludeFiles("", appClassPath.getExternalLibPaths());
@@ -183,6 +184,7 @@ public class ExecutionStatementCollector extends Executor {
 		// System.out.println("There are totally " + steps + " steps in this
 		// execution.");
 
+		this.setExecutionStatements(pointList);
 		return pointList;
 	}
 
@@ -249,6 +251,14 @@ public class ExecutionStatementCollector extends Executor {
 
 	public void setMultiThread(boolean isMultiThread) {
 		this.isMultiThread = isMultiThread;
+	}
+
+	public List<BreakPoint> getExecutionStatements() {
+		return executionStatements;
+	}
+
+	public void setExecutionStatements(List<BreakPoint> executionStatements) {
+		this.executionStatements = executionStatements;
 	}
 
 }
