@@ -172,6 +172,8 @@ public class ProgramExecutor extends Executor {
 
 		List<PointWrapper> wrapperList = convertToPointWrapperList(executionOrderList);
 
+		long t1 = System.currentTimeMillis();
+		
 		VirtualMachine vm = null;
 		try {
 			vm = constructTrace(monitor, wrapperList, this.appPath, stepNum, isTestcaseEvaluation);
@@ -183,6 +185,10 @@ public class ProgramExecutor extends Executor {
 			System.out.println("JVM is ended.");
 		}
 
+		long t2 = System.currentTimeMillis();
+		long time = t2 - t1;
+		System.out.println("time spent on collecting trace: " + time);
+		this.trace.setConstructTime((int)time);
 	}
 
 	/**
@@ -1154,9 +1160,9 @@ public class ProgramExecutor extends Executor {
 							
 							if (objRef instanceof ArrayReference) {
 								ArrayReference arrayValue = (ArrayReference) objRef;
-								varValue = constructArrayVarValue(arrayValue, var, frame.thread(), null, accessType);
+								varValue = constructArrayVarValue(arrayValue, var, frame.thread(), null, accessType, 0);
 							} else {
-								varValue = constructReferenceVarValue(objRef, var, frame.thread(), null, accessType);
+								varValue = constructReferenceVarValue(objRef, var, frame.thread(), null, accessType, 0);
 							}
 
 							StringBuffer buffer = new StringBuffer();
@@ -1166,7 +1172,10 @@ public class ProgramExecutor extends Executor {
 								buffer.append(",");
 							}
 							buffer.append("]");
-							varValue.setStringValue(buffer.toString());
+							String content = buffer.toString();
+							int len = (content.length()<100) ? content.length() : 100;
+							content = content.substring(0, len);
+							varValue.setStringValue(content);
 							
 						}
 						values.add(varValue);
@@ -1793,7 +1802,7 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private VarValue constructReferenceVarValue(ObjectReference objRef, Variable var0, ThreadReference thread,
-			BreakPoint point, String accessType) {
+			BreakPoint point, String accessType, int retrieveLayer) {
 		Variable var = var0.clone();
 		VarValue varValue = new ReferenceValue(false, objRef.uniqueID(), true, var);
 		String order = this.trace.findDefiningNodeOrder(accessType, trace.getLatestNode(), 
@@ -1825,7 +1834,7 @@ public class ProgramExecutor extends Executor {
 				boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(type, field);
 				if (!isIgnore) {
 					FieldVar variable = new FieldVar(false, field.name(), field.typeName());
-					extractor.appendVarVal(varValue, variable, map.get(field), Settings.getVariableLayer(), thread,
+					extractor.appendVarVal(varValue, variable, map.get(field), retrieveLayer, thread,
 							false);
 				}
 			}
@@ -1835,7 +1844,7 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private VarValue constructArrayVarValue(ArrayReference arrayValue, Variable var0, ThreadReference thread,
-			BreakPoint point, String accessType) {
+			BreakPoint point, String accessType, int retrieveLayer) {
 		Variable var = var0.clone();
 		ArrayValue arrayVal = new ArrayValue(false, true, var);
 		String componentType = ((ArrayType) arrayValue.type()).componentTypeName();
@@ -1855,18 +1864,12 @@ public class ProgramExecutor extends Executor {
 		for (int i = 0; i < arrayValue.length(); i++) {
 			String parentSimpleID = Variable.truncateSimpleID(arrayVal.getVarID());
 			String aliasVarID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
-//			String subValueDefOrder = trace.findDefiningNodeOrder(Variable.READ, trace.getLatestNode(), false,
-//					aliasVarID, aliasVarID);
-//			if(subValueDefOrder.equals("0")){
-//				subValueDefOrder = order;
-//			}
-//			aliasVarID = aliasVarID + ":" + subValueDefOrder;
 
 			String varName = String.valueOf(i);
 			Value elementValue = list.get(i);
 
 			ArrayElementVar varElement = new ArrayElementVar(varName, componentType, aliasVarID);
-			extractor.appendVarVal(arrayVal, varElement, elementValue, Settings.getVariableLayer(), thread, false);
+			extractor.appendVarVal(arrayVal, varElement, elementValue, retrieveLayer, thread, false);
 		}
 
 		return arrayVal;
@@ -1905,9 +1908,9 @@ public class ProgramExecutor extends Executor {
 				} else {
 					if (objRef instanceof ArrayReference) {
 						ArrayReference arrayValue = (ArrayReference) objRef;
-						varValue = constructArrayVarValue(arrayValue, var, frame.thread(), point, accessType);
+						varValue = constructArrayVarValue(arrayValue, var, frame.thread(), point, accessType, 0);
 					} else {
-						varValue = constructReferenceVarValue(objRef, var, frame.thread(), point, accessType);
+						varValue = constructReferenceVarValue(objRef, var, frame.thread(), point, accessType, 0);
 					}
 
 					StringBuffer buffer = new StringBuffer();
