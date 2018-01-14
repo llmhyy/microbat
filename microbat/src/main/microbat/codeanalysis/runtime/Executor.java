@@ -148,6 +148,7 @@ public abstract class Executor {
 		
 		for (Iterator<String> iterator = excludeList.iterator(); iterator.hasNext();) {
 			String excludeString = (String) iterator.next();
+			excludeString = excludeString.replace("/", ".");
 			if (!existingList.contains(excludeString)) {
 				existingList.add(excludeString);
 			}

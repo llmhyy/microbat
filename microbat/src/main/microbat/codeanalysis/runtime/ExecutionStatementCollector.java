@@ -39,8 +39,11 @@ public class ExecutionStatementCollector extends Executor {
 	private List<BreakPoint> executionOrderList = new ArrayList<>();
 
 	public List<BreakPoint> collectBreakPoints(AppJavaClassPath appClassPath, boolean isTestcaseEvaluation) {
-		List<String> exlcudes = MicroBatUtil.extractExcludeFiles("", appClassPath.getExternalLibPaths());
-		this.addLibExcludeList(exlcudes);
+		List<String> excludes = MicroBatUtil.extractExcludeFiles("", appClassPath.getExternalLibPaths());
+		
+//		List<String> abstractPrefixes = abstractPrefixes(excludes);
+		
+		this.addLibExcludeList(excludes);
 
 		steps = 0;
 		List<BreakPoint> pointList = new ArrayList<>();
@@ -182,7 +185,6 @@ public class ExecutionStatementCollector extends Executor {
 
 		return pointList;
 	}
-
 
 	protected boolean isInTestRunner(BreakPoint breakPoint) {
 		String className = breakPoint.getDeclaringCompilationUnitName();
