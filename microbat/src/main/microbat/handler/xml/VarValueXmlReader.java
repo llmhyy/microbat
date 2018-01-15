@@ -4,6 +4,7 @@ import static microbat.handler.xml.VarValueXmlConstants.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,8 +43,13 @@ public class VarValueXmlReader {
 			return new ArrayList<>();
 		}
 		VarValueXmlReader reader = new VarValueXmlReader();
-		ByteArrayInputStream in = new ByteArrayInputStream(str.getBytes());
-		return reader.read(in);
+		ByteArrayInputStream in;
+		try {
+			in = new ByteArrayInputStream(str.getBytes("UTF-8"));
+			return reader.read(in);
+		} catch (UnsupportedEncodingException e) {
+			throw new SavRtException(e);
+		}
 	}
 	
 	public List<VarValue> read(InputStream in) {
