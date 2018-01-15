@@ -51,8 +51,9 @@ public class TraceRecorder extends DbService {
 	public int insertTrace(Trace trace, String projectName, String projectVersion, String launchClass,
 			String launchMethod, Connection conn, List<AutoCloseable> closables) throws SQLException {
 		PreparedStatement ps;
-		String sql = "INSERT INTO Trace (project_name, project_version, launch_class, launch_method, generated_time) "
-				+ "VALUES (?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO Trace (project_name, project_version, "
+				+ "launch_class, launch_method, generated_time, is_multithread) "
+				+ "VALUES (?, ?, ?, ?, ?, ?)";
 		ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 		closables.add(ps);
 		int idx = 1;
@@ -61,6 +62,7 @@ public class TraceRecorder extends DbService {
 		ps.setString(idx++, launchClass);
 		ps.setString(idx++, launchMethod);
 		ps.setTimestamp(idx++, new Timestamp(System.currentTimeMillis()));
+		ps.setBoolean(idx++, trace.isMultiThread());
 		ps.execute();
 		int traceId = getFirstGeneratedIntCol(ps);
 		insertSteps(traceId, trace.getExecutionList(), conn, closables);
