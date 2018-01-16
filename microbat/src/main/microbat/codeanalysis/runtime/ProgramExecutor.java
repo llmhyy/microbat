@@ -1921,9 +1921,9 @@ public class ProgramExecutor extends Executor {
 				} else {
 					if (objRef instanceof ArrayReference) {
 						ArrayReference arrayValue = (ArrayReference) objRef;
-						varValue = constructArrayVarValue(arrayValue, var, frame.thread(), point, accessType, 1);
+						varValue = constructArrayVarValue(arrayValue, var, frame.thread(), point, accessType, Settings.getVariableLayer());
 					} else {
-						varValue = constructReferenceVarValue(objRef, var, frame.thread(), point, accessType, 1);
+						varValue = constructReferenceVarValue(objRef, var, frame.thread(), point, accessType, Settings.getVariableLayer());
 					}
 
 					StringBuffer buffer = new StringBuffer();
