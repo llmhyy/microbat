@@ -58,12 +58,14 @@ public class ExecutionStatementCollector extends Executor {
 		EventQueue queue = vm.eventQueue();
 
 		boolean connected = true;
-
+		String previousEvent = null;
+		
 		while (connected) {
 			try {
 				EventSet eventSet = queue.remove(TIME_OUT);
 				if (eventSet != null) {
 					for (Event event : eventSet) {
+						previousEvent = createEventLog(event);
 						if (event instanceof VMStartEvent) {
 							System.out.println("start collecting execution...");
 
@@ -163,6 +165,7 @@ public class ExecutionStatementCollector extends Executor {
 					eventSet.resume();
 				} else {
 					System.out.println("JVM time out when collecting statement");
+					System.out.print("Last event: " + previousEvent);
 					vm.exit(0);
 					vm.dispose();
 					connected = false;

@@ -405,6 +405,8 @@ public class ProgramExecutor extends Executor {
 						disableAllStepRequests();
 					} else {
 						excludeJUnitLibs();
+						this.methodEntryRequest.disable();
+						this.methodExitRequest.disable();
 					}
 
 				} else if (event instanceof ThreadStartEvent) {
@@ -802,34 +804,6 @@ public class ProgramExecutor extends Executor {
 		return vm;
 	}
 	
-	private String createEventLog(Event event) {
-		String eventName = event.toString();
-		if(event instanceof MethodEntryEvent){
-			Method method = ((MethodEntryEvent) event).method();
-			String className = method.declaringType().name();
-			String methodName = method.name();
-			String methodSig = method.signature();
-			String location = ((MethodEntryEvent) event).location().toString();
-			
-			return eventName + ":" + className + "#" + methodName + methodSig + "(" + location + ")";  
-		}
-		else if (event instanceof MethodExitEvent) {
-			Method method = ((MethodExitEvent) event).method();
-			String className = method.declaringType().name();
-			String methodName = method.name();
-			String methodSig = method.signature();
-			String location = ((MethodExitEvent) event).location().toString();
-			
-			return eventName + ":" + className + "#" + methodName + methodSig + "(" + location + ")"; 
-		}
-		else if(event instanceof StepEvent) {
-			String location = ((StepEvent) event).location().toString();
-			return eventName + ":" + "(" + location + ")";
-		}
-		
-		return eventName;
-	}
-
 	private boolean isInterestedTrack(ThreadReference threadRef, Method method, Stack<String> methodSignatureStack, boolean isEntry) {
 		try {
 			

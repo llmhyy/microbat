@@ -10,9 +10,14 @@ import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.InvalidTypeException;
 import com.sun.jdi.InvocationException;
 import com.sun.jdi.Location;
+import com.sun.jdi.Method;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.event.Event;
+import com.sun.jdi.event.MethodEntryEvent;
+import com.sun.jdi.event.MethodExitEvent;
+import com.sun.jdi.event.StepEvent;
 import com.sun.jdi.request.BreakpointRequest;
 import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequest;
@@ -109,6 +114,34 @@ public abstract class Executor {
 		Executor.libIncludes = includePatterns;
 	}
 	
+	
+	protected String createEventLog(Event event) {
+		String eventName = event.toString();
+		if(event instanceof MethodEntryEvent){
+			Method method = ((MethodEntryEvent) event).method();
+			String className = method.declaringType().name();
+			String methodName = method.name();
+			String methodSig = method.signature();
+			String location = ((MethodEntryEvent) event).location().toString();
+			
+			return eventName + ":" + className + "#" + methodName + methodSig + "(" + location + ")";  
+		}
+		else if (event instanceof MethodExitEvent) {
+			Method method = ((MethodExitEvent) event).method();
+			String className = method.declaringType().name();
+			String methodName = method.name();
+			String methodSig = method.signature();
+			String location = ((MethodExitEvent) event).location().toString();
+			
+			return eventName + ":" + className + "#" + methodName + methodSig + "(" + location + ")"; 
+		}
+		else if(event instanceof StepEvent) {
+			String location = ((StepEvent) event).location().toString();
+			return eventName + ":" + "(" + location + ")";
+		}
+		
+		return eventName;
+	}
 	
 	/**
 	 * This method derive more detailed libExcludes with libIncludes, for example, 
