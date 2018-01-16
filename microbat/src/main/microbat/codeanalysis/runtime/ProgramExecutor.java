@@ -363,8 +363,8 @@ public class ProgramExecutor extends Executor {
 		/** this variable is used to handle exception case. */
 		Location caughtLocationForJustException = null;
 
+		String previousEvent = null;
 		cancel: while (!stop && !eventTimeout) {
-			String previousEvent = null;
 			EventSet eventSet;
 			try {
 				eventSet = eventQueue.remove(TIME_OUT);
@@ -832,20 +832,18 @@ public class ProgramExecutor extends Executor {
 
 	private boolean isInterestedTrack(ThreadReference threadRef, Method method, Stack<String> methodSignatureStack, boolean isEntry) {
 		try {
-			List<StackFrame> frames = threadRef.frames();
-			for(StackFrame frame: frames){
-				Location location = frame.location();
-				String name = location.declaringType().name();
-				if(name.contains("ClassLoader")){
-					return false;
-				}
-			}
 			
 			if(!methodSignatureStack.isEmpty()){
+				List<StackFrame> frames = threadRef.frames();
+				for(StackFrame frame: frames){
+					Location location = frame.location();
+					String name = location.declaringType().name();
+					if(name.contains("ClassLoader")){
+						return false;
+					}
+				}
+				
 				String methodSignature = methodSignatureStack.peek();
-				
-				
-				
 				String invokedMethodName = method.name();
 				
 				if(isEntry){
