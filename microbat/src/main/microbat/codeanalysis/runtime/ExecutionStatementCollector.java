@@ -40,6 +40,7 @@ public class ExecutionStatementCollector extends Executor {
 	private List<BreakPoint> executionStatements = new ArrayList<>();
 
 	public List<BreakPoint> collectBreakPoints(AppJavaClassPath appClassPath, boolean isTestcaseEvaluation) {
+		long t1 = System.currentTimeMillis();
 		List<String> excludes = MicroBatUtil.extractExcludeFiles("", appClassPath.getExternalLibPaths());
 		
 //		List<String> abstractPrefixes = abstractPrefixes(excludes);
@@ -185,8 +186,12 @@ public class ExecutionStatementCollector extends Executor {
 		// execution.");
 
 		this.setExecutionStatements(pointList);
+		long t2 = System.currentTimeMillis();
+		this.setRunningTime(t2-t1);
 		return pointList;
 	}
+	
+	private long runningTime;
 
 	protected boolean isInTestRunner(BreakPoint breakPoint) {
 		String className = breakPoint.getDeclaringCompilationUnitName();
@@ -259,6 +264,14 @@ public class ExecutionStatementCollector extends Executor {
 
 	public void setExecutionStatements(List<BreakPoint> executionStatements) {
 		this.executionStatements = executionStatements;
+	}
+
+	public long getRunningTime() {
+		return runningTime;
+	}
+
+	public void setRunningTime(long runningTime) {
+		this.runningTime = runningTime;
 	}
 
 }
