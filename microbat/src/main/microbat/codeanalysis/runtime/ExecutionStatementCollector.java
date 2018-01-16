@@ -165,7 +165,7 @@ public class ExecutionStatementCollector extends Executor {
 					eventSet.resume();
 				} else {
 					System.out.println("JVM time out when collecting statement");
-					System.out.print("Last event: " + previousEvent);
+					System.out.println("Last event: " + previousEvent);
 					vm.exit(0);
 					vm.dispose();
 					connected = false;
