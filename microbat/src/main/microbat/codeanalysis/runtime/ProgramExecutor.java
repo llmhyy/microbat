@@ -1822,6 +1822,10 @@ public class ProgramExecutor extends Executor {
 				var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		varValue.setVarID(varID);
+		
+		if(retrieveLayer==0){
+			return varValue;
+		}
 
 		ClassType type = (ClassType) objRef.type();
 		boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);
@@ -1867,6 +1871,10 @@ public class ProgramExecutor extends Executor {
 				var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		arrayVal.setVarID(varID);
+		
+		if(retrieveLayer==0){
+			return arrayVal;
+		}
 
 		VariableValueExtractor extractor = new VariableValueExtractor(point, thread, null, this);
 		// add value of elements
