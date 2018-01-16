@@ -364,6 +364,7 @@ public class ProgramExecutor extends Executor {
 		Location caughtLocationForJustException = null;
 
 		cancel: while (!stop && !eventTimeout) {
+			String previousEvent = null;
 			EventSet eventSet;
 			try {
 				eventSet = eventQueue.remove(TIME_OUT);
@@ -378,6 +379,7 @@ public class ProgramExecutor extends Executor {
 			}
 			if (eventSet == null) {
 				System.out.println("Time out! Cannot get event set!");
+				System.out.println("The event before time out: " + previousEvent);
 				eventTimeout = true;
 				break;
 			}
@@ -389,6 +391,7 @@ public class ProgramExecutor extends Executor {
 			boolean isMethodEntryStepPair = isMethodEntryStepPair(sortedEvents);
 			
 			for (Event event : sortedEvents) {
+				previousEvent = createEventLog(event);
 				if (event instanceof VMStartEvent) {
 					System.out.println("JVM is started...");
 
@@ -798,6 +801,34 @@ public class ProgramExecutor extends Executor {
 
 		return vm;
 	}
+	
+	private String createEventLog(Event event) {
+		String eventName = event.toString();
+		if(event instanceof MethodEntryEvent){
+			Method method = ((MethodEntryEvent) event).method();
+			String className = method.declaringType().name();
+			String methodName = method.name();
+			String methodSig = method.signature();
+			String location = ((MethodEntryEvent) event).location().toString();
+			
+			return eventName + ":" + className + "#" + methodName + methodSig + "(" + location + ")";  
+		}
+		else if (event instanceof MethodExitEvent) {
+			Method method = ((MethodEntryEvent) event).method();
+			String className = method.declaringType().name();
+			String methodName = method.name();
+			String methodSig = method.signature();
+			String location = ((MethodEntryEvent) event).location().toString();
+			
+			return eventName + ":" + className + "#" + methodName + methodSig + "(" + location + ")"; 
+		}
+		else if(event instanceof StepEvent) {
+			String location = ((StepEvent) event).location().toString();
+			return eventName + ":" + "(" + location + ")";
+		}
+		
+		return eventName;
+	}
 
 	private boolean isInterestedTrack(ThreadReference threadRef, Method method, Stack<String> methodSignatureStack, boolean isEntry) {
 		try {
@@ -812,27 +843,20 @@ public class ProgramExecutor extends Executor {
 			
 			if(!methodSignatureStack.isEmpty()){
 				String methodSignature = methodSignatureStack.peek();
-				String className = methodSignature.substring(0, methodSignature.indexOf("#"));
+				
+				
 				
 				String invokedMethodName = method.name();
 				
 				if(isEntry){
-					InstructionVisitor visitor = libraryLine2InstructionVisitorMap.get(methodSignature);
-					if(visitor==null) {
-						visitor = new InstructionVisitor(methodSignature, appPath);
-						ByteCodeParser.parse(className, visitor, appPath);
-						libraryLine2InstructionVisitorMap.put(methodSignature, visitor);
-					}
-					
-					List<InstructionHandle> list = visitor.getInstructionList();
-					boolean isOk = findInvokingMethod(invokedMethodName, visitor, list);
+					boolean isMethodInvokeRelationship = isMethodInvokeRelationship(methodSignature, method);
 					
 					/**
 					 * reflection and static constructor
 					 */
 					boolean isPossibleRefection = methodSignature.contains("java.util.ResourceBundle#getBundle") 
 							|| methodSignature.contains("<clinit>") || invokedMethodName.contains("<clinit>");
-					if(isOk || isPossibleRefection) {
+					if(isMethodInvokeRelationship || isPossibleRefection) {
 						return true;
 					}
 				}
@@ -853,6 +877,43 @@ public class ProgramExecutor extends Executor {
 		
 		
 		return true;
+	}
+
+	private HashMap<String, List<String>> invokationMap = new HashMap<>();
+	private boolean isMethodInvokeRelationship(String methodSignature, Method invokedMethod) {
+		String invokedMethodName = invokedMethod.name();
+		String decType = invokedMethod.declaringType().name();
+		String invokedMethodSig = decType + "#" + invokedMethodName + invokedMethod.signature();
+		
+		List<String> invokees = invokationMap.get(methodSignature);
+		if(invokees==null) {
+			invokees = new ArrayList<>();
+		}
+		
+		if(invokees.contains(invokedMethodSig)) {
+			return true;
+		}
+		else {
+			String className = methodSignature.substring(0, methodSignature.indexOf("#"));
+			
+			InstructionVisitor visitor = libraryLine2InstructionVisitorMap.get(methodSignature);
+			if(visitor==null) {
+				visitor = new InstructionVisitor(methodSignature, appPath);
+				ByteCodeParser.parse(className, visitor, appPath);
+				libraryLine2InstructionVisitorMap.put(methodSignature, visitor);
+			}
+			
+			List<InstructionHandle> list = visitor.getInstructionList();
+			boolean isOk = findInvokingMethod(invokedMethodName, visitor, list);
+			
+			if(isOk) {
+				invokees.add(invokedMethodSig);
+				invokationMap.put(methodSignature, invokees);
+			}
+			
+			return isOk;
+		}
+		
 	}
 
 	private boolean checkIndirectAccess(Stack<String> methodSignatureStack, Stack<TraceNode> methodNodeStack) {
