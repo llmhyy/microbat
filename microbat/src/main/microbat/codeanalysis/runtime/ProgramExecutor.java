@@ -814,7 +814,7 @@ public class ProgramExecutor extends Executor {
 			return eventName + ":" + className + "#" + methodName + methodSig + "(" + location + ")";  
 		}
 		else if (event instanceof MethodExitEvent) {
-			Method method = ((MethodEntryEvent) event).method();
+			Method method = ((MethodExitEvent) event).method();
 			String className = method.declaringType().name();
 			String methodName = method.name();
 			String methodSig = method.signature();
