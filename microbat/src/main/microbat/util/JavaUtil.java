@@ -186,7 +186,7 @@ public class JavaUtil {
 						fieldValueString = JavaUtil.retrieveStringValueOfArray((ArrayReference)fieldValue);
 					}
 					else if(fieldValue instanceof ObjectReference){
-						if(retrieveLayer==1){
+						if(retrieveLayer<=1){
 							fieldValueString = fieldValue.toString();
 						}
 						else{
