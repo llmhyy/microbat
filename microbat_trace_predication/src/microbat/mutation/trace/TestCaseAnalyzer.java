@@ -404,7 +404,10 @@ public class TestCaseAnalyzer {
 	private String getMuBugId(String mutationFilePath) {
 		int endIdx = mutationFilePath.lastIndexOf(Constants.FILE_SEPARATOR);
 		int startIdx = mutationFilePath.substring(0, endIdx).lastIndexOf(Constants.FILE_SEPARATOR) + 1;
-		return "mu-" + mutationFilePath.substring(startIdx, endIdx);
+		// org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolator_82_13_1
+		String className = mutationFilePath.substring(startIdx, endIdx);
+		startIdx = className.lastIndexOf(".") + 1;
+		return "mu-" + className.substring(startIdx);
 	}
 
 	class TraceFilePair{
