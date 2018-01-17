@@ -6,6 +6,8 @@ public class LocalVar extends Variable{
 	private int lineNumber;
 	private String locationClass;
 	
+	private boolean isParameter = false;
+	
 	public LocalVar(String name, String type, String locationClass, int lineNumber){
 		super(name, type);
 		this.lineNumber = lineNumber;
@@ -78,6 +80,15 @@ public class LocalVar extends Variable{
 	public Variable clone() {
 		LocalVar var = new LocalVar(variableName, type, locationClass, lineNumber);
 		var.setVarID(varID);
+		var.setParameter(isParameter);
 		return var;
+	}
+
+	public boolean isParameter() {
+		return isParameter;
+	}
+
+	public void setParameter(boolean isParameter) {
+		this.isParameter = isParameter;
 	}
 }
