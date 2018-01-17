@@ -106,6 +106,9 @@ public final class Randomness {
 		return randomSequenceFixSize(allList, nextInt(maxSeqSize + 1));
 	}
 	
+	/**
+	 * This return random sublist without duplicate idx.
+	 * */
 	public static <T> List<T> randomSubList(List<T> allList, int subSize) {
 		List<T> sublist = new ArrayList<T>();
 		int n = allList.size();

@@ -43,7 +43,7 @@ public class AgentVmRunner extends VMRunner {
 			sb.append("=")
 				.append(StringUtils.join(agentParams, ","));
 		}
-		builder.add(sb.toString());
+		builder.append(sb.toString());
 		super.buildVmOption(builder, config);
 	}
 	
@@ -52,7 +52,7 @@ public class AgentVmRunner extends VMRunner {
 			CollectionBuilder<String, Collection<String>> builder) {
 		super.buildProgramArgs(config, builder);
 		for (String arg : programArgs) {
-			builder.add(arg);
+			builder.append(arg);
 		}
 	}
 	

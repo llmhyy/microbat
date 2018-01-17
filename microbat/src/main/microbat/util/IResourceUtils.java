@@ -63,4 +63,9 @@ public class IResourceUtils {
         }
         return relativePath;
     }
+    
+    public static String getAbsolutePathOsStr(IPath relativePath) {
+    	IPath absolutePath = relativeToAbsolute(relativePath);
+    	return absolutePath.toOSString();
+    }
 }

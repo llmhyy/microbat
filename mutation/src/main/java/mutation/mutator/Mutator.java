@@ -3,6 +3,7 @@ package mutation.mutator;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,8 @@ import mutation.parser.ClassAnalyzer;
 import mutation.parser.ClassDescriptor;
 import mutation.parser.JParser;
 import sav.common.core.utils.BreakpointUtils;
+import sav.common.core.utils.CollectionUtils;
+import sav.common.core.utils.Randomness;
 import sav.strategies.dto.ClassLocation;
 import sav.strategies.mutanbug.DebugLineInsertionResult;
 import sav.strategies.mutanbug.IMutator;
@@ -33,18 +36,24 @@ import sav.strategies.mutanbug.MutationResult;
 public class Mutator implements IMutator {
 	//TODO LLT: correct the configuration file path, temporary fix for running in eclipse
 	private static final String OPERATOR_MAP_FILE = "\\src\\main\\resources\\MuMap.txt";
-	
+	private static final int MU_TOTAL_NO_LIMIT = -1;
 	private Map<String, List<String>> opMapConfig;
 	private String srcFolder;
 	private String tmpMutationFolder;
+	private int muTotal = MU_TOTAL_NO_LIMIT;
 	
-	public Mutator(String srcFolder, String tmpMutationFolder) {
+	public Mutator(String srcFolder, String tmpMutationFolder, int muTotal) {
 		this.srcFolder = srcFolder;
 		this.tmpMutationFolder = tmpMutationFolder;
+		this.muTotal = muTotal;
+	}
+	
+	public Mutator(String srcFolder, String tmpMutationFolder) {
+		this(srcFolder, tmpMutationFolder, MU_TOTAL_NO_LIMIT);
 	}
 	
 	public Mutator(String srcFolder) {
-		this.srcFolder = srcFolder;
+		this(srcFolder, null, MU_TOTAL_NO_LIMIT);
 	}
 	
 	@Override
@@ -59,8 +68,8 @@ public class Mutator implements IMutator {
 		Map<String, List<String>> opMapConfig = getOpMapConfig();
 		mutationVisitor.init(new MutationMap(opMapConfig), classAnalyzer);
 		
-		Map<String, MutationResult> result = new HashMap<String, MutationResult>();
 		MutationFileWriter fileWriter = new MutationFileWriter(srcFolder, tmpMutationFolder);
+		List<MutationObject> muResult = new ArrayList<>();
 		for (Entry<String, List<Integer>> entry : classLocationMap.entrySet()) {
 			String className = entry.getKey();
 			
@@ -71,18 +80,47 @@ public class Mutator implements IMutator {
 				
 				cu.accept(mutationVisitor, true);
 				Map<Integer, List<MutationNode>> muRes = mutationVisitor.getResult();
-				MutationResult lineRes = new MutationResult(className);
 				for (Entry<Integer, List<MutationNode>> lineData : muRes.entrySet()) {
 					Integer line = lineData.getKey();
-					List<File> muFiles = fileWriter.write(lineData.getValue(), className, line);
-					lineRes.put(line, muFiles);
+					for (MutationNode muNode : lineData.getValue()) {
+						muResult.add(new MutationObject(className, line, muNode));
+					}
 				}
-				result.put(className, lineRes);
 			}
-			
 		}
-		
+		/* collect data */
+		if (muTotal != MU_TOTAL_NO_LIMIT && muTotal < muResult.size()) {
+			muResult = Randomness.randomSubList(muResult, muTotal);
+		}
+		Map<String, MutationResult> result = new HashMap<String, MutationResult>();
+		Map<ClassLocation, List<MutationNode>> muMap = groupByClassLocation(muResult);
+		for (ClassLocation loc : muMap.keySet()) {
+			MutationResult lineRes = new MutationResult(srcFolder, loc.getClassCanonicalName());
+			Integer line = loc.getLineNo();
+			List<File> muFiles = fileWriter.write(muMap.get(loc), loc.getClassCanonicalName(), line);
+			lineRes.put(line, muFiles);
+			result.put(loc.getClassCanonicalName(), lineRes);
+		}
 		return result;
+	}
+	
+	private Map<ClassLocation, List<MutationNode>> groupByClassLocation(List<MutationObject> muObjs) {
+		Map<ClassLocation, List<MutationNode>> map = new HashMap<>();
+		for (MutationObject muObj : muObjs) {
+			CollectionUtils.getListInitIfEmpty(map, muObj.classLocation).add(muObj.muNode);
+		}
+		return map;
+	}
+	
+	private static class MutationObject {
+		ClassLocation classLocation;
+		MutationNode muNode;
+
+		public MutationObject(String className, int line, MutationNode muNode) {
+			super();
+			this.classLocation = new ClassLocation(className, null, line);
+			this.muNode = muNode;
+		}
 	}
 
 	@Override

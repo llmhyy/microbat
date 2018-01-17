@@ -62,7 +62,7 @@ public class VMRunner {
 			throws SavException {
 		CollectionBuilder<String, Collection<String>> builder = CollectionBuilder
 						.init(new ArrayList<String>())
-						.add(VmRunnerUtils.buildJavaExecArg(config));
+						.append(VmRunnerUtils.buildJavaExecArg(config));
 		buildVmOption(builder, config);
 		buildProgramArgs(config, builder);
 		List<String> commands = builder.getResult();
@@ -71,11 +71,11 @@ public class VMRunner {
 	
 	protected void buildProgramArgs(VMConfiguration config,
 			CollectionBuilder<String, Collection<String>> builder) {
-		builder.add(cpToken);
-		builder.add(config.getClasspathStr());
-		builder.add(config.getLaunchClass());
+		builder.append(cpToken);
+		builder.append(config.getClasspathStr());
+		builder.append(config.getLaunchClass());
 		for (String arg : config.getProgramArgs()) {
-			builder.add(arg);
+			builder.append(arg);
 		}
 	}
 
@@ -121,8 +121,8 @@ public class VMRunner {
 	}
 
 	protected void buildVmOption(CollectionBuilder<String, ?> builder, VMConfiguration config) {
-		builder.addIf(String.format(debugToken, config.getPort()), config.isDebug())
-				.addIf(enableAssertionToken, config.isEnableAssertion());
+		builder.appendIf(String.format(debugToken, config.getPort()), config.isDebug())
+				.appendIf(enableAssertionToken, config.isEnableAssertion());
 	}
 
 	public boolean startVm(List<String> commands, boolean waitUntilStop)

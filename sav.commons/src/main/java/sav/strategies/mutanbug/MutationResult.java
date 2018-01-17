@@ -11,10 +11,12 @@ import java.util.Map;
  */
 
 public class MutationResult {
+	private String sourceFolder;
 	private String className;
 	private Map<Integer, List<File>> mutatedFiles;
 	
-	public MutationResult(String className) {
+	public MutationResult(String sourceFolder, String className) {
+		this.sourceFolder = sourceFolder;
 		this.className = className;
 		mutatedFiles = new HashMap<Integer, List<File>>();
 	}
@@ -41,6 +43,10 @@ public class MutationResult {
 
 	public void setMutatedFiles(Map<Integer, List<File>> mutatedFiles) {
 		this.mutatedFiles = mutatedFiles;
+	}
+	
+	public String getSourceFolder() {
+		return sourceFolder;
 	}
 
 	@Override

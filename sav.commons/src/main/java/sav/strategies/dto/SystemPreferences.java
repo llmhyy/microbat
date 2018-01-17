@@ -27,6 +27,10 @@ public class SystemPreferences {
 		return getValue(variables.get(key), def); 
 	}
 	
+	public String get(String key) {
+		return variables.get(key); 
+	}
+	
 	public void put(String key, String value) {
 		variables.put(key, value);
 	}

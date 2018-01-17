@@ -26,14 +26,14 @@ public class CollectionBuilder<E, T extends Collection<E>> {
 		this.orgCol = orgCol;
 	}
 
-	public CollectionBuilder<E, T> add(E newVal) {
+	public CollectionBuilder<E, T> append(E newVal) {
 		orgCol.add(newVal);
 		return this;
 	}
 	
-	public CollectionBuilder<E, T> addIf(E newVal, boolean add) {
-		if (add) {
-			add(newVal);
+	public CollectionBuilder<E, T> appendIf(E newVal, boolean condition) {
+		if (condition) {
+			append(newVal);
 		}
 		return this;
 	}
