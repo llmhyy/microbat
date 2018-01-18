@@ -13,12 +13,21 @@
             categoryId="microbat_mutation_trace.commands.category"
             id="microbat_mutation_trace.commands.sampleCommand">
       </command>
+      <command
+            categoryId="microbat_mutation_trace.commands.category"
+            id="microbat_mutation_trace.commands.muregression"
+            name="Retrieve From DB">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
       <handler
             commandId="microbat_mutation_trace.commands.sampleCommand"
             class="microbat.mutation.trace.handlers.MutationGenerationHandler">
+      </handler>
+      <handler
+            class="microbat.mutation.trace.handlers.MuRegressionRetrieverHandler"
+            commandId="microbat_mutation_trace.commands.muregression">
       </handler>
    </extension>
    <extension
@@ -43,6 +52,10 @@
                   mnemonic="S"
                   id="microbat_mutation_trace.menus.sampleCommand">
             </command>
+             <command
+                  commandId="microbat_mutation_trace.commands.muregression"
+                  id="microbat_mutation_trace.menus.muregression">
+            </command>
          </menu>
       </menuContribution>
       <menuContribution
@@ -58,5 +71,12 @@
          </toolbar>
       </menuContribution>
    </extension>
-
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="microbat.mutation.trace.preference.MuRegressionPreference"
+            id="muregression.preference"
+            name="MuRegression">
+      </page>
+   </extension>
 </plugin>

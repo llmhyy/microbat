@@ -413,10 +413,14 @@ public class JavaUtil {
 		return cu;
 	}
 	
-	public static ICompilationUnit findICompilationUnitInProject(String qualifiedName){
+	public static ICompilationUnit findICompilationUnitInProject(String qualifiedName) {
+		return findICompilationUnitInProject(qualifiedName, Settings.projectName);
+	}
+	
+	public static ICompilationUnit findICompilationUnitInProject(String qualifiedName, String projectName){
 		ICompilationUnit icu = Settings.iCompilationUnitMap.get(qualifiedName);
 		if(null == icu){
-			IProject iProject = getSpecificJavaProjectInWorkspace();
+			IProject iProject = getSpecificJavaProjectInWorkspace(projectName);
 			if(iProject != null){
 				IJavaProject project = JavaCore.create(iProject);
 				try {
@@ -503,17 +507,19 @@ public class JavaUtil {
 	}
 	
 	public static IProject getSpecificJavaProjectInWorkspace(){
+		return getSpecificJavaProjectInWorkspace(Settings.projectName);
+	}
+	
+	public static IProject getSpecificJavaProjectInWorkspace(String projectName){
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
 		IProject[] projects = root.getProjects();
 		
 		for(int i=0; i<projects.length; i++){
-			if(Settings.projectName.equals(projects[i].getName())){
+			if(projects[i].getName().equals(projectName)){
 				return projects[i];
-				//return JavaCore.create(projects[i]);
 			}
 		}
-		
 		return null;
 	}
 
