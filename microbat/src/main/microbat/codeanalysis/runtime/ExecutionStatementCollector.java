@@ -2,6 +2,7 @@ package microbat.codeanalysis.runtime;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -48,7 +49,7 @@ public class ExecutionStatementCollector extends Executor {
 		this.addLibExcludeList(excludes);
 
 		steps = 0;
-		List<BreakPoint> pointList = new ArrayList<>();
+		HashSet<BreakPoint> pointSet = new HashSet<>();
 
 		VirtualMachine vm = new VMStarter(appClassPath, isTestcaseEvaluation).start();
 
@@ -126,8 +127,8 @@ public class ExecutionStatementCollector extends Executor {
 //							System.out.println(breakPoint);
 
 							if (!isInTestRunner(breakPoint)) {
-								if (!pointList.contains(breakPoint)) {
-									pointList.add(breakPoint);
+								if (!pointSet.contains(breakPoint)) {
+									pointSet.add(breakPoint);
 								}
 
 								this.executionOrderList.add(breakPoint);
@@ -188,6 +189,7 @@ public class ExecutionStatementCollector extends Executor {
 		// System.out.println("There are totally " + steps + " steps in this
 		// execution.");
 
+		List<BreakPoint> pointList = new ArrayList<>(pointSet);
 		this.setExecutionStatements(pointList);
 		long t2 = System.currentTimeMillis();
 		this.setRunningTime(t2-t1);
