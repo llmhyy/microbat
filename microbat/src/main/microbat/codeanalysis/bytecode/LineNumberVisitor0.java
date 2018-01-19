@@ -31,6 +31,7 @@ import microbat.model.variable.ConstantVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
+import microbat.model.variable.VirtualVar;
 import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -42,7 +43,7 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 	
 	
 	
-	public LineNumberVisitor0(int lineNumber, String className, int offset, AppJavaClassPath appJavaClassPath) {
+	public LineNumberVisitor0(int lineNumber, String className, AppJavaClassPath appJavaClassPath) {
 		super();
 		this.lineNumber = lineNumber;
 		this.className = className;
@@ -109,7 +110,10 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 			InstructionHandle insHandle = previousInstructions.get(i);
 			VarOp varOp = parseReadWrittenVariable(insHandle, method, appJavaClassPath);
 			if(varOp!=null && varOp.op.equals(Variable.READ)){
-				return varOp.var;
+				Variable var = varOp.var;
+//				VirtualVar vVar = new VirtualVar(var.getName(), var.getType());
+//				return vVar;
+				return var;
 			}
 		}
 		

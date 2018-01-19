@@ -2,9 +2,11 @@ package microbat.model.trace;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
@@ -56,6 +58,11 @@ public class TraceNode{
 	private List<TraceNode> controlDominatees = new ArrayList<>();
 	
 	/**
+	 * this filed is used as a temporary field during the trace construction.
+	 */
+	private List<VarValue> returnedVariables = new ArrayList<>();
+	
+	/**
 	 * the order of this node in the whole trace, starting from 1.
 	 */
 	private int order;
@@ -79,6 +86,8 @@ public class TraceNode{
 	private TraceNode loopParent;
 	
 	private boolean isException;
+	
+	private long runtimePC;
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order) {
 		super();
@@ -956,18 +965,24 @@ public class TraceNode{
 		this.loopChildren.add(loopChild);
 	}
 
+	private List<TraceNode> allInvocationParents = null;
+	
 	public List<TraceNode> findAllInvocationParents() {
-		List<TraceNode> list = new ArrayList<>();
-		TraceNode parent = this.getInvocationParent();
-		while(parent != null){
-			if(list.contains(parent)) {
-				break;
+		if(allInvocationParents==null) {
+			Set<TraceNode> set = new HashSet<>();
+			TraceNode parent = this.getInvocationParent();
+			while(parent != null){
+				if(set.contains(parent)) {
+					break;
+				}
+				set.add(parent);
+				parent = parent.getInvocationParent();
 			}
-			list.add(parent);
-			parent = parent.getInvocationParent();
+			
+			allInvocationParents = new ArrayList<>(set);
 		}
 		
-		return list;
+		return allInvocationParents;
 	}
 
 	public void resetCheckTime() {
@@ -1038,6 +1053,23 @@ public class TraceNode{
 	public void setTrace(Trace trace) {
 		this.trace = trace;
 	}
+
+	public List<VarValue> getReturnedVariables() {
+		return returnedVariables;
+	}
+
+	public void setReturnedVariables(List<VarValue> returnedVariables) {
+		this.returnedVariables = returnedVariables;
+	}
+
+	public long getRuntimePC() {
+		return runtimePC;
+	}
+
+	public void setRuntimePC(long runtimePC) {
+		this.runtimePC = runtimePC;
+	}
+
 
 //	public List<VarValue> getHiddenReadVariables() {
 //		return hiddenReadVariables;

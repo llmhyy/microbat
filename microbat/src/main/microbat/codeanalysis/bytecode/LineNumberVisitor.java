@@ -48,7 +48,7 @@ public class LineNumberVisitor extends ByteCodeVisitor {
 				List<InstructionHandle> correspondingInstructions = findCorrespondingInstructions(breakPoint.getLineNumber(), code);
 				
 				if(!correspondingInstructions.isEmpty()){
-					String methodSig = breakPoint.getClassCanonicalName() + "." + method.getName() + method.getSignature();
+					String methodSig = breakPoint.getClassCanonicalName() + "#" + method.getName() + method.getSignature();
 					breakPoint.setMethodSign(methodSig);
 					
 					parseReadWrittenVariable(breakPoint, correspondingInstructions, code, cfg, appJavaClassPath);
