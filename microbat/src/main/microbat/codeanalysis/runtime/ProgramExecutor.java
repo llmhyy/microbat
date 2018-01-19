@@ -655,12 +655,12 @@ public class ProgramExecutor extends Executor {
 			return true;
 		}
 		
-		if(prevNode.getDeclaringCompilationUnitName().equals(thisNode.getDeclaringCompilationUnitName()) &&
-				prevNode.getLineNumber()==thisNode.getLineNumber()) {
-			if(prevNode.getRuntimePC()==thisNode.getRuntimePC()) {
-				return false;
-			}
-		}
+//		if(prevNode.getDeclaringCompilationUnitName().equals(thisNode.getDeclaringCompilationUnitName()) &&
+//				prevNode.getLineNumber()==thisNode.getLineNumber()) {
+//			if(prevNode.getRuntimePC()==thisNode.getRuntimePC()) {
+//				return false;
+//			}
+//		}
 		
 		return currentLocation.codeIndex()<=1;
 	}
