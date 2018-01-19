@@ -1,6 +1,7 @@
 package microbat.codeanalysis.runtime;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,7 +16,6 @@ import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InvokeInstruction;
-import org.apache.bcel.generic.Type;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -627,19 +627,57 @@ public class ProgramExecutor extends Executor {
 		return false;
 	}
 
+	String[] excludes = null;
 	private boolean isParentInvokeAppMethod(CFGNode parent, org.apache.bcel.classfile.Method method) {
+		if(excludes == null){
+			excludes = new String[Executor.libExcludes.length];
+			for(int i=0; i<Executor.libExcludes.length; i++){
+				String exclude = Executor.libExcludes[i];
+				exclude = exclude.replace("*", "");
+				excludes[i] = exclude;
+			}
+			Arrays.sort(excludes);
+		}
+		
 		Instruction ins = parent.getInstructionHandle().getInstruction();
 		if(ins instanceof InvokeInstruction){
 			InvokeInstruction invokeIns = (InvokeInstruction)ins;
 			ConstantPool pool = method.getConstantPool();
 			ConstantPoolGen gen = new ConstantPoolGen(pool);
 			String declareType = invokeIns.getClassName(gen);
-			for(String str: Executor.libExcludes){
-				String str0 = str.replace("*", "");
-				if(declareType.contains(str0)){
+			
+			int start = 0;
+			int end = excludes.length-1;
+			
+			int prevIndex = -1;
+			while(start<end){
+				int mid = (start+end)/2;
+				if(mid==prevIndex){
+					break;
+				}
+				
+				String exclude = excludes[mid];
+				if(declareType.contains(exclude)){
 					return false;
 				}
+				else{
+					int compareResult = exclude.compareTo(declareType);
+					if(compareResult<0){
+						start = mid;
+					}
+					else{
+						end = mid;	
+					}
+				}
+				prevIndex = mid;
 			}
+			
+//			for(String str: Executor.libExcludes){
+//				String str0 = str.replace("*", "");
+//				if(declareType.contains(str0)){
+//					return false;
+//				}
+//			}
 			
 			return true;
 		}
@@ -675,13 +713,6 @@ public class ProgramExecutor extends Executor {
 		if(prevNode==null) {
 			return true;
 		}
-		
-//		if(prevNode.getDeclaringCompilationUnitName().equals(thisNode.getDeclaringCompilationUnitName()) &&
-//				prevNode.getLineNumber()==thisNode.getLineNumber()) {
-//			if(prevNode.getRuntimePC()==thisNode.getRuntimePC()) {
-//				return false;
-//			}
-//		}
 		
 		return currentLocation.codeIndex()<=1;
 	}
