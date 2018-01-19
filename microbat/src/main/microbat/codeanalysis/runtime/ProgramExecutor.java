@@ -15,6 +15,7 @@ import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InvokeInstruction;
+import org.apache.bcel.generic.Type;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -295,7 +296,7 @@ public class ProgramExecutor extends Executor {
 		 * will not further analyze the runtime variables even if the code is in our interested
 		 * library.
 		 */
-		boolean isIndirectAccess = true;
+		boolean isIndirectAccess = false;
 		
 		/**
 		 * record the method entrance and exit so that I can build a
@@ -440,24 +441,38 @@ public class ProgramExecutor extends Executor {
 					boolean isMethodEntry = isMethodEntry(prevNode, node, currentLocation);
 					if(isMethodEntry) {
 						if(prevNode!=null && !isIndirectAccess) {
-							methodNodeStack.push(prevNode);
-							methodSignatureStack.push(node.getMethodSign());
 							parseWrittenParameterVariableForMethodInvocation(thread, 
 									prevNode, trace.getLatestNode());
+							methodNodeStack.push(prevNode);
+							methodSignatureStack.push(node.getMethodSign());
+							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
 						}
-						isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
 					}
 					
-					boolean isMethodExit = isMethodExit(prevNode, node, currentLocation);
+					TraceNode peekNode = methodNodeStack.empty() ? null : methodNodeStack.peek(); 
+					boolean isMethodExit = isMethodExit(prevNode, node, peekNode);
 					if(isMethodExit) {
 						if(!methodNodeStack.isEmpty() && !isIndirectAccess) {
+							creatRWReturnVariableForReturnStatement(prevNode, node);
 							methodNodeStack.pop();
 							methodSignatureStack.pop();
-							creatRWReturnVariableForReturnStatement(prevNode, node);
+							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
 						}
-						isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
+						
 					}
 
+					if(isIndirectAccess){
+						if(methodNodeStack.isEmpty()){
+							System.currentTimeMillis();
+						}
+						
+						if(isSameLocation(node, methodNodeStack.peek())){
+							methodNodeStack.pop();
+							methodSignatureStack.pop();
+							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
+						}
+					}
+					
 					/**
 					 * pop up method after an exception is caught.
 					 */
@@ -536,6 +551,14 @@ public class ProgramExecutor extends Executor {
 		return vm;
 	}
 	
+	private boolean isSameLocation(TraceNode node, TraceNode peek) {
+		BreakPoint b1 = node.getBreakPoint();
+		BreakPoint b2 = peek.getBreakPoint();
+		
+		return b1.getDeclaringCompilationUnitName().equals(b2.getDeclaringCompilationUnitName())
+				&& b1.getLineNumber()==b2.getLineNumber();
+	}
+
 	private void creatRWReturnVariableForReturnStatement(TraceNode prevNode, TraceNode node) {
 		for(VarValue returnValue: prevNode.getReadVariables()) {
 			prevNode.addWrittenVariable(returnValue);
@@ -552,12 +575,16 @@ public class ProgramExecutor extends Executor {
 		
 		List<InstructionHandle> range = new ArrayList<>();
 		for(CFGNode exitNode: cfg.getExitList()) {
+			if(exitNode.getInstructionHandle().getPosition()==node.getRuntimePC()) {
+				return true;
+			}	
+			
 			CFGNode cfgNode = exitNode;
 			range.add(cfgNode.getInstructionHandle());
 			while(cfgNode.getParents().size()==1) {
 				CFGNode parent = cfgNode.getParents().get(0);
-				if(parent.getChildren().size()==1 && !(parent.getInstructionHandle().getInstruction() instanceof InvokeInstruction)) {
-					if(isContains(parent, visitor.getInstructionList())){
+				if(parent.getChildren().size()==1 && !isParentInvokeAppMethod(parent, visitor.getMethod())) {
+					if(isContains(parent.getInstructionHandle(), visitor.getInstructionList())){
 						cfgNode = parent;
 						range.add(cfgNode.getInstructionHandle());
 					}
@@ -569,24 +596,39 @@ public class ProgramExecutor extends Executor {
 					break;
 				}
 			}
-			
 			for(InstructionHandle ins: range) {
 				if(ins.getPosition()==node.getRuntimePC()) {
 					return true;
 				}						
 			}
 			
-			if(exitNode.getInstructionHandle().getPosition()==node.getRuntimePC()) {
-				return true;
-			}	
+		}
+		return false;
+	}
+
+	private boolean isParentInvokeAppMethod(CFGNode parent, org.apache.bcel.classfile.Method method) {
+		Instruction ins = parent.getInstructionHandle().getInstruction();
+		if(ins instanceof InvokeInstruction){
+			InvokeInstruction invokeIns = (InvokeInstruction)ins;
+			ConstantPool pool = method.getConstantPool();
+			ConstantPoolGen gen = new ConstantPoolGen(pool);
+			String declareType = invokeIns.getClassName(gen);
+			for(String str: Executor.libExcludes){
+				String str0 = str.replace("*", "");
+				if(declareType.contains(str0)){
+					return false;
+				}
+			}
+			
+			return true;
 		}
 		
 		return false;
 	}
 
-	private boolean isContains(CFGNode parent, List<InstructionHandle> instructionList) {
+	private boolean isContains(InstructionHandle ins, List<InstructionHandle> instructionList) {
 		for(InstructionHandle handle: instructionList){
-			if(handle.getPosition()==parent.getInstructionHandle().getPosition()){
+			if(handle.getPosition()==ins.getPosition()){
 				return true;
 			}
 		}
@@ -623,25 +665,45 @@ public class ProgramExecutor extends Executor {
 		return currentLocation.codeIndex()<=1;
 	}
 
-	private boolean isMethodExit(TraceNode prevNode, TraceNode thisNode, Location currentLocation) {
+	private boolean isMethodExit(TraceNode prevNode, TraceNode thisNode, TraceNode peekNode) {
 		if(prevNode==null) {
 			return true;
 		}
 		
-//		if(prevNode.getRuntimePC()==0) {
-//			return false;
-//		}
+		/**
+		 * try finding a matching step before
+		 */
+		if(peekNode != null){
+			if(peekNode.getBreakPoint().equals(thisNode.getBreakPoint()) &&
+					peekNode.getRuntimePC()<thisNode.getRuntimePC()){
+				return true;
+			}
+		}
 		
-		boolean isThisPointEndOfMethod = isPointEndOfMethod(prevNode);
-		if(!isThisPointEndOfMethod) {
+		boolean isPrevNodePointEndOfMethod = isPointEndOfMethod(prevNode);
+		System.currentTimeMillis();
+		if(!isPrevNodePointEndOfMethod) {
 			return false;
 		}
+		
+		/**
+		 * try to check whether the node after it is still a return node in the same method,
+		 * if yes, the method exit event for prev node should not happen.
+		 */
+		boolean isThisNodePointEndOfMethod = isPointEndOfMethod(thisNode);
+		if(isThisNodePointEndOfMethod){
+			if(prevNode.getMethodSign().equals(thisNode.getMethodSign())){
+				return false;
+			}
+		}
+		
+		System.currentTimeMillis();
 		
 		BreakPoint prevPoint = prevNode.getBreakPoint(); 
 		BreakPoint thisPoint = thisNode.getBreakPoint();
 		boolean isContextDiff = isContextDiff(prevPoint, thisPoint);
 
-		return isThisPointEndOfMethod && isContextDiff;
+		return isPrevNodePointEndOfMethod && isContextDiff;
 	}
 	
 	private MethodDeclaration getMethodByAST(BreakPoint point) {
@@ -739,8 +801,10 @@ public class ProgramExecutor extends Executor {
 		return false;
 	}
 
-	private boolean findInvokingMethod(String invokedMethodName, LineNumberVisitor0 visitor,
+	private boolean findInvokingMethod(String invokedMethodSig, LineNumberVisitor0 visitor,
 			List<InstructionHandle> peekList) {
+		String invokedMethodName = invokedMethodSig.substring(invokedMethodSig.indexOf("#")+1, invokedMethodSig.indexOf("("));
+		
 		for(InstructionHandle handle: peekList) {
 			Instruction ins = handle.getInstruction();
 			if(ins instanceof InvokeInstruction) {
@@ -748,7 +812,6 @@ public class ProgramExecutor extends Executor {
 				ConstantPool pool = visitor.getMethod().getConstantPool();
 				ConstantPoolGen gen = new ConstantPoolGen(pool);
 				String methodName = iIns.getMethodName(gen);
-				
 				if(methodName.equals(invokedMethodName)) {
 					return true;
 				}
