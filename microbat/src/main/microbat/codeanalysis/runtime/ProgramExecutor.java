@@ -565,10 +565,31 @@ public class ProgramExecutor extends Executor {
 			node.addReadVariable(returnValue);
 		}
 	}
+	
+	private boolean isPointEndOfMethod(BreakPoint point){
+		LineNumberVisitor0 visitor = findMethodByteCode(point);
+		CFGConstructor cfgConstructor = new CFGConstructor();
+		CFG cfg = cfgConstructor.constructCFG(visitor.getMethod().getCode());
+		
+		for(CFGNode exitNode: cfg.getExitList()) {
+			for(InstructionHandle handle: visitor.getInstructionList()){
+				if(handle.getPosition()==exitNode.getInstructionHandle().getPosition()){
+					return true;
+				}
+			}
+			
+		}
+		return false;
+	}
 
 	private boolean isPointEndOfMethod(TraceNode node) {
 		BreakPoint point = node.getBreakPoint();
 		LineNumberVisitor0 visitor = findMethodByteCode(point);
+		
+		InstructionHandle lastHandle = visitor.getInstructionList().get(visitor.getInstructionList().size()-1);
+		if(lastHandle.getPosition()<node.getRuntimePC()){
+			return isPointEndOfMethod(point);
+		}
 		
 		CFGConstructor cfgConstructor = new CFGConstructor();
 		CFG cfg = cfgConstructor.constructCFG(visitor.getMethod().getCode());
@@ -681,7 +702,6 @@ public class ProgramExecutor extends Executor {
 		}
 		
 		boolean isPrevNodePointEndOfMethod = isPointEndOfMethod(prevNode);
-		System.currentTimeMillis();
 		if(!isPrevNodePointEndOfMethod) {
 			return false;
 		}
