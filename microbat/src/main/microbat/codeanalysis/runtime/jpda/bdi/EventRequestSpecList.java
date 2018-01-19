@@ -34,10 +34,14 @@
 
 package microbat.codeanalysis.runtime.jpda.bdi;
 
-import com.sun.jdi.*;
-import com.sun.jdi.request.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Vector;
 
-import java.util.*;
+import com.sun.jdi.ReferenceType;
+import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.request.EventRequest;
 
 class EventRequestSpecList {
 

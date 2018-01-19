@@ -34,12 +34,12 @@
 
 package microbat.codeanalysis.runtime.jpda.tty;
 
-import com.sun.jdi.request.EventRequest;
-import com.sun.jdi.event.ClassPrepareEvent;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import com.sun.jdi.event.ClassPrepareEvent;
+import com.sun.jdi.request.EventRequest;
 
 class EventRequestSpecList {
 

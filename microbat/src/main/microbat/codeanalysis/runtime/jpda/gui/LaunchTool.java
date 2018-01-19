@@ -34,22 +34,37 @@
 
 package microbat.codeanalysis.runtime.jpda.gui;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ButtonModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
-import com.sun.jdi.*;
-import com.sun.jdi.connect.*;
+import com.sun.jdi.Bootstrap;
+import com.sun.jdi.VirtualMachineManager;
+import com.sun.jdi.connect.Connector;
 
-import microbat.codeanalysis.runtime.jpda.bdi.*;
+import microbat.codeanalysis.runtime.jpda.bdi.ExecutionManager;
+import microbat.codeanalysis.runtime.jpda.bdi.VMLaunchFailureException;
 
 class LaunchTool {
 

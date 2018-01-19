@@ -3,8 +3,6 @@ package microbat.codeanalysis.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
-
 public class LocalVariableScopes {
 	private List<LocalVariableScope> variableScopes = new ArrayList<>();
 

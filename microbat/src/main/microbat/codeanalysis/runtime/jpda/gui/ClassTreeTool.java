@@ -34,16 +34,30 @@
 
 package microbat.codeanalysis.runtime.jpda.gui;
 
-import java.util.*;
+import java.awt.BorderLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.EventObject;
 
-import javax.swing.*;
-import javax.swing.tree.*;
-import java.awt.*;
-import java.awt.event.*;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 
-import com.sun.jdi.*;
-import microbat.codeanalysis.runtime.jpda.event.*;
-import microbat.codeanalysis.runtime.jpda.bdi.*;
+import com.sun.jdi.ReferenceType;
+import com.sun.jdi.VMDisconnectedException;
+
+import microbat.codeanalysis.runtime.jpda.bdi.ExecutionManager;
+import microbat.codeanalysis.runtime.jpda.bdi.NoSessionException;
+import microbat.codeanalysis.runtime.jpda.bdi.SessionListener;
+import microbat.codeanalysis.runtime.jpda.event.ClassPrepareEventSet;
+import microbat.codeanalysis.runtime.jpda.event.ClassUnloadEventSet;
+import microbat.codeanalysis.runtime.jpda.event.JDIAdapter;
+import microbat.codeanalysis.runtime.jpda.event.JDIListener;
+import microbat.codeanalysis.runtime.jpda.event.VMDisconnectEventSet;
 
 public class ClassTreeTool extends JPanel {
 

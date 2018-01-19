@@ -34,7 +34,8 @@
 
 package microbat.codeanalysis.runtime.jpda.gui;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.Writer;
 
 public class TypeScriptWriter extends Writer {
 

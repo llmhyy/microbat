@@ -3,10 +3,10 @@ package microbat.views;
 import java.util.HashMap;
 import java.util.Map;
 
-import microbat.Activator;
-
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
+
+import microbat.Activator;
 
 public class ImageUI {
 

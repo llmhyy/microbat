@@ -34,9 +34,15 @@
 
 package microbat.codeanalysis.runtime.jpda.bdi;
 
-import com.sun.jdi.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.sun.jdi.ClassType;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.Location;
+import com.sun.jdi.Method;
+import com.sun.jdi.ReferenceType;
+import com.sun.jdi.VirtualMachine;
 
 public class MethodBreakpointSpec extends BreakpointSpec {
     String methodId;

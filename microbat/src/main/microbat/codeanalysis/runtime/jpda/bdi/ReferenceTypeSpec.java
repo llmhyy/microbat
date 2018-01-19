@@ -34,7 +34,7 @@
 
 package microbat.codeanalysis.runtime.jpda.bdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.ReferenceType;
 
 interface ReferenceTypeSpec {
     /**

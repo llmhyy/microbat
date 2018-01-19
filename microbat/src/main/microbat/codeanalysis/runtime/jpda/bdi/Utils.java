@@ -34,7 +34,10 @@
 
 package microbat.codeanalysis.runtime.jpda.bdi;   //### does it belong here?
 
-import com.sun.jdi.*;
+import com.sun.jdi.Location;
+import com.sun.jdi.ObjectReference;
+import com.sun.jdi.ReferenceType;
+import com.sun.jdi.ThreadReference;
 
 public class Utils {
 

@@ -34,15 +34,36 @@
 
 package microbat.codeanalysis.runtime.jpda.gui;
 
-import java.io.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.File;
 
-import com.sun.jdi.*;
-import com.sun.jdi.request.*;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.ListModel;
 
-import microbat.codeanalysis.runtime.jpda.bdi.*;
+import com.sun.jdi.IncompatibleThreadStateException;
+import com.sun.jdi.Location;
+import com.sun.jdi.StackFrame;
+import com.sun.jdi.ThreadReference;
+import com.sun.jdi.request.BreakpointRequest;
+
+import microbat.codeanalysis.runtime.jpda.bdi.ExecutionManager;
+import microbat.codeanalysis.runtime.jpda.bdi.SpecErrorEvent;
+import microbat.codeanalysis.runtime.jpda.bdi.SpecEvent;
+import microbat.codeanalysis.runtime.jpda.bdi.SpecListener;
 
 public class SourceTool extends JPanel {
 

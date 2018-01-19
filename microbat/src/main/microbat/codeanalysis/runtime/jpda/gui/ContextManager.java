@@ -34,12 +34,23 @@
 
 package microbat.codeanalysis.runtime.jpda.gui;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.EventObject;
 
-import com.sun.jdi.*;
-import microbat.codeanalysis.runtime.jpda.event.*;
-import microbat.codeanalysis.runtime.jpda.bdi.*;
+import com.sun.jdi.StackFrame;
+import com.sun.jdi.ThreadReference;
+
+import microbat.codeanalysis.runtime.jpda.bdi.ExecutionManager;
+import microbat.codeanalysis.runtime.jpda.bdi.FrameIndexOutOfBoundsException;
+import microbat.codeanalysis.runtime.jpda.bdi.SessionListener;
+import microbat.codeanalysis.runtime.jpda.bdi.ThreadInfo;
+import microbat.codeanalysis.runtime.jpda.bdi.VMNotInterruptedException;
+import microbat.codeanalysis.runtime.jpda.event.ExceptionEventSet;
+import microbat.codeanalysis.runtime.jpda.event.JDIAdapter;
+import microbat.codeanalysis.runtime.jpda.event.JDIListener;
+import microbat.codeanalysis.runtime.jpda.event.LocationTriggerEventSet;
+import microbat.codeanalysis.runtime.jpda.event.VMDisconnectEventSet;
 
 public class ContextManager {
 

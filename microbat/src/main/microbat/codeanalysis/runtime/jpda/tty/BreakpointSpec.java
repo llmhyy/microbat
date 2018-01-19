@@ -34,11 +34,16 @@
 
 package microbat.codeanalysis.runtime.jpda.tty;
 
-import com.sun.jdi.*;
-import com.sun.jdi.request.*;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.sun.jdi.AbsentInformationException;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.Location;
+import com.sun.jdi.Method;
+import com.sun.jdi.ReferenceType;
+import com.sun.jdi.request.EventRequest;
+import com.sun.jdi.request.EventRequestManager;
 
 class BreakpointSpec extends EventRequestSpec {
     String methodId;

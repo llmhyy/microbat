@@ -34,8 +34,9 @@
 
 package microbat.codeanalysis.runtime.jpda.bdi;
 
-import com.sun.jdi.*;
 import java.util.StringTokenizer;
+
+import com.sun.jdi.ReferenceType;
 
 class PatternReferenceTypeSpec implements ReferenceTypeSpec {
     final boolean isWild;

@@ -34,7 +34,8 @@
 
 package microbat.codeanalysis.runtime.jpda.event;
 
-import com.sun.jdi.event.*;
+import com.sun.jdi.event.ClassUnloadEvent;
+import com.sun.jdi.event.EventSet;
 
 public class ClassUnloadEventSet extends AbstractEventSet {
 

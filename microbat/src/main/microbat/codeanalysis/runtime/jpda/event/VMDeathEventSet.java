@@ -34,7 +34,7 @@
 
 package microbat.codeanalysis.runtime.jpda.event;
 
-import com.sun.jdi.event.*;
+import com.sun.jdi.event.EventSet;
 
 public class VMDeathEventSet extends AbstractEventSet {
 

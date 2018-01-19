@@ -1,8 +1,5 @@
 package microbat.preference;
 
-import microbat.Activator;
-import microbat.util.Settings;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -23,6 +20,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+
+import microbat.Activator;
+import microbat.util.Settings;
 
 public class MicrobatPreference extends PreferencePage implements
 		IWorkbenchPreferencePage {

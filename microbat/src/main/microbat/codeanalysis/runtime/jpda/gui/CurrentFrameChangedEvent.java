@@ -34,9 +34,11 @@
 
 package microbat.codeanalysis.runtime.jpda.gui;
 
-import com.sun.jdi.*;
-import microbat.codeanalysis.runtime.jpda.bdi.*;
 import java.util.EventObject;
+
+import com.sun.jdi.ThreadReference;
+
+import microbat.codeanalysis.runtime.jpda.bdi.ThreadInfo;
 
 public class CurrentFrameChangedEvent extends EventObject {
 

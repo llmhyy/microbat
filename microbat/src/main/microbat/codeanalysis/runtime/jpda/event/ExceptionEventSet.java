@@ -34,8 +34,10 @@
 
 package microbat.codeanalysis.runtime.jpda.event;
 
-import com.sun.jdi.*;
-import com.sun.jdi.event.*;
+import com.sun.jdi.Location;
+import com.sun.jdi.ObjectReference;
+import com.sun.jdi.event.EventSet;
+import com.sun.jdi.event.ExceptionEvent;
 
 public class ExceptionEventSet extends LocatableEventSet {
 

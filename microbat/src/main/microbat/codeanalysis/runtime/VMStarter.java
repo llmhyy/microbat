@@ -7,15 +7,15 @@ import java.util.Map;
 
 import org.eclipse.jdi.internal.VirtualMachineManagerImpl;
 
-import sav.strategies.dto.AppJavaClassPath;
-import sav.strategies.vm.BootstrapPlugin;
-
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.VirtualMachineManager;
 import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 import com.sun.jdi.connect.LaunchingConnector;
 import com.sun.jdi.connect.VMStartException;
+
+import sav.strategies.dto.AppJavaClassPath;
+import sav.strategies.vm.BootstrapPlugin;
 
 
 @SuppressWarnings("restriction")

@@ -34,18 +34,46 @@
 
 package microbat.codeanalysis.runtime.jpda.bdi;
 
-import com.sun.jdi.*;
-import com.sun.jdi.request.*;
-import com.sun.jdi.connect.*;
-import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
-import microbat.codeanalysis.runtime.jpda.expr.ParseException;
-
-import java.io.*;
-import java.util.*;
-
-import microbat.codeanalysis.runtime.jpda.event.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.EventObject;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.SwingUtilities;
+
+import com.sun.jdi.AbsentInformationException;
+import com.sun.jdi.Bootstrap;
+import com.sun.jdi.ClassNotLoadedException;
+import com.sun.jdi.IncompatibleThreadStateException;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.InvocationException;
+import com.sun.jdi.ReferenceType;
+import com.sun.jdi.StackFrame;
+import com.sun.jdi.ThreadGroupReference;
+import com.sun.jdi.ThreadReference;
+import com.sun.jdi.Value;
+import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.VirtualMachineManager;
+import com.sun.jdi.connect.AttachingConnector;
+import com.sun.jdi.connect.Connector;
+import com.sun.jdi.connect.IllegalConnectorArgumentsException;
+import com.sun.jdi.connect.LaunchingConnector;
+import com.sun.jdi.connect.ListeningConnector;
+import com.sun.jdi.request.ClassPrepareRequest;
+import com.sun.jdi.request.ClassUnloadRequest;
+import com.sun.jdi.request.EventRequest;
+import com.sun.jdi.request.EventRequestManager;
+import com.sun.jdi.request.ExceptionRequest;
+import com.sun.jdi.request.StepRequest;
+import com.sun.jdi.request.ThreadDeathRequest;
+import com.sun.jdi.request.ThreadStartRequest;
+
+import microbat.codeanalysis.runtime.jpda.event.JDIListener;
+import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
+import microbat.codeanalysis.runtime.jpda.expr.ParseException;
 
 /**
  * Move this towards being only state and functionality

@@ -43,7 +43,6 @@ import com.google.common.io.Files;
 
 import microbat.Activator;
 import microbat.codeanalysis.runtime.Executor;
-import microbat.preference.AnalysisScopePreference;
 import microbat.util.MicroBatUtil;
 
 public class TransformLibHandler extends AbstractHandler {

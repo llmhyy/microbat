@@ -34,7 +34,10 @@
 
 package microbat.codeanalysis.runtime.jpda.bdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.ClassType;
+import com.sun.jdi.Field;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.ReferenceType;
 
 public class AccessWatchpointSpec extends WatchpointSpec {
 

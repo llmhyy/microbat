@@ -34,14 +34,23 @@
 
 package microbat.codeanalysis.runtime.jpda.bdi;
 
-import com.sun.jdi.*;
-import com.sun.jdi.connect.LaunchingConnector;
-import com.sun.jdi.connect.Connector;
-import com.sun.jdi.connect.VMStartException;
-import com.sun.jdi.connect.IllegalConnectorArgumentsException;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.Map;
+
 import javax.swing.SwingUtilities;
+
+import com.sun.jdi.Bootstrap;
+import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.VirtualMachineManager;
+import com.sun.jdi.connect.Connector;
+import com.sun.jdi.connect.IllegalConnectorArgumentsException;
+import com.sun.jdi.connect.LaunchingConnector;
+import com.sun.jdi.connect.VMStartException;
 
 
 class ChildSession extends Session {

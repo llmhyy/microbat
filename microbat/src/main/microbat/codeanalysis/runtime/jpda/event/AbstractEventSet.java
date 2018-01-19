@@ -34,11 +34,26 @@
 
 package microbat.codeanalysis.runtime.jpda.event;
 
-import com.sun.jdi.*;
-import com.sun.jdi.event.*;
-import com.sun.jdi.request.*;
+import java.util.Collection;
+import java.util.EventObject;
+import java.util.Iterator;
 
-import java.util.*;
+import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.event.AccessWatchpointEvent;
+import com.sun.jdi.event.ClassPrepareEvent;
+import com.sun.jdi.event.ClassUnloadEvent;
+import com.sun.jdi.event.Event;
+import com.sun.jdi.event.EventIterator;
+import com.sun.jdi.event.EventSet;
+import com.sun.jdi.event.ExceptionEvent;
+import com.sun.jdi.event.LocatableEvent;
+import com.sun.jdi.event.ThreadDeathEvent;
+import com.sun.jdi.event.ThreadStartEvent;
+import com.sun.jdi.event.VMDeathEvent;
+import com.sun.jdi.event.VMDisconnectEvent;
+import com.sun.jdi.event.VMStartEvent;
+import com.sun.jdi.event.WatchpointEvent;
+import com.sun.jdi.request.EventRequest;
 
 public abstract class AbstractEventSet extends EventObject implements EventSet {
 

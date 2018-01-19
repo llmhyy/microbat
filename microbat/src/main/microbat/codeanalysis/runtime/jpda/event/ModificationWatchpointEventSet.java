@@ -34,8 +34,9 @@
 
 package microbat.codeanalysis.runtime.jpda.event;
 
-import com.sun.jdi.*;
-import com.sun.jdi.event.*;
+import com.sun.jdi.Value;
+import com.sun.jdi.event.EventSet;
+import com.sun.jdi.event.ModificationWatchpointEvent;
 
 public class ModificationWatchpointEventSet extends WatchpointEventSet {
 

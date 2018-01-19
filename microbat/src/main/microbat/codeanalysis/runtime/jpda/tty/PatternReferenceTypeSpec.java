@@ -34,9 +34,10 @@
 
 package microbat.codeanalysis.runtime.jpda.tty;
 
-import com.sun.jdi.*;
-import com.sun.jdi.request.ClassPrepareRequest;
 import java.util.StringTokenizer;
+
+import com.sun.jdi.ReferenceType;
+import com.sun.jdi.request.ClassPrepareRequest;
 
 
 class PatternReferenceTypeSpec implements ReferenceTypeSpec {

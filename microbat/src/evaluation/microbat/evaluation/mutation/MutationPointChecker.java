@@ -3,8 +3,6 @@ package microbat.evaluation.mutation;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.util.JavaUtil;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -14,6 +12,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 
+import microbat.util.JavaUtil;
 import sav.strategies.dto.ClassLocation;
 
 public class MutationPointChecker extends ASTVisitor{

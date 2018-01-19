@@ -34,15 +34,23 @@
 
 package microbat.codeanalysis.runtime.jpda.gui;
 
-import java.io.*;
-import java.util.*;
+import java.awt.BorderLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.Enumeration;
+import java.util.NoSuchElementException;
 
-import javax.swing.*;
-import javax.swing.tree.*;
-import java.awt.*;
-import java.awt.event.*;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
-import microbat.codeanalysis.runtime.jpda.bdi.*;
+import microbat.codeanalysis.runtime.jpda.bdi.ExecutionManager;
 
 public class SourceTreeTool extends JPanel {
 

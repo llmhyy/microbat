@@ -34,14 +34,24 @@
 
 package microbat.codeanalysis.runtime.jpda.gui;
 
-import java.io.*;
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
 
-import com.sun.jdi.*;
-import microbat.codeanalysis.runtime.jpda.bdi.*;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+
+import com.sun.jdi.VirtualMachine;
+
+import microbat.codeanalysis.runtime.jpda.bdi.ExecutionManager;
 
 public class GUI extends JPanel {
 

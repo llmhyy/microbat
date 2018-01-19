@@ -34,13 +34,14 @@
 
 package microbat.codeanalysis.runtime.jpda.tty;
 
-import com.sun.jdi.ThreadReference;
-import com.sun.jdi.ThreadGroupReference;
-import com.sun.jdi.IncompatibleThreadStateException;
-import com.sun.jdi.StackFrame;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+
+import com.sun.jdi.IncompatibleThreadStateException;
+import com.sun.jdi.StackFrame;
+import com.sun.jdi.ThreadGroupReference;
+import com.sun.jdi.ThreadReference;
 
 class ThreadInfo {
     // This is a list of all known ThreadInfo objects. It survives

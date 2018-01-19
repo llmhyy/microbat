@@ -1,8 +1,5 @@
 package microbat.codeanalysis.ast;
 
-import microbat.model.SourceScope;
-import microbat.util.JavaUtil;
-
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.BreakStatement;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -16,7 +13,9 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SwitchStatement;
 import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
-import org.eclipse.jdt.ui.JavaUI;
+
+import microbat.model.SourceScope;
+import microbat.util.JavaUtil;
 
 public class SourceScopeParser {
 	

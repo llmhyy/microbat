@@ -18,7 +18,6 @@ import microbat.model.trace.Trace;
 import microbat.preference.MicrobatPreference;
 import microbat.util.Settings;
 import sav.common.core.SavException;
-import sav.commons.TestConfiguration;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class TraceModelConstructor {

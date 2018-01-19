@@ -34,11 +34,12 @@
 
 package microbat.codeanalysis.runtime.jpda.bdi;
 
-import com.sun.jdi.ThreadGroupReference;
-import java.util.List;
-import java.util.Stack;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Stack;
+
+import com.sun.jdi.ThreadGroupReference;
 
 /**
  * Descend the tree of thread groups.

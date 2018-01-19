@@ -1,10 +1,8 @@
 package microbat.breakpoint;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.util.List;
-
-import org.junit.Test;
 
 import microbat.model.BreakPoint;
 import microbat.model.variable.Variable;

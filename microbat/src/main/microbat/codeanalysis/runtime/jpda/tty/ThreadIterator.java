@@ -34,10 +34,11 @@
 
 package microbat.codeanalysis.runtime.jpda.tty;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.sun.jdi.ThreadGroupReference;
 import com.sun.jdi.ThreadReference;
-import java.util.List;
-import java.util.Iterator;
 
 class ThreadIterator implements Iterator<ThreadReference> {
     Iterator<ThreadReference> it = null;

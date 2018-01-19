@@ -34,8 +34,8 @@
 
 package microbat.codeanalysis.runtime.jpda.bdi;
 
-import java.util.EventObject;
 import java.util.EventListener;
+import java.util.EventObject;
 
 public interface SessionListener extends EventListener {
 

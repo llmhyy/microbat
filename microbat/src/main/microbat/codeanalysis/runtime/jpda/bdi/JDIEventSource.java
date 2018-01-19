@@ -34,12 +34,26 @@
 
 package microbat.codeanalysis.runtime.jpda.bdi;
 
-import com.sun.jdi.*;
-import com.sun.jdi.event.*;
-
-import microbat.codeanalysis.runtime.jpda.event.*;
-
 import javax.swing.SwingUtilities;
+
+import com.sun.jdi.ThreadReference;
+import com.sun.jdi.VMDisconnectedException;
+import com.sun.jdi.event.EventQueue;
+import com.sun.jdi.event.EventSet;
+
+import microbat.codeanalysis.runtime.jpda.event.AbstractEventSet;
+import microbat.codeanalysis.runtime.jpda.event.AccessWatchpointEventSet;
+import microbat.codeanalysis.runtime.jpda.event.ClassPrepareEventSet;
+import microbat.codeanalysis.runtime.jpda.event.ClassUnloadEventSet;
+import microbat.codeanalysis.runtime.jpda.event.ExceptionEventSet;
+import microbat.codeanalysis.runtime.jpda.event.JDIListener;
+import microbat.codeanalysis.runtime.jpda.event.LocationTriggerEventSet;
+import microbat.codeanalysis.runtime.jpda.event.ModificationWatchpointEventSet;
+import microbat.codeanalysis.runtime.jpda.event.ThreadDeathEventSet;
+import microbat.codeanalysis.runtime.jpda.event.ThreadStartEventSet;
+import microbat.codeanalysis.runtime.jpda.event.VMDeathEventSet;
+import microbat.codeanalysis.runtime.jpda.event.VMDisconnectEventSet;
+import microbat.codeanalysis.runtime.jpda.event.VMStartEventSet;
 
 /**
  */

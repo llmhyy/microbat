@@ -3,13 +3,13 @@ package microbat.evaluation.junit;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.util.MicroBatUtil;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+
+import microbat.util.MicroBatUtil;
 
 public class TestingMethodChecker extends ASTVisitor {
 	private boolean isSubclassOfTestCase;

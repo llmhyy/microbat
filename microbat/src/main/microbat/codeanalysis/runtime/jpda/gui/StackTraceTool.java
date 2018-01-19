@@ -34,11 +34,26 @@
 
 package microbat.codeanalysis.runtime.jpda.gui;
 
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.*;
-import com.sun.jdi.*;
-import microbat.codeanalysis.runtime.jpda.bdi.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+
+import javax.swing.AbstractListModel;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+import com.sun.jdi.Location;
+import com.sun.jdi.Method;
+import com.sun.jdi.StackFrame;
+
+import microbat.codeanalysis.runtime.jpda.bdi.ExecutionManager;
+import microbat.codeanalysis.runtime.jpda.bdi.ThreadInfo;
+import microbat.codeanalysis.runtime.jpda.bdi.VMNotInterruptedException;
 
 public class StackTraceTool extends JPanel {
 

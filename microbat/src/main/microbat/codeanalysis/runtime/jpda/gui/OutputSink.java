@@ -34,7 +34,8 @@
 
 package microbat.codeanalysis.runtime.jpda.gui;
 
-import java.io.*;
+import java.io.PrintWriter;
+import java.io.Writer;
 
 // This class is used in 'CommandInterpreter' as a hook to
 // allow messagebox style command output as an alternative

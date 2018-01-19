@@ -34,11 +34,13 @@
 
 package microbat.codeanalysis.runtime.jpda.gui;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-import microbat.codeanalysis.runtime.jpda.bdi.*;
+import javax.swing.JPanel;
+
+import microbat.codeanalysis.runtime.jpda.bdi.ExecutionManager;
 
 public class ApplicationTool extends JPanel {
 

@@ -34,9 +34,10 @@
 
 package microbat.codeanalysis.runtime.jpda.tty;
 
-import com.sun.jdi.*;
-import com.sun.jdi.request.EventRequestManager;
+import com.sun.jdi.Field;
+import com.sun.jdi.ReferenceType;
 import com.sun.jdi.request.EventRequest;
+import com.sun.jdi.request.EventRequestManager;
 
 class ModificationWatchpointSpec extends WatchpointSpec {
     ModificationWatchpointSpec(ReferenceTypeSpec refSpec, String fieldId)

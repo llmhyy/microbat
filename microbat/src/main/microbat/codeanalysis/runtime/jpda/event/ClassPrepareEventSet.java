@@ -34,8 +34,10 @@
 
 package microbat.codeanalysis.runtime.jpda.event;
 
-import com.sun.jdi.*;
-import com.sun.jdi.event.*;
+import com.sun.jdi.ReferenceType;
+import com.sun.jdi.ThreadReference;
+import com.sun.jdi.event.ClassPrepareEvent;
+import com.sun.jdi.event.EventSet;
 
 public class ClassPrepareEventSet extends AbstractEventSet {
 

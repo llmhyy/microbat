@@ -34,8 +34,10 @@
 
 package microbat.codeanalysis.runtime.jpda.event;
 
-import com.sun.jdi.*;
-import com.sun.jdi.event.*;
+import com.sun.jdi.Location;
+import com.sun.jdi.ThreadReference;
+import com.sun.jdi.event.EventSet;
+import com.sun.jdi.event.LocatableEvent;
 
 /**
  * Abstract event set for events with location and thread.
