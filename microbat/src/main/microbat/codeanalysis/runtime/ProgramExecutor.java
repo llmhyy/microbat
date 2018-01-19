@@ -446,27 +446,16 @@ public class ProgramExecutor extends Executor {
 									prevNode, trace.getLatestNode());
 						}
 						isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
-						boolean flag = isMethodInvokeRelationship(prevNode.getBreakPoint(), node.getMethodSign());
-						if(flag){
-							isIndirectAccess++;
-						}
-						else{
-							isIndirectAccess++;
-						}
 					}
 					
 					boolean isMethodExit = isMethodExit(prevNode, node, currentLocation);
 					if(isMethodExit) {
-						if(!methodNodeStack.isEmpty() && isIndirectAccess==0) {
+						if(!methodNodeStack.isEmpty() && !isIndirectAccess) {
 							methodNodeStack.pop();
 							methodSignatureStack.pop();
 							creatRWReturnVariableForReturnStatement(prevNode, node);
 						}
-//						isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
-						boolean flag = isMethodInvokeRelationship(prevNode.getBreakPoint(), node.getMethodSign());
-						if(flag){
-							isIndirectAccess++;
-						}
+						isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
 					}
 
 					/**
@@ -710,8 +699,6 @@ public class ProgramExecutor extends Executor {
 			return true;
 		}
 		else {
-			String className = invokeeSignature.substring(0, invokeeSignature.indexOf("#"));
-			
 			LineNumberVisitor0 visitor = findMethodByteCode(invokerPoint);
 			List<InstructionHandle> list = visitor.getInstructionList();
 			boolean isOk = findInvokingMethod(invokeeSignature, visitor, list);
@@ -733,32 +720,21 @@ public class ProgramExecutor extends Executor {
 		
 		int size = methodSignatureStack.size();
 		
-		for(int i=size; i>=2; i--) {
-			String oldPeek = methodSignatureStack.get(i-2);
-			String className = oldPeek.substring(0, oldPeek.indexOf("#"));
-			InstructionVisitor visitor = libraryLine2InstructionVisitorMap.get(oldPeek);
-			if(visitor==null) {
-				visitor = new InstructionVisitor(oldPeek, appPath);
-				ByteCodeParser.parse(className, visitor, appPath);
-				libraryLine2InstructionVisitorMap.put(oldPeek, visitor);
-			}
+		for(int i=0; i<size; i++) {
 			
-			List<InstructionHandle> peekList = visitor.getInstructionList();
-			String invokedMethod = methodSignatureStack.get(i-1);
+			TraceNode node = methodNodeStack.get(i);
+			String method = methodSignatureStack.get(i);
 			
-			System.currentTimeMillis();
-			
-			String invokedMethodName = invokedMethod.substring(invokedMethod.indexOf("#")+1, invokedMethod.indexOf("("));
-			boolean isOk = findInvokingMethod(invokedMethodName, visitor, peekList);
+			boolean isMethodInvokeRelationship = 
+					isMethodInvokeRelationship(node.getBreakPoint(), method);
 			/**
 			 * reflection and static constructor
 			 */
-			boolean isPossibleRefection = oldPeek.contains("java.util.ResourceBundle#getBundle");
-			if(!isOk && !isPossibleRefection) {
+			boolean isPossibleRefection = method.contains("java.util.ResourceBundle#getBundle");
+			if(!isMethodInvokeRelationship && !isPossibleRefection) {
 				return true;
 			}
 		}
-		
 		
 		return false;
 	}
