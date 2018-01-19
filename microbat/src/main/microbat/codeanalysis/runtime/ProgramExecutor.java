@@ -291,18 +291,17 @@ public class ProgramExecutor extends Executor {
 		 * code.
 		 * 
 		 * To this end, when we detect the library code is called/accessed by some normal
-		 * library code, we set the flag <code>isIndirectAccess</code> to be true. Then, we
+		 * library code, we set the flag <code>isIndirectAccess</code> to be k++. Then, we
 		 * will not further analyze the runtime variables even if the code is in our interested
 		 * library.
 		 */
-		boolean isIndirectAccess = false;
+		boolean isIndirectAccess = true;
 		
 		/**
 		 * record the method entrance and exit so that I can build a
 		 * tree-structure for trace node.
 		 */
 		Stack<TraceNode> methodNodeStack = new Stack<>();
-		// Stack<Method> methodStack = new Stack<>();
 		Stack<String> methodSignatureStack = new Stack<>();
 
 		UsedVariable previousVars = null;
@@ -439,23 +438,34 @@ public class ProgramExecutor extends Executor {
 
 					TraceNode prevNode = node.getStepInPrevious();
 					boolean isMethodEntry = isMethodEntry(prevNode, node, currentLocation);
-					if(isMethodEntry && !isIndirectAccess) {
-						if(prevNode!=null) {
+					if(isMethodEntry) {
+						if(prevNode!=null && !isIndirectAccess) {
 							methodNodeStack.push(prevNode);
 							methodSignatureStack.push(node.getMethodSign());
 							parseWrittenParameterVariableForMethodInvocation(thread, 
 									prevNode, trace.getLatestNode());
-							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
+						}
+						isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
+						boolean flag = isMethodInvokeRelationship(prevNode.getBreakPoint(), node.getMethodSign());
+						if(flag){
+							isIndirectAccess++;
+						}
+						else{
+							isIndirectAccess++;
 						}
 					}
 					
 					boolean isMethodExit = isMethodExit(prevNode, node, currentLocation);
-					if(isMethodExit && !isIndirectAccess) {
-						if(!methodNodeStack.isEmpty()) {
+					if(isMethodExit) {
+						if(!methodNodeStack.isEmpty() && isIndirectAccess==0) {
 							methodNodeStack.pop();
 							methodSignatureStack.pop();
 							creatRWReturnVariableForReturnStatement(prevNode, node);
-							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
+						}
+//						isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
+						boolean flag = isMethodInvokeRelationship(prevNode.getBreakPoint(), node.getMethodSign());
+						if(flag){
+							isIndirectAccess++;
 						}
 					}
 
@@ -689,35 +699,26 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private HashMap<String, List<String>> invokationMap = new HashMap<>();
-	private boolean isMethodInvokeRelationship(String methodSignature, Method invokedMethod) {
-		String invokedMethodName = invokedMethod.name();
-		String decType = invokedMethod.declaringType().name();
-		String invokedMethodSig = decType + "#" + invokedMethodName + invokedMethod.signature();
-		
-		List<String> invokees = invokationMap.get(methodSignature);
+	private boolean isMethodInvokeRelationship(BreakPoint invokerPoint, String invokeeSignature) {
+		String invokerSignature = invokerPoint.getMethodSign();
+		List<String> invokees = invokationMap.get(invokerSignature);
 		if(invokees==null) {
 			invokees = new ArrayList<>();
 		}
 		
-		if(invokees.contains(invokedMethodSig)) {
+		if(invokees.contains(invokeeSignature)) {
 			return true;
 		}
 		else {
-			String className = methodSignature.substring(0, methodSignature.indexOf("#"));
+			String className = invokeeSignature.substring(0, invokeeSignature.indexOf("#"));
 			
-			InstructionVisitor visitor = libraryLine2InstructionVisitorMap.get(methodSignature);
-			if(visitor==null) {
-				visitor = new InstructionVisitor(methodSignature, appPath);
-				ByteCodeParser.parse(className, visitor, appPath);
-				libraryLine2InstructionVisitorMap.put(methodSignature, visitor);
-			}
-			
+			LineNumberVisitor0 visitor = findMethodByteCode(invokerPoint);
 			List<InstructionHandle> list = visitor.getInstructionList();
-			boolean isOk = findInvokingMethod(invokedMethodName, visitor, list);
+			boolean isOk = findInvokingMethod(invokeeSignature, visitor, list);
 			
 			if(isOk) {
-				invokees.add(invokedMethodSig);
-				invokationMap.put(methodSignature, invokees);
+				invokees.add(invokeeSignature);
+				invokationMap.put(invokeeSignature, invokees);
 			}
 			
 			return isOk;
@@ -752,8 +753,7 @@ public class ProgramExecutor extends Executor {
 			/**
 			 * reflection and static constructor
 			 */
-			boolean isPossibleRefection = oldPeek.contains("java.util.ResourceBundle#getBundle") 
-					|| oldPeek.contains("<clinit>") || invokedMethodName.contains("<clinit>");
+			boolean isPossibleRefection = oldPeek.contains("java.util.ResourceBundle#getBundle");
 			if(!isOk && !isPossibleRefection) {
 				return true;
 			}
@@ -763,7 +763,7 @@ public class ProgramExecutor extends Executor {
 		return false;
 	}
 
-	private boolean findInvokingMethod(String invokedMethodName, InstructionVisitor visitor,
+	private boolean findInvokingMethod(String invokedMethodName, LineNumberVisitor0 visitor,
 			List<InstructionHandle> peekList) {
 		for(InstructionHandle handle: peekList) {
 			Instruction ins = handle.getInstruction();
