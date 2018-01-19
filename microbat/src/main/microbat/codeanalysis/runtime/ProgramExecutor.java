@@ -804,6 +804,7 @@ public class ProgramExecutor extends Executor {
 	private boolean isMethodInvokeRelationship(BreakPoint invokerPoint, String invokeeSignature) {
 		String invokerSignature = invokerPoint.getMethodSign();
 		List<String> invokees = invokationMap.get(invokerSignature);
+//		List<String> invokees = null;
 		if(invokees==null) {
 			invokees = new ArrayList<>();
 		}
@@ -818,7 +819,7 @@ public class ProgramExecutor extends Executor {
 			
 			if(isOk) {
 				invokees.add(invokeeSignature);
-				invokationMap.put(invokeeSignature, invokees);
+				invokationMap.put(invokerSignature, invokees);
 			}
 			
 			return isOk;
