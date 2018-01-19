@@ -439,7 +439,7 @@ public class ProgramExecutor extends Executor {
 
 					TraceNode prevNode = node.getStepInPrevious();
 					boolean isMethodEntry = isMethodEntry(prevNode, node, currentLocation);
-					if(isMethodEntry) {
+					if(isMethodEntry && !isIndirectAccess) {
 						if(prevNode!=null) {
 							methodNodeStack.push(prevNode);
 							methodSignatureStack.push(node.getMethodSign());
@@ -450,7 +450,7 @@ public class ProgramExecutor extends Executor {
 					}
 					
 					boolean isMethodExit = isMethodExit(prevNode, node, currentLocation);
-					if(isMethodExit) {
+					if(isMethodExit && !isIndirectAccess) {
 						if(!methodNodeStack.isEmpty()) {
 							methodNodeStack.pop();
 							methodSignatureStack.pop();
@@ -551,32 +551,46 @@ public class ProgramExecutor extends Executor {
 		CFGConstructor cfgConstructor = new CFGConstructor();
 		CFG cfg = cfgConstructor.constructCFG(visitor.getMethod().getCode());
 		
-//		List<InstructionHandle> range = new ArrayList<>();
+		List<InstructionHandle> range = new ArrayList<>();
 		for(CFGNode exitNode: cfg.getExitList()) {
-//			CFGNode cfgNode = exitNode;
-//			range.add(cfgNode.getInstructionHandle());
-//			while(cfgNode.getParents().size()==1) {
-//				CFGNode parent = cfgNode.getParents().get(0);
-//				if(parent.getChildren().size()==1) {
-//					cfgNode = parent;
-//					range.add(cfgNode.getInstructionHandle());
-//				}
-//				else {
-//					break;
-//				}
-//			}
-//			
-//			for(InstructionHandle ins: range) {
-//				if(ins.getPosition()==node.getRuntimePC()) {
-//					return true;
-//				}						
-//			}
+			CFGNode cfgNode = exitNode;
+			range.add(cfgNode.getInstructionHandle());
+			while(cfgNode.getParents().size()==1) {
+				CFGNode parent = cfgNode.getParents().get(0);
+				if(parent.getChildren().size()==1 && !(parent.getInstructionHandle().getInstruction() instanceof InvokeInstruction)) {
+					if(isContains(parent, visitor.getInstructionList())){
+						cfgNode = parent;
+						range.add(cfgNode.getInstructionHandle());
+					}
+					else{
+						break;
+					}
+				}
+				else {
+					break;
+				}
+			}
+			
+			for(InstructionHandle ins: range) {
+				if(ins.getPosition()==node.getRuntimePC()) {
+					return true;
+				}						
+			}
 			
 			if(exitNode.getInstructionHandle().getPosition()==node.getRuntimePC()) {
 				return true;
 			}	
 		}
 		
+		return false;
+	}
+
+	private boolean isContains(CFGNode parent, List<InstructionHandle> instructionList) {
+		for(InstructionHandle handle: instructionList){
+			if(handle.getPosition()==parent.getInstructionHandle().getPosition()){
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -620,7 +634,6 @@ public class ProgramExecutor extends Executor {
 //		}
 		
 		boolean isThisPointEndOfMethod = isPointEndOfMethod(prevNode);
-		
 		if(!isThisPointEndOfMethod) {
 			return false;
 		}
@@ -647,9 +660,9 @@ public class ProgramExecutor extends Executor {
 		if(thisMethod==null && thatMethod==null) {
 			return !thisPoint.getClassCanonicalName().equals(thatPoint.getClassCanonicalName());
 		}
-		else if(thisMethod!=null && thatMethod!=null) {
+//		else if(thisMethod!=null && thatMethod!=null) {
 //			return thisMethod.getStartPosition()!=thatMethod.getStartPosition();
-		}
+//		}
 		
 		return true;
 	}
