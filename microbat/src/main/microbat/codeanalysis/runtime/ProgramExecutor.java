@@ -439,7 +439,7 @@ public class ProgramExecutor extends Executor {
 					node.setRuntimePC(currentLocation.codeIndex());
 
 					TraceNode prevNode = node.getStepInPrevious();
-					boolean isMethodEntry = isMethodEntry(prevNode, node, currentLocation);
+					boolean isMethodEntry = isMethodEntry(prevNode, node);
 					if(isMethodEntry) {
 						if(prevNode!=null && !isIndirectAccess) {
 							parseWrittenParameterVariableForMethodInvocation(thread, 
@@ -564,7 +564,7 @@ public class ProgramExecutor extends Executor {
 			TraceNode stackNode = methodNodeStack.pop();
 			tempStack.push(stackNode);
 			count++;
-			if(isSameLocation(node, stackNode)) {
+			if(isSameContext(node, stackNode)) {
 				found = true;
 				break;
 			}
@@ -595,15 +595,17 @@ public class ProgramExecutor extends Executor {
 		BreakPoint b2 = peek.getBreakPoint();
 		
 		if(b1.getClassCanonicalName().equals(b2.getClassCanonicalName())) {
-			String nodeMethodName = b1.getMethodName();
-			String peekMethodName = b2.getMethodName();
+//			String nodeMethodName = b1.getMethodName();
+//			String peekMethodName = b2.getMethodName();
 			
-			if(peekMethodName.contains("<clinit>") && nodeMethodName.contains("<init>")) {
-				return true;
-			}
-			else {
-				return b1.getMethodSign().equals(b2.getMethodSign());				
-			}
+//			if(peekMethodName.contains("<clinit>") && nodeMethodName.contains("<init>")) {
+//				return true;
+//			}
+//			else {
+//				return b1.getMethodSign().equals(b2.getMethodSign());				
+//			}
+			
+			return b1.getMethodSign().equals(b2.getMethodSign());		
 		}
 		
 		return false;
@@ -762,7 +764,7 @@ public class ProgramExecutor extends Executor {
 		return visitor;
 	}
 	
-	private boolean isMethodEntry(TraceNode prevNode, TraceNode thisNode, Location currentLocation) {
+	private boolean isMethodEntry(TraceNode prevNode, TraceNode thisNode) {
 		if(prevNode==null) {
 			return true;
 		}
@@ -771,7 +773,36 @@ public class ProgramExecutor extends Executor {
 			return true;
 		}
 		
-		return currentLocation.codeIndex()<=1;
+		BreakPoint point = thisNode.getBreakPoint();
+		LineNumberVisitor0 visitor = findMethodByteCode(point);
+		
+		InstructionHandle lastHandle = visitor.getInstructionList().get(visitor.getInstructionList().size()-1);
+		if(lastHandle.getPosition()<thisNode.getRuntimePC()){
+			return isPointStartOfMethod(point);
+		}
+		
+		return thisNode.getRuntimePC()<=1;
+	}
+
+	private boolean isPointStartOfMethod(BreakPoint point) {
+		LineNumberVisitor0 visitor = findMethodByteCode(point);
+		if(visitor.getJavaClass().isAnonymous()){
+			if(point.getMethodName().equals("<init>")){
+				return true;
+			}
+		}
+		
+		CFGConstructor cfgConstructor = new CFGConstructor();
+		CFG cfg = cfgConstructor.constructCFG(visitor.getMethod().getCode());
+		InstructionHandle startHandle = cfg.getStartNode().getInstructionHandle();
+		
+		for(InstructionHandle handle: visitor.getInstructionList()){
+			if(handle.getPosition()==startHandle.getPosition()){
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	private boolean isMethodExit(TraceNode prevNode, TraceNode thisNode, TraceNode peekNode) {
@@ -808,9 +839,14 @@ public class ProgramExecutor extends Executor {
 						return false;
 					}
 				}
-				else if(prevMethod==null && thisMethod==null) {
-					return false;
-				}
+//				else if(prevMethod==null && thisMethod==null) {
+//					return false;
+//				}
+				
+			}
+			
+			if(prevNode.getMethodSign().equals(thisNode.getMethodSign())){
+				return false;
 			}
 		}
 		
