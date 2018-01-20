@@ -20,7 +20,6 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.w3c.dom.Node;
 
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.dto.ClassLocation;

@@ -32,14 +32,7 @@ public class FileUtils {
 	}
 	
 	public static void appendFile(String fileName, String content) {
-		File file = new File(fileName);
-		if (!file.exists()) {
-			try {
-				file.createNewFile();
-			} catch (IOException e) {
-				throw new SavRtException("cannot create file " + fileName);
-			}
-		}
+		File file = getFileCreateIfNotExist(fileName);
 		FileOutputStream stream;
 		try {
 			stream = new FileOutputStream(file, true);
@@ -50,6 +43,22 @@ public class FileUtils {
 		} catch (IOException e) {
 			throw new SavRtException(e);
 		}
+	}
+	
+	public static File getFileCreateIfNotExist(String path) {
+		File file = new File(path);
+		if (!file.exists()) {
+			File folder = file.getParentFile();
+			if (!folder.exists()) {
+				folder.mkdirs();
+			}
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				throw new SavRtException(e);
+			}
+		}
+		return file;
 	}
 	
 	public static String getFilePath(String... fragments) {

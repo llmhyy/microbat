@@ -1,20 +1,23 @@
 package microbat.mutation.trace.handlers;
 
-import java.net.URI;
 import java.sql.SQLException;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.jdt.core.ICompilationUnit;
 
 import microbat.Activator;
+import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
 import microbat.mutation.trace.MuDiffMatcher;
 import microbat.mutation.trace.MuRegression;
 import microbat.mutation.trace.MuRegressionRetriever;
 import microbat.mutation.trace.preference.MuRegressionPreference;
-import microbat.util.JavaUtil;
+import microbat.util.IResourceUtils;
+import microbat.util.MicroBatUtil;
+import sav.common.core.utils.ClassUtils;
+import sav.common.core.utils.FileUtils;
 import sav.strategies.dto.AppJavaClassPath;
 import tregression.empiricalstudy.Regression;
 import tregression.model.PairList;
@@ -24,8 +27,8 @@ public class MuRegressionRetrieverHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		String projectName = Activator.getDefault().getPreferenceStore().getString(MuRegressionPreference.TARGET_PROJECT_KEY);;
-		String bugId = Activator.getDefault().getPreferenceStore().getString(MuRegressionPreference.BUG_ID_KEY);;
+		String projectName = Activator.getDefault().getPreferenceStore().getString(MuRegressionPreference.TARGET_PROJECT_KEY);
+		String bugId = Activator.getDefault().getPreferenceStore().getString(MuRegressionPreference.BUG_ID_KEY);
 		
 		try {
 			MuRegression muRegression = new MuRegressionRetriever().retrieveRegression(projectName, bugId);
@@ -33,16 +36,36 @@ public class MuRegressionRetrieverHandler extends AbstractHandler {
 			Trace buggyTrace = regression.getBuggyTrace();
 			Trace correctTrace = regression.getCorrectTrace();
 
-			AppJavaClassPath buggyApp = initAppClasspath();
-			AppJavaClassPath fixApp = initAppClasspath();
-			buggyTrace.setAppJavaClassPath(buggyApp);
-			correctTrace.setAppJavaClassPath(fixApp);
-			String sourceFolder = getSourceFolder(projectName, regression.getTestClass());
-			MuDiffMatcher diffMatcher = new MuDiffMatcher(sourceFolder, muRegression.getOrginalFile().getAbsolutePath(),
-					muRegression.getMutationFile().getAbsolutePath());
+			AppJavaClassPath buggyClasspath = initAppClasspath(projectName);
+			AppJavaClassPath fixClasspath = initAppClasspath(projectName);
+			buggyTrace.setAppJavaClassPath(buggyClasspath);
+			correctTrace.setAppJavaClassPath(fixClasspath);
+			/* init path for diffMatcher */
+			String muPath = IResourceUtils.getFolderPath(projectName, "microbat/mutation/" + bugId + "/bug");
+//			String orgPath = IResourceUtils.getFolderPath(projectName, "microbat/mutation/" + bugId + "/fix");
+//			String srcFolder = "src";
+			String orgPath = IResourceUtils.getProjectPath(projectName);
+			String srcFolder = IResourceUtils.getRelativeSourceFolderPath(orgPath, projectName,
+					muRegression.getMutationClassName());
+			String testFolder = IResourceUtils.getRelativeSourceFolderPath(orgPath, projectName, regression.getTestClass());
+			String orgJFilePath = ClassUtils.getJFilePath(FileUtils.getFilePath(orgPath, srcFolder), muRegression.getMutationClassName());
+			String muJFilePath = ClassUtils.getJFilePath(FileUtils.getFilePath(muPath, srcFolder), muRegression.getMutationClassName());
+//			FileUtils.appendFile(orgJFilePath, muRegression.getOrginalCode());
+			FileUtils.appendFile(muJFilePath, muRegression.getMutationCode());
+			MuDiffMatcher diffMatcher = new MuDiffMatcher(srcFolder, orgJFilePath, muJFilePath);
+			diffMatcher.setBuggyPath(muPath);
+			diffMatcher.setFixPath(orgPath);
+			diffMatcher.setTestFolderName(testFolder);
 			diffMatcher.matchCode();
+			// fill breakpoint
+			buggyClasspath.setSourceCodePath(FileUtils.getFilePath(orgPath, srcFolder));
+			buggyClasspath.setTestCodePath(FileUtils.getFilePath(orgPath, testFolder));
+			fixClasspath.setSourceCodePath(FileUtils.getFilePath(orgPath, srcFolder));
+			fixClasspath.setTestCodePath(FileUtils.getFilePath(orgPath, testFolder));
+			fillMuBkpJavaFilePath(buggyTrace, muJFilePath, muRegression.getMutationClassName());
+			regression.fillMissingInfor(correctTrace, fixClasspath);
+			regression.fillMissingInfor(buggyTrace, buggyClasspath);
 			PairList pairList = regression.getPairList();
-//			regression.fillMissingInfor(config, buggyPath, fixPath);
 			Visualizer visualizer = new Visualizer();
 			visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
 		} catch (SQLException e) {
@@ -52,18 +75,17 @@ public class MuRegressionRetrieverHandler extends AbstractHandler {
 		return null;
 	}
 	
-	private String getSourceFolder(String projectName, String cName) {
-		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName, projectName);
-		URI uri = unit.getResource().getLocationURI();
-		String sourceFolderPath = uri.toString();
-		cName = cName.replace(".", "/") + ".java";
-		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName));
-		sourceFolderPath = sourceFolderPath.substring(5, sourceFolderPath.length());
-		return sourceFolderPath;
+	public void fillMuBkpJavaFilePath(Trace buggyTrace, String muJFilePath, String muClassName) {
+		for (TraceNode node : buggyTrace.getExecutionList()) {
+			BreakPoint point = node.getBreakPoint();
+			if (muClassName.equals(point.getDeclaringCompilationUnitName())) {
+				point.setFullJavaFilePath(muJFilePath);
+			}
+		}
 	}
-
-	private AppJavaClassPath initAppClasspath() {
-		AppJavaClassPath appClasspath = new AppJavaClassPath();
+	
+	private AppJavaClassPath initAppClasspath(String projectName) {
+		AppJavaClassPath appClasspath = MicroBatUtil.constructClassPaths(projectName);
 		return appClasspath;
 	}
 }

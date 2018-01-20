@@ -1,14 +1,14 @@
 package microbat.mutation.trace;
 
-import java.io.File;
-
-import sav.common.core.utils.FileUtils;
+import sav.common.core.utils.ClassUtils;
+import sav.common.core.utils.StringUtils;
 import tregression.empiricalstudy.Regression;
 
 public class MuRegression {
 	private Regression regression;
-	private File mutationFile;
-	private File orginalFile;
+	private String mutationCode;
+	private String orginalCode;
+	private String mutationClassName;
 
 	public Regression getRegression() {
 		return regression;
@@ -18,28 +18,24 @@ public class MuRegression {
 		this.regression = regression;
 	}
 
-	public File getMutationFile() {
-		return mutationFile;
-	}
-
-	public void setMutationFile(File mutationFile) {
-		this.mutationFile = mutationFile;
-	}
-
-	public File getOrginalFile() {
-		return orginalFile;
-	}
-
-	public void setOrginalFile(File orginalFile) {
-		this.orginalFile = orginalFile;
-	}
-
 	public void setMutationFiles(String correctCode, String buggyCode) {
-		orginalFile = FileUtils.getFileInTempFolder("CorrectCode.java");
-		FileUtils.appendFile(orginalFile.getAbsolutePath(), correctCode);
-		
-		mutationFile = FileUtils.getFileInTempFolder("MutationCode.java");
-		FileUtils.appendFile(mutationFile.getAbsolutePath(), buggyCode);
+		// TODO: we should have another column for className in table mutationFile
+		mutationClassName = ClassUtils.getCanonicalName(StringUtils.subString(correctCode, "package ", ";"),
+				StringUtils.subString(correctCode, "public class ", " "));
+		orginalCode = correctCode;
+		mutationCode = buggyCode;
+	}
+
+	public String getMutationCode() {
+		return mutationCode;
+	}
+
+	public String getOrginalCode() {
+		return orginalCode;
+	}
+
+	public String getMutationClassName() {
+		return mutationClassName;
 	}
 	
 }
