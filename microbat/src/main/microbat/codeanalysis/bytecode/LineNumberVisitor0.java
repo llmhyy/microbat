@@ -60,6 +60,10 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 			return;
 		}
 		
+		if(method.getName().contains("class$") && this.method!=null) {
+			return;
+		}
+		
 		if(isMethodContainLineNumber(method, lineNumber)){
 			InstructionList list = new InstructionList(code.getCode());
 			List<InstructionHandle> insHandles = findCorrespondingInstructions(lineNumber, code);

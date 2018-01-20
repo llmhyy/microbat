@@ -644,6 +644,8 @@ public class ProgramExecutor extends Executor {
 		CFGConstructor cfgConstructor = new CFGConstructor();
 		CFG cfg = cfgConstructor.constructCFG(visitor.getMethod().getCode());
 		
+		System.currentTimeMillis();
+		
 		List<InstructionHandle> range = new ArrayList<>();
 		for(CFGNode exitNode: cfg.getExitList()) {
 			if(exitNode.getInstructionHandle().getPosition()==node.getRuntimePC()) {
@@ -750,6 +752,7 @@ public class ProgramExecutor extends Executor {
 		
 		String locationID = className + "$" + lineNumber;
 		LineNumberVisitor0 visitor = libraryLine2LineVisitorMap.get(locationID);
+//		visitor = null;
 		if (visitor == null) {
 			visitor = new LineNumberVisitor0(lineNumber, className, appPath);
 			ByteCodeParser.parse(className, visitor, appPath);
@@ -809,7 +812,7 @@ public class ProgramExecutor extends Executor {
 			}
 		}
 		
-		System.currentTimeMillis();
+//		System.currentTimeMillis();
 		
 		BreakPoint prevPoint = prevNode.getBreakPoint(); 
 		BreakPoint thisPoint = thisNode.getBreakPoint();
