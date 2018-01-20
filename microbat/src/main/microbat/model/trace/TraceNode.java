@@ -437,6 +437,10 @@ public class TraceNode{
 	public String getMethodName() {
 		return this.getBreakPoint().getMethodName();
 	}
+	
+	public String getShortMethodSignature() {
+		return this.getBreakPoint().getShortMethodSignature();
+	}
 
 	public Map<TraceNode, List<String>> getDataDominator() {
 		return dataDominators;

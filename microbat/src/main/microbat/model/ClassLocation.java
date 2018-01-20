@@ -100,7 +100,7 @@ public class ClassLocation {
 		if(methodSign==null){
 			return null;
 		}
-		return SignatureUtils.extractMethodName(methodSign);
+		return methodSign.substring(methodSign.indexOf("#")+1, methodSign.indexOf("("));
 	}
 
 	

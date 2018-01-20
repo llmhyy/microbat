@@ -220,6 +220,13 @@ public class BreakPoint extends ClassLocation {
 		this.declaringCompilationUnitName = declaringCompilationUnitName;
 	}
 
+	public String getShortMethodSignature() {
+		String methodSig = this.methodSign;
+		String shortSig = methodSig.substring(methodSig.indexOf("#")+1, methodSig.length());
+		
+		return shortSig;
+	}
+	
 	public boolean isSourceVersion() {
 		String flag = File.separator + "bug" + File.separator;
 		return this.getFullJavaFilePath().contains(flag);

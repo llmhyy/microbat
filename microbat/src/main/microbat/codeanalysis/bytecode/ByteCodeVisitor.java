@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.EmptyVisitor;
+import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
@@ -267,4 +268,15 @@ public class ByteCodeVisitor extends EmptyVisitor{
 		
 		return bestVar;
 	}
+
+	protected JavaClass javaClass;
+	
+	public void setJavaClass(JavaClass clazz) {
+		this.javaClass = clazz;
+	}
+
+	public JavaClass getJavaClass() {
+		return javaClass;
+	}
+	
 }

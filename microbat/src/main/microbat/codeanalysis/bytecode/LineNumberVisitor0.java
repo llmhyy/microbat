@@ -31,13 +31,11 @@ import microbat.model.variable.ConstantVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
-import microbat.model.variable.VirtualVar;
 import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class LineNumberVisitor0 extends ByteCodeVisitor {
 	private int lineNumber;
-//	private int offset;
 	private String className;
 	private AppJavaClassPath appJavaClassPath;
 	
@@ -47,7 +45,6 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 		super();
 		this.lineNumber = lineNumber;
 		this.className = className;
-//		this.offset = offset;
 		this.appJavaClassPath = appJavaClassPath;
 	}
 

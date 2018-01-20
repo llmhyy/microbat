@@ -46,6 +46,7 @@ public class ByteCodeParser{
 		try {
 			clazz = Repository.lookupClass(className);
 			clazz.accept(new DescendingVisitor(clazz, visitor));
+			visitor.setJavaClass(clazz);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}

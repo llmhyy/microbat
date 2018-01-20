@@ -11,6 +11,7 @@ import java.util.Stack;
 
 import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.ConstantPool;
+import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.Instruction;
@@ -462,15 +463,18 @@ public class ProgramExecutor extends Executor {
 					}
 
 					if(isIndirectAccess){
-						if(methodNodeStack.isEmpty()){
-							System.currentTimeMillis();
-						}
-						
-						if(isSameContext(node, methodNodeStack.peek())){
+						int popCount = checkContextualReturn(node, methodNodeStack);
+						while(popCount != 0) {
 							methodNodeStack.pop();
 							methodSignatureStack.pop();
-							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
+							popCount--;
 						}
+						isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
+//						if(isSameLocation(node, methodNodeStack.peek())){
+//							methodNodeStack.pop();
+//							methodSignatureStack.pop();
+//							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
+//						}
 					}
 					
 					/**
@@ -551,6 +555,33 @@ public class ProgramExecutor extends Executor {
 		return vm;
 	}
 	
+	private int checkContextualReturn(TraceNode node, Stack<TraceNode> methodNodeStack) {
+		int count = 0;
+		boolean found = false;
+		
+		Stack<TraceNode> tempStack = new Stack<>();
+		while(!methodNodeStack.isEmpty()) {
+			TraceNode stackNode = methodNodeStack.pop();
+			tempStack.push(stackNode);
+			count++;
+			if(isSameLocation(node, stackNode)) {
+				found = true;
+				break;
+			}
+		}
+		
+		if(!found) {
+			count = 0;
+		}
+		
+		while(!tempStack.isEmpty()) {
+			TraceNode sNode = tempStack.pop();
+			methodNodeStack.push(sNode);
+		}
+		
+		return count;
+	}
+
 	private boolean isSameLocation(TraceNode node, TraceNode peek) {
 		BreakPoint b1 = node.getBreakPoint();
 		BreakPoint b2 = peek.getBreakPoint();
@@ -757,6 +788,14 @@ public class ProgramExecutor extends Executor {
 		}
 		
 		/**
+		 * check whether this step happens in an override method in parent class
+		 */
+//		boolean isThisNodeInOverrideMethod = isThisNodeInOverrideMethod(thisNode, prevNode);
+//		if(isThisNodeInOverrideMethod) {
+//			return false;
+//		}
+		
+		/**
 		 * try to check whether the node after it is still a return node in the same method,
 		 * if yes, the method exit event for prev node should not happen.
 		 */
@@ -779,6 +818,27 @@ public class ProgramExecutor extends Executor {
 		return isPrevNodePointEndOfMethod && isContextDiff;
 	}
 	
+	private boolean isThisNodeInOverrideMethod(TraceNode thisNode, TraceNode prevNode) {
+		if(thisNode.getMethodName().equals(prevNode.getMethodName())) {
+			String prevClass = prevNode.getClassCanonicalName();
+			
+			LineNumberVisitor0 v = findMethodByteCode(thisNode.getBreakPoint());
+			JavaClass superClass;
+			try {
+				superClass = v.getJavaClass().getSuperClass();
+				if(superClass!=null) {
+					String name = superClass.getClassName();
+					return name.equals(prevClass);
+				}
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+			
+		}
+		System.currentTimeMillis();
+		return false;
+	}
+
 	private Map<BreakPoint, MethodDeclaration> lineMethodMap = new HashMap<>();
 	private MethodDeclaration getMethodByAST(BreakPoint point) {
 		MethodDeclaration method = lineMethodMap.get(point);
