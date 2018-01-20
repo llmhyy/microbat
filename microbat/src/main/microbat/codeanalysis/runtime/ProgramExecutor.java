@@ -455,15 +455,27 @@ public class ProgramExecutor extends Executor {
 					if(isMethodExit) {
 						if(!methodNodeStack.isEmpty() && !isIndirectAccess) {
 							creatRWReturnVariableForReturnStatement(prevNode, node);
-							methodNodeStack.pop();
-							methodSignatureStack.pop();
+							
+							int popCount = checkContextualReturn(node, methodNodeStack, false);
+							if(popCount!=0){
+								while(popCount != 0) {
+									methodNodeStack.pop();
+									methodSignatureStack.pop();
+									popCount--;
+								}								
+							}
+							else{
+								methodNodeStack.pop();
+								methodSignatureStack.pop();								
+							}
+							
 							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
 						}
 						
 					}
 
 					if(isIndirectAccess){
-						int popCount = checkContextualReturn(node, methodNodeStack);
+						int popCount = checkContextualReturn(node, methodNodeStack, false);
 						while(popCount != 0) {
 							methodNodeStack.pop();
 							methodSignatureStack.pop();
@@ -555,7 +567,19 @@ public class ProgramExecutor extends Executor {
 		return vm;
 	}
 	
-	private int checkContextualReturn(TraceNode node, Stack<TraceNode> methodNodeStack) {
+	/**
+	 * given a trace step, check whether any invoker step in method stack share the same
+	 * location/context with this trace step.
+	 * 
+	 * the parameter <code>isPrecise</code> to specify whether the given trace step and
+	 * some invoker in method stack share same location or context.
+	 * 
+	 * @param node
+	 * @param methodNodeStack
+	 * @param isPrecise
+	 * @return
+	 */
+	private int checkContextualReturn(TraceNode node, Stack<TraceNode> methodNodeStack, boolean isPrecise) {
 		int count = 0;
 		boolean found = false;
 		
@@ -564,9 +588,17 @@ public class ProgramExecutor extends Executor {
 			TraceNode stackNode = methodNodeStack.pop();
 			tempStack.push(stackNode);
 			count++;
-			if(isSameContext(node, stackNode)) {
-				found = true;
-				break;
+			if(isPrecise){
+				if(isSameLocation(node, stackNode)) {
+					found = true;
+					break;
+				}
+			}
+			else{
+				if(isSameContext(node, stackNode)) {
+					found = true;
+					break;
+				}
 			}
 		}
 		
