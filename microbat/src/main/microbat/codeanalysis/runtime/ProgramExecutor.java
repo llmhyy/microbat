@@ -767,6 +767,10 @@ public class ProgramExecutor extends Executor {
 			return true;
 		}
 		
+		if(thisNode.getLineNumber()==1){
+			return true;
+		}
+		
 		return currentLocation.codeIndex()<=1;
 	}
 
