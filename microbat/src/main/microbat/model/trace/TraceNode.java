@@ -433,6 +433,10 @@ public class TraceNode{
 		List<GraphDiff> diffs = differ.getDiffs();
 		this.consequences = diffs;
 	}
+	
+	public String getMethodName() {
+		return this.getBreakPoint().getMethodName();
+	}
 
 	public Map<TraceNode, List<String>> getDataDominator() {
 		return dataDominators;
