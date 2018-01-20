@@ -466,7 +466,7 @@ public class ProgramExecutor extends Executor {
 							System.currentTimeMillis();
 						}
 						
-						if(isSameLocation(node, methodNodeStack.peek())){
+						if(isSameContext(node, methodNodeStack.peek())){
 							methodNodeStack.pop();
 							methodSignatureStack.pop();
 							isIndirectAccess = checkIndirectAccess(methodSignatureStack, methodNodeStack);
@@ -557,6 +557,25 @@ public class ProgramExecutor extends Executor {
 		
 		return b1.getDeclaringCompilationUnitName().equals(b2.getDeclaringCompilationUnitName())
 				&& b1.getLineNumber()==b2.getLineNumber();
+	}
+	
+	private boolean isSameContext(TraceNode node, TraceNode peek) {
+		BreakPoint b1 = node.getBreakPoint();
+		BreakPoint b2 = peek.getBreakPoint();
+		
+		if(b1.getClassCanonicalName().equals(b2.getClassCanonicalName())) {
+			String nodeMethodName = b1.getMethodName();
+			String peekMethodName = b2.getMethodName();
+			
+			if(peekMethodName.contains("<clinit>") && nodeMethodName.contains("<init>")) {
+				return true;
+			}
+			else {
+				return b1.getMethodSign().equals(b2.getMethodSign());				
+			}
+		}
+		
+		return false;
 	}
 
 	private void creatRWReturnVariableForReturnStatement(TraceNode prevNode, TraceNode node) {
@@ -743,7 +762,10 @@ public class ProgramExecutor extends Executor {
 		 */
 		boolean isThisNodePointEndOfMethod = isPointEndOfMethod(thisNode);
 		if(isThisNodePointEndOfMethod){
-			if(prevNode.getMethodSign().equals(thisNode.getMethodSign())){
+			MethodDeclaration prevMethod = getMethodByAST(prevNode.getBreakPoint());
+			MethodDeclaration thisMethod = getMethodByAST(thisNode.getBreakPoint());
+			if(prevNode.getClassCanonicalName().equals(thisNode.getClassCanonicalName()) &&
+					prevMethod.equals(thisMethod)){
 				return false;
 			}
 		}
@@ -757,12 +779,18 @@ public class ProgramExecutor extends Executor {
 		return isPrevNodePointEndOfMethod && isContextDiff;
 	}
 	
+	private Map<BreakPoint, MethodDeclaration> lineMethodMap = new HashMap<>();
 	private MethodDeclaration getMethodByAST(BreakPoint point) {
-		CompilationUnit thisCU = 
-				JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), this.appPath);
-		MethodFinder thisFinder = new MethodFinder(thisCU, point.getLineNumber());
-		thisCU.accept(thisFinder);
-		MethodDeclaration method = thisFinder.candidate;
+		MethodDeclaration method = lineMethodMap.get(point);
+		if(method==null) {
+			CompilationUnit thisCU = 
+					JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), this.appPath);
+			MethodFinder thisFinder = new MethodFinder(thisCU, point.getLineNumber());
+			thisCU.accept(thisFinder);
+			method = thisFinder.candidate;
+			lineMethodMap.put(point, method);
+		}
+		
 		return method;
 	}
 	
