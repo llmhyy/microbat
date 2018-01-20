@@ -791,14 +791,6 @@ public class ProgramExecutor extends Executor {
 		}
 		
 		/**
-		 * check whether this step happens in an override method in parent class
-		 */
-//		boolean isThisNodeInOverrideMethod = isThisNodeInOverrideMethod(thisNode, prevNode);
-//		if(isThisNodeInOverrideMethod) {
-//			return false;
-//		}
-		
-		/**
 		 * try to check whether the node after it is still a return node in the same method,
 		 * if yes, the method exit event for prev node should not happen.
 		 */
@@ -806,9 +798,15 @@ public class ProgramExecutor extends Executor {
 		if(isThisNodePointEndOfMethod){
 			MethodDeclaration prevMethod = getMethodByAST(prevNode.getBreakPoint());
 			MethodDeclaration thisMethod = getMethodByAST(thisNode.getBreakPoint());
-			if(prevNode.getClassCanonicalName().equals(thisNode.getClassCanonicalName()) &&
-					prevMethod.equals(thisMethod)){
-				return false;
+			if(prevNode.getClassCanonicalName().equals(thisNode.getClassCanonicalName())){
+				if(prevMethod!=null && thisMethod!=null) {
+					if(prevMethod.equals(thisMethod)) {
+						return false;
+					}
+				}
+				else if(prevMethod==null && thisMethod==null) {
+					return false;
+				}
 			}
 		}
 		
