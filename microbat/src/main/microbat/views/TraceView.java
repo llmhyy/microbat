@@ -59,10 +59,10 @@ import microbat.model.BreakPoint;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
-import soot.baf.internal.AbstractOpTypeBranchInst;
 
 public class TraceView extends ViewPart {
 
@@ -274,14 +274,9 @@ public class TraceView extends ViewPart {
 
 				System.out.println("Data Dominator: ");
 				for (TraceNode dominator : node.getDataDominator().keySet()) {
-					List<String> varIDs = node.getDataDominator().get(dominator);
+					VarValue var = node.getDataDominator().get(dominator);
 					System.out.println(dominator);
-					System.out.println("by: ");
-
-					for (String varID : varIDs) {
-						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
-						System.out.println(varID + ":" + entry.getAliasVariables());
-					}
+					System.out.println("by: " + var);
 
 					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
 				}
@@ -290,14 +285,9 @@ public class TraceView extends ViewPart {
 
 				System.out.println("Data Dominatee: " + node.getDataDominatee());
 				for (TraceNode dominatee : node.getDataDominatee().keySet()) {
-					List<String> varIDs = node.getDataDominatee().get(dominatee);
+					VarValue var = node.getDataDominatee().get(dominatee);
 					System.out.println(dominatee);
-					System.out.println("by: ");
-
-					for (String varID : varIDs) {
-						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
-						System.out.println(varID + ":" + entry.getAliasVariables());
-					}
+					System.out.println("by: " + var);
 
 					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
 				}

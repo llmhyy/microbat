@@ -16,7 +16,6 @@ import microbat.codeanalysis.ast.LocalVariableScopes;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.Scope;
-import microbat.model.UserInterestedVariables;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
@@ -356,7 +355,7 @@ public class Trace {
 	}
 
 	public void constructDomianceRelation(){
-		constructDataDomianceRelation();
+//		constructDataDomianceRelation();
 //		constructControlDomianceRelation0();
 		constructControlDomianceRelation();
 	}
@@ -559,34 +558,34 @@ public class Trace {
 //		return controlDominators;
 //	}
 
-	private void constructDataDomianceRelation() {
-		for(String varID: this.stepVariableTable.keySet()){
-			
-			StepVariableRelationEntry entry = this.stepVariableTable.get(varID);
-			List<TraceNode> producers = entry.getProducers();
-			List<TraceNode> consumers = entry.getConsumers();
-			
-			if(producers.isEmpty()){
-				//System.err.println("there is no producer for variable " + entry.getAliasVariables());
-			}
-			
-//			if(producers.size() > 1){
-//				System.err.println("there are more than one producer for variable " + entry.getAliasVariables());
+//	private void constructDataDomianceRelation() {
+//		for(String varID: this.stepVariableTable.keySet()){
+//			
+//			StepVariableRelationEntry entry = this.stepVariableTable.get(varID);
+//			List<TraceNode> producers = entry.getProducers();
+//			List<TraceNode> consumers = entry.getConsumers();
+//			
+//			if(producers.isEmpty()){
+//				//System.err.println("there is no producer for variable " + entry.getAliasVariables());
 //			}
-
-			if(!producers.isEmpty()){
-				TraceNode producer = producers.get(0);
-				List<String> varList = new ArrayList<>();
-				varList.add(varID);
-				for(TraceNode consumer: consumers){
-					producer.addDataDominatee(consumer, varList);
-					consumer.addDataDominator(producer, varList);
-				}
-				
-			}
-		}
-		
-	}
+//			
+////			if(producers.size() > 1){
+////				System.err.println("there are more than one producer for variable " + entry.getAliasVariables());
+////			}
+//
+//			if(!producers.isEmpty()){
+//				TraceNode producer = producers.get(0);
+//				List<String> varList = new ArrayList<>();
+//				varList.add(varID);
+//				for(TraceNode consumer: consumers){
+//					producer.addDataDominatee(consumer, varList);
+//					consumer.addDataDominator(producer, varList);
+//				}
+//				
+//			}
+//		}
+//		
+//	}
 
 	public Map<String, StepVariableRelationEntry> getStepVariableTable() {
 		return stepVariableTable;
@@ -777,54 +776,6 @@ public class Trace {
 //	}
 	
 	
-	public void distributeSuspiciousness(UserInterestedVariables interestedVariables) {
-		clearAllSuspiciousness();
-		
-		for(AttributionVar var: interestedVariables.getRoots()){
-			String varID = var.getVarID();
-			double suspicousness = 1;
-			StepVariableRelationEntry entry = this.stepVariableTable.get(varID);
-			
-			if(entry == null){
-				System.err.println("Cannot find " + varID + " in step variable table");
-			}
-			
-			if(!entry.getProducers().isEmpty()){
-				TraceNode producer = entry.getProducers().get(0);
-				int layer = 1;
-				distributeSuspiciousness(var, producer, suspicousness, layer);
-			}
-		}
-		
-	}
-	
-	private void distributeSuspiciousness(AttributionVar var, TraceNode producer, double suspiciousness, int layer){
-		if(!producer.hasChecked()){
-			double producerScore = suspiciousness * Settings.remainingRate;
-			producer.addSuspicousScore(var, producerScore);
-			
-			suspiciousness = suspiciousness - producerScore;
-		}
-		
-		if(layer < Settings.distribtionLayer){
-			List<TraceNode> nonCorrectDominators = producer.getUncheckedDataDominators();
-			if(!nonCorrectDominators.isEmpty()){
-				int n = nonCorrectDominators.size();
-				double subScore = suspiciousness/n;
-				for(TraceNode dominator: nonCorrectDominators){
-					distributeSuspiciousness(var, dominator, subScore, layer+1);
-				}					
-			}
-			else{
-				producer.addSuspicousScore(var, suspiciousness);
-			}
-		}
-		else{
-			producer.addSuspicousScore(var, suspiciousness);
-		}
-		
-	}
-
 	public TraceNode findMostSupiciousNode(AttributionVar var) {
 		TraceNode suspiciousNode = null;
 		for(TraceNode node: this.exectionList){
@@ -847,24 +798,6 @@ public class Trace {
 		}
 		
 		return suspiciousNode;
-	}
-
-	public TraceNode findOldestConflictNode(int order) {
-		TraceNode oldestNode = null;
-		
-		TraceNode node = this.exectionList.get(order-1);
-		for(TraceNode dominator: node.getDataDominator().keySet()){
-			if(oldestNode == null){
-				oldestNode = dominator;
-			}
-			else{
-				if(oldestNode.getCheckTime() > dominator.getCheckTime()){
-					oldestNode = dominator;
-				}
-			}
-		}
-		
-		return oldestNode;
 	}
 
 	public LoopSequence findLoopRangeOf(TraceNode currentNode) {

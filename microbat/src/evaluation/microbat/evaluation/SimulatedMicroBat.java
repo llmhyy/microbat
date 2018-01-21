@@ -78,7 +78,7 @@ public class SimulatedMicroBat {
 	
 	
 	private TraceNodeWrapper initVirtualRootWrapper(Trace trace) {
-		TraceNode virtualNode = new TraceNode(null, null, -1);
+		TraceNode virtualNode = new TraceNode(null, null, -1, trace);
 //		List<TraceNode> topList = trace.getTopMethodLevelNodes();
 		List<TraceNode> topList = trace.getTopAbstractionLevelNodes();
 		virtualNode.setInvocationChildren(topList);
