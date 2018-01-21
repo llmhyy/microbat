@@ -1989,6 +1989,10 @@ public class ProgramExecutor extends Executor {
 		ReturnStatement rStat = finder.returnStatement;
 		if(rStat != null){
 			Expression expr = rStat.getExpression();
+			if(expr==null){
+				return;
+			}
+			
 			String returnExpr = expr.toString();
 			
 			StackFrame frame = findFrame(thread, location);
