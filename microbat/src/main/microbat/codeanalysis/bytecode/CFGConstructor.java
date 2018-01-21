@@ -72,6 +72,13 @@ public class CFGConstructor {
 					targetNode.addParent(node);
 					node.addChild(targetNode);
 				}
+				
+				InstructionHandle targetHandle = switchIns.getTarget();
+				CFGNode targetNode = cfg.findOrCreateNewNode(targetHandle);
+				if(!node.getChildren().contains(targetNode)){
+					targetNode.addParent(node);
+					node.addChild(targetNode);					
+				}
 			}
 			else if(instructionHandle.getInstruction() instanceof BranchInstruction){
 				BranchInstruction bIns = (BranchInstruction)instructionHandle.getInstruction();
