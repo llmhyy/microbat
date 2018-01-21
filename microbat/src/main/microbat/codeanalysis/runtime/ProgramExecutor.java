@@ -945,7 +945,7 @@ public class ProgramExecutor extends Executor {
 		if (methodSign1 == null) {
 			return true;
 		}
-		methodSign1 = methodSign1.substring(methodSign1.lastIndexOf(".") + 1, methodSign1.length());
+		methodSign1 = methodSign1.substring(methodSign1.lastIndexOf("#") + 1, methodSign1.length());
 
 		String methodSign2 = loc.method().signature();
 		methodSign2 = loc.method().name() + methodSign2;
