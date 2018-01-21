@@ -142,7 +142,7 @@ public class PotentialCorrectPatternList {
 	}
 	
 	private TraceNode findDataDominatorOnCertainVariable(TraceNode existingSusiciousNode, Variable causingVar){
-		for(TraceNode dominator: existingSusiciousNode.getDataDominator().keySet()){
+		for(TraceNode dominator: existingSusiciousNode.getDataDominators().keySet()){
 			for(VarValue writtenVar: dominator.getWrittenVariables()){
 				Variable writtenVariable = writtenVar.getVariable();
 				

@@ -123,7 +123,7 @@ public class TraceNode{
 		return this.getBreakPoint().isReturnStatement();
 	}
 	
-	public TraceNode findDataDominator(VarValue readVar) {
+	public TraceNode getDataDominator(VarValue readVar) {
 		TraceNode dataDominator = null;
 		
 		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
@@ -454,7 +454,7 @@ public class TraceNode{
 		return this.getBreakPoint().getShortMethodSignature();
 	}
 
-	public Map<TraceNode, VarValue> getDataDominator() {
+	public Map<TraceNode, VarValue> getDataDominators() {
 		Map<TraceNode, VarValue> dataDominators = new HashMap<>();
 		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
 		for(VarValue readVar: this.getReadVariables()){
@@ -610,7 +610,7 @@ public class TraceNode{
 	}
 
 	private void findDominators(TraceNode node, Map<Integer, TraceNode> dominators) {
-		for(TraceNode dominator: node.getDataDominator().keySet()){
+		for(TraceNode dominator: node.getDataDominators().keySet()){
 			if(!dominators.containsKey(dominator.getOrder())){
 				dominators.put(dominator.getOrder(), dominator);		
 				findDominators(dominator, dominators);				

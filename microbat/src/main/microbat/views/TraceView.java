@@ -273,8 +273,8 @@ public class TraceView extends ViewPart {
 				System.out.println("=========================");
 
 				System.out.println("Data Dominator: ");
-				for (TraceNode dominator : node.getDataDominator().keySet()) {
-					VarValue var = node.getDataDominator().get(dominator);
+				for (TraceNode dominator : node.getDataDominators().keySet()) {
+					VarValue var = node.getDataDominators().get(dominator);
 					System.out.println(dominator);
 					System.out.println("by: " + var);
 
