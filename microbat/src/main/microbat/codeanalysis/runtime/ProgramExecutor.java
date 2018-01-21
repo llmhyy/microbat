@@ -266,14 +266,6 @@ public class ProgramExecutor extends Executor {
 		Map<String, BreakPoint> locBrpMap = new HashMap<String, BreakPoint>();
 
 		/**
-		 * This variable aims to record the last executed stepping point. If
-		 * this variable is not null, then the next time we listen a step event,
-		 * the values collected then are considered the aftermath of latest
-		 * recorded trace node.
-		 */
-		BreakPoint lastSteppingInPoint = null;
-
-		/**
 		 * We support recoding the trace in two modes: normal mode and test case
 		 * mode. When in test case mode, a lot of method invocation from JUnit
 		 * framework is useless, so I need to skip some events from JUnit by
@@ -408,7 +400,7 @@ public class ProgramExecutor extends Executor {
 					 * collect the variable values after executing previous step
 					 */
 					boolean isContextChange = false;
-					if (lastSteppingInPoint != null) {
+					if (trace.getLatestNode() != null) {
 						/**
 						 * Parsing the written variables of last step.
 						 * 
@@ -418,7 +410,7 @@ public class ProgramExecutor extends Executor {
 						 * parsing its heap ID which can only be accessed by
 						 * runtime.
 						 */
-						isContextChange = checkContext(lastSteppingInPoint, currentLocation);
+						isContextChange = checkContext(trace.getLatestNode().getBreakPoint(), currentLocation);
 						if (!isContextChange) {
 							processWrittenVariable(this.trace.getLatestNode(), this.trace.getStepVariableTable(), 
 									thread, currentLocation);
@@ -455,7 +447,6 @@ public class ProgramExecutor extends Executor {
 					if(isMethodExit) {
 						if(!methodNodeStack.isEmpty() && !isIndirectAccess) {
 							creatRWReturnVariableForReturnStatement(prevNode, node);
-							
 							int popCount = checkContextualReturn(node, methodNodeStack, false);
 							if(popCount!=0){
 								while(popCount != 0) {
@@ -509,8 +500,8 @@ public class ProgramExecutor extends Executor {
 						}
 					}
 
-					processReadVariable(node, this.trace.getStepVariableTable(), thread, currentLocation);
-					processReturnVariable(node, this.trace.getStepVariableTable(), thread, currentLocation);
+					processReadVariable(node, thread, currentLocation);
+					processReturnVariable(node, thread, currentLocation);
 					
 					appendReadVariableFromStepOver(node);
 					
@@ -644,9 +635,15 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private void creatRWReturnVariableForReturnStatement(TraceNode prevNode, TraceNode node) {
-		for(VarValue returnValue: prevNode.getReadVariables()) {
+		for(VarValue returnValue: prevNode.getReturnedVariables()) {
 			prevNode.addWrittenVariable(returnValue);
 			node.addReadVariable(returnValue);
+			
+			List<StepVariableRelationEntry> entries = constructStepVariableEntry(trace.getStepVariableTable(), returnValue);
+			for(StepVariableRelationEntry entry: entries){
+				entry.addProducer(prevNode);
+				entry.addConsumer(node);
+			}
 		}
 	}
 	
@@ -1917,9 +1914,8 @@ public class ProgramExecutor extends Executor {
 		return frame;
 	}
 
-	private void processReadVariable(TraceNode node, Map<String, StepVariableRelationEntry> stepVariableTable,
-			ThreadReference thread, Location location) {
-
+	private void processReadVariable(TraceNode node, ThreadReference thread, Location location) {
+		Map<String, StepVariableRelationEntry> stepVariableTable = trace.getStepVariableTable();
 		BreakPoint point = node.getBreakPoint();
 
 		StackFrame frame = findFrame(thread, location);
@@ -1943,9 +1939,8 @@ public class ProgramExecutor extends Executor {
 		}
 	}
 	
-	private void processReturnVariable(TraceNode node, Map<String, StepVariableRelationEntry> stepVariableTable,
-			ThreadReference thread, Location location) {
-
+	private void processReturnVariable(TraceNode node, ThreadReference thread, Location location) {
+		Map<String, StepVariableRelationEntry> stepVariableTable = trace.getStepVariableTable();
 		if(!node.isReturnNode()) {
 			return;
 		}
