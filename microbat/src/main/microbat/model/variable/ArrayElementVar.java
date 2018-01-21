@@ -6,6 +6,15 @@ public class ArrayElementVar extends Variable {
 		super(name, type);
 		this.aliasVarID = aliasVarID;
 	}
+	
+	@Override
+	public String getVarID() {
+		if(this.aliasVarID != null){
+			return this.aliasVarID;
+		}
+		
+		return this.varID;
+	}
 
 	@Override
 	public int hashCode() {
