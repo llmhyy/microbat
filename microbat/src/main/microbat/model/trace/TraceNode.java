@@ -123,6 +123,10 @@ public class TraceNode{
 		return this.getBreakPoint().isReturnStatement();
 	}
 	
+	public void addReturnVariable(VarValue var){
+		this.returnedVariables.add(var);
+	}
+	
 	public TraceNode getDataDominator(VarValue readVar) {
 		TraceNode dataDominator = null;
 		

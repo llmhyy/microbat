@@ -21,7 +21,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import com.sun.jdi.AbsentInformationException;
@@ -92,6 +94,7 @@ import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Param;
 import microbat.model.variable.Variable;
+import microbat.model.variable.VirtualVar;
 import microbat.util.BreakpointUtils;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
@@ -1458,6 +1461,40 @@ public class ProgramExecutor extends Executor {
 
 		return paramList;
 	}
+	
+	class ReturnStatementFinder extends ASTVisitor{
+		CompilationUnit cu;
+		int lineNumber;
+		
+		public ReturnStatementFinder(CompilationUnit cu, int lineNumber){
+			this.cu = cu;
+			this.lineNumber = lineNumber;
+		}
+		
+		ReturnStatement returnStatement;
+		
+		@Override
+		public boolean visit(MethodDeclaration md){
+			int start = cu.getLineNumber(md.getStartPosition());
+			int end = cu.getLineNumber(md.getStartPosition()+md.getLength());
+			if(lineNumber<start || end<lineNumber){
+				return false;
+			}
+			return true;
+		}
+		
+		@Override
+		public boolean visit(ReturnStatement rStat){
+			int start = cu.getLineNumber(rStat.getStartPosition());
+			int end = cu.getLineNumber(rStat.getStartPosition()+rStat.getLength());
+			if(start<=lineNumber && lineNumber<=end){
+				this.returnStatement = rStat;
+				return true;
+			}
+			
+			return false;
+		}
+	}
 
 	class MethodFinder extends ASTVisitor {
 		CompilationUnit cu;
@@ -1940,31 +1977,34 @@ public class ProgramExecutor extends Executor {
 	}
 	
 	private void processReturnVariable(TraceNode node, ThreadReference thread, Location location) {
-		Map<String, StepVariableRelationEntry> stepVariableTable = trace.getStepVariableTable();
 		if(!node.isReturnNode()) {
 			return;
 		}
 		
 		BreakPoint point = node.getBreakPoint();
-		LineNumberVisitor0 visitor = findMethodByteCode(point);
-		Variable returnedVar = visitor.getReturnedVar();
-		if(returnedVar!=null && !(returnedVar instanceof ConstantVar)) {
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appPath);
+		ReturnStatementFinder finder = new ReturnStatementFinder(cu, point.getLineNumber());
+		cu.accept(finder);
+		
+		ReturnStatement rStat = finder.returnStatement;
+		if(rStat != null){
+			Expression expr = rStat.getExpression();
+			String returnExpr = expr.toString();
+			
 			StackFrame frame = findFrame(thread, location);
 			if (frame == null) {
 				return;
 			}
 
+			Variable virtualVar = new VirtualVar(returnExpr, "unknown");
+			virtualVar.setVarID(VirtualVar.VIRTUAL_PREFIX + node.getOrder());
 			synchronized (frame) {
-				VarValue varValue = generateVarValue(frame, returnedVar, node, Variable.WRITTEN, point);
+				VarValue varValue = generateVarValue(frame, virtualVar, node, Variable.WRITTEN, point);
 				if (varValue != null) {
-					node.getReadVariables().add(varValue);
-
-					List<StepVariableRelationEntry> entries = constructStepVariableEntry(stepVariableTable, varValue);
-					for(StepVariableRelationEntry entry: entries){
-						entry.addConsumer(node);
-					}
+					node.addReturnVariable(varValue);
 				}
 			}
+			
 		}
 	}
 
