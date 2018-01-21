@@ -185,14 +185,14 @@ public class ExecutionStatementCollector extends Executor {
 			vm.exit(0);
 			vm.dispose();
 		}
+		long t2 = System.currentTimeMillis();
+		this.setRunningTime(t2-t1);
 
-		// System.out.println("There are totally " + steps + " steps in this
-		// execution.");
+		System.out.println("There are " + this.steps + " steps for this run.");
+		System.out.println("spend " + this.runningTime +  "ms to collect them.");
 
 		List<BreakPoint> pointList = new ArrayList<>(pointSet);
 		this.setExecutionStatements(pointList);
-		long t2 = System.currentTimeMillis();
-		this.setRunningTime(t2-t1);
 		return pointList;
 	}
 	
