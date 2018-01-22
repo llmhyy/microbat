@@ -80,7 +80,7 @@ public class TransformLibHandler extends AbstractHandler {
 			}
 			
 			try {
-				String[] invalidPrefixes = transferToPrefix(Executor.libExcludes);
+				String[] invalidPrefixes = transferToPrefix(Executor.getLibExcludes());
 				
 				JarFile jar = new JarFile(rtJarFile);
 				Enumeration<? extends JarEntry> enumeration = jar.entries();

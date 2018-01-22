@@ -58,7 +58,7 @@ public abstract class Executor {
 	protected ThreadStartRequest threadStartRequest;
 	protected BreakpointRequest breakpointRequest;
 	
-	public static String[] libExcludes = { 
+	private static String[] libExcludes = { 
 			"java.awt.*",
 			"java.applet.*", 
 			"java.lang.*",
@@ -106,7 +106,7 @@ public abstract class Executor {
 	
 	static{
 		String[] excludePatterns = Executor.deriveLibExcludePatterns();
-		Executor.libExcludes = excludePatterns;
+		Executor.setLibExcludes(excludePatterns);
 		String[] includePatterns = AnalysisScopePreference.getIncludedLibs();
 		for(int i=0; i<includePatterns.length; i++){
 			String includePattern = includePatterns[i];
@@ -179,8 +179,8 @@ public abstract class Executor {
 	
 	public void addLibExcludeList(List<String> excludeList) {
 		List<String> existingList = new ArrayList<>();
-		for (int i = 0; i < libExcludes.length; i++) {
-			existingList.add(libExcludes[i]);
+		for (int i = 0; i < getLibExcludes().length; i++) {
+			existingList.add(getLibExcludes()[i]);
 		}
 		
 		for (Iterator<String> iterator = excludeList.iterator(); iterator.hasNext();) {
@@ -191,7 +191,7 @@ public abstract class Executor {
 			}
 		}
 		
-		libExcludes = existingList.toArray(new String[0]);
+		setLibExcludes(existingList.toArray(new String[0]));
 	}
 	
 	protected void enableAllStepRequests() {
@@ -210,7 +210,7 @@ public abstract class Executor {
 		StepRequest stepRequest = erm.createStepRequest(threadReference, StepRequest.STEP_LINE, StepRequest.STEP_INTO);
 		stepRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
 
-		for (String ex : libExcludes) {
+		for (String ex : getLibExcludes()) {
 			stepRequest.addClassExclusionFilter(ex);
 		}
 		
@@ -221,7 +221,7 @@ public abstract class Executor {
 	/** add watch requests **/
 	protected void addClassWatch(EventRequestManager erm) {
 		classPrepareRequest = erm.createClassPrepareRequest();
-		for (String ex : libExcludes) {
+		for (String ex : getLibExcludes()) {
 			classPrepareRequest.addClassExclusionFilter(ex);
 		}
 		classPrepareRequest.setEnabled(true);
@@ -232,14 +232,14 @@ public abstract class Executor {
 	 */
 	protected void addMethodWatch(EventRequestManager erm) {
 		methodEntryRequest = erm.createMethodEntryRequest();
-		for (String classPattern : libExcludes) {
+		for (String classPattern : getLibExcludes()) {
 			methodEntryRequest.addClassExclusionFilter(classPattern);
 		}
 		methodEntryRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
 		methodEntryRequest.enable();
 
 		methodExitRequest = erm.createMethodExitRequest();
-		for (String classPattern : libExcludes) {
+		for (String classPattern : getLibExcludes()) {
 			methodExitRequest.addClassExclusionFilter(classPattern);
 		}
 		methodExitRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
@@ -249,7 +249,7 @@ public abstract class Executor {
 	protected void addExceptionWatch(EventRequestManager erm) {
 		exceptionRequest = erm.createExceptionRequest(null, true, true);
 		exceptionRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-		for (String ex : libExcludes) {
+		for (String ex : getLibExcludes()) {
 			exceptionRequest.addClassExclusionFilter(ex);
 		}
 		exceptionRequest.enable();
@@ -376,5 +376,13 @@ public abstract class Executor {
 		return 
 			(declareType.contains("junit.framework.TestResult") && methodName.equals("startTest")) ||
 			(declareType.contains("org.junit.internal.runners.model.ReflectiveCallable") && methodName.equals("run"));
+	}
+
+	public static String[] getLibExcludes() {
+		return libExcludes;
+	}
+
+	public static void setLibExcludes(String[] libExcludes) {
+		Executor.libExcludes = libExcludes;
 	}
 }
