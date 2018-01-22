@@ -40,8 +40,7 @@ import sav.strategies.vm.JavaCompiler;
 import sav.strategies.vm.VMConfiguration;
 import tregression.TraceModelConstructor;
 import tregression.empiricalstudy.EmpiricalTrial;
-import tregression.empiricalstudy.SimulatorWithCompilcatedModification;
-import tregression.empiricalstudy.SimulatorWithSingleLineModification;
+import tregression.empiricalstudy.Simulator;
 import tregression.empiricalstudy.TestCase;
 import tregression.io.ExcelReporter;
 import tregression.junit.ParsedTrials;
@@ -50,7 +49,6 @@ import tregression.model.PairList;
 import tregression.model.Trial;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.tracematch.LCSBasedTraceMatcher;
-import tregression.views.Visualizer;
 
 public class TestCaseAnalyzer {
 	
@@ -92,87 +90,6 @@ public class TestCaseAnalyzer {
 				iterator.remove();
 			}
 		}
-	}
-
-
-	private static Trace cachedMutatedTrace;
-	private static Trace cachedCorrectTrace;
-	
-	public void runEvaluationForSingleTrial(String testClassName, String testMethodName, String mutationFile, 
-			double unclearRate, boolean enableLoopInference, boolean isReuseTrace, int optionSearchLimit) 
-					throws JavaModelException, MalformedURLException, IOException, NullPointerException, SavException {
-		
-		String testcaseName = testClassName + "#" + testMethodName;
-		AppJavaClassPath testcaseConfig = createProjectClassPath(testClassName, testMethodName);
-		
-		File mutatedFile = new File(mutationFile);
-		
-		String[] sections = mutationFile.split("\\\\");
-		String mutatedLineString = sections[sections.length-2];
-		String[] lines = mutatedLineString.split("_");
-		int mutatedLine = Integer.valueOf(lines[1]);
-		
-		CompilationUnit cu = JavaUtil.parseCompilationUnit(mutationFile);
-		String mutatedClassName = JavaUtil.getFullNameOfCompilationUnit(cu);
-		
-		Trace correctTrace = null;
-		Trace killingMutatantTrace = null;
-		
-		if((cachedMutatedTrace==null || cachedCorrectTrace==null) || !isReuseTrace){
-			MutateInfo info =
-					mutateCode(mutatedClassName, mutatedFile, testcaseConfig, mutatedLine, testcaseName);
-			
-			if(info.isTooLong){
-				System.out.println("mutated trace is over long");
-				return;
-			}
-			
-			killingMutatantTrace = info.killingMutateTrace;
-			TestCaseRunner checker = new TestCaseRunner();
-			
-			List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig, true);
-			List<BreakPoint> executionOrderList = checker.getExecutionOrderList();
-			if(checker.isOverLong()){
-				return;
-			}
-			
-			System.out.println("The correct consists of " + checker.getStepNum() + " steps");
-			correctTrace = new TraceModelConstructor().
-					constructTraceModel(testcaseConfig, executingStatements, executionOrderList, checker.getStepNum(), true, true);
-			
-			cachedCorrectTrace = correctTrace;
-			cachedMutatedTrace = killingMutatantTrace;
-		}
-		else{
-			correctTrace = cachedCorrectTrace;
-			killingMutatantTrace = cachedMutatedTrace;
-		}
-		
-		SimulatorWithSingleLineModification microbat = new SimulatorWithSingleLineModification();
-		
-		ClassLocation mutatedLocation = new ClassLocation(mutatedClassName, null, mutatedLine);
-		LCSBasedTraceMatcher traceMatcher = new LCSBasedTraceMatcher();
-		PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, null); 
-		
-		microbat.prepare(killingMutatantTrace, correctTrace, pairList, mutatedLocation);
-		Visualizer visualizer = new Visualizer();
-		visualizer.visualize(killingMutatantTrace, correctTrace, microbat.getPairList(), null);
-		
-		Trial trial;
-		try {
-			trial = microbat.detectMutatedBug(killingMutatantTrace, correctTrace, mutatedLocation, 
-					testcaseName, mutatedFile.toString(), unclearRate, enableLoopInference, optionSearchLimit);	
-			if(trial != null){
-				System.out.println("Jump " + trial.getJumpSteps().size() + " steps in total");
-				if(!trial.isBugFound()){
-					System.err.println("Cannot find bug in Mutated File: " + mutatedFile);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.err.println("Mutated File: " + mutatedFile);
-		}
-		
 	}
 
 	public void runEvaluation(IPackageFragment pack, ExcelReporter reporter, boolean isLimitTrialNum, 
@@ -349,15 +266,16 @@ public class TestCaseAnalyzer {
 				LCSBasedTraceMatcher traceMatcher = new LCSBasedTraceMatcher();
 				PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, null); 
 				
-				SimulatorWithCompilcatedModification simulator = new SimulatorWithCompilcatedModification();
-				simulator.prepare(killingMutatantTrace, correctTrace, pairList, mutatedLocation);
-				
 				ICompilationUnit iunit = JavaUtil.findNonCacheICompilationUnitInProject(tobeMutatedClass);
 				String orgFilePath = IResourceUtils.getAbsolutePathOsStr(iunit.getPath());
 				String mutationFilePath = mutationFile.getAbsolutePath();
 				DiffMatcher diffMatcher = new MuDiffMatcher(testcaseConfig.getPreferences().get(SOURCE_FOLDER_KEY),
 						orgFilePath, mutationFilePath);
 				diffMatcher.matchCode();
+
+				Simulator simulator = new Simulator();
+				simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
+				
 				List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
 					
 				List<EmpiricalTrial> trials = new ArrayList<>();

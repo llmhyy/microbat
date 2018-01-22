@@ -111,7 +111,8 @@ public class ExecutionStatementCollector extends Executor {
 							try {
 								path = location.sourcePath();
 							} catch (AbsentInformationException e) {
-								e.printStackTrace();
+								System.err.println("Source name is unknown: " + location.declaringType().toString());
+//								e.printStackTrace();
 								continue;
 							}
 							
