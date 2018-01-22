@@ -1824,9 +1824,9 @@ public class ProgramExecutor extends Executor {
 				ObjectReference objRef = (ObjectReference) value;
 				String varID = String.valueOf(objRef.uniqueID());
 
-				String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, 
-						varID, var.getAliasVarID());
-				varID = varID + ":" + definingNodeOrder;
+//				String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, 
+//						varID, var.getAliasVarID());
+//				varID = varID + ":" + definingNodeOrder;
 				var.setVarID(varID);
 
 				if (value.type().toString().equals("java.lang.String")) {
