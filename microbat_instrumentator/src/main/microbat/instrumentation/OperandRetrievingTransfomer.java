@@ -29,13 +29,25 @@ public class OperandRetrievingTransfomer implements ClassFileTransformer {
 
 	public static String tempVariableName = "microbat_return_value";
 	
+	private boolean isExcluded(String className){
+		for(String excl: Excludes.defaultLibExcludes){
+			String prefix = excl.replace("*", "");
+			if(className.startsWith(prefix)){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	@Override
 	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-//		System.out.println(className);
-//		if(!className.equals("org/Test")){
-//			return classfileBuffer;
-//		}
+		System.out.println(className);
+		if(isExcluded(className)){
+			return classfileBuffer;
+		}
+		
 		
 		InputStream stream = new ByteArrayInputStream(classfileBuffer);
 		ClassParser parser = new ClassParser(stream, className);
