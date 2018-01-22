@@ -30,9 +30,9 @@ import sav.strategies.dto.AppJavaClassPath;
 public class MicroBatUtil {
 	private MicroBatUtil(){}
 	
-	public static String getProjectPath(){
+	public static String getProjectPath(String projectName){
 		IWorkspaceRoot myWorkspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-		IProject iProject = myWorkspaceRoot.getProject(Settings.projectName);
+		IProject iProject = myWorkspaceRoot.getProject(projectName);
 		
 		String projectPath = iProject.getLocationURI().getPath();
 //		projectPath = projectPath.substring(1, projectPath.length());
@@ -42,11 +42,15 @@ public class MicroBatUtil {
 	}
 	
 	public static AppJavaClassPath constructClassPaths(){
+		return constructClassPaths(Settings.projectName);
+	}
+	
+	public static AppJavaClassPath constructClassPaths(String projectName){
 		AppJavaClassPath appClassPath = new AppJavaClassPath();
 		
-		String projectPath = getProjectPath();
+		String projectPath = getProjectPath(projectName);
 		IWorkspaceRoot myWorkspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-		IProject iProject = myWorkspaceRoot.getProject(Settings.projectName);
+		IProject iProject = myWorkspaceRoot.getProject(projectName);
 		IJavaProject javaProject = JavaCore.create(iProject);
 		
 		/**
@@ -97,7 +101,7 @@ public class MicroBatUtil {
 		String outputFolder = "";
 		try {
 			for(String seg: javaProject.getOutputLocation().segments()){
-				if(!seg.equals(Settings.projectName)){
+				if(!seg.equals(projectName)){
 					outputFolder += seg + File.separator;
 				}
 			}

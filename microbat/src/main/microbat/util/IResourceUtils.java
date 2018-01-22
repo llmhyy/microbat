@@ -11,12 +11,17 @@ package microbat.util;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
+import java.security.InvalidParameterException;
 
+import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,4 +73,40 @@ public class IResourceUtils {
     	IPath absolutePath = relativeToAbsolute(relativePath);
     	return absolutePath.toOSString();
     }
+    
+    public static String getSourceFolderPath(String projectName, String cName) {
+		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName, projectName);
+		String javaFilePath = IResourceUtils.getAbsolutePathOsStr(unit.getPath());
+		return javaFilePath.substring(0, javaFilePath.indexOf(cName.replace(".", "/")));
+	}
+    
+    public static String getRelativeSourceFolderPath(String projectFolder, String projectName, String cName) {
+    	String sourceFolderPath = getSourceFolderPath(projectName, cName);
+    	if (!sourceFolderPath.startsWith(projectFolder)) {
+			throw new InvalidParameterException(
+					String.format("ProjectFolder: %s, FullSourceFolderPath: %s ", projectFolder, sourceFolderPath));
+		}
+		return sourceFolderPath.substring(projectFolder.length(), sourceFolderPath.length());
+    }
+    
+	public static String getProjectPath(String projectName) {
+		return getAbsolutePathOsStr(JavaUtil.getSpecificJavaProjectInWorkspace(projectName).getFullPath());
+	}
+
+	public static String getFolderPath(String projectName, String folderName) {
+		IProject project = JavaUtil.getSpecificJavaProjectInWorkspace(projectName);
+		if (project == null || !project.exists() || !project.isOpen()) {
+			throw new SavRtException(String.format("Project %s is not open!", projectName));
+		}
+		IFolder outputFolder = project.getFolder(folderName);
+		if (!outputFolder.exists()) {
+			try {
+				outputFolder.create(IResource.NONE, true, null);
+			} catch (CoreException e) {
+				new SavRtException(e);
+			}
+		}
+		return outputFolder.getLocation().toOSString();
+	}
+	
 }

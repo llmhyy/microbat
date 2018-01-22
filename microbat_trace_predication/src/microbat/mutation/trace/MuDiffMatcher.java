@@ -7,7 +7,7 @@ import tregression.separatesnapshots.DiffMatcher;
 public class MuDiffMatcher extends DiffMatcher {
 	private String buggySourcePath;
 	private String fixSourcePath;
-
+	
 	public MuDiffMatcher(String sourceFolder, String orgFilePath, String mutationFilePath) {
 		super(sourceFolder, null, null, null);
 		this.buggySourcePath = mutationFilePath;
