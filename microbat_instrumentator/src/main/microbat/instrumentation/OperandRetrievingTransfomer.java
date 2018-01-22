@@ -81,8 +81,6 @@ public class OperandRetrievingTransfomer implements ClassFileTransformer {
 		        mGen.setMaxLocals();
 				mGen.setMaxStack();
 				
-				System.out.println(instructionList);
-				
 				Method newMethod = mGen.getMethod();
 				classGen.setMethodAt(newMethod, i);
 			}
