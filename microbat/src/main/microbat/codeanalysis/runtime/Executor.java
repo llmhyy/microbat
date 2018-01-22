@@ -14,6 +14,7 @@ import com.sun.jdi.Method;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.event.ClassPrepareEvent;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.MethodEntryEvent;
 import com.sun.jdi.event.MethodExitEvent;
@@ -138,6 +139,9 @@ public abstract class Executor {
 		else if(event instanceof StepEvent) {
 			String location = ((StepEvent) event).location().toString();
 			return eventName + ":" + "(" + location + ")";
+		}
+		else if(event instanceof ClassPrepareEvent){
+			return eventName + ":" +  ((ClassPrepareEvent)event).referenceType().name();
 		}
 		
 		return eventName;
