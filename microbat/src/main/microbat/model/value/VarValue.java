@@ -27,22 +27,10 @@ import microbat.model.variable.Variable;
 public abstract class VarValue implements GraphNode{
 	
 	protected String stringValue;
-	
 	protected List<VarValue> parents = new ArrayList<>();
-	
-//	/**
-//	 * uniquely identify this single variable.
-//	 */
-//	protected String varID;
-//	protected String varName;
-//	protected boolean isField;
-//	protected boolean isStatic;
-	
 	protected Variable variable;
-	
 	protected List<VarValue> children = new ArrayList<>();
 	
-//	protected boolean isElementOfArray = false;
 	/**
 	 * indicate whether this variable is a top-level variable in certain step.
 	 */
@@ -58,6 +46,8 @@ public abstract class VarValue implements GraphNode{
 		this.variable = variable;
 		
 	}
+	
+	public abstract VarValue clone();
 	
 	/**
 	 * if the toString() of an object is undefined, the default toString() may return something like

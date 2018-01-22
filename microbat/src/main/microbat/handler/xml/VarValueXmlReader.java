@@ -1,6 +1,25 @@
 package microbat.handler.xml;
 
-import static microbat.handler.xml.VarValueXmlConstants.*;
+import static microbat.handler.xml.VarValueXmlConstants.FIELD_VAR_DECLARING_TYPE;
+import static microbat.handler.xml.VarValueXmlConstants.FIELD_VAR_IS_STATIC;
+import static microbat.handler.xml.VarValueXmlConstants.LOCAL_VAR_LINE_NUMBER;
+import static microbat.handler.xml.VarValueXmlConstants.LOCAL_VAR_LOCATION_CLASS;
+import static microbat.handler.xml.VarValueXmlConstants.VALUE_ARR_COMPONENT_TYPE_PROP;
+import static microbat.handler.xml.VarValueXmlConstants.VALUE_CHILDREN_PROP;
+import static microbat.handler.xml.VarValueXmlConstants.VALUE_CHILDREN_SEPARATOR;
+import static microbat.handler.xml.VarValueXmlConstants.VALUE_ID_ATT;
+import static microbat.handler.xml.VarValueXmlConstants.VALUE_IS_ARRAY_PROP;
+import static microbat.handler.xml.VarValueXmlConstants.VALUE_IS_ROOT_ATT;
+import static microbat.handler.xml.VarValueXmlConstants.VALUE_REF_UNIQUE_ID_PROP;
+import static microbat.handler.xml.VarValueXmlConstants.VALUE_STRING_VALUE_PROP;
+import static microbat.handler.xml.VarValueXmlConstants.VALUE_TAG;
+import static microbat.handler.xml.VarValueXmlConstants.VALUE_VAR_TYPE_ATT;
+import static microbat.handler.xml.VarValueXmlConstants.VARIABLE_TAG;
+import static microbat.handler.xml.VarValueXmlConstants.VAR_ALIAS_ID_ATT;
+import static microbat.handler.xml.VarValueXmlConstants.VAR_CAT_ATT;
+import static microbat.handler.xml.VarValueXmlConstants.VAR_ID_ATT;
+import static microbat.handler.xml.VarValueXmlConstants.VAR_NAME_ATT;
+import static microbat.handler.xml.VarValueXmlConstants.VAR_TYPE_ATT;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -13,13 +32,13 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import microbat.model.value.ArrayValue;
-import microbat.model.value.BooleanValue;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.StringValue;
@@ -34,7 +53,6 @@ import microbat.model.variable.VirtualVar;
 import microbat.util.PrimitiveUtils;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.StringUtils;
-import org.w3c.dom.CharacterData;
 
 public class VarValueXmlReader {
 	
@@ -85,9 +103,11 @@ public class VarValueXmlReader {
 				value.setStringValue(stringVal);
 			} else if (StringValue.TYPE.equals(varType)) {
 				value = new StringValue(stringVal, isRoot, variable);
-			} else if (BooleanValue.TYPE.endsWith(varType)) {
-				value = new BooleanValue(Boolean.valueOf(stringVal), isRoot, variable);
-			} else if (PrimitiveUtils.isPrimitiveType(varType)) {
+			} 
+//			else if (BooleanValue.TYPE.endsWith(varType)) {
+//				value = new BooleanValue(Boolean.valueOf(stringVal), isRoot, variable);
+//			} 
+			else if (PrimitiveUtils.isPrimitiveType(varType)) {
 				if ("char".equals(variable.getType())) {
 					char ch = (char)(int)Integer.valueOf(stringVal);
 					stringVal = Character.toString(ch);

@@ -21,7 +21,8 @@ import microbat.model.variable.Variable;
 
 public class ReferenceValue extends VarValue {
 	
-	private long uniqueID;
+	protected long uniqueID;
+	protected boolean isNull;
 	
 	public ReferenceValue(boolean isNull, boolean isRoot, Variable variable) {
 		super(isRoot, variable);
@@ -29,7 +30,6 @@ public class ReferenceValue extends VarValue {
 	
 	public ReferenceValue(boolean isNull, long referenceID, boolean isRoot, Variable variable) {
 		super(isRoot, variable);
-		this.variable.setVarID(String.valueOf(referenceID));
 		this.uniqueID = referenceID;
 	}
 	
@@ -42,13 +42,6 @@ public class ReferenceValue extends VarValue {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append(getVariable());
 		buffer.append(": ");
-		
-//		if(getClassType() != null){
-//			buffer.append(getClassType() + ": ");			
-//		}
-//		else{
-//			buffer.append("unknown type: ");
-//		}
 		
 		buffer.append(getVarID());
 		String print = buffer.toString();
@@ -149,6 +142,22 @@ public class ReferenceValue extends VarValue {
 		}
 		buffer.append("]");
 		setStringValue(buffer.toString());
+	}
+
+	@Override
+	public VarValue clone() {
+		ReferenceValue clonedValue = new ReferenceValue(this.isNull, this.uniqueID, isRoot, this.variable.clone());
+		clonedValue.setParents(this.getParents());
+		clonedValue.setChildren(this.getChildren());
+		return clonedValue;
+	}
+
+	public boolean isNull() {
+		return isNull;
+	}
+
+	public void setNull(boolean isNull) {
+		this.isNull = isNull;
 	}
 	
 }

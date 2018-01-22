@@ -346,21 +346,11 @@ public class VariableValueExtractor {
 		Type type = childVarValue.type();
 		
 		if (type instanceof PrimitiveType) {
-			if (type instanceof BooleanType) {
-				microbat.model.value.BooleanValue ele = 
-						new microbat.model.value.BooleanValue(((BooleanValue)childVarValue).booleanValue(), isRoot, childVar);
-				setPrimitiveID(parent, ele, executor.getTrace());
-				if(ele.getVarID()!=null){
-					parent.addChild(ele);
-					ele.addParent(parent);				
-				}
-			} else {
-				PrimitiveValue ele = new PrimitiveValue(childVarValue.toString(), isRoot, childVar);
-				setPrimitiveID(parent, ele, executor.getTrace());
-				if(ele.getVarID()!=null){
-					parent.addChild(ele);
-					ele.addParent(parent);				
-				}
+			PrimitiveValue ele = new PrimitiveValue(childVarValue.toString(), isRoot, childVar);
+			setPrimitiveID(parent, ele, executor.getTrace());
+			if(ele.getVarID()!=null){
+				parent.addChild(ele);
+				ele.addParent(parent);				
 			}
 		} else if (type instanceof ArrayType) { 
 			appendArrVarVal(parent, childVar, (ArrayReference)childVarValue, level, thread, isRoot);

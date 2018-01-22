@@ -27,5 +27,11 @@ public class StringValue extends PrimitiveValue {
 		return false;
 	}
 	
-	
+	@Override
+	public VarValue clone(){
+		StringValue clonedValue = new StringValue(this.stringValue, isRoot, this.variable.clone());
+		clonedValue.setParents(this.getParents());
+		clonedValue.setChildren(this.getChildren());
+		return clonedValue;
+	}
 }

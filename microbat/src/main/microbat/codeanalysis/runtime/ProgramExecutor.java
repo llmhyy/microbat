@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
@@ -1981,6 +1982,17 @@ public class ProgramExecutor extends Executor {
 			return;
 		}
 		
+		TraceNode prevNode = node.getStepInPrevious();
+		if(prevNode!=null && prevNode.isReturnNode()){
+			for(VarValue returnVar: prevNode.getReturnedVariables()){
+				VarValue clonedValue = returnVar.clone();
+				clonedValue.setVarID(VirtualVar.VIRTUAL_PREFIX + node.getOrder());
+				node.addReturnVariable(clonedValue);
+			}
+			return;
+		}
+		
+		
 		BreakPoint point = node.getBreakPoint();
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appPath);
 		ReturnStatementFinder finder = new ReturnStatementFinder(cu, point.getLineNumber());
@@ -1994,14 +2006,19 @@ public class ProgramExecutor extends Executor {
 			}
 			
 			String returnExpr = expr.toString();
+			Variable virtualVar = new VirtualVar(returnExpr, "return type");
+			virtualVar.setVarID(VirtualVar.VIRTUAL_PREFIX + node.getOrder());
+			if(expr instanceof NullLiteral){
+				VarValue varValue = new ReferenceValue(true, -1, false, virtualVar);
+				node.addReturnVariable(varValue);
+				return;
+			}
 			
 			StackFrame frame = findFrame(thread, location);
 			if (frame == null) {
 				return;
 			}
 
-			Variable virtualVar = new VirtualVar(returnExpr, "unknown");
-			virtualVar.setVarID(VirtualVar.VIRTUAL_PREFIX + node.getOrder());
 			synchronized (frame) {
 				VarValue varValue = generateVarValue(frame, virtualVar, node, Variable.WRITTEN, point);
 				if (varValue != null) {
