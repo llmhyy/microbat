@@ -76,7 +76,7 @@ public class MuRegressionPreference extends PreferencePage implements IWorkbench
 	protected void updateBugIdList() {
 		String targetProject = projectCombo.getText();
 		List<String> bugIds = cacheBugIds.get(targetProject);
-		if (bugIds == null) {
+		if (bugIds == null && targetProject != null) {
 			try {
 				bugIds = dbRetriver.getMuBugIds(targetProject);
 			} catch (SQLException e) {
@@ -84,12 +84,15 @@ public class MuRegressionPreference extends PreferencePage implements IWorkbench
 			}
 			cacheBugIds.put(targetProject, bugIds);
 		}
+		String selectedBugId = bugIdCombo.getText();
 		bugIdCombo.setItems((String[]) bugIds.toArray(new String[0]));
+		bugIdCombo.setText(selectedBugId);
 	}
 
 	private void setDefaultValue() {
 		projectCombo.setText(Activator.getDefault().getPreferenceStore().getString(TARGET_PROJECT_KEY));
 		bugIdCombo.setText(Activator.getDefault().getPreferenceStore().getString(BUG_ID_KEY));
+		updateBugIdList();
 	}
 
 	@Override
