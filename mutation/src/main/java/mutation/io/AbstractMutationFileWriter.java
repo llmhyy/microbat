@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.List;
 
 import japa.parser.ast.Node;
+import sav.common.core.Constants;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.StringUtils;
@@ -30,8 +31,9 @@ public class AbstractMutationFileWriter {
 		
 		this.scrFolder = srcFolder;
 		try {
-			String projName = srcFolder.substring(0, srcFolder.indexOf("/src"));
-			projName = projName.substring(projName.lastIndexOf("/")+1, projName.length());
+			srcFolder.replace("/", Constants.FILE_SEPARATOR);
+			String projName = srcFolder.substring(0, srcFolder.indexOf(Constants.FILE_SEPARATOR + "src"));
+			projName = projName.substring(projName.lastIndexOf(Constants.FILE_SEPARATOR)+1, projName.length());
 			
 			if(projName.length() < 5){
 				projName = "mutation";
