@@ -6,11 +6,13 @@ public class MuTrial {
 	private EmpiricalTrial trial;
 	private String orgFilePath;
 	private String mutationFilePath;
+	private String mutationClassName;
 
-	public MuTrial(EmpiricalTrial trial, String orgFilePath, String mutationFilePath) {
+	public MuTrial(EmpiricalTrial trial, String orgFilePath, String mutationFilePath, String mutationClassName) {
 		this.trial = trial;
 		this.orgFilePath = orgFilePath;
 		this.mutationFilePath = mutationFilePath;
+		this.mutationClassName = mutationClassName;
 	}
 
 	public EmpiricalTrial getTrial() {
@@ -37,4 +39,7 @@ public class MuTrial {
 		this.mutationFilePath = mutationFilePath;
 	}
 
+	public String getMutationClassName() {
+		return mutationClassName;
+	}
 }

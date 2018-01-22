@@ -11,6 +11,7 @@ package sav.common.core.utils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -93,11 +94,20 @@ public class FileUtils {
 	}
 	
 	public static void deleteAllFiles(String folderPath) {
+		deleteAllFiles(folderPath, null);
+	}
+	
+	public static void deleteAllFiles(String folderPath, FilenameFilter filter) {
 		File folder = new File(folderPath);
 		if (!folder.exists() || !folder.isDirectory()) {
 			return;
 		}
-		File[] files = folder.listFiles();
+		File[] files;
+		if (filter != null) {
+			files = folder.listFiles(filter);
+		} else {
+			files = folder.listFiles();
+		}
 		if (!CollectionUtils.isEmpty(files)) {
 			deleteFiles(Arrays.asList(files));
 		}
@@ -108,4 +118,5 @@ public class FileUtils {
 			file.delete();
 		}
 	}
+	
 }
