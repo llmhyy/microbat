@@ -36,7 +36,7 @@ public class MuRegressionRecorder extends RegressionRecorder {
 			Map<Integer, String> mutationFiles = new HashMap<>();
 			mutationFiles.put(buggyTraceId, muTrial.getMutationFilePath());
 			mutationFiles.put(correctTraceId, muTrial.getOrgFilePath());
-			insertMutationFile(mutationFiles, conn, closables);
+			insertMutationFile(muTrial.getMutationClassName(), mutationFiles, conn, closables);
 			conn.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -48,9 +48,9 @@ public class MuRegressionRecorder extends RegressionRecorder {
 		System.out.println("RecordDB finished!");
 	}
 
-	private void insertMutationFile(Map<Integer, String> mutationFiles, Connection conn, List<AutoCloseable> closables)
-			throws SQLException {
-		String sql = "INSERT INTO MutationFile (trace_id, mutationFile)" + " VALUES (?,?)";
+	private void insertMutationFile(String mutationClassName, Map<Integer, String> mutationFiles, Connection conn,
+			List<AutoCloseable> closables) throws SQLException {
+		String sql = "INSERT INTO MutationFile (trace_id, mutation_file, mutation_class_name)" + " VALUES (?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		for (Integer traceId : mutationFiles.keySet()) {
@@ -61,6 +61,7 @@ public class MuRegressionRecorder extends RegressionRecorder {
 			} catch (FileNotFoundException e) {
 				throw new SQLException(e);
 			}
+			ps.setString(idx++, mutationClassName);
 			ps.addBatch();
 		}
 		ps.executeBatch();

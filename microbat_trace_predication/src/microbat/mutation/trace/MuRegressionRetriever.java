@@ -8,10 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 
@@ -34,10 +31,10 @@ public class MuRegressionRetriever extends RegressionRetriever {
 			int buggyTraceId = (int) rs[idx++];
 			int correctTraceId = (int) rs[idx++];
 			Regression regression = retrieveRegressionInfo(regressionId, buggyTraceId, correctTraceId, conn, closables);
-			Map<Integer, String> traceCodes = loadMutationFile(Arrays.asList(buggyTraceId, correctTraceId), conn, closables);
+			rs = loadMutationFile(correctTraceId, buggyTraceId, conn, closables);
 			// result
 			MuRegression result = new MuRegression();
-			result.setMutationFiles(traceCodes.get(correctTraceId), traceCodes.get(buggyTraceId));
+			result.setMutationFiles((String)rs[0], (String)rs[1], (String)rs[2]);
 			result.setRegression(regression);
 			System.out.println(timer.getResult());
 			return result;
@@ -46,29 +43,41 @@ public class MuRegressionRetriever extends RegressionRetriever {
 		}
 	}
 	
-	private Map<Integer, String> loadMutationFile(List<Integer> traceIds, Connection conn,
+	/**
+	 * object[3]
+	 * [0]: original code
+	 * [1]: mutation code
+	 * [2]: mutation class name
+	 */
+	private Object[] loadMutationFile(int orgTraceId, int muTraceId, Connection conn,
 			List<AutoCloseable> closables) throws SQLException {
-		String matchList = StringUtils.join(traceIds, ",");
+		String matchList = StringUtils.join(",", orgTraceId, muTraceId);
 		PreparedStatement ps = conn
 				.prepareStatement(String.format("SELECT * FROM MutationFile WHERE trace_id IN (%s)", matchList));
 		ResultSet rs = ps.executeQuery();
 		closables.add(ps);
 		closables.add(rs);
-		Map<Integer, String> traceCodes = new HashMap<Integer, String>();
+		Object[] result = new Object[3];
 		while (rs.next()) {
 			int traceId = rs.getInt("trace_id");
-			Blob blob = rs.getBlob("mutationFile");
+			Blob blob = rs.getBlob("mutation_file");
+			String className = rs.getString("mutation_class_name");
 			StringWriter writer = new StringWriter();
 			try {
 				IOUtils.copy(blob.getBinaryStream(), writer, "utf-8");
 			} catch (IOException e) {
 				throw new SQLException(e);
 			}
-			traceCodes.put(traceId, writer.getBuffer().toString());
+			if (traceId == orgTraceId) {
+				result[0] = writer.getBuffer().toString();
+			} else {
+				result[1] = writer.getBuffer().toString();	
+			}
+			result[2] = className;
 		}
 		ps.close();
 		rs.close();
-		return traceCodes;
+		return result;
 	}
 	
 	public List<String> getMuBugIds(String targetProject) throws SQLException {

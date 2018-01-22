@@ -18,10 +18,12 @@ public class MuRegression {
 		this.regression = regression;
 	}
 
-	public void setMutationFiles(String correctCode, String buggyCode) {
-		// TODO: we should have another column for className in table mutationFile
-		mutationClassName = ClassUtils.getCanonicalName(StringUtils.subString(correctCode, "package ", ";"),
-				StringUtils.subString(correctCode, "public class ", " "));
+	public void setMutationFiles(String correctCode, String buggyCode, String className) {
+		mutationClassName = className;
+		if (mutationClassName == null) {
+			mutationClassName = ClassUtils.getCanonicalName(StringUtils.subString(correctCode, "package ", ";"),
+					StringUtils.subString(correctCode, "public class ", " "));
+		}
 		orginalCode = correctCode;
 		mutationCode = buggyCode;
 	}

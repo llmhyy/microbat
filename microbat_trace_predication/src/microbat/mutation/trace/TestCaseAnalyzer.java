@@ -3,31 +3,20 @@ package microbat.mutation.trace;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
 
 import microbat.evaluation.io.IgnoredTestCaseFiles;
 import microbat.model.BreakPoint;
@@ -44,7 +33,6 @@ import sav.common.core.Constants;
 import sav.common.core.SavException;
 import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.FileUtils;
-import sav.common.core.utils.ResourceUtils;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.dto.ClassLocation;
 import sav.strategies.mutanbug.MutationResult;
@@ -56,7 +44,6 @@ import tregression.empiricalstudy.SimulatorWithCompilcatedModification;
 import tregression.empiricalstudy.SimulatorWithSingleLineModification;
 import tregression.empiricalstudy.TestCase;
 import tregression.io.ExcelReporter;
-import tregression.junit.LoopStatementChecker;
 import tregression.junit.ParsedTrials;
 import tregression.junit.TestCaseRunner;
 import tregression.model.PairList;
@@ -382,7 +369,7 @@ public class TestCaseAnalyzer {
 
 					EmpiricalTrial trial = trials0.get(0);
 					trials.add(trial);
-					MuTrial muTrial = new MuTrial(trial, orgFilePath, mutationFilePath);
+					MuTrial muTrial = new MuTrial(trial, orgFilePath, mutationFilePath, tobeMutatedClass);
 					MuRegressionRecorder dbRecorder = new MuRegressionRecorder();
 					dbRecorder.record(muTrial, killingMutatantTrace, correctTrace, pairList,
 							iunit.getJavaProject().getElementName(), getMuBugId(mutationFilePath));
@@ -536,15 +523,6 @@ public class TestCaseAnalyzer {
 		return null;
 	}
 	
-	private void autoCompile() {
-		IProject project = JavaUtil.getSpecificJavaProjectInWorkspace();
-		try {
-			project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor());
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
-	}
-
 	private List<ClassLocation> findMutationLocation(String junitClassName, List<BreakPoint> executingStatements, AppJavaClassPath appPath) {
 		List<ClassLocation> locations = new ArrayList<>();
 		
@@ -557,98 +535,9 @@ public class TestCaseAnalyzer {
 			locations.add(location);	
 		}
 		
-//		for(BreakPoint point: executingStatements){
-//			String className = point.getDeclaringCompilationUnitName();
-//			CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className, appPath);
-//			if(cu != null && !JTestUtil.isInTestCase(className, appPath)){
-//				MutationPointChecker checker = new MutationPointChecker(cu, point.getLineNumber());
-//				cu.accept(checker);
-//				
-//				if(checker.isLoopInsider()){
-//					ClassLocation location = new ClassLocation(className, 
-//							null, point.getLineNumber());
-//					locations.add(location);					
-//				}
-//			}
-//		}
-//		
-//		List<ClassLocation> invocationMutationPoints = findInvocationMutations(executingStatements, appPath);
-//		for(ClassLocation location: invocationMutationPoints){
-//			if(!locations.contains(location)){
-//				locations.add(location);
-//			}
-//		}
-//		
 		return locations;
 	}
 	
-	private List<ClassLocation> findInvocationMutations(final List<BreakPoint> executingStatements, final AppJavaClassPath appPath) {
-		final List<ClassLocation> validLocationList = new ArrayList<>();
-		
-		for(final BreakPoint point: executingStatements){
-			final CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appPath);
-			cu.accept(new ASTVisitor() {
-				public boolean visit(MethodInvocation invocation){
-					int startLine = cu.getLineNumber(invocation.getStartPosition());
-					
-					
-					if(startLine == point.getLineNumber()){
-						if(startLine == 73){
-							System.currentTimeMillis();
-						}
-						
-						/**
-						 * check whether this invocation is above loop
-						 */
-						ASTNode parent = invocation.getParent();
-						while(parent!=null && !(parent instanceof Block)){
-							parent = parent.getParent();
-						}
-						if(parent==null){
-							return false;
-						}
-						
-						LoopStatementChecker checker = new LoopStatementChecker(invocation, cu);
-						parent.accept(checker);
-						
-						if(checker.isValid){
-							IMethodBinding invocationBinding = invocation.resolveMethodBinding();
-							IMethodBinding declarationBinding = invocationBinding.getMethodDeclaration();
-							
-							ITypeBinding type = declarationBinding.getDeclaringClass();
-							CompilationUnit cuOfDec = JavaUtil.findCompilationUnitInProject(type.getQualifiedName(), appPath);
-							
-							if(cuOfDec == null){
-								return false;
-							}
-							
-							MethodDeclaration declaration = (MethodDeclaration) cuOfDec.findDeclaringNode(declarationBinding);
-							if(declaration == null){
-								return false;
-							}
-							
-							int startMDLine = cuOfDec.getLineNumber(declaration.getStartPosition());
-							int endMDLine = cuOfDec.getLineNumber(declaration.getStartPosition()+declaration.getLength());
-							
-							for(BreakPoint point: executingStatements){
-								if(startMDLine<point.getLineNumber() && point.getLineNumber()<endMDLine){
-									ClassLocation location = 
-											new ClassLocation(point.getDeclaringCompilationUnitName(), null, point.getLineNumber());
-									if(!validLocationList.contains(location)){
-										validLocationList.add(location);
-									}
-								}
-							}
-						}
-					}
-					
-					return false;
-				}
-			});
-		}
-		
-		return validLocationList;
-	}
 
 	private AppJavaClassPath createProjectClassPath(String className, String methodName){
 		AppJavaClassPath classPath = MicroBatUtil.constructClassPaths();

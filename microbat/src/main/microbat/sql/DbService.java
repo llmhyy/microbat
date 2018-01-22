@@ -113,7 +113,6 @@ public class DbService {
 				dataSource.setDatabaseName(dbName);
 				conn.close();
 				dbSettingsVersion = dbVersion;
-				DBSettings.forceRunCreateScript = false;
 				return false;
 			} finally {
 				closeDb(conn, CollectionUtils.<AutoCloseable>listOf(stmt, rs));
@@ -149,7 +148,7 @@ public class DbService {
 			}
 			
 		}
-		if (!expectedTables.isEmpty() || DBSettings.forceRunCreateScript) {
+		if (!expectedTables.isEmpty() && DBSettings.enableAutoUpdateDb) {
 			System.out.println("Missing tables: " + expectedTables.toString());
 			String s;
 			StringBuffer sb = new StringBuffer();
