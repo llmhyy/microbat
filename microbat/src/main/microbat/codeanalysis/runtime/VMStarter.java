@@ -37,9 +37,12 @@ public class VMStarter {
 //		LaunchingConnector connector = getCommandLineConnector();
 		SocketLanchingConnector0 connector = new SocketLanchingConnector0((VirtualMachineManagerImpl)manager);
 		Map<String, Connector.Argument> arguments = connectorArguments(connector, configuration);
+		
+		System.currentTimeMillis();
+		
         try {
         	File workDir = new File(configuration.getWorkingDirectory());
-        	vm = connector.launch(arguments, workDir);
+        	vm = connector.launch(arguments, workDir, configuration);
         	return vm;
         } catch (IOException exc) {
             throw new Error("Unable to launch target VM: " + exc);
@@ -87,7 +90,7 @@ public class VMStarter {
         	mainValue = configuration.getLaunchClass();
         }
         mainArg.setValue(mainValue);
-
+        
         // We need a VM that supports watchpoints
         Connector.Argument optionArg =
             (Connector.Argument)arguments.get("options");

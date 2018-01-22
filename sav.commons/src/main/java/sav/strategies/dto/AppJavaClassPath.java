@@ -29,6 +29,8 @@ public class AppJavaClassPath {
 	
 	private String launchClass;
 	
+	private String agentLib;
+	
 	/**
 	 * If Microbat is running a test case (JUnit), user need to specify which test case to be run.
 	 */
@@ -135,6 +137,14 @@ public class AppJavaClassPath {
 
 	public void addExternalLibPath(String lib) {
 		this.externalLibPaths.add(lib);
+	}
+
+	public String getAgentLib() {
+		return agentLib;
+	}
+
+	public void setAgentLib(String agentLib) {
+		this.agentLib = agentLib;
 	}
 
 }

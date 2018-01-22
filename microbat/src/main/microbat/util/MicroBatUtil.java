@@ -96,6 +96,18 @@ public class MicroBatUtil {
 		appClassPath.addClasspath(testRunnerDir);
 		
 		/**
+		 * setting bcel lib (for instrumentation) into classpath
+		 */
+		String bcelDir = junitDir + File.separator + "bcel-6.0.jar";
+		appClassPath.addClasspath(bcelDir);
+		
+		/**
+		 * setting java agent lib 
+		 */
+		String agentLib = junitDir + File.separator + "instrumentator.jar";
+		appClassPath.setAgentLib(agentLib);
+		
+		/**
 		 * setting output folder
 		 */
 		String outputFolder = "";

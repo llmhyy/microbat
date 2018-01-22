@@ -20,6 +20,8 @@ import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 import com.sun.jdi.connect.VMStartException;
 
+import sav.strategies.dto.AppJavaClassPath;
+
 @SuppressWarnings("restriction")
 public class SocketLanchingConnector0 extends SocketLaunchingConnectorImpl {
 
@@ -112,7 +114,7 @@ public class SocketLanchingConnector0 extends SocketLaunchingConnectorImpl {
 	/* (non-Javadoc)
 	 * @see com.sun.jdi.connect.LaunchingConnector#launch(java.util.Map)
 	 */
-	public VirtualMachine launch(Map<String,? extends Connector.Argument> connectionArgs, File workingDirectory) throws IOException,
+	public VirtualMachine launch(Map<String,? extends Connector.Argument> connectionArgs, File workingDirectory, AppJavaClassPath configuration) throws IOException,
 			IllegalConnectorArgumentsException, VMStartException {
 		getConnectionArguments(connectionArgs);
 
@@ -132,12 +134,14 @@ public class SocketLanchingConnector0 extends SocketLaunchingConnectorImpl {
 		// Add Debug options.
 		//execString += " -Xdebug -Xnoagent -Djava.compiler=NONE"; //$NON-NLS-1$
 		//execString += " -Xrunjdwp:transport=dt_socket,address=" + address + ",server=n,suspend=" + (fSuspend ? "y" : "n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		execString += " -agentlib:jdwp=transport=dt_socket,address="+ address + ",suspend=" + (fSuspend ? "y" : "n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		execString += " -noverify -agentlib:jdwp=transport=dt_socket,address="+ address + ",suspend=" + (fSuspend ? "y" : "n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		
 		// Add User specified options.
 		if (fOptions != null)
 			execString += " " + fOptions; //$NON-NLS-1$
 
+		execString += " -javaagent:" + configuration.getAgentLib();
+		
 		// Add Main class.
 		execString += " " + fMain; //$NON-NLS-1$
 		System.out.println(execString);
