@@ -32,10 +32,18 @@ public class FileUtils {
 	}
 	
 	public static void appendFile(String fileName, String content) {
+		writeFile(fileName, content, true);
+	}
+	
+	public static void writeFile(String fileName, String content) {
+		writeFile(fileName, content, false);
+	}
+	
+	public static void writeFile(String fileName, String content, boolean append) {
 		File file = getFileCreateIfNotExist(fileName);
 		FileOutputStream stream;
 		try {
-			stream = new FileOutputStream(file, true);
+			stream = new FileOutputStream(file, append);
 			stream.write(content.getBytes());
 			stream.close();
 		} catch (FileNotFoundException e) {

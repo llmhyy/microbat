@@ -20,6 +20,7 @@ public class VarValueXmlConstants {
 	public static final String VALUE_STRING_VALUE_PROP = "strVal";
 	public static final String VALUE_VAR_TYPE_ATT = "type";
 	public static final String VALUE_REF_UNIQUE_ID_PROP = "uniqueId";
+	public static final String VALUE_REF_IS_NULL_PROP = "isNull";
 	public static final String VALUE_ARR_COMPONENT_TYPE_PROP = "compType"; // componentType
 	public static final String VALUE_IS_ARRAY_PROP = "isArr";
 	

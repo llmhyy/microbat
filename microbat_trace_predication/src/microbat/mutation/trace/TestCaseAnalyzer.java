@@ -79,7 +79,7 @@ public class TestCaseAnalyzer {
 		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName);
 		URI uri = unit.getResource().getLocationURI();
 		String sourceFolderPath = uri.toString();
-		cName = cName.replace(".", "/") + ".java";
+		cName = ClassUtils.getJFilePath(cName);
 		
 		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName));
 		sourceFolderPath = sourceFolderPath.substring(5, sourceFolderPath.length());
@@ -100,8 +100,7 @@ public class TestCaseAnalyzer {
 		while(iterator.hasNext()){
 			ClassLocation location = iterator.next();
 			String className = location.getClassCanonicalName();
-			String fileName  = sourceFolderPath + className.replace(".", "/") + ".java";
-			
+			String fileName  = ClassUtils.getJFilePath(sourceFolderPath, className);
 			File file = new File(fileName);
 			if(!file.exists()){
 				iterator.remove();
