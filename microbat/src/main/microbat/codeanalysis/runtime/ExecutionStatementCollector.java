@@ -6,6 +6,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.ui.JavaUI;
+
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.Location;
 import com.sun.jdi.Method;
@@ -28,6 +33,7 @@ import com.sun.jdi.request.EventRequestManager;
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
+import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import sav.strategies.dto.AppJavaClassPath;
@@ -45,6 +51,8 @@ public class ExecutionStatementCollector extends Executor {
 		List<String> excludes = MicroBatUtil.extractExcludeFiles("", appClassPath.getExternalLibPaths());
 		
 //		List<String> abstractPrefixes = abstractPrefixes(excludes);
+		
+		Range range = getStartRange(appClassPath);
 		
 		this.addLibExcludeList(excludes);
 
@@ -70,33 +78,27 @@ public class ExecutionStatementCollector extends Executor {
 						if (event instanceof VMStartEvent) {
 							System.out.println("start collecting execution...");
 
-							ThreadReference thread = ((VMStartEvent) event).thread();
-							addStepWatch(erm, thread);
-							addExceptionWatch(erm);
-							addMethodWatch(erm);
+							addClassWatch(erm);
 							addThreadStartWatch(erm);
-
-							if (isTestcaseEvaluation) {
-								disableAllStepRequests();
-							} else {
-								excludeJUnitLibs();
-								this.methodEntryRequest.disable();
-								this.methodExitRequest.disable();
-							}
-
 						} 
 						else if (event instanceof ThreadStartEvent) {
 							ThreadReference threadReference = ((ThreadStartEvent) event).thread();
 							if(hasValidThreadName(threadReference)) {
-//								addStepWatch(erm, threadReference);
-//								excludeJUnitLibs();	
 								setMultiThread(true);
-								System.currentTimeMillis();
 							}
 						}
 						else if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
 							connected = false;
 						} else if (event instanceof ClassPrepareEvent) {
+							if(this.stepRequestList.isEmpty()){
+								ClassPrepareEvent cEvent = (ClassPrepareEvent)event;
+								boolean reachApp = addStartBreakPointWatch(erm, cEvent.referenceType(), range);
+								if(reachApp){
+									addStepWatch(erm, ((ClassPrepareEvent) event).thread());
+									addExceptionWatch(erm);
+									excludeJUnitLibs();
+								}
+							}
 						} else if (event instanceof StepEvent) {
 							StepEvent sEvent = (StepEvent) event;
 							Location location = sEvent.location();
@@ -106,13 +108,12 @@ public class ExecutionStatementCollector extends Executor {
 							}
 
 							int lineNumber = location.lineNumber();
-
+							
 							String path = null;
 							try {
 								path = location.sourcePath();
 							} catch (AbsentInformationException e) {
 								System.err.println("Source name is unknown: " + location.declaringType().toString());
-//								e.printStackTrace();
 								continue;
 							}
 							
@@ -125,7 +126,6 @@ public class ExecutionStatementCollector extends Executor {
 
 							BreakPoint breakPoint = new BreakPoint(location.declaringType().name(),
 									declaringCompilationUnit, lineNumber);
-//							System.out.println(breakPoint);
 
 							if (!isInTestRunner(breakPoint)) {
 								if (!pointSet.contains(breakPoint)) {
@@ -205,29 +205,6 @@ public class ExecutionStatementCollector extends Executor {
 			return true;
 		}
 		return false;
-	}
-
-	protected void addBreakPointWatch(EventRequestManager erm, ReferenceType refType, List<ClassLocation> anchorPoint) {
-		for (Iterator<ClassLocation> iterator = anchorPoint.iterator(); iterator.hasNext();) {
-			ClassLocation classLocation = (ClassLocation) iterator.next();
-			System.out.println(refType.name());
-			if (classLocation.getClassCanonicalName().equals(refType.name())) {
-				List<Location> listOfLocations;
-				try {
-					listOfLocations = refType.locationsOfLine(classLocation.getLineNumber());
-					if (listOfLocations.size() == 0) {
-						System.out.println("No element in the list of locations ");
-						return;
-					}
-					Location loc = (Location)listOfLocations.get(0);
-					breakpointRequest = erm.createBreakpointRequest(loc);
-					breakpointRequest.setEnabled(true);
-				} catch (AbsentInformationException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		
 	}
 
 	public int getStepNum() {

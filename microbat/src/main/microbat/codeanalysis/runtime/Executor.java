@@ -5,12 +5,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+
+import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.InvalidTypeException;
 import com.sun.jdi.InvocationException;
 import com.sun.jdi.Location;
 import com.sun.jdi.Method;
+import com.sun.jdi.ReferenceType;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 import com.sun.jdi.VirtualMachine;
@@ -35,8 +41,10 @@ import microbat.codeanalysis.runtime.jpda.expr.ParseException;
 import microbat.preference.AnalysisScopePreference;
 import microbat.util.FilterUtils;
 import microbat.util.FilterUtils.ExtJarPackagesContainer;
+import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import sav.common.core.utils.StringUtils;
+import sav.strategies.dto.AppJavaClassPath;
 
 /**
  * This class is used to locate all the executor classes in this project
@@ -57,6 +65,35 @@ public abstract class Executor {
 	protected ExceptionRequest exceptionRequest;
 	protected ThreadStartRequest threadStartRequest;
 	protected BreakpointRequest breakpointRequest;
+	
+	private static String[] defaultLibExcludes = { 
+			"java.awt.*",
+			"java.applet.*", 
+			"java.lang.*",
+			"java.beans.*", 
+			"java.io.*", 
+			"java.math.*", 
+			"java.net.*", 
+			"java.nio.*", 
+			"java.rmi.*",
+			"java.security.*", 
+			"java.sql.*", 
+			"java.text.*", 
+			"java.util.*",
+			"javax.*", 
+			"sun.*", 
+			"com.sun.*", 
+			"com.oracle.*",
+			"org.ietf.*",
+			"org.omg.*",
+			"org.jcp.*",
+			"org.w3c.*",
+			"org.xml.*",
+			"sunw.*",
+			"org.junit.*", "junit.*", "junit.framework.*", "org.hamcrest.*", "org.hamcrest.core.*", "org.hamcrest.internal.*",
+			"jdk.*", "jdk.internal.*", "org.GNOME.Accessibility.*"
+			};
+	
 	
 	private static String[] libExcludes = { 
 			"java.awt.*",
@@ -104,7 +141,12 @@ public abstract class Executor {
 	public static String[] libIncludes = {"java.util.*"};
 //	public static String[] libIncludes = {"java.util.*\\"};
 	
+	private static List<String> microbatLibs = new ArrayList<>();
+	
 	static{
+		microbatLibs.add("microbat.instrumentation.*");
+		microbatLibs.add("org.apache.bcel.*");
+		
 		String[] excludePatterns = Executor.deriveLibExcludePatterns();
 		Executor.setLibExcludes(excludePatterns);
 		String[] includePatterns = AnalysisScopePreference.getIncludedLibs();
@@ -112,9 +154,94 @@ public abstract class Executor {
 			String includePattern = includePatterns[i];
 			includePatterns[i] = includePattern.replace("\\", "");
 		}
+		
 		Executor.libIncludes = includePatterns;
 	}
 	
+	protected class Range{
+		String className;
+		int startLine;
+		int endLine;
+		
+		public Range(String className, int startLine, int endLine) {
+			super();
+			this.className = className;
+			this.startLine = startLine;
+			this.endLine = endLine;
+		}
+	}
+	
+	class RangeFinder extends ASTVisitor{
+		Range range;
+		
+		String className;
+		String methodName;
+		CompilationUnit cu;
+		public RangeFinder(String className, String methodName, CompilationUnit cu) {
+			this.className = className;
+			this.methodName = methodName;
+			this.cu = cu;
+		}
+		
+		@Override
+		public boolean visit(MethodDeclaration md){
+			if(md.getName().getIdentifier().equals(methodName)){
+				int startLine = cu.getLineNumber(md.getStartPosition());
+				int endLine = cu.getLineNumber(md.getStartPosition()+md.getLength());
+				
+				range = new Range(className, startLine, endLine);
+				return false;
+			}
+			else{
+				return false;
+			}
+		}
+
+	}
+	
+	protected Range getStartRange(AppJavaClassPath appClassPath){
+		String className;
+		String methodName;
+		if(appClassPath.getOptionalTestClass()==null){
+			className = appClassPath.getLaunchClass();
+			methodName = "main";
+		}
+		else{
+			className = appClassPath.getOptionalTestClass();
+			methodName = appClassPath.getOptionalTestMethod();
+		}
+		
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className, appClassPath);
+		RangeFinder finder = new RangeFinder(className, methodName, cu);
+		cu.accept(finder);
+		
+		return finder.range;
+	}
+	
+	
+	protected boolean addStartBreakPointWatch(EventRequestManager erm, ReferenceType refType, 
+			Range range) {
+		if (range.className.equals(refType.name())) {
+			List<Location> listOfLocations;
+			try {
+				int count = range.startLine;
+				listOfLocations = refType.locationsOfLine(count++);
+				while (listOfLocations.size() == 0 && count<range.endLine) {
+					listOfLocations = refType.locationsOfLine(count++);
+				}
+				
+				Location loc = (Location)listOfLocations.get(0);
+				breakpointRequest = erm.createBreakpointRequest(loc);
+				breakpointRequest.setEnabled(true);
+				
+				return true;
+			} catch (AbsentInformationException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return false;
+	}
 	
 	protected String createEventLog(Event event) {
 		String eventName = event.toString();
@@ -221,9 +348,14 @@ public abstract class Executor {
 	/** add watch requests **/
 	protected void addClassWatch(EventRequestManager erm) {
 		classPrepareRequest = erm.createClassPrepareRequest();
-		for (String ex : getLibExcludes()) {
+		for (String ex : defaultLibExcludes) {
 			classPrepareRequest.addClassExclusionFilter(ex);
 		}
+		
+		for(String ex: Executor.getLibExcludes()){
+			classPrepareRequest.addClassExclusionFilter(ex);
+		}
+		
 		classPrepareRequest.setEnabled(true);
 	}
 	
@@ -277,10 +409,6 @@ public abstract class Executor {
 			stepRequest.disable();
 		}
 		
-		boolean methodEntrySwtich = methodEntryRequest.isEnabled();
-		methodEntryRequest.disable();
-		boolean methodExistSwtich = methodExitRequest.isEnabled();
-		methodExitRequest.disable();
 		boolean classPrepareSwtich = classPrepareRequest.isEnabled();
 		classPrepareRequest.disable();
 		boolean exceptionSwtich = exceptionRequest.isEnabled();
@@ -291,14 +419,10 @@ public abstract class Executor {
 				stepRequest.addClassExclusionFilter(junitString);
 			}
 			
-			methodEntryRequest.addClassExclusionFilter(junitString);
-			methodExitRequest.addClassExclusionFilter(junitString);
 			classPrepareRequest.addClassExclusionFilter(junitString);
 			exceptionRequest.addClassExclusionFilter(junitString);
 		}
 		
-		methodEntryRequest.setEnabled(methodEntrySwtich);
-		methodExitRequest.setEnabled(methodExistSwtich);
 		classPrepareRequest.setEnabled(classPrepareSwtich);
 		exceptionRequest.setEnabled(exceptionSwtich);
 		for(int i=0; i<stepRequestList.size(); i++) {
@@ -381,8 +505,19 @@ public abstract class Executor {
 	public static String[] getLibExcludes() {
 		return libExcludes;
 	}
-
+	
 	public static void setLibExcludes(String[] libExcludes) {
-		Executor.libExcludes = libExcludes;
+		List<String> libList = new ArrayList<>();
+		for(String lib: libExcludes){
+			libList.add(lib);
+		}
+		
+		for(String microbatLib: microbatLibs){
+			if(!libList.contains(microbatLib)){
+				libList.add(microbatLib);
+			}
+		}
+		
+		Executor.libExcludes = libList.toArray(new String[0]);
 	}
 }

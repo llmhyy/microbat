@@ -277,8 +277,6 @@ public class ProgramExecutor extends Executor {
 		 */
 		boolean isInRecording = false;
 
-		boolean isRecoverMethodRequest = false;
-		
 		/**
 		 * We divide the library code into two categories: the interesting ones (e.g., 
 		 * those in java.util.*) and the normal ones. We only capture the data and control
@@ -306,17 +304,14 @@ public class ProgramExecutor extends Executor {
 
 		/** this variable is used to handle exception case. */
 		Location caughtLocationForJustException = null;
+		
+		Range range = getStartRange(appClassPath);
 
 		String previousEvent = null;
 		cancel: while (!stop && !eventTimeout) {
 			EventSet eventSet;
 			try {
 				eventSet = eventQueue.remove(TIME_OUT);
-				if (isRecoverMethodRequest) {
-					this.methodEntryRequest.enable();
-					this.methodExitRequest.enable();
-					isRecoverMethodRequest = false;
-				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				break;
@@ -328,43 +323,35 @@ public class ProgramExecutor extends Executor {
 				break;
 			}
 
-			/**
-			 * ensure the step event is parsed before the method entry event
-			 */
-			List<Event> sortedEvents = sortEvents(eventSet);
-			
-			for (Event event : sortedEvents) {
+			for (Event event : eventSet) {
 				previousEvent = createEventLog(event);
 				if (event instanceof VMStartEvent) {
 					System.out.println("JVM is started...");
-
-					ThreadReference thread = ((VMStartEvent) event).thread();
-					addStepWatch(erm, thread);
-					addMethodWatch(erm);
-					addExceptionWatch(erm);
+					
 					addThreadStartWatch(erm);
-
-					if (isTestcaseEvaluation) {
-						disableAllStepRequests();
-					} else {
-						excludeJUnitLibs();
-						this.methodEntryRequest.disable();
-						this.methodExitRequest.disable();
-					}
 
 				} else if (event instanceof ThreadStartEvent) {
 					ThreadReference threadReference = ((ThreadStartEvent) event).thread();
 					if (hasValidThreadName(threadReference)) {
-						// addStepWatch(erm, threadReference);
-						// excludeJUnitLibs();
-						// System.currentTimeMillis();
 					}
 				}
 				if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
 					stop = true;
 					break;
 				} else if (event instanceof ClassPrepareEvent) {
-					parseBreakpoints(vm, (ClassPrepareEvent) event, locBrpMap);
+					if(this.stepRequestList.isEmpty()){
+						ClassPrepareEvent cEvent = (ClassPrepareEvent)event;
+						boolean reachApp = addStartBreakPointWatch(erm, cEvent.referenceType(), range);
+						if(reachApp){
+							addStepWatch(erm, ((ClassPrepareEvent) event).thread());
+							addExceptionWatch(erm);
+							parseBreakpoints(vm, (ClassPrepareEvent) event, locBrpMap);
+						}
+					}
+					else{
+						parseBreakpoints(vm, (ClassPrepareEvent) event, locBrpMap);						
+					}
+					
 				} else if (event instanceof StepEvent) {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
@@ -717,9 +704,9 @@ public class ProgramExecutor extends Executor {
 	String[] excludes = null;
 	private boolean isParentInvokeAppMethod(CFGNode parent, org.apache.bcel.classfile.Method method) {
 		if(excludes == null){
-			excludes = new String[Executor.libExcludes.length];
-			for(int i=0; i<Executor.libExcludes.length; i++){
-				String exclude = Executor.libExcludes[i];
+			excludes = new String[Executor.getLibExcludes().length];
+			for(int i=0; i<Executor.getLibExcludes().length; i++){
+				String exclude = Executor.getLibExcludes()[i];
 				exclude = exclude.replace("*", "");
 				excludes[i] = exclude;
 			}
@@ -2014,17 +2001,17 @@ public class ProgramExecutor extends Executor {
 				return;
 			}
 			
-			StackFrame frame = findFrame(thread, location);
-			if (frame == null) {
-				return;
-			}
-
-			synchronized (frame) {
-				VarValue varValue = generateVarValue(frame, virtualVar, node, Variable.WRITTEN, point);
-				if (varValue != null) {
-					node.addReturnVariable(varValue);
-				}
-			}
+//			StackFrame frame = findFrame(thread, location);
+//			if (frame == null) {
+//				return;
+//			}
+//
+//			synchronized (frame) {
+//				VarValue varValue = generateVarValue(frame, virtualVar, node, Variable.WRITTEN, point);
+//				if (varValue != null) {
+//					node.addReturnVariable(varValue);
+//				}
+//			}
 			
 		}
 	}
