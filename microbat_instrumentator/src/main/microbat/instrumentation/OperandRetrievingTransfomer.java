@@ -56,7 +56,7 @@ public class OperandRetrievingTransfomer implements ClassFileTransformer {
 				
 				MethodGen mGen = new MethodGen(method, clazz.getClassName(), classGen.getConstantPool());
 				InstructionList instructionList = mGen.getInstructionList();
-				System.out.println(instructionList);
+//				System.out.println(instructionList);
 				
 				LocalVariableGen lvGen = mGen.addLocalVariable(tempVariableName, returnType, instructionList.getStart(),
 						instructionList.getEnd());
@@ -76,7 +76,7 @@ public class OperandRetrievingTransfomer implements ClassFileTransformer {
 				
 		        instructionList.setPositions();
 		        
-		        System.out.println(instructionList);
+//		        System.out.println(instructionList);
 				
 		        mGen.setMaxLocals();
 				mGen.setMaxStack();
