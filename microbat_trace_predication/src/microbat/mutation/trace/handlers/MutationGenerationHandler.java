@@ -27,6 +27,8 @@ import microbat.util.IResourceUtils;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 import mutation.mutator.Mutator;
+import sav.common.core.Constants;
+import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.FileUtils;
 import sav.strategies.dto.ClassLocation;
 import sav.strategies.mutanbug.MutationResult;
@@ -99,7 +101,7 @@ public class MutationGenerationHandler extends AbstractHandler {
 		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName);
 		URI uri = unit.getResource().getLocationURI();
 		String sourceFolderPath = uri.toString();
-		cName = cName.replace(".", "/") + ".java";
+		cName = ClassUtils.getJFilePath(cName);
 		
 		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName));
 		sourceFolderPath = sourceFolderPath.substring(5, sourceFolderPath.length());

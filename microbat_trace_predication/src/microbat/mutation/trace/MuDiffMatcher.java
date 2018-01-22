@@ -15,6 +15,6 @@ public class MuDiffMatcher extends DiffMatcher {
 	}
 	
 	protected List<String> getRawDiffContent(){
-		return super.getRawDiffContent(buggySourcePath, fixSourcePath);
+		return super.getRawDiffContent(buggySourcePath, fixSourcePath, true);
 	}
 }

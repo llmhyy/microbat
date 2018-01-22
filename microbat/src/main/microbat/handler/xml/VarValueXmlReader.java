@@ -1,25 +1,6 @@
 package microbat.handler.xml;
 
-import static microbat.handler.xml.VarValueXmlConstants.FIELD_VAR_DECLARING_TYPE;
-import static microbat.handler.xml.VarValueXmlConstants.FIELD_VAR_IS_STATIC;
-import static microbat.handler.xml.VarValueXmlConstants.LOCAL_VAR_LINE_NUMBER;
-import static microbat.handler.xml.VarValueXmlConstants.LOCAL_VAR_LOCATION_CLASS;
-import static microbat.handler.xml.VarValueXmlConstants.VALUE_ARR_COMPONENT_TYPE_PROP;
-import static microbat.handler.xml.VarValueXmlConstants.VALUE_CHILDREN_PROP;
-import static microbat.handler.xml.VarValueXmlConstants.VALUE_CHILDREN_SEPARATOR;
-import static microbat.handler.xml.VarValueXmlConstants.VALUE_ID_ATT;
-import static microbat.handler.xml.VarValueXmlConstants.VALUE_IS_ARRAY_PROP;
-import static microbat.handler.xml.VarValueXmlConstants.VALUE_IS_ROOT_ATT;
-import static microbat.handler.xml.VarValueXmlConstants.VALUE_REF_UNIQUE_ID_PROP;
-import static microbat.handler.xml.VarValueXmlConstants.VALUE_STRING_VALUE_PROP;
-import static microbat.handler.xml.VarValueXmlConstants.VALUE_TAG;
-import static microbat.handler.xml.VarValueXmlConstants.VALUE_VAR_TYPE_ATT;
-import static microbat.handler.xml.VarValueXmlConstants.VARIABLE_TAG;
-import static microbat.handler.xml.VarValueXmlConstants.VAR_ALIAS_ID_ATT;
-import static microbat.handler.xml.VarValueXmlConstants.VAR_CAT_ATT;
-import static microbat.handler.xml.VarValueXmlConstants.VAR_ID_ATT;
-import static microbat.handler.xml.VarValueXmlConstants.VAR_NAME_ATT;
-import static microbat.handler.xml.VarValueXmlConstants.VAR_TYPE_ATT;
+import static microbat.handler.xml.VarValueXmlConstants.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -115,10 +96,14 @@ public class VarValueXmlReader {
 				value = new PrimitiveValue(stringVal, isRoot, variable);
 			} else if (isArray) {
 				value = new ArrayValue(false, isRoot, variable);
-				((ArrayValue) value).setComponentType(getProperty(valueEle, VALUE_ARR_COMPONENT_TYPE_PROP));
+				ArrayValue arrayVal = (ArrayValue) value;
+				arrayVal.setComponentType(getProperty(valueEle, VALUE_ARR_COMPONENT_TYPE_PROP));
+				arrayVal.setNull(getBooleanProperty(valueEle, VALUE_REF_IS_NULL_PROP));
 			} else {
 				value = new ReferenceValue(false, isRoot, variable);
-				((ReferenceValue) value).setUniqueID(getLongProperty(valueEle, VALUE_REF_UNIQUE_ID_PROP));
+				ReferenceValue refVal = (ReferenceValue) value;
+				refVal.setUniqueID(getLongProperty(valueEle, VALUE_REF_UNIQUE_ID_PROP));
+				refVal.setNull(getBooleanProperty(valueEle, VALUE_REF_IS_NULL_PROP));
 			}
 			varValueIdMap.put(valueEleId, value);
 			String childIds = getProperty(valueEle, VALUE_CHILDREN_PROP);
@@ -217,7 +202,7 @@ public class VarValueXmlReader {
 		}
 		return Long.valueOf(str);
 	}
-
+	
 	private boolean getBooleanAttribute(Element element, String attName) {
 		if (!element.hasAttribute(attName)) {
 			return false;

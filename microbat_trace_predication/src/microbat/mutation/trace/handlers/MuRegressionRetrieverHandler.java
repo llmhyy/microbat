@@ -50,8 +50,8 @@ public class MuRegressionRetrieverHandler extends AbstractHandler {
 			String testFolder = IResourceUtils.getRelativeSourceFolderPath(orgPath, projectName, regression.getTestClass());
 			String orgJFilePath = ClassUtils.getJFilePath(FileUtils.getFilePath(orgPath, srcFolder), muRegression.getMutationClassName());
 			String muJFilePath = ClassUtils.getJFilePath(FileUtils.getFilePath(muPath, srcFolder), muRegression.getMutationClassName());
-//			FileUtils.appendFile(orgJFilePath, muRegression.getOrginalCode());
-			FileUtils.appendFile(muJFilePath, muRegression.getMutationCode());
+//			FileUtils.writeFile(orgJFilePath, muRegression.getOrginalCode());
+			FileUtils.writeFile(muJFilePath, muRegression.getMutationCode());
 			MuDiffMatcher diffMatcher = new MuDiffMatcher(srcFolder, orgJFilePath, muJFilePath);
 			diffMatcher.setBuggyPath(muPath);
 			diffMatcher.setFixPath(orgPath);

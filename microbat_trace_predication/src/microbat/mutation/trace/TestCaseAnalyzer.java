@@ -12,6 +12,7 @@ import java.util.Map;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
@@ -43,6 +44,7 @@ import sav.common.core.Constants;
 import sav.common.core.SavException;
 import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.FileUtils;
+import sav.common.core.utils.ResourceUtils;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.dto.ClassLocation;
 import sav.strategies.mutanbug.MutationResult;
@@ -77,15 +79,12 @@ public class TestCaseAnalyzer {
 		ClassLocation cl = locationList.get(0);
 		String cName = cl.getClassCanonicalName();
 		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName);
-		URI uri = unit.getResource().getLocationURI();
-		String sourceFolderPath = uri.toString();
-		cName = cName.replace(".", "/") + ".java";
-		
+		IPath uri = unit.getResource().getFullPath();
+		String sourceFolderPath = IResourceUtils.getAbsolutePathOsStr(uri);
+		cName = ClassUtils.getJFilePath(cName);
 		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName));
-		sourceFolderPath = sourceFolderPath.substring(5, sourceFolderPath.length());
 		
 		cleanClassInTestPackage(sourceFolderPath, locationList);
-		System.currentTimeMillis();
 		
 		Mutator mutator = new Mutator(sourceFolderPath, TMP_DIRECTORY, muTotal);
 		TraceMutationVisitor mutationVisitor = new TraceMutationVisitor();
@@ -100,8 +99,7 @@ public class TestCaseAnalyzer {
 		while(iterator.hasNext()){
 			ClassLocation location = iterator.next();
 			String className = location.getClassCanonicalName();
-			String fileName  = sourceFolderPath + className.replace(".", "/") + ".java";
-			
+			String fileName  = ClassUtils.getJFilePath(sourceFolderPath, className);
 			File file = new File(fileName);
 			if(!file.exists()){
 				iterator.remove();

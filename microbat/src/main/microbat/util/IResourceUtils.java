@@ -26,6 +26,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sav.common.core.Constants;
 import sav.common.core.SavRtException;
 
 /**
@@ -77,7 +78,7 @@ public class IResourceUtils {
     public static String getSourceFolderPath(String projectName, String cName) {
 		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName, projectName);
 		String javaFilePath = IResourceUtils.getAbsolutePathOsStr(unit.getPath());
-		return javaFilePath.substring(0, javaFilePath.indexOf(cName.replace(".", "/")));
+		return javaFilePath.substring(0, javaFilePath.indexOf(cName.replace(".", Constants.FILE_SEPARATOR)));
 	}
     
     public static String getRelativeSourceFolderPath(String projectFolder, String projectName, String cName) {

@@ -45,6 +45,11 @@ public class ClassUtils {
 				+ Constants.JAVA_EXT_WITH_DOT;
 	}
 	
+	public static String getJFilePath(String className) {
+		return className.replace(Constants.DOT, Constants.FILE_SEPARATOR)
+				+ Constants.JAVA_EXT_WITH_DOT;
+	}
+	
 	public static String getClassFilePath(String targetPath, String className) {
 		return new StringBuilder()
 						.append(targetPath)
