@@ -56,7 +56,7 @@ public abstract class Executor {
 	
 	protected int steps = 0;
 	
-	public static int TIME_OUT = 30000;
+	public static int TIME_OUT = 10000;
 	
 	protected List<StepRequest> stepRequestList = new ArrayList<>();
 	protected MethodEntryRequest methodEntryRequest;
@@ -444,10 +444,10 @@ public abstract class Executor {
 			stepRequest.disable();
 		}
 		
-		boolean methodEntrySwtich = methodEntryRequest.isEnabled();
-		methodEntryRequest.disable();
-		boolean methodExistSwtich = methodExitRequest.isEnabled();
-		methodExitRequest.disable();
+//		boolean methodEntrySwtich = methodEntryRequest.isEnabled();
+//		methodEntryRequest.disable();
+//		boolean methodExistSwtich = methodExitRequest.isEnabled();
+//		methodExitRequest.disable();
 		boolean classPrepareSwtich = classPrepareRequest.isEnabled();
 		classPrepareRequest.disable();
 		boolean exceptionSwtich = exceptionRequest.isEnabled();
@@ -470,8 +470,8 @@ public abstract class Executor {
 			e1.printStackTrace();
 		} 
 		
-		methodEntryRequest.setEnabled(methodEntrySwtich);
-		methodExitRequest.setEnabled(methodExistSwtich);
+//		methodEntryRequest.setEnabled(methodEntrySwtich);
+//		methodExitRequest.setEnabled(methodExistSwtich);
 		classPrepareRequest.setEnabled(classPrepareSwtich);
 		exceptionRequest.setEnabled(exceptionSwtich);
 		threadStartRequest.setEnabled(threadSwith);
