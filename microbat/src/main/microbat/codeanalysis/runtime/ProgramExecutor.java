@@ -339,19 +339,9 @@ public class ProgramExecutor extends Executor {
 					stop = true;
 					break;
 				} else if (event instanceof ClassPrepareEvent) {
-					if(this.stepRequestList.isEmpty()){
-						ClassPrepareEvent cEvent = (ClassPrepareEvent)event;
-						boolean reachApp = addStartBreakPointWatch(erm, cEvent.referenceType(), range);
-						if(reachApp){
-							addStepWatch(erm, ((ClassPrepareEvent) event).thread());
-							addExceptionWatch(erm);
-							parseBreakpoints(vm, (ClassPrepareEvent) event, locBrpMap);
-						}
-					}
-					else{
-						parseBreakpoints(vm, (ClassPrepareEvent) event, locBrpMap);						
-					}
-					
+					ClassPrepareEvent cEvent = (ClassPrepareEvent)event;
+					addStartBreakPointWatch(erm, cEvent.referenceType(), range);
+					parseBreakpoints(vm, (ClassPrepareEvent) event, locBrpMap);						
 				} else if (event instanceof StepEvent) {
 					ThreadReference thread = ((StepEvent) event).thread();
 					Location currentLocation = ((StepEvent) event).location();
@@ -504,28 +494,13 @@ public class ProgramExecutor extends Executor {
 						stop = true;
 						break cancel;
 					}
-				} else if (event instanceof MethodEntryEvent) {
-					MethodEntryEvent mee = (MethodEntryEvent) event;
-					Method method = mee.method();
-					
-					/**
-					 * See the explanation of isInRcording variable.
-					 */
-					if (isTestcaseEvaluation && !isInRecording) {
-						String declaringTypeName = method.declaringType().name();
-						if (isTagJUnitCall(declaringTypeName, method.name())) {
-							enableAllStepRequests();
-							this.methodEntryRequest.disable();
-							this.methodExitRequest.disable();
-							isInRecording = true;
-							excludeJUnitLibs();
-						} else {
-							continue;
-						}
-					}
-
-				} else if (event instanceof MethodExitEvent) {
-				} else if (event instanceof ExceptionEvent) {
+				} 
+				else if(event instanceof BreakpointEvent){
+					addStepWatch(erm, ((BreakpointEvent) event).thread());
+					addExceptionWatch(erm);
+					excludeJUnitLibs();
+				}
+				else if (event instanceof ExceptionEvent) {
 					ExceptionEvent ee = (ExceptionEvent) event;
 					Location catchLocation = ee.catchLocation();
 					TraceNode lastNode = this.trace.getLatestNode();

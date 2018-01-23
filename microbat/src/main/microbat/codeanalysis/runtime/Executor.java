@@ -219,8 +219,12 @@ public abstract class Executor {
 	}
 	
 	
-	protected boolean addStartBreakPointWatch(EventRequestManager erm, ReferenceType refType, 
+	protected void addStartBreakPointWatch(EventRequestManager erm, ReferenceType refType, 
 			Range range) {
+		if(breakpointRequest!=null && breakpointRequest.isEnabled()){
+			return;
+		}
+		
 		if (range.className.equals(refType.name())) {
 			List<Location> listOfLocations;
 			try {
@@ -234,13 +238,10 @@ public abstract class Executor {
 				breakpointRequest = erm.createBreakpointRequest(loc);
 				breakpointRequest.setEnabled(true);
 				
-				return true;
 			} catch (AbsentInformationException e) {
 				e.printStackTrace();
 			}
 		}
-		
-		return false;
 	}
 	
 	protected String createEventLog(Event event) {

@@ -3,26 +3,18 @@ package microbat.codeanalysis.runtime;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.ui.JavaUI;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.Location;
-import com.sun.jdi.Method;
-import com.sun.jdi.ReferenceType;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.event.BreakpointEvent;
 import com.sun.jdi.event.ClassPrepareEvent;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.event.EventSet;
 import com.sun.jdi.event.ExceptionEvent;
-import com.sun.jdi.event.MethodEntryEvent;
 import com.sun.jdi.event.StepEvent;
 import com.sun.jdi.event.ThreadStartEvent;
 import com.sun.jdi.event.VMDeathEvent;
@@ -32,8 +24,6 @@ import com.sun.jdi.request.EventRequestManager;
 
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.model.BreakPoint;
-import microbat.model.ClassLocation;
-import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import sav.strategies.dto.AppJavaClassPath;
@@ -90,15 +80,8 @@ public class ExecutionStatementCollector extends Executor {
 						else if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
 							connected = false;
 						} else if (event instanceof ClassPrepareEvent) {
-							if(this.stepRequestList.isEmpty()){
-								ClassPrepareEvent cEvent = (ClassPrepareEvent)event;
-								boolean reachApp = addStartBreakPointWatch(erm, cEvent.referenceType(), range);
-								if(reachApp){
-									addStepWatch(erm, ((ClassPrepareEvent) event).thread());
-									addExceptionWatch(erm);
-									excludeJUnitLibs();
-								}
-							}
+							ClassPrepareEvent cEvent = (ClassPrepareEvent)event;
+							addStartBreakPointWatch(erm, cEvent.referenceType(), range);
 						} else if (event instanceof StepEvent) {
 							StepEvent sEvent = (StepEvent) event;
 							Location location = sEvent.location();
@@ -140,25 +123,12 @@ public class ExecutionStatementCollector extends Executor {
 								this.setOverLong(true);
 								connected = false;
 							}
-						} else if (event instanceof MethodEntryEvent) {
-							Method method = ((MethodEntryEvent) event).method();
-							if(isInIncludedLibrary(method.location())){
-								continue;
-							}
-
-//							System.out.println(method.declaringType().name() + "." + method.name());
-
-							if (isTestcaseEvaluation) {
-								String declaringTypeName = method.declaringType().name();
-								// if(appClassPath.getOptionalTestClass().equals(declaringTypeName)){
-								if (isTagJUnitCall(declaringTypeName, method.name())) {
-									enableAllStepRequests();
-									this.methodEntryRequest.disable();
-									this.methodExitRequest.disable();
-									excludeJUnitLibs();
-								}
-							}
 						} 
+						else if(event instanceof BreakpointEvent){
+							addStepWatch(erm, ((BreakpointEvent) event).thread());
+							addExceptionWatch(erm);
+							excludeJUnitLibs();
+						}
 						else if (event instanceof ExceptionEvent) {
 							System.currentTimeMillis();
 						} 
