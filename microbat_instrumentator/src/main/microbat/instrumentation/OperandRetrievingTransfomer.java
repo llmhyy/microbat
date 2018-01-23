@@ -7,8 +7,10 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.bcel.classfile.ClassFormatException;
 import org.apache.bcel.classfile.ClassParser;
@@ -40,10 +42,23 @@ public class OperandRetrievingTransfomer implements ClassFileTransformer {
 		return false;
 	}
 	
+	private Set<String> classNameSet = new HashSet<>();
+	
 	@Override
 	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-		System.out.println(className);
+//		System.out.println(className);
+//		System.out.println("heeloo");
+		
+//		if(!classNameSet.contains(className)){
+//			classNameSet.add(className);
+//		}
+//		else{
+//			System.out.println("additional transform happens: " + className);
+//		}
+		
+//		return classfileBuffer;
+		
 		if(isExcluded(className)){
 			return classfileBuffer;
 		}
