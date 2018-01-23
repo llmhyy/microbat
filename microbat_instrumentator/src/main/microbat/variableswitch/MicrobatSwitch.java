@@ -1,6 +1,6 @@
 package microbat.variableswitch;
 
 public class MicrobatSwitch {
-	public String type;
-	public String value;
+	public static String type;
+	public static String value = "null";
 }
