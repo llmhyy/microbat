@@ -140,7 +140,7 @@ public class SocketLanchingConnector0 extends SocketLaunchingConnectorImpl {
 		if (fOptions != null)
 			execString += " " + fOptions; //$NON-NLS-1$
 
-//		execString += " -javaagent:" + configuration.getAgentLib();
+		execString += " -javaagent:" + configuration.getAgentLib();
 		
 		// Add Main class.
 		execString += " " + fMain; //$NON-NLS-1$

@@ -56,6 +56,7 @@ import com.sun.jdi.FloatValue;
 import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.IntegerValue;
 import com.sun.jdi.InterfaceType;
+import com.sun.jdi.InvalidStackFrameException;
 import com.sun.jdi.InvalidTypeException;
 import com.sun.jdi.InvocationException;
 import com.sun.jdi.LocalVariable;
@@ -936,6 +937,7 @@ abstract class LValue {
                 if (var != null) {
                     return nFields(new LValueLocal(frame, var), izer, thread);
                 } else {
+                	System.currentTimeMillis();
                     ObjectReference thisObject = frame.thisObject();
                     if (thisObject != null) {
                         // check if it is a field of 'this'

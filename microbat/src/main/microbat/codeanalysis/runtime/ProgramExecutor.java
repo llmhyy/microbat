@@ -21,9 +21,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
@@ -39,7 +37,6 @@ import com.sun.jdi.InvalidTypeException;
 import com.sun.jdi.InvocationException;
 import com.sun.jdi.LocalVariable;
 import com.sun.jdi.Location;
-import com.sun.jdi.Method;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.StackFrame;
@@ -89,6 +86,7 @@ import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.StringValue;
 import microbat.model.value.VarValue;
+import microbat.model.value.VirtualValue;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.ConstantVar;
 import microbat.model.variable.FieldVar;
@@ -116,7 +114,8 @@ import sav.strategies.dto.AppJavaClassPath;
 @SuppressWarnings("restriction")
 public class ProgramExecutor extends Executor {
 	public static final long DEFAULT_TIMEOUT = -1;
-
+	public static String returnVariableValue = "microbat_return_value";
+	public static String returnVariableType = "microbat_return_type";
 	/**
 	 * fundamental fields for debugging
 	 */
@@ -136,7 +135,7 @@ public class ProgramExecutor extends Executor {
 
 	public ProgramExecutor() {
 	}
-
+	
 	/**
 	 * Executing the program, each time of the execution, we catch a JVM event
 	 * (e.g., step event, class preparing event, method entry event, etc.).
@@ -268,14 +267,6 @@ public class ProgramExecutor extends Executor {
 		boolean stop = false;
 		boolean eventTimeout = false;
 		Map<String, BreakPoint> locBrpMap = new HashMap<String, BreakPoint>();
-
-		/**
-		 * We support recoding the trace in two modes: normal mode and test case
-		 * mode. When in test case mode, a lot of method invocation from JUnit
-		 * framework is useless, so I need to skip some events from JUnit by
-		 * this variable.
-		 */
-		boolean isInRecording = false;
 
 		/**
 		 * We divide the library code into two categories: the interesting ones (e.g., 
@@ -427,7 +418,6 @@ public class ProgramExecutor extends Executor {
 					boolean isMethodExit = isMethodExit(prevNode, node, peekNode);
 					if(isMethodExit) {
 						if(!methodNodeStack.isEmpty() && !isIndirectAccess) {
-							creatRWReturnVariableForReturnStatement(prevNode, node);
 							int popCount = checkContextualReturn(node, methodNodeStack, false);
 							if(popCount!=0){
 								while(popCount != 0) {
@@ -1774,8 +1764,8 @@ public class ProgramExecutor extends Executor {
 		 */
 		Variable var = var0.clone();
 		String varName = var.getName();
-
 		try {
+			System.currentTimeMillis();
 			ExpressionValue expValue = retriveExpression(frame, varName, node.getBreakPoint());
 			if (expValue == null) {
 				return null;
@@ -1907,7 +1897,8 @@ public class ProgramExecutor extends Executor {
 					break;
 				}
 			}
-		} catch (IncompatibleThreadStateException e) {
+		} catch (Exception e) {
+			System.out.print(location);
 			e.printStackTrace();
 		}
 
@@ -1940,54 +1931,40 @@ public class ProgramExecutor extends Executor {
 	}
 	
 	private void processReturnVariable(TraceNode node, ThreadReference thread, Location location) {
-		if(!node.isReturnNode()) {
+		if(node==null || node.getStepInPrevious()==null || node.getStepInPrevious().getStepInPrevious()==null) {
 			return;
 		}
 		
-		TraceNode prevNode = node.getStepInPrevious();
-		if(prevNode!=null && prevNode.isReturnNode()){
-			for(VarValue returnVar: prevNode.getReturnedVariables()){
-				VarValue clonedValue = returnVar.clone();
-				clonedValue.setVarID(VirtualVar.VIRTUAL_PREFIX + node.getOrder());
-				node.addReturnVariable(clonedValue);
-			}
+		TraceNode interestingNode = node.getStepInPrevious().getStepInPrevious(); 
+		
+		if(!interestingNode.isReturnNode()){
 			return;
 		}
 		
 		
-		BreakPoint point = node.getBreakPoint();
-		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appPath);
-		ReturnStatementFinder finder = new ReturnStatementFinder(cu, point.getLineNumber());
-		cu.accept(finder);
+		StackFrame frame = findFrame(thread, location);
+		if (frame == null) {
+			return;
+		}
 		
-		ReturnStatement rStat = finder.returnStatement;
-		if(rStat != null){
-			Expression expr = rStat.getExpression();
-			if(expr==null){
-				return;
-			}
+		synchronized (frame) {
+			Variable virtualType = new VirtualVar(returnVariableType, "return type");
+			VarValue typeV = generateVarValue(frame, virtualType, node, Variable.WRITTEN, node.getBreakPoint());
 			
-			String returnExpr = expr.toString();
-			Variable virtualVar = new VirtualVar(returnExpr, "return type");
-			virtualVar.setVarID(VirtualVar.VIRTUAL_PREFIX + node.getOrder());
-			if(expr instanceof NullLiteral){
-				VarValue varValue = new ReferenceValue(true, -1, false, virtualVar);
-				node.addReturnVariable(varValue);
-				return;
-			}
+			Variable virtualValue = new VirtualVar(returnVariableValue, "return value");
+			VarValue valueV = generateVarValue(frame, virtualValue, node, Variable.WRITTEN, node.getBreakPoint());
 			
-//			StackFrame frame = findFrame(thread, location);
-//			if (frame == null) {
-//				return;
-//			}
-//
-//			synchronized (frame) {
-//				VarValue varValue = generateVarValue(frame, virtualVar, node, Variable.WRITTEN, point);
-//				if (varValue != null) {
-//					node.addReturnVariable(varValue);
-//				}
-//			}
+			String type = typeV.getStringValue();
+			String value = valueV.getStringValue();
 			
+			String vName = VirtualVar.VIRTUAL_PREFIX + node.getOrder();
+			VirtualVar vVar = new VirtualVar(vName, type);
+			VirtualValue vValue = new VirtualValue(false, vVar);
+			vValue.setStringValue(value);
+			vValue.setVarID(vName);
+			interestingNode.addReturnVariable(vValue);
+			
+			creatRWReturnVariableForReturnStatement(interestingNode, node.getStepInPrevious());
 		}
 	}
 
@@ -2063,18 +2040,6 @@ public class ProgramExecutor extends Executor {
 
 		ExpressionValue eValue = null;
 
-		// boolean classPrepare = getClassPrepareRequest().isEnabled();
-		// boolean step = getStepRequest().isEnabled();
-		// boolean methodEntry = getMethodEntryRequest().isEnabled();
-		// boolean methodExit = getMethodExitRequset().isEnabled();
-		// boolean exception = getExceptionRequest().isEnabled();
-		//
-		// getClassPrepareRequest().disable();
-		// getStepRequest().disable();
-		// getMethodEntryRequest().disable();
-		// getMethodExitRequset().disable();
-		// getExceptionRequest().disable();
-
 		try {
 			ExpressionParser.clear();
 
@@ -2106,7 +2071,7 @@ public class ProgramExecutor extends Executor {
 			eValue = new ExpressionValue(val, ExpressionParser.parentValue, null);
 
 		} catch (ParseException e) {
-			// e.printStackTrace();
+			 e.printStackTrace();
 		} catch (InvocationException e) {
 			e.printStackTrace();
 		} catch (InvalidTypeException e) {
@@ -2116,15 +2081,11 @@ public class ProgramExecutor extends Executor {
 		} catch (IncompatibleThreadStateException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
-			// e.printStackTrace();
+			e.printStackTrace();
 		} finally {
-			// getClassPrepareRequest().setEnabled(classPrepare);
-			// getStepRequest().setEnabled(step);
-			// getMethodEntryRequest().setEnabled(methodEntry);
-			// getMethodExitRequset().setEnabled(methodExit);
-			// getExceptionRequest().setEnabled(exception);
 		}
-
+		System.currentTimeMillis();
+		
 		return eValue;
 	}
 
