@@ -2092,7 +2092,7 @@ public class ProgramExecutor extends Executor {
 		} catch (IncompatibleThreadStateException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 		} finally {
 		}
 		System.currentTimeMillis();
