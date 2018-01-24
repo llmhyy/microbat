@@ -83,6 +83,9 @@ public class ExecutionStatementCollector extends Executor {
 							ClassPrepareEvent cEvent = (ClassPrepareEvent)event;
 							addStartBreakPointWatch(erm, cEvent.referenceType(), range);
 						} else if (event instanceof StepEvent) {
+//							this.breakpointRequest.disable();
+//							this.classPrepareRequest.disable();
+							
 							StepEvent sEvent = (StepEvent) event;
 							Location location = sEvent.location();
 							
