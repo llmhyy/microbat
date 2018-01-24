@@ -56,7 +56,7 @@ public abstract class Executor {
 	
 	protected int steps = 0;
 	
-	public static int TIME_OUT = 10000;
+	public int TIME_OUT = 10000;
 	
 	protected List<StepRequest> stepRequestList = new ArrayList<>();
 	protected MethodEntryRequest methodEntryRequest;
@@ -145,7 +145,9 @@ public abstract class Executor {
 	
 	static{
 		microbatLibs.add("microbat.instrumentation.*");
+		microbatLibs.add("javassist.*");
 		microbatLibs.add("org.apache.bcel.*");
+		
 		
 		String[] excludePatterns = Executor.deriveLibExcludePatterns();
 		Executor.setLibExcludes(excludePatterns);
