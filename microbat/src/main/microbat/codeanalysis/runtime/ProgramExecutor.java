@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
@@ -418,6 +419,7 @@ public class ProgramExecutor extends Executor {
 					boolean isMethodExit = isMethodExit(prevNode, node, peekNode);
 					if(isMethodExit) {
 						if(!methodNodeStack.isEmpty() && !isIndirectAccess) {
+							creatRWReturnVariableForReturnStatement(prevNode, node);	
 							int popCount = checkContextualReturn(node, methodNodeStack, false);
 							if(popCount!=0){
 								while(popCount != 0) {
@@ -1931,41 +1933,50 @@ public class ProgramExecutor extends Executor {
 	}
 	
 	private void processReturnVariable(TraceNode node, ThreadReference thread, Location location) {
-		if(node==null || node.getStepInPrevious()==null || node.getStepInPrevious().getStepInPrevious()==null) {
+		if(!node.isReturnNode()){
 			return;
 		}
 		
-		TraceNode interestingNode = node.getStepInPrevious().getStepInPrevious(); 
-		
-		if(!interestingNode.isReturnNode()){
-			return;
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(node.getDeclaringCompilationUnitName(), appPath);
+		ReturnStatementFinder finder = new ReturnStatementFinder(cu, node.getLineNumber());
+		cu.accept(finder);
+		ReturnStatement rStat = finder.returnStatement;
+		if(rStat!=null){
+			Expression expr = rStat.getExpression();
+			if(expr != null){
+				String exprString = expr.toString();
+				if(exprString.contains("(") || exprString.contains("[")){
+					for(VarValue readVar: node.getReadVariables()){
+						VirtualVar virVar = new VirtualVar(readVar.getVarName(), "return type");
+						String vID = VirtualVar.VIRTUAL_PREFIX + node.getOrder();
+						virVar.setVarID(vID);
+						VirtualValue virValue = new VirtualValue(false, virVar);
+						virValue.setStringValue(readVar.getStringValue());
+						node.addReturnVariable(virValue);
+						break;
+					}
+				}
+				else{
+					StackFrame frame = findFrame(thread, location);
+					if (frame == null) {
+						return;
+					}
+					
+					synchronized (frame) {
+						Variable vVar = new VirtualVar(exprString, "return type");
+						VarValue valueV = generateVarValue(frame, vVar, node, Variable.WRITTEN, node.getBreakPoint());
+						String vID = VirtualVar.VIRTUAL_PREFIX + node.getOrder();
+						if(valueV != null){
+							valueV.setVarID(vID);
+							node.addReturnVariable(valueV);
+						}
+					}
+				}
+			}
+			
 		}
 		
 		
-		StackFrame frame = findFrame(thread, location);
-		if (frame == null) {
-			return;
-		}
-		
-		synchronized (frame) {
-			Variable virtualType = new VirtualVar(returnVariableType, "return type");
-			VarValue typeV = generateVarValue(frame, virtualType, node, Variable.WRITTEN, node.getBreakPoint());
-			
-			Variable virtualValue = new VirtualVar(returnVariableValue, "return value");
-			VarValue valueV = generateVarValue(frame, virtualValue, node, Variable.WRITTEN, node.getBreakPoint());
-			
-			String type = typeV.getStringValue();
-			String value = valueV.getStringValue();
-			
-			String vName = VirtualVar.VIRTUAL_PREFIX + node.getOrder();
-			VirtualVar vVar = new VirtualVar(vName, type);
-			VirtualValue vValue = new VirtualValue(false, vVar);
-			vValue.setStringValue(value);
-			vValue.setVarID(vName);
-			interestingNode.addReturnVariable(vValue);
-			
-			creatRWReturnVariableForReturnStatement(interestingNode, node.getStepInPrevious());
-		}
 	}
 
 	private List<StepVariableRelationEntry> constructStepVariableEntry(Map<String, StepVariableRelationEntry> stepVariableTable,
@@ -2071,7 +2082,7 @@ public class ProgramExecutor extends Executor {
 			eValue = new ExpressionValue(val, ExpressionParser.parentValue, null);
 
 		} catch (ParseException e) {
-			 e.printStackTrace();
+//			 e.printStackTrace();
 		} catch (InvocationException e) {
 			e.printStackTrace();
 		} catch (InvalidTypeException e) {
