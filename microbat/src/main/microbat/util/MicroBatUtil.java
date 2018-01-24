@@ -100,6 +100,8 @@ public class MicroBatUtil {
 		 */
 		String bcelDir = junitDir + File.separator + "bcel-6.0.jar";
 		appClassPath.addClasspath(bcelDir);
+		String javassitDir = junitDir + File.separator + "javassist.jar";
+		appClassPath.addClasspath(javassitDir);
 		
 		/**
 		 * setting java agent lib 
