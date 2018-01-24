@@ -2,6 +2,7 @@ package microbat.instrumentation;
 
 public class Excludes {
 	public static String[] defaultLibExcludes = { 
+			"microbat.*",
 			"java.awt.*",
 			"java.applet.*", 
 			"java.lang.*",
