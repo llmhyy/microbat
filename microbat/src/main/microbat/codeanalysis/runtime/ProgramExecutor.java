@@ -1953,7 +1953,7 @@ public class ProgramExecutor extends Executor {
 						VirtualValue virValue = new VirtualValue(false, virVar);
 						virValue.setStringValue(readVar.getStringValue());
 						node.addReturnVariable(virValue);
-						break;
+//						break;
 					}
 				}
 				else{
