@@ -1551,13 +1551,12 @@ public class ProgramExecutor extends Executor {
 		LineNumberVisitor0 visitor = findMethodByteCode(invokeeNode.getBreakPoint());
 		List<Param> paramList = parseParameterList(visitor.getMethod());
 		for (Param param : paramList) {
-			
 			Value value = JavaUtil.retriveExpression(frame, param.getName());
-			
 			
 			LocalVar localVar = new LocalVar(param.getName(), param.getType(),
 					compilationUnit, lineNumber);
 			localVar.setParameter(true);
+			VarValue varValue = null;
 
 			if (!(value instanceof ObjectReference) || value == null) {
 				VariableScopeParser parser = new VariableScopeParser();
@@ -1574,14 +1573,38 @@ public class ProgramExecutor extends Executor {
 				} else {
 					System.currentTimeMillis();
 				}
+				
+				if (value != null) {
+					varValue = new PrimitiveValue(value.toString(), false, localVar);
+				}
 			} 
 			else {
-				ObjectReference ref = (ObjectReference) value;
-				String varID = String.valueOf(ref.uniqueID());
-				String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, invokerNode, 
-						varID, null);
-				varID = varID + ":" + definingNodeOrder;
+				ObjectReference objRef = (ObjectReference) value;
+				String varID = String.valueOf(objRef.uniqueID());
+//				String definingNodeOrder = this.trace.findDefiningNodeOrder(Variable.WRITTEN, invokerNode, 
+//						varID, null);
+//				varID = varID + ":" + definingNodeOrder;
 				localVar.setVarID(varID);
+				
+				varValue = new ReferenceValue(true, false, localVar);
+				
+				if (objRef instanceof ArrayReference) {
+					ArrayReference arrayValue = (ArrayReference) objRef;
+					varValue = constructArrayVarValue(arrayValue, localVar, frame.thread(), 
+							invokerNode.getBreakPoint(), Variable.WRITTEN, Settings.getVariableLayer());
+				} else {
+					varValue = constructReferenceVarValue(objRef, localVar, frame.thread(), 
+							invokerNode.getBreakPoint(), Variable.WRITTEN, Settings.getVariableLayer());
+				}
+
+				StringBuffer buffer = new StringBuffer();
+				buffer.append("[");
+				for (VarValue child : varValue.getChildren()) {
+					buffer.append(child.getVarName() + "=" + child.getStringValue());
+					buffer.append(",");
+				}
+				buffer.append("]");
+				varValue.setStringValue(buffer.toString());
 			}
 
 			StepVariableRelationEntry entry = this.trace.getStepVariableTable().get(localVar.getVarID());
@@ -1593,16 +1616,6 @@ public class ProgramExecutor extends Executor {
 			if (entry != null) {
 				entry.addAliasVariable(localVar);
 				entry.addProducer(invokerNode);
-
-				VarValue varValue = null;
-				if (PrimitiveUtils.isPrimitiveType(param.getType())) {
-					if (value != null) {
-						varValue = new PrimitiveValue(value.toString(), false, localVar);
-					}
-
-				} else {
-					varValue = new ReferenceValue(true, false, localVar);
-				}
 
 				if (varValue != null && varValue.getVarID() != null) {
 					invokerNode.addWrittenVariable(varValue);
