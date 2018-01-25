@@ -428,7 +428,7 @@ public class VariableValueExtractor {
 		if(level==0) {
 			return;
 		}
-		level--;
+//		level--;
 		ClassType type = (ClassType) objRef.type();
 		
 		long refID = objRef.uniqueID();
@@ -439,6 +439,7 @@ public class VariableValueExtractor {
 		ReferenceValue val = this.objectPool.get(refID);
 		if(val == null){
 			val = new ReferenceValue(false, refID, isRoot, childVar);	
+			val.setVarID(String.valueOf(refID));
 			this.objectPool.put(refID, val);
 			
 			boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(type);
@@ -465,8 +466,7 @@ public class VariableValueExtractor {
 //						String childVarID = val.getChildId(field.name());
 						if(childVarValue != null){
 							FieldVar var = new FieldVar(field.isStatic(), field.name(), childVarValue.type().toString());
-							int newLevel = level - 1;
-							appendVarVal(val, var, childVarValue, newLevel, thread, false);											
+							appendVarVal(val, var, childVarValue, level, thread, false);											
 						}
 					}
 				}
@@ -491,6 +491,7 @@ public class VariableValueExtractor {
 		else if(!val.getVarName().equals(childVar.getName())){
 			ReferenceValue cachedValue = val/*.clone()*/;
 			val = new ReferenceValue(false, refID, isRoot, childVar);	
+			val.setVarID(String.valueOf(refID));
 			val.setChildren(cachedValue.getChildren());
 			for(VarValue child: cachedValue.getChildren()){
 				child.addParent(val);
@@ -576,7 +577,7 @@ public class VariableValueExtractor {
 		if(level==0) {
 			return;
 		}
-		level--;
+//		level--;
 		
 		Variable variable = variable0.clone();
 		ArrayValue arrayVal = new ArrayValue(false, isRoot, variable);
