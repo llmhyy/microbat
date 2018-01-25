@@ -491,6 +491,7 @@ public class VariableValueExtractor {
 		else if(!val.getVarName().equals(childVar.getName())){
 			ReferenceValue cachedValue = val/*.clone()*/;
 			val = new ReferenceValue(false, refID, isRoot, childVar);	
+			val.setStringValue(cachedValue.getStringValue());
 			val.setVarID(String.valueOf(refID));
 			val.setChildren(cachedValue.getChildren());
 			for(VarValue child: cachedValue.getChildren()){
