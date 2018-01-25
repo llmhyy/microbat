@@ -12,7 +12,7 @@ import java.util.Map;
 
 import microbat.model.trace.Trace;
 import tregression.empiricalstudy.EmpiricalTrial;
-import tregression.empiricalstudy.MendingRecord;
+import tregression.empiricalstudy.DeadEndRecord;
 import tregression.io.RegressionRecorder;
 import tregression.model.PairList;
 
@@ -21,7 +21,7 @@ public class MuRegressionRecorder extends RegressionRecorder {
 	public void record(MuTrial muTrial, Trace buggyTrace, Trace correctTrace, PairList pairList,
 			String projectName, String bugId) throws SQLException {
 		EmpiricalTrial trial = muTrial.getTrial();
-		List<MendingRecord> mendingRecords = trial.getRootCauseFinder().getMendingRecordList();
+		List<DeadEndRecord> mendingRecords = trial.getDeadEndRecordList();
 		Connection conn = null;
 		List<AutoCloseable> closables = new ArrayList<AutoCloseable>();
 		try {

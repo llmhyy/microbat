@@ -62,6 +62,7 @@ import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
 import microbat.codeanalysis.runtime.jpda.expr.ParseException;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 import sav.strategies.dto.AppJavaClassPath;
 
 @SuppressWarnings("restriction")
