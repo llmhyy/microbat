@@ -42,12 +42,12 @@ public class InstrumenterTest {
 
 	private File getFile(String folder, String fileName) throws Exception {
 		File file = new File(folder + fileName);
-		FileUtils.createFile(file.getPath());
+		FileUtils.getFileCreateIfNotExist(file.getPath());
 		return file;
 	}
 
 	private byte[] instrument(byte[] data, String className) throws Exception {
 		TraceTransformer transformer = new TraceTransformer();
-		return transformer.instrument(className, data);
+		return transformer.instrument(className, data, new NormalInstrumenter());
 	}
 }

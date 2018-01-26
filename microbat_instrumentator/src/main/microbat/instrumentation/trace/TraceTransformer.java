@@ -4,75 +4,59 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
-import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtMethod;
-import javassist.bytecode.BadBytecode;
-import javassist.bytecode.CodeAttribute;
-import javassist.bytecode.CodeIterator;
-import javassist.bytecode.ConstPool;
-import javassist.bytecode.MethodInfo;
-import javassist.bytecode.Opcode;
-import microbat.instrumentation.trace.model.AccessVariableInfo;
+import microbat.instrumentation.trace.TraceTransformerChecker.CheckerResult;
 
 public class TraceTransformer implements ClassFileTransformer {
-
+	private TraceTransformerChecker checker = new TraceTransformerChecker();
+	private NormalInstrumenter normalInstrumenter = new NormalInstrumenter();
+	private ReturnInstrumenter returnInstrumenter = new ReturnInstrumenter();
+	
 	@Override
 	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
 		/* TODO checking & filter */
+		CheckerResult cR = checker.check(className);
+		ITraceInstrumenter instrumenter = null;
+		switch (cR) {
+		case EXCLUDE:
+			instrumenter = null;
+			break;
+		case RETURN_INSTRUMENTATION:
+			instrumenter = returnInstrumenter;
+			break;
+		case NORMAL_INSTRUMENTATION:
+			instrumenter = normalInstrumenter;
+			break;
+		}
+		if (instrumenter == null) {
+			return classfileBuffer;
+		}
 		/* do instrumentation */
 		try {
-			return instrument(className, classfileBuffer);
+			return instrument(className, classfileBuffer, instrumenter);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return classfileBuffer;
 	}
 
-	protected byte[] instrument(String className, byte[] classfileBuffer) throws Exception {
+	protected byte[] instrument(String className, byte[] classfileBuffer, ITraceInstrumenter instrumenter) throws Exception {
 		CtClass compiledClass;
 		ClassPool cp = ClassPool.getDefault();
 		compiledClass = cp.makeClass(new java.io.ByteArrayInputStream(classfileBuffer));
 		CtConstructor staticConstructor = compiledClass.getClassInitializer();
+		instrumenter.visitClass(className);
 		if (staticConstructor != null) {
-			MethodInfo methodInfo = staticConstructor.getMethodInfo();
-			System.out.println(methodInfo.getName());
-			CodeAttribute codeAttr = methodInfo.getCodeAttribute();
-			CodeIterator iterator = codeAttr.iterator();
-			// printer
-//			InstructionPrinter printer = new InstructionPrinter(System.out);
-			//
-			while (iterator.hasNext()) {
-				try {
-					int pos = iterator.next();
-					AccessVariableInfo accessVarInfo = collectVariable(iterator, pos, methodInfo.getConstPool());
-//					System.out.println(printer.instructionString(iterator, pos, methodInfo.getConstPool()));
-				} catch (BadBytecode e) {
-					throw new CannotCompileException(e);
-				}
-			}
+			instrumenter.instrument(staticConstructor);
 		}
 		for (CtMethod method : compiledClass.getDeclaredMethods()) {
-			System.out.println(method.getName());
+			instrumenter.instrument(method);
 		}
 		return compiledClass.toBytecode();
 	}
-
-	private AccessVariableInfo collectVariable(CodeIterator iterator, int pos, ConstPool constPool) {
-		AccessVariableInfo varInfo = new AccessVariableInfo();
-		int opcode = iterator.byteAt(pos);
-		switch (opcode) {
-		case Opcode.AALOAD:
-			
-			break;
-
-		default:
-			break;
-		}
-		return varInfo;
-	}
-
+	
 }

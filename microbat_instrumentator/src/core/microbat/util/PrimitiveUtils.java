@@ -17,6 +17,15 @@ import sav.common.core.utils.CollectionUtils;
  */
 public class PrimitiveUtils {
 	private PrimitiveUtils(){}
+	private static String STRING_TYPE = String.class.getName();
+	public static String T_BOOLEAN = "boolean";
+	public static String T_CHAR = "char";
+	public static String T_FLOAT = "float";
+	public static String T_DOUBLE = "double";
+	public static String T_BYTE = "byte";
+	public static String T_SHORT = "short";
+	public static String T_INT = "int";
+	public static String T_LONG = "long";
 	
 	public static String[] PRIMITIVE_TYPES = new String[]{
 		Integer.class.getName(),
@@ -27,16 +36,15 @@ public class PrimitiveUtils {
 		Long.class.getName(),
 		Short.class.getName(),
 		Byte.class.getName(),
-		"int",
-		"boolean",
-		"float",
-		"char",
-		"double",
-		"long",
-		"short",
-		"byte"
+		T_INT,
+		T_BOOLEAN,
+		T_FLOAT,
+		T_CHAR,
+		T_DOUBLE,
+		T_LONG,
+		T_SHORT,
+		T_BYTE
 	};
-	private static String STRING_TYPE = String.class.getName();
 	
 	public static boolean isPrimitiveType(String clazzName) {
 		return CollectionUtils.existIn(clazzName, PRIMITIVE_TYPES);

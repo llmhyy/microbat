@@ -142,7 +142,7 @@ public class VarValueXmlWriter {
 						strVal = String.valueOf(intVal);
 					}
 				}
-				addProperty(valueEle, VALUE_STRING_VALUE_PROP, strVal);
+				addValueStringValueProperty(valueEle, strVal);
 			} else {
 				addProperty(valueEle, VALUE_STRING_VALUE_PROP, varValue.getStringValue());
 			}
@@ -154,6 +154,11 @@ public class VarValueXmlWriter {
 				addProperty(valueEle, VALUE_CHILDREN_PROP, StringUtils.join(childIds, VALUE_CHILDREN_SEPARATOR));
 			}
 			return valueId;
+		}
+
+		private void addValueStringValueProperty(Element valueEle, String strVal) {
+			String filterStr = strVal.replace("&#", "#"); // To workaround xml parser (this is the case of special char)
+			addProperty(valueEle, VALUE_STRING_VALUE_PROP, filterStr);
 		}
 		
 		private String generateValueId(VarValue varValue) {
