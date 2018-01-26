@@ -326,7 +326,7 @@ public class VariableValueExtractor {
 	 */
 	public void appendVarVal(VarValue parent, Variable childVar, Value childVarValue, int level, 
 			ThreadReference thread, boolean isRoot) {
-		if(level==0) {
+		if(level<=0) {
 			return;
 		}
 		level--;

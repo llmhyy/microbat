@@ -79,10 +79,7 @@ public class Settings {
 	}
 	
 	public static int getVariableLayer(){
-		int level = Settings.variableLayer+1;
-		if(level == 0) {
-			level = -1;
-		}
+		int level = Settings.variableLayer;
 		return level;
 	}
 	
