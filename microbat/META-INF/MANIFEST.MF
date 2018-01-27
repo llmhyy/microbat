@@ -72,4 +72,5 @@ Export-Package: microbat,
  microbat.test.handler,
  microbat.trace,
  microbat.util,
- microbat.views
+ microbat.views,
+ org.apache.bcel

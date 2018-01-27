@@ -3,6 +3,7 @@ package microbat.evaluation;
 import java.io.File;
 import java.util.List;
 
+import org.apache.bcel.Repository;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -37,6 +38,7 @@ public class TraceModelConstructor {
 		
 		/** 1. clear some static common variables **/
 		clearOldData();
+		Repository.clearCache();
 		
 		
 		/** 2. parse read/written variables**/

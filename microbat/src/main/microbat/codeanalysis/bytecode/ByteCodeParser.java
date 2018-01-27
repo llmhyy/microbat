@@ -38,7 +38,6 @@ public class ByteCodeParser{
 //			ClassPath0 classPath = new ClassPath0(s);
 //			Repository.setRepository(SyntheticRepository.getInstance(classPath));
 //		}
-		
 		ClassPath0 classPath = new ClassPath0(s);
 		Repository.setRepository(SyntheticRepository.getInstance(classPath));
 		

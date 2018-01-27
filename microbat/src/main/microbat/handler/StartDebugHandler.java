@@ -3,6 +3,7 @@ package microbat.handler;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.bcel.Repository;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -88,6 +89,7 @@ public class StartDebugHandler extends AbstractHandler {
 					ProgramExecutor tcExecutor = new ProgramExecutor();
 					/** 0. clear some static common variables **/
 					clearOldData();
+					Repository.clearCache();
 					
 					int stepNum = -1;
 					boolean isMultiThread = false;
