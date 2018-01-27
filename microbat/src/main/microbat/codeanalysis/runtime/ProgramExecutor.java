@@ -72,7 +72,7 @@ import microbat.codeanalysis.bytecode.CFG;
 import microbat.codeanalysis.bytecode.CFGConstructor;
 import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.codeanalysis.bytecode.InstructionVisitor;
-import microbat.codeanalysis.bytecode.LineNumberVisitor0;
+import microbat.codeanalysis.bytecode.SingleLineByteCodeVisitor;
 import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
 import microbat.codeanalysis.runtime.jpda.expr.ParseException;
@@ -606,7 +606,7 @@ public class ProgramExecutor extends Executor {
 	}
 	
 	private boolean isPointEndOfMethod(BreakPoint point){
-		LineNumberVisitor0 visitor = findMethodByteCode(point);
+		SingleLineByteCodeVisitor visitor = findMethodByteCode(point);
 		CFGConstructor cfgConstructor = new CFGConstructor();
 		CFG cfg = cfgConstructor.constructCFG(visitor.getMethod().getCode());
 		
@@ -623,7 +623,7 @@ public class ProgramExecutor extends Executor {
 
 	private boolean isPointEndOfMethod(TraceNode node) {
 		BreakPoint point = node.getBreakPoint();
-		LineNumberVisitor0 visitor = findMethodByteCode(point);
+		SingleLineByteCodeVisitor visitor = findMethodByteCode(point);
 		
 		InstructionHandle lastHandle = visitor.getInstructionList().get(visitor.getInstructionList().size()-1);
 		if(lastHandle.getPosition()<node.getRuntimePC()){
@@ -735,15 +735,15 @@ public class ProgramExecutor extends Executor {
 		return false;
 	}
 
-	private LineNumberVisitor0 findMethodByteCode(BreakPoint point) {
+	private SingleLineByteCodeVisitor findMethodByteCode(BreakPoint point) {
 		String className = point.getClassCanonicalName();
 		int lineNumber = point.getLineNumber();
 		
 		String locationID = className + "$" + lineNumber;
-		LineNumberVisitor0 visitor = libraryLine2LineVisitorMap.get(locationID);
+		SingleLineByteCodeVisitor visitor = libraryLine2LineVisitorMap.get(locationID);
 //		visitor = null;
 		if (visitor == null) {
-			visitor = new LineNumberVisitor0(lineNumber, className, appPath);
+			visitor = new SingleLineByteCodeVisitor(lineNumber, className, appPath);
 			ByteCodeParser.parse(className, visitor, appPath);
 			libraryLine2LineVisitorMap.put(locationID, visitor);
 		}
@@ -761,7 +761,7 @@ public class ProgramExecutor extends Executor {
 		}
 		
 		BreakPoint point = thisNode.getBreakPoint();
-		LineNumberVisitor0 visitor = findMethodByteCode(point);
+		SingleLineByteCodeVisitor visitor = findMethodByteCode(point);
 		
 		InstructionHandle lastHandle = visitor.getInstructionList().get(visitor.getInstructionList().size()-1);
 		if(lastHandle.getPosition()<thisNode.getRuntimePC()){
@@ -772,7 +772,7 @@ public class ProgramExecutor extends Executor {
 	}
 
 	private boolean isPointStartOfMethod(BreakPoint point) {
-		LineNumberVisitor0 visitor = findMethodByteCode(point);
+		SingleLineByteCodeVisitor visitor = findMethodByteCode(point);
 		if(visitor.getJavaClass().isAnonymous()){
 			if(point.getMethodName().equals("<init>")){
 				return true;
@@ -850,7 +850,7 @@ public class ProgramExecutor extends Executor {
 		if(thisNode.getMethodName().equals(prevNode.getMethodName())) {
 			String prevClass = prevNode.getClassCanonicalName();
 			
-			LineNumberVisitor0 v = findMethodByteCode(thisNode.getBreakPoint());
+			SingleLineByteCodeVisitor v = findMethodByteCode(thisNode.getBreakPoint());
 			JavaClass superClass;
 			try {
 				superClass = v.getJavaClass().getSuperClass();
@@ -929,7 +929,7 @@ public class ProgramExecutor extends Executor {
 			return true;
 		}
 		else {
-			LineNumberVisitor0 visitor = findMethodByteCode(invokerPoint);
+			SingleLineByteCodeVisitor visitor = findMethodByteCode(invokerPoint);
 			List<InstructionHandle> list = visitor.getInstructionList();
 			boolean isOk = findInvokingMethod(invokeeSignature, visitor, list);
 			
@@ -969,7 +969,7 @@ public class ProgramExecutor extends Executor {
 		return false;
 	}
 
-	private boolean findInvokingMethod(String invokedMethodSig, LineNumberVisitor0 visitor,
+	private boolean findInvokingMethod(String invokedMethodSig, SingleLineByteCodeVisitor visitor,
 			List<InstructionHandle> peekList) {
 		String invokedMethodName = invokedMethodSig.substring(invokedMethodSig.indexOf("#")+1, invokedMethodSig.indexOf("("));
 		
@@ -1043,7 +1043,7 @@ public class ProgramExecutor extends Executor {
 		return uVars;
 	}
 
-	private HashMap<String, LineNumberVisitor0> libraryLine2LineVisitorMap = new HashMap<>();
+	private HashMap<String, SingleLineByteCodeVisitor> libraryLine2LineVisitorMap = new HashMap<>();
 	private HashMap<String, InstructionVisitor> libraryLine2InstructionVisitorMap = new HashMap<>();
 
 	class UsedVariable {
@@ -1067,9 +1067,9 @@ public class ProgramExecutor extends Executor {
 		String className = currentLocation.declaringType().name();
 
 		String locationID = className + "$" + lineNumber;
-		LineNumberVisitor0 visitor = libraryLine2LineVisitorMap.get(locationID);
+		SingleLineByteCodeVisitor visitor = libraryLine2LineVisitorMap.get(locationID);
 		if (visitor == null) {
-			visitor = new LineNumberVisitor0(lineNumber, className, appPath);
+			visitor = new SingleLineByteCodeVisitor(lineNumber, className, appPath);
 			ByteCodeParser.parse(className, visitor, appPath);
 			libraryLine2LineVisitorMap.put(locationID, visitor);
 		}
@@ -1548,7 +1548,7 @@ public class ProgramExecutor extends Executor {
 		String compilationUnit = invokeeNode.getDeclaringCompilationUnitName();
 		int lineNumber = invokeeNode.getLineNumber();
 
-		LineNumberVisitor0 visitor = findMethodByteCode(invokeeNode.getBreakPoint());
+		SingleLineByteCodeVisitor visitor = findMethodByteCode(invokeeNode.getBreakPoint());
 		List<Param> paramList = parseParameterList(visitor.getMethod());
 		for (Param param : paramList) {
 			Value value = JavaUtil.retriveExpression(frame, param.getName());

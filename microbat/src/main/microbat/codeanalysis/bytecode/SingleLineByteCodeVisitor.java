@@ -34,14 +34,14 @@ import microbat.model.variable.Variable;
 import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class LineNumberVisitor0 extends ByteCodeVisitor {
+public class SingleLineByteCodeVisitor extends ByteCodeVisitor {
 	private int lineNumber;
 	private String className;
 	private AppJavaClassPath appJavaClassPath;
 	
 	
 	
-	public LineNumberVisitor0(int lineNumber, String className, AppJavaClassPath appJavaClassPath) {
+	public SingleLineByteCodeVisitor(int lineNumber, String className, AppJavaClassPath appJavaClassPath) {
 		super();
 		this.lineNumber = lineNumber;
 		this.className = className;
