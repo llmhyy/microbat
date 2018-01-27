@@ -1,5 +1,3 @@
-USE trace
-;
 DROP TABLE IF EXISTS ControlScope
 ;
 CREATE TABLE ControlScope

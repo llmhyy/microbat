@@ -1,5 +1,3 @@
-USE trace
-;
 DROP TABLE IF EXISTS Regression
 ;
 CREATE TABLE Regression
