@@ -79,6 +79,7 @@ import microbat.codeanalysis.runtime.jpda.expr.ParseException;
 import microbat.codeanalysis.runtime.variable.VariableValueExtractor;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
+import microbat.model.ClassLocation;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -961,6 +962,10 @@ public class ProgramExecutor extends Executor {
 			
 			TraceNode node = methodNodeStack.get(i);
 			String method = methodSignatureStack.get(i);
+			
+			if(node.getLineNumber()==1 || method.equals(ClassLocation.UNKNOWN_METHOD_SIGN)){
+				continue;
+			}
 			
 			boolean isMethodInvokeRelationship = 
 					isMethodInvokeRelationship(node.getBreakPoint(), method);

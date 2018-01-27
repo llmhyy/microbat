@@ -16,6 +16,8 @@ import sav.common.core.utils.SignatureUtils;
  * 
  */
 public class ClassLocation {
+	public static String UNKNOWN_METHOD_SIGN = "unknown";
+	
 	protected String id;
 	protected String classCanonicalName;
 	protected String methodSign;

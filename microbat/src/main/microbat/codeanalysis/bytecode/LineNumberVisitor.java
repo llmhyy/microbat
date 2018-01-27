@@ -9,6 +9,7 @@ import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.InstructionHandle;
 
 import microbat.model.BreakPoint;
+import microbat.model.ClassLocation;
 import sav.strategies.dto.AppJavaClassPath;
 
 /**
@@ -45,17 +46,21 @@ public class LineNumberVisitor extends ByteCodeVisitor {
 		if(code != null){
 			for(BreakPoint breakPoint: breakPoints){
 				
-				List<InstructionHandle> correspondingInstructions = findCorrespondingInstructions(breakPoint.getLineNumber(), code);
-				
-				if(!correspondingInstructions.isEmpty()){
-					String methodSig = breakPoint.getClassCanonicalName() + "#" + method.getName() + method.getSignature();
-					if(!(methodSig.contains("class$") && breakPoint.getMethodSign()!=null)) {
-						breakPoint.setMethodSign(methodSig);						
-					}
+				if(breakPoint.getLineNumber()!=1){
+					List<InstructionHandle> correspondingInstructions = findCorrespondingInstructions(breakPoint.getLineNumber(), code);
 					
-					parseReadWrittenVariable(breakPoint, correspondingInstructions, code, cfg, appJavaClassPath);
+					if(!correspondingInstructions.isEmpty()){
+						String methodSig = breakPoint.getClassCanonicalName() + "#" + method.getName() + method.getSignature();
+						if(!(methodSig.contains("class$") && breakPoint.getMethodSign()!=null)) {
+							breakPoint.setMethodSign(methodSig);						
+						}
+						
+						parseReadWrittenVariable(breakPoint, correspondingInstructions, code, cfg, appJavaClassPath);
+					}
 				}
-				
+				else{
+					breakPoint.setMethodSign(ClassLocation.UNKNOWN_METHOD_SIGN);
+				}
 			}
 			
 		}
