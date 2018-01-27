@@ -537,15 +537,23 @@ public class ProgramExecutor extends Executor {
 			tempStack.push(stackNode);
 			count++;
 			if(isPrecise){
-				if(isSameLocation(node, stackNode)) {
+				if(isSameLocation(node, stackNode) && stackNode.getRuntimePC()<node.getRuntimePC()) {
 					found = true;
 					break;
 				}
 			}
 			else{
 				if(isSameContext(node, stackNode)) {
-					found = true;
-					break;
+					if(isSameLocation(node, stackNode)){//in case a recursive method.
+						if(node.getRuntimePC()>stackNode.getRuntimePC()){
+							found = true;
+							break;
+						}
+					}
+					else{
+						found = true;
+						break;						
+					}
 				}
 			}
 		}
