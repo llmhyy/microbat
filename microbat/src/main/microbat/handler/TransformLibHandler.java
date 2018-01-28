@@ -125,6 +125,8 @@ public class TransformLibHandler extends AbstractHandler {
 					}
 				}
 				jar.close();
+				
+				System.currentTimeMillis();
 				updateRTJar(writtenFiles, workingDir);
 
 			} catch (IOException e) {
@@ -150,8 +152,15 @@ public class TransformLibHandler extends AbstractHandler {
 	
 	private boolean isValidClass(String className, String[] prefixes) {
 		for(String prefix: prefixes){
-			if(className.startsWith(prefix)){
-				return false;
+			if(prefix.endsWith("/")) {// a pattern
+				if(className.startsWith(prefix)){
+					return false;
+				}				
+			}
+			else {// a class
+				if(className.equals(prefix)) {
+					return false;
+				}
 			}
 		}
 		
