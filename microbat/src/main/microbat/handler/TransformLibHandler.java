@@ -229,8 +229,8 @@ public class TransformLibHandler extends AbstractHandler {
 
 	private String getSharedPrefix(String a, String b) {
 		String regex = String.valueOf(File.separatorChar);
-		String[] aFolders = a.split(regex);
-		String[] bFolders = b.split(regex);
+		String[] aFolders = a.split("\\\\");
+		String[] bFolders = b.split("\\\\");
 		
 		List<String> list = new ArrayList<>();
 		

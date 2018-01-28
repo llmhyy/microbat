@@ -7,7 +7,9 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ClassNotLoadedException;
@@ -214,8 +216,36 @@ public abstract class Executor {
 		}
 		
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(className, appClassPath);
+		
 		RangeFinder finder = new RangeFinder(className, methodName, cu);
 		cu.accept(finder);
+		
+		if(finder.range==null) {
+			TypeDeclaration type = (TypeDeclaration) cu.types().get(0);
+			String typeName = type.getSuperclassType().toString();
+			
+			String fullName = null;
+			for(Object obj: cu.imports()) {
+				if(obj instanceof ImportDeclaration) {
+					ImportDeclaration del = (ImportDeclaration)obj;
+					String identifier = del.getName().getFullyQualifiedName();
+					if(identifier.contains(typeName)) {
+						fullName = identifier;
+						break;
+					}
+				}
+			}
+			
+			if(fullName==null) {
+				fullName = cu.getPackage().getName().getFullyQualifiedName() + "." + typeName;
+			}
+			
+			CompilationUnit parentCU = JavaUtil.findCompilationUnitInProject(fullName, appClassPath);
+			RangeFinder parentFinder = new RangeFinder(fullName, methodName, parentCU);
+			parentCU.accept(parentFinder);
+			return parentFinder.range;
+			
+		}
 		
 		return finder.range;
 	}
