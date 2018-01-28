@@ -102,7 +102,12 @@ public class ClassLocation {
 		if(methodSign==null){
 			return null;
 		}
-		return methodSign.substring(methodSign.indexOf("#")+1, methodSign.indexOf("("));
+		
+		if(methodSign.contains("#")) {
+			return methodSign.substring(methodSign.indexOf("#")+1, methodSign.indexOf("("));			
+		}
+		
+		return methodSign;
 	}
 
 	

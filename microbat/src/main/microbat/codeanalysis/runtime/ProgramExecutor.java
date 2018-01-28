@@ -963,7 +963,7 @@ public class ProgramExecutor extends Executor {
 			TraceNode node = methodNodeStack.get(i);
 			String method = methodSignatureStack.get(i);
 			
-			if(node.getLineNumber()==1 || method.equals(ClassLocation.UNKNOWN_METHOD_SIGN)){
+			if(node.getBreakPoint().isStartOfClass() || method.equals(ClassLocation.UNKNOWN_METHOD_SIGN)){
 				continue;
 			}
 			

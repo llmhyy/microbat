@@ -7,9 +7,13 @@ import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.LineNumber;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.InstructionHandle;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
+import microbat.util.JavaUtil;
 import sav.strategies.dto.AppJavaClassPath;
 
 /**
@@ -45,8 +49,8 @@ public class LineNumberVisitor extends ByteCodeVisitor {
 		CFG cfg = new CFGConstructor().buildCFGWithControlDomiance(code);
 		if(code != null){
 			for(BreakPoint breakPoint: breakPoints){
-				
-				if(breakPoint.getLineNumber()!=1){
+				boolean isStartOfClass = isStartOfClass(breakPoint);
+				if(!isStartOfClass){
 					List<InstructionHandle> correspondingInstructions = findCorrespondingInstructions(breakPoint.getLineNumber(), code);
 					
 					if(!correspondingInstructions.isEmpty()){
@@ -59,6 +63,7 @@ public class LineNumberVisitor extends ByteCodeVisitor {
 					}
 				}
 				else{
+					breakPoint.setStartOfClass(true);
 					breakPoint.setMethodSign(ClassLocation.UNKNOWN_METHOD_SIGN);
 				}
 			}
@@ -67,6 +72,32 @@ public class LineNumberVisitor extends ByteCodeVisitor {
 		
 		
     }
+
+	private boolean isStartOfClass(BreakPoint breakPoint) {
+		if(breakPoint.getLineNumber()==1) {
+			return true;
+		}
+		
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(
+				breakPoint.getDeclaringCompilationUnitName(), appJavaClassPath);
+		final List<TypeDeclaration> list = new ArrayList<>();
+		cu.accept(new ASTVisitor() {
+			public boolean visit(TypeDeclaration type) {
+				list.add(type);
+				return true;
+			}
+		});
+		
+		for(TypeDeclaration type: list) {
+			int startLine = cu.getLineNumber(type.getName().getStartPosition());
+			if(breakPoint.getLineNumber()==startLine) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
 
 	private List<BreakPoint> findIncludeBreakPoints(Code code, List<BreakPoint> breakPoints) {
 		List<BreakPoint> includedPoints = new ArrayList<>();
