@@ -951,6 +951,20 @@ public class ProgramExecutor extends Executor {
 		
 	}
 
+	/**
+	 * There is a conservative analysis for checking indirect access/invocation.
+	 * More specifically, a line such as the start of a class, can be corresponded to 
+	 * multiple byte code instructions or associated with many byte code level method. 
+	 * It is dogmatic to infer which method can be associated with this line in the 
+	 * static analysis. for now, once a line is the start of a class, we set its method 
+	 * as unknown so that we can have a conservative analysis to figure out whether 
+	 * two methods have invocation relationship. namely, an unknown method may invoke 
+	 * any methods and be invoked by any methods.
+	 * 
+	 * @param methodSignatureStack
+	 * @param methodNodeStack
+	 * @return
+	 */
 	private boolean checkIndirectAccess(Stack<String> methodSignatureStack, Stack<TraceNode> methodNodeStack) {
 		if(methodSignatureStack.size()<=1) {
 			return false;
