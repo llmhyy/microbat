@@ -5,7 +5,7 @@ public class LocalVar extends Variable{
 //	private String type;
 	private int lineNumber;
 	private String locationClass;
-	
+	private int index;
 	private boolean isParameter = false;
 	
 	public LocalVar(String name, String type, String locationClass, int lineNumber){
@@ -90,5 +90,10 @@ public class LocalVar extends Variable{
 
 	public void setParameter(boolean isParameter) {
 		this.isParameter = isParameter;
+	}
+	
+	@Override
+	public VariableType getVarType() {
+		return VariableType.LOCAL;
 	}
 }

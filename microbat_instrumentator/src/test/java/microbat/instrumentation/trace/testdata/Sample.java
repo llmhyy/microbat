@@ -16,7 +16,7 @@ public class Sample {
 
 	public void testArr() {
 		int[][] a = new int[][] { { 1, 2 }, { 3, 4 } };
-		field = 2;
+		field = 2; 
 		for (int i = 0; i < 2; i++) {
 			field++;
 			a[0][i] = field;

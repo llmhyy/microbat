@@ -1,5 +1,7 @@
 package microbat.model.variable;
 
+import microbat.model.variable.Variable.VariableType;
+
 public class ArrayElementVar extends Variable {
 
 	public ArrayElementVar(String name, String type, String aliasVarID) {
@@ -62,4 +64,8 @@ public class ArrayElementVar extends Variable {
 		return var;
 	}
 	
+	@Override
+	public VariableType getVarType() {
+		return VariableType.ARRAY_ELEMENT;
+	}
 }

@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 
 import org.junit.Test;
 
-import microbat.instrumentation.trace.TraceTransformer;
 import microbat.instrumentation.trace.testdata.Sample;
 import sav.common.core.utils.FileUtils;
 
@@ -16,7 +15,7 @@ import sav.common.core.utils.FileUtils;
  */
 public class InstrumenterTest {
 	private final String CLASS_FOLDER = "E:/lyly/Projects/microbat/master/microbat_instrumentator/bin";
-	private final String INSTRUMENT_TARGET_FOLDER = "E:/lyly/Projects";
+	private final String INSTRUMENT_TARGET_FOLDER = "E:/lyly/Projects/inst_src";
 
 	@Test
 	public void writeFile() throws Exception {
@@ -34,7 +33,7 @@ public class InstrumenterTest {
 		byte[] data = new byte[33000];
 		in.read(data);
 		data = instrument(data, className);
-		System.out.println(new String(data));
+//		System.out.println(new String(data));
 		out.write(data);
 		out.close();
 		in.close();
@@ -47,7 +46,13 @@ public class InstrumenterTest {
 	}
 
 	private byte[] instrument(byte[] data, String className) throws Exception {
-		TraceTransformer transformer = new TraceTransformer();
-		return transformer.instrument(className, data, new NormalInstrumenter());
+//		TraceTransformer transformer = new TraceTransformer();
+//		return transformer.instrument(className, data, new NormalInstrumenter());
+//		BcelTraceTransformer transformer = new BcelTraceTransformer();
+//		return transformer.instrument(className, data);
+//		FieldTransformer transformer = new FieldTransformer();
+//		return transformer.instrument(className, data);
+		TraceInstrumenter transformer = new TraceInstrumenter();
+		return transformer.instrument(className, data);
 	}
 }

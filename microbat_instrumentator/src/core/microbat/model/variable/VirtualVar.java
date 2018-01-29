@@ -33,4 +33,9 @@ public class VirtualVar extends Variable {
 	public boolean isOfPrimitiveType(){
 		return PrimitiveUtils.isPrimitiveTypeOrString(type);
 	}
+	
+	@Override
+	public VariableType getVarType() {
+		return VariableType.VIRTUAL;
+	}
 }
