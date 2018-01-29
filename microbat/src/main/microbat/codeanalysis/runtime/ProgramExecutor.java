@@ -23,8 +23,11 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.StringLiteral;
+import org.eclipse.jdt.core.dom.TypeLiteral;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
@@ -1982,32 +1985,40 @@ public class ProgramExecutor extends Executor {
 		ReturnStatement rStat = finder.returnStatement;
 		if(rStat!=null){
 			Expression expr = rStat.getExpression();
+			String vID = VirtualVar.VIRTUAL_PREFIX + node.getOrder();
 			if(expr != null){
 				String exprString = expr.toString();
 				if(exprString.contains("(") || exprString.contains("[")){
 					for(VarValue readVar: node.getReadVariables()){
 						VirtualVar virVar = new VirtualVar(readVar.getVarName(), "return type");
-						String vID = VirtualVar.VIRTUAL_PREFIX + node.getOrder();
-						virVar.setVarID(vID);
 						VirtualValue virValue = new VirtualValue(false, virVar);
+						virValue.setVarID(vID);
 						virValue.setStringValue(readVar.getStringValue());
 						node.addReturnVariable(virValue);
-//						break;
 					}
 				}
 				else{
-					StackFrame frame = findFrame(thread, location);
-					if (frame == null) {
-						return;
-					}
-					
-					synchronized (frame) {
+					if(expr instanceof NullLiteral || expr instanceof NullLiteral 
+							|| expr instanceof StringLiteral || expr instanceof TypeLiteral) {
 						Variable vVar = new VirtualVar(exprString, "return type");
-						VarValue valueV = generateVarValue(frame, vVar, node, Variable.WRITTEN, node.getBreakPoint());
-						String vID = VirtualVar.VIRTUAL_PREFIX + node.getOrder();
-						if(valueV != null){
-							valueV.setVarID(vID);
-							node.addReturnVariable(valueV);
+						VirtualValue virValue = new VirtualValue(false, vVar);
+						virValue.setVarID(vID);
+						virValue.setStringValue(exprString);
+						node.addReturnVariable(virValue);
+					}
+					else {
+						StackFrame frame = findFrame(thread, location);
+						if (frame == null) {
+							return;
+						}
+						
+						synchronized (frame) {
+							Variable vVar = new VirtualVar(exprString, "return type");
+							VarValue valueV = generateVarValue(frame, vVar, node, Variable.WRITTEN, node.getBreakPoint());
+							if(valueV != null){
+								valueV.setVarID(vID);
+								node.addReturnVariable(valueV);
+							}
 						}
 					}
 				}
