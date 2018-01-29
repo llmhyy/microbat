@@ -151,6 +151,7 @@ public class TransformLibHandler extends AbstractHandler {
 	}
 	
 	private boolean isValidClass(String className, String[] prefixes) {
+		className = className.replace(".class", "");
 		for(String prefix: prefixes){
 			if(prefix.endsWith("/")) {// a pattern
 				if(className.startsWith(prefix)){
