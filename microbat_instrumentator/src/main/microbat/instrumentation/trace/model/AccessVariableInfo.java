@@ -1,9 +1,18 @@
 package microbat.instrumentation.trace.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import microbat.model.variable.FieldVar;
+import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
+import microbat.model.variable.Variable.VariableType;
+import sav.common.core.utils.ClassUtils;
+import sav.common.core.utils.CollectionUtils;
+import sav.common.core.utils.Iterators;
+import sav.common.core.utils.StringUtils;
 
 public class AccessVariableInfo {
 	private int lineNo;
@@ -64,7 +73,80 @@ public class AccessVariableInfo {
 	}
 
 	public int getInsertPc() {
-		// TODO Auto-generated method stub
-		return 0;
+		// TODO LLT: check multi stmt in line which has break/return/continue.
+		return pcs.get(pcs.size() - 1) + 1;
+	}
+	
+	public String getReadString() {
+		return buildVarsStr(readVars);
+	}
+	
+	public String getWrittenString() {
+		return buildVarsStr(writtenVars);
+	}
+	
+	private Map<String, Variable> allVars;
+	@SuppressWarnings("unchecked")
+	public Map<String, Variable> getAllVarNames() {
+		if (allVars != null) {
+			return allVars;
+		}
+		allVars = new HashMap<>();
+		Iterators<Variable> it = new Iterators<>(readVars.iterator(), writtenVars.iterator());
+		while (it.hasNext()) {
+			Variable var = it.next();
+			String varName = var.getName();
+			if (var.getVarType() == VariableType.FIELD) {
+				FieldVar fieldVar = (FieldVar) var;
+				if (fieldVar.isStatic()) {
+					String declaringType = fieldVar.getDeclaringType();
+					varName = declaringType == null ? var.getName() : ClassUtils.toClassMethodStr(declaringType, var.getName());
+				} else {
+					varName = FIELD_VAR_PREFIX + var.getName();
+				}
+			} 
+			allVars.put(varName, var);
+		}
+		return allVars;
+	}
+	
+	private static final String VAR_SEPARATOR = ";";
+	private static final String VAR_PROP_SEPARATOR = ":";
+	private static final String FIELD_VAR_PREFIX = "this.";
+	private static String buildVarsStr(List<Variable> vars) {
+		if (CollectionUtils.isEmpty(vars)) {
+			return StringUtils.EMPTY;
+		}
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < vars.size(); i++) {
+			Variable var = vars.get(i);
+			sb.append(var.getVarType()).append(VAR_PROP_SEPARATOR)
+				.append(var.getType()).append(VAR_PROP_SEPARATOR)
+				.append(var.getName());
+			switch (var.getVarType()) {
+			case ARRAY_ELEMENT:
+			case CONSTANTS:
+				break;
+			case FIELD:
+				FieldVar fieldVar = (FieldVar) var;
+				sb.append(VAR_PROP_SEPARATOR).append(fieldVar.isStatic());
+				break;
+			case LOCAL:
+				LocalVar localVar = (LocalVar) var;
+				sb.append(VAR_PROP_SEPARATOR).append(localVar.getLocationClass())
+					.append(VAR_PROP_SEPARATOR).append(localVar.getLineNumber())
+					.append(VAR_PROP_SEPARATOR).append(localVar.isParameter());
+				break;
+			case VIRTUAL:
+				break;
+			default:
+				throw new IllegalArgumentException("Unhandled type: " + var.getVarType());
+			}
+			if (i != (vars.size() - 1)) {
+				sb.append(VAR_SEPARATOR);
+			}
+		}
+		
+		return sb.toString();
 	}
 }

@@ -50,6 +50,25 @@ public class StringUtils {
 		return join(Arrays.asList(params), separator);
 	}
 	
+	/**
+	 * return a join string with quote for each value.
+	 */
+	public static String toJoinStrCode(List<?> allVars) {
+		StringBuilder varSb = new StringBuilder();
+		for (int i = 0; i < allVars.size(); i++) {
+			Object val = allVars.get(i);
+			if (val == null) {
+				varSb.append("null");
+			} else {
+				varSb.append("\"").append(val.toString()).append("\"");;
+			}
+			if (i != allVars.size() - 1) {
+				varSb.append(", ");
+			}
+		}
+		return varSb.toString();
+	}
+	
 	public static String newLineJoin(List<?> params) {
 		return join(params, Constants.NEW_LINE);
 	}

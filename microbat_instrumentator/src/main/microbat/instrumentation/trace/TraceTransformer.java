@@ -9,6 +9,9 @@ import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtMethod;
 import microbat.instrumentation.trace.TraceTransformerChecker.CheckerResult;
+import microbat.instrumentation.trace.bk.ITraceInstrumenter;
+import microbat.instrumentation.trace.bk.NormalInstrumenter;
+import microbat.instrumentation.trace.bk.ReturnInstrumenter;
 
 public class TraceTransformer implements ClassFileTransformer {
 	private TraceTransformerChecker checker = new TraceTransformerChecker();

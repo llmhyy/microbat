@@ -81,4 +81,9 @@ public class FieldVar extends Variable{
 		var.setDeclaringType(declaringType);
 		return var;
 	}
+	
+	@Override
+	public VariableType getVarType() {
+		return VariableType.FIELD;
+	}
 }
