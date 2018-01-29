@@ -1988,9 +1988,11 @@ public class ProgramExecutor extends Executor {
 			String vID = VirtualVar.VIRTUAL_PREFIX + node.getOrder();
 			if(expr != null){
 				String exprString = expr.toString();
+				String varName = node.getMethodName();
 				if(exprString.contains("(") || exprString.contains("[")){
+					int count = 0;
 					for(VarValue readVar: node.getReadVariables()){
-						VirtualVar virVar = new VirtualVar(readVar.getVarName(), "return type");
+						VirtualVar virVar = new VirtualVar(varName+(count++), "return type");
 						VirtualValue virValue = new VirtualValue(false, virVar);
 						virValue.setVarID(vID);
 						virValue.setStringValue(readVar.getStringValue());
@@ -2000,7 +2002,7 @@ public class ProgramExecutor extends Executor {
 				else{
 					if(expr instanceof NullLiteral || expr instanceof NullLiteral 
 							|| expr instanceof StringLiteral || expr instanceof TypeLiteral) {
-						Variable vVar = new VirtualVar(exprString, "return type");
+						Variable vVar = new VirtualVar(varName, "return type");
 						VirtualValue virValue = new VirtualValue(false, vVar);
 						virValue.setVarID(vID);
 						virValue.setStringValue(exprString);
@@ -2015,6 +2017,7 @@ public class ProgramExecutor extends Executor {
 						synchronized (frame) {
 							Variable vVar = new VirtualVar(exprString, "return type");
 							VarValue valueV = generateVarValue(frame, vVar, node, Variable.WRITTEN, node.getBreakPoint());
+							vVar.setName(varName);
 							if(valueV != null){
 								valueV.setVarID(vID);
 								node.addReturnVariable(valueV);
