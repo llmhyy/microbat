@@ -20,7 +20,6 @@ import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.ReferenceType;
 
-import microbat.instrumentation.trace.example.FieldIndex;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.CollectionUtils;
 
