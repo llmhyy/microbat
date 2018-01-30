@@ -1373,11 +1373,24 @@ public class ProgramExecutor extends Executor {
 			String name = caughtLocationForJustException.method().name();
 			String sig = caughtLocationForJustException.method().signature();
 			String m = name + sig;
-			String peek = methodSignatureStack.peek();
+			
+			/**
+			 * if the exception is caught by current method, we do not need to pop
+			 */
+			String currentMethod = methodSignatureStack.peek();
+			if(currentMethod.contains(m)){
+				return;
+			}
+			
+			/**
+			 * the last popped method should share the context with m
+			 */
+			String peek = methodNodeStack.peek().getMethodSign();
 			while(!peek.contains(m)) {
 				if (!methodNodeStack.isEmpty()) {
-					methodNodeStack.pop();
-					methodSignatureStack.pop();					
+					TraceNode node = methodNodeStack.pop();
+					peek = node.getMethodSign();
+					methodSignatureStack.pop();
 				}
 				else {
 					break;
@@ -1385,6 +1398,7 @@ public class ProgramExecutor extends Executor {
 			}
 		}
 		
+		System.currentTimeMillis();
 	}
 
 	private BreakPoint getNextPoint(List<BreakPoint> executionOrderList) {
