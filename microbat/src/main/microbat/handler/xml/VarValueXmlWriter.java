@@ -81,7 +81,7 @@ public class VarValueXmlWriter {
 			DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 			Document doc = docBuilder.newDocument();
 			toXml(doc);
-			
+			doc.setXmlVersion("1.1");
 			// write the content into xml file
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			Transformer transformer = transformerFactory.newTransformer();
