@@ -39,6 +39,12 @@ public class CollectionUtils {
 		return list;
 	}
 	
+	public static <T> List<T> listOf(T value, int size) {
+		List<T> list = new ArrayList<T>(size);
+		list.add(value);
+		return list;
+	}
+	
 	public static <T> List<T> listOf(T value1, T value2, T value3) {
 		List<T> list = new ArrayList<T>();
 		list.add(value1);

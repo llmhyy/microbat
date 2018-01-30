@@ -2,47 +2,58 @@ package microbat.instrumentation.trace;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.bcel.Const;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ASTORE;
-import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.BasicType;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.DUP;
+import org.apache.bcel.generic.DUP2;
+import org.apache.bcel.generic.DUP2_X1;
+import org.apache.bcel.generic.DUP2_X2;
+import org.apache.bcel.generic.DUP_X1;
+import org.apache.bcel.generic.DUP_X2;
 import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.GETFIELD;
 import org.apache.bcel.generic.GETSTATIC;
 import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.INVOKEVIRTUAL;
-import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.InstructionTargeter;
+import org.apache.bcel.generic.InvokeInstruction;
+import org.apache.bcel.generic.LDC;
 import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.MethodGen;
-import org.apache.bcel.generic.ObjectType;
+import org.apache.bcel.generic.POP;
 import org.apache.bcel.generic.PUSH;
 import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.PUTSTATIC;
-import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.SWAP;
+import org.apache.bcel.generic.StoreInstruction;
+import org.apache.bcel.generic.TargetLostException;
 import org.apache.bcel.generic.Type;
 
 import microbat.instrumentation.trace.data.ExecutionTracer;
-import microbat.instrumentation.trace.example.FieldIndex;
+import microbat.instrumentation.trace.model.ArrayInstructionInfo;
+import microbat.instrumentation.trace.model.FieldInstructionInfo;
+import microbat.instrumentation.trace.model.LineInstructionInfo;
+import microbat.instrumentation.trace.model.LocalVarInstructionInfo;
+import microbat.instrumentation.trace.model.RWInstructionInfo;
 import sav.common.core.SavRtException;
 
 public class TraceInstrumenter {
+	private static final String TRACER_VAR_NAME = "$tracer";
 
 	protected byte[] instrument(String className, byte[] classfileBuffer) throws Exception {
 		ClassParser cp = new ClassParser(new java.io.ByteArrayInputStream(classfileBuffer), className);
@@ -50,22 +61,22 @@ public class TraceInstrumenter {
 		// First, make sure we have to instrument this class:
 		if (!jc.isClass()) // could be an interface
 			return null;
-		ClassGen cg = new ClassGen(jc);
-		ConstantPoolGen cpg = cg.getConstantPool();
-		setMethodIndex(cpg);
+		ClassGen classGen = new ClassGen(jc);
+		ConstantPoolGen constPool = classGen.getConstantPool();
+		setMethodIndex(constPool);
 		JavaClass newJC = null;
-		for (Method meth : jc.getMethods()) {
-			if (meth.isNative() || meth.isAbstract() || meth.getCode() == null) {
+		for (Method method : jc.getMethods()) {
+			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
 			}
 			boolean changed = false;
-			MethodGen mg = new MethodGen(meth, className, cpg);
-			changed = instrumentMethod(cg, cpg, mg);
+			MethodGen methodGen = new MethodGen(method, className, constPool);
+			changed = instrumentMethod(classGen, constPool, methodGen, method);
 			if (changed) {
-				cg.replaceMethod(meth, mg.getMethod());
+				classGen.replaceMethod(method, methodGen.getMethod());
 			}
-			newJC = cg.getJavaClass();
-			newJC.setConstantPool(cpg.getFinalConstantPool());
+			newJC = classGen.getJavaClass();
+			newJC.setConstantPool(constPool.getFinalConstantPool());
 		}
 		System.out.println("===============================================");
 		dumpClass(jc);
@@ -91,94 +102,232 @@ public class TraceInstrumenter {
 		}
 	}
 
-	private int executionTracer_getTracer_idx;
-	private int executionTracer_hitLine_idx;
-	private int executionTracer_writeField_idx;
-	private int executionTracer_writeLocalVar_idx;
-	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen) {
+	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method) {
 		InstructionList insnList = methodGen.getInstructionList();
-		Map<LineNumberGen, List<InstructionHandle>> lineNoInsnsMap = getLineNoInsnsMap(methodGen, constPool);
+		List<LineInstructionInfo> lineInsnInfos = new ArrayList<>();
+		LineNumberTable lineNumberTable = methodGen.getLineNumberTable(constPool);
+		for (LineNumberGen lineGen : methodGen.getLineNumbers()) {
+			lineInsnInfos.add(new LineInstructionInfo(method.getLocalVariableTable(), constPool, lineNumberTable,
+					lineGen, insnList));
+		}
 		LocalVariableGen tracerVar = injectCodeInitTracer(methodGen);
 		if (tracerVar == null) {
 			throw new SavRtException("tracerVar == null");
 		}
-		for (LineNumberGen lineGen : lineNoInsnsMap.keySet()) {
-			List<InstructionHandle> lineInsns =lineNoInsnsMap.get(lineGen);
-			List<InstructionHandle> rwInsns = extractRWInstructions(lineInsns);
+		for (LineInstructionInfo lineInfo : lineInsnInfos) {
+			/* instrument RW instructions */
+			List<RWInstructionInfo> rwInsns = lineInfo.getRWInstructions();
 			if (rwInsns.isEmpty()) {
-				injectCodeTracerHitLine(insnList, constPool, tracerVar, lineGen);
+				injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getLineGen());
 			} else {
-				for (InstructionHandle rwInsn : rwInsns) {
+				for (RWInstructionInfo rwInsnInfo : rwInsns) {
 					InstructionList newInsns = null;
-					Instruction insn = rwInsn.getInstruction();
-					if (insn instanceof FieldInstruction) {
-						newInsns = getInjectCodeTracerRWriteField(constPool, tracerVar, (FieldInstruction)insn);
-					} else if (insn instanceof ArrayInstruction) {
-						newInsns = getInjectCodeTracerRWriteArray(constPool, tracerVar, (ArrayInstruction)insn);
-					} else if (insn instanceof LocalVariableInstruction) {
-						newInsns = getInjectCodeTracerRWriteLocalVar(constPool, tracerVar, (LocalVariableInstruction)insn);
+					if (rwInsnInfo instanceof FieldInstructionInfo) {
+						newInsns = getInjectCodeTracerRWriteField(constPool, tracerVar, (FieldInstructionInfo)rwInsnInfo);
+					} else if (rwInsnInfo instanceof ArrayInstructionInfo) {
+						newInsns = getInjectCodeTracerRWriteArray(constPool, tracerVar, (ArrayInstructionInfo)rwInsnInfo);
+					} else if (rwInsnInfo instanceof LocalVarInstructionInfo) {
+						newInsns = getInjectCodeTracerRWriteLocalVar(constPool, tracerVar, (LocalVarInstructionInfo)rwInsnInfo);
 					}
 					if ((newInsns != null) && (newInsns.getLength() > 0)) {
-						InstructionHandle pos = insnList.insert(rwInsn, newInsns);
-						updateTargeters(rwInsn, pos);
-						newInsns.dispose();
+						if (rwInsnInfo.isStoreInstruction()) {
+							InstructionHandle pos = insnList.insert(rwInsnInfo.getInstructionHandler(), newInsns);
+							updateTargeters(rwInsnInfo.getInstructionHandler(), pos);
+							newInsns.dispose();
+						} else {
+							InstructionHandle pos = insnList.insert(rwInsnInfo.getInstructionHandler(), newInsns);
+							try {
+								insnList.delete(rwInsnInfo.getInstructionHandler());
+							} catch (TargetLostException e) {
+								e.printStackTrace();
+							}
+							updateTargeters(rwInsnInfo.getInstructionHandler(), pos);
+							newInsns.dispose();
+						}
 					}
+				}
+			}
+			/* instrument Invocation instructions */
+			List<InstructionHandle> invokeInsns = lineInfo.getInvokeInstructions();
+			if (!invokeInsns.isEmpty()) {
+				for (InstructionHandle insn : invokeInsns) {
+					InstructionList newInsns = getInjectCodeTracerInvokeMethod(tracerVar, (InvokeInstruction)insn.getInstruction());
 				}
 			}
 		}
 		return true;
 	}
 	
-	private InstructionList getInjectCodeTracerRWriteField(ConstantPoolGen constPool, LocalVariableGen tracerVar, FieldInstruction insn) {
-		InstructionList newInsns = new InstructionList();
+	private InstructionList getInjectCodeTracerInvokeMethod(LocalVariableGen tracerVar, InvokeInstruction instruction) {
+//		instruction.get
+		return null;
+	}
+
+	private InstructionList getInjectCodeTracerRWriteField(ConstantPoolGen constPool, LocalVariableGen tracerVar,
+			FieldInstructionInfo info) {
+		FieldInstruction insn = (FieldInstruction) info.getInstruction();
 		if (insn instanceof PUTFIELD) {
-			Type fieldType = insn.getFieldType(constPool);
-			if (fieldType instanceof ReferenceType) {
-				int fieldIndex = getFieldIndex(constPool, insn);
-				newInsns.append(new DUP()); // Duplicates object and value
-				newInsns.append(new ALOAD(tracerVar.getIndex()));
-				newInsns.append(new SWAP());
-				newInsns.append(new INVOKEVIRTUAL(executionTracer_writeField_idx)); // record hit
-				return newInsns;
-			} else if (fieldType instanceof BasicType) {
-				
-			}
+			return getInjectCodePutField(constPool, tracerVar, info);
 		} else if (insn instanceof PUTSTATIC) {
-			
+			return getInjectCodePutStatic(constPool, tracerVar, info);
 		} else if (insn instanceof GETFIELD) {
-			
+			return getInjectCodeGetField(constPool, tracerVar, info);
 		} else if (insn instanceof GETSTATIC) {
 			
+		}
+		return null;
+	}
+
+	private InstructionList getInjectCodePutField(ConstantPoolGen constPool, LocalVariableGen tracerVar,
+			FieldInstructionInfo info) {
+		InstructionList newInsns = new InstructionList();
+		if (info.isComputationalType1()) {
+			newInsns.append(new DUP2()); // Duplicates object and value: [obj, val], obj, val
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // [obj, val], obj, val, tracer
+			newInsns.append(new DUP_X2()); // [obj, val], tracer, obj, val, tracer
+			newInsns.append(new POP()); // [obj, val], tracer, obj, val
+		} else { // obj, val*
+			/**/
+			newInsns.append(new DUP2_X1()); // val*, obj, val*
+			newInsns.append(new POP()); // val*, obj
+			newInsns.append(new DUP_X2()); // obj, val*, obj
+			newInsns.append(new DUP_X2()); // obj, obj, val*, obj
+			newInsns.append(new POP()); // obj, obj, val*
+			newInsns.append(new DUP2_X1()); // obj, val*, obj, val*
+			
+			/* swap obj, var* */
+			newInsns.append(new DUP2_X1()); // val*, obj, val*
+			newInsns.append(new POP()); // val*, obj
+			
+			/* push tracer */
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // val*, obj, tracer
+			/* bring tracer to the bottom */
+			newInsns.append(new DUP2_X2()); // obj, tracer, val*, obj, tracer
+			newInsns.append(new POP()); // obj, tracer, val*, obj
+			/* swap obj, var* */
+			newInsns.append(new DUP_X2()); // obj, tracer, obj, val*, obj
+			newInsns.append(new POP()); // obj, tracer, obj, val*
+		}
+		Type fieldType = info.getFieldBcType();
+		if (fieldType  instanceof BasicType) {
+			newInsns.append(new INVOKESTATIC(getValueOfMethodIdx((BasicType) fieldType, constPool)));
+		}
+		newInsns.append(new LDC(info.getFieldIndex())); // tracer, obj, val, fieldIdx
+		newInsns.append(new PUSH(constPool, fieldType.getSignature())); // tracer, obj, val, fieldIdx, fieldTypeSignature
+		newInsns.append(new PUSH(constPool, info.getLine())); // tracer, obj, val, fieldIdx, fieldTypeSignature, line
+		newInsns.append(new INVOKEVIRTUAL(executionTracer_writeField_idx)); // record -> [obj, val] or [obj, val], val
+		if (info.getFieldStackSize() == 2) {
+			newInsns.append(new POP());
+		}
+		return newInsns;
+	}
+	
+	/**
+	 * ex: ldc "strABC" (java.lang.String)
+     *      putstatic microbat/instrumentation/trace/testdata/RefVar.staticStr:java.lang.String
+	 */
+	private InstructionList getInjectCodePutStatic(ConstantPoolGen constPool, LocalVariableGen tracerVar,
+			FieldInstructionInfo info) {
+		InstructionList newInsns = new InstructionList();
+		if (info.getFieldStackSize() == 1) {
+			newInsns.append(new DUP()); // val
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // val, tracer
+			newInsns.append(new SWAP()); // tracer, val
+		} else {
+			newInsns.append(new DUP2()); // val*
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // val*, tracer
+			newInsns.append(new DUP_X2()); // tracer, val*, tracer
+			newInsns.append(new POP()); // tracer, val*
+		}
+		Type fieldType = info.getFieldBcType();
+		if (fieldType  instanceof BasicType) {
+			newInsns.append(new INVOKESTATIC(getValueOfMethodIdx((BasicType) fieldType, constPool)));
+		}
+		newInsns.append(new PUSH(constPool, info.getRefType())); // tracer, val*, refType
+		newInsns.append(new PUSH(constPool, info.getFieldName())); // tracer, val*, refType, fieldName
+		newInsns.append(new PUSH(constPool, info.getFieldType()));
+		newInsns.append(new PUSH(constPool, info.getLine()));
+		newInsns.append(new INVOKEVIRTUAL(executionTracer_writeStaticField_idx));
+		return newInsns;
+	}
+	
+	private InstructionList getInjectCodeGetField(ConstantPoolGen constPool, LocalVariableGen tracerVar,
+			FieldInstructionInfo info) {
+		// stack: obj (refValue)
+		GETFIELD insn = (GETFIELD) info.getInstruction();
+		
+		InstructionList newInsns = new InstructionList();
+		newInsns.append(new DUP()); // obj, obj
+		newInsns.append(new GETFIELD(insn.getIndex())); // obj, val (*)
+		if (info.isComputationalType1()) {
+			newInsns.append(new DUP_X1()); // [val], obj, val
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // [val], obj, val, tracer
+			newInsns.append(new DUP_X2()); // [val], tracer, obj, val, tracer
+			newInsns.append(new POP()); // [val], tracer, obj, val
+		} else {
+			newInsns.append(new DUP2_X1()); // [val*], obj, val*
+			/* swap */
+			newInsns.append(new DUP2_X1()); //  [val*], val*, obj, val*
+			newInsns.append(new POP()); // [val*], val*, obj
+			
+			/* push tracer */
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // val*, obj, tracer
+			/* bring tracer to the bottom */
+			newInsns.append(new DUP2_X2()); // obj, tracer, val*, obj, tracer
+			newInsns.append(new POP()); // obj, tracer, val*, obj
+			/* swap obj, var* */
+			newInsns.append(new DUP_X2()); // obj, tracer, obj, val*, obj
+			newInsns.append(new POP()); // obj, tracer, obj, val* ([val, obj], tracer, obj, val*)
+		}
+		Type fieldType = info.getFieldBcType();
+		if (fieldType  instanceof BasicType) {
+			newInsns.append(new INVOKESTATIC(getValueOfMethodIdx((BasicType) fieldType, constPool)));
+		}
+		newInsns.append(new LDC(info.getFieldIndex())); // tracer, obj, val, fieldIdx
+		newInsns.append(new PUSH(constPool, fieldType.getSignature())); // tracer, obj, val, fieldIdx, fieldTypeSignature
+		newInsns.append(new PUSH(constPool, info.getLine())); // tracer, obj, val, fieldIdx, fieldTypeSignature, line
+		newInsns.append(new INVOKEVIRTUAL(executionTracer_readField_idx)); // record -> [obj, val] or [obj, val], val
+		if (info.isComputationalType2()) {
+			newInsns.append(new POP());
 		}
 		return newInsns;
 	}
 	
 	private InstructionList getInjectCodeTracerRWriteLocalVar(ConstantPoolGen constPool, LocalVariableGen tracerVar,
-			LocalVariableInstruction insn) {
+			LocalVarInstructionInfo insnInfo) {
+		LocalVariableInstruction insn = (LocalVariableInstruction) insnInfo.getInstruction();
 		InstructionList newInsns = new InstructionList();
-		if (insn instanceof ASTORE) {
-			ASTORE storeInsn = (ASTORE) insn;
-			newInsns.append(new DUP());
-			newInsns.append(new ALOAD(tracerVar.getIndex()));
-			newInsns.append(new SWAP());
-			newInsns.append(new PUSH(constPool, storeInsn.getIndex()));
+		Type type = insn.getType(constPool);
+		int fieldStackSize = type.getSize();
+		if (insn instanceof StoreInstruction) {
+			if (fieldStackSize == 1) {
+				newInsns.append(new DUP());		
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // value, $tracer
+				newInsns.append(new SWAP()); // $tracer, value
+			} else { // stack size = 2
+				newInsns.append(new DUP2());
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // value*, $tracer
+				newInsns.append(new DUP_X2()); // $tracer, value*, $tracer
+				newInsns.append(new POP()); // $tracer, value*
+			}
+			if (type instanceof BasicType) {
+				newInsns.append(new INVOKESTATIC(getValueOfMethodIdx((BasicType) type, constPool)));
+			}
+			newInsns.append(new PUSH(constPool, insnInfo.getVarName())); //  $tracer, value, varName
+			newInsns.append(new PUSH(constPool, insnInfo.getVarType())); // $tracer, value, varName, varType
+			newInsns.append(new PUSH(constPool, insnInfo.getLine())); // $tracer, value, varName, line
+			newInsns.append(new PUSH(constPool, insn.getIndex())); // $tracer, value, varName, bcLocalVarIdx
 			newInsns.append(new INVOKEVIRTUAL(executionTracer_writeLocalVar_idx));
 		}
 		return newInsns;
 	}
 
 	private InstructionList getInjectCodeTracerRWriteArray(ConstantPoolGen constPool, LocalVariableGen tracerVar,
-			ArrayInstruction insn) {
+			ArrayInstructionInfo insn) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
-	private static int getFieldIndex(ConstantPoolGen cpg, FieldInstruction putfield) {
-		ObjectType refType = (ObjectType) putfield.getReferenceType(cpg);
-		int fieldIndex = FieldIndex.getFieldIndex(refType.getClassName(), putfield.getFieldName(cpg));
-		return cpg.addInteger(fieldIndex); // Is now a constant-pool ref
-	}
-
 	private void injectCodeTracerHitLine(InstructionList insnList, ConstantPoolGen constPool,
 			LocalVariableGen tracerVar, LineNumberGen lineGen) {
 		InstructionList newInsns = new InstructionList();
@@ -196,65 +345,16 @@ public class TraceInstrumenter {
 		if (startInsn == null) {
 			return null;
 		}
-		LocalVariableGen tracerVar = methodGen.addLocalVariable("$tracer", Type.getType(ExecutionTracer.class),
+		LocalVariableGen tracerVar = methodGen.addLocalVariable(TRACER_VAR_NAME, Type.getType(ExecutionTracer.class),
 				insnList.getStart(), insnList.getEnd());
 		InstructionList newInsns = new InstructionList();
 		newInsns.append(new INVOKESTATIC(executionTracer_getTracer_idx));
 		newInsns.append(new ASTORE(tracerVar.getIndex()));
-		/* update */
+		/* inject code */
 		InstructionHandle insertPos = insnList.insert(startInsn, newInsns);
 		updateTargeters(startInsn, insertPos);
 		newInsns.dispose();
 		return tracerVar;
-	}
-
-	private List<InstructionHandle> extractRWInstructions(List<InstructionHandle> insnList) {
-		List<InstructionHandle> rwInsns = new ArrayList<>();
-		for (InstructionHandle insnHandler : insnList) {
-			Instruction insn = insnHandler.getInstruction();
-			if ((insn instanceof FieldInstruction)
-					|| (insn instanceof ArrayInstruction)
-					|| (insn instanceof LocalVariableInstruction)) {
-				rwInsns.add(insnHandler);
-			}
-		}
-		return rwInsns;
-	}
-	
-	private Map<LineNumberGen, List<InstructionHandle>> getLineNoInsnsMap(MethodGen methodGen, ConstantPoolGen constPool) {
-		Map<LineNumberGen, List<InstructionHandle>> result = new HashMap<>();
-		InstructionList insnList = methodGen.getInstructionList();
-		for (LineNumberGen lineGen : methodGen.getLineNumbers()) {
-			List<InstructionHandle> lineInsns = findCorrespondingInstructions(insnList,
-					methodGen.getLineNumberTable(constPool), lineGen.getSourceLine());
-			result.put(lineGen, lineInsns);
-		}
-		return result;
-	}
-	
-	protected List<InstructionHandle> findCorrespondingInstructions(InstructionList list, LineNumberTable lineTable,
-			int lineNumber) {
-		List<InstructionHandle> correspondingInstructions = new ArrayList<>();
-		Iterator<?> iter = list.iterator();
-		while (iter.hasNext()) {
-			InstructionHandle insHandle = (InstructionHandle) iter.next();
-			int instructionLine = lineTable.getSourceLine(insHandle.getPosition());
-			if (instructionLine == lineNumber) {
-				correspondingInstructions.add(insHandle);
-			}
-		}
-		return correspondingInstructions;
-	}
-	
-	private void setMethodIndex(ConstantPoolGen cpg) {
-		// microbat/instrumentation/trace/data/ExecutionTracer getTracer(()Lmicrobat/instrumentation/trace/data/ExecutionTracer;);
-		executionTracer_getTracer_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "getTracer", "()Lmicrobat/instrumentation/trace/data/ExecutionTracer;");
-		// microbat/instrumentation/trace/data/ExecutionTracer hitLine((I)V);
-		executionTracer_hitLine_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "hitLine", "(I)V");
-		// microbat/instrumentation/trace/data/ExecutionTracer writeField((Ljava/lang/Object;)V);
-		executionTracer_writeField_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "writeField", "(Ljava/lang/Object;)V");
-		// microbat/instrumentation/trace/data/ExecutionTracer writeLocalVar((Ljava/lang/Object;I)V);
-		executionTracer_writeLocalVar_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "writeLocalVar", "(Ljava/lang/Object;I)V");
 	}
 	
 	private static void updateTargeters(InstructionHandle oldPos, InstructionHandle newPos) {
@@ -264,5 +364,69 @@ public class TraceInstrumenter {
 				it.updateTarget(oldPos, newPos);
 			}
 		}
+	}
+
+	
+	private Map<BasicType, Integer> valueOfMethodIdxMap = new HashMap<>();
+	private int getValueOfMethodIdx(BasicType type, ConstantPoolGen cpg) {
+		if (valueOfMethodIdxMap.containsKey(type)) {
+			return valueOfMethodIdxMap.get(type);
+		}
+		int idx;
+		switch (type.getType()) {
+		case Const.T_INT:
+			idx = cpg.addMethodref("java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer");
+			break;
+		case Const.T_BOOLEAN:
+			idx = cpg.addMethodref("java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean");
+			break;
+		case Const.T_FLOAT:
+			idx = cpg.addMethodref("java/lang/Float", "valueOf", "(F)Ljava/lang/Float");
+			break;
+		case Const.T_CHAR:
+			idx = cpg.addMethodref("java/lang/Character", "valueOf", "(C)Ljava/lang/Character");
+			break;
+		case Const.T_DOUBLE:
+			idx = cpg.addMethodref("java/lang/Double", "valueOf", "(D)Ljava/lang/Double");
+			break;
+		case Const.T_LONG:
+			idx = cpg.addMethodref("java/lang/Long", "valueOf", "(J)Ljava/lang/Long");
+			break;
+		case Const.T_SHORT:
+			idx = cpg.addMethodref("java/lang/Short", "valueOf", "(S)Ljava/lang/Short");
+			break;
+		case Const.T_BYTE:
+			idx = cpg.addMethodref("java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte");
+			break;
+		default:
+			throw new IllegalArgumentException("Unhandled type: " + type);
+		}
+		valueOfMethodIdxMap.put(type, idx);
+		return idx;
+	}
+	
+	private int executionTracer_getTracer_idx;
+	private int executionTracer_hitLine_idx;
+	private int executionTracer_writeField_idx;
+	private int executionTracer_writeLocalVar_idx;
+	private int executionTracer_hitInvoke_idx;
+	private int executionTracer_enterMethod_idx;
+	private int executionTracer_readField_idx;
+	private int executionTracer_exitMethod_idx;
+	private int executionTracer_tryTracer_idx;
+	private int executionTracer_readLocalVar_idx;
+	private int executionTracer_writeStaticField_idx;
+	private void setMethodIndex(ConstantPoolGen cpg) {
+		executionTracer_tryTracer_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "tryTracer", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+		executionTracer_readLocalVar_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "readLocalVar", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;II)V");
+		executionTracer_writeStaticField_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "writeStaticField", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
+		executionTracer_getTracer_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "getTracer", "()Lmicrobat/instrumentation/trace/data/ExecutionTracer;");
+		executionTracer_writeLocalVar_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "writeLocalVar", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;II)V");
+		executionTracer_writeField_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "writeField", "(Ljava/lang/Object;Ljava/lang/Object;ILjava/lang/String;I)V");
+		executionTracer_readField_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "readField", "(Ljava/lang/Object;Ljava/lang/Object;ILjava/lang/String;I)V");
+		executionTracer_hitLine_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "hitLine", "(I)V");
+		executionTracer_enterMethod_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "enterMethod", "(Ljava/lang/String;Ljava/lang/String;)V");
+		executionTracer_exitMethod_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "exitMethod", "(I)V");
+		executionTracer_hitInvoke_idx = cpg.addMethodref("microbat/instrumentation/trace/data/ExecutionTracer", "hitInvoke", "(ILjava/lang/Object;Ljava/lang/String;)V");
 	}
 }
