@@ -41,10 +41,11 @@ public class VarValueXmlReader {
 		if (StringUtils.isEmpty(str)) {
 			return new ArrayList<>();
 		}
+		String filterStr = str.replace("&#", "#"); // LLT: TO REMOVE (temporary keep for old db)
 		VarValueXmlReader reader = new VarValueXmlReader();
 		ByteArrayInputStream in;
 		try {
-			in = new ByteArrayInputStream(str.getBytes("UTF-8"));
+			in = new ByteArrayInputStream(filterStr.getBytes("UTF-8"));
 			return reader.read(in);
 		} catch (UnsupportedEncodingException e) {
 			throw new SavRtException(e);
@@ -76,7 +77,7 @@ public class VarValueXmlReader {
 			String valueEleId = getAttribute(valueEle, VALUE_ID_ATT);
 			boolean isRoot = getBooleanAttribute(valueEle, VALUE_IS_ROOT_ATT);
 			String varType = getAttribute(valueEle, VALUE_VAR_TYPE_ATT);
-			String stringVal = getProperty(valueEle, VALUE_STRING_VALUE_PROP);
+			String stringVal = getStringValueProperty(valueEle);
 			boolean isArray = getBooleanProperty(valueEle, VALUE_IS_ARRAY_PROP);
 			VarValue value = null;
 			if (varType == null) {
@@ -89,10 +90,6 @@ public class VarValueXmlReader {
 //				value = new BooleanValue(Boolean.valueOf(stringVal), isRoot, variable);
 //			} 
 			else if (PrimitiveUtils.isPrimitiveType(varType)) {
-				if ("char".equals(variable.getType())) {
-					char ch = (char)(int)Integer.valueOf(stringVal);
-					stringVal = Character.toString(ch);
-				}
 				value = new PrimitiveValue(stringVal, isRoot, variable);
 			} else if (isArray) {
 				value = new ArrayValue(false, isRoot, variable);
@@ -120,6 +117,20 @@ public class VarValueXmlReader {
 			}
 		}
 		return result;
+	}
+
+	private String getStringValueProperty(Element valueEle) {
+		String str = getProperty(valueEle, VALUE_STRING_VALUE_PROP);
+		if (str != null && str.startsWith(VarValueXmlWriter.SPECIAL_STRING_PREFIX)) {
+			str = str.substring(VarValueXmlWriter.SPECIAL_STRING_PREFIX.length());
+			String[] bytesArr = str.split(",");
+			byte[] bytes = new byte[bytesArr.length];
+			for (int i = 0; i < bytesArr.length; i++) {
+				bytes[i] = Byte.valueOf(bytesArr[i]);
+			}
+			str = new String(bytes);
+		}
+		return str;
 	}
 	
 	/**
