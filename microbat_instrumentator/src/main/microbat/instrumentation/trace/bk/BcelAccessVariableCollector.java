@@ -30,10 +30,10 @@ public class BcelAccessVariableCollector implements IAccessVariableCollector {
 	}
 
 	public void collectVariables(AccessVariableInfo lineInfo) {
-		if (visitor != null && visitor.getLineNumber() == lineInfo.getLineNo()) {
-			return; // visit already;
-		}
-		
+//		if (visitor != null && visitor.getLineNumber() == lineInfo.getLineNo()) {
+//			return; // visit already;
+//		}
+//		
 		ClassPath classPath = new ClassPath(ClassPath.getClassPath());
 		Repository.setRepository(SyntheticRepository.getInstance(classPath));
 		JavaClass clazz;
