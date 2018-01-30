@@ -56,6 +56,7 @@ import sav.common.core.utils.StringUtils;
 		</variableValues>
  */
 public class VarValueXmlWriter {
+	public static final String SPECIAL_STRING_PREFIX = "$__byteArr_";
 	private List<VarValue> varValues;
 	
 	public VarValueXmlWriter(List<VarValue> varValues) {
@@ -80,7 +81,7 @@ public class VarValueXmlWriter {
 			DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 			Document doc = docBuilder.newDocument();
 			toXml(doc);
-			
+			doc.setXmlVersion("1.1");
 			// write the content into xml file
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			Transformer transformer = transformerFactory.newTransformer();
@@ -135,16 +136,9 @@ public class VarValueXmlWriter {
 				addProperty(valueEle, VALUE_REF_UNIQUE_ID_PROP, refVal.getUniqueID());
 				addProperty(valueEle, VALUE_REF_IS_NULL_PROP, refVal.isNull());
 			} else if(varValue instanceof PrimitiveValue) {
-				String strVal = varValue.getStringValue();
-				if ("char".equals(varValue.getVariable().getType())) {
-					if (!StringUtils.isEmpty(varValue.getStringValue())) {
-						int intVal = (int)(varValue.getStringValue().charAt(0));
-						strVal = String.valueOf(intVal);
-					}
-				}
-				addValueStringValueProperty(valueEle, strVal);
+				addValueStringValueProperty(valueEle, varValue.getStringValue());
 			} else {
-				addProperty(valueEle, VALUE_STRING_VALUE_PROP, varValue.getStringValue());
+				addValueStringValueProperty(valueEle, varValue.getStringValue());
 			}
 			if (CollectionUtils.isNotEmpty(varValue.getChildren())) {
 				List<String> childIds = new ArrayList<String>(varValue.getChildren().size());
@@ -157,8 +151,26 @@ public class VarValueXmlWriter {
 		}
 
 		private void addValueStringValueProperty(Element valueEle, String strVal) {
-			String filterStr = strVal.replace("&#", "#"); // To workaround xml parser (this is the case of special char)
-			addProperty(valueEle, VALUE_STRING_VALUE_PROP, filterStr);
+			String xml10pattern = "[^"
+                    + "\u0009\r\n"
+                    + "\u0020-\uD7FF"
+                    + "\uE000-\uFFFD"
+                    + "\ud800\udc00-\udbff\udfff"
+                    + "]";
+			if (strVal.matches(xml10pattern)) {
+				// convert to byteArray
+				StringBuilder sb = new StringBuilder(SPECIAL_STRING_PREFIX);
+				byte[] bytes = strVal.getBytes();
+				for (int i = 0; i < bytes.length; ) {
+					sb.append(bytes[i]);
+					if ((i++) != bytes.length) {
+						sb.append(",");
+					}
+				}
+				addProperty(valueEle, VALUE_STRING_VALUE_PROP, sb.toString(), true);
+			} else {
+				addProperty(valueEle, VALUE_STRING_VALUE_PROP, strVal, false);
+			}
 		}
 		
 		private String generateValueId(VarValue varValue) {
