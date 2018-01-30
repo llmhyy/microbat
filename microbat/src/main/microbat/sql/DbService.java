@@ -2,7 +2,9 @@ package microbat.sql;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.sql.Connection;
@@ -46,7 +48,6 @@ public class DbService {
 						if(os.toLowerCase().contains("win")){
 							tableName = tableName.toLowerCase();
 						}
-						
 						tables.add(tableName);
 						return true;
 					}
@@ -150,20 +151,10 @@ public class DbService {
 		}
 		if (!expectedTables.isEmpty() && DBSettings.enableAutoUpdateDb) {
 			System.out.println("Missing tables: " + expectedTables.toString());
-			String s;
 			StringBuffer sb = new StringBuffer();
 			try {
 				for (String tableName : MICROBAT_TABLES) {
-					FileReader fr = new FileReader(new File(
-							IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "ddl/" + tableName + ".sql")));
-					BufferedReader br = new BufferedReader(fr);
-					while ((s = br.readLine()) != null) {
-						if ("USE trace".equals(s)) {
-							s = s.replace("trace", DBSettings.dbName);
-						}
-						sb.append(s);
-					}
-					br.close();
+					readSqlScriptFile(sb, tableName);
 				}
 				String[] inst = sb.toString().split(";");
 				Statement st = conn.createStatement();
@@ -180,6 +171,39 @@ public class DbService {
 			}
 		}
 	}
+
+	private void readSqlScriptFile(StringBuffer sb, String tableName) throws FileNotFoundException, IOException {
+		String s;
+		File file = new File(
+				IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "ddl/" + tableName + ".sql"));
+		FileReader fr = new FileReader(file);
+		BufferedReader br = new BufferedReader(fr);
+		boolean check = CollectionUtils.existIn(tableName, "step", "mutationfile");
+		StringBuilder newContent = new StringBuilder();
+		boolean update = false;
+		while ((s = br.readLine()) != null) {
+			if (check) {
+				int l = s.length();
+				s = s.replace("read_vars TEXT", "read_vars MEDIUMTEXT");
+				s = s.replace("written_vars TEXT", "written_vars MEDIUMTEXT");
+				s = s.replace("mutation_file BLOB", "mutation_file MEDIUMBLOB");
+				if (s.length() != l) {
+					update = true;
+				}
+				newContent.append(s).append("\n");
+			}
+			sb.append(s);
+		}
+		br.close();
+		fr.close();
+		if (update) {
+			FileWriter fw = new FileWriter(file, false);
+			fw.write(newContent.toString());
+			fw.close();
+		}
+	}
+	
+	
 	
 	protected int countNumberOfRows(ResultSet rs) throws SQLException {
 		if (rs == null) {
