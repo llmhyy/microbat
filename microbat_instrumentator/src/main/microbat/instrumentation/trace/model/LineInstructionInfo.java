@@ -19,25 +19,26 @@ import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.ReferenceType;
+import org.apache.bcel.generic.Type;
 
 import sav.common.core.SavRtException;
-import sav.common.core.utils.CollectionUtils;
 
 public class LineInstructionInfo {
 	private LineNumberGen lineGen;
 	private List<InstructionHandle> lineInsns;
 	private LocalVariableTable localVarTable;
 	private ConstantPoolGen constPool;
+	private LineNumberTable lineNumberTable;
 	
 	public LineInstructionInfo(LocalVariableTable localVariableTable, ConstantPoolGen constPool, LineNumberTable lineNumberTable,
 			LineNumberGen lineGen, InstructionList insnList) {
 		this.lineGen = lineGen;
 		this.localVarTable = localVariableTable;
 		this.constPool = constPool;
+		this.lineNumberTable = lineNumberTable;
 		lineInsns = findCorrespondingInstructions(insnList, lineNumberTable, lineGen.getSourceLine());
 	}
 
-	@SuppressWarnings("unchecked")
 	public List<RWInstructionInfo> getRWInstructions() {
 		List<RWInstructionInfo> rwInsns = new ArrayList<>(Math.min(10, lineInsns.size()));
 		for (InstructionHandle insnHandler : lineInsns) {
@@ -46,28 +47,33 @@ public class LineInstructionInfo {
 				FieldInstruction fieldInsn = (FieldInstruction) insn;
 				ReferenceType refType = fieldInsn.getReferenceType(constPool);
 				FieldInstructionInfo info = new FieldInstructionInfo(insnHandler, lineGen);
-				info.fieldBcType = fieldInsn.getFieldType(constPool);
-				info.fieldIndex = getFieldIndex(constPool, fieldInsn);
-				info.refType = refType.getSignature();
-				info.varType = fieldInsn.getSignature(constPool);
-				info.varName = fieldInsn.getFieldName(constPool);
-				info.isStore = existIn(insn.getOpcode(), Const.PUTFIELD, Const.PUTSTATIC);
+				info.setFieldBcType(fieldInsn.getFieldType(constPool));
+				info.setFieldIndex(getFieldIndex(constPool, fieldInsn));;
+				info.setRefType(refType.getSignature());
+				info.setVarType(fieldInsn.getSignature(constPool));
+				info.setVarName(fieldInsn.getFieldName(constPool));
+				info.setIsStore(existIn(insn.getOpcode(), Const.PUTFIELD, Const.PUTSTATIC));
 				rwInsns.add(info);
 			} else if (insn instanceof ArrayInstruction) {
 				ArrayInstructionInfo info = new ArrayInstructionInfo(insnHandler, lineGen);
-				info.isStore = CollectionUtils.existIn(insn.getOpcode(), Const.AASTORE, Const.FASTORE, Const.LASTORE,
-						Const.CASTORE, Const.IASTORE, Const.BASTORE, Const.SASTORE, Const.DASTORE);
+				info.setIsStore(existIn(insn.getOpcode(), Const.AASTORE, Const.FASTORE, Const.LASTORE,
+						Const.CASTORE, Const.IASTORE, Const.BASTORE, Const.SASTORE, Const.DASTORE));
 				rwInsns.add(info);
 			} else if (insn instanceof LocalVariableInstruction) {
-				LocalVariable localVar = localVarTable.getLocalVariable(((LocalVariableInstruction) insn).getIndex(),
+				LocalVariableInstruction localVarInsn = (LocalVariableInstruction) insn;
+				LocalVariable localVar = localVarTable.getLocalVariable(localVarInsn.getIndex(),
 						insnHandler.getPosition() + insn.getLength());
 				if (localVar == null) {
 					throw new SavRtException(String.format("Cannot find localVar with (index = %s, pc = %s)",
-							((LocalVariableInstruction) insn).getIndex(), insnHandler.getPosition()));
+							localVarInsn.getIndex(), insnHandler.getPosition()));
 				}
 				LocalVarInstructionInfo info = new LocalVarInstructionInfo(insnHandler, lineGen, localVar.getName(), localVar.getSignature());
-				info.isStore = existIn(insn.getOpcode(), Const.FSTORE, Const.IINC, Const.DSTORE, Const.ASTORE,
-						Const.ISTORE, Const.LSTORE);
+				info.setIsStore(existIn(((LocalVariableInstruction) insn).getCanonicalTag(), Const.FSTORE, Const.IINC, Const.DSTORE, Const.ASTORE,
+						Const.ISTORE, Const.LSTORE));
+				Type type = localVarInsn.getType(constPool);
+				info.setStackSize(type.getSize());
+				info.setVarScopeStartLine(lineNumberTable.getSourceLine(localVar.getStartPC()));
+				info.setVarScopeEndLine(lineNumberTable.getSourceLine(localVar.getStartPC() + localVar.getLength()));
 				rwInsns.add(info);
 			}
 		}

@@ -455,6 +455,11 @@ public abstract class VarValue implements GraphNode{
 		return this.variable.getAliasVarID();
 	}
 
+	public void linkAchild(VarValue value) {
+		this.addChild(value);
+		value.addParent(this);
+	}
+
 	
 //	public abstract VarValue clone();
 }

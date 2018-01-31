@@ -12,8 +12,11 @@ public class CodeGenerator {
 	@Test
 	public void generateCode_ExecutionTracerIdx() {
 		for (Method method : ExecutionTracer.class.getDeclaredMethods()) {
+			if (!method.getName().startsWith("_")) {
+				continue;
+			}
 			String signature = SignatureUtils.getSignature(method);
-			String format = "executionTracer_%s_idx = cpg.addMethodref(\"%s\", \"%s\", \"%s\");";
+			String format = "executionTracer%s_idx = cpg.addMethodref(\"%s\", \"%s\", \"%s\");";
 			System.out.println(String.format(format, method.getName(),ExecutionTracer.class.getName().replace(".", "/"),
 					method.getName(), signature));
 		}
