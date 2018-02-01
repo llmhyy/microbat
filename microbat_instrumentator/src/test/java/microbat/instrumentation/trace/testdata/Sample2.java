@@ -11,12 +11,22 @@ public class Sample2 {
 		long longVal = 234l;
 		double doubleVal = 23;
 		int[][] a = new int[][] { { 1, 2 }, { 3, 4 } };
+		String[] b = new String[] {"bele0", "bele1", "bele2", "bele3", "bele4"};
 		str = "abc";
 		RefVar var = new RefVar();
 		intVal ++;
 		intVal += 3;
 		intVal --;
 		longVal ++;
+		/* READ ARRAY ELEMENT */
+		String b0 = b[0];
+		int a01 = a[0][1];
+		
+		/* WRITE ARRAY ELEMENT */
+		a[0][0] = 5;
+		a[0][1] = 7;
+		a[1][0] = 10;
+		b[1] = b0 + "abcd";
 //		/* WRITE FIELD */
 		var.varName = "name";
 		var.val = 3;

@@ -11,6 +11,7 @@ import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.StringValue;
 import microbat.model.value.VarValue;
+import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
@@ -83,6 +84,7 @@ public class ExecutionTracer {
 	
 	/* 
 	 * Methods which are with prefix "_" are called in instrument code.
+	 * =================================================================
 	 * */
 	public void _enterMethod(String className, String methodName) {
 		methodEntry = new BreakPoint(className, null, methodName, -1);
@@ -105,6 +107,7 @@ public class ExecutionTracer {
 		BreakPoint bkp = new BreakPoint(methodEntry.getClassCanonicalName(), null, methodEntry.getMethodName(), line);
 		int order = trace.size() + 1;
 		currentNode = new TraceNode(bkp, null, order, trace);
+		trace.addTraceNode(currentNode);
 	}
 	
 	/**
@@ -199,6 +202,28 @@ public class ExecutionTracer {
 				varScopeEndLine));
 		VarValue value = appendVarValue(varValue, var, null);
 		currentNode.addReadVariable(value);
+	}
+	
+	public void _readArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line) {
+		_hitLine(line);
+		addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, false);
+	}
+	
+	public void _writeArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line) {
+		_hitLine(line);
+		addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
+	}
+	
+	private void addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType, int line, boolean write) {
+		String name = new StringBuilder(getUniqueIdStr(arrayRef)).append("[").append(index).append("]").toString();
+		String eleType = SignatureUtils.signatureToName(arrayRef.getClass().getName());
+		Variable var = new ArrayElementVar(name, eleType, null);
+		VarValue value = appendVarValue(eleValue, var, null);
+		if (write) {
+			currentNode.addWrittenVariable(value);
+		} else {
+			currentNode.addReadVariable(value);
+		}
 	}
 	
 	public void tryTracer(Object refValue, Object fieldValue) {

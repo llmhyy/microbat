@@ -12,6 +12,7 @@ public class RWInstructionInfo {
 	private String varName;
 	private String varType;
 	private boolean isStore; // if not write, this is a readInstruction. 
+	private int varStackSize;
 	
 	public RWInstructionInfo(InstructionHandle insnHandler, LineNumberGen lineGen) {
 		this.instructionHandler = insnHandler;
@@ -58,10 +59,6 @@ public class RWInstructionInfo {
 		return SignatureUtils.signatureToName(sign);
 	}
 
-	public boolean isStore() {
-		return isStore;
-	}
-
 	public void setIsStore(boolean isStore) {
 		this.isStore = isStore;
 	}
@@ -69,4 +66,21 @@ public class RWInstructionInfo {
 	public void setLine(int line) {
 		this.line = line;
 	}
+
+	public int getVarStackSize() {
+		return varStackSize;
+	}
+
+	public void setVarStackSize(int varStackSize) {
+		this.varStackSize = varStackSize;
+	}
+	
+	public boolean isComputationalType1() {
+		return varStackSize == 1;
+	}
+	
+	public boolean isComputationalType2() {
+		return varStackSize == 2;
+	}
+	
 }

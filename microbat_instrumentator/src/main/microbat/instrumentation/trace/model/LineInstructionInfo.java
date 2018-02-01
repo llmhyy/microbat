@@ -50,12 +50,18 @@ public class LineInstructionInfo {
 				info.setFieldBcType(fieldInsn.getFieldType(constPool));
 				info.setFieldIndex(getFieldIndex(constPool, fieldInsn));;
 				info.setRefType(refType.getSignature());
+				info.setVarStackSize(refType.getSize());
 				info.setVarType(fieldInsn.getSignature(constPool));
 				info.setVarName(fieldInsn.getFieldName(constPool));
 				info.setIsStore(existIn(insn.getOpcode(), Const.PUTFIELD, Const.PUTSTATIC));
 				rwInsns.add(info);
 			} else if (insn instanceof ArrayInstruction) {
 				ArrayInstructionInfo info = new ArrayInstructionInfo(insnHandler, lineGen);
+				ArrayInstruction arrInsn = (ArrayInstruction) insn;
+				Type eleType = arrInsn.getType(constPool);
+				info.setElementType(eleType);
+				info.setVarType(eleType.getSignature());
+				info.setVarStackSize(eleType.getSize());
 				info.setIsStore(existIn(insn.getOpcode(), Const.AASTORE, Const.FASTORE, Const.LASTORE,
 						Const.CASTORE, Const.IASTORE, Const.BASTORE, Const.SASTORE, Const.DASTORE));
 				rwInsns.add(info);
@@ -71,7 +77,7 @@ public class LineInstructionInfo {
 				info.setIsStore(existIn(((LocalVariableInstruction) insn).getCanonicalTag(), Const.FSTORE, Const.IINC, Const.DSTORE, Const.ASTORE,
 						Const.ISTORE, Const.LSTORE));
 				Type type = localVarInsn.getType(constPool);
-				info.setStackSize(type.getSize());
+				info.setVarStackSize(type.getSize());
 				info.setVarScopeStartLine(lineNumberTable.getSourceLine(localVar.getStartPC()));
 				info.setVarScopeEndLine(lineNumberTable.getSourceLine(localVar.getStartPC() + localVar.getLength()));
 				rwInsns.add(info);
