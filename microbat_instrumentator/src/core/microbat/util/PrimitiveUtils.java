@@ -50,6 +50,21 @@ public class PrimitiveUtils {
 		return CollectionUtils.existIn(clazzName, PRIMITIVE_TYPES);
 	}
 	
+	public static boolean isPrimitive(String type){
+		if(type.equals("int") ||
+				type.equals("boolean") ||
+				type.equals("float") ||
+				type.equals("char") ||
+				type.equals("double") ||
+				type.equals("long") ||
+				type.equals("short") ||
+				type.equals("byte")){
+			return true;
+		}
+		
+		return false;
+	}
+	
 	public static boolean isPrimitiveTypeOrString(String clazzName) {
 		return isPrimitiveType(clazzName) || isString(clazzName) 
 				|| clazzName.equals("String") || clazzName.equals(STRING_TYPE);

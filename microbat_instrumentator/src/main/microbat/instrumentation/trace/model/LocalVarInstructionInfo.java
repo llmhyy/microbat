@@ -1,16 +1,15 @@
 package microbat.instrumentation.trace.model;
 
 import org.apache.bcel.generic.InstructionHandle;
-import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableInstruction;
 
 public class LocalVarInstructionInfo extends RWInstructionInfo {
 	private int varScopeStartLine;
 	private int varScopeEndLine;
 	
-	public LocalVarInstructionInfo(InstructionHandle insnHandler, LineNumberGen lineGen, String varName,
+	public LocalVarInstructionInfo(InstructionHandle insnHandler, int line, String varName,
 			String varType) {
-		super(insnHandler, lineGen);
+		super(insnHandler, line);
 		setVarName(varName);
 		setVarType(varType);
 	}

@@ -1,0 +1,56 @@
+package microbat.instrumentation.trace.data;
+
+import org.apache.bcel.generic.Type;
+
+import microbat.model.variable.Variable;
+import microbat.util.PrimitiveUtils;
+
+public class TraceUtils {
+	private TraceUtils(){}
+	
+	public static String getObjectVarId(Object refValue) {
+		if (refValue == null) {
+			return "null";
+		}
+		return String.valueOf(getUniqueId(refValue));
+	}
+
+	public static long getUniqueId(Object refValue) {
+		if (refValue == null) {
+			return -1;
+		}
+		return System.identityHashCode(refValue);
+	}
+
+	public static String getFieldVarId(String parentVarId, String fieldName, String fieldType, Object fieldValue) {
+		if (PrimitiveUtils.isPrimitive(fieldType)) {
+			return Variable.concanateFieldVarID(parentVarId, fieldName);
+		}
+		return getObjectVarId(fieldValue);
+	}
+
+	public static String getArrayElementVarId(String parentVarId, int index, String elementType, Object eleValue) {
+		if (PrimitiveUtils.isPrimitive(elementType)) {
+			return Variable.concanateArrayElementVarID(parentVarId, String.valueOf(index));
+		}
+		return getObjectVarId(eleValue);
+	}
+	
+	private static final String ARG_TYPE_SEPARATOR = ":";
+	
+	public static String encodeArgTypes(Type[] argTypes) {
+		StringBuilder sb = new StringBuilder();
+		int lastIdx = argTypes.length - 1;
+		for (int i = 0; i < argTypes.length; i++) {
+			sb.append(argTypes[i].getSignature());
+			if (i != lastIdx) {
+				sb.append(ARG_TYPE_SEPARATOR);
+			}
+		}
+		return sb.toString();
+	}
+	
+	public static String[] parseArgTypes(String code) {
+		return code.split(ARG_TYPE_SEPARATOR);
+	}
+}

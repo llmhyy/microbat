@@ -26,11 +26,15 @@ public class ExecutionTracer {
 	static {
 		rtStores = new HashMap<>();
 	}
-
 	private Trace trace;
 
 	private TraceNode currentNode;
 	private BreakPoint methodEntry;
+	/*
+	 * For exclusive case,  
+	 */
+	private boolean exclusive; //current method is in exclude list.
+	private InvokingTrack invokeTrack = new EmptyInvokingTrack();
 	private MethodCallStack methodCallStack;
 
 	ExecutionTracer() {
@@ -54,7 +58,7 @@ public class ExecutionTracer {
 			value = arrVal;
 			/* TODO append children */
 		} else {
-			ReferenceValue refVal = new ReferenceValue(fieldValue == null, getUniqueId(fieldValue), isRoot, var);
+			ReferenceValue refVal = new ReferenceValue(fieldValue == null, TraceUtils.getUniqueId(fieldValue), isRoot, var);
 			value = refVal;
 			/* TODO append children */
 		}
@@ -68,39 +72,50 @@ public class ExecutionTracer {
 		return StringUtils.toString(obj, null);
 	}
 
-	private String getUniqueIdStr(Object refValue) {
-		if (refValue == null) {
-			return null;
-		}
-		return String.valueOf(getUniqueId(refValue));
-	}
-
-	private long getUniqueId(Object refValue) {
-		if (refValue == null) {
-			return -1;
-		}
-		return System.identityHashCode(refValue);
-	}
-	
 	/* 
 	 * Methods which are with prefix "_" are called in instrument code.
 	 * =================================================================
 	 * */
 	public void _enterMethod(String className, String methodName) {
+		exclusive = !FilterChecker.isExclusive(className, methodName);
 		methodEntry = new BreakPoint(className, null, methodName, -1);
 		currentNode = null;
+		invokeTrack.setBkp(methodEntry);
 	}
 
-	public void _exitMethod(int line) {
+	public void exitMethod(int line) {
+		/* TODO restore previous state */
 		currentNode = methodCallStack.safePop();
 	}
 
-	public void _hitInvoke(int line, Object invokeObj, String methodName) {
+	public void _hitInvoke(Object invokeObj, String invokeTypeSign, String methodName, Object[] params,
+			String paramTypeSignsCode, String returnTypeSign, int line) {
 		_hitLine(line);
-		methodCallStack.push(currentNode);
+		/* save current state */
+		methodCallStack.push(currentNode, methodEntry, exclusive, invokeTrack);
+		/* set up invokeTrack */
+		invokeTrack = new InvokingTrack(invokeObj, invokeTypeSign, methodName, params,
+				TraceUtils.parseArgTypes(paramTypeSignsCode));
+	}
+	
+	public void _hitInvokeStatic(String invokeTypeSign, String methodName, Object[] params,
+			String paramTypeSignsCode, String returnTypeSign, int line) {
+		
+	}
+	
+	/**
+	 * @param line
+	 * @param returnObj
+	 * @param returnGeneralType (if type is object type -> this will be display of object type, not specific name 
+	 */
+	public void _hitReturn(Object returnObj, String returnGeneralType, int line) {
+		//TODO
 	}
 
 	public void _hitLine(int line) {
+		if (exclusive) {
+			return;
+		}
 		if (currentNode != null && currentNode.getBreakPoint().getLineNumber() == line) {
 			return;
 		}
@@ -113,16 +128,35 @@ public class ExecutionTracer {
 	/**
 	 * @param refValue
 	 * @param fieldValue
-	 * @param fieldIdx
 	 * @param fieldTypeSign
 	 * @param line
 	 */
-	public void _writeField(Object refValue, Object fieldValue, int fieldIdx, String fieldName, String fieldTypeSign, int line) {
+	public void _writeField(Object refValue, Object fieldValue, String fieldName, String fieldTypeSign, int line) {
 		_hitLine(line);
+		String parentVarId = TraceUtils.getObjectVarId(refValue);
+		String fieldVarId = Variable.concanateFieldVarID(parentVarId, fieldName);
+		boolean invokeRelevant = invokeTrack.updateRelevant(parentVarId, fieldVarId);
+		if (exclusive && !invokeRelevant) {
+			return;
+		}
 		Variable var = new FieldVar(false, fieldName, SignatureUtils.signatureToName(fieldTypeSign));
-		var.setVarID(Variable.concanateFieldVarID(getUniqueIdStr(refValue), fieldName));
+		var.setVarID(fieldVarId);
 		VarValue value = appendVarValue(fieldValue, var, null);
-		currentNode.addWrittenVariable(value);
+		addRWriteValue(value, true);
+		if (invokeRelevant) {
+			invokeTrack.addWrittenValue(value);
+		}
+	}
+
+	private void addRWriteValue(VarValue value, boolean isWrittenVar) {
+		if (currentNode == null) {
+			return;
+		}
+		if (isWrittenVar) {
+			currentNode.addWrittenVariable(value);
+		} else {
+			currentNode.addReadVariable(value);
+		}
 	}
 	
 	/**
@@ -131,28 +165,37 @@ public class ExecutionTracer {
 	 * @param fieldName
 	 * @param fieldTypeSign
 	 * @param line
+	 * TODO LLT: handle relevant?
 	 */
-	public void _writeStaticField(Object fieldValue, String refType, String fieldName, String fieldTypeSign, int line) {
+	public void _writeStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line) {
+		if (exclusive) {
+			return;
+		}
 		_hitLine(line);
-		Variable var = new FieldVar(false, fieldName, SignatureUtils.signatureToName(fieldTypeSign));
+		Variable var = new FieldVar(false, fieldName, fieldType);
 		var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
 		VarValue value = appendVarValue(fieldValue, var, null);
-		currentNode.addWrittenVariable(value);
+		addRWriteValue(value, true);
 	}
 
 	/**
 	 * @param refValue
 	 * @param fieldValue
-	 * @param fieldIdx
-	 * @param fieldTypeSign
+	 * @param fieldType
 	 * @param line
 	 */
-	public void _readField(Object refValue, Object fieldValue, int fieldIdx, String fieldName, String fieldTypeSign, int line) {
+	public void _readField(Object refValue, Object fieldValue, String fieldName, String fieldType, int line) {
 		_hitLine(line);
-		Variable var = new FieldVar(false, fieldName, SignatureUtils.signatureToName(fieldTypeSign));
-		var.setVarID(Variable.concanateFieldVarID(getUniqueIdStr(refValue), fieldName));
+		String parentVarId = TraceUtils.getObjectVarId(refValue);
+		String fieldVarId = TraceUtils.getFieldVarId(parentVarId, fieldName, fieldType, fieldValue);
+		invokeTrack.updateRelevant(parentVarId, fieldVarId);
+		if (exclusive) {
+			return;
+		}
+		Variable var = new FieldVar(false, fieldName, fieldType);
+		var.setVarID(fieldVarId);
 		VarValue value = appendVarValue(fieldValue, var, null);
-		currentNode.addReadVariable(value);
+		addRWriteValue(value, false);
 	}
 
 	/**
@@ -163,11 +206,14 @@ public class ExecutionTracer {
 	 * @param line
 	 */
 	public void _readStaticField(Object fieldValue, String refType, String fieldName, String fieldTypeSign, int line) {
+		if (exclusive) {
+			return;
+		}
 		_hitLine(line);
 		Variable var = new FieldVar(true, fieldName, SignatureUtils.signatureToName(fieldTypeSign));
 		var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
 		VarValue value = appendVarValue(fieldValue, var, null);
-		currentNode.addReadVariable(value);
+		addRWriteValue(value, false);;
 	}
 	
 	/**
@@ -179,12 +225,15 @@ public class ExecutionTracer {
 	 */
 	public void _writeLocalVar(Object varValue, String varName, String varType, int line, int bcLocalVarIdx,
 			int varScopeStartLine, int varScopeEndLine) {
+		if (exclusive) {
+			return;
+		}
 		_hitLine(line);
 		Variable var = new LocalVar(varName, varType, methodEntry.getClassCanonicalName(), line);
 		var.setVarID(Variable.concanateLocalVarID(methodEntry.getClassCanonicalName(), varName, varScopeStartLine,
 				varScopeEndLine));
 		VarValue value = appendVarValue(varValue, var, null);
-		currentNode.addWrittenVariable(value);
+		addRWriteValue(value, true);
 	}
 	
 	/**
@@ -201,29 +250,55 @@ public class ExecutionTracer {
 		var.setVarID(Variable.concanateLocalVarID(methodEntry.getClassCanonicalName(), varName, varScopeStartLine,
 				varScopeEndLine));
 		VarValue value = appendVarValue(varValue, var, null);
-		currentNode.addReadVariable(value);
+		addRWriteValue(value, false);;
 	}
 	
+	/**
+	 * @param arrayRef
+	 * @param index
+	 * @param eleValue
+	 * @param elementType
+	 * @param line
+	 */
 	public void _readArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line) {
 		_hitLine(line);
+		String parentVarId = TraceUtils.getObjectVarId(arrayRef);
+		String arrEleVarId = TraceUtils.getArrayElementVarId(parentVarId, index, elementType, eleValue);
+		invokeTrack.updateRelevant(parentVarId, arrEleVarId);
+		if (exclusive) {
+			return;
+		}
 		addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, false);
 	}
 	
+	/**
+	 * 
+	 * @param arrayRef
+	 * @param index
+	 * @param eleValue
+	 * @param elementType
+	 * @param line
+	 */
 	public void _writeArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line) {
 		_hitLine(line);
-		addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
+		String parentVarId = TraceUtils.getObjectVarId(arrayRef);
+		String arrEleVarId = TraceUtils.getArrayElementVarId(parentVarId, index, elementType, eleValue);
+		boolean involeRelevant = invokeTrack.updateRelevant(parentVarId, arrEleVarId);
+		if (exclusive && !involeRelevant) {
+			return;
+		}
+		VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
+		invokeTrack.addWrittenValue(value);
 	}
 	
-	private void addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType, int line, boolean write) {
-		String name = new StringBuilder(getUniqueIdStr(arrayRef)).append("[").append(index).append("]").toString();
+	private VarValue addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType, int line,
+			boolean write) {
+		String name = new StringBuilder(TraceUtils.getObjectVarId(arrayRef)).append("[").append(index).append("]").toString();
 		String eleType = SignatureUtils.signatureToName(arrayRef.getClass().getName());
 		Variable var = new ArrayElementVar(name, eleType, null);
 		VarValue value = appendVarValue(eleValue, var, null);
-		if (write) {
-			currentNode.addWrittenVariable(value);
-		} else {
-			currentNode.addReadVariable(value);
-		}
+		addRWriteValue(value, write);
+		return value;
 	}
 	
 	public void tryTracer(Object refValue, Object fieldValue) {

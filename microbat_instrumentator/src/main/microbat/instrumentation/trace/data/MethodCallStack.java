@@ -2,6 +2,7 @@ package microbat.instrumentation.trace.data;
 
 import java.util.Stack;
 
+import microbat.model.BreakPoint;
 import microbat.model.trace.TraceNode;
 
 public class MethodCallStack extends Stack<TraceNode> {
@@ -12,6 +13,10 @@ public class MethodCallStack extends Stack<TraceNode> {
 			return pop();
 		}
 		return null;
+	}
+
+	public void push(TraceNode currentNode, BreakPoint methodEntry, boolean exclusive, InvokingTrack invokeTrack) {
+		// TODO Auto-generated method stub
 	}
 	
 }
