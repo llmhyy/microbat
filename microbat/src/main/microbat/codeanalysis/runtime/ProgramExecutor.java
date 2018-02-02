@@ -20,6 +20,8 @@ import org.apache.bcel.generic.InvokeInstruction;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -2015,7 +2017,8 @@ public class ProgramExecutor extends Executor {
 				}
 				else{
 					if(expr instanceof NullLiteral || expr instanceof NullLiteral 
-							|| expr instanceof StringLiteral || expr instanceof TypeLiteral) {
+							|| expr instanceof StringLiteral || expr instanceof TypeLiteral 
+							|| expr instanceof BooleanLiteral || expr instanceof CharacterLiteral) {
 						Variable vVar = new VirtualVar(varName, "return type");
 						VirtualValue virValue = new VirtualValue(false, vVar);
 						virValue.setVarID(vID);
