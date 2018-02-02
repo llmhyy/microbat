@@ -5,9 +5,9 @@ import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.Type;
 
 public class FieldInstructionInfo extends RWInstructionInfo {
-	String refType;
-	Type fieldBcType;
-	int fieldIndex;
+	private String refType;
+	private Type fieldBcType;
+	private int fieldIndex;
 
 	public FieldInstructionInfo(InstructionHandle insnHandler, LineNumberGen lineGen) {
 		super(insnHandler, lineGen);
@@ -30,13 +30,25 @@ public class FieldInstructionInfo extends RWInstructionInfo {
 	}
 	
 	public String getFieldName() {
-		return varName;
+		return getVarName();
 	}
 	
 	public String getFieldType() {
-		return varType;
+		return getVarType();
 	}
 	
+	public void setRefType(String refType) {
+		this.refType = signatureToName(refType);
+	}
+
+	public void setFieldBcType(Type fieldBcType) {
+		this.fieldBcType = fieldBcType;
+	}
+
+	public void setFieldIndex(int fieldIndex) {
+		this.fieldIndex = fieldIndex;
+	}
+
 	public boolean isComputationalType1() {
 		return getFieldStackSize() == 1;
 	}
