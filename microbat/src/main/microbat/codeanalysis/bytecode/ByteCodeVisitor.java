@@ -72,7 +72,6 @@ public class ByteCodeVisitor extends EmptyVisitor{
 
 	protected void parseReadWrittenVariable(BreakPoint point, List<InstructionHandle> correspondingInstructions, 
 			Code code, CFG cfg, AppJavaClassPath appJavaClassPath) {
-		
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appJavaClassPath);
 
 		ConstantPoolGen pool = new ConstantPoolGen(code.getConstantPool()); 
@@ -176,7 +175,10 @@ public class ByteCodeVisitor extends EmptyVisitor{
 			else if(insHandle.getInstruction() instanceof ReturnInstruction){
 				point.setReturnStatement(true);
 			}
-			else if(insHandle.getInstruction() instanceof IfInstruction || insHandle.getInstruction() instanceof Select){
+			
+			CFGNode cfgNode = cfg.findNode(insHandle.getPosition());
+			
+			if(cfgNode.isBranch()){
 				setConditionalScope(insHandle, point, cfg, code, cu);
 			}
 		}

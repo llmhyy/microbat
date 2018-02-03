@@ -407,7 +407,7 @@ public class Trace {
 			}
 			
 			//add try-catch flow
-			testAndAppendTryCatchControlFlow(node);
+			//testAndAppendTryCatchControlFlow(node);
 			
 			if(node.isConditional()){
 				controlDominator = node;
