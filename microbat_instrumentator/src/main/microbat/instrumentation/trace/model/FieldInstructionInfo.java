@@ -1,16 +1,14 @@
 package microbat.instrumentation.trace.model;
 
 import org.apache.bcel.generic.InstructionHandle;
-import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.Type;
 
 public class FieldInstructionInfo extends RWInstructionInfo {
 	private String refType;
 	private Type fieldBcType;
-	private int fieldIndex;
 
-	public FieldInstructionInfo(InstructionHandle insnHandler, LineNumberGen lineGen) {
-		super(insnHandler, lineGen);
+	public FieldInstructionInfo(InstructionHandle insnHandler, int line) {
+		super(insnHandler, line);
 	}
 
 	public String getRefType() {
@@ -19,10 +17,6 @@ public class FieldInstructionInfo extends RWInstructionInfo {
 
 	public int getFieldStackSize() {
 		return fieldBcType.getSize();
-	}
-
-	public int getFieldIndex() {
-		return fieldIndex;
 	}
 
 	public Type getFieldBcType() {
@@ -43,10 +37,6 @@ public class FieldInstructionInfo extends RWInstructionInfo {
 
 	public void setFieldBcType(Type fieldBcType) {
 		this.fieldBcType = fieldBcType;
-	}
-
-	public void setFieldIndex(int fieldIndex) {
-		this.fieldIndex = fieldIndex;
 	}
 
 	public boolean isComputationalType1() {

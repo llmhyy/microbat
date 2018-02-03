@@ -2,14 +2,13 @@ package microbat.instrumentation.trace.model;
 
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.InstructionHandle;
-import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.Type;
 
 public class ArrayInstructionInfo extends RWInstructionInfo {
 	private Type elementType;
 	
-	public ArrayInstructionInfo(InstructionHandle insnHandler, LineNumberGen lineGen) {
-		super(insnHandler, lineGen);
+	public ArrayInstructionInfo(InstructionHandle insnHandler, int line) {
+		super(insnHandler, line);
 	}
 
 	@Override

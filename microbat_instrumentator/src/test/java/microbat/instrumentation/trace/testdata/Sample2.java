@@ -1,11 +1,15 @@
 package microbat.instrumentation.trace.testdata;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.CollectionUtils;
 
 public class Sample2 {
 	String str;
 	
-	public boolean testArr() {
+	public boolean testArr() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		/* WRITE LOCAL VAR */
 		int intVal = 10;
 		long longVal = 234l;
@@ -22,6 +26,9 @@ public class Sample2 {
 		String b0 = b[0];
 		int a01 = a[0][1];
 		
+		for (int i = 0; i < 2; i++) {
+			a[0][i] = i;
+		}
 		/* WRITE ARRAY ELEMENT */
 		a[0][0] = 5;
 		a[0][1] = 7;
@@ -55,6 +62,10 @@ public class Sample2 {
 		System.out.println(RefVar.staticDouble);
 		System.out.println(RefVar.staticList);
 		
+		/* INVOKE */
+		Method method = ClassUtils.loockupMethodByNameOrSign(RefVar.class, "getVarName()Ljava/lang/String;").get(0);
+		String toStrg = (String) method.invoke(var);
+		System.out.println(toStrg);
 		return true;
 	}
 	

@@ -2,7 +2,6 @@ package microbat.instrumentation.trace.model;
 
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
-import org.apache.bcel.generic.LineNumberGen;
 
 import sav.common.core.utils.SignatureUtils;
 
@@ -14,9 +13,9 @@ public class RWInstructionInfo {
 	private boolean isStore; // if not write, this is a readInstruction. 
 	private int varStackSize;
 	
-	public RWInstructionInfo(InstructionHandle insnHandler, LineNumberGen lineGen) {
+	public RWInstructionInfo(InstructionHandle insnHandler, int line) {
 		this.instructionHandler = insnHandler;
-		this.line = lineGen.getSourceLine();
+		this.line = line;
 	}
 	
 	public int getLine() {

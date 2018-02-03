@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 
 import org.junit.Test;
 
+import microbat.instrumentation.trace.testdata.InvokeSample;
 import microbat.instrumentation.trace.testdata.Sample2;
 import sav.common.core.utils.FileUtils;
 
@@ -14,12 +15,12 @@ import sav.common.core.utils.FileUtils;
  *
  */
 public class InstrumenterTest {
-	private final String CLASS_FOLDER = "E:/lyly/Projects/microbat/master/microbat_instrumentator/bin";
-	private final String INSTRUMENT_TARGET_FOLDER = "E:/lyly/Projects/inst_src";
+	public static final String CLASS_FOLDER = "E:/lyly/Projects/microbat/master/microbat_instrumentator/bin";
+	private static final String INSTRUMENT_TARGET_FOLDER = "E:/lyly/Projects/inst_src";
 
 	@Test
 	public void writeFile() throws Exception {
-		String className = Sample2.class.getName();
+		String className = InvokeSample.class.getName();
 		
 		String classPath = className.replace(".", "/") + ".class";
 		String clazzFile = new StringBuilder("/").append(classPath).toString();

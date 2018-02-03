@@ -12,4 +12,8 @@ public class RefVar {
 	public int val;
 	public long longVal;
 	public double doubleVal;
+	
+	public String getVarName() {
+		return varName;
+	}
 }
