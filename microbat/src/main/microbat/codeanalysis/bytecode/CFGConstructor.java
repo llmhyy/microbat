@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.bcel.classfile.Code;
+import org.apache.bcel.classfile.CodeException;
 import org.apache.bcel.generic.BranchInstruction;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
@@ -94,9 +95,33 @@ public class CFGConstructor {
 			previousNode = node;
 		}
 		
+		attachTryCatchControlFlow(cfg, code);
+		
 		setExitNodes(cfg);
 		
 		return cfg;
+	}
+
+	private void attachTryCatchControlFlow(CFG cfg, Code code) {
+		CodeException[] exceptions = code.getExceptionTable();
+		if(exceptions==null){
+			return;
+		}
+		
+		for(CodeException exception: exceptions){
+			int start = exception.getStartPC();
+			int end = exception.getEndPC();
+			int handle = exception.getHandlerPC();
+			CFGNode targetNode = cfg.findNode(handle);
+			
+			for(int i=start; i<=end; i++){
+				CFGNode sourceNode = cfg.findNode(i);
+				if(sourceNode!=null){
+					sourceNode.addChild(targetNode);
+					targetNode.addParent(sourceNode);					
+				}
+			}
+		}
 	}
 
 	private void setExitNodes(CFG cfg) {
