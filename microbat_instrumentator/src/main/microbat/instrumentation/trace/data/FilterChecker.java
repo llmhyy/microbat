@@ -8,4 +8,14 @@ public class FilterChecker {
 		
 	}
 
+	public static void setup() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public static boolean isTransformable(String className) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

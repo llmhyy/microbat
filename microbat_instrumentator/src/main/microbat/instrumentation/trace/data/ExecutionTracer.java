@@ -15,6 +15,7 @@ import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
+import microbat.model.variable.VirtualVar;
 import microbat.util.PrimitiveUtils;
 import sav.common.core.utils.SignatureUtils;
 import sav.common.core.utils.StringUtils;
@@ -22,7 +23,7 @@ import sav.strategies.dto.AppJavaClassPath;
 
 public class ExecutionTracer {
 	private static Map<Long, ExecutionTracer> rtStores;
-
+	private static long mainThreadId = -1;
 	static {
 		rtStores = new HashMap<>();
 	}
@@ -44,28 +45,28 @@ public class ExecutionTracer {
 	}
 
 	/* TODO: Set aliasVarId*/
-	private VarValue appendVarValue(Object fieldValue, Variable var, VarValue parent) {
+	private VarValue appendVarValue(Object value, Variable var, VarValue parent) {
 		boolean isRoot = (parent == null);
-		VarValue value = null;
+		VarValue varValue = null;
 		if (PrimitiveUtils.isString(var.getType())) {
-			return new StringValue(getStringValue(fieldValue), isRoot, var);
+			return new StringValue(getStringValue(value), isRoot, var);
 		} else if (PrimitiveUtils.isPrimitiveType(var.getType())) {
-			return new PrimitiveValue(getStringValue(fieldValue), isRoot, var);
+			return new PrimitiveValue(getStringValue(value), isRoot, var);
 		} else if(var.getType().endsWith("[]")) {
 			/* array */
-			ArrayValue arrVal = new ArrayValue(fieldValue == null, isRoot, var);
+			ArrayValue arrVal = new ArrayValue(value == null, isRoot, var);
 			arrVal.setComponentType(var.getType().substring(0, var.getType().length() - 2)); // 2 = "[]".length
-			value = arrVal;
+			varValue = arrVal;
 			/* TODO append children */
 		} else {
-			ReferenceValue refVal = new ReferenceValue(fieldValue == null, TraceUtils.getUniqueId(fieldValue), isRoot, var);
-			value = refVal;
+			ReferenceValue refVal = new ReferenceValue(value == null, TraceUtils.getUniqueId(value), isRoot, var);
+			varValue = refVal;
 			/* TODO append children */
 		}
 		if (parent != null) {
-			parent.linkAchild(value);
+			parent.linkAchild(varValue);
 		}
-		return value;
+		return varValue;
 	}
 	
 	private String getStringValue(Object obj) {
@@ -77,15 +78,18 @@ public class ExecutionTracer {
 	 * =================================================================
 	 * */
 	public void _enterMethod(String className, String methodName) {
-		exclusive = !FilterChecker.isExclusive(className, methodName);
+		exclusive = exclusive || FilterChecker.isExclusive(className, methodName);
 		methodEntry = new BreakPoint(className, null, methodName, -1);
 		currentNode = null;
 		invokeTrack.setBkp(methodEntry);
 	}
 
 	public void exitMethod(int line) {
-		/* TODO restore previous state */
-		currentNode = methodCallStack.safePop();
+		OnWorkingMethod onWorkingMethod = methodCallStack.safePop();
+		this.exclusive = onWorkingMethod.isExclusive();
+		this.methodEntry = onWorkingMethod.getMethodEntry();
+		this.currentNode = onWorkingMethod.getCurrentNode();
+		this.invokeTrack = onWorkingMethod.getInvokeTrack();
 	}
 
 	public void _hitInvoke(Object invokeObj, String invokeTypeSign, String methodName, Object[] params,
@@ -100,6 +104,7 @@ public class ExecutionTracer {
 	
 	public void _hitInvokeStatic(String invokeTypeSign, String methodName, Object[] params,
 			String paramTypeSignsCode, String returnTypeSign, int line) {
+		_hitLine(line);
 		
 	}
 	
@@ -109,7 +114,14 @@ public class ExecutionTracer {
 	 * @param returnGeneralType (if type is object type -> this will be display of object type, not specific name 
 	 */
 	public void _hitReturn(Object returnObj, String returnGeneralType, int line) {
-		//TODO
+		Variable returnVar = new VirtualVar(invokeTrack.getInvokeNodeId(), returnGeneralType);
+		VarValue returnVal = appendVarValue(returnObj, returnVar, null);
+		invokeTrack.setReturnValue(returnVal);
+		exitMethod(line);
+	}
+	
+	public void _hitVoidReturn(int line) {
+		exitMethod(line);
 	}
 
 	public void _hitLine(int line) {
@@ -307,11 +319,30 @@ public class ExecutionTracer {
 
 	public synchronized static ExecutionTracer _getTracer() {
 		long threadId = Thread.currentThread().getId();
+		if (mainThreadId < 0) {
+			mainThreadId = threadId;
+		}
+		return getTracer(threadId);
+	}
+
+	private static ExecutionTracer getTracer(long threadId) {
 		ExecutionTracer store = rtStores.get(threadId);
 		if (store == null) {
 			store = new ExecutionTracer();
 			rtStores.put(threadId, store);
 		}
 		return store;
+	}
+	
+	public static Map<Long, ExecutionTracer> getRtStores() {
+		return rtStores;
+	}
+	
+	public synchronized static ExecutionTracer getMainThreadStore() {
+		return getTracer(mainThreadId);
+	}
+	
+	public Trace getTrace() {
+		return trace;
 	}
 }
