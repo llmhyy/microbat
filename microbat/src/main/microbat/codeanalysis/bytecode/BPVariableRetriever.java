@@ -27,36 +27,42 @@ public class BPVariableRetriever {
 		
 		String originalSystemClassPath = System.getProperty("java.class.path");
 		String[] paths = originalSystemClassPath.split(File.pathSeparator);
-		List<String> pathList = new ArrayList<>();
-		for(String path: paths){
-			pathList.add(path);
-		}
 		
-		StringBuffer buffer = new StringBuffer(originalSystemClassPath);
-		for(String classPath: appClassPath.getClasspaths()){
-			if(!pathList.contains(classPath)){
-				buffer.append(File.pathSeparator + classPath);				
+		try{
+			List<String> pathList = new ArrayList<>();
+			for(String path: paths){
+				pathList.add(path);
+			}
+			
+			StringBuffer buffer = new StringBuffer(originalSystemClassPath);
+			for(String classPath: appClassPath.getClasspaths()){
+				if(!pathList.contains(classPath)){
+					buffer.append(File.pathSeparator + classPath);				
+				}
+			}
+			System.setProperty("java.class.path", buffer.toString());
+			String s = System.getProperty("java.class.path");
+			
+			/** when evaluation does not change line number, so we can keep the cache to speed up the progress */
+			if(!isOptimizeByteCodeCompilation){
+				Repository.clearCache();				
+				ClassPath0 classPath = new ClassPath0(s);
+				Repository.setRepository(SyntheticRepository.getInstance(classPath));
+			}
+			
+			Map<String, List<BreakPoint>> class2PointMap = summarize(executingStatements);
+			for(String className: class2PointMap.keySet()){
+				JavaClass clazz = Repository.lookupClass(className);
+				LineNumberVisitor visitor = new LineNumberVisitor(class2PointMap.get(className), appClassPath);
+				clazz.accept(new DescendingVisitor(clazz, visitor));
 			}
 		}
-		System.setProperty("java.class.path", buffer.toString());
-		String s = System.getProperty("java.class.path");
-		
-		/** when evaluation does not change line number, so we can keep the cache to speed up the progress */
-		if(!isOptimizeByteCodeCompilation){
-			Repository.clearCache();				
-			ClassPath0 classPath = new ClassPath0(s);
-			Repository.setRepository(SyntheticRepository.getInstance(classPath));
+		catch(Exception e){
+			e.printStackTrace();
 		}
-		
-		Map<String, List<BreakPoint>> class2PointMap = summarize(executingStatements);
-		for(String className: class2PointMap.keySet()){
-			JavaClass clazz = Repository.lookupClass(className);
-			LineNumberVisitor visitor = new LineNumberVisitor(class2PointMap.get(className), appClassPath);
-			clazz.accept(new DescendingVisitor(clazz, visitor));
+		finally{
+			System.setProperty("java.class.path", originalSystemClassPath);			
 		}
-		
-		System.setProperty("java.class.path", originalSystemClassPath);
-		System.currentTimeMillis();
 		
 		return executingStatements;
 	}
