@@ -739,17 +739,19 @@ public class TraceNode{
 		return false;
 	}
 
-	private List<TraceNode> allControlDominatees;
+	private HashSet<TraceNode> allControlDominatees;
 	public List<TraceNode> findAllControlDominatees() {
 		if(allControlDominatees==null){
-			List<TraceNode> controlDominatees = new ArrayList<>();
+			HashSet<TraceNode> controlDominatees = new HashSet<>();
 			findAllControlDominatees(this, controlDominatees);
 			allControlDominatees = controlDominatees;
 		}
-		return allControlDominatees;
+		
+		
+		return new ArrayList<TraceNode>(allControlDominatees);
 	}
 
-	private void findAllControlDominatees(TraceNode node, List<TraceNode> controlDominatees) {
+	private void findAllControlDominatees(TraceNode node, HashSet<TraceNode> controlDominatees) {
 		for(TraceNode dominatee: node.getControlDominatees()){
 			if(!controlDominatees.contains(dominatee)){
 				controlDominatees.add(dominatee);
