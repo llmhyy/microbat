@@ -3,6 +3,7 @@ package microbat.codeanalysis.bytecode;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.Instruction;
@@ -60,20 +61,65 @@ public class CallGraph {
 				String methodSignature = invokeIns.getMethodName(cpGen)+invokeIns.getSignature(cpGen);
 				String className = invokeIns.getClassName(cpGen);
 				
-				ByteCodeMethodFinder finder = new MethodFinderBySignature(methodSignature);
-				ByteCodeParser.parse(className, finder, appPath);
-				
-				Method calleeMethod = finder.getMethod();
-				String calleeSignature = className + "#" + calleeMethod.getName() + calleeMethod.getSignature();
-				
-				if(!methodMaps.containsKey(calleeSignature)){
-					MethodNode calleeNode = new MethodNode(calleeSignature, calleeMethod);
-					methodMaps.put(calleeSignature, calleeNode);
+				if(!className.contains("[")){
+					ByteCodeMethodFinder finder = new MethodFinderBySignature(methodSignature);
+					ByteCodeParser.parse(className, finder, appPath);
 					
-					appendCallGraphRootAt(calleeNode);
+					Method calleeMethod = finder.getMethod();
+					if(calleeMethod==null && finder.javaClass.isClass()){
+						MethodAndClass mc = checkSuperClass((MethodFinderBySignature)finder, appPath);
+						calleeMethod = mc.method;
+						className = mc.clazz;
+					}
+					
+					if(calleeMethod != null){
+						String calleeSignature = className + "#" + calleeMethod.getName() + calleeMethod.getSignature();
+						
+						if(!methodMaps.containsKey(calleeSignature)){
+							MethodNode calleeNode = new MethodNode(calleeSignature, calleeMethod);
+							methodMaps.put(calleeSignature, calleeNode);
+							
+							appendCallGraphRootAt(calleeNode);
+						}
+					}
+					
 				}
+				
 			}
 		}
+	}
+	
+	class MethodAndClass{
+		Method method;
+		String clazz;
+		public MethodAndClass(Method method, String clazz) {
+			super();
+			this.method = method;
+			this.clazz = clazz;
+		}
+		
+	}
+	
+	private MethodAndClass checkSuperClass(MethodFinderBySignature finder, AppJavaClassPath appPath2) {
+		JavaClass clazz = finder.javaClass;
+		while(clazz!=null){
+			try {
+				clazz = clazz.getSuperClass();
+				
+				ByteCodeParser.parse(clazz.getClassName(), finder, appPath);
+				Method method = finder.getMethod();
+				if(method!=null){
+					return new MethodAndClass(method, clazz.getClassName());
+				}
+				
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+				break;
+			}
+		}
+		
+		
+		return null;
 	}
 
 	private Map<String, Method> locationMethodMap = new HashMap<>();
