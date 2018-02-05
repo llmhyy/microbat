@@ -24,13 +24,13 @@ public class Sample {
 	}
 
 	public void testArrayList() {
-		List<int[]> a = new ArrayList<>();
-		a.add(new int[] { 1, 2 });
-		a.add(new int[] { 3, 4 });
+		List<int[]> b = new ArrayList<>();
+		b.add(new int[] { 1, 2 });
+		b.add(new int[] { 3, 4 });
 		field = 2;
 		for (int i = 0; i < 2; i++) {
 			field++;
-			a.get(0)[i] = field;
+			b.get(0)[i] = field;
 			System.out.println(randomValue);
 		}
 	}

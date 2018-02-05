@@ -2,6 +2,7 @@ package microbat.instrumentation;
 
 import microbat.instrumentation.trace.data.ExecutionTracer;
 import microbat.instrumentation.trace.data.FilterChecker;
+import microbat.instrumentation.trace.data.IExecutionTracer;
 import microbat.model.trace.Trace;
 import microbat.sql.TraceRecorder;
 
@@ -14,9 +15,10 @@ public class Agent {
 
 	public void shutdown() throws Exception {
 		/* collect trace & store */
-		Trace trace = ExecutionTracer.getMainThreadStore().getTrace();
+		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 		TraceRecorder traceRecorder = new TraceRecorder();
-		traceRecorder.storeTrace(trace);
+		Trace trace = ((ExecutionTracer) tracer).getTrace();
+		traceRecorder.storeTrace(trace );
 	}
 
 	public static String extrctJarPath() {
