@@ -1769,7 +1769,7 @@ public class ProgramExecutor extends Executor {
 
 				boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(type, field);
 				if (!isIgnore) {
-					FieldVar variable = new FieldVar(false, field.name(), field.typeName());
+					FieldVar variable = new FieldVar(false, field.name(), field.typeName(), field.declaringType().signature());
 					extractor.appendVarVal(varValue, variable, map.get(field), retrieveLayer, thread,
 							false);
 				}

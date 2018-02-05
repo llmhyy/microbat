@@ -4,6 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.FieldInstruction;
+import org.apache.bcel.generic.Instruction;
+import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.PUTFIELD;
+import org.apache.bcel.generic.PUTSTATIC;
+
+import microbat.model.variable.FieldVar;
 
 public class MethodNode {
 	private String methodSign;
@@ -14,20 +23,52 @@ public class MethodNode {
 	
 	
 	public MethodNode(String methodSign, Method method){
-		this.methodSign = methodSign;
+		this.setMethodSign(methodSign);
 		this.method = method;
+	}
+	
+	public List<InstructionHandle> findFieldDefinition(FieldVar field){
+		List<InstructionHandle> hList = new ArrayList<>();
+		
+		ConstantPoolGen gen = new ConstantPoolGen(method.getConstantPool());
+		
+		InstructionList list = new InstructionList(method.getCode().getCode());
+		for(InstructionHandle handle: list.getInstructionHandles()){
+			Instruction instruction = handle.getInstruction();
+			if(instruction instanceof PUTFIELD){
+				PUTFIELD ins = (PUTFIELD)instruction;
+				String fieldName = ins.getFieldName(gen);
+				String className = ins.getReferenceType(gen).getSignature();
+				
+				if(field.getName().equals(fieldName) && field.getDeclaringType().equals(className)){
+					hList.add(handle);
+				}
+				
+			}
+			else if(instruction instanceof PUTSTATIC){
+				PUTSTATIC ins = (PUTSTATIC)instruction;
+				String fieldName = ins.getFieldName(gen);
+				String className = ins.getReferenceType(gen).getSignature();
+				
+				if(field.getName().equals(fieldName) && field.getDeclaringType().equals(className)){
+					hList.add(handle);
+				}
+			}
+		}
+		
+		return hList;
 	}
 	
 	@Override
 	public String toString() {
-		return "MethodNode [methodSign=" + methodSign + "]";
+		return "MethodNode [methodSign=" + getMethodSign() + "]";
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((methodSign == null) ? 0 : methodSign.hashCode());
+		result = prime * result + ((getMethodSign() == null) ? 0 : getMethodSign().hashCode());
 		return result;
 	}
 
@@ -40,10 +81,10 @@ public class MethodNode {
 		if (getClass() != obj.getClass())
 			return false;
 		MethodNode other = (MethodNode) obj;
-		if (methodSign == null) {
-			if (other.methodSign != null)
+		if (getMethodSign() == null) {
+			if (other.getMethodSign() != null)
 				return false;
-		} else if (!methodSign.equals(other.methodSign))
+		} else if (!getMethodSign().equals(other.getMethodSign()))
 			return false;
 		return true;
 	}
@@ -78,6 +119,14 @@ public class MethodNode {
 	
 	public void addCallee(MethodNode node){
 		callees.add(node);
+	}
+
+	public String getMethodSign() {
+		return methodSign;
+	}
+
+	public void setMethodSign(String methodSign) {
+		this.methodSign = methodSign;
 	}
 	
 }

@@ -393,7 +393,7 @@ public class WALAByteCodeAnalyzer{
 			else{
 				String type = gIns.getFieldType();
 				type = SignatureUtils.signatureToName(type);
-				FieldVar var = new FieldVar(gIns.isStatic(), fullFieldName, type);
+				FieldVar var = new FieldVar(gIns.isStatic(), fullFieldName, type, null);
 				
 				point.addReadVariable(var);				
 			}
@@ -421,7 +421,7 @@ public class WALAByteCodeAnalyzer{
 			else{
 				String type = pIns.getFieldType();
 				type = SignatureUtils.signatureToName(type);
-				FieldVar var = new FieldVar(pIns.isStatic(), fullFieldName, type);
+				FieldVar var = new FieldVar(pIns.isStatic(), fullFieldName, type, null);
 				point.addWrittenVariable(var);
 				
 			}

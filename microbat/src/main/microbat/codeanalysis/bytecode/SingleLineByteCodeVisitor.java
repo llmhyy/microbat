@@ -178,8 +178,9 @@ public class SingleLineByteCodeVisitor extends ByteCodeVisitor {
 				
 				String type = gIns.getFieldType(pool).getSignature();
 				type = SignatureUtils.signatureToName(type);
+				String declaringType = gIns.getReferenceType(pool).getSignature();
 				
-				FieldVar var = new FieldVar(isStatic, fullFieldName, type);
+				FieldVar var = new FieldVar(isStatic, fullFieldName, type, declaringType);
 				
 				if(rw){
 					if(!readVars.contains(var)){
@@ -282,6 +283,7 @@ public class SingleLineByteCodeVisitor extends ByteCodeVisitor {
 			Instruction ins = insHandle.getInstruction();
 			if(ins instanceof FieldInstruction){
 				FieldInstruction fIns = (FieldInstruction)ins;
+				String declaringType = fIns.getReferenceType(pool).getSignature();
 				boolean isStatic = insHandle.getInstruction().getName().toLowerCase().contains("static");
 				String fieldName = fIns.getFieldName(pool);
 				String type = fIns.getFieldType(pool).getSignature();
@@ -289,7 +291,7 @@ public class SingleLineByteCodeVisitor extends ByteCodeVisitor {
 					if(fIns.getName().contains("get")){
 						if(popArrayTime==0){
 							type = SignatureUtils.signatureToName(type);
-							return new FieldVar(isStatic, fieldName, type);											
+							return new FieldVar(isStatic, fieldName, type, declaringType);											
 						}
 						else{
 							popArrayTime--;

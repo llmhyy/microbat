@@ -109,7 +109,8 @@ public class ByteCodeVisitor extends EmptyVisitor{
 						}
 					}
 					
-					FieldVar var = new FieldVar(isStatic, fullFieldName, type);
+					String declaringType = gIns.getReferenceType(pool).getSignature();
+					FieldVar var = new FieldVar(isStatic, fullFieldName, type, declaringType);
 					
 					if(rw){
 						point.addReadVariable(var);										

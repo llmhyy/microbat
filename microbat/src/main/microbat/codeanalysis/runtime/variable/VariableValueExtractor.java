@@ -15,8 +15,6 @@ import org.apache.commons.lang.StringUtils;
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
 import com.sun.jdi.ArrayType;
-import com.sun.jdi.BooleanType;
-import com.sun.jdi.BooleanValue;
 import com.sun.jdi.ClassType;
 import com.sun.jdi.Field;
 import com.sun.jdi.IncompatibleThreadStateException;
@@ -161,7 +159,7 @@ public class VariableValueExtractor {
 			varList.add(var);
 		}
 		for(Field field: allFields){
-			FieldVar var = new FieldVar(field.isStatic(), field.name(), field.typeName());
+			FieldVar var = new FieldVar(field.isStatic(), field.name(), field.typeName(), field.declaringType().signature());
 			var.setDeclaringType(field.declaringType().name());
 			varList.add(var);
 		}
@@ -465,7 +463,8 @@ public class VariableValueExtractor {
 					if(!isIgnore){
 //						String childVarID = val.getChildId(field.name());
 						if(childVarValue != null){
-							FieldVar var = new FieldVar(field.isStatic(), field.name(), childVarValue.type().toString());
+							FieldVar var = new FieldVar(field.isStatic(), field.name(), 
+									childVarValue.type().toString(), field.declaringType().signature());
 							appendVarVal(val, var, childVarValue, level, thread, false);											
 						}
 					}
