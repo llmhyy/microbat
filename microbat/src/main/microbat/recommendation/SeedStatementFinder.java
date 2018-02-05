@@ -17,7 +17,11 @@ public class SeedStatementFinder {
 		AppJavaClassPath appClassPath = trace.getAppJavaClassPath();
 		
 		List<BreakPoint> collectedBreakPoints = trace.allLocations();
+		
+		long t1 = System.currentTimeMillis();
 		CallGraph callGraph = buildCallGraph(collectedBreakPoints, appClassPath);
+		long t2 = System.currentTimeMillis();
+		System.out.println("Time for building call graph: " + (t2-t1));
 		
 		List<ClassLocation> variableDefs = matchDefinition(callGraph, specificVar);
 		
