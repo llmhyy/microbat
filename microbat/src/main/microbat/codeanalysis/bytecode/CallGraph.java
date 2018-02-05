@@ -29,7 +29,6 @@ public class CallGraph {
 			MethodNode node = methodMaps.get(methodSign);
 			if(node==null){
 				Method method = findByteCodeMethod(location);
-				System.currentTimeMillis();
 				if(method!=null){
 					node = new MethodNode(methodSign, method);
 					methodMaps.put(methodSign, node);
@@ -87,7 +86,8 @@ public class CallGraph {
 		if (method == null) {
 			ByteCodeMethodFinder finder = new MethodFinderByLine(point);
 			ByteCodeParser.parse(className, finder, appPath);
-			locationMethodMap.put(locationID, finder.getMethod());
+			method = finder.getMethod();
+			locationMethodMap.put(locationID, method);
 		}
 		
 		return method;
