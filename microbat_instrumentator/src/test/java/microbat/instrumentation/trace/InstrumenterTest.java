@@ -6,8 +6,7 @@ import java.io.FileOutputStream;
 
 import org.junit.Test;
 
-import microbat.instrumentation.trace.testdata.InvokeSample;
-import microbat.instrumentation.trace.testdata.Sample2;
+import microbat.instrumentation.trace.testdata.Sample;
 import sav.common.core.utils.FileUtils;
 
 /**
@@ -20,7 +19,7 @@ public class InstrumenterTest {
 
 	@Test
 	public void writeFile() throws Exception {
-		String className = InvokeSample.class.getName();
+		String className = Sample.class.getName();
 		
 		String classPath = className.replace(".", "/") + ".class";
 		String clazzFile = new StringBuilder("/").append(classPath).toString();

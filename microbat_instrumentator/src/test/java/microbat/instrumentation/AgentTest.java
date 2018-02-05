@@ -30,7 +30,8 @@ public class AgentTest {
 		config.addClasspaths(getLibJars(BASE_DIR + "/lib"));
 		config.setLaunchClass(Sample.class.getName());
 		config.setDebug(true);
-		System.out.println(config.getPort());
+		config.setPort(9595);
+		config.setNoVerify(true);
 		vmRunner.startVm(config);
 	}
 	

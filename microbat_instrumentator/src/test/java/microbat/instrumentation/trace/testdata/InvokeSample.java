@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import microbat.instrumentation.trace.data.ExecutionTracer;
+import microbat.instrumentation.trace.data.IExecutionTracer;
 
 public class InvokeSample {
 	
@@ -11,12 +12,12 @@ public class InvokeSample {
   public static void main(String[] args) {
       InvokeSample sc = new InvokeSample();
       sc.run();
-//      if (sc != null) {
-//    	  sc = null;
-//      }
+      if (sc != null) {
+    	  sc = null;
+      }
   }
 
-  private void run() { ExecutionTracer tracer = ExecutionTracer._getTracer();
+  private void run() { IExecutionTracer tracer = ExecutionTracer._getTracer("InvokeSample", "run", 19);
       List<String> ls = new ArrayList<>();
       ls.add("Good Day");  tracer._hitInvoke(null, null, "methodname", null, "paramTypeSignsCode", "returnTypeSign", 17);
 

@@ -35,6 +35,7 @@ public class VMConfiguration {
 	// for internal use only
 	private List<String> programArgs;
 	private boolean vmLog = true;
+	private boolean noVerify = false;
 	
 	public VMConfiguration(VMConfiguration config) {
 		this.javaHome = config.getJavaHome();
@@ -108,6 +109,14 @@ public class VMConfiguration {
 		return port;
 	}
 	
+	@Deprecated
+	/**
+	 * using getPort instead.
+	 * */
+	public void setPort(int port) {
+		this.port = port;
+	}
+	
 	public static int findFreePort() {
 		ServerSocket socket= null;
 		try {
@@ -171,5 +180,13 @@ public class VMConfiguration {
 
 	public void setWorkingDirectory(String workingDirectory) {
 		this.workingDirectory = workingDirectory;
+	}
+
+	public boolean isNoVerify() {
+		return noVerify;
+	}
+
+	public void setNoVerify(boolean noVerify) {
+		this.noVerify = noVerify;
 	}
 }

@@ -21,7 +21,7 @@ import sav.common.core.utils.SignatureUtils;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class ExecutionTracer {
+public class ExecutionTracer implements IExecutionTracer {
 	private static Map<Long, ExecutionTracer> rtStores;
 	private static long mainThreadId = -1;
 	static {
@@ -37,6 +37,7 @@ public class ExecutionTracer {
 	private boolean exclusive; //current method is in exclude list.
 	private InvokingTrack invokeTrack = new EmptyInvokingTrack();
 	private MethodCallStack methodCallStack;
+	private Locker locker = new Locker();
 
 	ExecutionTracer() {
 		methodCallStack = new MethodCallStack();
@@ -77,35 +78,42 @@ public class ExecutionTracer {
 	 * Methods which are with prefix "_" are called in instrument code.
 	 * =================================================================
 	 * */
-	public void _enterMethod(String className, String methodName) {
+	public void enterMethod(String className, String methodName, int methodStartLine) {
+		locker.lock();
 		exclusive = exclusive || FilterChecker.isExclusive(className, methodName);
-		methodEntry = new BreakPoint(className, null, methodName, -1);
+		methodEntry = new BreakPoint(className, null, methodName, methodStartLine);
 		currentNode = null;
 		invokeTrack.setBkp(methodEntry);
+		locker.unLock();
 	}
 
 	public void exitMethod(int line) {
+		locker.lock();
 		OnWorkingMethod onWorkingMethod = methodCallStack.safePop();
 		this.exclusive = onWorkingMethod.isExclusive();
 		this.methodEntry = onWorkingMethod.getMethodEntry();
 		this.currentNode = onWorkingMethod.getCurrentNode();
 		this.invokeTrack = onWorkingMethod.getInvokeTrack();
+		locker.unLock();
 	}
 
+	@Override
 	public void _hitInvoke(Object invokeObj, String invokeTypeSign, String methodName, Object[] params,
 			String paramTypeSignsCode, String returnTypeSign, int line) {
+		locker.lock();
 		_hitLine(line);
 		/* save current state */
 		methodCallStack.push(currentNode, methodEntry, exclusive, invokeTrack);
 		/* set up invokeTrack */
 		invokeTrack = new InvokingTrack(invokeObj, invokeTypeSign, methodName, params,
 				TraceUtils.parseArgTypes(paramTypeSignsCode));
+		locker.unLock();
 	}
 	
+	@Override
 	public void _hitInvokeStatic(String invokeTypeSign, String methodName, Object[] params,
 			String paramTypeSignsCode, String returnTypeSign, int line) {
 		_hitLine(line);
-		
 	}
 	
 	/**
@@ -113,28 +121,37 @@ public class ExecutionTracer {
 	 * @param returnObj
 	 * @param returnGeneralType (if type is object type -> this will be display of object type, not specific name 
 	 */
+	@Override
 	public void _hitReturn(Object returnObj, String returnGeneralType, int line) {
+		locker.lock();
 		Variable returnVar = new VirtualVar(invokeTrack.getInvokeNodeId(), returnGeneralType);
 		VarValue returnVal = appendVarValue(returnObj, returnVar, null);
 		invokeTrack.setReturnValue(returnVal);
 		exitMethod(line);
+		locker.unLock();
 	}
 	
+	@Override
 	public void _hitVoidReturn(int line) {
 		exitMethod(line);
 	}
 
+	@Override
 	public void _hitLine(int line) {
 		if (exclusive) {
 			return;
 		}
+		locker.lock();
 		if (currentNode != null && currentNode.getBreakPoint().getLineNumber() == line) {
+			locker.unLock();
 			return;
 		}
-		BreakPoint bkp = new BreakPoint(methodEntry.getClassCanonicalName(), null, methodEntry.getMethodName(), line);
+		/* TODO LLT: in Breakpoint, we need to set methodName or signature? */
+		BreakPoint bkp = new BreakPoint(methodEntry.getClassCanonicalName(), null, methodEntry.getMethodSign(), line);
 		int order = trace.size() + 1;
 		currentNode = new TraceNode(bkp, null, order, trace);
 		trace.addTraceNode(currentNode);
+		locker.unLock();
 	}
 	
 	/**
@@ -143,12 +160,15 @@ public class ExecutionTracer {
 	 * @param fieldTypeSign
 	 * @param line
 	 */
+	@Override
 	public void _writeField(Object refValue, Object fieldValue, String fieldName, String fieldTypeSign, int line) {
+		locker.lock();
 		_hitLine(line);
 		String parentVarId = TraceUtils.getObjectVarId(refValue);
 		String fieldVarId = Variable.concanateFieldVarID(parentVarId, fieldName);
 		boolean invokeRelevant = invokeTrack.updateRelevant(parentVarId, fieldVarId);
 		if (exclusive && !invokeRelevant) {
+			locker.unLock();
 			return;
 		}
 		Variable var = new FieldVar(false, fieldName, SignatureUtils.signatureToName(fieldTypeSign));
@@ -158,6 +178,7 @@ public class ExecutionTracer {
 		if (invokeRelevant) {
 			invokeTrack.addWrittenValue(value);
 		}
+		locker.unLock();
 	}
 
 	private void addRWriteValue(VarValue value, boolean isWrittenVar) {
@@ -179,15 +200,18 @@ public class ExecutionTracer {
 	 * @param line
 	 * TODO LLT: handle relevant?
 	 */
+	@Override
 	public void _writeStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line) {
 		if (exclusive) {
 			return;
 		}
+		locker.lock();
 		_hitLine(line);
 		Variable var = new FieldVar(false, fieldName, fieldType);
 		var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
 		VarValue value = appendVarValue(fieldValue, var, null);
 		addRWriteValue(value, true);
+		locker.unLock();
 	}
 
 	/**
@@ -196,8 +220,10 @@ public class ExecutionTracer {
 	 * @param fieldType
 	 * @param line
 	 */
+	@Override
 	public void _readField(Object refValue, Object fieldValue, String fieldName, String fieldType, int line) {
 		_hitLine(line);
+		locker.lock();
 		String parentVarId = TraceUtils.getObjectVarId(refValue);
 		String fieldVarId = TraceUtils.getFieldVarId(parentVarId, fieldName, fieldType, fieldValue);
 		invokeTrack.updateRelevant(parentVarId, fieldVarId);
@@ -208,6 +234,7 @@ public class ExecutionTracer {
 		var.setVarID(fieldVarId);
 		VarValue value = appendVarValue(fieldValue, var, null);
 		addRWriteValue(value, false);
+		locker.unLock();
 	}
 
 	/**
@@ -217,15 +244,18 @@ public class ExecutionTracer {
 	 * @param fieldTypeSign
 	 * @param line
 	 */
+	@Override
 	public void _readStaticField(Object fieldValue, String refType, String fieldName, String fieldTypeSign, int line) {
 		if (exclusive) {
 			return;
 		}
+		locker.lock();
 		_hitLine(line);
 		Variable var = new FieldVar(true, fieldName, SignatureUtils.signatureToName(fieldTypeSign));
 		var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
 		VarValue value = appendVarValue(fieldValue, var, null);
 		addRWriteValue(value, false);;
+		locker.unLock();
 	}
 	
 	/**
@@ -235,17 +265,20 @@ public class ExecutionTracer {
 	 * @param line
 	 * @param bcLocalVarIdx
 	 */
+	@Override
 	public void _writeLocalVar(Object varValue, String varName, String varType, int line, int bcLocalVarIdx,
 			int varScopeStartLine, int varScopeEndLine) {
 		if (exclusive) {
 			return;
 		}
 		_hitLine(line);
+		locker.lock();
 		Variable var = new LocalVar(varName, varType, methodEntry.getClassCanonicalName(), line);
 		var.setVarID(Variable.concanateLocalVarID(methodEntry.getClassCanonicalName(), varName, varScopeStartLine,
 				varScopeEndLine));
 		VarValue value = appendVarValue(varValue, var, null);
 		addRWriteValue(value, true);
+		locker.unLock();
 	}
 	
 	/**
@@ -255,14 +288,17 @@ public class ExecutionTracer {
 	 * @param line
 	 * @param bcLocalVarIdx
 	 */
+	@Override
 	public void _readLocalVar(Object varValue, String varName, String varType, int line, int bcLocalVarIdx,
 			int varScopeStartLine, int varScopeEndLine) {
 		_hitLine(line);
+		locker.lock();
 		Variable var = new LocalVar(varName, varType, methodEntry.getClassCanonicalName(), line);
 		var.setVarID(Variable.concanateLocalVarID(methodEntry.getClassCanonicalName(), varName, varScopeStartLine,
 				varScopeEndLine));
 		VarValue value = appendVarValue(varValue, var, null);
-		addRWriteValue(value, false);;
+		addRWriteValue(value, false);
+		locker.unLock();
 	}
 	
 	/**
@@ -272,15 +308,19 @@ public class ExecutionTracer {
 	 * @param elementType
 	 * @param line
 	 */
+	@Override
 	public void _readArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line) {
 		_hitLine(line);
+		locker.lock();
 		String parentVarId = TraceUtils.getObjectVarId(arrayRef);
 		String arrEleVarId = TraceUtils.getArrayElementVarId(parentVarId, index, elementType, eleValue);
 		invokeTrack.updateRelevant(parentVarId, arrEleVarId);
 		if (exclusive) {
+			locker.unLock();
 			return;
 		}
 		addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, false);
+		locker.unLock();
 	}
 	
 	/**
@@ -291,16 +331,20 @@ public class ExecutionTracer {
 	 * @param elementType
 	 * @param line
 	 */
+	@Override
 	public void _writeArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line) {
 		_hitLine(line);
+		locker.lock();
 		String parentVarId = TraceUtils.getObjectVarId(arrayRef);
 		String arrEleVarId = TraceUtils.getArrayElementVarId(parentVarId, index, elementType, eleValue);
 		boolean involeRelevant = invokeTrack.updateRelevant(parentVarId, arrEleVarId);
 		if (exclusive && !involeRelevant) {
+			locker.unLock();
 			return;
 		}
 		VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
 		invokeTrack.addWrittenValue(value);
+		locker.unLock();
 	}
 	
 	private VarValue addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType, int line,
@@ -317,12 +361,23 @@ public class ExecutionTracer {
 		// TODO LLT: do nothing, JUST FOR TEST. TO REMOVE.
 	}
 
-	public synchronized static ExecutionTracer _getTracer() {
+	private static final Locker gLocker = new Locker();
+	public synchronized static IExecutionTracer _getTracer(String className, String methodName, int methodStartLine) {
+		if (gLocker.lock()) {
+			return EmptyExecutionTracer.getInstance();
+		}
 		long threadId = Thread.currentThread().getId();
 		if (mainThreadId < 0) {
 			mainThreadId = threadId;
 		}
-		return getTracer(threadId);
+		ExecutionTracer tracer = getTracer(threadId);
+		if (tracer.locker.isLock()) {
+			gLocker.unLock();
+			return EmptyExecutionTracer.getInstance();
+		}
+		tracer.enterMethod(className.replace("/", "."), methodName, methodStartLine);
+		gLocker.unLock();
+		return tracer;
 	}
 
 	private static ExecutionTracer getTracer(long threadId) {
@@ -338,11 +393,39 @@ public class ExecutionTracer {
 		return rtStores;
 	}
 	
-	public synchronized static ExecutionTracer getMainThreadStore() {
+	public synchronized static IExecutionTracer getMainThreadStore() {
 		return getTracer(mainThreadId);
+	}
+	
+	public static void shutdown() {
+		gLocker.lock();
 	}
 	
 	public Trace getTrace() {
 		return trace;
+	}
+	
+	private static class Locker {
+		boolean tracing;
+		
+		/**
+		 * return true if already lock
+		 * false if not locked
+		 * */
+		public boolean lock() {
+			if (tracing) {
+				return true;
+			}
+			tracing = true;
+			return false;
+		}
+		
+		public void unLock() {
+			tracing = false;
+		}
+		
+		public boolean isLock() {
+			return tracing;
+		}
 	}
 }

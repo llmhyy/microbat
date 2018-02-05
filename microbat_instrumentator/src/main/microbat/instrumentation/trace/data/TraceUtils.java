@@ -51,6 +51,9 @@ public class TraceUtils {
 	}
 	
 	public static String[] parseArgTypes(String code) {
+		if (code == null || code.isEmpty()) {
+			return new String[0];
+		}
 		return code.split(ARG_TYPE_SEPARATOR);
 	}
 }

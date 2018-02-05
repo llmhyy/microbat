@@ -17,7 +17,6 @@ import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableInstruction;
-import org.apache.bcel.generic.RETURN;
 import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Type;
@@ -140,7 +139,7 @@ public class LineInstructionInfo {
 		List<InstructionHandle> returnInsns = new ArrayList<>(1);
 		for (InstructionHandle insnHandler : insnList) {
 			Instruction insn = insnHandler.getInstruction();
-			if ((insn instanceof ReturnInstruction) && !(insn instanceof RETURN)) {
+			if ((insn instanceof ReturnInstruction)) {
 				returnInsns.add(insnHandler);
 			}
 		}
@@ -165,5 +164,9 @@ public class LineInstructionInfo {
 		rwInsructionInfo = null;
 		invokeInsns = null;
 		returnInsns = null;
+	}
+
+	public boolean hasNoInstrumentation() {
+		return rwInsructionInfo.isEmpty() && invokeInsns.isEmpty() && returnInsns.isEmpty();
 	}
 }
