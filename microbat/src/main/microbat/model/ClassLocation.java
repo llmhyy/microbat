@@ -9,7 +9,6 @@
 package microbat.model;
 
 import microbat.util.BreakpointUtils;
-import sav.common.core.utils.SignatureUtils;
 
 /**
  * @author Yun Lin, modified from LLT
