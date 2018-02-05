@@ -128,6 +128,10 @@ public class StepRecommender {
 	private List<TraceNode> visitedUnclearNodeList = new ArrayList<>();
 	
 	public TraceNode recommendNode(Trace trace, TraceNode currentNode, UserFeedback userFeedback){
+		InspectingRange range = detailInspector.inspectingRange;
+		detailInspector = DetailInspectorFactory.createInspector();
+		detailInspector.inspectingRange = range;
+		
 		String feedbackType = userFeedback.getFeedbackType();
 		if(feedbackType.equals(UserFeedback.WRONG_PATH)){
 			Settings.wrongPathNodeOrder.add(currentNode.getOrder());
