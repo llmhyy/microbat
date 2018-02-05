@@ -22,6 +22,10 @@ public class InvokingTrack {
 	private BreakPoint bkp;
 	private List<VarValue> writtenVarValue;
 	private String invokeNodeId;
+	
+	public InvokingTrack() {
+		// EMTPY CONSTRUCTOR
+	}
 
 	/* TODO LLT: check if need to convert paramtype from signature to name */
 	public InvokingTrack(Object invokeObj, String className, String methodName, Object[] params, String[] paramTypes) {
