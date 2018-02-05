@@ -47,7 +47,8 @@ public class AdvancedDetailInspector extends DetailInspector {
 		
 		VarValue specificVar = findSpecificWrongVar(start, end);
 		
-		List<ClassLocation> seedStatements = findSeedStatemets(specificVar, start, end);
+		SeedStatementFinder seedFinder = new SeedStatementFinder();
+		List<ClassLocation> seedStatements = seedFinder.findSeedStatemets(specificVar, start, end);
 		
 		System.out.println("call graph is built!");
 	}

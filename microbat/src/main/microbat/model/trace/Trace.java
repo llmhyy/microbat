@@ -991,4 +991,15 @@ public class Trace {
 	public void setMultiThread(boolean isMultiThread) {
 		this.isMultiThread = isMultiThread;
 	}
+
+	public List<BreakPoint> allLocations() {
+		List<BreakPoint> locations = new ArrayList<>();
+		for(TraceNode node: this.exectionList){
+			if(!locations.contains(node.getBreakPoint())){
+				locations.add(node.getBreakPoint());
+			}
+		}
+		
+		return locations;
+	}
 }
