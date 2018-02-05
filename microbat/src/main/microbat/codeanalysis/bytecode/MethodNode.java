@@ -72,5 +72,12 @@ public class MethodNode {
 		this.method = method;
 	}
 	
+	public void addCaller(MethodNode node){
+		callers.add(node);
+	}
+	
+	public void addCallee(MethodNode node){
+		callees.add(node);
+	}
 	
 }

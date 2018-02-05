@@ -44,8 +44,8 @@ public class CallGraph {
 		return null;
 	}
 	
-	private void appendCallGraphRootAt(MethodNode node) {
-		Method method = node.getMethod();
+	private void appendCallGraphRootAt(MethodNode callerNode) {
+		Method method = callerNode.getMethod();
 		if(method.getCode()==null){
 			return;
 		}
@@ -78,6 +78,9 @@ public class CallGraph {
 						if(!methodMaps.containsKey(calleeSignature)){
 							MethodNode calleeNode = new MethodNode(calleeSignature, calleeMethod);
 							methodMaps.put(calleeSignature, calleeNode);
+							
+							callerNode.addCallee(calleeNode);
+							calleeNode.addCaller(callerNode);
 							
 							appendCallGraphRootAt(calleeNode);
 						}
