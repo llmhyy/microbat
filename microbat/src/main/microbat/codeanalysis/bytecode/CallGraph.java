@@ -126,8 +126,8 @@ public class CallGraph {
 							MethodNode calleeNode = new MethodNode(calleeSignature, mc.method);
 							methodMaps.put(calleeSignature, calleeNode);
 
-							callerNode.addCallee(calleeNode);
-							calleeNode.addCaller(callerNode);
+							callerNode.addCallee(handle, calleeNode);
+							calleeNode.addCaller(callerNode, handle);
 
 							appendCallGraphRootAt(calleeNode);
 						}
@@ -139,9 +139,18 @@ public class CallGraph {
 		}
 	}
 
+	private Map<String, List<String>> implementationMap = new HashMap<>();
+	
 	private List<JavaClass> allClasses = new ArrayList<>();
 	private List<String> findImplementations(JavaClass clazz) {
-		List<String> implementations = new ArrayList<>();
+		
+		List<String> implementations = implementationMap.get(clazz.getClassName());
+		if(implementations!=null){
+			return implementations;
+		}
+		
+		
+		implementations = new ArrayList<>();
 		
 		if(allClasses.isEmpty()){
 			Repository repo = clazz.getRepository();
@@ -174,6 +183,7 @@ public class CallGraph {
 			}
 		}
 		
+		implementationMap.put(clazz.getClassName(), implementations);
 		
 		return implementations;
 	}

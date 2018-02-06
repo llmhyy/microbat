@@ -1,31 +1,53 @@
 package microbat.codeanalysis.bytecode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ConstantPoolGen;
-import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.PUTSTATIC;
 
+import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
+import microbat.model.variable.LocalVar;
+import microbat.model.variable.Variable;
 
 public class MethodNode {
 	private String methodSign;
 	private Method method;
 	
-	private List<MethodNode> callers = new ArrayList<>();
-	private List<MethodNode> callees = new ArrayList<>();
+	/**
+	 * the instruction handles are the call sites for each method
+	 */
+	private Map<MethodNode, List<InstructionHandle>> callers = new HashMap<>();
+	private Map<InstructionHandle, MethodNode> callees = new HashMap<>();
 	
 	
 	public MethodNode(String methodSign, Method method){
 		this.setMethodSign(methodSign);
 		this.method = method;
 	}
+	
+	public List<InstructionHandle> findVariableDefinition(Variable var){
+		if(var instanceof FieldVar){
+			return findFieldDefinition((FieldVar)var);
+		}
+		else if(var instanceof LocalVar){
+			//TODO
+		}
+		else if(var instanceof ArrayElementVar){
+			//TODO
+		}
+		
+		return null;
+	}
+	
 	
 	public List<InstructionHandle> findFieldDefinition(FieldVar field){
 		List<InstructionHandle> hList = new ArrayList<>();
@@ -89,21 +111,7 @@ public class MethodNode {
 		return true;
 	}
 
-	public List<MethodNode> getCallers() {
-		return callers;
-	}
-
-	public void setCallers(List<MethodNode> callers) {
-		this.callers = callers;
-	}
-
-	public List<MethodNode> getCallees() {
-		return callees;
-	}
-
-	public void setCallees(List<MethodNode> callees) {
-		this.callees = callees;
-	}
+	
 
 	public Method getMethod() {
 		return method;
@@ -113,12 +121,21 @@ public class MethodNode {
 		this.method = method;
 	}
 	
-	public void addCaller(MethodNode node){
-		callers.add(node);
+	public void addCaller(MethodNode node, InstructionHandle handle){
+		List<InstructionHandle> list = callers.get(node);
+		if(list==null){
+			list = new ArrayList<>();
+		}
+		
+		if(!list.contains(handle)){
+			list.add(handle);
+		}
+		
+		callers.put(node, list);
 	}
 	
-	public void addCallee(MethodNode node){
-		callees.add(node);
+	public void addCallee(InstructionHandle handle, MethodNode node){
+		callees.put(handle, node);
 	}
 
 	public String getMethodSign() {
@@ -127,6 +144,38 @@ public class MethodNode {
 
 	public void setMethodSign(String methodSign) {
 		this.methodSign = methodSign;
+	}
+
+	public Map<InstructionHandle, MethodNode> getCallees() {
+		return callees;
+	}
+
+	public void setCallees(Map<InstructionHandle, MethodNode> callees) {
+		this.callees = callees;
+	}
+
+	public Map<MethodNode, List<InstructionHandle>> getAllCallers() {
+		Map<MethodNode, List<InstructionHandle>> map = new HashMap<>();
+		findAllCallers(map, this);
+		
+		return map;
+	}
+
+	private void findAllCallers(Map<MethodNode, List<InstructionHandle>> map, MethodNode methodNode) {
+		for(MethodNode caller: methodNode.getCallers().keySet()){
+			if(!map.keySet().contains(caller)){
+				map.put(caller, methodNode.getCallers().get(caller));
+				findAllCallers(map, caller);
+			}
+		}
+	}
+
+	public Map<MethodNode, List<InstructionHandle>> getCallers() {
+		return callers;
+	}
+
+	public void setCallers(Map<MethodNode, List<InstructionHandle>> callers) {
+		this.callers = callers;
 	}
 	
 }

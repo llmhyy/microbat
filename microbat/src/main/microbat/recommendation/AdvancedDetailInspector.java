@@ -3,7 +3,12 @@ package microbat.recommendation;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.bcel.generic.InstructionHandle;
+
+import microbat.codeanalysis.bytecode.MethodNode;
+import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -48,8 +53,12 @@ public class AdvancedDetailInspector extends DetailInspector {
 		VarValue specificVar = findSpecificWrongVar(start, end);
 		
 		SeedStatementFinder seedFinder = new SeedStatementFinder();
-		List<ClassLocation> seedStatements = seedFinder.findSeedStatemets(specificVar, start, end);
+		Map<MethodNode, List<InstructionHandle>> seeds = seedFinder.findSeedStatemets(specificVar, start, end);
 		
+		Trace trace = start.getTrace();
+		SeedControlDominatorFinder controlFinder = new SeedControlDominatorFinder();
+		List<BreakPoint> controlDominators = controlFinder.findSeedControlDominators(trace.allLocations(), seeds);
+		System.currentTimeMillis();
 		System.out.println("call graph is built!");
 	}
 	
