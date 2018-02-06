@@ -13,6 +13,7 @@ import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.AALOAD;
 import org.apache.bcel.generic.AASTORE;
+import org.apache.bcel.generic.ACONST_NULL;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ANEWARRAY;
 import org.apache.bcel.generic.ASTORE;
@@ -34,6 +35,7 @@ import org.apache.bcel.generic.IINC;
 import org.apache.bcel.generic.ILOAD;
 import org.apache.bcel.generic.INVOKEINTERFACE;
 import org.apache.bcel.generic.INVOKESTATIC;
+import org.apache.bcel.generic.INVOKEVIRTUAL;
 import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
@@ -225,17 +227,22 @@ public class TraceInstrumenter {
 			newInsns.append(new PUSH(constPool, line));
 			appendTracerMethodInvoke(newInsns, TracerMethods.HIT_VOID_RETURN, constPool);
 		} else {
-			/* on stack: value */
 			Type type = insn.getType();
-			if (type.getSize() == 1) {
-				newInsns.append(new DUP()); // val, val
-				newInsns.append(new ALOAD(tracerVar.getIndex())); // val, val, tracer
-				newInsns.append(new SWAP()); // val, tracer, val
+			if (insnHandler.getPrev().getInstruction() instanceof ACONST_NULL) {
+				newInsns.append(new ALOAD(tracerVar.getIndex()));  // val, tracer
+				newInsns.append(new ACONST_NULL());
 			} else {
-				newInsns.append(new DUP2()); // val*, val*
-				newInsns.append(new ALOAD(tracerVar.getIndex())); // val*, val*, tracer
-				newInsns.append(new DUP_X2()); // val*, tracer, val*, tracer
-				newInsns.append(new POP()); // val*, tracer, val*
+				/* on stack: value */
+				if (type.getSize() == 1) {
+					newInsns.append(new DUP()); // val, val
+					newInsns.append(new ALOAD(tracerVar.getIndex())); // val, val, tracer
+					newInsns.append(new SWAP()); // val, tracer, val
+				} else {
+					newInsns.append(new DUP2()); // val*, val*
+					newInsns.append(new ALOAD(tracerVar.getIndex())); // val*, val*, tracer
+					newInsns.append(new DUP_X2()); // val*, tracer, val*, tracer
+					newInsns.append(new POP()); // val*, tracer, val*
+				}
 			}
 			newInsns.append(new PUSH(constPool, type.getSignature())); // val*, tracer, val*, returnGeneralType
 			newInsns.append(new PUSH(constPool, line)); // val*, tracer, val*, returnGeneralType, line
@@ -309,12 +316,11 @@ public class TraceInstrumenter {
 		/* restore arg values */
 		for (int i = 0; i < argTypes.length; i++) {
 			Type argType = argTypes[i];
-			newInsns.append(new ALOAD(argObjsVar.getIndex()));
-			newInsns.append(new PUSH(constPool, i));
-			newInsns.append(new AALOAD());
+			newInsns.append(new ALOAD(argObjsVar.getIndex())); // load argObjs[]
+			newInsns.append(new PUSH(constPool, i)); // arg idx
+			newInsns.append(new AALOAD()); // -> argObjs[arg idx]
 			if (argType instanceof BasicType) {
-				newInsns.append(new INVOKESTATIC(
-						basicTypeSupporter.getToPrimitiveValueMethodIdx((BasicType) argType, constPool)));
+				newInsns.append(new INVOKEVIRTUAL(basicTypeSupporter.getToPrimitiveValueMethodIdx((BasicType) argType, constPool)));
 			}
 		}
 		InstructionHandle pos = insnList.insert(insn, newInsns);
@@ -340,7 +346,16 @@ public class TraceInstrumenter {
 	private InstructionList getInjectCodePutField(ConstantPoolGen constPool, LocalVariableGen tracerVar,
 			FieldInstructionInfo info) {
 		InstructionList newInsns = new InstructionList();
-		if (info.isComputationalType1()) {
+		/*
+		 * on stack: obj, value
+		 */
+		if (info.isNextToAconstNull()) {
+			newInsns.append(new POP());
+			newInsns.append(new DUP());
+			newInsns.append(new ALOAD(tracerVar.getIndex()));
+			newInsns.append(new SWAP());
+			newInsns.append(new ACONST_NULL());
+		} else if (info.isComputationalType1()) {
 			newInsns.append(new DUP2()); // Duplicates object and value: [obj, val], obj, val
 			newInsns.append(new ALOAD(tracerVar.getIndex())); // [obj, val], obj, val, tracer
 			newInsns.append(new DUP_X2()); // [obj, val], tracer, obj, val, tracer
@@ -375,7 +390,9 @@ public class TraceInstrumenter {
 		newInsns.append(new PUSH(constPool, info.getFieldType())); // tracer, obj, val, fieldName, fieldTypeSignature
 		newInsns.append(new PUSH(constPool, info.getLine())); // tracer, obj, val, fieldName, fieldTypeSignature, line
 		appendTracerMethodInvoke(newInsns, TracerMethods.WRITE_FIELD, constPool); // record -> [obj, val] or [obj, val], val
-		if (info.isComputationalType2()) {
+		if (info.isNextToAconstNull()) {
+			newInsns.append(new ACONST_NULL());
+		} else if (info.isComputationalType2()) {
 			newInsns.append(new POP());
 		}
 		return newInsns;
@@ -388,7 +405,10 @@ public class TraceInstrumenter {
 	private InstructionList getInjectCodePutStatic(ConstantPoolGen constPool, LocalVariableGen tracerVar,
 			FieldInstructionInfo info) {
 		InstructionList newInsns = new InstructionList();
-		if (info.getFieldStackSize() == 1) {
+		if (info.isNextToAconstNull()) {
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // tracer
+			newInsns.append(new ACONST_NULL()); // tracer, val
+		} else if (info.getFieldStackSize() == 1) {
 			newInsns.append(new DUP()); // val
 			newInsns.append(new ALOAD(tracerVar.getIndex())); // val, tracer
 			newInsns.append(new SWAP()); // tracer, val
@@ -516,15 +536,20 @@ public class TraceInstrumenter {
 			}
 		}
 		/* invoke tracer */
-		if (insnInfo.isComputationalType1()) {
-			newInsns.append(new DUP());		// [value], value, $tracer
+		if (insnInfo.getInstructionHandler().getPrev().getInstruction() instanceof ACONST_NULL) {
 			newInsns.append(new ALOAD(tracerVar.getIndex())); // value, $tracer
-			newInsns.append(new SWAP()); // $tracer, value
-		} else { // stack size = 2
-			newInsns.append(new DUP2());
-			newInsns.append(new ALOAD(tracerVar.getIndex())); // value*, $tracer
-			newInsns.append(new DUP_X2()); // $tracer, value*, $tracer
-			newInsns.append(new POP()); // $tracer, value*
+			newInsns.append(new ACONST_NULL());
+		} else {
+			if (insnInfo.isComputationalType1()) {
+				newInsns.append(new DUP());		// [value], value, $tracer
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // value, $tracer
+				newInsns.append(new SWAP()); // $tracer, value
+			} else { // stack size = 2
+				newInsns.append(new DUP2());
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // value*, $tracer
+				newInsns.append(new DUP_X2()); // $tracer, value*, $tracer
+				newInsns.append(new POP()); // $tracer, value*
+			}
 		}
 		if (type instanceof BasicType) {
 			newInsns.append(new INVOKESTATIC(basicTypeSupporter.getValueOfMethodIdx((BasicType) type, constPool)));
