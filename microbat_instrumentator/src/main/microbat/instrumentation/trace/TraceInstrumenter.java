@@ -34,7 +34,6 @@ import org.apache.bcel.generic.IINC;
 import org.apache.bcel.generic.ILOAD;
 import org.apache.bcel.generic.INVOKEINTERFACE;
 import org.apache.bcel.generic.INVOKESTATIC;
-import org.apache.bcel.generic.INVOKEVIRTUAL;
 import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
@@ -77,6 +76,7 @@ public class TraceInstrumenter {
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		JavaClass newJC = null;
+
 		for (Method method : jc.getMethods()) {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
@@ -146,12 +146,12 @@ public class TraceInstrumenter {
 			}
 		}
 	}
-
+	
 	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method) {
 		InstructionList insnList = methodGen.getInstructionList();
 		List<LineInstructionInfo> lineInsnInfos = new ArrayList<>();
 	
-		LineNumberTable lineNumberTable = 	method.getLineNumberTable();//methodGen.getLineNumberTable(constPool);
+		LineNumberTable lineNumberTable = method.getLineNumberTable();//methodGen.getLineNumberTable(constPool);
 		Set<Integer> visitedLines = new HashSet<>();
 		for (LineNumberGen lineGen : methodGen.getLineNumbers()) {
 			if (!visitedLines.contains(lineGen.getSourceLine())) {
@@ -414,7 +414,7 @@ public class TraceInstrumenter {
 		if (method == TracerMethods.GET_TRACER) {
 			int index = constPool.addMethodref(method.getDeclareClass(), method.getMethodName(), 
 					method.getMethodSign());
-			newInsns.append(new INVOKEVIRTUAL(index));
+			newInsns.append(new INVOKESTATIC(index));
 		} else {
 			int index = constPool.addInterfaceMethodref(method.getDeclareClass(), method.getMethodName(), 
 					method.getMethodSign());
