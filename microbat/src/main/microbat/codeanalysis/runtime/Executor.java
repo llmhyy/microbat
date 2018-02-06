@@ -553,4 +553,10 @@ public abstract class Executor {
 		
 		Executor.libExcludes = libList.toArray(new String[0]);
 	}
+
+
+	public static String[] getDefaultLibExcludes() {
+		return defaultLibExcludes;
+	}
+
 }
