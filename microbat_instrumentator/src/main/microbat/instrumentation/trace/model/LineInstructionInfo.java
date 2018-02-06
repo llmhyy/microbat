@@ -21,8 +21,6 @@ import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Type;
 
-import sav.common.core.SavRtException;
-
 public class LineInstructionInfo {
 	private int line;
 	private InstructionHandle lineNumberInsn;
@@ -34,7 +32,7 @@ public class LineInstructionInfo {
 	private List<InstructionHandle> invokeInsns;
 	private List<InstructionHandle> returnInsns;
 	
-	public LineInstructionInfo(LocalVariableTable localVariableTable, ConstantPoolGen constPool, LineNumberTable lineNumberTable,
+	public LineInstructionInfo(String locId, LocalVariableTable localVariableTable, ConstantPoolGen constPool, LineNumberTable lineNumberTable,
 			LineNumberGen lineGen, InstructionList insnList) {
 		this.line = lineGen.getSourceLine();
 		this.lineNumberInsn = lineGen.getInstruction();
@@ -42,7 +40,7 @@ public class LineInstructionInfo {
 		this.constPool = constPool;
 		this.lineNumberTable = lineNumberTable;
 		lineInsns = findCorrespondingInstructions(insnList, lineNumberTable, lineGen.getSourceLine());
-		rwInsructionInfo = extractRWInstructions();
+		rwInsructionInfo = extractRWInstructions(locId);
 		invokeInsns = extractInvokeInstructions(lineInsns);
 		returnInsns = extractReturnInstructions(lineInsns);
 	}
@@ -51,7 +49,7 @@ public class LineInstructionInfo {
 		return rwInsructionInfo;
 	}
 
-	private List<RWInstructionInfo> extractRWInstructions() {
+	private List<RWInstructionInfo> extractRWInstructions(String locId) {
 		List<RWInstructionInfo> rwInsns = new ArrayList<>(Math.min(10, lineInsns.size()));
 		for (InstructionHandle insnHandler : lineInsns) {
 			Instruction insn = insnHandler.getInstruction();
@@ -81,8 +79,9 @@ public class LineInstructionInfo {
 				LocalVariable localVar = localVarTable.getLocalVariable(localVarInsn.getIndex(),
 						insnHandler.getPosition() + insn.getLength());
 				if (localVar == null) {
-					throw new SavRtException(String.format("Cannot find localVar with (index = %s, pc = %s)",
-							localVarInsn.getIndex(), insnHandler.getPosition()));
+					System.out.println(String.format("Warning: Cannot find localVar with (index = %s, pc = %s) at %s",
+							localVarInsn.getIndex(), insnHandler.getPosition(), locId));
+					continue;
 				}
 				LocalVarInstructionInfo info = new LocalVarInstructionInfo(insnHandler, line, localVar.getName(), localVar.getSignature());
 				info.setIsStore(existIn(((LocalVariableInstruction) insn).getCanonicalTag(), Const.FSTORE, Const.IINC, Const.DSTORE, Const.ASTORE,

@@ -14,6 +14,15 @@ import sav.common.core.utils.CollectionUtils;
 public class DbService {
 	private static MysqlDataSource dataSource;
 	
+	static {
+		dataSource = new MysqlDataSource();
+		dataSource.setServerName(DBSettings.dbAddress);
+		dataSource.setPort(DBSettings.dbPort);
+		dataSource.setUser(DBSettings.username);
+		dataSource.setPassword(DBSettings.password);
+		dataSource.setDatabaseName(DBSettings.dbName);
+	}
+	
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}

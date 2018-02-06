@@ -14,6 +14,7 @@ public class Agent {
 	}
 
 	public void shutdown() throws Exception {
+		ExecutionTracer.shutdown();
 		/* collect trace & store */
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 		TraceRecorder traceRecorder = new TraceRecorder();

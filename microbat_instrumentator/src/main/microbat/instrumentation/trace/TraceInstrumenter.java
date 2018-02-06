@@ -63,6 +63,7 @@ import microbat.instrumentation.trace.model.FieldInstructionInfo;
 import microbat.instrumentation.trace.model.LineInstructionInfo;
 import microbat.instrumentation.trace.model.LocalVarInstructionInfo;
 import microbat.instrumentation.trace.model.RWInstructionInfo;
+import sav.common.core.utils.StringUtils;
 
 public class TraceInstrumenter {
 	private static final String TRACER_VAR_NAME = "$tracer"; // local var
@@ -157,7 +158,8 @@ public class TraceInstrumenter {
 		Set<Integer> visitedLines = new HashSet<>();
 		for (LineNumberGen lineGen : methodGen.getLineNumbers()) {
 			if (!visitedLines.contains(lineGen.getSourceLine())) {
-				lineInsnInfos.add(new LineInstructionInfo(method.getLocalVariableTable(), constPool, lineNumberTable,
+				String loc = StringUtils.dotJoin(classGen.getClassName(), method.getName(), lineGen.getSourceLine());
+				lineInsnInfos.add(new LineInstructionInfo(loc, method.getLocalVariableTable(), constPool, lineNumberTable,
 						lineGen, insnList));
 				visitedLines.add(lineGen.getSourceLine());
 			}
