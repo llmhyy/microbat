@@ -9,25 +9,26 @@ import org.junit.Test;
 import microbat.instrumentation.trace.data.ExecutionTracer;
 import microbat.instrumentation.trace.data.IExecutionTracer;
 import sav.common.core.utils.SignatureUtils;
+import sav.common.core.utils.StringUtils;
 
 public class CodeGenerator {
 
 	@Test
 	public void generateCode_ExecutionTracerIdx() {
 		Method[] methods = ExecutionTracer.class.getMethods();
-		for (Method method : methods) {
-			if (!method.getName().startsWith("_")) {
-				continue;
-			}
-			String className = IExecutionTracer.class.getName();
-			if ("_getTracer".equals(method.getName())) {
-				className = ExecutionTracer.class.getName();
-			}
-			String signature = SignatureUtils.getSignature(method);
-			String format = "executionTracer%s_idx = cpg.addMethodref(\"%s\", \"%s\", \"%s\");";
-			System.out.println(String.format(format, method.getName(), className.replace(".", "/"),
-					method.getName(), signature));
-		}
+//		for (Method method : methods) {
+//			if (!method.getName().startsWith("_")) {
+//				continue;
+//			}
+//			String className = IExecutionTracer.class.getName();
+//			if ("_getTracer".equals(method.getName())) {
+//				className = ExecutionTracer.class.getName();
+//			}
+//			String signature = SignatureUtils.getSignature(method);
+//			String format = "executionTracer%s_idx = cpg.addMethodref(\"%s\", \"%s\", \"%s\");";
+//			System.out.println(String.format(format, method.getName(), className.replace(".", "/"),
+//					method.getName(), signature));
+//		}
 		
 		for (int i = 0; i < methods.length; i++) {
 			Method method = methods[i];
@@ -52,7 +53,7 @@ public class CodeGenerator {
 			}
 			String signature = SignatureUtils.getSignature(method);
 			System.out.println(String.format(format, sb.toString().toUpperCase(),
-					className,
+					className.replace(".", "/"),
 					method.getName(),
 					signature,
 					method.getParameters().length + 1));

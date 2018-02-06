@@ -1,19 +1,12 @@
 package microbat.instrumentation.trace;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.bcel.Const;
 import org.apache.bcel.generic.BasicType;
 import org.apache.bcel.generic.ConstantPoolGen;
 
 public class BasicTypeSupporter {
-	private Map<BasicType, Integer> valueOfMethodIdxMap = new HashMap<>();
 	
 	public int getToPrimitiveValueMethodIdx(BasicType type, ConstantPoolGen cpg) {
-		if (valueOfMethodIdxMap.containsKey(type)) {
-			return valueOfMethodIdxMap.get(type);
-		}
 		int idx;
 		switch (type.getType()) {
 		case Const.T_INT:
@@ -43,14 +36,10 @@ public class BasicTypeSupporter {
 		default:
 			throw new IllegalArgumentException("Unhandled type: " + type);
 		}
-		valueOfMethodIdxMap.put(type, idx);
 		return idx;
 	}
 	
 	public int getValueOfMethodIdx(BasicType type, ConstantPoolGen cpg) {
-		if (valueOfMethodIdxMap.containsKey(type)) {
-			return valueOfMethodIdxMap.get(type);
-		}
 		int idx;
 		switch (type.getType()) {
 		case Const.T_INT:
@@ -80,7 +69,6 @@ public class BasicTypeSupporter {
 		default:
 			throw new IllegalArgumentException("Unhandled type: " + type);
 		}
-		valueOfMethodIdxMap.put(type, idx);
 		return idx;
 	}
 }

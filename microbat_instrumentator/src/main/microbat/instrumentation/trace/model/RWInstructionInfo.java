@@ -1,5 +1,6 @@
 package microbat.instrumentation.trace.model;
 
+import org.apache.bcel.generic.ACONST_NULL;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 
@@ -82,4 +83,8 @@ public class RWInstructionInfo {
 		return varStackSize == 2;
 	}
 	
+	public boolean isNextToAconstNull() {
+		InstructionHandle prev = getInstructionHandler().getPrev();
+		return prev != null && prev.getInstruction() instanceof ACONST_NULL;
+	}
 }

@@ -90,10 +90,12 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void exitMethod(int line) {
 		locker.lock();
 		OnWorkingMethod onWorkingMethod = methodCallStack.safePop();
-		this.exclusive = onWorkingMethod.isExclusive();
-		this.methodEntry = onWorkingMethod.getMethodEntry();
-		this.currentNode = onWorkingMethod.getCurrentNode();
-		this.invokeTrack = onWorkingMethod.getInvokeTrack();
+		if (onWorkingMethod != null) {
+			this.exclusive = onWorkingMethod.isExclusive();
+			this.methodEntry = onWorkingMethod.getMethodEntry();
+			this.currentNode = onWorkingMethod.getCurrentNode();
+			this.invokeTrack = onWorkingMethod.getInvokeTrack();
+		}
 		locker.unLock();
 	}
 
@@ -397,8 +399,14 @@ public class ExecutionTracer implements IExecutionTracer {
 		return getTracer(mainThreadId);
 	}
 	
+	private static boolean shutdown;
 	public static void shutdown() {
 		gLocker.lock();
+		shutdown = true;
+	}
+	
+	public static boolean isShutdown() {
+		return shutdown;
 	}
 	
 	public Trace getTrace() {
