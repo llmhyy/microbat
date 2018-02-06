@@ -3,8 +3,10 @@ package microbat.views;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
@@ -637,45 +639,59 @@ public class DebugFeedbackView extends ViewPart {
 				openChooseFeedbackDialog();
 			} 
 			else {
-				Trace trace = getTraceView().getTrace();
-				TraceNode suspiciousNode = null;
-				boolean isValidForRecommendation = isValidForRecommendation();
-				if(isValidForRecommendation){
-					String feedbackType = feedback.getFeedbackType();
-					
-					CheckingState state = new CheckingState();
-					state.recordCheckingState(currentNode, recommender, trace, Settings.interestedVariables, 
-							Settings.wrongPathNodeOrder, Settings.potentialCorrectPatterns);
-					Settings.checkingStateStack.push(state);
-					
-					if(!feedbackType.equals(UserFeedback.UNCLEAR)){
-						setCurrentNodeChecked(trace, currentNode);		
-						updateVariableCheckTime(trace, currentNode);
-					}
-					
-					collectBehavior(feedbackType);
-					
-					if(feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) && feedback.getOption() == null){
-						List<VarValue> list = currentNode.getWrongReadVars(Settings.interestedVariables);
-						if(!list.isEmpty()){
-							ChosenVariableOption option = new ChosenVariableOption(list.get(0), null);
-							feedback.setOption(option);
+				final Trace trace = getTraceView().getTrace();
+				Job job = new Job("searching for suspicious step...") {
+					@Override
+					protected IStatus run(IProgressMonitor monitor) {
+						
+						boolean isValidForRecommendation = isValidForRecommendation();
+						if(isValidForRecommendation){
+							String feedbackType = feedback.getFeedbackType();
+							
+							CheckingState state = new CheckingState();
+							state.recordCheckingState(currentNode, recommender, trace, Settings.interestedVariables, 
+									Settings.wrongPathNodeOrder, Settings.potentialCorrectPatterns);
+							Settings.checkingStateStack.push(state);
+							
+							if(!feedbackType.equals(UserFeedback.UNCLEAR)){
+								setCurrentNodeChecked(trace, currentNode);		
+								updateVariableCheckTime(trace, currentNode);
+							}
+							
+							collectBehavior(feedbackType);
+							
+							if(feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) && feedback.getOption() == null){
+								List<VarValue> list = currentNode.getWrongReadVars(Settings.interestedVariables);
+								if(!list.isEmpty()){
+									ChosenVariableOption option = new ChosenVariableOption(list.get(0), null);
+									feedback.setOption(option);
+								}
+							}
+							
+							final TraceNode suspiciousNode = recommender.recommendNode(trace, currentNode, feedback);
+							lastFeedbackType = feedbackType;
+							
+							if(recommender.getState()==DebugState.BINARY_SEARCH || recommender.getState()==DebugState.SKIP){
+								Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+								behavior.increaseSkip();
+								new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
+							}
+							
+							if(suspiciousNode != null){
+								Display.getDefault().asyncExec(new Runnable(){
+									@Override
+									public void run() {
+										jumpToNode(trace, suspiciousNode);	
+									}
+								});
+							}
 						}
+						
+						return Status.OK_STATUS;
 					}
-					
-					suspiciousNode = recommender.recommendNode(trace, currentNode, feedback);
-					lastFeedbackType = feedbackType;
-					
-					if(recommender.getState()==DebugState.BINARY_SEARCH || recommender.getState()==DebugState.SKIP){
-						Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
-						behavior.increaseSkip();
-						new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
-					}
-				}
+				};
 				
-				if(suspiciousNode != null){
-					jumpToNode(trace, suspiciousNode);	
-				}
+				job.schedule();
 				
 			}
 		}
