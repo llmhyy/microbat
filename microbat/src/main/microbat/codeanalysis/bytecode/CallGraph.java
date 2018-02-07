@@ -311,7 +311,7 @@ public class CallGraph {
 	
 	private Map<String, Method> locationMethodMap = new HashMap<>();
 
-	private Method findByteCodeMethod(BreakPoint point) {
+	public Method findByteCodeMethod(BreakPoint point) {
 		String className = point.getClassCanonicalName();
 		int lineNumber = point.getLineNumber();
 

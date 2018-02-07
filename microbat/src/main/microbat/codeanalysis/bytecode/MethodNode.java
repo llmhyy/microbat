@@ -5,18 +5,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.PUTSTATIC;
+import org.apache.bcel.generic.StoreInstruction;
+import org.apache.bcel.generic.Type;
 
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
+import sav.common.core.utils.SignatureUtils;
 
 public class MethodNode {
 	private String methodSign;
@@ -39,17 +44,93 @@ public class MethodNode {
 			return findFieldDefinition((FieldVar)var);
 		}
 		else if(var instanceof LocalVar){
-			//TODO
+			return findLocalVarDefinition((LocalVar)var);
 		}
 		else if(var instanceof ArrayElementVar){
-			//TODO
+			return findArrayElementDefinition((ArrayElementVar)var);
 		}
 		
 		return null;
 	}
 	
-	
-	public List<InstructionHandle> findFieldDefinition(FieldVar field){
+	private List<InstructionHandle> findLocalVarDefinition(LocalVar var) {
+		List<InstructionHandle> hList = new ArrayList<>();
+		
+		if(method.getLocalVariableTable()==null){
+			System.err.println("method " + methodSign + " does not have local variable table");
+		}
+		
+		ConstantPoolGen gen = new ConstantPoolGen(method.getConstantPool());
+		
+		InstructionList list = new InstructionList(method.getCode().getCode());
+		for(InstructionHandle handle: list.getInstructionHandles()){
+			Instruction instruction = handle.getInstruction();
+			if(instruction instanceof StoreInstruction){
+				StoreInstruction sIns = (StoreInstruction)instruction;
+				
+				if(method.getLocalVariableTable()!=null){
+					LocalVariable lVar = method.getLocalVariableTable().getLocalVariable(sIns.getIndex(), handle.getPosition());
+					if(lVar!=null){
+						String typeName = SignatureUtils.signatureToName(lVar.getSignature());
+						if(var.getType().equals(typeName) && lVar.getName().equals(var.getName())){
+							hList.add(handle);
+						}
+						
+					}
+				}
+				else{
+					Type t = sIns.getType(gen);
+					String typeName = SignatureUtils.signatureToName(t.getSignature());
+					if(isVagueMatch(typeName, var.getType())){
+						hList.add(handle);
+					}
+				}
+				
+			}
+		}
+		
+		return hList;
+	}
+
+
+	private boolean isVagueMatch(String typeName, String type) {
+		if(typeName.equals("int")){
+			if(type.equals("int") ||
+					type.equals("byte") ||
+					type.equals("short") ||
+					type.equals("char") ||
+					type.equals("boolean")){
+				return true;
+			}
+		}
+		
+		return typeName.equals(type);
+	}
+
+	private List<InstructionHandle> findArrayElementDefinition(ArrayElementVar var) {
+		List<InstructionHandle> hList = new ArrayList<>();
+		
+		ConstantPoolGen gen = new ConstantPoolGen(method.getConstantPool());
+		
+		InstructionList list = new InstructionList(method.getCode().getCode());
+		for(InstructionHandle handle: list.getInstructionHandles()){
+			Instruction instruction = handle.getInstruction();
+			if(instruction instanceof ArrayInstruction){
+				ArrayInstruction aIns = (ArrayInstruction)instruction;
+				Type type = aIns.getType(gen);
+				if(var.getType().equals(type)){
+					if(instruction.getName().contains("STORE")){
+						hList.add(handle);
+					}
+				}
+				
+			}
+		}
+		
+		return hList;
+	}
+
+	private List<InstructionHandle> findFieldDefinition(FieldVar field){
 		List<InstructionHandle> hList = new ArrayList<>();
 		
 		ConstantPoolGen gen = new ConstantPoolGen(method.getConstantPool());
