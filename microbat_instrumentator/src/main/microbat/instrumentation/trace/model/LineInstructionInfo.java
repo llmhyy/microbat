@@ -21,16 +21,22 @@ import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Type;
 
+import microbat.instrumentation.trace.InstrConstants;
+
 public class LineInstructionInfo {
-	private int line;
-	private InstructionHandle lineNumberInsn;
-	private List<InstructionHandle> lineInsns;
-	private LocalVariableTable localVarTable;
-	private ConstantPoolGen constPool;
-	private LineNumberTable lineNumberTable;
-	private List<RWInstructionInfo> rwInsructionInfo;
-	private List<InstructionHandle> invokeInsns;
-	private List<InstructionHandle> returnInsns;
+	protected int line;
+	protected InstructionHandle lineNumberInsn;
+	protected Iterator<InstructionHandle> lineInsns;
+	protected LocalVariableTable localVarTable;
+	protected ConstantPoolGen constPool;
+	protected LineNumberTable lineNumberTable;
+	protected List<RWInstructionInfo> rwInsructionInfo;
+	protected List<InstructionHandle> invokeInsns;
+	protected List<InstructionHandle> returnInsns;
+	
+	LineInstructionInfo() {
+		
+	}
 	
 	public LineInstructionInfo(String locId, LocalVariableTable localVariableTable, ConstantPoolGen constPool, LineNumberTable lineNumberTable,
 			LineNumberGen lineGen, InstructionList insnList) {
@@ -49,9 +55,10 @@ public class LineInstructionInfo {
 		return rwInsructionInfo;
 	}
 
-	private List<RWInstructionInfo> extractRWInstructions(String locId) {
-		List<RWInstructionInfo> rwInsns = new ArrayList<>(Math.min(10, lineInsns.size()));
-		for (InstructionHandle insnHandler : lineInsns) {
+	protected List<RWInstructionInfo> extractRWInstructions(String locId) {
+		List<RWInstructionInfo> rwInsns = new ArrayList<>();
+		while (lineInsns.hasNext()) {
+			InstructionHandle insnHandler = lineInsns.next();
 			Instruction insn = insnHandler.getInstruction();
 			if (insn instanceof FieldInstruction) {
 				FieldInstruction fieldInsn = (FieldInstruction) insn;
@@ -76,27 +83,41 @@ public class LineInstructionInfo {
 				rwInsns.add(info);
 			} else if (insn instanceof LocalVariableInstruction) {
 				LocalVariableInstruction localVarInsn = (LocalVariableInstruction) insn;
-				LocalVariable localVar = localVarTable.getLocalVariable(localVarInsn.getIndex(),
-						insnHandler.getPosition() + insn.getLength());
-				if (localVar == null) {
-					System.out.println(String.format("Warning: Cannot find localVar with (index = %s, pc = %s) at %s",
-							localVarInsn.getIndex(), insnHandler.getPosition(), locId));
-					continue;
+				LocalVariable localVar = null;
+				if (localVarTable != null) {
+					localVar = localVarTable.getLocalVariable(localVarInsn.getIndex(),
+							insnHandler.getPosition() + insn.getLength());
 				}
-				LocalVarInstructionInfo info = new LocalVarInstructionInfo(insnHandler, line, localVar.getName(), localVar.getSignature());
-				info.setIsStore(existIn(((LocalVariableInstruction) insn).getCanonicalTag(), Const.FSTORE, Const.IINC, Const.DSTORE, Const.ASTORE,
-						Const.ISTORE, Const.LSTORE));
-				Type type = localVarInsn.getType(constPool);
-				info.setVarStackSize(type.getSize());
-				info.setVarScopeStartLine(lineNumberTable.getSourceLine(localVar.getStartPC()));
-				info.setVarScopeEndLine(lineNumberTable.getSourceLine(localVar.getStartPC() + localVar.getLength()));
-				rwInsns.add(info);
+				if (localVar == null) {
+//					System.out.println(String.format("Warning: Cannot find localVar with (index = %s, pc = %s) at %s",
+//							localVarInsn.getIndex(), insnHandler.getPosition(), locId));
+					Type type = localVarInsn.getType(constPool);
+					String localVarName = String.format("%s:%s", locId, insnHandler.getPosition());
+					String localVarTypeSign = type.getSignature();
+					LocalVarInstructionInfo info = new LocalVarInstructionInfo(insnHandler, line, localVarName, localVarTypeSign);
+					info.setIsStore(existIn(((LocalVariableInstruction) insn).getCanonicalTag(), Const.FSTORE, Const.IINC, Const.DSTORE, Const.ASTORE,
+							Const.ISTORE, Const.LSTORE));
+					info.setVarStackSize(type.getSize());
+					info.setVarScopeStartLine(InstrConstants.UNKNOWN_LINE);
+					info.setVarScopeEndLine(InstrConstants.UNKNOWN_LINE);
+					rwInsns.add(info);
+					continue;
+				} else {
+					LocalVarInstructionInfo info = new LocalVarInstructionInfo(insnHandler, line, localVar.getName(), localVar.getSignature());
+					info.setIsStore(existIn(((LocalVariableInstruction) insn).getCanonicalTag(), Const.FSTORE, Const.IINC, Const.DSTORE, Const.ASTORE,
+							Const.ISTORE, Const.LSTORE));
+					Type type = localVarInsn.getType(constPool);
+					info.setVarStackSize(type.getSize());
+					info.setVarScopeStartLine(lineNumberTable.getSourceLine(localVar.getStartPC()));
+					info.setVarScopeEndLine(lineNumberTable.getSourceLine(localVar.getStartPC() + localVar.getLength()));
+					rwInsns.add(info);
+				}
 			}
 		}
 		return rwInsns;
 	}
 	
-	private static boolean existIn(short opCode, short... checkOpCodes) {
+	protected static boolean existIn(short opCode, short... checkOpCodes) {
 		for (short checkOpCode : checkOpCodes) {
 			if (opCode == checkOpCode) {
 				return true;
@@ -109,7 +130,7 @@ public class LineInstructionInfo {
 		return invokeInsns;
 	}
 	
-	private static List<InstructionHandle> findCorrespondingInstructions(InstructionList list, LineNumberTable lineTable,
+	private static Iterator<InstructionHandle> findCorrespondingInstructions(InstructionList list, LineNumberTable lineTable,
 			int lineNumber) {
 		List<InstructionHandle> correspondingInstructions = new ArrayList<>();
 		Iterator<?> iter = list.iterator();
@@ -120,12 +141,13 @@ public class LineInstructionInfo {
 				correspondingInstructions.add(insHandle);
 			}
 		}
-		return correspondingInstructions;
+		return correspondingInstructions.iterator();
 	}
 	
-	private static List<InstructionHandle> extractInvokeInstructions(List<InstructionHandle> insnList) {
+	protected static List<InstructionHandle> extractInvokeInstructions(Iterator<InstructionHandle> it) {
 		List<InstructionHandle> invokeInsns = new ArrayList<>(3);
-		for (InstructionHandle insnHandler : insnList) {
+		while(it.hasNext()) {
+			InstructionHandle insnHandler = it.next();
 			Instruction insn = insnHandler.getInstruction();
 			if (insn instanceof InvokeInstruction) {
 				invokeInsns.add(insnHandler);
@@ -134,9 +156,10 @@ public class LineInstructionInfo {
 		return invokeInsns;
 	}
 	
-	private List<InstructionHandle> extractReturnInstructions(List<InstructionHandle> insnList) {
+	protected List<InstructionHandle> extractReturnInstructions(Iterator<InstructionHandle> insnList) {
 		List<InstructionHandle> returnInsns = new ArrayList<>(1);
-		for (InstructionHandle insnHandler : insnList) {
+		while (insnList.hasNext()) {
+			InstructionHandle insnHandler = insnList.next();
 			Instruction insn = insnHandler.getInstruction();
 			if ((insn instanceof ReturnInstruction)) {
 				returnInsns.add(insnHandler);

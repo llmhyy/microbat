@@ -11,6 +11,16 @@ public class Agent {
 	public void startup() {
 		/* init filter */
 		FilterChecker.setup();
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				try {
+					shutdown();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 
 	public void shutdown() throws Exception {

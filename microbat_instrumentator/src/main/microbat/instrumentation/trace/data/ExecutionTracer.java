@@ -39,7 +39,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	private MethodCallStack methodCallStack;
 	private Locker locker = new Locker();
 
-	ExecutionTracer() {
+	public ExecutionTracer() {
 		methodCallStack = new MethodCallStack();
 		AppJavaClassPath appJavaClassPath = new AppJavaClassPath();
 		trace = new Trace(appJavaClassPath);
@@ -81,7 +81,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void enterMethod(String className, String methodName, int methodStartLine) {
 		locker.lock();
 		exclusive = exclusive || FilterChecker.isExclusive(className, methodName);
-		methodEntry = new BreakPoint(className, null, methodName, methodStartLine);
+		// TODO-INSTR: declaringCompilationUnitName would not be correct here.
+		methodEntry = new BreakPoint(className, className, methodName, methodStartLine);
 		currentNode = null;
 		invokeTrack.setBkp(methodEntry);
 		locker.unLock();
@@ -126,6 +127,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	@Override
 	public void _hitReturn(Object returnObj, String returnGeneralType, int line) {
 		locker.lock();
+		_hitLine(line);
 		Variable returnVar = new VirtualVar(invokeTrack.getInvokeNodeId(), returnGeneralType);
 		VarValue returnVal = appendVarValue(returnObj, returnVar, null);
 		invokeTrack.setReturnValue(returnVal);
@@ -135,6 +137,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	@Override
 	public void _hitVoidReturn(int line) {
+		_hitLine(line);
 		exitMethod(line);
 	}
 
@@ -149,9 +152,10 @@ public class ExecutionTracer implements IExecutionTracer {
 			return;
 		}
 		/* TODO LLT: in Breakpoint, we need to set methodName or signature? */
-		BreakPoint bkp = new BreakPoint(methodEntry.getClassCanonicalName(), null, methodEntry.getMethodSign(), line);
+		BreakPoint bkp = new BreakPoint(methodEntry.getClassCanonicalName(),
+				methodEntry.getDeclaringCompilationUnitName(), methodEntry.getMethodSign(), line);
 		int order = trace.size() + 1;
-		currentNode = new TraceNode(bkp, null, order, trace);
+		currentNode = new TraceNode(bkp, null, order, trace); // leave programState empty.
 		trace.addTraceNode(currentNode);
 		locker.unLock();
 	}

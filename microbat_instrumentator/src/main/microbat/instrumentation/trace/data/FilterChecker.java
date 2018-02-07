@@ -6,7 +6,7 @@ import java.util.List;
 import microbat.instrumentation.Excludes;
 
 public class FilterChecker implements IFilterChecker {
-	private static final IFilterChecker checker = new FilterChecker();
+	private static final IFilterChecker checker = new FilterCheckerMock();
 	private static List<String> excludeList;
 	
 	public static boolean isExclusive(String className, String methodName) {
