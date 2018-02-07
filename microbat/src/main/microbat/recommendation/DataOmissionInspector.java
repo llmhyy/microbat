@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.generic.InstructionHandle;
 
 import microbat.codeanalysis.bytecode.MethodNode;
@@ -24,27 +25,32 @@ import soot.options.Options;
  * @author Yun Lin
  *
  */
-public class AdvancedDetailInspector extends DetailInspector {
+public class DataOmissionInspector extends DetailInspector {
 
 	@Override
 	public TraceNode recommendDetailNode(TraceNode currentNode, Trace trace) {
-		analysis();
-		return null;
+		List<TraceNode> controlDominators = analysis();
+		if(controlDominators.isEmpty()){
+			return null;			
+		}
+		else{
+			return controlDominators.get(0);
+		}
 	}
 
 	@Override
 	public DetailInspector clone() {
-		DetailInspector inspector = new AdvancedDetailInspector();
+		DetailInspector inspector = new DataOmissionInspector();
 		if(this.inspectingRange != null){
 			inspector.setInspectingRange(this.inspectingRange.clone());			
 		}
 		return inspector;
 	}
 	
-	public void analysis(){
+	public List<TraceNode> analysis(){
 		
 		if(this.inspectingRange == null){
-			return;
+			return new ArrayList<>();
 		}
 		
 		TraceNode start = this.inspectingRange.startNode;
@@ -57,11 +63,63 @@ public class AdvancedDetailInspector extends DetailInspector {
 		
 		Trace trace = start.getTrace();
 		SeedControlDominatorFinder controlFinder = new SeedControlDominatorFinder();
-		List<BreakPoint> controlDominators = controlFinder.findSeedControlDominators(trace.allLocations(), seeds);
-		System.currentTimeMillis();
-		System.out.println("call graph is built!");
+		List<BreakPoint> controlPoints = controlFinder.findSeedControlDominators(trace.allLocations(), seeds);
+		
+		List<TraceNode> controlDominators = new ArrayList<>();
+		for(int i=end.getOrder(); i>=1; i--){
+			TraceNode node = trace.getTraceNode(i);
+			if(controlPoints.contains(node.getBreakPoint())){
+				if(!contains(node.getControlDominatees(), controlDominators)){
+					if(!isExecutedPotentialSeeds(node, seeds)){
+						controlDominators.add(node);						
+					}
+				}
+			}
+		}
+		
+		return controlDominators;
 	}
 	
+	private boolean isExecutedPotentialSeeds(TraceNode controlDominator,
+			Map<MethodNode, List<InstructionHandle>> seeds) {
+		
+		for(MethodNode method: seeds.keySet()){
+			if(method.getMethodSign().equals(controlDominator.getMethodSign())){
+				LineNumberTable table = method.getMethod().getLineNumberTable();
+				List<InstructionHandle> sites = seeds.get(method);
+				for(InstructionHandle site: sites){
+					int siteLine = table.getSourceLine(site.getPosition());
+					
+					if(isExecute(siteLine, controlDominator.getControlDominatees())){
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+
+	private boolean isExecute(int siteLine, List<TraceNode> controlDominatees) {
+		for(TraceNode node: controlDominatees){
+			if(node.getLineNumber()==siteLine){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean contains(List<TraceNode> controlDominatees, List<TraceNode> controlDominators) {
+		for(TraceNode controlDominatee: controlDominatees){
+			for(TraceNode controlDominator: controlDominators){
+				if(controlDominatee.equals(controlDominator)){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	private VarValue findSpecificWrongVar(TraceNode start, TraceNode end){
 		VarValue writtenVar = start.getWrittenVariables().get(0);
 		List<VarValue> wrongReadVarList = end.getWrongReadVars(Settings.interestedVariables);
