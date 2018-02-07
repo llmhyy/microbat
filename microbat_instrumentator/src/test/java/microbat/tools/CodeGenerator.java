@@ -56,7 +56,7 @@ public class CodeGenerator {
 					className.replace(".", "/"),
 					method.getName(),
 					signature,
-					method.getParameters().length + 1));
+					method.getParameterTypes().length + 1));
 		}
 	}
 	

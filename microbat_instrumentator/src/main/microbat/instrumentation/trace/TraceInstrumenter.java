@@ -63,6 +63,8 @@ import microbat.instrumentation.trace.model.FieldInstructionInfo;
 import microbat.instrumentation.trace.model.LineInstructionInfo;
 import microbat.instrumentation.trace.model.LocalVarInstructionInfo;
 import microbat.instrumentation.trace.model.RWInstructionInfo;
+import microbat.instrumentation.trace.model.UnknownLineInstructionInfo;
+import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
 
 public class TraceInstrumenter {
@@ -70,7 +72,7 @@ public class TraceInstrumenter {
 	private static final String TEMP_VAR_NAME = "$tempVar"; // local var
 	private BasicTypeSupporter basicTypeSupporter = new BasicTypeSupporter();
 	
-	protected byte[] instrument(String className, byte[] classfileBuffer) throws Exception {
+	public byte[] instrument(String className, byte[] classfileBuffer) throws Exception {
 		ClassParser cp = new ClassParser(new java.io.ByteArrayInputStream(classfileBuffer), className);
 		JavaClass jc = cp.parse();
 		// First, make sure we have to instrument this class:
@@ -109,7 +111,9 @@ public class TraceInstrumenter {
 //		dumpClass(newJC);
 		if (newJC != null) {
 			byte[] data = newJC.getBytes();
-//			store(data, className);
+//			if (className.endsWith("Random")) {
+//				store(data, className);
+//			}
 			return data;
 		}
 		return null;
@@ -118,6 +122,7 @@ public class TraceInstrumenter {
 	private void store(byte[] data, String className) {
 		String filePath = "E:/lyly/Projects/inst_src/test/" + className.substring(className.lastIndexOf(".") + 1) + ".class";
 		System.out.println("dump instrumented class to file: " + filePath);
+		FileUtils.getFileCreateIfNotExist(filePath);
 		FileOutputStream out = null;
 		try {
 			out = new FileOutputStream(filePath);
@@ -165,12 +170,19 @@ public class TraceInstrumenter {
 			}
 		}
 		InstructionHandle startInsn = insnList.getStart();
-		if (startInsn == null || visitedLines.isEmpty()) {
+		if (startInsn == null) {
 			// empty method
 			return false;
 		}
+		/* class does not include line number */
+		if (visitedLines.isEmpty()) {
+			String loc = classGen.getClassName() + "." + method.getName();
+			lineInsnInfos.add(new UnknownLineInstructionInfo(loc, constPool, insnList));
+		}
+		int startLine = lineNumberTable != null ? lineNumberTable.getSourceLine(startInsn.getPosition())
+				: InstrConstants.UNKNOWN_LINE;
 		LocalVariableGen tracerVar = injectCodeInitTracer(methodGen, constPool,
-				lineNumberTable.getSourceLine(startInsn.getPosition()));
+				startLine);
 		
 		for (LineInstructionInfo lineInfo : lineInsnInfos) {
 			/* instrument RW instructions */

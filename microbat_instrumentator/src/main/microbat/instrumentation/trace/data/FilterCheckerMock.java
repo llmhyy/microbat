@@ -7,9 +7,13 @@ public class FilterCheckerMock implements IFilterChecker {
 	private List<String> includes = Arrays.asList(
 			"microbat/instrumentation/trace/testdata",
 			"java/util/Random",
-			"java/util/List",
-			"java/util/ArrayList",
-			"java/util/Arrays");
+//			"java/util/List",
+//			"java/util/ArrayList",
+			"org/apache/commons/lang/ArrayUtils",
+//			"java/util/Date",
+			"java/util/Arrays"
+//			"java/lang/String"
+			);
 	
 	@Override
 	public void startup() {
@@ -17,13 +21,12 @@ public class FilterCheckerMock implements IFilterChecker {
 
 	@Override
 	public boolean checkTransformable(String className) {
-		return !checkExclusive(className, null);
-//		for (String include : includes) {
-//			if (className.startsWith(include)) {
-//				return true;
-//			}
-//		}
-//		return false;
+		for (String include : includes) {
+			if (className.startsWith(include)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
