@@ -56,10 +56,24 @@ public class CallGraph {
 	}
 	
 	private boolean isValidClass(String className){
-		String[] excludePrefix = Executor.getDefaultLibExcludes();
+		for(String include: Executor.libIncludes){
+			String includeStr = include.replace("\\", "");
+			includeStr = includeStr.replace("*", "");
+			
+			if(className.contains(includeStr)){
+				return true;
+			}
+		}
+		
+		String[] excludePrefix = Executor.getLibExcludes();
+		
 		for(String prefix: excludePrefix){
-			String pref = prefix.replace("*", "");
-			if(className.contains(pref) && !pref.contains("util")){
+			String pref = prefix;
+			if(prefix.contains("*")){
+				pref = prefix.replace("*", "");
+			}
+			
+			if(className.contains(pref)){
 				return false;
 			}
 		}
