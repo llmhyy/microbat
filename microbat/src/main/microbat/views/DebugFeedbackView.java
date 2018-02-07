@@ -584,11 +584,19 @@ public class DebugFeedbackView extends ViewPart {
 			box.open();
 		}
 		
-		private void openReconfirmDialog(String message){
-			Status status = new Status(IStatus.ERROR, "My Plug-in ID", 0,
-		            "Conflict Choice", null);
-			ErrorDialog.openError(PlatformUI.getWorkbench()
-					.getDisplay().getActiveShell(), "Conflict Choice", message, status);
+		private void openReconfirmDialog(final String message){
+			
+			Display.getDefault().asyncExec(new Runnable() {
+				
+				@Override
+				public void run() {
+					Status status = new Status(IStatus.ERROR, "My Plug-in ID", 0,
+				            "Conflict Choice", null);
+					ErrorDialog.openError(PlatformUI.getWorkbench()
+							.getDisplay().getActiveShell(), "Conflict Choice", message, status);
+				}
+			});
+			
 		}
 		
 		private boolean isValidForRecommendation(){
@@ -616,14 +624,14 @@ public class DebugFeedbackView extends ViewPart {
 //				openReconfirmDialog(message);
 //				return false;
 //			}
-			else if(((existWrittenVariable && writtenVarCorrectness==TraceNode.WRITTEN_VARS_INCORRECT) ||
-					(existReadVariable && readVarCorrectness==TraceNode.READ_VARS_INCORRECT))
-					&& feedbackType.equals(UserFeedback.CORRECT)){
-				String message = "Some variables are marked incorrect, but your feedback is marked correct (\"Yes\" choice), "
-						+ "are you really sure?";
-				openReconfirmDialog(message);
-				return false;
-			}
+//			else if(((existWrittenVariable && writtenVarCorrectness==TraceNode.WRITTEN_VARS_INCORRECT) ||
+//					(existReadVariable && readVarCorrectness==TraceNode.READ_VARS_INCORRECT))
+//					&& feedbackType.equals(UserFeedback.CORRECT)){
+//				String message = "Some variables are marked incorrect, but your feedback is marked correct (\"Yes\" choice), "
+//						+ "are you really sure?";
+//				openReconfirmDialog(message);
+//				return false;
+//			}
 			else if(lastFeedbackType != null && lastFeedbackType.equals(UserFeedback.WRONG_PATH) && feedbackType.equals(UserFeedback.CORRECT)){
 				String message = "The lastest node has wrong path, but you now tell me that no variable "
 						+ "in this conditional statement is wrong, are you really sure?";
