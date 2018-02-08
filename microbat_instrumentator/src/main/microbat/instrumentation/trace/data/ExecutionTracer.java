@@ -37,9 +37,10 @@ public class ExecutionTracer implements IExecutionTracer {
 	private boolean exclusive; //current method is in exclude list.
 	private InvokingTrack invokeTrack = new EmptyInvokingTrack();
 	private MethodCallStack methodCallStack;
-	private Locker locker = new Locker();
+	private Locker locker;
 
-	public ExecutionTracer() {
+	public ExecutionTracer(long threadId) {
+		locker = new Locker(threadId);
 		methodCallStack = new MethodCallStack();
 		AppJavaClassPath appJavaClassPath = new AppJavaClassPath();
 		trace = new Trace(appJavaClassPath);
@@ -363,16 +364,16 @@ public class ExecutionTracer implements IExecutionTracer {
 		return value;
 	}
 	
-	public void tryTracer(Object refValue, Object fieldValue) {
-		// TODO LLT: do nothing, JUST FOR TEST. TO REMOVE.
-	}
-
-	private static final Locker gLocker = new Locker();
+	private static final Locker gLocker = new Locker(-1);
+	private static LockedThreads lockedThreads = new LockedThreads();
 	public synchronized static IExecutionTracer _getTracer(String className, String methodName, int methodStartLine) {
 		if (gLocker.lock()) {
 			return EmptyExecutionTracer.getInstance();
 		}
 		long threadId = Thread.currentThread().getId();
+		if (lockedThreads.contains(threadId)) {
+			return EmptyExecutionTracer.getInstance();
+		}
 		if (mainThreadId < 0) {
 			mainThreadId = threadId;
 		}
@@ -381,6 +382,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			gLocker.unLock();
 			return EmptyExecutionTracer.getInstance();
 		}
+		System.out.println(className);
 		tracer.enterMethod(className.replace("/", "."), methodName, methodStartLine);
 		gLocker.unLock();
 		return tracer;
@@ -389,7 +391,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	private static ExecutionTracer getTracer(long threadId) {
 		ExecutionTracer store = rtStores.get(threadId);
 		if (store == null) {
-			store = new ExecutionTracer();
+			store = new ExecutionTracer(threadId);
 			rtStores.put(threadId, store);
 		}
 		return store;
@@ -419,12 +421,18 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	private static class Locker {
 		boolean tracing;
+		long threadId;
 		
+		public Locker(long threadId) {
+			this.threadId = threadId;
+		}
+
 		/**
 		 * return true if already lock
 		 * false if not locked
 		 * */
 		public boolean lock() {
+			lockedThreads.add(threadId);
 			if (tracing) {
 				return true;
 			}
@@ -434,6 +442,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		
 		public void unLock() {
 			tracing = false;
+			lockedThreads.remove(threadId);
 		}
 		
 		public boolean isLock() {

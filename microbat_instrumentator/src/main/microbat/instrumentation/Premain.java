@@ -6,24 +6,26 @@ import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.jar.JarFile;
 
 import microbat.instrumentation.trace.TraceTransformer;
 
 public class Premain {
-
+	private static final String AGENT_JAR_FOLDER = "E:/lyly/Projects/microbat/master/microbat_instrumentator/src/test/resources/";
+	private static final String AGENT_JAR = AGENT_JAR_FOLDER + "microbat.instrumentator.jar";
+	private static final String AGENT_JAR_TEST = AGENT_JAR_FOLDER +  "microbat_instrumentator.jar";
+	
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
-//		logLoadedClasses(inst);
-		installBootstrap(Arrays.asList("E:/lyly/Projects/microbat/master/microbat_instrumentator/src/test/resources/microbat.instrumentator.jar"), inst);
-//		installBootstrap(Arrays.asList("E:/lyly/Projects/microbat/master/microbat_instrumentator/src/test/resources/testcall.jar"), inst);
+		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
+		installBootstrap(Arrays.asList(AGENT_JAR), inst);
 		
 		System.out.println("start instrumentation...");
 		final Agent agent = new Agent();
 		agent.startup();
         inst.addTransformer(new TraceTransformer(), true);
-        /* TODO list all retransform classes. */
-        inst.retransformClasses(Random.class);
+        if (retransformableClasses.length > 0) {
+        	inst.retransformClasses(retransformableClasses);
+        }
         System.out.println("after retransform");
     }
 
@@ -40,14 +42,19 @@ public class Premain {
 		}		
 	}
 	
-	private static void logLoadedClasses(Instrumentation inst) {
-		System.out.println("List all loaded classes....");
-		Class[] classes = inst.getAllLoadedClasses();
-		List<Class> candidates = new ArrayList<Class>();
-		for (Class c : classes) {
+	private static Class<?>[] getRetransformableClasses(Instrumentation inst) {
+		System.out.println("Collect retransformable classes....");
+		List<Class<?>> candidates = new ArrayList<Class<?>>();
+		Class<?>[] classes = inst.getAllLoadedClasses();
+		for (Class<?> c : classes) {
 			if (inst.isModifiableClass(c) && inst.isRetransformClassesSupported()) {
-				System.out.println(c.getName());
+				if (!Excludes.isExcluded(c.getName())) {
+					candidates.add(c);
+					System.out.println(c.getName());
+				}
 			}
 		}
+		candidates.add(ArrayList.class);
+		return candidates.toArray(new Class<?>[candidates.size()]);
 	}
 }

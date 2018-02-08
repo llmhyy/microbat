@@ -8,7 +8,7 @@ public class FilterCheckerMock implements IFilterChecker {
 			"microbat/instrumentation/trace/testdata",
 			"java/util/Random",
 //			"java/util/List",
-//			"java/util/ArrayList",
+			"java/util/ArrayList",
 			"org/apache/commons/lang/ArrayUtils",
 //			"java/util/Date",
 			"java/util/Arrays"
@@ -31,7 +31,10 @@ public class FilterCheckerMock implements IFilterChecker {
 
 	@Override
 	public boolean checkExclusive(String className, String methodName) {
-		return !className.startsWith("microbat/instrumentation/trace/testdata");
+		if ("java.util.ArrayList".equals(className)) {
+			return false;
+		}
+		return !className.startsWith("microbat.instrumentation.trace.testdata");
 	}
 
 }
