@@ -38,12 +38,12 @@ public class CallGraph {
 		String methodSign = location.getMethodSign();
 		if (methodSign != null) {
 
-			MethodNode node = getMethodMaps().get(methodSign);
+			MethodNode node = methodMaps.get(methodSign);
 			if (node == null) {
 				Method method = findByteCodeMethod(location);
 				if (method != null) {
 					node = new MethodNode(methodSign, method);
-					getMethodMaps().put(methodSign, node);
+					methodMaps.put(methodSign, node);
 
 					appendCallGraphRootAt(node);
 				}
@@ -135,16 +135,16 @@ public class CallGraph {
 
 					for (MethodAndClass mc: mcList) {
 						String calleeSignature = mc.clazz + "#" + mc.method.getName() + mc.method.getSignature();
-
-						if (!methodMaps.containsKey(calleeSignature)) {
-							MethodNode calleeNode = new MethodNode(calleeSignature, mc.method);
+						MethodNode calleeNode = methodMaps.get(calleeSignature);
+						if (calleeNode==null) {
+							calleeNode = new MethodNode(calleeSignature, mc.method);
 							methodMaps.put(calleeSignature, calleeNode);
-
-							callerNode.addCallee(handle, calleeNode);
-							calleeNode.addCaller(callerNode, handle);
-
 							appendCallGraphRootAt(calleeNode);
 						}
+						
+						callerNode.addCallee(handle, calleeNode);
+						calleeNode.addCaller(callerNode, handle);
+						
 					}
 
 				}
