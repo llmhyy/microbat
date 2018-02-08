@@ -71,7 +71,7 @@ public class DataOmissionInspector extends DetailInspector {
 			if(controlPoints.contains(node.getBreakPoint())){
 				List<TraceNode> allControlDominatees = node.findAllControlDominatees();
 				if(!contains(allControlDominatees, controlDominators)){
-					if(!isExecutedPotentialSeeds(node, seeds)){
+					if(!isExecutedPotentialSeeds(node, seeds, end.getOrder())){
 						controlDominators.add(node);						
 					}
 				}
@@ -82,7 +82,7 @@ public class DataOmissionInspector extends DetailInspector {
 	}
 	
 	private boolean isExecutedPotentialSeeds(TraceNode controlDominator,
-			Map<MethodNode, List<InstructionHandle>> seeds) {
+			Map<MethodNode, List<InstructionHandle>> seeds, int endOrder) {
 		
 		for(MethodNode method: seeds.keySet()){
 			if(method.getMethodSign().equals(controlDominator.getMethodSign())){
@@ -91,7 +91,7 @@ public class DataOmissionInspector extends DetailInspector {
 				for(InstructionHandle site: sites){
 					int siteLine = table.getSourceLine(site.getPosition());
 					
-					if(isExecute(siteLine, controlDominator.getControlDominatees())){
+					if(isExecute(siteLine, controlDominator.getControlDominatees(), endOrder)){
 						return true;
 					}
 				}
@@ -101,9 +101,9 @@ public class DataOmissionInspector extends DetailInspector {
 		return false;
 	}
 
-	private boolean isExecute(int siteLine, List<TraceNode> controlDominatees) {
+	private boolean isExecute(int siteLine, List<TraceNode> controlDominatees, int endOrder) {
 		for(TraceNode node: controlDominatees){
-			if(node.getLineNumber()==siteLine){
+			if(node.getLineNumber()==siteLine && node.getOrder()<=endOrder){
 				return true;
 			}
 		}
