@@ -118,8 +118,9 @@ public class MethodNode {
 			if(instruction instanceof ArrayInstruction){
 				ArrayInstruction aIns = (ArrayInstruction)instruction;
 				Type type = aIns.getType(gen);
-				if(var.getType().equals(type)){
-					if(instruction.getName().contains("STORE")){
+				String typeName = SignatureUtils.signatureToName(type.getSignature());
+				if(var.getType().equals(typeName)){
+					if(instruction.getName().contains("store")){
 						hList.add(handle);
 					}
 				}
