@@ -611,11 +611,11 @@ public class DebugFeedbackView extends ViewPart {
 				return true;
 			}
 			
-			if(existWrittenVariable && existReadVariable && writtenVarCorrectness==TraceNode.WRITTEN_VARS_INCORRECT
-					&& readVarCorrectness==TraceNode.READ_VARS_CORRECT){
-				openBugFoundDialog();
-				return false;
-			}
+//			if(existWrittenVariable && existReadVariable && writtenVarCorrectness==TraceNode.WRITTEN_VARS_INCORRECT
+//					&& readVarCorrectness==TraceNode.READ_VARS_CORRECT){
+//				openBugFoundDialog();
+//				return false;
+//			}
 //			else if(existWrittenVariable && existReadVariable && writtenVarCorrectness==TraceNode.WRITTEN_VARS_CORRECT 
 //					&& readVarCorrectness==TraceNode.READ_VARS_INCORRECT){
 //				String message = "It seems that this step is correct and it takes "
