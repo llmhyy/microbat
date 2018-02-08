@@ -1926,7 +1926,13 @@ public class ProgramExecutor extends Executor {
 					} else if (var instanceof ArrayElementVar) {
 						String index = var.getSimpleName();
 						ExpressionValue indexValue = retriveExpression(frame, index, node.getBreakPoint());
-						String indexValueString = indexValue.value.toString();
+						String indexValueString = null;
+						if(indexValue.value!=null){
+							indexValueString = indexValue.value.toString();
+						}
+						else{
+							indexValueString = "unknown";
+						}
 						String varID = Variable.concanateArrayElementVarID(String.valueOf(objRef.uniqueID()),
 								indexValueString);
 						String definingNodeOrder = this.trace.findDefiningNodeOrder(accessType, node, 
@@ -1939,7 +1945,6 @@ public class ProgramExecutor extends Executor {
 				String content = (value == null) ? null : value.toString();
 				varValue = new PrimitiveValue(content, false, var);
 			}
-
 			return varValue;
 		} catch (Exception e) {
 			e.printStackTrace();
