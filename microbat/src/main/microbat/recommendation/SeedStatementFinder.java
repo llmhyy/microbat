@@ -68,13 +68,11 @@ public class SeedStatementFinder {
 		Set<MethodNode> executedAppMethods = new HashSet<>();
 		
 		long t1 = System.currentTimeMillis();
-		if(graph==null){
-			graph = new CallGraph(appClassPath);
-			
-			for(BreakPoint location: collectedBreakPoints){
-				MethodNode node = graph.findOrCreateMethodNode(location);
-				executedAppMethods.add(node);
-			}
+		graph = new CallGraph(appClassPath);
+		
+		for(BreakPoint location: collectedBreakPoints){
+			MethodNode node = graph.findOrCreateMethodNode(location);
+			executedAppMethods.add(node);
 		}
 		
 		long t2 = System.currentTimeMillis();
@@ -84,6 +82,7 @@ public class SeedStatementFinder {
 		Map<MethodNode, List<InstructionHandle>> allSeeds = 
 				findAllSeedMethods(seeds, executedAppMethods, specificVar.getVariable());
 		
+		System.currentTimeMillis();
 		return allSeeds;
 	}
 
