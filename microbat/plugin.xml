@@ -124,6 +124,11 @@
             id="microbat.command.StoreTrace"
             name="Store Trace">
       </command>
+      <command
+            defaultHandler="microbat.handler.TraceRestoreHandler"
+            id="microbat.command.RestoreTrace"
+            name="Restore Trace">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -184,6 +189,11 @@
             <command
                   commandId="microbat.command.StoreTrace"
                   label="Store Trace"
+                  style="push">
+            </command>
+            <command
+                  commandId="microbat.command.RestoreTrace"
+                  label="Restore Trace"
                   style="push">
             </command>
          </menu>
