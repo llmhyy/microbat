@@ -20,9 +20,9 @@ public class FilterCheckerMock implements IFilterChecker {
 	}
 
 	@Override
-	public boolean checkTransformable(String className) {
+	public boolean checkTransformable(String classFName) {
 		for (String include : includes) {
-			if (className.startsWith(include)) {
+			if (classFName.startsWith(include)) {
 				return true;
 			}
 		}

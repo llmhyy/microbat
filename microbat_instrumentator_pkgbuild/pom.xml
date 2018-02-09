@@ -53,9 +53,9 @@
 				<configuration>
 					<shadedArtifactAttached>true</shadedArtifactAttached>
 					<!-- <shadedClassifierName>junit.runner</shadedClassifierName> -->
-					<finalName>microbat.instrumentor.jar</finalName>
+					<finalName>microbat.instrumentator.jar</finalName>
 					<minimizeJar>false</minimizeJar>
-					<outputFile>${microbat.instr.dir}/src/test/resources/microbat.instrumentator.jar</outputFile>
+					<outputFile>${microbat.instr.dir}/src/test/resources/microbat_rt.jar</outputFile>
 					<!-- <outputFile>E:/lyly/workspace/microbat_instrumentation/TestCall/libs/microbat.instrumentator.jar</outputFile> -->
 					<filters>
 						<filter>

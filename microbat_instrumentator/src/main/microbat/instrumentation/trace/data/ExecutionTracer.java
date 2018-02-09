@@ -364,8 +364,13 @@ public class ExecutionTracer implements IExecutionTracer {
 		return value;
 	}
 	
-	private static final Locker gLocker = new Locker(-1);
 	private static LockedThreads lockedThreads = new LockedThreads();
+	private static final Locker gLocker = new Locker();
+	
+	public static void _startTracing() {
+		gLocker.unLock();
+	}
+	
 	public synchronized static IExecutionTracer _getTracer(String className, String methodName, int methodStartLine) {
 		if (gLocker.lock()) {
 			return EmptyExecutionTracer.getInstance();
@@ -422,6 +427,12 @@ public class ExecutionTracer implements IExecutionTracer {
 	private static class Locker {
 		boolean tracing;
 		long threadId;
+		
+		public Locker() {
+			// global locker
+			this.threadId = -1;
+			lock();
+		}
 		
 		public Locker(long threadId) {
 			this.threadId = threadId;

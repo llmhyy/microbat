@@ -2,14 +2,12 @@ package microbat.tools;
 
 import java.lang.reflect.Method;
 
-import javax.print.attribute.standard.Chromaticity;
-
 import org.junit.Test;
 
 import microbat.instrumentation.trace.data.ExecutionTracer;
 import microbat.instrumentation.trace.data.IExecutionTracer;
+import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.SignatureUtils;
-import sav.common.core.utils.StringUtils;
 
 public class CodeGenerator {
 
@@ -35,24 +33,28 @@ public class CodeGenerator {
 			if (!method.getName().startsWith("_")) {
 				continue;
 			}
+			boolean ifaceMethod = true;
 			String className = IExecutionTracer.class.getName();
-			if ("_getTracer".equals(method.getName())) {
+			if (CollectionUtils.existIn(method.getName(), "_getTracer", "_startTracing")) {
 				className = ExecutionTracer.class.getName();
+				ifaceMethod = false;
 			}
-			String format = "%s(\"%s\", \"%s\", \"%s\", %d),";
+			String format = "%s(%s, \"%s\", \"%s\", \"%s\", %d),";
 			String methodName = method.getName();
 			char[] charArray = methodName.toCharArray();
-			StringBuilder sb = new StringBuilder();
+			StringBuilder enumType = new StringBuilder();
 			for (int j = 1; j < charArray.length; j++) {
 				char ch = charArray[j];
 				if (Character.isUpperCase(ch)) {
-					sb.append("_").append(ch);
+					enumType.append("_").append(ch);
 				} else {
-					sb.append(ch);
+					enumType.append(ch);
 				}
 			}
 			String signature = SignatureUtils.getSignature(method);
-			System.out.println(String.format(format, sb.toString().toUpperCase(),
+			System.out.println(String.format(format, 
+					enumType.toString().toUpperCase(),
+					String.valueOf(ifaceMethod),
 					className.replace(".", "/"),
 					method.getName(),
 					signature,

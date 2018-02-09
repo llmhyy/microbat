@@ -12,7 +12,7 @@ import microbat.instrumentation.trace.TraceTransformer;
 
 public class Premain {
 	private static final String AGENT_JAR_FOLDER = "E:/lyly/Projects/microbat/master/microbat_instrumentator/src/test/resources/";
-	private static final String AGENT_JAR = AGENT_JAR_FOLDER + "microbat.instrumentator.jar";
+	private static final String AGENT_JAR = AGENT_JAR_FOLDER + "microbat_rt.jar";
 	private static final String AGENT_JAR_TEST = AGENT_JAR_FOLDER +  "microbat_instrumentator.jar";
 	
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
@@ -20,10 +20,10 @@ public class Premain {
 		installBootstrap(Arrays.asList(AGENT_JAR), inst);
 		
 		System.out.println("start instrumentation...");
-		final Agent agent = new Agent();
+		final Agent agent = new Agent(agentArgs);
 		agent.startup();
-        inst.addTransformer(new TraceTransformer(), true);
-        if (retransformableClasses.length > 0) {
+		inst.addTransformer(new TraceTransformer(agent.getAgentParams().getEntryPoint()), true);
+		if (retransformableClasses.length > 0) {
         	inst.retransformClasses(retransformableClasses);
         }
         System.out.println("after retransform");
@@ -33,6 +33,7 @@ public class Premain {
 		System.out.println("install jar to boostrap...");
 		for (String bootJarPath : bootJarPaths) {
 			try {
+				System.out.println(bootJarPath);
 				JarFile jarfile = new JarFile(new File(bootJarPath));
 				inst.appendToBootstrapClassLoaderSearch(jarfile);
 			} catch (IOException ioe) {

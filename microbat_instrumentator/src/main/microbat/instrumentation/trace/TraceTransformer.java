@@ -6,24 +6,25 @@ import java.security.ProtectionDomain;
 
 import microbat.instrumentation.trace.data.ExecutionTracer;
 import microbat.instrumentation.trace.data.FilterChecker;
+import microbat.model.ClassLocation;
 
 public class TraceTransformer implements ClassFileTransformer {
 	private TraceInstrumenter instrumenter;
 	
-	public TraceTransformer() {
-		instrumenter = new TraceInstrumenter();
+	public TraceTransformer(ClassLocation entryPoint) {
+		instrumenter = new TraceInstrumenter(entryPoint);
 	}
 	
 	@Override
-	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
+	public byte[] transform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
 		/* exclude internal classes & libs */
-		if (!FilterChecker.isTransformable(className) || ExecutionTracer.isShutdown()) {
+		if (!FilterChecker.isTransformable(classFName) || ExecutionTracer.isShutdown()) {
 			return null;
 		}
 		/* do instrumentation */
 		try {
-			return instrumenter.instrument(className, classfileBuffer);
+			return instrumenter.instrument(classFName, classfileBuffer);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

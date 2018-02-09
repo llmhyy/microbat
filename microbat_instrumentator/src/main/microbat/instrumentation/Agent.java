@@ -7,6 +7,11 @@ import microbat.model.trace.Trace;
 import microbat.sql.TraceRecorder;
 
 public class Agent {
+	private AgentParams agentParams;
+	
+	public Agent(String agentArgs) {
+		agentParams = AgentParams.parse(agentArgs);
+	}
 
 	public void startup() {
 		/* init filter */
@@ -15,7 +20,7 @@ public class Agent {
 			@Override
 			public void run() {
 				try {
-					shutdown();
+					shutdown();	
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -35,6 +40,10 @@ public class Agent {
 	public static String extrctJarPath() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	public AgentParams getAgentParams() {
+		return agentParams;
 	}
 
 }

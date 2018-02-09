@@ -13,8 +13,8 @@ public class FilterChecker implements IFilterChecker {
 		return checker.checkExclusive(className, methodName);
 	}
 	
-	public static boolean isTransformable(String className) {
-		return checker.checkTransformable(className);
+	public static boolean isTransformable(String classFName) {
+		return checker.checkTransformable(classFName);
 	}
 
 	public boolean checkExclusive(String className, String methodName) {

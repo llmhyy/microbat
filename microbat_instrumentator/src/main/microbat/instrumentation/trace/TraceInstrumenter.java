@@ -64,7 +64,9 @@ import microbat.instrumentation.trace.model.LineInstructionInfo;
 import microbat.instrumentation.trace.model.LocalVarInstructionInfo;
 import microbat.instrumentation.trace.model.RWInstructionInfo;
 import microbat.instrumentation.trace.model.UnknownLineInstructionInfo;
+import microbat.model.ClassLocation;
 import sav.common.core.utils.FileUtils;
+import sav.common.core.utils.SignatureUtils;
 import sav.common.core.utils.StringUtils;
 
 public class TraceInstrumenter {
@@ -72,24 +74,38 @@ public class TraceInstrumenter {
 	private static final String TEMP_VAR_NAME = "$tempVar"; // local var
 	private BasicTypeSupporter basicTypeSupporter = new BasicTypeSupporter();
 	
-	public byte[] instrument(String className, byte[] classfileBuffer) throws Exception {
-		ClassParser cp = new ClassParser(new java.io.ByteArrayInputStream(classfileBuffer), className);
+	private ClassLocation entryPoint;
+	
+	public TraceInstrumenter(ClassLocation entryPoint) {
+		this.entryPoint = entryPoint;
+	}
+	
+	public byte[] instrument(String classFName, byte[] classfileBuffer) throws Exception {
+		String className = classFName.replace("/", ".");
+		ClassParser cp = new ClassParser(new java.io.ByteArrayInputStream(classfileBuffer), classFName);
 		JavaClass jc = cp.parse();
 		// First, make sure we have to instrument this class:
-		if (!jc.isClass()) // could be an interface
+		if (!jc.isClass()) {
+			// could be an interface
 			return null;
+		}
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		JavaClass newJC = null;
-
+		boolean entry = className.equals(entryPoint.getClassCanonicalName());
 		for (Method method : jc.getMethods()) {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
 			}
 			try {
 				boolean changed = false;
-				MethodGen methodGen = new MethodGen(method, className, constPool);
-				changed = instrumentMethod(classGen, constPool, methodGen, method);
+				MethodGen methodGen = new MethodGen(method, classFName, constPool);
+				boolean startTracing = false;
+				if (entry && SignatureUtils.createMethodNameSign(method.getName(), method.getSignature())
+						.equals(entryPoint.getMethodSign())) {
+					startTracing = true;
+				}
+				changed = instrumentMethod(classGen, constPool, methodGen, method, startTracing);
 				if (changed) {
 					// All changes made, so finish off the method:
 					InstructionList instructionList = methodGen.getInstructionList();
@@ -101,7 +117,7 @@ public class TraceInstrumenter {
 				newJC = classGen.getJavaClass();
 				newJC.setConstantPool(constPool.getFinalConstantPool());
 			} catch (Exception e) {
-				System.err.println(String.format("Error when instrumenting: %s.%s", className, method.getName()));
+				System.err.println(String.format("Error when instrumenting: %s.%s", classFName, method.getName()));
 				e.printStackTrace();
 			}
 		}
@@ -112,7 +128,7 @@ public class TraceInstrumenter {
 		if (newJC != null) {
 			byte[] data = newJC.getBytes();
 //			if (className.endsWith("Random")) {
-//				store(data, className);
+				store(data, classFName);
 //			}
 			return data;
 		}
@@ -155,7 +171,8 @@ public class TraceInstrumenter {
 		}
 	}
 	
-	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method) {
+	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
+			boolean startTracing) {
 		InstructionList insnList = methodGen.getInstructionList();
 		List<LineInstructionInfo> lineInsnInfos = new ArrayList<>();
 	
@@ -181,8 +198,9 @@ public class TraceInstrumenter {
 		}
 		int startLine = lineNumberTable != null ? lineNumberTable.getSourceLine(startInsn.getPosition())
 				: InstrConstants.UNKNOWN_LINE;
+		
 		LocalVariableGen tracerVar = injectCodeInitTracer(methodGen, constPool,
-				startLine);
+				startLine, startTracing);
 		
 		for (LineInstructionInfo lineInfo : lineInsnInfos) {
 			/* instrument RW instructions */
@@ -231,7 +249,7 @@ public class TraceInstrumenter {
 		}
 		return true;
 	}
-	
+
 	private void injectCodeTracerReturn(InstructionList insnList, ConstantPoolGen constPool, LocalVariableGen tracerVar,
 			InstructionHandle insnHandler, int line) {
 		InstructionList newInsns = new InstructionList();
@@ -445,14 +463,14 @@ public class TraceInstrumenter {
 	}
 	
 	private void appendTracerMethodInvoke(InstructionList newInsns, TracerMethods method, ConstantPoolGen constPool) {
-		if (method == TracerMethods.GET_TRACER) {
-			int index = constPool.addMethodref(method.getDeclareClass(), method.getMethodName(), 
-					method.getMethodSign());
-			newInsns.append(new INVOKESTATIC(index));
-		} else {
+		if (method.isIfaceMethod()) {
 			int index = constPool.addInterfaceMethodref(method.getDeclareClass(), method.getMethodName(), 
 					method.getMethodSign());
 			newInsns.append(new INVOKEINTERFACE(index, method.getArgNo()));
+		} else {
+			int index = constPool.addMethodref(method.getDeclareClass(), method.getMethodName(), 
+					method.getMethodSign());
+			newInsns.append(new INVOKESTATIC(index));
 		}
 	}
 	
@@ -635,7 +653,8 @@ public class TraceInstrumenter {
 		newInsns.dispose();
 	}
 
-	private LocalVariableGen injectCodeInitTracer(MethodGen methodGen, ConstantPoolGen constPool, int methodStartLine) {
+	private LocalVariableGen injectCodeInitTracer(MethodGen methodGen, ConstantPoolGen constPool, int methodStartLine,
+			boolean startTracing) {
 		InstructionList insnList = methodGen.getInstructionList();
 		InstructionHandle startInsn = insnList.getStart();
 		if (startInsn == null) {
@@ -644,6 +663,9 @@ public class TraceInstrumenter {
 		LocalVariableGen tracerVar = methodGen.addLocalVariable(TRACER_VAR_NAME, Type.getType(IExecutionTracer.class),
 				insnList.getStart(), insnList.getEnd());
 		InstructionList newInsns = new InstructionList();
+		if (startTracing) {
+			appendTracerMethodInvoke(newInsns, TracerMethods.START_TRACING, constPool);
+		}
 		newInsns.append(new PUSH(constPool, methodGen.getClassName()));
 		newInsns.append(new PUSH(constPool, methodGen.getName()));
 		newInsns.append(new PUSH(constPool, methodStartLine));
