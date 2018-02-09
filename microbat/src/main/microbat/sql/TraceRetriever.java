@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,6 +160,9 @@ public class TraceRetriever extends DbService {
 	}
 	
 	private void loadLocations(Map<Integer, TraceNode> locIdStepMap, Connection conn, List<AutoCloseable> closables) throws SQLException {
+		if (locIdStepMap.isEmpty()) {
+			return;
+		}
 		Set<Integer> locationSet = locIdStepMap.keySet();
 		String matchList = StringUtils.join(locationSet, ",");
 		/* control scope */
@@ -190,6 +194,9 @@ public class TraceRetriever extends DbService {
 	
 	private Map<Integer, ControlScope> loadControlScopes(Set<Integer> locationSet, String matchList, Connection conn,
 			List<AutoCloseable> closables) throws SQLException {
+		if (matchList.isEmpty()) {
+			return Collections.EMPTY_MAP;
+		}
 		PreparedStatement ps = conn.prepareStatement(String.format(
 				"SELECT location_id, class_name, line_number, is_loop FROM ControlScope WHERE location_id IN (%s)",
 					matchList));
@@ -212,6 +219,9 @@ public class TraceRetriever extends DbService {
 	
 	private Map<Integer, SourceScope> loadLoopScope(Set<Integer> locationSet, String matchList, Connection conn,
 			List<AutoCloseable> closables) throws SQLException {
+		if (matchList.isEmpty()) {
+			return Collections.EMPTY_MAP;
+		}
 		PreparedStatement ps = conn.prepareStatement(String.format(
 				"SELECT location_id, class_name, start_line, end_line FROM LoopScope WHERE location_id IN (%s)",
 					matchList));
