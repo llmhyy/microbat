@@ -11,6 +11,7 @@ import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.FieldInstruction;
+import org.apache.bcel.generic.INVOKESPECIAL;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
@@ -147,7 +148,8 @@ public class LineInstructionInfo {
 		List<InstructionHandle> invokeInsns = new ArrayList<>(3);
 		for (InstructionHandle insnHandler : insns) {
 			Instruction insn = insnHandler.getInstruction();
-			if (insn instanceof InvokeInstruction) {
+			if (insn instanceof InvokeInstruction && 
+					(!(insn instanceof INVOKESPECIAL))) {
 				invokeInsns.add(insnHandler);
 			}
 		}

@@ -32,4 +32,6 @@ public interface IExecutionTracer {
 
 	public void _writeArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line);
 
+	public void _afterInvoke(String loc, int line);
+
 }

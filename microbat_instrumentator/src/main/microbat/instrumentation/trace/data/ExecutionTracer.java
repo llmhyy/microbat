@@ -123,6 +123,17 @@ public class ExecutionTracer implements IExecutionTracer {
 		_hitLine(line);
 	}
 	
+	@Override
+	public void _afterInvoke(String loc, int line) {
+		locker.lock();
+		if (methodEntry.getClassCanonicalName().equals(loc) && methodEntry.getLineNumber() == line) {
+			/* exit success */
+		} else {
+			exitMethod(-1);
+		}
+		locker.unLock();
+	}
+	
 	/**
 	 * @param line
 	 * @param returnObj
@@ -375,11 +386,13 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 	
 	public synchronized static IExecutionTracer _getTracer(String className, String methodName, int methodStartLine) {
-		if (gLocker.lock()) {
+		if (gLocker.isLock()) {
 			return EmptyExecutionTracer.getInstance();
 		}
+		gLocker.lock();
 		long threadId = Thread.currentThread().getId();
 		if (lockedThreads.contains(threadId)) {
+			gLocker.unLock();
 			return EmptyExecutionTracer.getInstance();
 		}
 		if (mainThreadId < 0) {

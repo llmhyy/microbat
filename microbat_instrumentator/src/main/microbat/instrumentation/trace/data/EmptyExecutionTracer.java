@@ -88,4 +88,10 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 		return instance;
 	}
 
+	@Override
+	public void _afterInvoke(String loc, int line) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

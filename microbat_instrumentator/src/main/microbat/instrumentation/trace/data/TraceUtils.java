@@ -19,7 +19,11 @@ public class TraceUtils {
 		if (refValue == null) {
 			return -1;
 		}
-		return System.identityHashCode(refValue);
+		try {
+			return System.identityHashCode(refValue);
+		} catch (Throwable e) {
+			return -1;
+		}
 	}
 
 	public static String getFieldVarId(String parentVarId, String fieldName, String fieldType, Object fieldValue) {

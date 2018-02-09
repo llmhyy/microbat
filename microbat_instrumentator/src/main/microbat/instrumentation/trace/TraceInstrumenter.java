@@ -34,6 +34,7 @@ import org.apache.bcel.generic.GETSTATIC;
 import org.apache.bcel.generic.IINC;
 import org.apache.bcel.generic.ILOAD;
 import org.apache.bcel.generic.INVOKEINTERFACE;
+import org.apache.bcel.generic.INVOKESPECIAL;
 import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.INVOKEVIRTUAL;
 import org.apache.bcel.generic.InstructionFactory;
@@ -288,15 +289,21 @@ public class TraceInstrumenter {
 
 	private void injectCodeTracerInvokeMethod(MethodGen methodGen, InstructionList insnList, ConstantPoolGen constPool,
 			InstructionFactory instructionFactory, LocalVariableGen tracerVar, InstructionHandle insnHandler, int line) {
-		InstructionList newInsns = new InstructionList();
 		InvokeInstruction insn = (InvokeInstruction) insnHandler.getInstruction();
+		String className = insn.getClassName(constPool);
+
+		if (insn instanceof INVOKESPECIAL && "java.lang.Object".equals(className)
+				&& methodGen.getName().equals("<init>")) {
+			return;
+		}
+		
+		InstructionList newInsns = new InstructionList();
 		TracerMethods tracerMethod = TracerMethods.HIT_INVOKE;
 		boolean isInvokeStatic = insn instanceof INVOKESTATIC;
 		if (isInvokeStatic) {
 			tracerMethod = TracerMethods.HIT_INVOKE_STATIC;
 		}
 		/* on stack:  objectRef, arg1, arg2, ... */
-		String className = insn.getClassName(constPool);
 		ReferenceType returnType = insn.getReferenceType(constPool);
 		Type[] argTypes = insn.getArgumentTypes(constPool);
 		/*
@@ -356,6 +363,16 @@ public class TraceInstrumenter {
 			}
 		}
 		InstructionHandle pos = insnList.insert(insn, newInsns);
+		updateTargeters(insnHandler, pos);
+		newInsns.dispose();
+		/* after */
+		newInsns = new InstructionList();
+		newInsns.append(new ALOAD(tracerVar.getIndex()));
+		newInsns.append(new PUSH(constPool, methodGen.getClassName()));
+		newInsns.append(new PUSH(constPool, line));
+		appendTracerMethodInvoke(newInsns, TracerMethods.AFTER_INVOKE, constPool);
+		
+		pos = insnList.append(insn, newInsns);
 		updateTargeters(insnHandler, pos);
 		newInsns.dispose();
 	}
