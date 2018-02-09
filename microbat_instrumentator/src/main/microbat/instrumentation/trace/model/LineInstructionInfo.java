@@ -26,7 +26,7 @@ import microbat.instrumentation.trace.InstrConstants;
 public class LineInstructionInfo {
 	protected int line;
 	protected InstructionHandle lineNumberInsn;
-	protected Iterator<InstructionHandle> lineInsns;
+	protected List<InstructionHandle> lineInsns;
 	protected LocalVariableTable localVarTable;
 	protected ConstantPoolGen constPool;
 	protected LineNumberTable lineNumberTable;
@@ -57,8 +57,7 @@ public class LineInstructionInfo {
 
 	protected List<RWInstructionInfo> extractRWInstructions(String locId) {
 		List<RWInstructionInfo> rwInsns = new ArrayList<>();
-		while (lineInsns.hasNext()) {
-			InstructionHandle insnHandler = lineInsns.next();
+		for (InstructionHandle insnHandler : lineInsns) {
 			Instruction insn = insnHandler.getInstruction();
 			if (insn instanceof FieldInstruction) {
 				FieldInstruction fieldInsn = (FieldInstruction) insn;
@@ -130,7 +129,7 @@ public class LineInstructionInfo {
 		return invokeInsns;
 	}
 	
-	private static Iterator<InstructionHandle> findCorrespondingInstructions(InstructionList list, LineNumberTable lineTable,
+	private static List<InstructionHandle> findCorrespondingInstructions(InstructionList list, LineNumberTable lineTable,
 			int lineNumber) {
 		List<InstructionHandle> correspondingInstructions = new ArrayList<>();
 		Iterator<?> iter = list.iterator();
@@ -141,13 +140,12 @@ public class LineInstructionInfo {
 				correspondingInstructions.add(insHandle);
 			}
 		}
-		return correspondingInstructions.iterator();
+		return correspondingInstructions;
 	}
 	
-	protected static List<InstructionHandle> extractInvokeInstructions(Iterator<InstructionHandle> it) {
+	protected static List<InstructionHandle> extractInvokeInstructions(List<InstructionHandle> insns) {
 		List<InstructionHandle> invokeInsns = new ArrayList<>(3);
-		while(it.hasNext()) {
-			InstructionHandle insnHandler = it.next();
+		for (InstructionHandle insnHandler : insns) {
 			Instruction insn = insnHandler.getInstruction();
 			if (insn instanceof InvokeInstruction) {
 				invokeInsns.add(insnHandler);
@@ -156,10 +154,9 @@ public class LineInstructionInfo {
 		return invokeInsns;
 	}
 	
-	protected List<InstructionHandle> extractReturnInstructions(Iterator<InstructionHandle> insnList) {
+	protected List<InstructionHandle> extractReturnInstructions(List<InstructionHandle> lineInsns) {
 		List<InstructionHandle> returnInsns = new ArrayList<>(1);
-		while (insnList.hasNext()) {
-			InstructionHandle insnHandler = insnList.next();
+		for (InstructionHandle insnHandler : lineInsns) {
 			Instruction insn = insnHandler.getInstruction();
 			if ((insn instanceof ReturnInstruction)) {
 				returnInsns.add(insnHandler);

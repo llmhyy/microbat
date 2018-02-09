@@ -19,7 +19,7 @@ import sav.common.core.utils.StringUtils;
 public class InvokingTrack {
 	private Set<String> relevantVarIds;
 	private VarValue returnValue;
-	private BreakPoint bkp;
+	private BreakPoint invokerEntry;
 	private List<VarValue> writtenVarValue;
 	private String invokeNodeId;
 	
@@ -63,12 +63,12 @@ public class InvokingTrack {
 		this.returnValue = returnValue;
 	}
 
-	public BreakPoint getBkp() {
-		return bkp;
+	public BreakPoint getInvokerEntry() {
+		return invokerEntry;
 	}
 
-	public void setBkp(BreakPoint bkp) {
-		this.bkp = bkp;
+	public void setInvokerEntry(BreakPoint invokerEntry) {
+		this.invokerEntry = invokerEntry;
 	}
 
 	public void addWrittenValue(VarValue value) {

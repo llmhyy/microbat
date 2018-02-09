@@ -1,5 +1,7 @@
 package microbat.instrumentation.trace.model;
 
+import java.util.Arrays;
+
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.InstructionList;
 
@@ -10,7 +12,7 @@ public class UnknownLineInstructionInfo extends LineInstructionInfo {
 		line = -1;
 		lineNumberInsn = insnList.getStart();
 		this.constPool = constPool;
-		lineInsns = insnList.iterator();
+		lineInsns = Arrays.asList(insnList.getInstructionHandles());
 		rwInsructionInfo = extractRWInstructions(locId);
 		invokeInsns = extractInvokeInstructions(lineInsns);
 		returnInsns = extractReturnInstructions(lineInsns);

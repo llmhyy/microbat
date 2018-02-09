@@ -1,6 +1,5 @@
 package microbat.instrumentation.trace.data;
 
-import microbat.model.BreakPoint;
 import microbat.model.value.VarValue;
 
 public class EmptyInvokingTrack extends InvokingTrack {
@@ -22,16 +21,6 @@ public class EmptyInvokingTrack extends InvokingTrack {
 	@Override
 	public void setReturnValue(VarValue returnValue) {
 		// do nothing
-	}
-
-	@Override
-	public BreakPoint getBkp() {
-		return null;
-	}
-
-	@Override
-	public void setBkp(BreakPoint bkp) {
-		super.setBkp(bkp);
 	}
 
 	@Override

@@ -32,9 +32,9 @@ public class ExecutionTracer implements IExecutionTracer {
 	private TraceNode currentNode;
 	private BreakPoint methodEntry;
 	/*
-	 * For exclusive case,  
+	 * For exclusive case, invokeTrack will be recorded to collect data.
 	 */
-	private boolean exclusive; //current method is in exclude list.
+	private boolean exclusive;
 	private InvokingTrack invokeTrack = new EmptyInvokingTrack();
 	private MethodCallStack methodCallStack;
 	private Locker locker;
@@ -85,7 +85,6 @@ public class ExecutionTracer implements IExecutionTracer {
 		// TODO-INSTR: declaringCompilationUnitName would not be correct here.
 		methodEntry = new BreakPoint(className, className, methodName, methodStartLine);
 		currentNode = null;
-		invokeTrack.setBkp(methodEntry);
 		locker.unLock();
 	}
 
@@ -111,6 +110,10 @@ public class ExecutionTracer implements IExecutionTracer {
 		/* set up invokeTrack */
 		invokeTrack = new InvokingTrack(invokeObj, invokeTypeSign, methodName, params,
 				TraceUtils.parseArgTypes(paramTypeSignsCode));
+		invokeTrack.setInvokerEntry(methodEntry);
+		/* set entry as invokee method */
+		methodEntry = new BreakPoint(invokeTypeSign, invokeTypeSign, methodName, -1);
+		currentNode = null;
 		locker.unLock();
 	}
 	
