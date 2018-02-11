@@ -94,4 +94,10 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 		
 	}
 
+	@Override
+	public void _hitMethodEnd(int line) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

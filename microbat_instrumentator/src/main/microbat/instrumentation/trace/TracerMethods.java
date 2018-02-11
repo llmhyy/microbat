@@ -16,8 +16,8 @@ public enum TracerMethods {
 	HIT_VOID_RETURN(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_hitVoidReturn", "(I)V", 2),
 	WRITE_LOCAL_VAR(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_writeLocalVar", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;IIII)V", 8),
 	WRITE_ARRAY_ELEMENT_VAR(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_writeArrayElementVar", "(Ljava/lang/Object;ILjava/lang/Object;Ljava/lang/String;I)V", 6),
-	WRITE_STATIC_FIELD(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_writeStaticField", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V", 6)
-	
+	WRITE_STATIC_FIELD(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_writeStaticField", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V", 6),
+	HIT_METHOD_END(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_hitMethodEnd", "(I)V", 2)
 	;
 	private boolean interfaceMethod;
 	private String declareClass;

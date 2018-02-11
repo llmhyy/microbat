@@ -57,6 +57,8 @@ import org.apache.bcel.generic.SWAP;
 import org.apache.bcel.generic.TargetLostException;
 import org.apache.bcel.generic.Type;
 
+import microbat.codeanalysis.bytecode.CFG;
+import microbat.codeanalysis.bytecode.CFGConstructor;
 import microbat.instrumentation.trace.data.IExecutionTracer;
 import microbat.instrumentation.trace.data.TraceUtils;
 import microbat.instrumentation.trace.model.ArrayInstructionInfo;
@@ -73,6 +75,7 @@ import sav.common.core.utils.StringUtils;
 public class TraceInstrumenter {
 	private static final String TRACER_VAR_NAME = "$tracer"; // local var
 	private static final String TEMP_VAR_NAME = "$tempVar"; // local var
+	
 	private BasicTypeSupporter basicTypeSupporter = new BasicTypeSupporter();
 	
 	private ClassLocation entryPoint;
@@ -177,13 +180,16 @@ public class TraceInstrumenter {
 		InstructionList insnList = methodGen.getInstructionList();
 		List<LineInstructionInfo> lineInsnInfos = new ArrayList<>();
 	
+		CFGConstructor cfgConstructor = new CFGConstructor();
+		CFG cfg = cfgConstructor.constructCFG(method.getCode());
+		
 		LineNumberTable lineNumberTable = method.getLineNumberTable();//methodGen.getLineNumberTable(constPool);
 		Set<Integer> visitedLines = new HashSet<>();
 		for (LineNumberGen lineGen : methodGen.getLineNumbers()) {
 			if (!visitedLines.contains(lineGen.getSourceLine())) {
 				String loc = StringUtils.dotJoin(classGen.getClassName(), method.getName(), lineGen.getSourceLine());
 				lineInsnInfos.add(new LineInstructionInfo(loc, method.getLocalVariableTable(), constPool, lineNumberTable,
-						lineGen, insnList));
+						lineGen, insnList, cfg));
 				visitedLines.add(lineGen.getSourceLine());
 			}
 		}
@@ -246,9 +252,29 @@ public class TraceInstrumenter {
 			for (InstructionHandle insn : lineInfo.getReturnInsns()) {
 				injectCodeTracerReturn(insnList, constPool, tracerVar, insn, line);
 			}
+			
+			/**
+			 * instrument exit instructions
+			 */
+			for(InstructionHandle exitInsHandle: lineInfo.getExitInsns()){
+				injectCodeTracerExit(exitInsHandle, insnList, constPool, tracerVar, line);
+			}
+			
 			lineInfo.dispose();
 		}
 		return true;
+	}
+
+	private void injectCodeTracerExit(InstructionHandle exitInsHandle, InstructionList insnList, 
+			ConstantPoolGen constPool, LocalVariableGen tracerVar, int line) {
+		InstructionList newInsns = new InstructionList();
+		newInsns.append(new ALOAD(tracerVar.getIndex()));
+		newInsns.append(new PUSH(constPool, line));
+		appendTracerMethodInvoke(newInsns, TracerMethods.HIT_METHOD_END, constPool);
+		
+		InstructionHandle pos = insnList.insert(exitInsHandle, newInsns);
+		updateTargeters(exitInsHandle, pos);
+		newInsns.dispose();
 	}
 
 	private void injectCodeTracerReturn(InstructionList insnList, ConstantPoolGen constPool, LocalVariableGen tracerVar,

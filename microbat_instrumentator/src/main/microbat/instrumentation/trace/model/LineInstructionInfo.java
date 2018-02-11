@@ -22,6 +22,8 @@ import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Type;
 
+import microbat.codeanalysis.bytecode.CFG;
+import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.trace.InstrConstants;
 
 public class LineInstructionInfo {
@@ -34,13 +36,14 @@ public class LineInstructionInfo {
 	protected List<RWInstructionInfo> rwInsructionInfo;
 	protected List<InstructionHandle> invokeInsns;
 	protected List<InstructionHandle> returnInsns;
+	private List<InstructionHandle> exitInsns;
 	
 	LineInstructionInfo() {
 		
 	}
 	
-	public LineInstructionInfo(String locId, LocalVariableTable localVariableTable, ConstantPoolGen constPool, LineNumberTable lineNumberTable,
-			LineNumberGen lineGen, InstructionList insnList) {
+	public LineInstructionInfo(String locId, LocalVariableTable localVariableTable, ConstantPoolGen constPool, 
+			LineNumberTable lineNumberTable, LineNumberGen lineGen, InstructionList insnList, CFG cfg) {
 		this.line = lineGen.getSourceLine();
 		this.lineNumberInsn = lineGen.getInstruction();
 		this.localVarTable = localVariableTable;
@@ -50,6 +53,20 @@ public class LineInstructionInfo {
 		rwInsructionInfo = extractRWInstructions(locId);
 		invokeInsns = extractInvokeInstructions(lineInsns);
 		returnInsns = extractReturnInstructions(lineInsns);
+		exitInsns = extractExitInsns(cfg, lineInsns);
+	}
+	
+	private List<InstructionHandle> extractExitInsns(CFG cfg, List<InstructionHandle> lineInsns2) {
+		List<InstructionHandle> list = new ArrayList<>();
+		for(InstructionHandle handle: lineInsns2){
+			for(CFGNode node: cfg.getExitList()){
+				if(node.getInstructionHandle().getPosition()==handle.getPosition()){
+					list.add(handle);
+					break;
+				}
+			}
+		}
+		return list;
 	}
 
 	public List<RWInstructionInfo> getRWInstructions() {
@@ -190,4 +207,9 @@ public class LineInstructionInfo {
 	public boolean hasNoInstrumentation() {
 		return rwInsructionInfo.isEmpty() && invokeInsns.isEmpty() && returnInsns.isEmpty();
 	}
+
+	public List<InstructionHandle> getExitInsns() {
+		return exitInsns;
+	}
+
 }

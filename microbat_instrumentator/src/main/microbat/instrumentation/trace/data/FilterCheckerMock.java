@@ -5,6 +5,7 @@ import java.util.List;
 
 public class FilterCheckerMock implements IFilterChecker {
 	private List<String> includes = Arrays.asList(
+			"com0",
 			"microbat/instrumentation/trace/testdata",
 			"java/util/Random",
 //			"java/util/List",
@@ -34,7 +35,7 @@ public class FilterCheckerMock implements IFilterChecker {
 		if ("java.util.ArrayList".equals(className)) {
 			return false;
 		}
-		return !className.startsWith("microbat.instrumentation.trace.testdata");
+		return !className.startsWith("com0");
 	}
 
 }

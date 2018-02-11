@@ -34,4 +34,6 @@ public interface IExecutionTracer {
 
 	public void _afterInvoke(String loc, int line);
 
+	public void _hitMethodEnd(int line);
+	
 }

@@ -124,6 +124,12 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 	
 	@Override
+	public void _hitMethodEnd(int line){
+//		System.out.println(currentNode);
+		System.currentTimeMillis();
+	}
+	
+	@Override
 	public void _afterInvoke(String loc, int line) {
 		locker.lock();
 		if (methodEntry.getClassCanonicalName().equals(loc) && methodEntry.getLineNumber() == line) {
@@ -146,14 +152,14 @@ public class ExecutionTracer implements IExecutionTracer {
 		Variable returnVar = new VirtualVar(invokeTrack.getInvokeNodeId(), returnGeneralType);
 		VarValue returnVal = appendVarValue(returnObj, returnVar, null);
 		invokeTrack.setReturnValue(returnVal);
-		exitMethod(line);
+//		exitMethod(line);
 		locker.unLock();
 	}
 	
 	@Override
 	public void _hitVoidReturn(int line) {
 		_hitLine(line);
-		exitMethod(line);
+//		exitMethod(line);
 	}
 
 	@Override
