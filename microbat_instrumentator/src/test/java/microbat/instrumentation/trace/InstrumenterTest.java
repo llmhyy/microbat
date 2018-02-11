@@ -6,7 +6,10 @@ import java.io.FileOutputStream;
 
 import org.junit.Test;
 
+import microbat.instrumentation.trace.testdata.ConnectionPropertiesImpl;
 import microbat.instrumentation.trace.testdata.Sample;
+import microbat.instrumentation.trace.testdata.Sample4;
+import microbat.model.ClassLocation;
 import sav.common.core.utils.FileUtils;
 
 /**
@@ -19,18 +22,20 @@ public class InstrumenterTest {
 
 	@Test
 	public void writeFile() throws Exception {
-		String className = Sample.class.getName();
+		String className = Sample4.class.getName();
 		
 		String classPath = className.replace(".", "/") + ".class";
 		String clazzFile = new StringBuilder("/").append(classPath).toString();
 
+		///
 		File outFile = getFile(INSTRUMENT_TARGET_FOLDER, clazzFile);
 		FileOutputStream out = new FileOutputStream(outFile);
 		System.out.println(outFile.getAbsolutePath());
+		
 		File inFile = new File(CLASS_FOLDER + clazzFile);
 		FileInputStream in = new FileInputStream(inFile);
 
-		byte[] data = new byte[33000];
+		byte[] data = new byte[100000];
 		in.read(data);
 		data = instrument(data, className);
 //		System.out.println(new String(data));
@@ -46,13 +51,14 @@ public class InstrumenterTest {
 	}
 
 	private byte[] instrument(byte[] data, String className) throws Exception {
-//		TraceTransformer transformer = new TraceTransformer();
+		ClassLocation loc = new ClassLocation("", "", -1);
+		//		TraceTransformer transformer = new TraceTransformer();
 //		return transformer.instrument(className, data, new NormalInstrumenter());
 //		BcelTraceTransformer transformer = new BcelTraceTransformer();
 //		return transformer.instrument(className, data);
 //		FieldTransformer transformer = new FieldTransformer();
 //		return transformer.instrument(className, data);
-		TraceInstrumenter transformer = new TraceInstrumenter();
+		TraceInstrumenter transformer = new TraceInstrumenter(loc);
 		return transformer.instrument(className, data);
 	}
 }
