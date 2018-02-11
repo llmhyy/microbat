@@ -460,17 +460,11 @@ public class ExecutionTracer implements IExecutionTracer {
 			this.threadId = threadId;
 		}
 
-		/**
-		 * return true if already lock
-		 * false if not locked
-		 * */
-		public boolean lock() {
-			lockedThreads.add(threadId);
-			if (tracing) {
-				return true;
+		public void lock() {
+			if (!tracing) {
+				lockedThreads.add(threadId);
+				tracing = true;
 			}
-			tracing = true;
-			return false;
 		}
 		
 		public void unLock() {

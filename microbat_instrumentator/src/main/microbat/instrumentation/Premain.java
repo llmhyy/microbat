@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
 
+import com.mysql.jdbc.Messages;
+
 import microbat.instrumentation.trace.TraceTransformer;
 
 public class Premain {
@@ -15,19 +17,19 @@ public class Premain {
 	private static final String AGENT_JAR = BASE_DIR + "src/test/resources/microbat_rt.jar";
 	
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
-		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
 //		installBootstrap(Arrays.asList(AGENT_JAR), inst);
 		installBootstrap(Arrays.asList(
+				BASE_DIR + "lib/mysql-connector-java-5.1.44-bin.jar",
+				BASE_DIR + "src/test/resources/microbat_instrumentator.jar",
 				BASE_DIR + "lib/bcel-6.0.jar",
 				BASE_DIR + "lib/commons-cli-1.2.jar",
 				BASE_DIR + "lib/commons-io-1.3.2.jar",
 				BASE_DIR + "lib/commons-lang-2.6.jar",
-				BASE_DIR + "lib/mysql-connector-java-5.1.44-bin.jar",
 				BASE_DIR + "lib/sav.commons.jar",
 				BASE_DIR + "lib/slf4j-api-1.7.12.jar",
-				BASE_DIR + "lib/slf4j-log4j12-1.7.12.jar",
-				BASE_DIR + "src/test/resources/microbat_rt.jar"
+				BASE_DIR + "lib/slf4j-log4j12-1.7.12.jar"
 				), inst);
+		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
 		
 		System.out.println("start instrumentation...");
 		final Agent agent = new Agent(agentArgs);
@@ -44,7 +46,7 @@ public class Premain {
 		for (String bootJarPath : bootJarPaths) {
 			try {
 				System.out.println(bootJarPath);
-				JarFile jarfile = new JarFile(new File(bootJarPath));
+				JarFile jarfile = new JarFile(new File(bootJarPath), false);
 				inst.appendToBootstrapClassLoaderSearch(jarfile);
 			} catch (IOException ioe) {
 				System.err.println("unable to open boot jar file : " + bootJarPath);

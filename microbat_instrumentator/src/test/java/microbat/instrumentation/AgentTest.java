@@ -16,7 +16,8 @@ import sav.strategies.vm.VMConfiguration;
 
 public class AgentTest {
 	private static final String BASE_DIR = "E:/lyly/Projects/microbat/master/microbat_instrumentator";
-	private static final String JAR_PATH = BASE_DIR + "/src/test/resources/microbat_rt.jar";
+//	private static final String JAR_PATH = BASE_DIR + "/src/test/resources/microbat_rt.jar";
+	private static final String JAR_PATH = BASE_DIR + "/src/test/resources/microbat_instrumentator.jar";
 	
 	@Test
 	public void runSample() throws Exception {
@@ -28,12 +29,13 @@ public class AgentTest {
 		VMConfiguration config = new VMConfiguration();
 		config.setJavaHome(TestConfiguration.getJavaHome());
 		config.addClasspath(BASE_DIR + "/bin");
-		config.addClasspaths(getLibJars(BASE_DIR + "/lib"));
-		config.setLaunchClass(Sample4.class.getName());
+//		config.addClasspaths(getLibJars(BASE_DIR + "/lib"));
+		Class<?> clazz = Sample4.class;
+		config.setLaunchClass(clazz.getName());
 		config.setDebug(true);
 		config.setPort(9595);
 		config.setNoVerify(true);
-		vmRunner.addAgentParam("entry_point", "microbat.instrumentation.trace.testdata.Testaaa.main([Ljava/lang/String;)V");
+		vmRunner.addAgentParam("entry_point", clazz.getName() + ".main([Ljava/lang/String;)V");
 		vmRunner.startVm(config);
 	}
 	
