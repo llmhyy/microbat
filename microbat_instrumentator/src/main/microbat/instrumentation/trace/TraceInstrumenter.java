@@ -480,7 +480,7 @@ public class TraceInstrumenter {
 	}
 	
 	private void appendTracerMethodInvoke(InstructionList newInsns, TracerMethods method, ConstantPoolGen constPool) {
-		if (method.isIfaceMethod()) {
+		if (method.isInterfaceMethod()) {
 			int index = constPool.addInterfaceMethodref(method.getDeclareClass(), method.getMethodName(), 
 					method.getMethodSign());
 			newInsns.append(new INVOKEINTERFACE(index, method.getArgNo()));

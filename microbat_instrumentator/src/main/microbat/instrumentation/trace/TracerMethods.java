@@ -19,14 +19,14 @@ public enum TracerMethods {
 	WRITE_STATIC_FIELD(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_writeStaticField", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V", 6)
 	
 	;
-	private boolean ifaceMethod;
+	private boolean interfaceMethod;
 	private String declareClass;
 	private String methodName;
 	private String methodSign;
 	private int argNo;
 
 	private TracerMethods(boolean ifaceMethod, String declareClass, String methodName, String methodSign, int argNo) {
-		this.ifaceMethod = ifaceMethod;
+		this.interfaceMethod = ifaceMethod;
 		this.declareClass = declareClass;
 		this.methodName = methodName;
 		this.methodSign = methodSign;
@@ -49,7 +49,7 @@ public enum TracerMethods {
 		return argNo;
 	}
 
-	public boolean isIfaceMethod() {
-		return ifaceMethod;
+	public boolean isInterfaceMethod() {
+		return interfaceMethod;
 	}
 }
