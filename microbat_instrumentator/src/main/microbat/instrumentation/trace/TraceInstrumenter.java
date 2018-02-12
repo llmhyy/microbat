@@ -21,6 +21,7 @@ import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ArrayType;
 import org.apache.bcel.generic.BasicType;
 import org.apache.bcel.generic.ClassGen;
+import org.apache.bcel.generic.CodeExceptionGen;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.DUP;
 import org.apache.bcel.generic.DUP2;
@@ -235,16 +236,16 @@ public class TraceInstrumenter {
 							(LocalVarInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
 				}
 				if ((newInsns != null) && (newInsns.getLength() > 0)) {
+					InstructionHandle insnHandler = rwInsnInfo.getInstructionHandler();
 					if (rwInsnInfo.isStoreInstruction()) {
-						InstructionHandle pos = insnList.insert(rwInsnInfo.getInstructionHandler(), newInsns);
-						updateTargeters(rwInsnInfo.getInstructionHandler(), pos);
+						insertInsnHandler(insnList, newInsns, insnHandler);
 						newInsns.dispose();
 					} else {
-						InstructionHandle pos = insnList.insert(rwInsnInfo.getInstructionHandler(), newInsns);
-						updateTargeters(rwInsnInfo.getInstructionHandler(), pos);
+						InstructionHandle pos = insertInsnHandler(insnList, newInsns, insnHandler);
 						try {
-							insnList.delete(rwInsnInfo.getInstructionHandler());
-							updateTargeters(rwInsnInfo.getInstructionHandler(), pos);
+							updateExceptionTable(insnHandler, insnHandler.getPrev(), insnHandler.getNext());
+							insnList.delete(insnHandler);
+							updateTargeters(insnHandler, pos);
 						} catch (TargetLostException e) {
 							e.printStackTrace();
 						}
@@ -282,15 +283,59 @@ public class TraceInstrumenter {
 		return varGen;
 	}
 
-	private void injectCodeTracerExit(InstructionHandle exitInsHandle, InstructionList insnList,
+	private void appendInstruction(InstructionList insnList, InstructionHandle insnHandler, InstructionList newInsns) {
+		updateExceptionTable(insnHandler, insnHandler, newInsns.getEnd());
+		InstructionHandle pos = insnList.append(insnHandler, newInsns);
+		updateTargeters(insnHandler, pos);
+	}
+
+	private InstructionHandle insertInsnHandler(InstructionList insnList, InstructionList newInsns,
+			InstructionHandle insnHandler) {
+		updateExceptionTable(insnHandler, newInsns.getStart(), insnHandler);
+		InstructionHandle pos = insnList.insert(insnHandler, newInsns);
+		updateTargeters(insnHandler, pos);
+		return pos;
+	}
+	
+	private static void updateExceptionTable(InstructionHandle oldPos, InstructionHandle newStart,
+			InstructionHandle newEnd) {
+		InstructionTargeter[] itList = oldPos.getTargeters();
+		if (itList != null) {
+			for (InstructionTargeter it : itList) {
+				if (it instanceof CodeExceptionGen) {
+					CodeExceptionGen exception = (CodeExceptionGen) it;
+					if (exception.getStartPC() == null || exception.getEndPC() == null
+							|| exception.getHandlerPC() == null || newStart == null || newEnd == null) {
+						throw new IllegalArgumentException(String.format(
+								"updateTargeters-error: \nexception.getStartPC=%s, "
+										+ "\nexception.getEndPC()=%s, \nexception.getHandlerPC()=%s, \nnewStart=%s, \nnewEnd=%s",
+								StringUtils.toStringNullToEmpty(exception.getStartPC()),
+								StringUtils.toStringNullToEmpty(exception.getEndPC()),
+								StringUtils.toStringNullToEmpty(exception.getHandlerPC()),
+								StringUtils.toStringNullToEmpty(newStart), StringUtils.toStringNullToEmpty(newEnd)));
+					}
+					if (exception.getStartPC() == oldPos) {
+						exception.setStartPC(newStart);
+					}
+					if (exception.getEndPC() == oldPos) {
+						exception.setEndPC(newEnd);
+					}
+					if (exception.getHandlerPC() == oldPos) {
+						exception.setHandlerPC(newStart);
+					}
+				}
+			}
+		}
+	}
+
+	private void injectCodeTracerExit(InstructionHandle exitInsHandle, InstructionList insnList, 
 			ConstantPoolGen constPool, LocalVariableGen tracerVar, int line) {
 		InstructionList newInsns = new InstructionList();
 		newInsns.append(new ALOAD(tracerVar.getIndex()));
 		newInsns.append(new PUSH(constPool, line));
 		appendTracerMethodInvoke(newInsns, TracerMethods.HIT_METHOD_END, constPool);
-
-		InstructionHandle pos = insnList.insert(exitInsHandle, newInsns);
-		updateTargeters(exitInsHandle, pos);
+		
+		insertInsnHandler(insnList, newInsns, exitInsHandle);
 		newInsns.dispose();
 	}
 
@@ -338,8 +383,7 @@ public class TraceInstrumenter {
 			appendTracerMethodInvoke(newInsns, TracerMethods.HIT_RETURN, constPool);
 			// val
 		}
-		InstructionHandle pos = insnList.insert(insn, newInsns);
-		updateTargeters(insnHandler, pos);
+		insertInsnHandler(insnList, newInsns, insnHandler);
 		newInsns.dispose();
 	}
 
@@ -449,8 +493,7 @@ public class TraceInstrumenter {
 						basicTypeSupporter.getToPrimitiveValueMethodIdx((BasicType) argType, constPool)));
 			}
 		}
-		InstructionHandle pos = insnList.insert(insn, newInsns);
-		updateTargeters(insnHandler, pos);
+		insertInsnHandler(insnList, newInsns, insnHandler);
 		newInsns.dispose();
 		/* after */
 		newInsns = new InstructionList();
@@ -458,9 +501,7 @@ public class TraceInstrumenter {
 		newInsns.append(new PUSH(constPool, methodGen.getClassName()));
 		newInsns.append(new PUSH(constPool, line));
 		appendTracerMethodInvoke(newInsns, TracerMethods.AFTER_INVOKE, constPool);
-
-		pos = insnList.append(insn, newInsns);
-		updateTargeters(insnHandler, pos);
+		appendInstruction(insnList, insnHandler, newInsns);
 		newInsns.dispose();
 	}
 
@@ -874,8 +915,7 @@ public class TraceInstrumenter {
 		newInsns.append(new ALOAD(classNameVar.getIndex()));
 		newInsns.append(new ALOAD(methodSigVar.getIndex()));
 		appendTracerMethodInvoke(newInsns, TracerMethods.HIT_LINE, constPool);
-		InstructionHandle pos = insnList.insert(lineNumberInsn, newInsns);
-		updateTargeters(lineNumberInsn, pos);
+		insertInsnHandler(insnList, newInsns, lineNumberInsn);
 		newInsns.dispose();
 	}
 
@@ -915,9 +955,7 @@ public class TraceInstrumenter {
 		appendTracerMethodInvoke(newInsns, TracerMethods.GET_TRACER, constPool);
 		InstructionHandle tracerStartPos = newInsns.append(new ASTORE(tracerVar.getIndex()));
 		tracerVar.setStart(tracerStartPos);
-		/* inject code */
-		InstructionHandle insertPos = insnList.insert(startInsn, newInsns);
-		updateTargeters(startInsn, insertPos);
+		insertInsnHandler(insnList, newInsns, startInsn);
 		newInsns.dispose();
 		return tracerVar;
 	}
@@ -926,7 +964,9 @@ public class TraceInstrumenter {
 		InstructionTargeter[] itList = oldPos.getTargeters();
 		if (itList != null) {
 			for (InstructionTargeter it : itList) {
-				it.updateTarget(oldPos, newPos);
+				if (!(it instanceof CodeExceptionGen)) {
+					it.updateTarget(oldPos, newPos);
+				}
 			}
 		}
 	}

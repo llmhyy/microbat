@@ -7,8 +7,8 @@
 
 	<properties>
 		<relocate.pkg>microbat.ext</relocate.pkg>
-		<pkgbuild.dir>E:/lyly/Projects/microbat/master/microbat_instrumentator_pkgbuild</pkgbuild.dir>
-		<microbat.instr.dir>E:/lyly/Projects/microbat/master/microbat_instrumentator</microbat.instr.dir>
+		<pkgbuild.dir>E:/linyun/git_space/microbat/microbat_instrumentator_pkgbuild</pkgbuild.dir>
+		<microbat.instr.dir>E:/linyun/git_space/microbat/microbat_instrumentator</microbat.instr.dir>
 	</properties>
 
 	<build>

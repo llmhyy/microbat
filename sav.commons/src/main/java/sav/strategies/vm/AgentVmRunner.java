@@ -24,9 +24,17 @@ import sav.common.core.utils.StringUtils;
  *
  */
 public class AgentVmRunner extends VMRunner {
+	private String agentOptionSeparator = "=";
+	private String agentParamsSeparator = ",";
 	protected String agentJarPath;
 	private Map<String, String> agentParams;
 	private List<String> programArgs;
+	
+	public AgentVmRunner(String agentJarPath, String agentOptionSeparator, String agentParamsSeparator) {
+		this(agentJarPath);
+		this.agentOptionSeparator = agentOptionSeparator;
+		this.agentParamsSeparator = agentParamsSeparator;
+	}
 
 	public AgentVmRunner(String agentJarPath) {
 		this.agentJarPath = agentJarPath;
@@ -42,9 +50,13 @@ public class AgentVmRunner extends VMRunner {
 		List<String> agentParams = getAgentParams();
 		if (agentParams != null) {
 			sb.append("=")
-				.append(StringUtils.join(agentParams, ","));
+				.append(StringUtils.join(agentParams, getAgentParamsSeparator()));
 		}
 		builder.append(sb.toString());
+	}
+
+	protected String getAgentParamsSeparator() {
+		return agentParamsSeparator;
 	}
 	
 	@Override
@@ -99,6 +111,6 @@ public class AgentVmRunner extends VMRunner {
 	}
 
 	protected String getAgentOptionSeparator() {
-		return "=";
+		return agentOptionSeparator;
 	}
 }

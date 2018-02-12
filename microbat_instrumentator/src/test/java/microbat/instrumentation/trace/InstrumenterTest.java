@@ -25,13 +25,15 @@ public class InstrumenterTest {
 		String classPath = className.replace(".", "/") + ".class";
 		String clazzFile = new StringBuilder("/").append(classPath).toString();
 
+		///
 		File outFile = getFile(INSTRUMENT_TARGET_FOLDER, clazzFile);
 		FileOutputStream out = new FileOutputStream(outFile);
 		System.out.println(outFile.getAbsolutePath());
+		
 		File inFile = new File(CLASS_FOLDER + clazzFile);
 		FileInputStream in = new FileInputStream(inFile);
 
-		byte[] data = new byte[33000];
+		byte[] data = new byte[100000];
 		in.read(data);
 		data = instrument(data, className);
 //		System.out.println(new String(data));
@@ -49,6 +51,7 @@ public class InstrumenterTest {
 	private byte[] instrument(byte[] data, String className) throws Exception {
 //		return data;
 //		TraceTransformer transformer = new TraceTransformer();
+		//		TraceTransformer transformer = new TraceTransformer();
 //		return transformer.instrument(className, data, new NormalInstrumenter());
 //		BcelTraceTransformer transformer = new BcelTraceTransformer();
 //		return transformer.instrument(className, data);
