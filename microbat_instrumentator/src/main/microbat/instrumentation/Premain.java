@@ -8,8 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
 
-import com.mysql.jdbc.Messages;
-
 import microbat.instrumentation.trace.TraceTransformer;
 
 public class Premain {
