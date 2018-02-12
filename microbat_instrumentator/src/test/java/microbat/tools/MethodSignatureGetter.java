@@ -21,14 +21,7 @@ import sav.common.core.utils.SignatureUtils;
 public class MethodSignatureGetter {
 	
 	public static void main(String[] args) {
-		printSignature(Integer.class, new String[]{"valueOf"});
-		printSignature(Boolean.class, new String[]{"valueOf"});
-		printSignature(Float.class, new String[]{"valueOf"});
-		printSignature(Character.class, new String[]{"valueOf"});
-		printSignature(Double.class, new String[]{"valueOf"});
-		printSignature(Long.class, new String[]{"valueOf"});
-		printSignature(Short.class, new String[]{"valueOf"});
-		printSignature(Byte.class, new String[]{"valueOf"});
+		printSignature(MethodSignatureGetter.class, new String[]{"main"});
 	}
 
 	private static void printSignature(Class<?> clazz, String[] methodNames) {

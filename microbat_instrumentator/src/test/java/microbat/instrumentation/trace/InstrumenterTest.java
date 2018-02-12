@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import org.junit.Test;
 
 import microbat.instrumentation.trace.testdata.Sample;
+import microbat.model.ClassLocation;
 import sav.common.core.utils.FileUtils;
 
 /**
@@ -14,7 +15,7 @@ import sav.common.core.utils.FileUtils;
  *
  */
 public class InstrumenterTest {
-	public static final String CLASS_FOLDER = "E:/lyly/Projects/microbat/master/microbat_instrumentator/bin";
+	public static final String CLASS_FOLDER = "E:/linyun/git_space/microbat/microbat_instrumentator/bin";
 	private static final String INSTRUMENT_TARGET_FOLDER = "E:/lyly/Projects/inst_src";
 
 	@Test
@@ -46,13 +47,14 @@ public class InstrumenterTest {
 	}
 
 	private byte[] instrument(byte[] data, String className) throws Exception {
+//		return data;
 //		TraceTransformer transformer = new TraceTransformer();
 //		return transformer.instrument(className, data, new NormalInstrumenter());
 //		BcelTraceTransformer transformer = new BcelTraceTransformer();
 //		return transformer.instrument(className, data);
 //		FieldTransformer transformer = new FieldTransformer();
 //		return transformer.instrument(className, data);
-		TraceInstrumenter transformer = new TraceInstrumenter();
+		TraceInstrumenter transformer = new TraceInstrumenter(new ClassLocation("", "", 23));
 		return transformer.instrument(className, data);
 	}
 }

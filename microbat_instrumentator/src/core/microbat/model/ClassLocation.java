@@ -31,9 +31,9 @@ public class ClassLocation {
 		return location;
 	}
 
-	public ClassLocation(String className, String methodName, int lineNumber) {
+	public ClassLocation(String className, String methodSignature, int lineNumber) {
 		this.classCanonicalName = className;
-		this.methodSign = methodName;
+		this.methodSign = methodSignature;
 		this.lineNo = lineNumber;
 	}
 

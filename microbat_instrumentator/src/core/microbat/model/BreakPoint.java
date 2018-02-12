@@ -28,9 +28,16 @@ public class BreakPoint extends ClassLocation {
 	private List<ClassLocation> targets = new ArrayList<>();
 	private String declaringCompilationUnitName;
 	
-	public BreakPoint(String className, String declaringCompilationUnitName, int linNum){
-		super(className, null, linNum);
-		this.declaringCompilationUnitName = declaringCompilationUnitName;
+	public BreakPoint(String className, String methodSinature, int linNum){
+		super(className, methodSinature, linNum);
+		
+		if(className.contains("$")){
+			String declaringCompilationName = className.substring(0, className.indexOf("$"));
+			this.declaringCompilationUnitName = declaringCompilationName;
+		}
+		else{
+			this.declaringCompilationUnitName = className;
+		}
 	}
 	
 	public BreakPoint(String className, String declaringCompilationUnitName, String methodSign, int lineNo) {

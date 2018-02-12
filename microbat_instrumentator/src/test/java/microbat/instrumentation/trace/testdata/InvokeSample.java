@@ -19,7 +19,7 @@ public class InvokeSample {
 
   private void run() { IExecutionTracer tracer = ExecutionTracer._getTracer("InvokeSample", "run", 19);
       List<String> ls = new ArrayList<>();
-      ls.add("Good Day");  tracer._hitInvoke(null, null, "methodname", null, "paramTypeSignsCode", "returnTypeSign", 17);
+      ls.add("Good Day");  tracer._hitInvoke(null, null, "methodname", null, "paramTypeSignsCode", "returnTypeSign", 17, "", "");
 
       ArrayList<String> als = new ArrayList<>();
       als.add("Dydh Da");

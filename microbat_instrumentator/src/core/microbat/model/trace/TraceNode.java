@@ -10,6 +10,7 @@ import java.util.Set;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
+import microbat.instrumentation.trace.data.InvokingTrack;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
@@ -35,6 +36,9 @@ public class TraceNode{
 	private Map<AttributionVar, Double> suspicousScoreMap = new HashMap<>();
 	
 	private int checkTime = -1;
+	
+	private String invokingMethod = null;
+	private InvokingTrack invokingDetail = null;
 	
 	private BreakPoint breakPoint;
 	private BreakPointValue programState;
@@ -1076,6 +1080,22 @@ public class TraceNode{
 
 	public void setRuntimePC(long runtimePC) {
 		this.runtimePC = runtimePC;
+	}
+
+	public String getInvokingMethod() {
+		return invokingMethod;
+	}
+
+	public void setInvokingMethod(String invokingMethod) {
+		this.invokingMethod = invokingMethod;
+	}
+
+	public InvokingTrack getInvokingDetail() {
+		return invokingDetail;
+	}
+
+	public void setInvokingDetail(InvokingTrack invokingDetail) {
+		this.invokingDetail = invokingDetail;
 	}
 
 

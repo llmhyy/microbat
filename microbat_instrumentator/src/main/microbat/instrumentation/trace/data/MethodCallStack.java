@@ -15,8 +15,8 @@ public class MethodCallStack extends Stack<OnWorkingMethod> {
 		return null;
 	}
 
-	public void push(TraceNode currentNode, BreakPoint methodEntry, boolean exclusive, InvokingTrack invokeTrack) {
-		super.push(new OnWorkingMethod(currentNode, methodEntry, exclusive, invokeTrack));
+	public void push(TraceNode node, boolean exclusive) {
+		super.push(new OnWorkingMethod(node, exclusive));
 	}
 	
 }
