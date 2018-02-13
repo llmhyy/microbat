@@ -166,12 +166,13 @@ public class ExecutionTracer implements IExecutionTracer {
 	/**
 	 * @param line
 	 * @param returnObj
-	 * @param returnGeneralType (if type is object type -> this will be display of object type, not specific name 
+	 * @param returnGeneralTypeSign (if type is object type -> this will be display of object type, not specific name 
 	 */
 	@Override
-	public void _hitReturn(Object returnObj, String returnGeneralType, int line, String className, String methodSignature) {
+	public void _hitReturn(Object returnObj, String returnGeneralTypeSign, int line, String className, String methodSignature) {
 		_hitLine(line, className, methodSignature);
 		locker.lock();
+		String returnGeneralType = SignatureUtils.signatureToName(returnGeneralTypeSign);
 		Variable returnVar = new VirtualVar(invokeTrack.getInvokeNodeId(), returnGeneralType);
 		VarValue returnVal = appendVarValue(returnObj, returnVar, null);
 		invokeTrack.setReturnValue(returnVal);
@@ -215,11 +216,12 @@ public class ExecutionTracer implements IExecutionTracer {
 	/**
 	 * @param refValue
 	 * @param fieldValue
-	 * @param fieldTypeSign
+	 * @param fieldType
 	 * @param line
 	 */
 	@Override
-	public void _writeField(Object refValue, Object fieldValue, String fieldName, String fieldTypeSign, int line, String className, String methodSignature) {
+	public void _writeField(Object refValue, Object fieldValue, String fieldName, String fieldType, int line,
+			String className, String methodSignature) {
 		_hitLine(line, className, methodSignature);
 		locker.lock();
 		String parentVarId = TraceUtils.getObjectVarId(refValue);
@@ -229,7 +231,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			locker.unLock();
 			return;
 		}
-		Variable var = new FieldVar(false, fieldName, SignatureUtils.signatureToName(fieldTypeSign));
+		Variable var = new FieldVar(false, fieldName, fieldType);
 		var.setVarID(fieldVarId);
 		VarValue value = appendVarValue(fieldValue, var, null);
 		addRWriteValue(value, true);
@@ -302,17 +304,18 @@ public class ExecutionTracer implements IExecutionTracer {
 	 * @param fieldValue
 	 * @param refType
 	 * @param fieldName
-	 * @param fieldTypeSign
+	 * @param fieldType
 	 * @param line
 	 */
 	@Override
-	public void _readStaticField(Object fieldValue, String refType, String fieldName, String fieldTypeSign, int line, String className, String methodSignature) {
+	public void _readStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line,
+			String className, String methodSignature) {
 		if (exclusive) {
 			return;
 		}
 		_hitLine(line, className, methodSignature);
 		locker.lock();
-		Variable var = new FieldVar(true, fieldName, SignatureUtils.signatureToName(fieldTypeSign));
+		Variable var = new FieldVar(true, fieldName, fieldType);
 		var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
 		VarValue value = appendVarValue(fieldValue, var, null);
 		addRWriteValue(value, false);

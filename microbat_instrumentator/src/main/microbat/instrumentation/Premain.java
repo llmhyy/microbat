@@ -49,8 +49,7 @@ public class Premain {
 	private static void installBootstrap(Instrumentation inst) throws Exception {
 		System.out.println("install jar to boostrap...");
 		File tempFolder = AgentUtils.createTempFolder("microbat");
-		System.out.println(
-				"Temp folder to extract jars (existing jars will not be override): " + tempFolder.getAbsolutePath());
+		System.out.println("Temp folder to extract jars: " + tempFolder.getAbsolutePath());
 		List<JarFile> bootJarPaths = getJarFiles("instrumentator_all.jar");
 		if (bootJarPaths.isEmpty()) {
 			bootJarPaths = getJarFiles("instrumentator_rt.jar", 
@@ -63,6 +62,7 @@ public class Premain {
 										"slf4j-api-1.7.12.jar");
 		}
 		if (bootJarPaths.isEmpty()) {
+			System.out.println("Switch to dev mode");
 			bootJarPaths = getJarFilesDevMode();
 		}
 		for (JarFile jarfile : bootJarPaths) {
