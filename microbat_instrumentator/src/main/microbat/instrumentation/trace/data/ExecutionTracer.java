@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import microbat.model.BreakPoint;
+import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.ArrayValue;
@@ -46,6 +47,28 @@ public class ExecutionTracer implements IExecutionTracer {
 		trace = new Trace(appJavaClassPath);
 	}
 
+	private void buildDataRelation(Variable var, String rw){
+		TraceNode currentNode = trace.getLatestNode();
+		String order = trace.findDefiningNodeOrder(rw, currentNode, var.getVarID(), var.getAliasVarID());
+		String varID = var.getVarID() + ":" + order;
+		var.setVarID(varID);
+		if(var.getAliasVarID()!=null){
+			var.setAliasVarID(var.getAliasVarID()+":"+order);			
+		}
+		
+		StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
+		if(entry == null){
+			entry = new StepVariableRelationEntry(varID);
+		}
+		if(rw.equals(Variable.READ)){
+			entry.addConsumer(currentNode);
+		}
+		else if(rw.equals(Variable.WRITTEN)){
+			entry.addProducer(currentNode);
+		}
+		trace.getStepVariableTable().put(varID, entry);
+	}
+	
 	/* TODO: Set aliasVarId*/
 	private VarValue appendVarValue(Object value, Variable var, VarValue parent) {
 		boolean isRoot = (parent == null);
@@ -223,8 +246,10 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 		if (isWrittenVar) {
 			currentNode.addWrittenVariable(value);
+			buildDataRelation(value.getVariable(), Variable.WRITTEN);
 		} else {
 			currentNode.addReadVariable(value);
+			buildDataRelation(value.getVariable(), Variable.READ);
 		}
 	}
 	
