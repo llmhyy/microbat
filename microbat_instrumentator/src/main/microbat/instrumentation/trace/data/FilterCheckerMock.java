@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class FilterCheckerMock implements IFilterChecker {
-	private List<String> includes = Arrays.asList(
+	private List<String> transformables = Arrays.asList(
 			"com0",
 			"microbat/instrumentation/trace/testdata",
 			"java/util/Random",
@@ -22,7 +22,7 @@ public class FilterCheckerMock implements IFilterChecker {
 
 	@Override
 	public boolean checkTransformable(String classFName) {
-		for (String include : includes) {
+		for (String include : transformables) {
 			if (classFName.startsWith(include)) {
 				return true;
 			}
@@ -30,12 +30,16 @@ public class FilterCheckerMock implements IFilterChecker {
 		return false;
 	}
 
+	private List<String> includes = Arrays.asList("java.util.ArrayList", 
+			"com0", "microbat.instrumentation.trace.testdata");
 	@Override
 	public boolean checkExclusive(String className, String methodName) {
-		if ("java.util.ArrayList".equals(className)) {
-			return false;
+		for (String include : includes) {
+			if (className.startsWith(include)) {
+				return false;
+			}
 		}
-		return !className.startsWith("com0");
+		return false;
 	}
 
 }

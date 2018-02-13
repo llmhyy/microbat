@@ -26,6 +26,18 @@ import sav.common.core.SavRtException;
 public class FileUtils {
 	private FileUtils(){}
 	
+	public static File createTempFolder(String folderName) {
+		File folder = getFileInTempFolder(folderName);
+		if (folder.exists()) {
+			if (folder.isDirectory()) {
+				return folder;
+			}
+			throw new SavRtException(String.format("Cannot create temp folder: %s", folderName));
+		}
+		folder.mkdirs();
+		return folder;
+	}
+	
 	public static File getFileInTempFolder(String fileName) {
 		File tmpdir = new File(System.getProperty("java.io.tmpdir"));
 		File file = new File(tmpdir, fileName);

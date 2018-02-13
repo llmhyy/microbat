@@ -65,14 +65,9 @@ public class ExecutionTracer implements IExecutionTracer {
 			varValue = refVal;
 			/* TODO append children */
 		}
-		
-		
 		if (parent != null) {
 			parent.linkAchild(varValue);
 		}
-		
-		System.currentTimeMillis();
-		
 		return varValue;
 	}
 	
@@ -110,9 +105,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	@Override
 	public void _hitInvoke(Object invokeObj, String invokeTypeSign, String methodSig, Object[] params,
 			String paramTypeSignsCode, String returnTypeSign, int line, String residingClassName, String residingMethodSignature) {
-		locker.lock();
 		_hitLine(line, residingClassName, residingMethodSignature);
-		
+		locker.lock();
 		InvokingTrack invokeDetail = new InvokingTrack(invokeObj, invokeTypeSign, methodSig, params,
 				TraceUtils.parseArgTypes(paramTypeSignsCode));
 		
@@ -153,8 +147,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	 */
 	@Override
 	public void _hitReturn(Object returnObj, String returnGeneralType, int line, String className, String methodSignature) {
-		locker.lock();
 		_hitLine(line, className, methodSignature);
+		locker.lock();
 		Variable returnVar = new VirtualVar(invokeTrack.getInvokeNodeId(), returnGeneralType);
 		VarValue returnVal = appendVarValue(returnObj, returnVar, null);
 		invokeTrack.setReturnValue(returnVal);
@@ -203,8 +197,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	 */
 	@Override
 	public void _writeField(Object refValue, Object fieldValue, String fieldName, String fieldTypeSign, int line, String className, String methodSignature) {
-		locker.lock();
 		_hitLine(line, className, methodSignature);
+		locker.lock();
 		String parentVarId = TraceUtils.getObjectVarId(refValue);
 		String fieldVarId = Variable.concanateFieldVarID(parentVarId, fieldName);
 		boolean invokeRelevant = invokeTrack.updateRelevant(parentVarId, fieldVarId);
@@ -247,8 +241,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		if (exclusive) {
 			return;
 		}
-		locker.lock();
 		_hitLine(line, className, methodSignature);
+		locker.lock();
 		Variable var = new FieldVar(false, fieldName, fieldType);
 		var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
 		VarValue value = appendVarValue(fieldValue, var, null);
@@ -291,12 +285,12 @@ public class ExecutionTracer implements IExecutionTracer {
 		if (exclusive) {
 			return;
 		}
-		locker.lock();
 		_hitLine(line, className, methodSignature);
+		locker.lock();
 		Variable var = new FieldVar(true, fieldName, SignatureUtils.signatureToName(fieldTypeSign));
 		var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
 		VarValue value = appendVarValue(fieldValue, var, null);
-		addRWriteValue(value, false);;
+		addRWriteValue(value, false);
 		locker.unLock();
 	}
 	

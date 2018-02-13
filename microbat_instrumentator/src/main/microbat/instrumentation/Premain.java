@@ -1,7 +1,9 @@
 package microbat.instrumentation;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,13 +13,23 @@ import java.util.jar.JarFile;
 import microbat.instrumentation.trace.TraceTransformer;
 
 public class Premain {
-	private static final String AGENT_JAR_FOLDER = "E:/linyun/git_space/microbat/microbat_instrumentator/src/test/resources/";
-	private static final String AGENT_JAR = AGENT_JAR_FOLDER + "microbat_rt.jar";
-	private static final String AGENT_JAR_TEST = AGENT_JAR_FOLDER +  "microbat_instrumentator.jar";
-	
+
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
 		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
-		installBootstrap(Arrays.asList("E:/linyun/instrumentation/instrumentator.jar",
+		installBootstrap(inst);
+
+		System.out.println("start instrumentation...");
+		final Agent agent = new Agent(agentArgs);
+		agent.startup();
+		inst.addTransformer(new TraceTransformer(agent.getAgentParams().getEntryPoint()), true);
+		if (retransformableClasses.length > 0) {
+			inst.retransformClasses(retransformableClasses);
+		}
+		System.out.println("after retransform");
+	}
+	
+	private static List<JarFile> getJarFilesDevMode() throws IOException {
+		List<String> jarPaths = Arrays.asList("E:/linyun/instrumentation/instrumentator.jar",
 				"E:/linyun/git_space/microbat/microbat_instrumentator/lib/bcel-6.0.jar",
 				"E:/linyun/git_space/microbat/microbat_instrumentator/lib/javassist.jar",
 				"E:/linyun/git_space/microbat/microbat_instrumentator/lib/commons-lang-2.6.jar",
@@ -25,32 +37,82 @@ public class Premain {
 				"E:/linyun/git_space/microbat/microbat_instrumentator/lib/commons-io-1.3.2.jar",
 				"E:/linyun/git_space/microbat/microbat_instrumentator/lib/mysql-connector-java-5.1.44-bin.jar",
 				"E:/linyun/git_space/microbat/microbat_instrumentator/lib/slf4j-api-1.7.12.jar"
-				), inst);
-		
-		System.out.println("start instrumentation...");
-		final Agent agent = new Agent(agentArgs);
-		agent.startup();
-		inst.addTransformer(new TraceTransformer(agent.getAgentParams().getEntryPoint()), true);
-		if (retransformableClasses.length > 0) {
-        	inst.retransformClasses(retransformableClasses);
-        }
-        System.out.println("after retransform");
-    }
+				);
+		List<JarFile> jars = new ArrayList<>(jarPaths.size());
+		for (String jarPath : jarPaths) {
+			JarFile jarFile = new JarFile(jarPath);
+			jars.add(jarFile);
+		}
+		return jars;
+	}
 
-	private static void installBootstrap(List<String> bootJarPaths, Instrumentation inst) throws IOException {
+	private static void installBootstrap(Instrumentation inst) throws Exception {
 		System.out.println("install jar to boostrap...");
-		for (String bootJarPath : bootJarPaths) {
-			try {
-				System.out.println(bootJarPath);
-				JarFile jarfile = new JarFile(new File(bootJarPath));
-				inst.appendToBootstrapClassLoaderSearch(jarfile);
-			} catch (IOException ioe) {
-				System.err.println("unable to open boot jar file : " + bootJarPath);
-				throw ioe;
+		File tempFolder = AgentUtils.createTempFolder("microbat");
+		System.out.println(
+				"Temp folder to extract jars (existing jars will not be override): " + tempFolder.getAbsolutePath());
+		List<JarFile> bootJarPaths = getJarFiles("instrumentator_all.jar");
+		if (bootJarPaths.isEmpty()) {
+			bootJarPaths = getJarFiles("instrumentator_rt.jar", 
+										"bcel-6.0.jar",
+										"javassist.jar",
+										"commons-lang-2.6.jar",
+										"sav.commons.jar",
+										"commons-io-1.3.2.jar",
+										"mysql-connector-java-5.1.44-bin.jar",
+										"slf4j-api-1.7.12.jar");
+		}
+		if (bootJarPaths.isEmpty()) {
+			bootJarPaths = getJarFilesDevMode();
+		}
+		for (JarFile jarfile : bootJarPaths) {
+			inst.appendToBootstrapClassLoaderSearch(jarfile);
+			if (jarfile.getName().contains("mysql-connector-java")) {
+				inst.appendToSystemClassLoaderSearch(jarfile);
 			}
-		}		
+		}
+	}
+
+	private static List<JarFile> getJarFiles(String... jarNames) throws Exception {
+		File tempFolder = AgentUtils.createTempFolder("microbat");
+		List<JarFile> jars = new ArrayList<>();
+		for (String jarName : jarNames) {
+			File file = new File(tempFolder.getAbsolutePath(), jarName);
+			if (file.exists()) {
+				file.delete();
+			}
+			if (!file.exists()) {
+				try {
+					String jarResourcePath = "lib/" + jarName;
+					boolean success = extractJar(jarResourcePath, file.getAbsolutePath());
+					if (!success) {
+						System.out.println("Could not extract jar: " + jarResourcePath);
+						if (jarName.endsWith("instrumentator_rt.jar")) {
+							jars.clear();
+							return jars;
+						}
+						continue;
+					}
+				} catch (Exception ex) {
+					file.delete();
+					continue;
+				}
+			}
+			JarFile jarFile = new JarFile(file);
+			jars.add(jarFile);
+		}
+		return jars;
 	}
 	
+	public static boolean extractJar(String jarResourcePath, String filePath) throws IOException {
+		final InputStream inputJarStream = Premain.class.getClassLoader().getResourceAsStream(jarResourcePath);
+		if (inputJarStream == null) {
+			return false;
+		}
+		AgentUtils.copy(inputJarStream, new FileOutputStream(filePath));
+		return true;
+	}
+
 	private static Class<?>[] getRetransformableClasses(Instrumentation inst) {
 		System.out.println("Collect retransformable classes....");
 		List<Class<?>> candidates = new ArrayList<Class<?>>();
@@ -63,7 +125,7 @@ public class Premain {
 				}
 			}
 		}
-//		candidates.add(ArrayList.class);
+		candidates.add(ArrayList.class);
 		return candidates.toArray(new Class<?>[candidates.size()]);
 	}
 }
