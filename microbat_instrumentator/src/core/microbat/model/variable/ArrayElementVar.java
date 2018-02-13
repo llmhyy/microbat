@@ -62,8 +62,4 @@ public class ArrayElementVar extends Variable {
 		return var;
 	}
 	
-	@Override
-	public VariableType getVarType() {
-		return VariableType.ARRAY_ELEMENT;
-	}
 }

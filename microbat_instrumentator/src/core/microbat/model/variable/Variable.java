@@ -137,13 +137,4 @@ public abstract class Variable {
 
 	public abstract String getSimpleName();
 	public abstract Variable clone();
-	public abstract VariableType getVarType();
-	
-	public static enum VariableType {
-		FIELD,
-		LOCAL, 
-		ARRAY_ELEMENT, 
-		CONSTANTS, 
-		VIRTUAL
-	}
 }

@@ -6,12 +6,12 @@ import java.security.ProtectionDomain;
 
 import microbat.instrumentation.trace.data.ExecutionTracer;
 import microbat.instrumentation.trace.data.FilterChecker;
-import microbat.model.ClassLocation;
+import microbat.instrumentation.trace.model.EntryPoint;
 
 public class TraceTransformer implements ClassFileTransformer {
 	private TraceInstrumenter instrumenter;
 	
-	public TraceTransformer(ClassLocation entryPoint) {
+	public TraceTransformer(EntryPoint entryPoint) {
 		instrumenter = new TraceInstrumenter(entryPoint);
 	}
 	

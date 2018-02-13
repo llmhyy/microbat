@@ -4,13 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import microbat.instrumentation.trace.InstrConstants;
-import microbat.model.ClassLocation;
+import microbat.instrumentation.trace.model.EntryPoint;
 import sav.common.core.Pair;
 import sav.common.core.utils.ClassUtils;
 
 public class AgentParams {
-	private ClassLocation entryPoint;
-	
+	private EntryPoint entryPoint;
+
 	public static AgentParams parse(String agentArgs) {
 		String[] args = agentArgs.split(InstrConstants.AGENT_PARAMS_SEPARATOR);
 		Map<String, String> argMap = new HashMap<>();
@@ -21,16 +21,17 @@ public class AgentParams {
 		AgentParams params = new AgentParams();
 		String entryPointStr = argMap.get("entry_point");
 		Pair<String, String> classMethod = ClassUtils.splitClassMethod(entryPointStr);
-		ClassLocation entryPoint = new ClassLocation(classMethod.a, classMethod.b, -1);
+		EntryPoint entryPoint = new EntryPoint(classMethod.a, classMethod.b);
 		params.entryPoint = entryPoint;
 		return params;
 	}
 
-	public ClassLocation getEntryPoint() {
+	public EntryPoint getEntryPoint() {
 		return entryPoint;
 	}
 
-	public void setEntryPoint(ClassLocation entryPoint) {
+	public void setEntryPoint(EntryPoint entryPoint) {
 		this.entryPoint = entryPoint;
 	}
+
 }

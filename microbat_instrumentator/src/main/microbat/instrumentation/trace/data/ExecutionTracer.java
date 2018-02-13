@@ -1,8 +1,15 @@
 package microbat.instrumentation.trace.data;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
 import microbat.model.BreakPoint;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
@@ -18,6 +25,7 @@ import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
 import microbat.util.PrimitiveUtils;
+import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.SignatureUtils;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
@@ -25,6 +33,7 @@ import sav.strategies.dto.AppJavaClassPath;
 public class ExecutionTracer implements IExecutionTracer {
 	private static Map<Long, ExecutionTracer> rtStores;
 	private static long mainThreadId = -1;
+	public static int variableLayer = 10;
 	static {
 		rtStores = new HashMap<>();
 	}
@@ -69,24 +78,83 @@ public class ExecutionTracer implements IExecutionTracer {
 		trace.getStepVariableTable().put(varID, entry);
 	}
 	
-	/* TODO: Set aliasVarId*/
 	private VarValue appendVarValue(Object value, Variable var, VarValue parent) {
+		return appendVarValue(value, var, parent, variableLayer);
+	}
+	
+	/* TODO: Set aliasVarId*/
+	private VarValue appendVarValue(Object value, Variable var, VarValue parent, int retrieveLayer) {
+		if (retrieveLayer < 0) {
+			return null;
+		}
+		retrieveLayer--;
+		
 		boolean isRoot = (parent == null);
 		VarValue varValue = null;
 		if (PrimitiveUtils.isString(var.getType())) {
-			return new StringValue(getStringValue(value), isRoot, var);
+			varValue = new StringValue(getStringValue(value), isRoot, var);
 		} else if (PrimitiveUtils.isPrimitiveType(var.getType())) {
-			return new PrimitiveValue(getStringValue(value), isRoot, var);
+			varValue = new PrimitiveValue(getStringValue(value), isRoot, var);
 		} else if(var.getType().endsWith("[]")) {
 			/* array */
 			ArrayValue arrVal = new ArrayValue(value == null, isRoot, var);
 			arrVal.setComponentType(var.getType().substring(0, var.getType().length() - 2)); // 2 = "[]".length
 			varValue = arrVal;
-			/* TODO append children */
+			if (value == null) {
+				arrVal.setNull(true);
+			} else {
+				int length = Array.getLength(value);
+				for (int i = 0; i < length; i++) {
+					String parentSimpleID = Variable.truncateSimpleID(var.getVarID());
+					String aliasVarID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
+					String varName = String.valueOf(i);
+					ArrayElementVar varElement = new ArrayElementVar(varName, arrVal.getComponentType(), aliasVarID);
+					Object elementValue = Array.get(value, i);
+					appendVarValue(elementValue, varElement, arrVal, retrieveLayer);
+				}
+			}
 		} else {
 			ReferenceValue refVal = new ReferenceValue(value == null, TraceUtils.getUniqueId(value), isRoot, var);
 			varValue = refVal;
-			/* TODO append children */
+			if (value != null) {
+				Class<?> objClass = value.getClass();
+				boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(objClass);
+				if (needParseFields) {
+					List<Field> allFields = CollectionUtils.toArrayList(objClass.getDeclaredFields());
+					Collections.sort(allFields, new Comparator<Field>() {
+						@Override
+						public int compare(Field o1, Field o2) {
+							return o1.getName().compareTo(o2.getName());
+						}
+					});
+					for (Field field : allFields) {
+						field.setAccessible(true);
+						try {
+							Object fieldValue = field.get(value);
+							Class<?> fieldType = field.getType();
+							String fieldTypeStr = fieldType.getName();
+							if (fieldType.isArray()) {
+								fieldTypeStr = SignatureUtils.signatureToName(fieldTypeStr);
+							}
+							if(fieldType.isEnum()){
+								if(fieldTypeStr.equals(var.getType())){
+									continue;
+								}
+							}
+							boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(objClass, field);
+							if(!isIgnore){
+								if(fieldValue != null){
+									FieldVar fieldVar = new FieldVar(Modifier.isStatic(field.getModifiers()),
+											field.getName(), fieldTypeStr, field.getDeclaringClass().getName());
+									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer);
+								}
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
 		}
 		if (parent != null) {
 			parent.linkAchild(varValue);
@@ -231,7 +299,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			locker.unLock();
 			return;
 		}
-		Variable var = new FieldVar(false, fieldName, fieldType);
+		Variable var = new FieldVar(false, fieldName, fieldType, fieldType);
 		var.setVarID(fieldVarId);
 		VarValue value = appendVarValue(fieldValue, var, null);
 		addRWriteValue(value, true);
@@ -270,7 +338,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 		_hitLine(line, className, methodSignature);
 		locker.lock();
-		Variable var = new FieldVar(false, fieldName, fieldType);
+		Variable var = new FieldVar(false, fieldName, fieldType, fieldType);
 		var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
 		VarValue value = appendVarValue(fieldValue, var, null);
 		addRWriteValue(value, true);
@@ -293,7 +361,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		if (exclusive) {
 			return;
 		}
-		Variable var = new FieldVar(false, fieldName, fieldType);
+		Variable var = new FieldVar(false, fieldName, fieldType, fieldType);
 		var.setVarID(fieldVarId);
 		VarValue value = appendVarValue(fieldValue, var, null);
 		addRWriteValue(value, false);
@@ -315,7 +383,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 		_hitLine(line, className, methodSignature);
 		locker.lock();
-		Variable var = new FieldVar(true, fieldName, fieldType);
+		Variable var = new FieldVar(true, fieldName, fieldType, fieldType);
 		var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
 		VarValue value = appendVarValue(fieldValue, var, null);
 		addRWriteValue(value, false);
