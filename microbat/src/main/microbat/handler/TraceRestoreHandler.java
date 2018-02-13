@@ -37,7 +37,8 @@ public class TraceRestoreHandler extends AbstractHandler{
 			protected IStatus run(IProgressMonitor monitor) {
 				TraceRetriever retriever = new TraceRetriever();
 				try {
-					final Trace trace = retriever.retrieveTrace(89);
+					int traceID = retriever.getLatestTrace(Settings.projectName);
+					final Trace trace = retriever.retrieveTrace(traceID);
 					Display.getDefault().asyncExec(new Runnable() {
 
 						@Override

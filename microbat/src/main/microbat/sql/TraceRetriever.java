@@ -24,6 +24,41 @@ import sav.common.core.utils.StringUtils;
 
 public class TraceRetriever extends DbService {
 
+	/**
+	 * return Object[]: regression_id, buggy_trace id, correct_trace id
+	 */
+	public int getLatestTrace(String projectName) throws SQLException {
+		int result = -1;
+		Connection conn = null;
+		List<AutoCloseable> closables = new ArrayList<>();
+		try {
+			conn = getConnection();
+			
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT MAX(trace_id) FROM Trace");
+//			ps.setString(1, projectName);
+			ResultSet rs = ps.executeQuery();
+			closables.add(ps);
+			closables.add(rs);
+			
+			if (countNumberOfRows(rs) == 0) {
+				throw new SQLException(
+						String.format("No record of Regression found for project %s", projectName));
+			}
+			if (rs.next()) {
+				result = rs.getInt(1); // regression_id
+			} else {
+				throw new SQLException(
+						String.format("No record of Regression found for project %s", projectName));
+			}
+			
+		} finally {
+			closeDb(conn, closables);
+		}
+		
+		return result;
+	}
+	
 	public Trace retrieveTrace(int traceId) throws SQLException{
 		Connection conn = null;
 		List<AutoCloseable> closables = new ArrayList<>();
@@ -36,6 +71,7 @@ public class TraceRetriever extends DbService {
 			closeDb(conn, closables);
 		}
 	}
+	
 	protected Trace loadTrace(int traceId, Connection conn, List<AutoCloseable> closables) throws SQLException {
 		Trace trace = new Trace(null); 
 		// load step

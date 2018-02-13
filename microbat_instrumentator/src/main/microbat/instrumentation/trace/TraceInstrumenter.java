@@ -63,14 +63,13 @@ import microbat.codeanalysis.bytecode.CFGConstructor;
 import microbat.instrumentation.trace.data.IExecutionTracer;
 import microbat.instrumentation.trace.data.TraceUtils;
 import microbat.instrumentation.trace.model.ArrayInstructionInfo;
+import microbat.instrumentation.trace.model.EntryPoint;
 import microbat.instrumentation.trace.model.FieldInstructionInfo;
 import microbat.instrumentation.trace.model.LineInstructionInfo;
 import microbat.instrumentation.trace.model.LocalVarInstructionInfo;
 import microbat.instrumentation.trace.model.RWInstructionInfo;
 import microbat.instrumentation.trace.model.UnknownLineInstructionInfo;
-import microbat.model.ClassLocation;
 import sav.common.core.utils.FileUtils;
-import sav.common.core.utils.SignatureUtils;
 import sav.common.core.utils.StringUtils;
 
 public class TraceInstrumenter {
@@ -79,12 +78,11 @@ public class TraceInstrumenter {
 	private static final String CLASS_NAME = "$className"; // local var
 	private static final String METHOD_SIGNATURE = "$methodSignature"; // local
 																		// var
-
 	private BasicTypeSupporter basicTypeSupporter = new BasicTypeSupporter();
 
-	private ClassLocation entryPoint;
+	private EntryPoint entryPoint;
 
-	public TraceInstrumenter(ClassLocation entryPoint) {
+	public TraceInstrumenter(EntryPoint entryPoint) {
 		this.entryPoint = entryPoint;
 	}
 
@@ -100,7 +98,7 @@ public class TraceInstrumenter {
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		JavaClass newJC = null;
-		boolean entry = className.equals(entryPoint.getClassCanonicalName());
+		boolean entry = className.equals(entryPoint.getClassName());
 		for (Method method : jc.getMethods()) {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
@@ -109,8 +107,7 @@ public class TraceInstrumenter {
 				boolean changed = false;
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
 				boolean startTracing = false;
-				if (entry && SignatureUtils.createMethodNameSign(method.getName(), method.getSignature())
-						.equals(entryPoint.getMethodSign())) {
+				if (entry && entryPoint.matchMethod(method.getName(), method.getSignature())) {
 					startTracing = true;
 				}
 				changed = instrumentMethod(classGen, constPool, methodGen, method, startTracing);

@@ -49,7 +49,7 @@ public class InstrumenterTest {
 	}
 
 	private byte[] instrument(byte[] data, String className) throws Exception {
-//		return data;
+		return data;
 //		TraceTransformer transformer = new TraceTransformer();
 		//		TraceTransformer transformer = new TraceTransformer();
 //		return transformer.instrument(className, data, new NormalInstrumenter());
@@ -57,7 +57,7 @@ public class InstrumenterTest {
 //		return transformer.instrument(className, data);
 //		FieldTransformer transformer = new FieldTransformer();
 //		return transformer.instrument(className, data);
-		TraceInstrumenter transformer = new TraceInstrumenter(new ClassLocation("", "", 23));
-		return transformer.instrument(className, data);
+//		TraceInstrumenter transformer = new TraceInstrumenter(new ClassLocation("", "", 23));
+//		return transformer.instrument(className, data);
 	}
 }

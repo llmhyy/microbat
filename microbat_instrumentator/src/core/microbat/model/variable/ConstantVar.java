@@ -27,8 +27,4 @@ public class ConstantVar extends Variable {
 		this.value = value;
 	}
 
-	@Override
-	public VariableType getVarType() {
-		return VariableType.CONSTANTS;
-	}
 }

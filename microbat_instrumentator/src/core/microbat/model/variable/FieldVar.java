@@ -4,9 +4,10 @@ public class FieldVar extends Variable{
 	private boolean isStatic;
 	private String declaringType;
 	
-	public FieldVar(boolean isStatic, String name, String type){
+	public FieldVar(boolean isStatic, String name, String type, String declaringType){
 		super(name, type);
 		this.isStatic = isStatic;
+		this.declaringType = declaringType;
 	}
 	
 	public boolean isStatic() {
@@ -76,14 +77,9 @@ public class FieldVar extends Variable{
 
 	@Override
 	public Variable clone() {
-		FieldVar var = new FieldVar(isStatic, variableName, type);
+		FieldVar var = new FieldVar(isStatic, variableName, type, declaringType);
 		var.setVarID(varID);
 		var.setDeclaringType(declaringType);
 		return var;
-	}
-	
-	@Override
-	public VariableType getVarType() {
-		return VariableType.FIELD;
 	}
 }

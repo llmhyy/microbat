@@ -54,7 +54,7 @@ public class CollectionUtils {
 	}
 	
 	public static <T> List<T> toArrayList(T[] vals) {
-		List<T> list = new ArrayList<T>();
+		List<T> list = new ArrayList<T>(vals.length);
 		for (T val : vals) {
 			list.add(val);
 		}

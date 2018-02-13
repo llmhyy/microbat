@@ -167,7 +167,8 @@ public class VarValueXmlReader {
 			variable = new ConstantVar(name, type);
 		} else if (isOfType(cat, FieldVar.class)) {
 			boolean isStatic = getBooleanAttribute(ele, FIELD_VAR_IS_STATIC);
-			variable = new FieldVar(isStatic , name, type);
+			//TODO, we need the declaring type of the field
+			variable = new FieldVar(isStatic , name, type, null);
 			((FieldVar) variable).setDeclaringType(getAttribute(ele, FIELD_VAR_DECLARING_TYPE));
 		} else if (isOfType(cat, LocalVar.class)) {
 			String locationClass = getAttribute(ele, LOCAL_VAR_LOCATION_CLASS);

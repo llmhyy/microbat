@@ -22,6 +22,7 @@ import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.LoadInstruction;
 import org.apache.bcel.generic.LocalVariableInstruction;
+import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.StoreInstruction;
 import org.apache.bcel.generic.Type;
@@ -174,8 +175,12 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 				String type = gIns.getFieldType(pool).getSignature();
 				type = SignatureUtils.signatureToName(type);
 				
-				FieldVar var = new FieldVar(isStatic, fullFieldName, type);
-				
+				FieldVar var = new FieldVar(isStatic, fullFieldName, type, type);
+				if (isStatic) {
+					/* get fieldRefClassName */
+					ReferenceType refType = gIns.getReferenceType(pool);
+					var.setDeclaringType(SignatureUtils.signatureToName(refType.getSignature()));
+				}
 				if(rw){
 					if(!readVars.contains(var)){
 						return new VarOp(var, Variable.READ);															
@@ -191,7 +196,12 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 		else if(insHandle.getInstruction() instanceof LocalVariableInstruction){
 			LocalVariableInstruction lIns = (LocalVariableInstruction)insHandle.getInstruction();
 			int varIndex = lIns.getIndex();
-			String varName = "$" + varIndex;
+//			String varName = "$" + varIndex;
+			LocalVariable localVariable = method.getLocalVariableTable().getLocalVariable(varIndex, insHandle.getPosition());
+			if (localVariable == null) {
+				localVariable = method.getLocalVariableTable().getLocalVariable(varIndex);
+			}
+			String varName = localVariable == null ? "$" + varIndex : localVariable.getName();
 			LocalVar var = new LocalVar(varName, null, className, lineNumber);
 			if(insHandle.getInstruction() instanceof IINC){
 				if(!readVars.contains(var)){
@@ -284,7 +294,7 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 					if(fIns.getName().contains("get")){
 						if(popArrayTime==0){
 							type = SignatureUtils.signatureToName(type);
-							return new FieldVar(isStatic, fieldName, type);											
+							return new FieldVar(isStatic, fieldName, type, type);											
 						}
 						else{
 							popArrayTime--;
@@ -371,7 +381,7 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 			}
 			else if(ins instanceof InvokeInstruction){
 				InvokeInstruction iIns = (InvokeInstruction)ins;
-				Type type = iIns.getReturnType(pool);
+//				Type type = iIns.getReturnType(pool);
 				//TODO handle the returned array by method invocation.
 			}
 		}
@@ -417,5 +427,9 @@ public class LineNumberVisitor0 extends ByteCodeVisitor {
 
 	public void setMethod(Method method) {
 		this.method = method;
+	}
+	
+	public int getLineNumber() {
+		return lineNumber;
 	}
 }
