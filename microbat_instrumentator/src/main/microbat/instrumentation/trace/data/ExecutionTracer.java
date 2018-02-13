@@ -414,9 +414,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	private VarValue addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType, int line,
 			boolean write) {
 		String id = new StringBuilder(TraceUtils.getObjectVarId(arrayRef)).append("[").append(index).append("]").toString();
-		String eleType = SignatureUtils.signatureToName(arrayRef.getClass().getName());
 		String name = id;
-		Variable var = new ArrayElementVar(name, eleType, null);
+		Variable var = new ArrayElementVar(name, elementType, null);
 		VarValue value = appendVarValue(eleValue, var, null);
 		addRWriteValue(value, write);
 		return value;
