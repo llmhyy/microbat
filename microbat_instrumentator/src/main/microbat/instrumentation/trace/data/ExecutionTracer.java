@@ -65,9 +65,14 @@ public class ExecutionTracer implements IExecutionTracer {
 			varValue = refVal;
 			/* TODO append children */
 		}
+		
+		
 		if (parent != null) {
 			parent.linkAchild(varValue);
 		}
+		
+		System.currentTimeMillis();
+		
 		return varValue;
 	}
 	
@@ -311,8 +316,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		_hitLine(line, className, methodSignature);
 		locker.lock();
 		Variable var = new LocalVar(varName, varType, className, line);
-		var.setVarID(Variable.concanateLocalVarID(className, varName, varScopeStartLine,
-				varScopeEndLine));
+		String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
+		var.setVarID(varID);
 		VarValue value = appendVarValue(varValue, var, null);
 		addRWriteValue(value, true);
 		locker.unLock();
@@ -331,8 +336,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		_hitLine(line, className, methodSignature);
 		locker.lock();
 		Variable var = new LocalVar(varName, varType, className, line);
-		var.setVarID(Variable.concanateLocalVarID(className, varName, varScopeStartLine,
-				varScopeEndLine));
+		String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
+		var.setVarID(varID);
 		VarValue value = appendVarValue(varValue, var, null);
 		addRWriteValue(value, false);
 		locker.unLock();
@@ -386,8 +391,9 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	private VarValue addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType, int line,
 			boolean write) {
-		String name = new StringBuilder(TraceUtils.getObjectVarId(arrayRef)).append("[").append(index).append("]").toString();
+		String id = new StringBuilder(TraceUtils.getObjectVarId(arrayRef)).append("[").append(index).append("]").toString();
 		String eleType = SignatureUtils.signatureToName(arrayRef.getClass().getName());
+		String name = id;
 		Variable var = new ArrayElementVar(name, eleType, null);
 		VarValue value = appendVarValue(eleValue, var, null);
 		addRWriteValue(value, write);

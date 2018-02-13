@@ -33,6 +33,14 @@ public class TraceUtils {
 		}
 		return getObjectVarId(fieldValue);
 	}
+	
+	public static String getLocalVarId(String className, int startLine, int endLine, 
+			String varName, String varType, Object varValue) {
+		if (PrimitiveUtils.isPrimitive(varType)) {
+			return Variable.concanateLocalVarID(className, varName, startLine, endLine);
+		}
+		return getObjectVarId(varValue);
+	}
 
 	public static String getArrayElementVarId(String parentVarId, int index, String elementType, Object eleValue) {
 		if (PrimitiveUtils.isPrimitive(elementType)) {
