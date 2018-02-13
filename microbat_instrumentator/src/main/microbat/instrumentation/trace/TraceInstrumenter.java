@@ -358,17 +358,18 @@ public class TraceInstrumenter {
 				/* on stack: value */
 				if (type.getSize() == 1) {
 					newInsns.append(new DUP()); // val, val
-					newInsns.append(new ALOAD(tracerVar.getIndex())); // val,
-																		// val,
-																		// tracer
+					newInsns.append(new ALOAD(tracerVar.getIndex())); // val, val, tracer
 					newInsns.append(new SWAP()); // val, tracer, val
 				} else {
 					newInsns.append(new DUP2()); // val*, val*
-					newInsns.append(new ALOAD(tracerVar.getIndex())); // val*,
-																		// val*,
-																		// tracer
+					newInsns.append(new ALOAD(tracerVar.getIndex())); // val*, val*, tracer
 					newInsns.append(new DUP_X2()); // val*, tracer, val*, tracer
 					newInsns.append(new POP()); // val*, tracer, val*
+				}
+				
+				if (type instanceof BasicType) {
+					newInsns.append(
+							new INVOKESTATIC(basicTypeSupporter.getValueOfMethodIdx((BasicType) type, constPool)));
 				}
 			}
 			newInsns.append(new PUSH(constPool, type.getSignature())); // val*,
@@ -882,6 +883,10 @@ public class TraceInstrumenter {
 																											// arrRef,
 																											// idx,
 																											// val
+		if (info.getElementType() instanceof BasicType) {
+			newInsns.append(
+					new INVOKESTATIC(basicTypeSupporter.getValueOfMethodIdx((BasicType) info.getElementType(), constPool)));
+		}
 		newInsns.append(new PUSH(constPool, info.getVarType())); // tracer,
 																	// arrRef,
 																	// idx, val,

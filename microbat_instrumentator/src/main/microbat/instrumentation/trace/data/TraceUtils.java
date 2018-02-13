@@ -19,7 +19,6 @@ public class TraceUtils {
 		if (refValue == null) {
 			return -1;
 		}
-//		return 1;
 		try {
 			return System.identityHashCode(refValue);
 		} catch (Throwable e) {
