@@ -10,7 +10,7 @@ import java.util.Set;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
-import microbat.instrumentation.trace.data.InvokingTrack;
+import microbat.instrumentation.trace.data.InvokingDetail;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
@@ -38,7 +38,7 @@ public class TraceNode{
 	private int checkTime = -1;
 	
 	private String invokingMethod = null;
-	private InvokingTrack invokingDetail = null;
+	private InvokingDetail invokingDetail = null;
 	
 	private BreakPoint breakPoint;
 	private BreakPointValue programState;
@@ -60,9 +60,16 @@ public class TraceNode{
 	private List<TraceNode> controlDominatees = new ArrayList<>();
 	
 	/**
-	 * this filed is used as a temporary field during the trace construction.
+	 * this filed is used as a temporary field during the trace 
+	 * construction for returning value.
 	 */
 	private List<VarValue> returnedVariables = new ArrayList<>();
+	
+	/**
+	 * this filed is used as a temporary field during the trace 
+	 * construction for passing parameter of method invocation.
+	 */
+	private List<VarValue> passParameters = new ArrayList<>();
 	
 	/**
 	 * the order of this node in the whole trace, starting from 1.
@@ -1090,12 +1097,20 @@ public class TraceNode{
 		this.invokingMethod = invokingMethod;
 	}
 
-	public InvokingTrack getInvokingDetail() {
+	public InvokingDetail getInvokingDetail() {
 		return invokingDetail;
 	}
 
-	public void setInvokingDetail(InvokingTrack invokingDetail) {
+	public void setInvokingDetail(InvokingDetail invokingDetail) {
 		this.invokingDetail = invokingDetail;
+	}
+
+	public List<VarValue> getPassParameters() {
+		return passParameters;
+	}
+
+	public void setPassParameters(List<VarValue> passParameters) {
+		this.passParameters = passParameters;
 	}
 
 
