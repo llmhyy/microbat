@@ -16,19 +16,19 @@ import sav.common.core.utils.StringUtils;
  * For invoking, any touch on parameter's or invokeObj's fields
  *         will be recorded. (That means writeField will be handle in ExecutionTracer.
  */
-public class InvokingTrack {
+public class InvokingDetail {
 	private Set<String> relevantVarIds;
 	private VarValue returnValue;
 	private BreakPoint invokerEntry;
 	private List<VarValue> writtenVarValue;
 	private String invokeNodeId;
 	
-	public InvokingTrack() {
+	public InvokingDetail() {
 		// EMTPY CONSTRUCTOR
 	}
 
 	/* TODO LLT: check if need to convert paramtype from signature to name */
-	public InvokingTrack(Object invokeObj, String className, String methodName, Object[] params, String[] paramTypes) {
+	public InvokingDetail(Object invokeObj, String className, String methodName, Object[] params, String[] paramTypes) {
 		/* extract object Ids */
 		relevantVarIds = new HashSet<>(params.length + 1);
 		if (invokeObj == null) {

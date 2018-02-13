@@ -2,7 +2,7 @@ package microbat.instrumentation.trace.data;
 
 import microbat.model.value.VarValue;
 
-public class EmptyInvokingTrack extends InvokingTrack {
+public class EmptyInvokingTrack extends InvokingDetail {
 
 	public EmptyInvokingTrack() {
 		super();

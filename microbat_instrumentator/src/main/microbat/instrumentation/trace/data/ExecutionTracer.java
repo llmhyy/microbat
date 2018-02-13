@@ -36,7 +36,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	 * For exclusive case, invokeTrack will be recorded to collect data.
 	 */
 	private boolean exclusive;
-	private InvokingTrack invokeTrack = new EmptyInvokingTrack();
+//	private InvokingTrack invokeTrack = new EmptyInvokingTrack();
 	private MethodCallStack methodCallStack;
 	private Locker locker;
 
@@ -82,10 +82,12 @@ public class ExecutionTracer implements IExecutionTracer {
 			ArrayValue arrVal = new ArrayValue(value == null, isRoot, var);
 			arrVal.setComponentType(var.getType().substring(0, var.getType().length() - 2)); // 2 = "[]".length
 			varValue = arrVal;
+			varValue.setStringValue(getStringValue(value));
 			/* TODO append children */
 		} else {
 			ReferenceValue refVal = new ReferenceValue(value == null, TraceUtils.getUniqueId(value), isRoot, var);
 			varValue = refVal;
+			varValue.setStringValue(getStringValue(value));
 			/* TODO append children */
 		}
 		if (parent != null) {
@@ -104,7 +106,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	 * */
 	public void enterMethod(String className, String methodSignature, int methodStartLine) {
 		locker.lock();
-		exclusive = exclusive || FilterChecker.isExclusive(className, methodSignature);
+		exclusive = FilterChecker.isExclusive(className, methodSignature);
 		// TODO-INSTR: declaringCompilationUnitName would not be correct here.
 //		currentNode = null;
 		
@@ -130,12 +132,12 @@ public class ExecutionTracer implements IExecutionTracer {
 			String paramTypeSignsCode, String returnTypeSign, int line, String residingClassName, String residingMethodSignature) {
 		_hitLine(line, residingClassName, residingMethodSignature);
 		locker.lock();
-		InvokingTrack invokeDetail = new InvokingTrack(invokeObj, invokeTypeSign, methodSig, params,
-				TraceUtils.parseArgTypes(paramTypeSignsCode));
+//		InvokingDetail invokeDetail = new InvokingDetail(invokeObj, invokeTypeSign, methodSig, params,
+//				TraceUtils.parseArgTypes(paramTypeSignsCode));
 		
 		TraceNode latestNode = trace.getLatestNode();
 		latestNode.setInvokingMethod(methodSig);
-		latestNode.setInvokingDetail(invokeDetail);
+//		latestNode.setInvokingDetail(invokeDetail);
 		
 		locker.unLock();
 	}
@@ -144,6 +146,9 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void _hitInvokeStatic(String invokeTypeSign, String methodName, Object[] params,
 			String paramTypeSignsCode, String returnTypeSign, int line, String className, String methodSignature) {
 		_hitLine(line, className, methodSignature);
+		
+		TraceNode latestNode = trace.getLatestNode();
+		latestNode.setInvokingMethod(methodName+paramTypeSignsCode);
 	}
 	
 	@Override
@@ -173,17 +178,19 @@ public class ExecutionTracer implements IExecutionTracer {
 		_hitLine(line, className, methodSignature);
 		locker.lock();
 		String returnGeneralType = SignatureUtils.signatureToName(returnGeneralTypeSign);
-		Variable returnVar = new VirtualVar(invokeTrack.getInvokeNodeId(), returnGeneralType);
+		Variable returnVar = new VirtualVar(methodSignature, returnGeneralType);
+		String varID = VirtualVar.VIRTUAL_PREFIX + methodSignature;
+		returnVar.setVarID(varID);
 		VarValue returnVal = appendVarValue(returnObj, returnVar, null);
-		invokeTrack.setReturnValue(returnVal);
-//		exitMethod(line);
+		TraceNode latestNode = trace.getLatestNode();
+		latestNode.addReturnVariable(returnVal);
+		
 		locker.unLock();
 	}
 	
 	@Override
 	public void _hitVoidReturn(int line, String className, String methodSignature) {
 		_hitLine(line, className, methodSignature);
-//		exitMethod(line);
 	}
 
 	@Override
@@ -197,7 +204,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			locker.unLock();
 			return;
 		}
-		/* TODO LLT: in Breakpoint, we need to set methodName or signature? */
+		
 		BreakPoint bkp = new BreakPoint(className, methodSignature, line);
 		int order = trace.size() + 1;
 		TraceNode currentNode = new TraceNode(bkp, null, order, trace); // leave programState empty.
@@ -226,18 +233,18 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.lock();
 		String parentVarId = TraceUtils.getObjectVarId(refValue);
 		String fieldVarId = Variable.concanateFieldVarID(parentVarId, fieldName);
-		boolean invokeRelevant = invokeTrack.updateRelevant(parentVarId, fieldVarId);
-		if (exclusive && !invokeRelevant) {
-			locker.unLock();
-			return;
-		}
+//		boolean invokeRelevant = invokeTrack.updateRelevant(parentVarId, fieldVarId);
+//		if (exclusive && !invokeRelevant) {
+//			locker.unLock();
+//			return;
+//		}
 		Variable var = new FieldVar(false, fieldName, fieldType);
 		var.setVarID(fieldVarId);
 		VarValue value = appendVarValue(fieldValue, var, null);
 		addRWriteValue(value, true);
-		if (invokeRelevant) {
-			invokeTrack.addWrittenValue(value);
-		}
+//		if (invokeRelevant) {
+//			invokeTrack.addWrittenValue(value);
+//		}
 		locker.unLock();
 	}
 
@@ -289,10 +296,10 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.lock();
 		String parentVarId = TraceUtils.getObjectVarId(refValue);
 		String fieldVarId = TraceUtils.getFieldVarId(parentVarId, fieldName, fieldType, fieldValue);
-		invokeTrack.updateRelevant(parentVarId, fieldVarId);
-		if (exclusive) {
-			return;
-		}
+//		invokeTrack.updateRelevant(parentVarId, fieldVarId);
+//		if (exclusive) {
+//			return;
+//		}
 		Variable var = new FieldVar(false, fieldName, fieldType);
 		var.setVarID(fieldVarId);
 		VarValue value = appendVarValue(fieldValue, var, null);
@@ -376,13 +383,13 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void _readArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line, String className, String methodSignature) {
 		_hitLine(line, className, methodSignature);
 		locker.lock();
-		String parentVarId = TraceUtils.getObjectVarId(arrayRef);
-		String arrEleVarId = TraceUtils.getArrayElementVarId(parentVarId, index, elementType, eleValue);
-		invokeTrack.updateRelevant(parentVarId, arrEleVarId);
-		if (exclusive) {
-			locker.unLock();
-			return;
-		}
+//		String parentVarId = TraceUtils.getObjectVarId(arrayRef);
+//		String arrEleVarId = TraceUtils.getArrayElementVarId(parentVarId, index, elementType, eleValue);
+//		invokeTrack.updateRelevant(parentVarId, arrEleVarId);
+//		if (exclusive) {
+//			locker.unLock();
+//			return;
+//		}
 		addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, false);
 		locker.unLock();
 	}
@@ -399,15 +406,15 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void _writeArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line, String className, String methodSignature) {
 		_hitLine(line, className, methodSignature);
 		locker.lock();
-		String parentVarId = TraceUtils.getObjectVarId(arrayRef);
-		String arrEleVarId = TraceUtils.getArrayElementVarId(parentVarId, index, elementType, eleValue);
-		boolean involeRelevant = invokeTrack.updateRelevant(parentVarId, arrEleVarId);
-		if (exclusive && !involeRelevant) {
-			locker.unLock();
-			return;
-		}
-		VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
-		invokeTrack.addWrittenValue(value);
+//		String parentVarId = TraceUtils.getObjectVarId(arrayRef);
+//		String arrEleVarId = TraceUtils.getArrayElementVarId(parentVarId, index, elementType, eleValue);
+//		boolean involeRelevant = invokeTrack.updateRelevant(parentVarId, arrEleVarId);
+//		if (exclusive && !involeRelevant) {
+//			locker.unLock();
+//			return;
+//		}
+		addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
+//		invokeTrack.addWrittenValue(value);
 		locker.unLock();
 	}
 	
@@ -416,7 +423,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		String id = new StringBuilder(TraceUtils.getObjectVarId(arrayRef)).append("[").append(index).append("]").toString();
 		String eleType = SignatureUtils.signatureToName(arrayRef.getClass().getName());
 		String name = id;
-		Variable var = new ArrayElementVar(name, eleType, null);
+		Variable var = new ArrayElementVar(name, eleType, id);
+		var.setVarID(id);
 		VarValue value = appendVarValue(eleValue, var, null);
 		addRWriteValue(value, write);
 		return value;

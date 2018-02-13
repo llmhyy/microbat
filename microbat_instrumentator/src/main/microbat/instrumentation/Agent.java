@@ -3,7 +3,10 @@ package microbat.instrumentation;
 import microbat.instrumentation.trace.data.ExecutionTracer;
 import microbat.instrumentation.trace.data.FilterChecker;
 import microbat.instrumentation.trace.data.IExecutionTracer;
+import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 import microbat.sql.TraceRecorder;
 
 public class Agent {
@@ -34,7 +37,65 @@ public class Agent {
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 		TraceRecorder traceRecorder = new TraceRecorder();
 		Trace trace = ((ExecutionTracer) tracer).getTrace();
+		
+		createVirtualDataRelation(trace);
+		trace.constructDomianceRelation();
+//		trace.constructLoopParentRelation();
+		
 		traceRecorder.storeTrace(trace );
+	}
+
+	private void createVirtualDataRelation(Trace trace) {
+		for(int i=0; i<trace.size(); i++){
+			int order = i+1;
+			TraceNode currentNode = trace.getTraceNode(order);
+			if(order<trace.size()){
+				TraceNode nextNode = trace.getTraceNode(order+1);
+				currentNode.setStepInNext(nextNode);
+				nextNode.setStepInPrevious(currentNode);
+			}
+			else if(order==trace.size()){
+				TraceNode prevNode = trace.getTraceNode(order-1);
+				currentNode.setStepInPrevious(prevNode);
+			}
+			
+			if(currentNode.getInvocationParent()!=null && !currentNode.getPassParameters().isEmpty()){
+				TraceNode invocationParent = currentNode.getInvocationParent();
+				TraceNode firstChild = invocationParent.getInvocationChildren().get(0);
+				if(firstChild.getOrder()==currentNode.getOrder()){
+					for(VarValue value: currentNode.getPassParameters()){
+						String varID = value.getVarID();
+						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
+						if(entry==null){
+							entry = new StepVariableRelationEntry(varID);
+						}
+						entry.addProducer(invocationParent);
+						trace.getStepVariableTable().put(varID, entry);
+					}
+				}
+			}
+			
+			if(currentNode.getInvocationParent()!=null && !currentNode.getReturnedVariables().isEmpty()){
+				TraceNode invocationParent = currentNode.getInvocationParent();
+				TraceNode stepOverNext = invocationParent.getStepOverNext();
+				System.currentTimeMillis();
+				if(stepOverNext!=null){
+					for(VarValue value: currentNode.getReturnedVariables()){
+						currentNode.addWrittenVariable(value);
+						stepOverNext.addReadVariable(value);
+						String varID = value.getVarID();
+						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
+						if(entry==null){
+							entry = new StepVariableRelationEntry(varID);
+						}
+						entry.addProducer(currentNode);
+						entry.addConsumer(stepOverNext);
+						trace.getStepVariableTable().put(varID, entry);
+					}
+				}
+			}
+		}
+		
 	}
 
 	public static String extrctJarPath() {
