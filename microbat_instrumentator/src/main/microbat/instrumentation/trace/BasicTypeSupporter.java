@@ -3,6 +3,8 @@ package microbat.instrumentation.trace;
 import org.apache.bcel.Const;
 import org.apache.bcel.generic.BasicType;
 import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.ObjectType;
+import org.apache.bcel.generic.ReferenceType;
 
 public class BasicTypeSupporter {
 	
@@ -70,5 +72,29 @@ public class BasicTypeSupporter {
 			throw new IllegalArgumentException("Unhandled type: " + type);
 		}
 		return idx;
+	}
+
+	public ReferenceType getCorrespondingPrimitiveType(BasicType type) {
+		switch (type.getType()) {
+		case Const.T_INT:
+			return ObjectType.getInstance(Integer.class.getName());
+		case Const.T_BOOLEAN:
+			return ObjectType.getInstance(Boolean.class.getName());
+		case Const.T_FLOAT:
+			return ObjectType.getInstance(Float.class.getName());
+		case Const.T_CHAR:
+			return ObjectType.getInstance(Character.class.getName());
+		case Const.T_DOUBLE:
+			return ObjectType.getInstance(Double.class.getName());
+		case Const.T_LONG:
+			return ObjectType.getInstance(Long.class.getName());
+		case Const.T_SHORT:
+			return ObjectType.getInstance(Short.class.getName());
+		case Const.T_BYTE:
+			return ObjectType.getInstance(Byte.class.getName());
+		default:
+			throw new IllegalArgumentException("Unhandled type: " + type);
+		}
+		
 	}
 }

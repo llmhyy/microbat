@@ -11,7 +11,6 @@ import sav.strategies.dto.AppJavaClassPath;
 
 public class AgentParams {
 	private EntryPoint entryPoint;
-	
 	private AppJavaClassPath appPath;
 
 	public static AgentParams parse(String agentArgs) {

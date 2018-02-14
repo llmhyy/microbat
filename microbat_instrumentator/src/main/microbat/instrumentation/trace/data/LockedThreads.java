@@ -11,13 +11,13 @@ public class LockedThreads {
 	
 	public LockedThreads() {
 		for (int i = 0; i < capacity; i++) {
-			lockedThreadIds[i] = -1;
+			lockedThreadIds[i] = -1l;
 		}
 	}
 
 	public boolean contains(long threadId) {
-		for (long id : lockedThreadIds) {
-			if (id == threadId) {
+		for (int i = 0; i < capacity; i++) {
+			if (lockedThreadIds[i] == threadId) {
 				return true;
 			}
 		}
@@ -26,7 +26,7 @@ public class LockedThreads {
 
 	public void add(long threadId) {
 		for (int i = 0; i < capacity; i++) {
-			if (lockedThreadIds[i] == -1) {
+			if (lockedThreadIds[i] < 0) {
 				lockedThreadIds[i] = threadId;
 				return;
 			}
@@ -37,7 +37,7 @@ public class LockedThreads {
 	public void remove(long threadId) {
 		for (int i = 0; i < capacity; i++) {
 			if (lockedThreadIds[i] == threadId) {
-				lockedThreadIds[i] = -1;
+				lockedThreadIds[i] = -1l;
 				return;
 			}
 		}

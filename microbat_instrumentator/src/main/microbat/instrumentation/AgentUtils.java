@@ -5,17 +5,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import sav.common.core.SavRtException;
-
 public class AgentUtils {
 
-	public static File createTempFolder(String folderName) {
+	public static File createTempFolder(String folderName) throws Exception {
 		File folder = getFileInTempFolder(folderName);
 		if (folder.exists()) {
 			if (folder.isDirectory()) {
 				return folder;
 			}
-			throw new SavRtException(String.format("Cannot create temp folder: %s", folderName));
+			throw new Exception(String.format("Cannot create temp folder: %s", folderName));
 		}
 		folder.mkdirs();
 		return folder;

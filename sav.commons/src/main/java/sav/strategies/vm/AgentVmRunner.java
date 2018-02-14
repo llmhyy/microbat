@@ -113,4 +113,12 @@ public class AgentVmRunner extends VMRunner {
 	protected String getAgentOptionSeparator() {
 		return agentOptionSeparator;
 	}
+
+	public void setAgentOptionSeparator(String agentOptionSeparator) {
+		this.agentOptionSeparator = agentOptionSeparator;
+	}
+
+	public void setAgentParamsSeparator(String agentParamsSeparator) {
+		this.agentParamsSeparator = agentParamsSeparator;
+	}
 }

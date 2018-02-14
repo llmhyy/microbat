@@ -38,7 +38,6 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	//TODO this parameter should be controlled by user.
 	public static int variableLayer = 10;
-	
 	static {
 		rtStores = new HashMap<>();
 	}
@@ -115,7 +114,7 @@ public class ExecutionTracer implements IExecutionTracer {
 					String varName = String.valueOf(i);
 					ArrayElementVar varElement = new ArrayElementVar(varName, arrVal.getComponentType(), aliasVarID);
 					Object elementValue = Array.get(value, i);
-//					appendVarValue(elementValue, varElement, arrVal, retrieveLayer);
+					appendVarValue(elementValue, varElement, arrVal, retrieveLayer);
 				}
 			}
 		} else {
@@ -152,7 +151,7 @@ public class ExecutionTracer implements IExecutionTracer {
 								if(fieldValue != null){
 									FieldVar fieldVar = new FieldVar(Modifier.isStatic(field.getModifiers()),
 											field.getName(), fieldTypeStr, field.getDeclaringClass().getName());
-//									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer);
+									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer);
 								}
 							}
 						} catch (Exception e) {
@@ -218,9 +217,10 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void _hitInvokeStatic(String invokeTypeSign, String methodName, Object[] params,
 			String paramTypeSignsCode, String returnTypeSign, int line, String className, String methodSignature) {
 		_hitLine(line, className, methodSignature);
-		
+		locker.lock();
 		TraceNode latestNode = trace.getLatestNode();
 		latestNode.setInvokingMethod(methodName+paramTypeSignsCode);
+		locker.unLock();
 	}
 	
 	@Override
@@ -485,7 +485,7 @@ public class ExecutionTracer implements IExecutionTracer {
 //			locker.unLock();
 //			return;
 //		}
-		addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
+		VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
 //		invokeTrack.addWrittenValue(value);
 		locker.unLock();
 	}
@@ -508,7 +508,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		gLocker.unLock();
 	}
 	
-	public synchronized static IExecutionTracer _getTracer(String className, String methodSig, int methodStartLine) {
+	public synchronized static IExecutionTracer _getTracer(String className, String methodSig, int methodStartLine,
+			String paramTypeSignsCode, Object[] params) {
 		if (gLocker.isLock()) {
 			return EmptyExecutionTracer.getInstance();
 		}
