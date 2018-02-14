@@ -8,6 +8,7 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.sql.TraceRecorder;
+import sav.strategies.dto.AppJavaClassPath;
 
 public class Agent {
 	private AgentParams agentParams;
@@ -20,7 +21,13 @@ public class Agent {
 		/* init filter */
 		FilterChecker.setup();
 		
-		ExecutionTracer.appJavaClassPath = agentParams.getAppPath();
+		AppJavaClassPath appPath = new AppJavaClassPath();
+		appPath.setLaunchClass(agentParams.getLaunchClass());
+		appPath.setJavaHome(agentParams.getJavaHome());
+		for(String cp: agentParams.getClassPaths()){
+			appPath.addClasspath(cp);
+		}
+		ExecutionTracer.appJavaClassPath = appPath;
 		
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
