@@ -3,9 +3,12 @@ package microbat.codeanalysis.bytecode;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.InstructionHandle;
 
 public class CFG {
+	private Method method;
+	
 	private List<CFGNode> nodeList = new ArrayList<>();
 	private CFGNode startNode;
 	private List<CFGNode> exitList = new ArrayList<>();
@@ -78,5 +81,13 @@ public class CFG {
 
 	public int size() {
 		return nodeList.size();
+	}
+
+	public Method getMethod() {
+		return method;
+	}
+
+	public void setMethod(Method method) {
+		this.method = method;
 	}
 }

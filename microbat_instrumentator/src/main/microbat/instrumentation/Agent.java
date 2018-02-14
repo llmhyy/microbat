@@ -19,6 +19,9 @@ public class Agent {
 	public void startup() {
 		/* init filter */
 		FilterChecker.setup();
+		
+		ExecutionTracer.appJavaClassPath = agentParams.getAppPath();
+		
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
@@ -39,7 +42,7 @@ public class Agent {
 		Trace trace = ((ExecutionTracer) tracer).getTrace();
 		
 		createVirtualDataRelation(trace);
-		trace.constructDomianceRelation();
+		trace.constructControlDomianceRelation();
 //		trace.constructLoopParentRelation();
 		
 		traceRecorder.storeTrace(trace );

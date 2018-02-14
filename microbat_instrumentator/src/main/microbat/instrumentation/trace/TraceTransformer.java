@@ -4,15 +4,15 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
+import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.trace.data.ExecutionTracer;
 import microbat.instrumentation.trace.data.FilterChecker;
-import microbat.instrumentation.trace.model.EntryPoint;
 
 public class TraceTransformer implements ClassFileTransformer {
 	private TraceInstrumenter instrumenter;
 	
-	public TraceTransformer(EntryPoint entryPoint) {
-		instrumenter = new TraceInstrumenter(entryPoint);
+	public TraceTransformer(AgentParams params) {
+		instrumenter = new TraceInstrumenter(params);
 	}
 	
 	@Override

@@ -60,6 +60,7 @@ import org.apache.bcel.generic.Type;
 
 import microbat.codeanalysis.bytecode.CFG;
 import microbat.codeanalysis.bytecode.CFGConstructor;
+import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.trace.data.IExecutionTracer;
 import microbat.instrumentation.trace.data.TraceUtils;
 import microbat.instrumentation.trace.model.ArrayInstructionInfo;
@@ -82,8 +83,8 @@ public class TraceInstrumenter {
 
 	private EntryPoint entryPoint;
 
-	public TraceInstrumenter(EntryPoint entryPoint) {
-		this.entryPoint = entryPoint;
+	public TraceInstrumenter(AgentParams params) {
+		this.entryPoint = params.getEntryPoint();
 	}
 
 	public byte[] instrument(String classFName, byte[] classfileBuffer) throws Exception {

@@ -33,7 +33,12 @@ import sav.strategies.dto.AppJavaClassPath;
 public class ExecutionTracer implements IExecutionTracer {
 	private static Map<Long, ExecutionTracer> rtStores;
 	private static long mainThreadId = -1;
+	
+	public static AppJavaClassPath appJavaClassPath;
+	
+	//TODO this parameter should be controlled by user.
 	public static int variableLayer = 10;
+	
 	static {
 		rtStores = new HashMap<>();
 	}
@@ -52,7 +57,6 @@ public class ExecutionTracer implements IExecutionTracer {
 	public ExecutionTracer(long threadId) {
 		locker = new Locker(threadId);
 		methodCallStack = new MethodCallStack();
-		AppJavaClassPath appJavaClassPath = new AppJavaClassPath();
 		trace = new Trace(appJavaClassPath);
 	}
 
@@ -111,7 +115,7 @@ public class ExecutionTracer implements IExecutionTracer {
 					String varName = String.valueOf(i);
 					ArrayElementVar varElement = new ArrayElementVar(varName, arrVal.getComponentType(), aliasVarID);
 					Object elementValue = Array.get(value, i);
-					appendVarValue(elementValue, varElement, arrVal, retrieveLayer);
+//					appendVarValue(elementValue, varElement, arrVal, retrieveLayer);
 				}
 			}
 		} else {
@@ -148,7 +152,7 @@ public class ExecutionTracer implements IExecutionTracer {
 								if(fieldValue != null){
 									FieldVar fieldVar = new FieldVar(Modifier.isStatic(field.getModifiers()),
 											field.getName(), fieldTypeStr, field.getDeclaringClass().getName());
-									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer);
+//									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer);
 								}
 							}
 						} catch (Exception e) {

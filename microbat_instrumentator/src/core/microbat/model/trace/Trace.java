@@ -7,11 +7,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.InstructionHandle;
 import org.apache.commons.lang.StringUtils;
 
 import microbat.codeanalysis.ast.LocalVariableScopes;
+import microbat.codeanalysis.bytecode.ByteCodeParser;
+import microbat.codeanalysis.bytecode.CFG;
+import microbat.codeanalysis.bytecode.CFGConstructor;
+import microbat.codeanalysis.bytecode.CFGNode;
+import microbat.codeanalysis.bytecode.MethodFinderByLine;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
+import microbat.model.ClassLocation;
+import microbat.model.ControlScope;
 import microbat.model.Scope;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
@@ -350,41 +359,82 @@ public class Trace {
 		return false;
 	}
 
-	public void constructDomianceRelation(){
-//		constructDataDomianceRelation();
-//		constructControlDomianceRelation0();
-		constructControlDomianceRelation();
+	private Map<BreakPoint, ControlScope> controlScopeMap = new HashMap<>();
+	private Map<String, CFG> methodCFGMap = new HashMap<>();
+	
+	private ControlScope parseControlScope(BreakPoint breakPoint) {
+		
+		ControlScope scope = controlScopeMap.get(breakPoint);
+		if(scope!=null){
+			return scope;
+		}
+		
+		List<ClassLocation> ranges = new ArrayList<>();
+		
+		CFG cfg = methodCFGMap.get(breakPoint.getMethodSign());
+		if(cfg==null){
+			MethodFinderByLine finder = new MethodFinderByLine(breakPoint);
+			ByteCodeParser.parse(breakPoint.getClassCanonicalName(), finder, appJavaClassPath);
+			Method method = finder.getMethod();
+			CFGConstructor cfgConstructor = new CFGConstructor();
+			cfg = cfgConstructor.buildCFGWithControlDomiance(method.getCode());
+			cfg.setMethod(method);
+			methodCFGMap.put(breakPoint.getMethodSign(), cfg);
+		}
+		
+		
+		List<InstructionHandle> correspondingList = findCorrepondingIns(breakPoint, cfg, cfg.getMethod());
+		
+		for(InstructionHandle ins: correspondingList){
+			CFGNode cfgNode = cfg.findNode(ins);
+			if(cfgNode.isBranch()){
+				breakPoint.setConditional(true);
+			}
+			
+			List<ClassLocation> controlScope0 = findControlledLines(cfgNode.getControlDependentees(), cfg.getMethod(), breakPoint);
+			ranges.addAll(controlScope0);
+		}
+		
+		scope = new ControlScope();
+		scope.setRangeList(ranges);
+		scope.setCondition(breakPoint.isConditional());
+		controlScopeMap.put(breakPoint, scope);
+		
+		return scope;
 	}
 	
-//	class CatchClauseFinder extends ASTVisitor{
-//		CompilationUnit cu;
-//		int lineNumber;
-//		
-//		public CatchClauseFinder(CompilationUnit cu, int lineNumber) {
-//			super();
-//			this.cu = cu;
-//			this.lineNumber = lineNumber;
-//		}
-//
-//		CatchClause containingClause;
-//		
-//		public boolean visit(CatchClause clause) {
-//			int startLine = cu.getLineNumber(clause.getStartPosition());
-//			int endLine = cu.getLineNumber(clause.getStartPosition()+clause.getLength());
-//			
-//			if(startLine<=lineNumber && lineNumber<=endLine) {
-//				containingClause = clause;
-//				return true;
-//			}
-//			else {
-//				return false;
-//			}
-//		}
-//	}
-	
-	private void constructControlDomianceRelation() {
+	private List<InstructionHandle> findCorrepondingIns(BreakPoint breakPoint, CFG cfg, Method method) {
+		List<InstructionHandle> list = new ArrayList<>();
+		for(CFGNode node: cfg.getNodeList()){
+			int line = method.getLineNumberTable().getSourceLine(node.getInstructionHandle().getPosition());
+			if(line==breakPoint.getLineNumber()){
+				list.add(node.getInstructionHandle());
+			}
+		}
+		return list;
+	}
+
+	private List<ClassLocation> findControlledLines(List<CFGNode> controlDependentees, Method method,
+			BreakPoint breakPoint) {
+		List<ClassLocation> controlLines = new ArrayList<>();
+		for(CFGNode node: controlDependentees){
+			int line = method.getLineNumberTable().getSourceLine(node.getInstructionHandle().getPosition());
+			ClassLocation location = new ClassLocation(breakPoint.getClassCanonicalName(), breakPoint.getMethodSign(), line);
+			
+			if(!controlLines.contains(location)){
+				controlLines.add(location);
+			}
+		}
+		return controlLines;
+	}
+
+	public void constructControlDomianceRelation() {
 		TraceNode controlDominator = null;
 		for(TraceNode node: this.exectionList){
+			ControlScope scope = parseControlScope(node.getBreakPoint());			
+			node.setControlScope(scope);
+			node.getBreakPoint().setConditional(scope.isCondition());
+			
 			if(controlDominator != null){
 				
 				if(isContainedInScope(node, controlDominator.getControlScope())){
@@ -402,74 +452,12 @@ public class Trace {
 				}
 			}
 			
-			//add try-catch flow
-//			testAndAppendTryCatchControlFlow(node);
-			
 			if(node.isConditional()){
 				controlDominator = node;
 			}
 		}
 	}
 
-//	private Map<String, CatchClause> catchClauseMap = new HashMap<>();
-//	
-//	private void testAndAppendTryCatchControlFlow(TraceNode node) {
-//		String key = node.getDeclaringCompilationUnitName()+":"+node.getLineNumber();
-//		CatchClause clause = catchClauseMap.get(key);
-//		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(node.getDeclaringCompilationUnitName(), this.appJavaClassPath);
-//		if(clause==null){
-//			if(cu == null) {
-//				cu = JavaUtil.findCompiltionUnitBySourcePath(node.getBreakPoint().getFullJavaFilePath(), 
-//						node.getDeclaringCompilationUnitName());
-//			}
-//			 
-//			CatchClauseFinder finder = new CatchClauseFinder(cu, node.getLineNumber());
-//			cu.accept(finder);
-//			catchClauseMap.put(key, finder.containingClause);
-//		}
-//		
-//		
-//		if(clause!=null) {
-//			TraceNode existingControlDom = node.getControlDominator();
-//			if(existingControlDom!=null) {
-//				if (!isClauseContainScope(node, cu, clause, existingControlDom)) {
-//					addTryCatchControlFlow(node);
-//				}
-//			}
-//			else {
-//				addTryCatchControlFlow(node);
-//			}
-//			
-//		}
-//	}
-
-//	private boolean isClauseContainScope(TraceNode node, CompilationUnit cu, CatchClause clause, TraceNode existingControlDom) {
-//		if(node.getDeclaringCompilationUnitName().equals(existingControlDom.getDeclaringCompilationUnitName())) {
-//			int startLine = cu.getLineNumber(clause.getStartPosition());
-//			int endLine = cu.getLineNumber(clause.getStartPosition()+clause.getLength());
-//			
-//			if(startLine<=existingControlDom.getLineNumber() && existingControlDom.getLineNumber()<=endLine) {
-//				return true;
-//			}
-//		}
-//		
-//		return false;
-//	}
-
-	private void addTryCatchControlFlow(TraceNode node) {
-		TraceNode previousNode = node.getStepInPrevious();
-		while(previousNode!=null) {
-			if(previousNode.isException()) {
-				break;
-			}
-			previousNode = previousNode.getStepInPrevious();
-		}
-		
-		if(previousNode!=null) {
-			node.setControlDominator(previousNode);
-			previousNode.addControlDominatee(node);
-		}
-	}
 
 	private TraceNode findContainingControlDominator(TraceNode node, TraceNode controlDominator) {
 		TraceNode superControlDominator = controlDominator.getControlDominator();

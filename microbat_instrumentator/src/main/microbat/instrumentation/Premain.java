@@ -21,7 +21,7 @@ public class Premain {
 		System.out.println("start instrumentation...");
 		final Agent agent = new Agent(agentArgs);
 		agent.startup();
-		inst.addTransformer(new TraceTransformer(agent.getAgentParams().getEntryPoint()), true);
+		inst.addTransformer(new TraceTransformer(agent.getAgentParams()), true);
 		if (retransformableClasses.length > 0) {
 			inst.retransformClasses(retransformableClasses);
 		}

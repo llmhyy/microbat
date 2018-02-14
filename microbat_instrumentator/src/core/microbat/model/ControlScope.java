@@ -7,15 +7,17 @@ import microbat.model.trace.TraceNode;
 
 public class ControlScope implements Scope{
 	private List<ClassLocation> rangeList = new ArrayList<>();
+	private boolean isCondition;
 	private boolean isLoop;
 	
 	public ControlScope() {
 		
 	}
 	
-	public ControlScope(List<ClassLocation> rangeList, boolean isLoop) {
+	public ControlScope(List<ClassLocation> rangeList, boolean isCondition, boolean isLoop) {
 		super();
 		this.rangeList = rangeList;
+		this.isCondition = isCondition;
 		this.isLoop = isLoop;
 	}
 
@@ -58,6 +60,14 @@ public class ControlScope implements Scope{
 	public void addLocation(ClassLocation location) {
 		this.rangeList.add(location);
 		
+	}
+
+	public boolean isCondition() {
+		return isCondition;
+	}
+
+	public void setCondition(boolean isCondition) {
+		this.isCondition = isCondition;
 	}
 	
 }

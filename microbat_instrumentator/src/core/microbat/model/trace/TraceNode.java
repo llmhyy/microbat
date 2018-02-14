@@ -14,6 +14,7 @@ import microbat.instrumentation.trace.data.InvokingDetail;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
+import microbat.model.ControlScope;
 import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
 import microbat.model.value.VarValue;
@@ -1111,6 +1112,10 @@ public class TraceNode{
 
 	public void setPassParameters(List<VarValue> passParameters) {
 		this.passParameters = passParameters;
+	}
+
+	public void setControlScope(ControlScope scope) {
+		this.breakPoint.setControlScope(scope);;
 	}
 
 
