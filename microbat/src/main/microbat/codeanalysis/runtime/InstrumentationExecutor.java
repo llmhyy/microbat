@@ -25,6 +25,8 @@ public class InstrumentationExecutor {
 		List<String> command = new ArrayList<>();
 		command.add(this.appPath.getJavaHome()+File.separator+"bin"+File.separator+"java");
 		
+		command.add("-noverify");
+		
 		command.add("-cp");
 		
 		StringBuffer buffer = new StringBuffer();
