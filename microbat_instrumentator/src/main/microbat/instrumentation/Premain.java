@@ -29,7 +29,7 @@ public class Premain {
 	}
 	
 	private static List<JarFile> getJarFilesDevMode() throws IOException {
-		List<String> jarPaths = Arrays.asList("E:/linyun/software/eclipse-java-mars/eclipse-java-mars-clean/eclipse/dropins/junit_lib",
+		List<String> jarPaths = Arrays.asList("E:/linyun/software/eclipse-java-mars/eclipse-java-mars-clean/eclipse/dropins/junit_lib/instrumentator.jar",
 				"E:/linyun/git_space/microbat/microbat_instrumentator/lib/bcel-6.0.jar",
 				"E:/linyun/git_space/microbat/microbat_instrumentator/lib/javassist.jar",
 				"E:/linyun/git_space/microbat/microbat_instrumentator/lib/commons-lang-2.6.jar",
