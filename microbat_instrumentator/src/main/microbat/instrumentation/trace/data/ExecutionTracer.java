@@ -522,7 +522,28 @@ public class ExecutionTracer implements IExecutionTracer {
 			gLocker.unLock();
 			return EmptyExecutionTracer.getInstance();
 		}
-//		String name = className.replace("/", ".");
+		
+		TraceNode latestNode = tracer.getTrace().getLatestNode();
+		if(latestNode!=null){
+			int varScopeStart = methodStartLine;
+			//TODO need method end line
+			int varScopeEnd = -1;
+			
+			String[] parameterTypes = TraceUtils.parseArgTypes(paramTypeSignsCode);
+			for(int i=0; i<parameterTypes.length; i++){
+				String parameterType = parameterTypes[i];
+				
+				//TODO need parameter name
+				String varName = i + "th param";
+				
+				Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
+				String varID = TraceUtils.getLocalVarId(className, varScopeStart, varScopeEnd, varName, parameterType, params[i]);
+				var.setVarID(varID);
+				VarValue value = tracer.appendVarValue(params[i], var, null);
+				tracer.addRWriteValue(value, true);
+			}
+		}
+		
 		tracer.enterMethod(className, methodSig, methodStartLine);
 		gLocker.unLock();
 		return tracer;
