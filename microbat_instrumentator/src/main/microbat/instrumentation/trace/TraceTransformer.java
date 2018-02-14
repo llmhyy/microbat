@@ -18,10 +18,26 @@ public class TraceTransformer implements ClassFileTransformer {
 	@Override
 	public byte[] transform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-		/* exclude internal classes & libs */
-		if (!FilterChecker.isTransformable(classFName) || ExecutionTracer.isShutdown()) {
+		if (ExecutionTracer.isShutdown()) {
 			return null;
 		}
+		/* bootstrap classes */
+		if ((loader == null) || (protectionDomain == null)) {
+			if (!FilterChecker.isTransformable(classFName, null, true)) {
+				return null;
+			}
+		} 
+		if (protectionDomain != null) {
+			String path = protectionDomain.getCodeSource().getLocation().getFile();
+			if (path.startsWith("/")) {
+				path = path.substring(1, path.length());
+			}
+			if (!FilterChecker.isTransformable(classFName, path,
+					false)) {
+				return null;
+			}
+		}
+		
 		/* do instrumentation */
 		try {
 			return instrumenter.instrument(classFName, classfileBuffer);

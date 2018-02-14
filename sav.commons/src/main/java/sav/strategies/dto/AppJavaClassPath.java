@@ -31,6 +31,8 @@ public class AppJavaClassPath {
 	
 	private String agentLib;
 	
+	private List<String> agentBootstrapPathList = new ArrayList<>();
+	
 	/**
 	 * If Microbat is running a test case (JUnit), user need to specify which test case to be run.
 	 */
@@ -146,5 +148,15 @@ public class AppJavaClassPath {
 	public void setAgentLib(String agentLib) {
 		this.agentLib = agentLib;
 	}
+
+	public List<String> getAgentBootstrapPathList() {
+		return agentBootstrapPathList;
+	}
+
+	public void setAgentBootstrapPathList(List<String> agentBootstrapPathList) {
+		this.agentBootstrapPathList = agentBootstrapPathList;
+	}
+
+	
 
 }

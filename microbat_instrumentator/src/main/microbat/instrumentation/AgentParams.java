@@ -16,7 +16,6 @@ public class AgentParams {
 	private String workingDirectory;
 	private String javaHome;
 	private String launchClass;
-	
 
 	public static AgentParams parse(String agentArgs) {
 		String[] args = agentArgs.split(InstrConstants.AGENT_PARAMS_SEPARATOR);

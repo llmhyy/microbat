@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,20 +45,25 @@ public class VMRunner {
 	 * want to use the old flags, be careful about when to quote the value and
 	 * when to not quote.
 	 */
-	protected static final String debugToken = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=%s";
+	protected static final String debugToken = "-agentlib:jdwp=transport=dt_socket,suspend=y,address=%s";
 	protected static final String enableAssertionToken = "-ea";
-	protected static final String noVerifyToken = "-noverify";
 	/* timeout in millisecond */
 	private long timeout = NO_TIME_OUT;
 	private boolean isLog = true;
+	protected Timer timer = null;
 	
-	private Process process;
+	protected Process process;
 	private String processError;
 	
 	public boolean startVm(VMConfiguration config) throws SavException {
 		this.isLog = config.isVmLogEnable();
 		List<String> commands = buildCommandsFromConfiguration(config);
 		return startVm(commands, false);
+	}
+	
+	public String getCommandLinesString(VMConfiguration config) throws SavException {
+		List<String> commands = buildCommandsFromConfiguration(config);
+		return StringUtils.join(commands, " ");
 	}
 
 	private List<String> buildCommandsFromConfiguration(VMConfiguration config)
@@ -72,9 +79,9 @@ public class VMRunner {
 	
 	protected void buildProgramArgs(VMConfiguration config,
 			CollectionBuilder<String, Collection<String>> builder) {
-		builder.append(cpToken);
-		builder.append(config.getClasspathStr());
-		builder.append(config.getLaunchClass());
+		builder.append(cpToken)
+				.append(config.getClasspathStr())
+				.append(config.getLaunchClass());
 		for (String arg : config.getProgramArgs()) {
 			builder.append(arg);
 		}
@@ -87,70 +94,74 @@ public class VMRunner {
 	}
 	
 	public String getProccessError() throws SavRtException {
-		if (processError == null) {
-			if (process != null) {
-				try {
-					processError = getText(process.getErrorStream());
-				} catch (IOException e) {
-					throw new SavRtException(e);
-				}
-			}
-			processError = StringUtils.EMPTY;
-		}
 		return processError;
 	}
-	
-	private String getText(InputStream stream) throws IOException {
-		try {
-			stream.available();
-		} catch (IOException ex) {
-			// stream closed already!
-			return StringUtils.EMPTY;
-		}
-		StringBuilder sb = new StringBuilder();
-		BufferedReader in = new BufferedReader(new InputStreamReader(stream));
-		String inputLine;
-		/* Note: The input stream must be read if available to be closed, 
-		 * otherwise, the process will never end. So, keep doing this even if 
-		 * the printStream is not set */
-		while (in.ready() && (inputLine = in.readLine()) != null) {
-			sb.append(inputLine)
-				.append("\n");
-		}
-		in.close();
-		return sb.toString();
+
+	public void setupInputStream(final InputStream is, final StringBuffer sb, final boolean error) {
+		final InputStreamReader streamReader = new InputStreamReader(is);
+		new Thread(new Runnable() {
+			public void run() {
+				BufferedReader br = new BufferedReader(streamReader);
+				String line = null;
+				try {
+					while ((line = br.readLine()) != null) {
+//						if (error) {
+//							log.warn(line);
+//						}
+						if (!line.contains("Class JavaLaunchHelper is implemented in both")) {
+							sb.append(line).append("\n");
+						}
+					}
+				} catch (IOException e) {
+					// do nothing
+				} finally {
+					IOUtils.closeQuietly(streamReader);
+					IOUtils.closeQuietly(br);
+					IOUtils.closeQuietly(is);
+				}
+			}
+		}).start();
 	}
 
 	protected void buildVmOption(CollectionBuilder<String, ?> builder, VMConfiguration config) {
 		builder.appendIf(String.format(debugToken, config.getPort()), config.isDebug())
-				.appendIf(enableAssertionToken, config.isEnableAssertion())
-				.appendIf(noVerifyToken, config.isNoVerify());
+				.appendIf(enableAssertionToken, config.isEnableAssertion());
 	}
 
 	public boolean startVm(List<String> commands, boolean waitUntilStop)
 			throws SavException {
-		System.out.println("start cmd..");
-		System.out.println(StringUtils.join(commands, " "));
-//		for (String cmd : commands) {
-//			System.out.println(cmd);
-//		}
+		StringBuffer sb = new StringBuffer();
+		logCommands(commands);
 		ProcessBuilder processBuilder = new ProcessBuilder(commands);
 		try {
 			process = processBuilder.start();
-			Timer t = new Timer();
+			setupErrorStream(process.getErrorStream(), sb);
+			/* Note: The input stream must be read if available to be closed, 
+			 * otherwise, the process will never end. So, keep doing this even if 
+			 * the printStream is not set */
+			setupInputStream(process.getInputStream(), new StringBuffer(), false);
+			setupOutputStream(process.getOutputStream());
+			timer = null;
 			if (timeout != NO_TIME_OUT) {
-			    t.schedule(new TimerTask() {
+				timer = new Timer();
+			    timer.schedule(new TimerTask() {
 
 			        @Override
 			        public void run() {
-			            process.destroy();
+			            stop();
+			            log.info("destroy thread due to timeout!");
 			        }
+
 			    }, timeout); 
 			}
 			if (waitUntilStop) {
-				boolean success = waitUntilStop(process);
-				t.cancel();
-				return success;
+				waitUntilStop(process);
+				if (timer != null) {
+					timer.cancel();
+					timer = null;
+				}
+				processError = sb.toString();
+				return isExecutionSuccessful();
 			}
 			return true;
 		} catch (IOException e) {
@@ -158,61 +169,66 @@ public class VMRunner {
 			throw new SavException(ModuleEnum.JVM, e, "cannot start jvm process");
 		}
 	}
-	
-	public boolean waitUntilStop(Process process) throws SavException {
+
+	public boolean isExecutionSuccessful() {
 		try {
-			String str = getText(process.getInputStream());
-			processError = getText(process.getErrorStream());
-			
-			
+			return process.exitValue() == 0;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+	
+	protected void stop() {
+		process.destroy();
+	}
+	
+	protected void setupErrorStream(InputStream errorStream, StringBuffer sb) {
+		setupInputStream(errorStream, sb, true);
+	}
+
+	protected void setupOutputStream(OutputStream outputStream) {
+		// override if needed.
+	}
+
+	private void logCommands(List<String> commands) {
+		System.out.println(StringUtils.join(commands, " "));
+		if (isLog && log.isDebugEnabled()) {
+			log.debug("start cmd..");
+			log.debug(StringUtils.join(commands, " "));
+		}
+	}
+	
+	public void waitUntilStop(Process process) throws SavException {
+		waitUntilStopByWaitfor(process);
+	}
+	
+	public void waitUntilStopByWaitfor(Process process) throws SavException {
+		try {
 			process.waitFor();
-			
-			
-			String error = getText((process.getErrorStream()));
-			if (!StringUtils.isEmpty(error)) {
-				log.debug(error);
-				return false;
-			}
-			return true;
-		} catch (IOException e) {
-			log.error(e.getMessage());
-			throw new SavException(ModuleEnum.JVM, e);
 		} catch (InterruptedException e) {
 			log.error(e.getMessage());
 			throw new SavException(ModuleEnum.JVM, e);
 		}
 	}
 
-//	public boolean waitUntilStop(Process process)
-//			throws SavException {
-//		while (true) {
-//			try {
-//				getText(process.getInputStream());
-//				processError = getText(process.getErrorStream());
-//				process.exitValue();
-//				processError = getText((process.getErrorStream()));
-//				if (!StringUtils.isEmpty(processError)) {
-//					log.debug(processError);
-//					return false;
-//				}
-//				return true;
-//			} catch (IOException e) {
-//				log.logEx(e, "");
-//				throw new SavException(ModuleEnum.JVM, e);
-//			} catch (IllegalThreadStateException ex) {
-//				// means: not yet terminated
-//				try {
-//					Thread.sleep(100);
-//				} catch (InterruptedException e) {
-//					log.logEx(e, "");
-//					throw new SavException(ModuleEnum.JVM, e);
-//				}
-//			} 
-//		}
-//	}
-//	
+	public void waitUntilStopByALoop(Process process)
+			throws SavException {
+		while (true) {
+			try {
+				process.exitValue();
+				return;
+			} catch (IllegalThreadStateException ex) {
+				// means: not yet terminated
+			} 
+		}
+	}
+	
 	public void setTimeout(int timeout, TimeUnit unit) {
-		this.timeout = unit.toMillis(timeout);
+		setTimeout(unit.toMillis(timeout));
+	}
+	
+	public void setTimeout(long timeout) {
+		this.timeout = timeout;
 	}
 	
 	public static boolean start(VMConfiguration config) throws SavException {
@@ -223,6 +239,21 @@ public class VMRunner {
 	public boolean startAndWaitUntilStop(List<String> commands)
 			throws SavException {
 		return startVm(commands, true);
+	}
+	
+	protected boolean isProcessRunning() {
+	    try {
+	        process.exitValue();
+	        return false;
+	    } catch (Exception e) {
+	        return true;
+	    }
+	}
+	
+	public void cancelTimer() {
+		if (timer != null) {
+			timer.cancel();
+		}
 	}
 	
 	public static VMRunner getDefault() {

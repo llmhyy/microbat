@@ -7,9 +7,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.bcel.Const;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.LineNumberTable;
+import org.apache.bcel.classfile.LocalVariable;
+import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.AALOAD;
 import org.apache.bcel.generic.AASTORE;
@@ -61,6 +64,7 @@ import org.apache.bcel.generic.Type;
 import microbat.codeanalysis.bytecode.CFG;
 import microbat.codeanalysis.bytecode.CFGConstructor;
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.trace.data.FilterChecker;
 import microbat.instrumentation.trace.data.IExecutionTracer;
 import microbat.instrumentation.trace.data.TraceUtils;
 import microbat.instrumentation.trace.model.ArrayInstructionInfo;
@@ -99,7 +103,8 @@ public class TraceInstrumenter {
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		JavaClass newJC = null;
-		boolean entry = className.equals(entryPoint.getClassName());
+		boolean entry = entryPoint != null ? className.equals(entryPoint.getClassName()) : 
+									FilterChecker.isAppClass(classFName);
 		for (Method method : jc.getMethods()) {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
@@ -108,7 +113,7 @@ public class TraceInstrumenter {
 				boolean changed = false;
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
 				boolean startTracing = false;
-				if (entry && entryPoint.matchMethod(method.getName(), method.getSignature())) {
+				if (entry && (entryPoint == null || entryPoint.matchMethod(method.getName(), method.getSignature()))) {
 					startTracing = true;
 				}
 				changed = instrumentMethod(classGen, constPool, methodGen, method, startTracing);
@@ -301,8 +306,8 @@ public class TraceInstrumenter {
 		if (itList != null) {
 			for (InstructionTargeter it : itList) {
 				if (it instanceof CodeExceptionGen) {
-					CodeExceptionGen exception = (CodeExceptionGen) it;
-					if (exception.getStartPC() == null || exception.getEndPC() == null
+					CodeExceptionGen exception = (CodeExceptionGen)it;
+					if (exception .getStartPC() == null || exception.getEndPC() == null
 							|| exception.getHandlerPC() == null || newStart == null || newEnd == null) {
 						throw new IllegalArgumentException(String.format(
 								"updateTargeters-error: \nexception.getStartPC=%s, "
@@ -325,7 +330,7 @@ public class TraceInstrumenter {
 			}
 		}
 	}
-
+	
 	private void injectCodeTracerExit(InstructionHandle exitInsHandle, InstructionList insnList, 
 			ConstantPoolGen constPool, LocalVariableGen tracerVar, int line) {
 		InstructionList newInsns = new InstructionList();
@@ -488,6 +493,8 @@ public class TraceInstrumenter {
 			newInsns.append(new PUSH(constPool, i)); // arg idx
 			newInsns.append(new AALOAD()); // -> argObjs[arg idx]
 			if (argType instanceof BasicType) {
+				newInsns.append(instructionFactory
+						.createCheckCast(basicTypeSupporter.getCorrespondingPrimitiveType((BasicType) argType)));
 				newInsns.append(new INVOKEVIRTUAL(
 						basicTypeSupporter.getToPrimitiveValueMethodIdx((BasicType) argType, constPool)));
 			}
@@ -932,9 +939,6 @@ public class TraceInstrumenter {
 		LocalVariableGen tracerVar = methodGen.addLocalVariable(TRACER_VAR_NAME, Type.getType(IExecutionTracer.class),
 				insnList.getStart(), insnList.getEnd());
 		InstructionList newInsns = new InstructionList();
-		if (startTracing) {
-			appendTracerMethodInvoke(newInsns, TracerMethods.START_TRACING, constPool);
-		}
 		String className = methodGen.getClassName();
 		className = className.replace("/", ".");
 		
@@ -950,11 +954,44 @@ public class TraceInstrumenter {
 		}
 		newInsns.append(new PUSH(constPool, mSig));
 		newInsns.append(new ASTORE(methodSigVar.getIndex()));
+		newInsns.append(new PUSH(constPool, startTracing));
+		newInsns.append(new PUSH(constPool, className)); // className
+		newInsns.append(new PUSH(constPool, mSig)); //className, String methodSig
+		newInsns.append(new PUSH(constPool, methodStartLine));	//className, String methodSig, int methodStartLine	
+		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgTypes(methodGen.getArgumentTypes())));
+		//className, String methodSig, int methodStartLine, argTypes
+		/* init Object[] */
+		LocalVariableGen argObjsVar = addTempVar(methodGen, new ArrayType(Type.OBJECT, 1), startInsn);
+		newInsns.append(new PUSH(constPool, methodGen.getArgumentTypes().length));
+		newInsns.append(new ANEWARRAY(constPool.addClass(Object.class.getName())));
+		argObjsVar.setStart(newInsns.append(new ASTORE(argObjsVar.getIndex())));
+		/* assign method argument values to Object[] */
+		LocalVariableTable localVariableTable = methodGen.getLocalVariableTable(constPool);
+		if (localVariableTable != null) {
+			int varIdx = (Const.ACC_STATIC & methodGen.getAccessFlags()) != 0 ? 0 : 1;
+			for (int i = 0; i < methodGen.getArgumentTypes().length; i++) {
+				LocalVariable localVariable = localVariableTable.getLocalVariable(varIdx, 0);
+				newInsns.append(new ALOAD(argObjsVar.getIndex()));
+				newInsns.append(new PUSH(constPool, i));
+				Type argType = methodGen.getArgumentType(i);
+				newInsns.append(InstructionFactory.createLoad(argType, localVariable.getIndex()));
+				if (argType instanceof BasicType) {
+					newInsns.append(
+							new INVOKESTATIC(basicTypeSupporter.getValueOfMethodIdx((BasicType) argType, constPool)));
+				}
+				newInsns.append(new AASTORE());
+				if (Type.DOUBLE.equals(argType) || Type.LONG.equals(argType)) {
+					varIdx += 2;
+				} else {
+					varIdx ++;
+				}
+			}
+		} else {
+			System.out.println("Warning: localVariableTable is empty!");
+		}
+		newInsns.append(new ALOAD(argObjsVar.getIndex()));
+		//className, String methodSig, int methodStartLine, argTypes, argObjs
 		
-		newInsns.append(new PUSH(constPool, className));
-		newInsns.append(new PUSH(constPool, mSig));
-		newInsns.append(new PUSH(constPool, methodStartLine));		
-
 		appendTracerMethodInvoke(newInsns, TracerMethods.GET_TRACER, constPool);
 		InstructionHandle tracerStartPos = newInsns.append(new ASTORE(tracerVar.getIndex()));
 		tracerVar.setStart(tracerStartPos);

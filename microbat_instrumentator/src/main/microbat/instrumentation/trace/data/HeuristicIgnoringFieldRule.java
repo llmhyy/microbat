@@ -1,4 +1,4 @@
-package microbat.codeanalysis.runtime.herustic;
+package microbat.instrumentation.trace.data;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@SuppressWarnings("restriction")
 public class HeuristicIgnoringFieldRule {
 	
 	public static final String ENUM = "enum";

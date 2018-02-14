@@ -19,7 +19,7 @@ public class Agent {
 
 	public void startup() {
 		/* init filter */
-		FilterChecker.setup();
+		
 		
 		AppJavaClassPath appPath = new AppJavaClassPath();
 		appPath.setLaunchClass(agentParams.getLaunchClass());
@@ -27,6 +27,7 @@ public class Agent {
 		for(String cp: agentParams.getClassPaths()){
 			appPath.addClasspath(cp);
 		}
+		FilterChecker.setup(appPath);
 		ExecutionTracer.appJavaClassPath = appPath;
 		
 		Runtime.getRuntime().addShutdownHook(new Thread() {

@@ -1,11 +1,15 @@
 package microbat.instrumentation.trace.data;
 
+import sav.strategies.dto.AppJavaClassPath;
+
 public interface IFilterChecker {
 
-	void startup();
+	void startup(AppJavaClassPath appClasspath);
 
-	boolean checkTransformable(String className);
+	boolean checkExclusive(String classFName, String methodName);
+	
+	boolean checkAppClass(String classFName);
 
-	boolean checkExclusive(String className, String methodName);
+	boolean checkTransformable(String classFName, String path, boolean isBootstrap);
 
 }

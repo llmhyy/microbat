@@ -135,6 +135,16 @@ public class MicroBatUtil {
 		appClassPath.setWorkingDirectory(projectPath);
 		appClassPath.setLaunchClass(Settings.lanuchClass);
 		
+		String instruLibString = junitDir + File.separator + "instru_lib";
+		File instruFile = new File(instruLibString);
+		if(instruFile.isDirectory()){
+			appClassPath.getAgentBootstrapPathList().add(agentLib);
+			for(File f: instruFile.listFiles()){
+				appClassPath.getAgentBootstrapPathList().add(f.getAbsolutePath());
+			}
+		}
+		
+		
 		return appClassPath;
 		
 	}
