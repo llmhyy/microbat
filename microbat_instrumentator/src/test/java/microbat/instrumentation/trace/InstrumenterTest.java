@@ -6,8 +6,9 @@ import java.io.FileOutputStream;
 
 import org.junit.Test;
 
-import microbat.instrumentation.trace.testdata.Sample;
-import microbat.model.ClassLocation;
+import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.trace.model.EntryPoint;
+import microbat.instrumentation.trace.testdata.Sample3;
 import sav.common.core.utils.FileUtils;
 
 /**
@@ -15,12 +16,12 @@ import sav.common.core.utils.FileUtils;
  *
  */
 public class InstrumenterTest {
-	public static final String CLASS_FOLDER = "E:/linyun/git_space/microbat/microbat_instrumentator/bin";
+	public static final String CLASS_FOLDER = "E:/lyly/Projects/microbat/master/microbat_instrumentator/bin";
 	private static final String INSTRUMENT_TARGET_FOLDER = "E:/lyly/Projects/inst_src";
 
 	@Test
 	public void writeFile() throws Exception {
-		String className = Sample.class.getName();
+		String className = Sample3.class.getName();
 		
 		String classPath = className.replace(".", "/") + ".class";
 		String clazzFile = new StringBuilder("/").append(classPath).toString();
@@ -36,7 +37,6 @@ public class InstrumenterTest {
 		byte[] data = new byte[100000];
 		in.read(data);
 		data = instrument(data, className);
-//		System.out.println(new String(data));
 		out.write(data);
 		out.close();
 		in.close();
@@ -49,15 +49,9 @@ public class InstrumenterTest {
 	}
 
 	private byte[] instrument(byte[] data, String className) throws Exception {
-		return data;
-//		TraceTransformer transformer = new TraceTransformer();
-		//		TraceTransformer transformer = new TraceTransformer();
-//		return transformer.instrument(className, data, new NormalInstrumenter());
-//		BcelTraceTransformer transformer = new BcelTraceTransformer();
-//		return transformer.instrument(className, data);
-//		FieldTransformer transformer = new FieldTransformer();
-//		return transformer.instrument(className, data);
-//		TraceInstrumenter transformer = new TraceInstrumenter(new ClassLocation("", "", 23));
-//		return transformer.instrument(className, data);
+		AgentParams params = new AgentParams();
+		params.setEntryPoint(new EntryPoint("", ""));
+		TraceInstrumenter transformer = new TraceInstrumenter(params);
+		return transformer.instrument(className, data);
 	}
 }

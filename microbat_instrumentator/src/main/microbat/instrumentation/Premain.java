@@ -93,6 +93,7 @@ public class Premain {
 						}
 						continue;
 					}
+					System.out.println("Extracted jar: " + jarResourcePath);
 				} catch (Exception ex) {
 					file.delete();
 					continue;
@@ -119,13 +120,10 @@ public class Premain {
 		Class<?>[] classes = inst.getAllLoadedClasses();
 		for (Class<?> c : classes) {
 			if (inst.isModifiableClass(c) && inst.isRetransformClassesSupported()) {
-				if (!Excludes.isExcluded(c.getName())) {
-					candidates.add(c);
-					System.out.println(c.getName());
-				}
+				candidates.add(c);
 			}
 		}
-		candidates.add(ArrayList.class);
+		System.out.println(candidates.size() + " transformable candidates");
 		return candidates.toArray(new Class<?>[candidates.size()]);
 	}
 }

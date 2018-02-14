@@ -60,6 +60,11 @@ public class VMRunner {
 		List<String> commands = buildCommandsFromConfiguration(config);
 		return startVm(commands, false);
 	}
+	
+	public String getCommandLinesString(VMConfiguration config) throws SavException {
+		List<String> commands = buildCommandsFromConfiguration(config);
+		return StringUtils.join(commands, " ");
+	}
 
 	private List<String> buildCommandsFromConfiguration(VMConfiguration config)
 			throws SavException {

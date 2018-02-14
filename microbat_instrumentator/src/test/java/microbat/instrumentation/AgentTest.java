@@ -8,15 +8,19 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
-import microbat.instrumentation.trace.TraceAgentVmRunner;
+import microbat.instrumentation.trace.InstrConstants;
 import microbat.instrumentation.trace.testdata.Sample;
+import sav.common.core.SavException;
+import sav.common.core.utils.CollectionBuilder;
 import sav.commons.TestConfiguration;
+import sav.strategies.vm.AgentVmRunner;
 import sav.strategies.vm.VMConfiguration;
+import sav.strategies.vm.VmRunnerUtils;
 
 public class AgentTest {
-	private static final String BASE_DIR = "E:/lyly/Projects/microbat/master/microbat_instrumentator";
+	protected static final String BASE_DIR = "E:/lyly/Projects/microbat/master/microbat_instrumentator";
 //	private static final String JAR_PATH = BASE_DIR + "/src/test/resources/microbat_rt.jar";
-	private static final String JAR_PATH = BASE_DIR + "/src/test/resources/microbat_instrumentator.jar";
+	protected static final String JAR_PATH = BASE_DIR + "/src/resources/instrumentator.jar";
 	
 	@Test
 	public void runSample() throws Exception {
@@ -24,7 +28,7 @@ public class AgentTest {
 	}
 
 	private void startVm() throws Exception {
-		TraceAgentVmRunner vmRunner = new TraceAgentVmRunner(JAR_PATH);
+		AgentVmRunner vmRunner = new AgentVmRunner(JAR_PATH, InstrConstants.AGENT_OPTION_SEPARATOR, InstrConstants.AGENT_PARAMS_SEPARATOR);
 		VMConfiguration config = new VMConfiguration();
 		config.setJavaHome(TestConfiguration.getJavaHome());
 		config.addClasspath(BASE_DIR + "/bin");
@@ -35,7 +39,8 @@ public class AgentTest {
 		config.setPort(9595);
 		config.setNoVerify(true);
 		vmRunner.addAgentParam("entry_point", clazz.getName() + ".main([Ljava/lang/String;)V");
-		vmRunner.startVm(config);
+//		vmRunner.startVm(config);
+		System.out.println(vmRunner.getCommandLinesString(config));
 	}
 	
 	protected List<String> getLibJars(String... libFolders) throws Exception {
@@ -50,4 +55,5 @@ public class AgentTest {
 		}
 		return jars;
 	}
+	
 }

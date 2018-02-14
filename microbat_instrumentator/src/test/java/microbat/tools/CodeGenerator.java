@@ -1,6 +1,9 @@
 package microbat.tools;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -13,9 +16,17 @@ public class CodeGenerator {
 
 	@Test
 	public void generateCode_ExecutionTracerIdx() {
-		Method[] methods = ExecutionTracer.class.getMethods();
-		for (int i = 0; i < methods.length; i++) {
-			Method method = methods[i];
+		Method[] ms = ExecutionTracer.class.getMethods();
+		List<Method> methods = CollectionUtils.toArrayList(ms);
+		Collections.sort(methods, new Comparator<Method>() {
+
+			@Override
+			public int compare(Method o1, Method o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		});
+		for (int i = 0; i < methods.size(); i++) {
+			Method method = methods.get(i);
 			if (!method.getName().startsWith("_")) {
 				continue;
 			}

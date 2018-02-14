@@ -18,7 +18,7 @@ public class Agent {
 
 	public void startup() {
 		/* init filter */
-		FilterChecker.setup();
+		FilterChecker.setup(agentParams.getAppPath());
 		
 		ExecutionTracer.appJavaClassPath = agentParams.getAppPath();
 		
