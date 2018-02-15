@@ -43,16 +43,16 @@ import sav.strategies.vm.VMRunner;
  */
 public class InterprocessVmRunner extends VMRunner {
 	private final Logger log = LoggerFactory.getLogger(InterprocessVmRunner.class);
-	private ServerInputWriter inputWriter;
-	private ServerOutputReader outputReader;
+	private TcpInputWriter inputWriter;
+	private TcpOutputReader outputReader;
 	private boolean closeStreamsOnStop;
 	
-	public InterprocessVmRunner(ServerInputWriter inputWriter, ServerOutputReader outputReader) {
+	public InterprocessVmRunner(TcpInputWriter inputWriter, TcpOutputReader outputReader) {
 		this.inputWriter = inputWriter;
 		this.outputReader = outputReader;
 	}
 	
-	public InterprocessVmRunner(ServerInputWriter inputWriter, ServerOutputReader outputReader, boolean closeStreamsOnStop) {
+	public InterprocessVmRunner(TcpInputWriter inputWriter, TcpOutputReader outputReader, boolean closeStreamsOnStop) {
 		this(inputWriter, outputReader);
 		setCloseStreamsOnStop(closeStreamsOnStop);
 	}

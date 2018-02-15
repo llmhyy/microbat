@@ -12,13 +12,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 import sav.common.core.utils.SingleTimer;
-import sav.strategies.vm.interprocess.ServerOutputReader;
+import sav.strategies.vm.interprocess.TcpOutputReader;
 
 /**
  * @author LLT
  *
  */
-public class SampleOutputReader extends ServerOutputReader {
+public class SampleOutputReader extends TcpOutputReader {
 	private static final String OUTPUT_START_TOKEN = "@@GanOutputStart@@";
 	private static final String OUTPUT_END_TOKEN = "@@GanOutputEnd@@";
 	private volatile SampleOutput ganOutput;

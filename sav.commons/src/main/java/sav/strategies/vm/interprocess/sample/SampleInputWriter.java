@@ -11,13 +11,13 @@ package sav.strategies.vm.interprocess.sample;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
-import sav.strategies.vm.interprocess.ServerInputWriter;
+import sav.strategies.vm.interprocess.TcpInputWriter;
 
 /**
  * @author LLT
  *
  */
-public class SampleInputWriter extends ServerInputWriter {
+public class SampleInputWriter extends TcpInputWriter {
 	private SampleInput ganInput;
 	private PrintWriter pw;
 	

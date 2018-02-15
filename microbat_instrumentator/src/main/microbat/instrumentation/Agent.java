@@ -1,5 +1,6 @@
 package microbat.instrumentation;
 
+import microbat.instrumentation.TcpConnector.TcpTraceWriter;
 import microbat.instrumentation.trace.data.ExecutionTracer;
 import microbat.instrumentation.trace.data.FilterChecker;
 import microbat.instrumentation.trace.data.IExecutionTracer;
@@ -55,9 +56,17 @@ public class Agent {
 //		trace.constructLoopParentRelation();
 		
 		traceRecorder.storeTrace(trace );
+		writeTrace(trace);
 		System.out.println("Finish recording.");
 	}
 
+	private void writeTrace(Trace trace) throws Exception {
+		TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
+		TcpTraceWriter traceWriter = tcpConnector.connect();
+		traceWriter.writeTrace(trace);
+		tcpConnector.close();
+	}
+	
 	private void createVirtualDataRelation(Trace trace) {
 		for(int i=0; i<trace.size(); i++){
 			int order = i+1;

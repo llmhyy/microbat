@@ -12,9 +12,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -25,8 +24,8 @@ import sav.common.core.SavException;
 import sav.common.core.SavRtException;
 import sav.strategies.vm.AgentVmRunner;
 import sav.strategies.vm.VMConfiguration;
-import sav.strategies.vm.interprocess.ServerInputWriter;
-import sav.strategies.vm.interprocess.ServerOutputReader;
+import sav.strategies.vm.interprocess.TcpInputWriter;
+import sav.strategies.vm.interprocess.TcpOutputReader;
 
 /**
  * @author LLT
@@ -34,65 +33,63 @@ import sav.strategies.vm.interprocess.ServerOutputReader;
  */
 public class SocketAgentVmRunner extends AgentVmRunner {
 	private static Logger log = LoggerFactory.getLogger(SocketAgentVmRunner.class);
-	public static final String CONNECTION_PORT_OPTION = "-port";
-	private Socket client;
-	private ServerInputWriter inputWriter;
-	private ServerOutputReader outputReader;
+	public static final String CONNECTION_PORT_OPTION = "port";
+	private ServerSocket serverSocket;
+	private TcpInputWriter inputWriter;
+	private TcpOutputReader outputReader;
 	
-	public SocketAgentVmRunner(ServerInputWriter inputWriter, ServerOutputReader outputReader, String agentJar) {
+	public SocketAgentVmRunner(TcpInputWriter inputWriter, TcpOutputReader outputReader, String agentJar) {
 		super(agentJar);
 		this.inputWriter = inputWriter;
 		this.outputReader = outputReader;
+		
+		int port = VMConfiguration.findFreePort();
+		
+		try {
+			serverSocket = new ServerSocket(port);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new SavRtException(e);
+		}
+		addAgentParam(CONNECTION_PORT_OPTION, String.valueOf(port));
 	}
 	
-	public boolean startVm(List<String> commands) throws SavException {
-		int port = VMConfiguration.findFreePort();
-		List<String> newCommands = new ArrayList<String>(commands.size() + 2);
-		newCommands.add(CONNECTION_PORT_OPTION);
-		newCommands.add(String.valueOf(port));
-		newCommands.addAll(commands);
-		boolean result = super.startVm(newCommands, false);
-		connect(port);
+	@Override
+	public boolean startVm(List<String> commands, boolean waitUntilStop) throws SavException {
+		boolean result = super.startVm(commands, false);
+		try {
+			Socket client = serverSocket.accept();
+			try {
+				if (inputWriter != null) {
+					inputWriter.setOutputStream(client.getOutputStream());
+				}
+				setuptInputStream(client.getInputStream());
+			} catch (IOException e) {
+				throw new SavRtException(e);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		return result;
 	}
 	
 	public void stop() {
 		try {
-			process.destroy();
 			if (inputWriter != null) {
 				inputWriter.close();
 			}
 			if (outputReader != null) {
 				outputReader.close();
 			}
-			client.close();
+			if (serverSocket != null) {
+				serverSocket.close();
+			}
+			process.destroy();
 		} catch (IOException e) {
 			log.debug(e.getMessage());
 		}
 	}
 	
-	public void connect(int port) throws SavException {
-		while (true) {
-			try {
-				client = new Socket("localhost", port);
-				// TODO: set timeout!
-				break;
-			} catch (UnknownHostException e) {
-				throw new SavRtException(e);
-			} catch (IOException e) {
-				throw new SavRtException(e);
-			}
-		}
-		try {
-			if (inputWriter != null) {
-				inputWriter.setOutputStream(client.getOutputStream());
-			}
-			setuptInputStream(client.getInputStream());
-		} catch (IOException e) {
-			throw new SavRtException(e);
-		}
-	}
-
 	private void setuptInputStream(final InputStream is) {
 		new Thread(new Runnable() {
 			public void run() {

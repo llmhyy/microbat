@@ -25,8 +25,8 @@ import sav.common.core.SavException;
 import sav.common.core.SavRtException;
 import sav.strategies.vm.VMConfiguration;
 import sav.strategies.vm.VMRunner;
-import sav.strategies.vm.interprocess.ServerInputWriter;
-import sav.strategies.vm.interprocess.ServerOutputReader;
+import sav.strategies.vm.interprocess.TcpInputWriter;
+import sav.strategies.vm.interprocess.TcpOutputReader;
 
 /**
  * @author LLT
@@ -36,10 +36,10 @@ public class SocketVmRunner extends VMRunner {
 	private static Logger log = LoggerFactory.getLogger(SocketVmRunner.class);
 	public static final String CONNECTION_PORT_OPTION = "-port";
 	private Socket client;
-	private ServerInputWriter inputWriter;
-	private ServerOutputReader outputReader;
+	private TcpInputWriter inputWriter;
+	private TcpOutputReader outputReader;
 	
-	public SocketVmRunner(ServerInputWriter inputWriter, ServerOutputReader outputReader) {
+	public SocketVmRunner(TcpInputWriter inputWriter, TcpOutputReader outputReader) {
 		this.inputWriter = inputWriter;
 		this.outputReader = outputReader;
 	}

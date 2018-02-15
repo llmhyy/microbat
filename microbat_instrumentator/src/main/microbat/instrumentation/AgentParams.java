@@ -14,6 +14,7 @@ public class AgentParams {
 	public static final String OPT_JAVA_HOME = "java_home";
 	public static final String OPT_CLASS_PATH = "class_path";
 	public static final String OPT_WORKING_DIR = "working_dir";
+	public static final String OPT_TCP_PORT = "tcp_port";
 	private EntryPoint entryPoint;
 	
 	private List<String> classPaths = new ArrayList<>();
@@ -21,6 +22,7 @@ public class AgentParams {
 	private String workingDirectory;
 	private String javaHome;
 	private String launchClass;
+	private int tcpPort;
 
 	public static AgentParams parse(String agentArgs) {
 		String[] args = agentArgs.split(InstrConstants.AGENT_PARAMS_SEPARATOR);
@@ -55,7 +57,10 @@ public class AgentParams {
 		for(String classPath: classPaths){
 			params.getClassPaths().add(classPath);
 		}
-		
+		String portStr = argMap.get(OPT_TCP_PORT);
+		if (portStr != null) {
+			params.tcpPort = Integer.valueOf(portStr);
+		}
 //		String bootstrpString = argMap.get("bootstrp_path");
 //		String[] bootstrpStrings = bootstrpString.split(";");
 //		for(String bootstrp: bootstrpStrings){
@@ -111,6 +116,10 @@ public class AgentParams {
 
 	public void setLaunchClass(String launchClass) {
 		this.launchClass = launchClass;
+	}
+	
+	public int getTcpPort() {
+		return tcpPort;
 	}
 
 }

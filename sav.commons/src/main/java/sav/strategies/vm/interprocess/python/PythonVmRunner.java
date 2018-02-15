@@ -15,8 +15,8 @@ import java.util.List;
 import sav.common.core.SavException;
 import sav.common.core.utils.CollectionBuilder;
 import sav.strategies.vm.interprocess.InterprocessVmRunner;
-import sav.strategies.vm.interprocess.ServerInputWriter;
-import sav.strategies.vm.interprocess.ServerOutputReader;
+import sav.strategies.vm.interprocess.TcpInputWriter;
+import sav.strategies.vm.interprocess.TcpOutputReader;
 
 /**
  * @author LLT
@@ -24,11 +24,11 @@ import sav.strategies.vm.interprocess.ServerOutputReader;
  */
 public class PythonVmRunner extends InterprocessVmRunner {
 
-	public PythonVmRunner(ServerInputWriter inputWriter, ServerOutputReader outputReader) {
+	public PythonVmRunner(TcpInputWriter inputWriter, TcpOutputReader outputReader) {
 		super(inputWriter, outputReader);
 	}
 	
-	public PythonVmRunner(ServerInputWriter inputWriter, ServerOutputReader outputReader, boolean closeStreamsOnStop) {
+	public PythonVmRunner(TcpInputWriter inputWriter, TcpOutputReader outputReader, boolean closeStreamsOnStop) {
 		super(inputWriter, outputReader, closeStreamsOnStop);
 	}
 
