@@ -40,7 +40,9 @@ Export-Package: microbat.graphdiff,
  sav.strategies.junit,
  sav.strategies.mutanbug,
  sav.strategies.slicing,
- sav.strategies.vm
+ sav.strategies.vm,
+ sav.strategies.vm.interprocess,
+ sav.strategies.vm.interprocess.socket
 Bundle-ClassPath: .,
  lib/commons-io-1.3.2.jar,
  lib/commons-lang-2.6.jar,
