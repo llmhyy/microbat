@@ -186,7 +186,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			//TODO need method end line
 			int varScopeEnd = -1;
 			
-			String[] parameterTypes = TraceUtils.parseArgTypes(paramTypeSignsCode);
+			String[] parameterTypes = TraceUtils.parseArgTypesOrNames(paramTypeSignsCode);
 			for(int i=0; i<parameterTypes.length; i++){
 				String pType = parameterTypes[i];
 				String parameterType = SignatureUtils.signatureToName(pType);
@@ -528,7 +528,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	private static final Locker gLocker = new Locker();
 	
 	public synchronized static IExecutionTracer _getTracer(boolean startTracing, String className, String methodSig,
-			int methodStartLine, String paramTypeSignsCode, Object[] params) {
+			int methodStartLine, int methodEndLine, String paramNamesCode, String paramTypeSignsCode, Object[] params) {
 		if (gLocker.isLock() && !startTracing) {
 			return EmptyExecutionTracer.getInstance();
 		}

@@ -216,12 +216,23 @@ public class TraceInstrumenter {
 			String loc = classGen.getClassName() + "." + method.getName();
 			lineInsnInfos.add(new UnknownLineInstructionInfo(loc, constPool, insnList));
 		}
-		int startLine = lineNumberTable != null ? lineNumberTable.getSourceLine(startInsn.getPosition())
-				: InstrConstants.UNKNOWN_LINE;
+		int startLine = Integer.MAX_VALUE;
+		int endLine = InstrConstants.UNKNOWN_LINE;
+		for (int line : visitedLines) {
+			if (line < startLine) {
+				startLine = line;
+			}
+			if (line > endLine) {
+				endLine = line;
+			}
+		}
+		if (startLine == Integer.MAX_VALUE) {
+			startLine = InstrConstants.UNKNOWN_LINE;
+		}
 
 		LocalVariableGen classNameVar = createLocalVariable(CLASS_NAME, methodGen, constPool, startLine);
 		LocalVariableGen methodSigVar = createLocalVariable(METHOD_SIGNATURE, methodGen, constPool, startLine);
-		LocalVariableGen tracerVar = injectCodeInitTracer(methodGen, constPool, startLine, startTracing, classNameVar,
+		LocalVariableGen tracerVar = injectCodeInitTracer(methodGen, constPool, startLine, endLine, startTracing, classNameVar,
 				methodSigVar);
 
 		for (LineInstructionInfo lineInfo : lineInsnInfos) {
@@ -878,7 +889,7 @@ public class TraceInstrumenter {
 	}
 
 	private LocalVariableGen injectCodeInitTracer(MethodGen methodGen, ConstantPoolGen constPool, int methodStartLine,
-			boolean startTracing, LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
+			int methodEndLine, boolean startTracing, LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
 		InstructionList insnList = methodGen.getInstructionList();
 		InstructionHandle startInsn = insnList.getStart();
 		if (startInsn == null) {
@@ -906,6 +917,8 @@ public class TraceInstrumenter {
 		newInsns.append(new PUSH(constPool, className)); // startTracing, className
 		newInsns.append(new PUSH(constPool, mSig)); // startTracing, className, String methodSig
 		newInsns.append(new PUSH(constPool, methodStartLine));	// startTracing, className, String methodSig, int methodStartLine	
+		newInsns.append(new PUSH(constPool, methodEndLine)); // startTracing, className, String methodSig, int methodStartLine, methodEndLine
+		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgNames(methodGen.getArgumentNames())));
 		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgTypes(methodGen.getArgumentTypes())));
 		// startTracing, className, String methodSig, int methodStartLine, argTypes
 		/* init Object[] */
@@ -938,7 +951,7 @@ public class TraceInstrumenter {
 			System.out.println("Warning: localVariableTable is empty!");
 		}
 		newInsns.append(new ALOAD(argObjsVar.getIndex()));
-		//className, String methodSig, int methodStartLine, argTypes, argObjs
+		// className, String methodSig, int methodStartLine, methodEndLine, argNames, argTypes, argObjs
 		
 		appendTracerMethodInvoke(newInsns, TracerMethods.GET_TRACER, constPool);
 		InstructionHandle tracerStartPos = newInsns.append(new ASTORE(tracerVar.getIndex()));

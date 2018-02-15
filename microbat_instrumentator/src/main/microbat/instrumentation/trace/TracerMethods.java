@@ -2,7 +2,7 @@ package microbat.instrumentation.trace;
 
 public enum TracerMethods {
 	AFTER_INVOKE(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_afterInvoke", "(Ljava/lang/String;I)V", 3),
-	GET_TRACER(false, "microbat/instrumentation/trace/data/ExecutionTracer", "_getTracer", "(ZLjava/lang/String;Ljava/lang/String;ILjava/lang/String;[Ljava/lang/Object;)Lmicrobat/instrumentation/trace/data/IExecutionTracer;", 7),
+	GET_TRACER(false, "microbat/instrumentation/trace/data/ExecutionTracer", "_getTracer", "(ZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)Lmicrobat/instrumentation/trace/data/IExecutionTracer;", 9),
 	HIT_INVOKE(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_hitInvoke", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 10),
 	HIT_INVOKE_STATIC(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_hitInvokeStatic", "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 9),
 	HIT_LINE(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_hitLine", "(ILjava/lang/String;Ljava/lang/String;)V", 4),

@@ -50,6 +50,18 @@ public class TraceUtils {
 	
 	private static final String ARG_TYPE_SEPARATOR = ":";
 	
+	public static String encodeArgNames(String[] argNames) {
+		StringBuilder sb = new StringBuilder();
+		int lastIdx = argNames.length - 1;
+		for (int i = 0; i < argNames.length; i++) {
+			sb.append(argNames[i]);
+			if (i != lastIdx) {
+				sb.append(ARG_TYPE_SEPARATOR);
+			}
+		}
+		return sb.toString();
+	}
+	
 	public static String encodeArgTypes(Type[] argTypes) {
 		StringBuilder sb = new StringBuilder();
 		int lastIdx = argTypes.length - 1;
@@ -62,7 +74,7 @@ public class TraceUtils {
 		return sb.toString();
 	}
 	
-	public static String[] parseArgTypes(String code) {
+	public static String[] parseArgTypesOrNames(String code) {
 		if (code == null || code.isEmpty()) {
 			return new String[0];
 		}
