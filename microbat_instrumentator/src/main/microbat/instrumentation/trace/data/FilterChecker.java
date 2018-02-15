@@ -21,7 +21,7 @@ public class FilterChecker implements IFilterChecker {
 		appBinFolders = new ArrayList<>();
 		for (String cp : appClasspath.getClasspaths()) {
 			if (cp.startsWith(appClasspath.getWorkingDirectory())) {
-				if (cp.endsWith(".jar")) {
+				if (cp.endsWith(".jar") && !cp.contains("junit")) {
 					extLibs.add(cp);
 				} else {
 					File binFolder = new File(cp);
@@ -34,7 +34,7 @@ public class FilterChecker implements IFilterChecker {
 				}
 			}
 		}
-		addBootstrapIncludes(ArrayList.class.getName());
+//		addBootstrapIncludes(ArrayList.class.getName());
 	}
 	
 	private void addBootstrapIncludes(String... classNames) {
@@ -68,8 +68,8 @@ public class FilterChecker implements IFilterChecker {
 	}
 	
 	@Override
-	public boolean checkExclusive(String classFName, String methodName) {
-		return !includes.contains(classFName);
+	public boolean checkExclusive(String className, String methodName) {
+		return !includes.contains(className.replace(".", "/"));
 	}
 	
 	public static void setup(AppJavaClassPath appClasspath) {
@@ -87,4 +87,5 @@ public class FilterChecker implements IFilterChecker {
 	public static boolean isAppClass(String classFName) {
 		return checker.checkAppClass(classFName);
 	}
+
 }

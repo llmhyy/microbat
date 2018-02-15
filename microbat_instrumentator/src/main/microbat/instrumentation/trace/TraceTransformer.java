@@ -32,8 +32,7 @@ public class TraceTransformer implements ClassFileTransformer {
 			if (path.startsWith("/")) {
 				path = path.substring(1, path.length());
 			}
-			if (!FilterChecker.isTransformable(classFName, path,
-					false)) {
+			if (!FilterChecker.isTransformable(classFName, path, false)) {
 				return null;
 			}
 		}

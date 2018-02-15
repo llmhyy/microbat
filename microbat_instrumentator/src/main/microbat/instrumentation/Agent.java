@@ -37,6 +37,7 @@ public class Agent {
 	public void shutdown() throws Exception {
 		ExecutionTracer.shutdown();
 		/* collect trace & store */
+		System.out.println("Recording trace...");
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 		TraceRecorder traceRecorder = new TraceRecorder();
 		Trace trace = ((ExecutionTracer) tracer).getTrace();
@@ -46,6 +47,7 @@ public class Agent {
 //		trace.constructLoopParentRelation();
 		
 		traceRecorder.storeTrace(trace );
+		System.out.println("Finish recording.");
 	}
 
 	private void createVirtualDataRelation(Trace trace) {

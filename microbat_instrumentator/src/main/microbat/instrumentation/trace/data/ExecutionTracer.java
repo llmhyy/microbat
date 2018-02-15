@@ -36,7 +36,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	public static AppJavaClassPath appJavaClassPath;
 	
 	//TODO this parameter should be controlled by user.
-	public static int variableLayer = 10;
+	public static int variableLayer = 2;
 	static {
 		rtStores = new HashMap<>();
 	}
