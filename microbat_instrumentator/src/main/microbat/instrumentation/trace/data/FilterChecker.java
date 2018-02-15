@@ -9,7 +9,7 @@ import java.util.Set;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class FilterChecker implements IFilterChecker {
-	private static final IFilterChecker checker = new FilterCheckerMock();
+	private static final IFilterChecker checker = new FilterChecker();
 	
 	private List<String> appBinFolders;
 	private List<String> extLibs;
@@ -20,7 +20,17 @@ public class FilterChecker implements IFilterChecker {
 		extLibs = new ArrayList<>();
 		appBinFolders = new ArrayList<>();
 		for (String cp : appClasspath.getClasspaths()) {
-			if (cp.startsWith(appClasspath.getWorkingDirectory())) {
+			cp = cp.replace("\\", "/");
+			if(cp.startsWith("/")){
+				cp = cp.substring(1, cp.length());
+			}
+			
+			String workingDir = appClasspath.getWorkingDirectory().replace("\\", "/");
+			if(workingDir.startsWith("/")){
+				workingDir = workingDir.substring(1, workingDir.length());
+			}
+			
+			if (cp.contains(workingDir)) {
 				if (cp.endsWith(".jar") && !cp.contains("junit")) {
 					extLibs.add(cp);
 				} else {
@@ -34,7 +44,9 @@ public class FilterChecker implements IFilterChecker {
 				}
 			}
 		}
-//		addBootstrapIncludes(ArrayList.class.getName());
+		
+		System.currentTimeMillis();
+		addBootstrapIncludes(ArrayList.class.getName());
 	}
 	
 	private void addBootstrapIncludes(String... classNames) {

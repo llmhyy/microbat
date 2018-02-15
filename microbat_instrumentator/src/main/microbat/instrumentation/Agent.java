@@ -25,6 +25,7 @@ public class Agent {
 		for(String cp: agentParams.getClassPaths()){
 			appPath.addClasspath(cp);
 		}
+		appPath.setWorkingDirectory(agentParams.getWorkingDirectory());
 		FilterChecker.setup(appPath);
 		ExecutionTracer.appJavaClassPath = appPath;
 		
