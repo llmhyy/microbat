@@ -1,13 +1,12 @@
 package microbat.instrumentation;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import microbat.instrumentation.trace.InstrConstants;
 import microbat.instrumentation.trace.model.EntryPoint;
-import sav.common.core.Pair;
-import sav.common.core.utils.ClassUtils;
-import sav.strategies.dto.AppJavaClassPath;
 
 public class AgentParams {
 	public static final String OPT_ENTRY_POINT = "entry_point";
@@ -16,7 +15,12 @@ public class AgentParams {
 	public static final String OPT_CLASS_PATH = "class_path";
 	public static final String OPT_WORKING_DIR = "working_dir";
 	private EntryPoint entryPoint;
-	private AppJavaClassPath appPath;
+	
+	private List<String> classPaths = new ArrayList<>();
+	private List<String> bootstrapPaths = new ArrayList<>();
+	private String workingDirectory;
+	private String javaHome;
+	private String launchClass;
 
 	public static AgentParams parse(String agentArgs) {
 		String[] args = agentArgs.split(InstrConstants.AGENT_PARAMS_SEPARATOR);
@@ -26,29 +30,37 @@ public class AgentParams {
 			argMap.put(keyValue[0], keyValue[1]);
 		}
 		AgentParams params = new AgentParams();
+		
 		String entryPointStr = argMap.get(OPT_ENTRY_POINT);
 		if (entryPointStr != null) {
-			Pair<String, String> classMethod = ClassUtils.splitClassMethod(entryPointStr);
-			EntryPoint entryPoint = new EntryPoint(classMethod.a, classMethod.b);
+			int idx = entryPointStr.lastIndexOf(".");
+			String mainClass = entryPointStr.substring(0, idx);
+			String mainMethod = entryPointStr.substring(idx + 1);
+			
+			EntryPoint entryPoint = new EntryPoint(mainClass, mainMethod);
 			params.entryPoint = entryPoint;
 		}
+		
+		params.setJavaHome(argMap.get(OPT_JAVA_HOME));
+		params.setWorkingDirectory(argMap.get(OPT_WORKING_DIR));
+
 		String launchClass = argMap.get(OPT_LAUNCH_CLASS);
 		if (launchClass == null && params.entryPoint != null) {
 			launchClass = params.entryPoint.getClassName();
 		}
-		String javaHome = argMap.get(OPT_JAVA_HOME);
+		params.setLaunchClass(launchClass);
+		
 		String classPathString = argMap.get(OPT_CLASS_PATH);
 		String[] classPaths = classPathString.split(";");
-		String workingDirectory = argMap.get(OPT_WORKING_DIR);
-		
-		AppJavaClassPath appPath = new AppJavaClassPath();
-		appPath.setJavaHome(javaHome);
-		appPath.setWorkingDirectory(workingDirectory);
-		appPath.setLaunchClass(launchClass);
 		for(String classPath: classPaths){
-			appPath.addClasspath(classPath);
+			params.getClassPaths().add(classPath);
 		}
-		params.setAppPath(appPath);
+		
+//		String bootstrpString = argMap.get("bootstrp_path");
+//		String[] bootstrpStrings = bootstrpString.split(";");
+//		for(String bootstrp: bootstrpStrings){
+//			params.bootstrapPaths.add(bootstrp);
+//		}
 		
 		return params;
 	}
@@ -61,12 +73,44 @@ public class AgentParams {
 		this.entryPoint = entryPoint;
 	}
 
-	public AppJavaClassPath getAppPath() {
-		return appPath;
+	public List<String> getBootstrpPaths() {
+		return bootstrapPaths;
 	}
 
-	public void setAppPath(AppJavaClassPath appPath) {
-		this.appPath = appPath;
+	public void setBootstrpPaths(List<String> bootstrpPaths) {
+		this.bootstrapPaths = bootstrpPaths;
+	}
+
+	public List<String> getClassPaths() {
+		return classPaths;
+	}
+
+	public void setClassPaths(List<String> classPaths) {
+		this.classPaths = classPaths;
+	}
+
+	public String getWorkingDirectory() {
+		return workingDirectory;
+	}
+
+	public void setWorkingDirectory(String workingDirectory) {
+		this.workingDirectory = workingDirectory;
+	}
+
+	public String getJavaHome() {
+		return javaHome;
+	}
+
+	public void setJavaHome(String javaHome) {
+		this.javaHome = javaHome;
+	}
+
+	public String getLaunchClass() {
+		return launchClass;
+	}
+
+	public void setLaunchClass(String launchClass) {
+		this.launchClass = launchClass;
 	}
 
 }

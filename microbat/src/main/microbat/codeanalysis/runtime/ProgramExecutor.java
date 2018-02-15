@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.LocalVariableTable;
@@ -104,7 +103,6 @@ import microbat.model.variable.VirtualVar;
 import microbat.util.BreakpointUtils;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
-import microbat.util.PrimitiveUtils;
 import microbat.util.Settings;
 import sav.common.core.SavException;
 import sav.common.core.utils.CollectionUtils;

@@ -174,13 +174,37 @@ public class ExecutionTracer implements IExecutionTracer {
 	 * Methods which are with prefix "_" are called in instrument code.
 	 * =================================================================
 	 * */
-	public void enterMethod(String className, String methodSignature, int methodStartLine) {
+	public void enterMethod(String className, String methodSignature, int methodStartLine, String paramTypeSignsCode, Object[] params) {
 		locker.lock();
 		exclusive = FilterChecker.isExclusive(className, methodSignature);
 		// TODO-INSTR: declaringCompilationUnitName would not be correct here.
 //		currentNode = null;
 		
 		TraceNode latestNode = trace.getLatestNode();
+		if(latestNode!=null){
+			int varScopeStart = methodStartLine;
+			//TODO need method end line
+			int varScopeEnd = -1;
+			
+			String[] parameterTypes = TraceUtils.parseArgTypes(paramTypeSignsCode);
+			for(int i=0; i<parameterTypes.length; i++){
+				String pType = parameterTypes[i];
+				String parameterType = SignatureUtils.signatureToName(pType);
+				
+				//TODO need parameter name
+				String varName = i + "th param";
+				
+				if(PrimitiveUtils.isPrimitiveType(parameterType)){
+					Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
+					
+					String varID = TraceUtils.getLocalVarId(className, varScopeStart, varScopeEnd, varName, parameterType, params[i]);
+					var.setVarID(varID);
+					VarValue value = appendVarValue(params[i], var, null);
+					addRWriteValue(value, true);
+				}
+			}
+		}
+		
 		if(latestNode!=null){
 			methodCallStack.push(latestNode, exclusive);
 		}
@@ -522,8 +546,8 @@ public class ExecutionTracer implements IExecutionTracer {
 			gLocker.unLock();
 			return EmptyExecutionTracer.getInstance();
 		}
-//		String name = className.replace("/", ".");
-		tracer.enterMethod(className, methodSig, methodStartLine);
+		
+		tracer.enterMethod(className, methodSig, methodStartLine, paramTypeSignsCode, params);
 		gLocker.unLock();
 		return tracer;
 	}

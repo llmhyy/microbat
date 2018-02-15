@@ -24,6 +24,7 @@ import microbat.behavior.BehaviorReader;
 import microbat.behavior.BehaviorReporter;
 import microbat.codeanalysis.bytecode.BPVariableRetriever;
 import microbat.codeanalysis.runtime.ExecutionStatementCollector;
+import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.ProgramExecutor;
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.model.BreakPoint;
@@ -61,6 +62,7 @@ public class StartDebugHandler extends AbstractHandler {
 	
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		
+		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		if (Settings.isRunTest) {
 			appClassPath.setOptionalTestClass(Settings.lanuchClass);
@@ -68,7 +70,8 @@ public class StartDebugHandler extends AbstractHandler {
 			appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
 		}
 		
-		
+		InstrumentationExecutor ex = new InstrumentationExecutor(appClassPath);
+		ex.run();
 		
 		try {
 			new BehaviorReader().readXLSX();
