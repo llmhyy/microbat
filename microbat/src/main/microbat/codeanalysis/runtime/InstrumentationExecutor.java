@@ -44,8 +44,13 @@ public class InstrumentationExecutor {
 		buffer.append(appPath.getAgentLib());
 		buffer.append("=");
 		
-		buffer.append("entry_point=");
-		buffer.append(appPath.getLaunchClass()+".main([Ljava/lang/String;)V");
+		buffer.append("launch_class=");
+		if(appPath.getOptionalTestClass()!=null){
+			buffer.append(appPath.getOptionalTestClass());
+		}
+		else{
+			buffer.append(appPath.getLaunchClass());			
+		}
 		
 		//Java Home
 		buffer.append(",");
@@ -90,17 +95,10 @@ public class InstrumentationExecutor {
 		builder.directory(new File(this.appPath.getWorkingDirectory()));
 		try {
 			Process process = builder.start();
-			int errorCode = process.waitFor();
-			if (errorCode != 0) {
-				String output = output(process.getErrorStream());
-				System.out.println(output);
-			}
-			else{
-				String output = output(process.getInputStream());
-				System.out.println(output);
-			}
+			String output = output(process.getInputStream());
+			System.out.println(output);
 
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

@@ -83,128 +83,128 @@ public class StartDebugHandler extends AbstractHandler {
 		behavior.increaseGenerateTrace();
 		new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
 		
-		try {
-			
-			Job job = new Job("Preparing for Debugging ...") {
-				
-				@Override
-				protected IStatus run(IProgressMonitor monitor) {
-					ProgramExecutor tcExecutor = new ProgramExecutor();
-					/** 0. clear some static common variables **/
-					clearOldData();
-					Repository.clearCache();
-					
-					int stepNum = -1;
-					boolean isMultiThread = false;
-					List<BreakPoint> executingStatements = null;
-					List<BreakPoint> executionOrderList = null;
-					try{
-						monitor.beginTask("approximating efforts", 1);
-						
-						ExecutionStatementCollector collector = new ExecutionStatementCollector();
-						executingStatements = collector.collectBreakPoints(appClassPath, Settings.isRunTest);
-						executionOrderList = collector.getExecutionOrderList();
-						stepNum = collector.getStepNum();
-						
-						if (collector.isMultiThread()) {
-							isMultiThread = true;
-							System.out.println("WARNING: It is multi-thread program, "
-									+ "the steps outside the main thread will be missed");
-						}
-						monitor.worked(1);		
-					}
-					finally{
-						monitor.done();
-					}
-					
-					if(stepNum != -1){
-						try{
-							monitor.beginTask("Construct Trace Model", stepNum);
-							
-							/** 1. parse read/written variables**/
-							monitor.setTaskName("parse read/written variables");
-							
-							BPVariableRetriever retriever = new BPVariableRetriever(executingStatements);
-							List<BreakPoint> runningStatements = null;
-							try {
-								runningStatements = retriever.parsingBreakPoints(appClassPath, false);
-							} catch (Exception e1) {
-								e1.printStackTrace();
-							}
-							
-							monitor.worked(2);
-							
-							/**
-							 * 2. find the variable scope for:
-							 * 1) Identifying the same local variable in different trace nodes.
-							 * 2) Generating variable ID for local variable.
-							 */
-//							monitor.setTaskName("parse variable scopes");
-//							List<String> classScope = parseScope(runningStatements);
-//							parseLocalVariables(classScope, appClassPath);
-							
-							if(runningStatements == null){
-								System.err.println("Cannot find any slice");
-								return Status.OK_STATUS;
-							}
-							
-							monitor.worked(1);
-							
-							/** 3. extract runtime variables*/
-							monitor.setTaskName("extract runtime value for variables");
-							
-							tcExecutor.setConfig(appClassPath);
-							try {
-								tcExecutor.run(runningStatements, executionOrderList, monitor, stepNum, Settings.isRunTest);
-							} catch (SavException | TimeoutException e) {
-								e.printStackTrace();
-							} 
-							
-							/** 4. construct dominance and loop-parent relation*/
-							monitor.setTaskName("construct dominance and loop-parent relation");
-							
-							final Trace trace = tcExecutor.getTrace();
-							trace.setMultiThread(isMultiThread);
-							trace.constructDomianceRelation();
-							trace.constructLoopParentRelation();
-							
-							monitor.worked(1);
-							
-//							Activator.getDefault().setCurrentTrace(trace);
-							Display.getDefault().asyncExec(new Runnable(){
-								
-								@Override
-								public void run() {
-									TraceView traceView = MicroBatViews.getTraceView();
-									traceView.setTrace(trace);
-									traceView.updateData();
-								}
-								
-							});
-						}
-						finally{
-							monitor.done();
-						}
-					}
-					
-					return Status.OK_STATUS;
-				}
-
-//				private List<String> parseScope(List<BreakPoint> breakpoints) {
-//					List<String> classes = new ArrayList<>();
-//					for(BreakPoint bp: breakpoints){
-//						if(!classes.contains(bp.getDeclaringCompilationUnitName())){
-//							classes.add(bp.getDeclaringCompilationUnitName());
+//		try {
+//			
+//			Job job = new Job("Preparing for Debugging ...") {
+//				
+//				@Override
+//				protected IStatus run(IProgressMonitor monitor) {
+//					ProgramExecutor tcExecutor = new ProgramExecutor();
+//					/** 0. clear some static common variables **/
+//					clearOldData();
+//					Repository.clearCache();
+//					
+//					int stepNum = -1;
+//					boolean isMultiThread = false;
+//					List<BreakPoint> executingStatements = null;
+//					List<BreakPoint> executionOrderList = null;
+//					try{
+//						monitor.beginTask("approximating efforts", 1);
+//						
+//						ExecutionStatementCollector collector = new ExecutionStatementCollector();
+//						executingStatements = collector.collectBreakPoints(appClassPath, Settings.isRunTest);
+//						executionOrderList = collector.getExecutionOrderList();
+//						stepNum = collector.getStepNum();
+//						
+//						if (collector.isMultiThread()) {
+//							isMultiThread = true;
+//							System.out.println("WARNING: It is multi-thread program, "
+//									+ "the steps outside the main thread will be missed");
+//						}
+//						monitor.worked(1);		
+//					}
+//					finally{
+//						monitor.done();
+//					}
+//					
+//					if(stepNum != -1){
+//						try{
+//							monitor.beginTask("Construct Trace Model", stepNum);
+//							
+//							/** 1. parse read/written variables**/
+//							monitor.setTaskName("parse read/written variables");
+//							
+//							BPVariableRetriever retriever = new BPVariableRetriever(executingStatements);
+//							List<BreakPoint> runningStatements = null;
+//							try {
+//								runningStatements = retriever.parsingBreakPoints(appClassPath, false);
+//							} catch (Exception e1) {
+//								e1.printStackTrace();
+//							}
+//							
+//							monitor.worked(2);
+//							
+//							/**
+//							 * 2. find the variable scope for:
+//							 * 1) Identifying the same local variable in different trace nodes.
+//							 * 2) Generating variable ID for local variable.
+//							 */
+////							monitor.setTaskName("parse variable scopes");
+////							List<String> classScope = parseScope(runningStatements);
+////							parseLocalVariables(classScope, appClassPath);
+//							
+//							if(runningStatements == null){
+//								System.err.println("Cannot find any slice");
+//								return Status.OK_STATUS;
+//							}
+//							
+//							monitor.worked(1);
+//							
+//							/** 3. extract runtime variables*/
+//							monitor.setTaskName("extract runtime value for variables");
+//							
+//							tcExecutor.setConfig(appClassPath);
+//							try {
+//								tcExecutor.run(runningStatements, executionOrderList, monitor, stepNum, Settings.isRunTest);
+//							} catch (SavException | TimeoutException e) {
+//								e.printStackTrace();
+//							} 
+//							
+//							/** 4. construct dominance and loop-parent relation*/
+//							monitor.setTaskName("construct dominance and loop-parent relation");
+//							
+//							final Trace trace = tcExecutor.getTrace();
+//							trace.setMultiThread(isMultiThread);
+//							trace.constructDomianceRelation();
+//							trace.constructLoopParentRelation();
+//							
+//							monitor.worked(1);
+//							
+////							Activator.getDefault().setCurrentTrace(trace);
+//							Display.getDefault().asyncExec(new Runnable(){
+//								
+//								@Override
+//								public void run() {
+//									TraceView traceView = MicroBatViews.getTraceView();
+//									traceView.setTrace(trace);
+//									traceView.updateData();
+//								}
+//								
+//							});
+//						}
+//						finally{
+//							monitor.done();
 //						}
 //					}
-//					return classes;
+//					
+//					return Status.OK_STATUS;
 //				}
-			};
-			job.schedule();
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//
+////				private List<String> parseScope(List<BreakPoint> breakpoints) {
+////					List<String> classes = new ArrayList<>();
+////					for(BreakPoint bp: breakpoints){
+////						if(!classes.contains(bp.getDeclaringCompilationUnitName())){
+////							classes.add(bp.getDeclaringCompilationUnitName());
+////						}
+////					}
+////					return classes;
+////				}
+//			};
+//			job.schedule();
+//			
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 		
 		return null;
 	}
