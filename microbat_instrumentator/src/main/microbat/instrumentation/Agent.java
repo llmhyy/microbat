@@ -7,6 +7,7 @@ import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.model.variable.Variable;
 import microbat.sql.TraceRecorder;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -96,6 +97,9 @@ public class Agent {
 						currentNode.addWrittenVariable(value);
 						stepOverNext.addReadVariable(value);
 						String varID = value.getVarID();
+						String definingOrder = trace.findDefiningNodeOrder(Variable.WRITTEN, currentNode, varID, varID);
+						varID = varID+":"+definingOrder;
+						value.setVarID(varID);
 						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
 						if(entry==null){
 							entry = new StepVariableRelationEntry(varID);
