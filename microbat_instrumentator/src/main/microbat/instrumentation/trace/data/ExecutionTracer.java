@@ -174,7 +174,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	 * Methods which are with prefix "_" are called in instrument code.
 	 * =================================================================
 	 * */
-	public void enterMethod(String className, String methodSignature, int methodStartLine, String paramTypeSignsCode, Object[] params) {
+	public void enterMethod(String className, String methodSignature, int methodStartLine, int methodEndLine, 
+			String paramTypeSignsCode, String paramNamesCode, Object[] params) {
 		locker.lock();
 		exclusive = FilterChecker.isExclusive(className, methodSignature);
 		// TODO-INSTR: declaringCompilationUnitName would not be correct here.
@@ -183,16 +184,14 @@ public class ExecutionTracer implements IExecutionTracer {
 		TraceNode latestNode = trace.getLatestNode();
 		if(latestNode!=null){
 			int varScopeStart = methodStartLine;
-			//TODO need method end line
-			int varScopeEnd = -1;
+			int varScopeEnd = methodEndLine;
 			
 			String[] parameterTypes = TraceUtils.parseArgTypesOrNames(paramTypeSignsCode);
+			String[] parameterNames = paramNamesCode.split(":");
 			for(int i=0; i<parameterTypes.length; i++){
 				String pType = parameterTypes[i];
 				String parameterType = SignatureUtils.signatureToName(pType);
-				
-				//TODO need parameter name
-				String varName = i + "th param";
+				String varName = parameterNames[i];
 				
 				if(PrimitiveUtils.isPrimitiveType(parameterType)){
 					Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
@@ -547,7 +546,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			return EmptyExecutionTracer.getInstance();
 		}
 		
-		tracer.enterMethod(className, methodSig, methodStartLine, paramTypeSignsCode, params);
+		tracer.enterMethod(className, methodSig, methodStartLine, methodEndLine, paramTypeSignsCode, paramNamesCode, params);
 		gLocker.unLock();
 		return tracer;
 	}

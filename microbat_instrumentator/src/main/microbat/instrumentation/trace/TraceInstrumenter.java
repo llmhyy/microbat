@@ -918,7 +918,14 @@ public class TraceInstrumenter {
 		newInsns.append(new PUSH(constPool, mSig)); // startTracing, className, String methodSig
 		newInsns.append(new PUSH(constPool, methodStartLine));	// startTracing, className, String methodSig, int methodStartLine	
 		newInsns.append(new PUSH(constPool, methodEndLine)); // startTracing, className, String methodSig, int methodStartLine, methodEndLine
-		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgNames(methodGen.getArgumentNames())));
+		String methodString = methodGen.getMethod().toString();
+		String args = methodString.substring(methodString.indexOf("(")+1, methodString.indexOf(")"));
+		String[] argList = args.split(",");
+		for(int i=0; i<argList.length; i++){
+			argList[i] = argList[i].trim();
+			argList[i] = argList[i].substring(argList[i].indexOf(" ")+1, argList[i].length());
+		}
+		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgNames(argList)));
 		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgTypes(methodGen.getArgumentTypes())));
 		// startTracing, className, String methodSig, int methodStartLine, argTypes
 		/* init Object[] */
