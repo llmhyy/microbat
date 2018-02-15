@@ -1,15 +1,12 @@
 package microbat.agent;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import org.apache.commons.io.IOUtils;
-
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.tcp.TraceOutputReader;
 import microbat.instrumentation.trace.InstrConstants;
 import microbat.model.trace.Trace;
 import sav.common.core.SavException;
@@ -37,37 +34,26 @@ public class TraceAgentRunner extends AgentVmRunner {
 		}
 		super.startVm(config);
 //		System.out.println(super.getCommandLinesString(config));
+		TraceOutputReader reader = null;
 		try {
 			Socket client = serverSocket.accept();
-			try {
-				InputStream inputStream = client.getInputStream();
-				final InputStreamReader streamReader = new InputStreamReader(inputStream);
-				// TODO: parse Trace
-				BufferedReader br = new BufferedReader(streamReader);
-				try {
-					String line = null;
-					try {
-						while ((line = br.readLine()) != null) {
-							
-							System.out.println(line);
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				} finally {
-					IOUtils.closeQuietly(streamReader);
-					IOUtils.closeQuietly(br);
-					IOUtils.closeQuietly(inputStream);
-				}
-			} catch (IOException e) {
-				throw new SavRtException(e);
-			}
-		} catch (IOException e) {
+			InputStream inputStream = client.getInputStream();
+			reader = new TraceOutputReader(inputStream);
+			trace = reader.readTrace();
+		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 		return true;
 	}
-	
+
 	public Trace getTrace() {
 		return trace;
 	}

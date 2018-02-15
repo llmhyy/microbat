@@ -1,26 +1,25 @@
 package microbat.instrumentation;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import microbat.instrumentation.trace.InstrConstants;
+import microbat.instrumentation.tcp.TraceOutputWriter;
 import microbat.model.trace.Trace;
 import sav.common.core.SavRtException;
 
 public class TcpConnector {
 	private int tcpPort;
-	private TcpTraceWriter inputWriter;
+	private TraceOutputWriter inputWriter;
 	private Socket server;
 
 	public TcpConnector(int tcpPort) {
 		this.tcpPort = tcpPort;
 	}
 
-	public TcpTraceWriter connect() throws Exception {
-		inputWriter = new TcpTraceWriter();
+	public TraceOutputWriter connect() throws Exception {
 		while (true) {
 			try {
 				server = new Socket("localhost", tcpPort);
@@ -33,7 +32,7 @@ public class TcpConnector {
 			}
 		}
 		try {
-			inputWriter.setOutputStream(server.getOutputStream());
+			inputWriter = new TraceOutputWriter(server.getOutputStream());
 		} catch (IOException e) {
 			throw new SavRtException(e);
 		}
@@ -48,20 +47,30 @@ public class TcpConnector {
 				e.printStackTrace();
 			}
 		}
+		if (inputWriter != null) {
+			try {
+				inputWriter.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public static class TcpTraceWriter {
-		private PrintWriter pw;
+		private DataOutputStream pw;
 		
 		public void setOutputStream(OutputStream outputStream) {
-			this.pw = new PrintWriter(outputStream, true);
+			this.pw = new DataOutputStream(outputStream);
 		}
 
-		public void writeTrace(Trace trace) {
-			pw.println(InstrConstants.INSTRUMENT_RESULT);
-			pw.println("Trace is collected!!!!");
+		public void writeTrace(Trace trace) throws IOException {
+			int traceNum = (trace == null ? 0 : 1);
+			pw.writeInt(traceNum);
+			
+			
 			pw.flush();
 		}
 		
 	}
+	
 }

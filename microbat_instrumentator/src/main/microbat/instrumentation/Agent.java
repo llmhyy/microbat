@@ -1,6 +1,7 @@
 package microbat.instrumentation;
 
 import microbat.instrumentation.TcpConnector.TcpTraceWriter;
+import microbat.instrumentation.tcp.TraceOutputWriter;
 import microbat.instrumentation.trace.data.ExecutionTracer;
 import microbat.instrumentation.trace.data.FilterChecker;
 import microbat.instrumentation.trace.data.IExecutionTracer;
@@ -62,8 +63,10 @@ public class Agent {
 
 	private void writeTrace(Trace trace) throws Exception {
 		TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
-		TcpTraceWriter traceWriter = tcpConnector.connect();
+		TraceOutputWriter traceWriter = tcpConnector.connect();
 		traceWriter.writeTrace(trace);
+		traceWriter.flush();
+		Thread.sleep(10000l);
 		tcpConnector.close();
 	}
 	
