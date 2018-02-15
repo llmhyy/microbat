@@ -17,7 +17,7 @@ public class InvokeSample {
       }
   }
 
-  private void run() { IExecutionTracer tracer = ExecutionTracer._getTracer(true, "InvokeSample", "run", 19, 
+  private void run() { IExecutionTracer tracer = ExecutionTracer._getTracer(true, "InvokeSample", "run", 19, 22, "", 
 		  "", new Object[1]);
       List<String> ls = new ArrayList<>();
       ls.add("Good Day");  tracer._hitInvoke(null, null, "methodname", null, "paramTypeSignsCode", "returnTypeSign", 17, "", "");
