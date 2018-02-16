@@ -35,6 +35,7 @@ public class InstrumentationExecutor {
 		config.setJavaHome(appPath.getJavaHome());
 		config.setClasspath(appPath.getClasspaths());
 		config.setLaunchClass(appPath.getLaunchClass());
+		config.setWorkingDirectory(appPath.getWorkingDirectory());
 				
 		if(appPath.getOptionalTestClass()!=null) {
 			config.addProgramArgs(appPath.getOptionalTestClass());
