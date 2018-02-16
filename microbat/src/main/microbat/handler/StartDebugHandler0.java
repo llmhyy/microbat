@@ -11,17 +11,18 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.swt.widgets.Display;
 
-import microbat.agent.TraceConstructor;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReader;
 import microbat.behavior.BehaviorReporter;
+import microbat.codeanalysis.bytecode.BPVariableRetriever;
 import microbat.codeanalysis.runtime.ExecutionStatementCollector;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.ProgramExecutor;
@@ -34,9 +35,10 @@ import microbat.util.Settings;
 import microbat.views.DebugFeedbackView;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
+import sav.common.core.SavException;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class StartDebugHandler extends AbstractHandler {
+public class StartDebugHandler0 extends AbstractHandler {
 	
 	private void clearOldData(){
 		Settings.interestedVariables.clear();
@@ -67,9 +69,6 @@ public class StartDebugHandler extends AbstractHandler {
 			appClassPath.setOptionalTestMethod(Settings.testMethod);
 			appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
 		}
-		
-		InstrumentationExecutor ex = new InstrumentationExecutor(appClassPath);
-		ex.run();
 		
 		try {
 			new BehaviorReader().readXLSX();
@@ -119,10 +118,56 @@ public class StartDebugHandler extends AbstractHandler {
 						try{
 							monitor.beginTask("Construct Trace Model", stepNum);
 							
-							final Trace trace = new TraceConstructor().getTrace(appClassPath);
+							/** 1. parse read/written variables**/
+							monitor.setTaskName("parse read/written variables");
+							
+							BPVariableRetriever retriever = new BPVariableRetriever(executingStatements);
+							List<BreakPoint> runningStatements = null;
+							try {
+								runningStatements = retriever.parsingBreakPoints(appClassPath, false);
+							} catch (Exception e1) {
+								e1.printStackTrace();
+							}
+							
+							monitor.worked(2);
+							
+							/**
+							 * 2. find the variable scope for:
+							 * 1) Identifying the same local variable in different trace nodes.
+							 * 2) Generating variable ID for local variable.
+							 */
+//							monitor.setTaskName("parse variable scopes");
+//							List<String> classScope = parseScope(runningStatements);
+//							parseLocalVariables(classScope, appClassPath);
+							
+							if(runningStatements == null){
+								System.err.println("Cannot find any slice");
+								return Status.OK_STATUS;
+							}
 							
 							monitor.worked(1);
 							
+							/** 3. extract runtime variables*/
+							monitor.setTaskName("extract runtime value for variables");
+							
+							tcExecutor.setConfig(appClassPath);
+							try {
+								tcExecutor.run(runningStatements, executionOrderList, monitor, stepNum, Settings.isRunTest);
+							} catch (SavException | TimeoutException e) {
+								e.printStackTrace();
+							} 
+							
+							/** 4. construct dominance and loop-parent relation*/
+							monitor.setTaskName("construct dominance and loop-parent relation");
+							
+							final Trace trace = tcExecutor.getTrace();
+							trace.setMultiThread(isMultiThread);
+							trace.constructDomianceRelation();
+							trace.constructLoopParentRelation();
+							
+							monitor.worked(1);
+							
+//							Activator.getDefault().setCurrentTrace(trace);
 							Display.getDefault().asyncExec(new Runnable(){
 								
 								@Override
@@ -133,9 +178,6 @@ public class StartDebugHandler extends AbstractHandler {
 								}
 								
 							});
-						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
 						}
 						finally{
 							monitor.done();

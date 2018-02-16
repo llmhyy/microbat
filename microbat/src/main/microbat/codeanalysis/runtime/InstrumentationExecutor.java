@@ -21,87 +21,92 @@ public class InstrumentationExecutor {
 		this.appPath = appPath;
 	}
 	
-	public void run(){
-		List<String> command = new ArrayList<>();
-		command.add(this.appPath.getJavaHome()+File.separator+"bin"+File.separator+"java");
-		
-		command.add("-noverify");
-		
-		command.add("-cp");
-		
-		StringBuffer buffer = new StringBuffer();
-		buffer.append(".");
-		for(String cp: appPath.getClasspaths()){
-			buffer.append(";");
-			buffer.append(cp);
-		}
-		String cp = buffer.toString();
-		command.add(cp);
-		
-		buffer = new StringBuffer();
-		buffer.append("-javaagent:");
-		//TODO set agent lib
-		buffer.append(appPath.getAgentLib());
-		buffer.append("=");
-		
-		buffer.append("launch_class=");
-		if(appPath.getOptionalTestClass()!=null){
-			buffer.append(appPath.getOptionalTestClass());
-		}
-		else{
-			buffer.append(appPath.getLaunchClass());			
-		}
-		
-		//Java Home
-		buffer.append(",");
-		buffer.append("java_home=");
-		buffer.append(appPath.getJavaHome());
-		
-		//Class Path
-		buffer.append(",");
-		buffer.append("class_path=.");
-		for(String classPath: appPath.getClasspaths()){
-			buffer.append(";");
-			buffer.append(classPath);
-		}
-		
-		//Working Directory
-		buffer.append(",");
-		buffer.append("working_dir=");
-		buffer.append(appPath.getWorkingDirectory());
-
-		//Bootstrap 
-//		buffer.append(",");
-//		buffer.append("bootstrap_path=.");
-//		for(String path: appPath.getAgentBootstrapPathList()){
-//			buffer.append(";");
-//			buffer.append(path);
-//		}
-		
-		String agentInfo = buffer.toString();
-		command.add(agentInfo);
-		
-		command.add(appPath.getLaunchClass());
-		
-		if(appPath.getOptionalTestMethod()!=null){
-			command.add(appPath.getOptionalTestClass());
-			command.add(appPath.getOptionalTestMethod());
-		}
-		
-		String com = createRunningCommand(command);
-		System.out.println(com);
-		
-		ProcessBuilder builder = new ProcessBuilder(command);
-		builder.directory(new File(this.appPath.getWorkingDirectory()));
-		try {
-			Process process = builder.start();
-			String output = output(process.getInputStream());
-			System.out.println(output);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public void run() {
+//		Trace trace = 
 	}
+	
+	
+//	public void run(){
+//		List<String> command = new ArrayList<>();
+//		command.add(this.appPath.getJavaHome()+File.separator+"bin"+File.separator+"java");
+//		
+//		command.add("-noverify");
+//		
+//		command.add("-cp");
+//		
+//		StringBuffer buffer = new StringBuffer();
+//		buffer.append(".");
+//		for(String cp: appPath.getClasspaths()){
+//			buffer.append(";");
+//			buffer.append(cp);
+//		}
+//		String cp = buffer.toString();
+//		command.add(cp);
+//		
+//		buffer = new StringBuffer();
+//		buffer.append("-javaagent:");
+//		//TODO set agent lib
+//		buffer.append(appPath.getAgentLib());
+//		buffer.append("=");
+//		
+//		buffer.append("launch_class=");
+//		if(appPath.getOptionalTestClass()!=null){
+//			buffer.append(appPath.getOptionalTestClass());
+//		}
+//		else{
+//			buffer.append(appPath.getLaunchClass());			
+//		}
+//		
+//		//Java Home
+//		buffer.append(",");
+//		buffer.append("java_home=");
+//		buffer.append(appPath.getJavaHome());
+//		
+//		//Class Path
+//		buffer.append(",");
+//		buffer.append("class_path=.");
+//		for(String classPath: appPath.getClasspaths()){
+//			buffer.append(";");
+//			buffer.append(classPath);
+//		}
+//		
+//		//Working Directory
+//		buffer.append(",");
+//		buffer.append("working_dir=");
+//		buffer.append(appPath.getWorkingDirectory());
+//
+//		//Bootstrap 
+////		buffer.append(",");
+////		buffer.append("bootstrap_path=.");
+////		for(String path: appPath.getAgentBootstrapPathList()){
+////			buffer.append(";");
+////			buffer.append(path);
+////		}
+//		
+//		String agentInfo = buffer.toString();
+//		command.add(agentInfo);
+//		
+//		command.add(appPath.getLaunchClass());
+//		
+//		if(appPath.getOptionalTestMethod()!=null){
+//			command.add(appPath.getOptionalTestClass());
+//			command.add(appPath.getOptionalTestMethod());
+//		}
+//		
+//		String com = createRunningCommand(command);
+//		System.out.println(com);
+//		
+//		ProcessBuilder builder = new ProcessBuilder(command);
+//		builder.directory(new File(this.appPath.getWorkingDirectory()));
+//		try {
+//			Process process = builder.start();
+//			String output = output(process.getInputStream());
+//			System.out.println(output);
+//
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 	private String createRunningCommand(List<String> command) {
 		StringBuffer buffer = new StringBuffer();
