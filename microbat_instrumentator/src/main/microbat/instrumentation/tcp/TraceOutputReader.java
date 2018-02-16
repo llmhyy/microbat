@@ -24,6 +24,10 @@ public class TraceOutputReader extends DataInputStream {
 	}
 
 	public Trace readTrace() throws IOException {
+		int traceNo = readInt();
+		if (traceNo == 0) {
+			return null;
+		}
 		Trace trace = new Trace(null);
 		readString(); // projectName
 		readString(); // projectVersion
@@ -35,30 +39,11 @@ public class TraceOutputReader extends DataInputStream {
 		return trace;
 	}
 
-	private void readStepVariableRelation(Trace trace) throws IOException {
-		Map<String, StepVariableRelationEntry> stepVariableTable = trace.getStepVariableTable();
-		int size = readInt();
-		for (int i = 0; i < size; i++) {
-			StepVariableRelationEntry entry = new StepVariableRelationEntry(readString());
-			int producerSize = readInt();
-			for (int p = 0; p < producerSize; p++) {
-				entry.addProducer(readNode(trace.getExecutionList()));
-				readInt();
-			}
-			int consumerSize = readInt();
-			for (int p = 0; p < consumerSize; p++) {
-				entry.addConsumer(readNode(trace.getExecutionList()));
-				readInt();
-			}
-			stepVariableTable.put(entry.getVarID(), entry);
-		}
-	}
-
 	private List<TraceNode> readSteps(Trace trace) throws IOException {
 		int size = readInt();
 		List<TraceNode> allSteps = new ArrayList<>();
 		for (int i = 0; i < size; i++) {
-			TraceNode node = new TraceNode(null, null, i, trace);
+			TraceNode node = new TraceNode(null, null, i + 1, trace);
 			allSteps.add(node);
 		}
 
@@ -110,7 +95,7 @@ public class TraceOutputReader extends DataInputStream {
 		if (nodeOrder == -1) {
 			return null;
 		}
-		return allSteps.get(nodeOrder);
+		return allSteps.get(nodeOrder - 1);
 	}
 
 	private BreakPoint readLocation() throws IOException {
@@ -150,6 +135,25 @@ public class TraceOutputReader extends DataInputStream {
 		scope.setStartLine(readInt());
 		scope.setEndLine(readInt());
 		return scope;
+	}
+	
+	private void readStepVariableRelation(Trace trace) throws IOException {
+		Map<String, StepVariableRelationEntry> stepVariableTable = trace.getStepVariableTable();
+		int size = readInt();
+		for (int i = 0; i < size; i++) {
+			StepVariableRelationEntry entry = new StepVariableRelationEntry(readString());
+			int producerSize = readInt();
+			for (int p = 0; p < producerSize; p++) {
+				entry.addProducer(readNode(trace.getExecutionList()));
+				readInt();
+			}
+			int consumerSize = readInt();
+			for (int p = 0; p < consumerSize; p++) {
+				entry.addConsumer(readNode(trace.getExecutionList()));
+				readInt();
+			}
+			stepVariableTable.put(entry.getVarID(), entry);
+		}
 	}
 
 	private String readString() throws IOException {

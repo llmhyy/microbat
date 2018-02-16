@@ -134,7 +134,7 @@ public class TraceRetriever extends DbService {
 		int total = countNumberOfRows(rs);
 		List<TraceNode> allSteps = new ArrayList<>(total);
 		for (int i = 0; i < total; i++) {
-			allSteps.add(new TraceNode(null, null, i, trace));
+			allSteps.add(new TraceNode(null, null, i + 1, trace));
 		}
 		Map<Integer, TraceNode> locationIdMap = new HashMap<>();
 		while (rs.next()) {
