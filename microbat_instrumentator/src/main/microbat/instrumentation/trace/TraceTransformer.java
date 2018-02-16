@@ -4,11 +4,16 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
+import microbat.instrumentation.AbstractTransformer;
 import microbat.instrumentation.AgentParams;
-import microbat.instrumentation.trace.data.ExecutionTracer;
 import microbat.instrumentation.trace.data.FilterChecker;
 
-public class TraceTransformer implements ClassFileTransformer {
+/**
+ * 
+ * @author lyly
+ *
+ */
+public class TraceTransformer extends AbstractTransformer implements ClassFileTransformer {
 	private TraceInstrumenter instrumenter;
 	
 	public TraceTransformer(AgentParams params) {
@@ -16,11 +21,8 @@ public class TraceTransformer implements ClassFileTransformer {
 	}
 	
 	@Override
-	public byte[] transform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
+	protected byte[] doTransform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-		if (ExecutionTracer.isShutdown()) {
-			return null;
-		}
 		/* bootstrap classes */
 		if ((loader == null) || (protectionDomain == null)) {
 			if (!FilterChecker.isTransformable(classFName, null, true)) {
@@ -43,7 +45,7 @@ public class TraceTransformer implements ClassFileTransformer {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return classfileBuffer;
+		return null;
 	}
 
 }

@@ -15,6 +15,7 @@ public class AgentParams {
 	public static final String OPT_CLASS_PATH = "class_path";
 	public static final String OPT_WORKING_DIR = "working_dir";
 	public static final String OPT_TCP_PORT = "tcp_port";
+	public static final String OPT_DUMP_FILE = "dump_file_path";
 	private EntryPoint entryPoint;
 	
 	private List<String> classPaths = new ArrayList<>();
@@ -22,7 +23,8 @@ public class AgentParams {
 	private String workingDirectory;
 	private String javaHome;
 	private String launchClass;
-	private int tcpPort;
+	private int tcpPort = -1;
+	private String dumpFile;
 
 	public static AgentParams parse(String agentArgs) {
 		String[] args = agentArgs.split(InstrConstants.AGENT_PARAMS_SEPARATOR);
@@ -61,7 +63,8 @@ public class AgentParams {
 		if (portStr != null) {
 			params.tcpPort = Integer.valueOf(portStr);
 		}
-//		String bootstrpString = argMap.get("bootstrp_path");
+		params.dumpFile = argMap.get(OPT_DUMP_FILE);
+		//		String bootstrpString = argMap.get("bootstrp_path");
 //		String[] bootstrpStrings = bootstrpString.split(";");
 //		for(String bootstrp: bootstrpStrings){
 //			params.bootstrapPaths.add(bootstrp);
@@ -122,4 +125,7 @@ public class AgentParams {
 		return tcpPort;
 	}
 
+	public String getDumpFile() {
+		return dumpFile;
+	}
 }

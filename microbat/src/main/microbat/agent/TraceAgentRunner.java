@@ -1,12 +1,15 @@
 package microbat.agent;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 import microbat.instrumentation.AgentParams;
-import microbat.instrumentation.tcp.TraceOutputReader;
+import microbat.instrumentation.io.TraceOutputReader;
 import microbat.instrumentation.trace.InstrConstants;
 import microbat.model.trace.Trace;
 import sav.common.core.SavException;
@@ -17,13 +20,47 @@ import sav.strategies.vm.VMConfiguration;
 public class TraceAgentRunner extends AgentVmRunner {
 	private ServerSocket serverSocket;
 	private Trace trace;
+	private boolean isTestSuccessful = false;
+	private String testFailureMessage;
 	
 	public TraceAgentRunner(String agentJar) {
 		super(agentJar, InstrConstants.AGENT_OPTION_SEPARATOR, InstrConstants.AGENT_PARAMS_SEPARATOR);
 	}
+	
+	public boolean runWithDumpFileOption(VMConfiguration config) throws SavException {
+		TraceOutputReader reader = null;
+		InputStream stream = null;
+		try {
+			File tempFile = File.createTempFile("trace", ".exec");
+			System.out.println("Trace dumpfile: " + tempFile.getPath());
+			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(tempFile.getPath()));
+			super.startAndWaitUntilStop(config);
+			//		System.out.println(super.getCommandLinesString(config));
+			
+			stream = new FileInputStream(tempFile);
+			reader = new TraceOutputReader(new BufferedInputStream(stream));
+			String msg = reader.readString();
+			updateTestResult(msg);
+			trace = reader.readTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new SavRtException(e);
+		} finally {
+			try {
+				if (reader != null) {
+					reader.close();
+				}
+				if (reader != null) {
+					reader.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return true;
+	}
 
-	@Override
-	public boolean startVm(VMConfiguration config) throws SavException {
+	public boolean runWithSocket(VMConfiguration config) throws SavException {
 		try {
 			int port = VMConfiguration.findFreePort();
 			serverSocket = new ServerSocket(port);
@@ -39,6 +76,8 @@ public class TraceAgentRunner extends AgentVmRunner {
 			Socket client = serverSocket.accept();
 			InputStream inputStream = client.getInputStream();
 			reader = new TraceOutputReader(inputStream);
+			String msg = reader.readString();
+			updateTestResult(msg);
 			trace = reader.readTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -52,6 +91,23 @@ public class TraceAgentRunner extends AgentVmRunner {
 			}
 		}
 		return true;
+	}
+
+	private void updateTestResult(String msg) {
+		if (msg == null || msg.isEmpty()) {
+			return;
+		}
+		int sIdx = msg.indexOf(";");
+		isTestSuccessful = Boolean.valueOf(msg.substring(0, sIdx));
+		testFailureMessage = msg.substring(sIdx + 1, msg.length()); 
+	}
+
+	public boolean isTestSuccessful() {
+		return isTestSuccessful;
+	}
+
+	public String getTestFailureMessage() {
+		return testFailureMessage;
 	}
 
 	public Trace getTrace() {

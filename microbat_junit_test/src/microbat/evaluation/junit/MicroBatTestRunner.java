@@ -47,8 +47,13 @@ public class MicroBatTestRunner {
 		System.currentTimeMillis();
 		System.out.println("is successful? " + successful);
 		System.out.println(this.failureMessage);
+		$setProgramMessage(successful + ";" + this.failureMessage);
 	}
 	
+	private void $setProgramMessage(String resultMsg) {
+		// for agent part.
+	}
+
 	public static boolean isTestSuccessful(String className, String methodName, URLClassLoader classLoader){
 		Request request;
 		try {

@@ -1,7 +1,8 @@
 package microbat.instrumentation;
 
-import microbat.instrumentation.TcpConnector.TcpTraceWriter;
-import microbat.instrumentation.tcp.TraceOutputWriter;
+import microbat.instrumentation.io.TraceOutputWriter;
+import microbat.instrumentation.io.file.FileOutputHandler;
+import microbat.instrumentation.io.tcp.TcpConnector;
 import microbat.instrumentation.trace.data.ExecutionTracer;
 import microbat.instrumentation.trace.data.FilterChecker;
 import microbat.instrumentation.trace.data.IExecutionTracer;
@@ -15,6 +16,7 @@ import sav.strategies.dto.AppJavaClassPath;
 
 public class Agent {
 	private AgentParams agentParams;
+	private static String programMsg = "";
 	
 	public Agent(String agentArgs) {
 		agentParams = AgentParams.parse(agentArgs);
@@ -49,25 +51,33 @@ public class Agent {
 		/* collect trace & store */
 		System.out.println("Recording trace...");
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
-		TraceRecorder traceRecorder = new TraceRecorder();
+	
 		Trace trace = ((ExecutionTracer) tracer).getTrace();
 		
 		createVirtualDataRelation(trace);
 		trace.constructControlDomianceRelation();
 //		trace.constructLoopParentRelation();
 		
-		traceRecorder.storeTrace(trace );
-		writeTrace(trace);
+		writeOutput(trace);
 		System.out.println("Finish recording.");
 	}
 
-	private void writeTrace(Trace trace) throws Exception {
-		TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
-		TraceOutputWriter traceWriter = tcpConnector.connect();
-		traceWriter.writeTrace(trace);
-		traceWriter.flush();
-		Thread.sleep(10000l);
-		tcpConnector.close();
+	private void writeOutput(Trace trace) throws Exception {
+		if (agentParams.getDumpFile() != null) {
+			FileOutputHandler fileHandler = new FileOutputHandler(agentParams.getDumpFile());
+			fileHandler.save(programMsg, trace, false);
+		} else if (agentParams.getTcpPort() != -1) {
+			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
+			TraceOutputWriter traceWriter = tcpConnector.connect();
+			traceWriter.writeString(programMsg);
+			traceWriter.writeTrace(trace);
+			traceWriter.flush();
+			Thread.sleep(10000l);
+			tcpConnector.close();
+		} else {
+			TraceRecorder traceRecorder = new TraceRecorder();
+			traceRecorder.storeTrace(trace );
+		}
 	}
 	
 	private void createVirtualDataRelation(Trace trace) {
@@ -123,7 +133,10 @@ public class Agent {
 				}
 			}
 		}
-		
+	}
+	
+	public static void setProgramMsg(String programMsg) {
+		Agent.programMsg = programMsg;
 	}
 
 	public static String extrctJarPath() {

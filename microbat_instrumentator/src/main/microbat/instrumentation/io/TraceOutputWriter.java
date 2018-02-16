@@ -1,4 +1,4 @@
-package microbat.instrumentation.tcp;
+package microbat.instrumentation.io;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -30,7 +30,7 @@ public class TraceOutputWriter extends DataOutputStream {
 		writeTrace(trace, null, null, null, null);
 	}
 	
-	private void writeString(String str) throws IOException {
+	public final void writeString(String str) throws IOException {
 		if (str == null) {
 			writeInt(-1);
 		} else if ( str.isEmpty()) {

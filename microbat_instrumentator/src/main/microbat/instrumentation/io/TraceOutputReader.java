@@ -1,4 +1,4 @@
-package microbat.instrumentation.tcp;
+package microbat.instrumentation.io;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -156,7 +156,7 @@ public class TraceOutputReader extends DataInputStream {
 		}
 	}
 
-	private String readString() throws IOException {
+	public String readString() throws IOException {
 		int len = readInt();
 		if (len == -1) {
 			return null;

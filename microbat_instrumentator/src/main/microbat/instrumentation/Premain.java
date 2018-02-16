@@ -22,6 +22,7 @@ public class Premain {
 		final Agent agent = new Agent(agentArgs);
 		agent.startup();
 		inst.addTransformer(new TraceTransformer(agent.getAgentParams()), true);
+		inst.addTransformer(new TestRunnerTranformer());
 		if (retransformableClasses.length > 0) {
 			inst.retransformClasses(retransformableClasses);
 		}

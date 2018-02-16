@@ -105,10 +105,20 @@ public class TraceInstrumenter {
 		JavaClass newJC = null;
 		boolean entry = entryPoint != null ? className.equals(entryPoint.getClassName()) : 
 									FilterChecker.isAppClass(classFName);
+//		boolean isArrayList = "java/util/ArrayList".equals(classFName);
 		for (Method method : jc.getMethods()) {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
 			}
+			
+//			if (isArrayList && !CollectionUtils.existIn(method.getName(), "<init>", 
+//					"trimToSize", "ensureCapacity", "ensureCapacityInternal", "ensureExplicitCapacity",
+//					"grow", "hugeCapacity", "size")) {
+//				continue;
+//			}
+//			if (isArrayList && method.getName().equals("size")) {
+//				continue;
+//			}
 			try {
 				boolean changed = false;
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
@@ -145,6 +155,7 @@ public class TraceInstrumenter {
 //			if (className.endsWith("TestCase")) {
 //				store(classfileBuffer, classFName + "_org");
 //			}
+			
 			return data;
 		}
 		return null;
@@ -968,7 +979,7 @@ public class TraceInstrumenter {
 		return tracerVar;
 	}
 
-	private static void updateTargeters(InstructionHandle oldPos, InstructionHandle newPos) {
+	public static void updateTargeters(InstructionHandle oldPos, InstructionHandle newPos) {
 		InstructionTargeter[] itList = oldPos.getTargeters();
 		if (itList != null) {
 			for (InstructionTargeter it : itList) {

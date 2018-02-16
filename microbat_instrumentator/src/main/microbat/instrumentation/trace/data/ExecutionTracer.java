@@ -550,7 +550,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		gLocker.unLock();
 		return tracer;
 	}
-
+	
 	private static ExecutionTracer getTracer(long threadId) {
 		ExecutionTracer store = rtStores.get(threadId);
 		if (store == null) {
@@ -566,6 +566,15 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	public synchronized static IExecutionTracer getMainThreadStore() {
 		return getTracer(mainThreadId);
+	}
+	
+	public synchronized static IExecutionTracer getCurrentThreadStore() {
+		long threadId = Thread.currentThread().getId();
+		ExecutionTracer store = rtStores.get(threadId);
+		if (store != null) {
+			return store;
+		}
+		return EmptyExecutionTracer.getInstance();
 	}
 	
 	private static boolean shutdown;
@@ -611,5 +620,17 @@ public class ExecutionTracer implements IExecutionTracer {
 		public boolean isLock() {
 			return tracing;
 		}
+	}
+
+	@Override
+	public boolean lock() {
+		boolean isLock = locker.isLock();
+		locker.lock();
+		return isLock;
+	}
+
+	@Override
+	public void unLock() {
+		locker.unLock();
 	}
 }

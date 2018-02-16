@@ -46,7 +46,7 @@ public class FilterChecker implements IFilterChecker {
 		}
 		
 		System.currentTimeMillis();
-		addBootstrapIncludes(ArrayList.class.getName());
+//		addBootstrapIncludes(ArrayList.class.getName());
 	}
 	
 	private void addBootstrapIncludes(String... classNames) {

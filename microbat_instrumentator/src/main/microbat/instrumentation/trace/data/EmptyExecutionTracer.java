@@ -108,4 +108,15 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 		
 	}
 
+	@Override
+	public boolean lock() {
+		return false;
+	}
+
+	@Override
+	public void unLock() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

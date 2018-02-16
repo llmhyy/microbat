@@ -36,4 +36,7 @@ public interface IExecutionTracer {
 
 	public void _hitMethodEnd(int line);
 	
+	public boolean lock();
+	
+	public void unLock();
 }

@@ -1,4 +1,4 @@
-package microbat.instrumentation;
+package microbat.instrumentation.io.tcp;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import microbat.instrumentation.tcp.TraceOutputWriter;
+import microbat.instrumentation.io.TraceOutputWriter;
 import microbat.model.trace.Trace;
 import sav.common.core.SavRtException;
 
