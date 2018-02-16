@@ -100,7 +100,9 @@ public class TraceOutputWriter extends DataOutputStream {
 	}
 	
 	private void writeLocation(BreakPoint location) throws IOException {
+		writeString(location.getClassCanonicalName());
 		writeString(location.getDeclaringCompilationUnitName());
+		writeString(location.getMethodSign());
 		writeInt(location.getLineNumber());
 		writeBoolean(location.isConditional());
 		writeBoolean(location.isReturnStatement());

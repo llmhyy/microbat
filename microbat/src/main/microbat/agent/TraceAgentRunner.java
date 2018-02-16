@@ -35,7 +35,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 			System.out.println("Trace dumpfile: " + tempFile.getPath());
 			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(tempFile.getPath()));
 			super.startAndWaitUntilStop(config);
-			//		System.out.println(super.getCommandLinesString(config));
+//			System.out.println(super.getCommandLinesString(config));
 			
 			stream = new FileInputStream(tempFile);
 			reader = new TraceOutputReader(new BufferedInputStream(stream));

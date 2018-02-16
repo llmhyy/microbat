@@ -171,7 +171,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 
 	/* 
-	 * Methods which are with prefix "_" are called in instrument code.
+	 * Methods with prefix "_" are called in instrument code.
 	 * =================================================================
 	 * */
 	public void enterMethod(String className, String methodSignature, int methodStartLine, int methodEndLine, 

@@ -15,6 +15,8 @@ public class BreakPoint extends ClassLocation {
 	
 	private boolean isReturnStatement;
 	
+	private boolean isStartOfClass = false;
+	
 	private boolean isConditional;
 	
 	/**
@@ -237,5 +239,13 @@ public class BreakPoint extends ClassLocation {
 	public boolean isSourceVersion() {
 		String flag = File.separator + "bug" + File.separator;
 		return this.getFullJavaFilePath().contains(flag);
+	}
+
+	public boolean isStartOfClass() {
+		return isStartOfClass;
+	}
+
+	public void setStartOfClass(boolean isStartOfClass) {
+		this.isStartOfClass = isStartOfClass;
 	}
 }
