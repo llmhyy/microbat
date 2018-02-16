@@ -34,7 +34,8 @@ Bundle-ClassPath: .,
  lib/asm-6.0.jar,
  lib/asm-tree-6.0.jar,
  lib/asm-util-6.0.jar,
- lib/mysql-connector-java-5.1.44-bin.jar
+ lib/mysql-connector-java-5.1.44-bin.jar,
+ lib/instrumentator.jar
 Export-Package: microbat,
  microbat.algorithm.graphdiff,
  microbat.behavior,

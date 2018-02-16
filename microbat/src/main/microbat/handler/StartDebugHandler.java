@@ -87,59 +87,31 @@ public class StartDebugHandler extends AbstractHandler {
 				
 				@Override
 				protected IStatus run(IProgressMonitor monitor) {
-					ProgramExecutor tcExecutor = new ProgramExecutor();
-					/** 0. clear some static common variables **/
-					clearOldData();
-					Repository.clearCache();
-					
-					int stepNum = -1;
-					boolean isMultiThread = false;
-					List<BreakPoint> executingStatements = null;
-					List<BreakPoint> executionOrderList = null;
 					try{
-						monitor.beginTask("approximating efforts", 1);
+						monitor.beginTask("Construct Trace Model", 100);
 						
-						ExecutionStatementCollector collector = new ExecutionStatementCollector();
-						executingStatements = collector.collectBreakPoints(appClassPath, Settings.isRunTest);
-						executionOrderList = collector.getExecutionOrderList();
-						stepNum = collector.getStepNum();
+						InstrumentationExecutor exectuor = new InstrumentationExecutor(appClassPath);
 						
-						if (collector.isMultiThread()) {
-							isMultiThread = true;
-							System.out.println("WARNING: It is multi-thread program, "
-									+ "the steps outside the main thread will be missed");
-						}
-						monitor.worked(1);		
+						final Trace trace = exectuor.run();
+						
+						monitor.worked(80);
+						
+						Display.getDefault().asyncExec(new Runnable(){
+							
+							@Override
+							public void run() {
+								TraceView traceView = MicroBatViews.getTraceView();
+								traceView.setTrace(trace);
+								traceView.updateData();
+							}
+							
+						});
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 					finally{
 						monitor.done();
-					}
-					
-					if(stepNum != -1){
-						try{
-							monitor.beginTask("Construct Trace Model", stepNum);
-							
-							final Trace trace = new TraceConstructor().getTrace(appClassPath);
-							
-							monitor.worked(1);
-							
-							Display.getDefault().asyncExec(new Runnable(){
-								
-								@Override
-								public void run() {
-									TraceView traceView = MicroBatViews.getTraceView();
-									traceView.setTrace(trace);
-									traceView.updateData();
-								}
-								
-							});
-						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						finally{
-							monitor.done();
-						}
 					}
 					
 					return Status.OK_STATUS;

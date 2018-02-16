@@ -8,7 +8,12 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import microbat.agent.TraceAgentRunner;
+import microbat.instrumentation.AgentParams;
+import microbat.model.trace.Trace;
+import sav.common.core.SavException;
 import sav.strategies.dto.AppJavaClassPath;
+import sav.strategies.vm.VMConfiguration;
 
 public class InstrumentationExecutor {
 	private final static String TEST_CASE_RUNNER = "microbat.evaluation.junit.MicroBatTestRunner";
@@ -21,12 +26,46 @@ public class InstrumentationExecutor {
 		this.appPath = appPath;
 	}
 	
-	public void run() {
-//		Trace trace = 
+	
+	public Trace run(){
+		String jarPath = appPath.getAgentLib();
+		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath);
+		VMConfiguration config = new VMConfiguration();
+		config.setNoVerify(true);
+		config.setJavaHome(appPath.getJavaHome());
+		config.setClasspath(appPath.getClasspaths());
+		config.setLaunchClass(appPath.getLaunchClass());
+				
+		if(appPath.getOptionalTestClass()!=null) {
+			config.addProgramArgs(appPath.getOptionalTestClass());
+			config.addProgramArgs(appPath.getOptionalTestMethod());			
+			agentRunner.addAgentParam(AgentParams.OPT_LAUNCH_CLASS, appPath.getOptionalTestClass());
+		}
+		else {
+			agentRunner.addAgentParam(AgentParams.OPT_LAUNCH_CLASS, appPath.getLaunchClass());
+		}
+		
+		agentRunner.addAgentParam(AgentParams.OPT_JAVA_HOME, config.getJavaHome());
+		agentRunner.addAgentParam(AgentParams.OPT_CLASS_PATH, config.getClasspathStr());
+		agentRunner.addAgentParam(AgentParams.OPT_WORKING_DIR, config.getWorkingDirectory());
+		long start = System.currentTimeMillis();
+		try {
+			agentRunner.runWithDumpFileOption(config);
+		} catch (SavException e1) {
+			e1.printStackTrace();
+		}
+//		agentRunner.runWithSocket(config);
+		Trace trace = agentRunner.getTrace();
+		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
+		System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
+		System.out.println("finish!");
+		System.out.println("Time: " + (System.currentTimeMillis() - start));
+		
+		return trace;
+		
 	}
 	
-	
-//	public void run(){
+//	public void run() {
 //		List<String> command = new ArrayList<>();
 //		command.add(this.appPath.getJavaHome()+File.separator+"bin"+File.separator+"java");
 //		
