@@ -46,7 +46,7 @@ public class FilterChecker implements IFilterChecker {
 		}
 		
 		System.currentTimeMillis();
-//		addBootstrapIncludes(ArrayList.class.getName());
+		addBootstrapIncludes(ArrayList.class.getName());
 	}
 	
 	private void addBootstrapIncludes(String... classNames) {
@@ -81,7 +81,8 @@ public class FilterChecker implements IFilterChecker {
 	
 	@Override
 	public boolean checkExclusive(String className, String methodName) {
-		return !includes.contains(className.replace(".", "/"));
+		String classFName = className.replace(".", "/");
+		return !includes.contains(classFName) && !bootstrapIncludes.contains(classFName);
 	}
 	
 	public static void setup(AppJavaClassPath appClasspath) {

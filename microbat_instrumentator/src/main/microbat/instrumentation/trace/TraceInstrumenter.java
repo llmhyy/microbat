@@ -24,6 +24,7 @@ import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ArrayType;
 import org.apache.bcel.generic.BasicType;
 import org.apache.bcel.generic.ClassGen;
+import org.apache.bcel.generic.ClassGenException;
 import org.apache.bcel.generic.CodeExceptionGen;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.DUP;
@@ -75,6 +76,7 @@ import microbat.instrumentation.trace.model.LineInstructionInfo;
 import microbat.instrumentation.trace.model.LocalVarInstructionInfo;
 import microbat.instrumentation.trace.model.RWInstructionInfo;
 import microbat.instrumentation.trace.model.UnknownLineInstructionInfo;
+import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
 
@@ -105,18 +107,18 @@ public class TraceInstrumenter {
 		JavaClass newJC = null;
 		boolean entry = entryPoint != null ? className.equals(entryPoint.getClassName()) : 
 									FilterChecker.isAppClass(classFName);
-//		boolean isArrayList = "java/util/ArrayList".equals(classFName);
+		boolean isArrayList = "java/util/ArrayList".equals(classFName);
 		for (Method method : jc.getMethods()) {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
 			}
 			
-//			if (isArrayList && !CollectionUtils.existIn(method.getName(), "<init>", 
-//					"trimToSize", "ensureCapacity", "ensureCapacityInternal", "ensureExplicitCapacity",
-//					"grow", "hugeCapacity", "size")) {
-//				continue;
-//			}
-//			if (isArrayList && method.getName().equals("size")) {
+			if (isArrayList && !CollectionUtils.existIn(method.getName(), "<init>", 
+					"trimToSize", "ensureCapacity", "ensureCapacityInternal", "ensureExplicitCapacity",
+					"grow", "hugeCapacity", "isEmpty", "size", "add", "remove")) {
+				continue;
+			}
+//			if (isArrayList && !CollectionUtils.existIn(method.getName(), "size")) {
 //				continue;
 //			}
 			try {
@@ -274,7 +276,7 @@ public class TraceInstrumenter {
 						try {
 							updateExceptionTable(insnHandler, insnHandler.getPrev(), insnHandler.getNext());
 							insnList.delete(insnHandler);
-							updateTargeters(insnHandler, pos);
+//							updateTargeters(insnHandler, pos);
 						} catch (TargetLostException e) {
 							e.printStackTrace();
 						}
@@ -315,14 +317,14 @@ public class TraceInstrumenter {
 	private void appendInstruction(InstructionList insnList, InstructionHandle insnHandler, InstructionList newInsns) {
 		updateExceptionTable(insnHandler, insnHandler, newInsns.getEnd());
 		InstructionHandle pos = insnList.append(insnHandler, newInsns);
-		updateTargeters(insnHandler, pos);
+//		updateTargeters(insnHandler, pos);
 	}
 
 	private InstructionHandle insertInsnHandler(InstructionList insnList, InstructionList newInsns,
 			InstructionHandle insnHandler) {
 		updateExceptionTable(insnHandler, newInsns.getStart(), insnHandler);
 		InstructionHandle pos = insnList.insert(insnHandler, newInsns);
-		updateTargeters(insnHandler, pos);
+//		updateTargeters(insnHandler, pos);
 		return pos;
 	}
 	
@@ -333,16 +335,6 @@ public class TraceInstrumenter {
 			for (InstructionTargeter it : itList) {
 				if (it instanceof CodeExceptionGen) {
 					CodeExceptionGen exception = (CodeExceptionGen)it;
-					if (exception .getStartPC() == null || exception.getEndPC() == null
-							|| exception.getHandlerPC() == null || newStart == null || newEnd == null) {
-						throw new IllegalArgumentException(String.format(
-								"updateTargeters-error: \nexception.getStartPC=%s, "
-										+ "\nexception.getEndPC()=%s, \nexception.getHandlerPC()=%s, \nnewStart=%s, \nnewEnd=%s",
-								StringUtils.toStringNullToEmpty(exception.getStartPC()),
-								StringUtils.toStringNullToEmpty(exception.getEndPC()),
-								StringUtils.toStringNullToEmpty(exception.getHandlerPC()),
-								StringUtils.toStringNullToEmpty(newStart), StringUtils.toStringNullToEmpty(newEnd)));
-					}
 					if (exception.getStartPC() == oldPos) {
 						exception.setStartPC(newStart);
 					}
@@ -352,6 +344,23 @@ public class TraceInstrumenter {
 					if (exception.getHandlerPC() == oldPos) {
 						exception.setHandlerPC(newStart);
 					}
+				} else if (it instanceof LocalVariableGen) {
+					LocalVariableGen localVarGen = (LocalVariableGen) it;
+					boolean targeted = false;
+					if (localVarGen.getStart() == oldPos) {
+						targeted = true;
+						localVarGen.setStart(newStart);
+					}
+					if (localVarGen.getEnd() == oldPos) {
+						targeted = true;
+						localVarGen.setEnd(newEnd);
+					}
+					if (!targeted) {
+						throw new ClassGenException("Not targeting " + oldPos + ", but {" + localVarGen.getStart()
+								+ ", " + localVarGen.getEnd() + "}");
+					}
+				} else {
+					it.updateTarget(oldPos, newStart);
 				}
 			}
 		}
@@ -909,26 +918,27 @@ public class TraceInstrumenter {
 		LocalVariableGen tracerVar = methodGen.addLocalVariable(TRACER_VAR_NAME, Type.getType(IExecutionTracer.class),
 				insnList.getStart(), insnList.getEnd());
 		InstructionList newInsns = new InstructionList();
+		
+		/* store classNameVar */
 		String className = methodGen.getClassName();
 		className = className.replace("/", ".");
-		
 		newInsns.append(new PUSH(constPool, className));
-		newInsns.append(new ASTORE(classNameVar.getIndex())); // store classNameVar
+		newInsns.append(new ASTORE(classNameVar.getIndex()));
 		
+		/* store methodSignVar */
 		String sig = methodGen.getSignature();
 		String methodName = methodGen.getName();
 		String mSig = className + "#" + methodName + sig;
-		int stringIndex = constPool.lookupString(mSig);
-		if (stringIndex == -1) {
-			stringIndex = constPool.addString(mSig);
-		}
 		newInsns.append(new PUSH(constPool, mSig));
-		newInsns.append(new ASTORE(methodSigVar.getIndex())); // store methodSignVar
+		newInsns.append(new ASTORE(methodSigVar.getIndex())); 
+		
+		/* invoke _getTracer()  */
 		newInsns.append(new PUSH(constPool, startTracing)); // startTracing
-		newInsns.append(new PUSH(constPool, className)); // startTracing, className
-		newInsns.append(new PUSH(constPool, mSig)); // startTracing, className, String methodSig
+		newInsns.append(new ALOAD(classNameVar.getIndex())); // startTracing, className
+		newInsns.append(new ALOAD(methodSigVar.getIndex())); // startTracing, className, String methodSig
 		newInsns.append(new PUSH(constPool, methodStartLine));	// startTracing, className, String methodSig, int methodStartLine	
 		newInsns.append(new PUSH(constPool, methodEndLine)); // startTracing, className, String methodSig, int methodStartLine, methodEndLine
+		
 		String methodString = methodGen.getMethod().toString();
 		String args = methodString.substring(methodString.indexOf("(")+1, methodString.indexOf(")"));
 		String[] argList = args.split(",");
@@ -939,6 +949,7 @@ public class TraceInstrumenter {
 		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgNames(argList)));
 		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgTypes(methodGen.getArgumentTypes())));
 		// startTracing, className, String methodSig, int methodStartLine, argTypes
+		
 		/* init Object[] */
 		LocalVariableGen argObjsVar = addTempVar(methodGen, new ArrayType(Type.OBJECT, 1), startInsn);
 		newInsns.append(new PUSH(constPool, methodGen.getArgumentTypes().length));

@@ -289,10 +289,12 @@ public class ExecutionTracer implements IExecutionTracer {
 
 	@Override
 	public void _hitLine(int line, String className, String methodSignature) {
+		locker.lock();
+		exclusive = FilterChecker.isExclusive(className, methodSignature);
 		if (exclusive) {
+			locker.unLock();
 			return;
 		}
-		locker.lock();
 		TraceNode latestNode = trace.getLatestNode();
 		if (latestNode != null && latestNode.getBreakPoint().getLineNumber() == line) {
 			locker.unLock();
