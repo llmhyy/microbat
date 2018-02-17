@@ -326,7 +326,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		_hitLine(line, className, methodSignature);
 		locker.lock();
 		String parentVarId = TraceUtils.getObjectVarId(refValue);
-		String fieldVarId = Variable.concanateFieldVarID(parentVarId, fieldName);
+		String fieldVarId = TraceUtils.getFieldVarId(parentVarId, fieldName, fieldType, fieldValue);
+//		String fieldVarId = Variable.concanateFieldVarID(parentVarId, fieldName);
 //		boolean invokeRelevant = invokeTrack.updateRelevant(parentVarId, fieldVarId);
 //		if (exclusive && !invokeRelevant) {
 //			locker.unLock();
