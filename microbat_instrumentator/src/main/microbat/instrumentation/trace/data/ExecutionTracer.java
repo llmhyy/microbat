@@ -178,7 +178,6 @@ public class ExecutionTracer implements IExecutionTracer {
 			String paramTypeSignsCode, String paramNamesCode, Object[] params) {
 		locker.lock();
 		exclusive = FilterChecker.isExclusive(className, methodSignature);
-		// TODO-INSTR: declaringCompilationUnitName would not be correct here.
 //		currentNode = null;
 		
 		TraceNode latestNode = trace.getLatestNode();
@@ -466,6 +465,21 @@ public class ExecutionTracer implements IExecutionTracer {
 		var.setVarID(varID);
 		VarValue value = appendVarValue(varValue, var, null);
 		addRWriteValue(value, false);
+		locker.unLock();
+	}
+	
+	@Override
+	public void _iincLocalVar(Object varValue, Object varValueAfter, String varName, String varType, int line, int bcLocalVarIdx,
+			int varScopeStartLine, int varScopeEndLine, String className, String methodSignature) {
+		_hitLine(line, className, methodSignature);
+		locker.lock();
+		Variable var = new LocalVar(varName, varType, className, line);
+		String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
+		var.setVarID(varID);
+		VarValue value = appendVarValue(varValue, var, null);
+		addRWriteValue(value, false); // add read var
+		VarValue writtenValue = appendVarValue(varValueAfter, var, null);
+		addRWriteValue(writtenValue, true); // add written var
 		locker.unLock();
 	}
 	

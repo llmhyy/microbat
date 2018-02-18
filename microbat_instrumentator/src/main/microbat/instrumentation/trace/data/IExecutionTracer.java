@@ -27,6 +27,9 @@ public interface IExecutionTracer {
 
 	public void _readLocalVar(Object varValue, String varName, String varType, int line, int bcLocalVarIdx,
 			int varScopeStartLine, int varScopeEndLine, String className, String methodSignature);
+	
+	public void _iincLocalVar(Object varValue, Object varValueAfter, String varName, String varType, int line,
+			int bcLocalVarIdx, int varScopeStartLine, int varScopeEndLine, String className, String methodSignature);
 
 	public void _readArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line, String className, String methodSignature);
 
@@ -43,4 +46,5 @@ public interface IExecutionTracer {
 	public boolean lock();
 	
 	public void unLock();
+
 }

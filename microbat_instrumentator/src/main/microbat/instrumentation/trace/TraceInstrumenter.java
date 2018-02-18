@@ -37,7 +37,6 @@ import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.GETFIELD;
 import org.apache.bcel.generic.GETSTATIC;
 import org.apache.bcel.generic.IINC;
-import org.apache.bcel.generic.ILOAD;
 import org.apache.bcel.generic.INVOKEINTERFACE;
 import org.apache.bcel.generic.INVOKESPECIAL;
 import org.apache.bcel.generic.INVOKESTATIC;
@@ -263,8 +262,13 @@ public class TraceInstrumenter {
 					newInsns = getInjectCodeTracerRWriteArray(methodGen, constPool, tracerVar,
 							(ArrayInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
 				} else if (rwInsnInfo instanceof LocalVarInstructionInfo) {
-					newInsns = getInjectCodeTracerRWLocalVar(constPool, tracerVar,
-							(LocalVarInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
+					if (rwInsnInfo.getInstruction() instanceof IINC) {
+						newInsns = getInjectCodeTracerIINC(constPool, tracerVar,
+								(LocalVarInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
+					} else {
+						newInsns = getInjectCodeTracerRWLocalVar(constPool, tracerVar,
+								(LocalVarInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
+					}
 				}
 				if ((newInsns != null) && (newInsns.getLength() > 0)) {
 					InstructionHandle insnHandler = rwInsnInfo.getInstructionHandler();
@@ -783,55 +787,97 @@ public class TraceInstrumenter {
 		TracerMethods tracerMethod = TracerMethods.WRITE_LOCAL_VAR;
 		if (!insnInfo.isStoreInstruction()) {
 			newInsns.append(insn.copy()); // value
-			if (insn instanceof IINC) {
-				// store first, then load local var to get value
-				newInsns.append(new ILOAD(insn.getIndex())); // value
-				tracerMethod = TracerMethods.WRITE_LOCAL_VAR;
-			} else {
-				tracerMethod = TracerMethods.READ_LOCAL_VAR;
-			}
-		}
+				tracerMethod = TracerMethods.READ_LOCAL_VAR; // value
+		} 
 		/* invoke tracer */
 		if (insnInfo.getInstructionHandler().getPrev().getInstruction() instanceof ACONST_NULL) {
 			newInsns.append(new ALOAD(tracerVar.getIndex())); // value, $tracer
 			newInsns.append(new ACONST_NULL());
 		} else {
 			if (insnInfo.isComputationalType1()) {
-				newInsns.append(new DUP()); // [value], value, $tracer
-				newInsns.append(new ALOAD(tracerVar.getIndex())); // value, $tracer
-				newInsns.append(new SWAP()); // $tracer, value
+				newInsns.append(new DUP()); // [value], value
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // [value], value, $tracer
+				newInsns.append(new SWAP()); //  [value], $tracer, value
 			} else { // stack size = 2
-				newInsns.append(new DUP2());
-				newInsns.append(new ALOAD(tracerVar.getIndex())); 
-				// value*, $tracer
-				newInsns.append(new DUP_X2()); // $tracer, value*, $tracer
-				newInsns.append(new POP()); // $tracer, value*
+				newInsns.append(new DUP2()); // [value*], value* 
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // [value*], value*, $tracer
+				newInsns.append(new DUP_X2()); // [value*], $tracer, value*, $tracer
+				newInsns.append(new POP()); // [value*], $tracer, value*
 			}
 		}
 		if (type instanceof BasicType) {
 			newInsns.append(new INVOKESTATIC(basicTypeSupporter.getValueOfMethodIdx((BasicType) type, constPool)));
 		}
+		
 		newInsns.append(new PUSH(constPool, insnInfo.getVarName())); 
-		// $tracer, value, varName
+		// [value(*)], $tracer, value, varName
 		
 		newInsns.append(new PUSH(constPool, insnInfo.getVarType())); 
-		// $tracer, value, varName, varType
+		// [value(*)], $tracer, value, varName, varType
 		
 		newInsns.append(new PUSH(constPool, insnInfo.getLine())); 
-		// $tracer, value, varName, line
+		// [value(*)], $tracer, value, varName, line
 		
 		newInsns.append(new PUSH(constPool, insn.getIndex())); 
-		// $tracer, value, varName, bcLocalVarIdx
+		// [value(*)], $tracer, value, varName, bcLocalVarIdx
 		
 		newInsns.append(new PUSH(constPool, insnInfo.getVarScopeStartLine())); 
-		// $tracer, value, varName, bcLocalVarIdx, varScopeStartLine
+		// [value(*)], $tracer, value, varName, bcLocalVarIdx, varScopeStartLine
 		
 		newInsns.append(new PUSH(constPool, insnInfo.getVarScopeEndLine())); 
-		// $tracer, value, varName, bcLocalVarIdx, varScopeStartLine, varScopeEndLine
+		// [value(*)], $tracer, value, varName, bcLocalVarIdx, varScopeStartLine, varScopeEndLine
 		
 		newInsns.append(new ALOAD(classNameVar.getIndex()));
 		newInsns.append(new ALOAD(methodSigVar.getIndex()));
 		appendTracerMethodInvoke(newInsns, tracerMethod, constPool);
+		return newInsns;
+	}
+	
+	private InstructionList getInjectCodeTracerIINC(ConstantPoolGen constPool, LocalVariableGen tracerVar,
+			LocalVarInstructionInfo insnInfo, LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
+		IINC insn = (IINC) insnInfo.getInstruction();
+		// ignore reference to self
+		if (insn.getIndex() == 0) {
+			return null;
+		}
+		InstructionList newInsns = new InstructionList();
+		Type type = insn.getType(constPool);
+		
+		/* tracer */
+		newInsns.append(new ALOAD(tracerVar.getIndex()));
+		/* load current value */
+		newInsns.append(InstructionFactory.createLoad(type, insn.getIndex())); // $tracer, value
+		newInsns.append(new INVOKESTATIC(basicTypeSupporter.getValueOfMethodIdx((BasicType) type, constPool)));
+		
+		/* iinc */
+		newInsns.append(insn.copy()); // $tracer, value
+		
+		/* load valueAfter */
+		newInsns.append(InstructionFactory.createLoad(type, insn.getIndex())); // $tracer, value, valueAfter
+		newInsns.append(new INVOKESTATIC(basicTypeSupporter.getValueOfMethodIdx((BasicType) type, constPool)));
+
+		newInsns.append(new PUSH(constPool, insnInfo.getVarName())); 
+		// $tracer, value, valueAfter, varName
+		
+		newInsns.append(new PUSH(constPool, insnInfo.getVarType())); 
+		// $tracer, value, valueAfter, varName, varType
+		
+		newInsns.append(new PUSH(constPool, insnInfo.getLine())); 
+		// $tracer, value, valueAfter, varName, line
+		
+		newInsns.append(new PUSH(constPool, insn.getIndex())); 
+		// $tracer, value, valueAfter, varName, bcLocalVarIdx
+		
+		newInsns.append(new PUSH(constPool, insnInfo.getVarScopeStartLine())); 
+		// $tracer, value, valueAfter, varName, bcLocalVarIdx, varScopeStartLine
+		
+		newInsns.append(new PUSH(constPool, insnInfo.getVarScopeEndLine())); 
+		// $tracer, value, valueAfter, varName, bcLocalVarIdx, varScopeStartLine, varScopeEndLine
+		
+		newInsns.append(new ALOAD(classNameVar.getIndex()));
+		newInsns.append(new ALOAD(methodSigVar.getIndex()));
+		appendTracerMethodInvoke(newInsns, TracerMethods.IINC_LOCAL_VAR, constPool);
+		
 		return newInsns;
 	}
 

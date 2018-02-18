@@ -9,6 +9,7 @@ public enum TracerMethods {
 	HIT_METHOD_END(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_hitMethodEnd", "(I)V", 2),
 	HIT_RETURN(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_hitReturn", "(Ljava/lang/Object;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 6),
 	HIT_VOID_RETURN(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_hitVoidReturn", "(ILjava/lang/String;Ljava/lang/String;)V", 4),
+	IINC_LOCAL_VAR(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_iincLocalVar", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;IIIILjava/lang/String;Ljava/lang/String;)V", 11),
 	READ_ARRAY_ELEMENT_VAR(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_readArrayElementVar", "(Ljava/lang/Object;ILjava/lang/Object;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 8),
 	READ_FIELD(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_readField", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 8),
 	READ_LOCAL_VAR(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_readLocalVar", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;IIIILjava/lang/String;Ljava/lang/String;)V", 10),
@@ -16,8 +17,8 @@ public enum TracerMethods {
 	WRITE_ARRAY_ELEMENT_VAR(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_writeArrayElementVar", "(Ljava/lang/Object;ILjava/lang/Object;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 8),
 	WRITE_FIELD(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_writeField", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 8),
 	WRITE_LOCAL_VAR(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_writeLocalVar", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;IIIILjava/lang/String;Ljava/lang/String;)V", 10),
-	WRITE_STATIC_FIELD(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_writeStaticField", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 8)
-	
+	WRITE_STATIC_FIELD(true, "microbat/instrumentation/trace/data/IExecutionTracer", "_writeStaticField", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 8),
+
 	;
 	private boolean interfaceMethod;
 	private String declareClass;
