@@ -112,11 +112,11 @@ public class TraceInstrumenter {
 				continue; // Only instrument methods with code in them!
 			}
 			
-			if (isArrayList && !CollectionUtils.existIn(method.getName(), "<init>", 
-					"trimToSize", "ensureCapacity", "ensureCapacityInternal", "ensureExplicitCapacity",
-					"grow", "hugeCapacity", "isEmpty", "size", "add", "remove")) {
-				continue;
-			}
+//			if (isArrayList && !CollectionUtils.existIn(method.getName(), "<init>", 
+//					"trimToSize", "ensureCapacity", "ensureCapacityInternal", "ensureExplicitCapacity",
+//					"grow", "hugeCapacity", "isEmpty", "size", "add", "remove")) {
+//				continue;
+//			}
 //			if (isArrayList && !CollectionUtils.existIn(method.getName(), "size")) {
 //				continue;
 //			}

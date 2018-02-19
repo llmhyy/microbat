@@ -2,6 +2,7 @@ package microbat.instrumentation.trace.data;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,27 +20,19 @@ public class FilterChecker implements IFilterChecker {
 	public void startup(AppJavaClassPath appClasspath) {
 		extLibs = new ArrayList<>();
 		appBinFolders = new ArrayList<>();
+		String workingDir = getPath(appClasspath.getWorkingDirectory());
 		for (String cp : appClasspath.getClasspaths()) {
-			cp = cp.replace("\\", "/");
-			if(cp.startsWith("/")){
-				cp = cp.substring(1, cp.length());
-			}
-			
-			String workingDir = appClasspath.getWorkingDirectory().replace("\\", "/");
-			if(workingDir.startsWith("/")){
-				workingDir = workingDir.substring(1, workingDir.length());
-			}
-			
-			if (cp.contains(workingDir)) {
-				if (cp.endsWith(".jar") && !cp.contains("junit")) {
-					extLibs.add(cp);
+			String path = getPath(cp);
+			if (path.contains(workingDir)) {
+				if (path.endsWith(".jar") && !path.contains("junit")) {
+					extLibs.add(path);
 				} else {
-					File binFolder = new File(cp);
+					File binFolder = new File(path);
 					if (binFolder.exists() && binFolder.isDirectory()) {
-						if (!cp.endsWith("/")) {
-							cp = cp + "/";
+						if (!path.endsWith("/")) {
+							path = path + "/";
 						}
-						appBinFolders.add(cp);
+						appBinFolders.add(path);
 					}
 				}
 			}
@@ -47,8 +40,19 @@ public class FilterChecker implements IFilterChecker {
 		
 		System.currentTimeMillis();
 		addBootstrapIncludes(ArrayList.class.getName());
+		addBootstrapIncludes(HashMap.class.getName());
+		addBootstrapIncludes(StringBuffer.class.getName());
 	}
 	
+	private String getPath(String cp) {
+		String path = cp;
+		path = path.replace("\\", "/");
+		if(path.startsWith("/")){
+			path = path.substring(1, path.length());
+		}
+		return path;
+	}
+
 	private void addBootstrapIncludes(String... classNames) {
 		for (String className : classNames) {
 			bootstrapIncludes.add(className.replace(".", "/"));
@@ -60,15 +64,20 @@ public class FilterChecker implements IFilterChecker {
 		if (isBootstrap) {
 			return bootstrapIncludes.contains(classFName);
 		}
-		for (String extLib : extLibs) {
-			if (path.startsWith(extLib)) {
-				return true;
+		path = getPath(path);
+		File file = new File(path);
+		if (file.isFile()) {
+			for (String extLib : extLibs) {
+				if (path.startsWith(extLib)) {
+					return true;
+				}
 			}
-		}
-		for (String binFolder : appBinFolders) {
-			if (path.startsWith(binFolder)) {
-				includes.add(classFName);
-				return true;
+		} else {
+			for (String binFolder : appBinFolders) {
+				if (binFolder.equals(path)) {
+					includes.add(classFName);
+					return true;
+				}
 			}
 		}
 		return false;

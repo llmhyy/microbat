@@ -12,6 +12,7 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.sql.TraceRecorder;
+import sav.common.core.utils.SingleTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class Agent {
@@ -49,7 +50,8 @@ public class Agent {
 	public void shutdown() throws Exception {
 		ExecutionTracer.shutdown();
 		/* collect trace & store */
-		System.out.println("Recording trace...");
+		System.out.println("Building trace dependencies ...");
+		SingleTimer timer = SingleTimer.start("Building trace dependencies");
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 	
 		Trace trace = ((ExecutionTracer) tracer).getTrace();
@@ -57,12 +59,14 @@ public class Agent {
 		createVirtualDataRelation(trace);
 		trace.constructControlDomianceRelation();
 //		trace.constructLoopParentRelation();
-		
+		System.out.println(timer.getResult());
+		timer.startNewTask("write output");
 		writeOutput(trace);
-		System.out.println("Finish recording.");
+		System.out.println(timer.getResult());
 	}
 
 	private void writeOutput(Trace trace) throws Exception {
+		System.out.println("Recording trace...");
 		if (agentParams.getDumpFile() != null) {
 			FileOutputHandler fileHandler = new FileOutputHandler(agentParams.getDumpFile());
 			fileHandler.save(programMsg, trace, false);
@@ -78,6 +82,7 @@ public class Agent {
 			TraceRecorder traceRecorder = new TraceRecorder();
 			traceRecorder.storeTrace(trace );
 		}
+		System.out.println("Finish recording.");
 	}
 	
 	private void createVirtualDataRelation(Trace trace) {

@@ -25,6 +25,11 @@ public class SingleTimer {
 		SingleTimer timer = new SingleTimer(taskName, currentTime());
 		return timer;
 	}
+	
+	public void startNewTask(String taskName) {
+		this.taskName = taskName;
+		this.start = currentTime();
+	}
 
 	private static long currentTime() {
 		return System.currentTimeMillis();

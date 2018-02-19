@@ -108,7 +108,7 @@ public class MicroBatUtil {
 		 */
 		String agentLib = junitDir + File.separator + "instrumentator.jar";
 		appClassPath.setAgentLib(agentLib);
-		appClassPath.addClasspath(agentLib);
+//		appClassPath.addClasspath(agentLib);
 		
 		/**
 		 * setting output folder

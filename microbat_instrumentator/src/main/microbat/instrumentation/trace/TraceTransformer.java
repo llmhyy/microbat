@@ -32,9 +32,6 @@ public class TraceTransformer extends AbstractTransformer implements ClassFileTr
 		} 
 		if (protectionDomain != null) {
 			String path = protectionDomain.getCodeSource().getLocation().getFile();
-			if (path.startsWith("/")) {
-				path = path.substring(1, path.length());
-			}
 			if (!FilterChecker.isTransformable(classFName, path, false)) {
 				return null;
 			}
