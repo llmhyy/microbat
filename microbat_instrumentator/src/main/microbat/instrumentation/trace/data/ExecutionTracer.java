@@ -179,7 +179,10 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.lock();
 		exclusive = FilterChecker.isExclusive(className, methodSignature);
 //		currentNode = null;
-		
+		if (!exclusive) {
+			_hitLine(methodStartLine, className, methodSignature);
+			locker.lock();
+		}
 		TraceNode latestNode = trace.getLatestNode();
 		if(latestNode!=null){
 			int varScopeStart = methodStartLine;

@@ -49,7 +49,6 @@ public class InstrumentationExecutor {
 		agentRunner.addAgentParam(AgentParams.OPT_JAVA_HOME, config.getJavaHome());
 		agentRunner.addAgentParam(AgentParams.OPT_CLASS_PATH, config.getClasspathStr());
 		agentRunner.addAgentParam(AgentParams.OPT_WORKING_DIR, config.getWorkingDirectory());
-		long start = System.currentTimeMillis();
 		try {
 			agentRunner.runWithDumpFileOption(config);
 		} catch (SavException e1) {
@@ -60,7 +59,6 @@ public class InstrumentationExecutor {
 		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 		System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 		System.out.println("finish!");
-		System.out.println("Time: " + (System.currentTimeMillis() - start));
 		
 		return trace;
 		

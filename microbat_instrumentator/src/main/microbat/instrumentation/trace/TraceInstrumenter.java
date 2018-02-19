@@ -1,7 +1,5 @@
 package microbat.instrumentation.trace;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -75,8 +73,6 @@ import microbat.instrumentation.trace.model.LineInstructionInfo;
 import microbat.instrumentation.trace.model.LocalVarInstructionInfo;
 import microbat.instrumentation.trace.model.RWInstructionInfo;
 import microbat.instrumentation.trace.model.UnknownLineInstructionInfo;
-import sav.common.core.utils.CollectionUtils;
-import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
 
 public class TraceInstrumenter {
@@ -143,46 +139,11 @@ public class TraceInstrumenter {
 				e.printStackTrace();
 			}
 		}
-		// System.out.println("===============================================");
-		// dumpClass(jc);
-		// System.out.println("=================NEW
-		// JAVACLASS==============================");
-		// dumpClass(newJC);
 		if (newJC != null) {
 			byte[] data = newJC.getBytes();
-			// if (className.endsWith("Random")) {
-			store(data, classFName);
-			// }
-//			if (className.endsWith("TestCase")) {
-//				store(classfileBuffer, classFName + "_org");
-//			}
-			
 			return data;
 		}
 		return null;
-	}
-
-	private void store(byte[] data, String className) {
-		String filePath = "E:/lyly/Projects/inst_src/test/" + className.substring(className.lastIndexOf(".") + 1)
-				+ ".class";
-		System.out.println("dump instrumented class to file: " + filePath);
-		FileUtils.getFileCreateIfNotExist(filePath);
-		FileOutputStream out = null;
-		try {
-			out = new FileOutputStream(filePath);
-			out.write(data);
-			out.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (out != null) {
-					out.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 
 	private void dumpClass(JavaClass jc) {
@@ -250,10 +211,10 @@ public class TraceInstrumenter {
 		for (LineInstructionInfo lineInfo : lineInsnInfos) {
 			/* instrument RW instructions */
 			List<RWInstructionInfo> rwInsns = lineInfo.getRWInstructions();
-			if (lineInfo.hasNoInstrumentation()) {
+//			if (lineInfo.hasNoInstrumentation()) {
 				injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getLine(),
 						lineInfo.getLineNumberInsn(), classNameVar, methodSigVar);
-			}
+//			}
 			for (RWInstructionInfo rwInsnInfo : rwInsns) {
 				InstructionList newInsns = null;
 				if (rwInsnInfo instanceof FieldInstructionInfo) {

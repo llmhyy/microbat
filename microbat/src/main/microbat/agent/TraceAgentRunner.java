@@ -14,6 +14,7 @@ import microbat.instrumentation.trace.InstrConstants;
 import microbat.model.trace.Trace;
 import sav.common.core.SavException;
 import sav.common.core.SavRtException;
+import sav.common.core.utils.StopTimer;
 import sav.strategies.vm.AgentVmRunner;
 import sav.strategies.vm.VMConfiguration;
 
@@ -28,15 +29,18 @@ public class TraceAgentRunner extends AgentVmRunner {
 	}
 	
 	public boolean runWithDumpFileOption(VMConfiguration config) throws SavException {
+		StopTimer timer = new StopTimer("Building trace");
+		timer.newPoint("Execution");
 		TraceOutputReader reader = null;
 		InputStream stream = null;
 		try {
 			File tempFile = File.createTempFile("trace", ".exec");
+			tempFile.deleteOnExit();
 			System.out.println("Trace dumpfile: " + tempFile.getPath());
 			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(tempFile.getPath()));
 			super.startAndWaitUntilStop(config);
 //			System.out.println(super.getCommandLinesString(config));
-			
+			timer.newPoint("Read output result");
 			stream = new FileInputStream(tempFile);
 			reader = new TraceOutputReader(new BufferedInputStream(stream));
 			String msg = reader.readString();
@@ -57,6 +61,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 				e.printStackTrace();
 			}
 		}
+		System.out.println(timer.getResultString());
 		return true;
 	}
 

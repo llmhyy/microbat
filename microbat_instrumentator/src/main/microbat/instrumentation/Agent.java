@@ -13,6 +13,7 @@ import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.sql.TraceRecorder;
 import sav.common.core.utils.SingleTimer;
+import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class Agent {
@@ -24,6 +25,8 @@ public class Agent {
 	}
 
 	public void startup() {
+		final StopTimer timer = new StopTimer("Trace Construction");
+		timer.newPoint("Execution");
 		/* init filter */
 		AppJavaClassPath appPath = new AppJavaClassPath();
 		appPath.setLaunchClass(agentParams.getLaunchClass());
@@ -39,7 +42,7 @@ public class Agent {
 			@Override
 			public void run() {
 				try {
-					shutdown();	
+					shutdown(timer);	
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -47,11 +50,11 @@ public class Agent {
 		});
 	}
 
-	public void shutdown() throws Exception {
+	public void shutdown(StopTimer timer) throws Exception {
 		ExecutionTracer.shutdown();
 		/* collect trace & store */
 		System.out.println("Building trace dependencies ...");
-		SingleTimer timer = SingleTimer.start("Building trace dependencies");
+		timer.newPoint("Building trace dependencies");
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 	
 		Trace trace = ((ExecutionTracer) tracer).getTrace();
@@ -59,10 +62,9 @@ public class Agent {
 		createVirtualDataRelation(trace);
 		trace.constructControlDomianceRelation();
 //		trace.constructLoopParentRelation();
-		System.out.println(timer.getResult());
-		timer.startNewTask("write output");
+		timer.newPoint("Recording trace");
 		writeOutput(trace);
-		System.out.println(timer.getResult());
+		System.out.println(timer.getResultString());
 	}
 
 	private void writeOutput(Trace trace) throws Exception {

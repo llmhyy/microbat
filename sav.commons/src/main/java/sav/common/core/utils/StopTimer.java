@@ -102,8 +102,8 @@ public class StopTimer {
 		long diffMin = timeUnit.toMinutes(diff);
 		StringBuilder sb = new StringBuilder();
 		sb.append(diff).append(" ms");
-		if (diffMin > 1) {
-			sb.append("(").append(diffMin).append("m").append(")");
+		if (diffMin >= 1) {
+			sb.append("(").append(diffMin).append("m").append(diffSec - (60 * diffMin)).append("s").append(")");
 		} else if (diffSec > 1) {
 			sb.append("(").append(diffSec).append("s").append(")");
 		}
@@ -120,4 +120,7 @@ public class StopTimer {
 		}
 	}
 
+	public String getResultString() {
+		return StringUtils.newLineJoin(getResults());
+	}
 }
