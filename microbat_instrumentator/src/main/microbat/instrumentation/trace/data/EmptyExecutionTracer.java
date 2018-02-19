@@ -119,4 +119,11 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 		
 	}
 
+	@Override
+	public void _iincLocalVar(Object varValue, Object varValueAfter, String varName, String varType, int line,
+			int bcLocalVarIdx, int varScopeStartLine, int varScopeEndLine, String className, String methodSignature) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
