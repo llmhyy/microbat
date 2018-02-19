@@ -1,6 +1,5 @@
 package microbat.recommendation;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,15 +9,10 @@ import org.apache.bcel.generic.InstructionHandle;
 
 import microbat.codeanalysis.bytecode.MethodNode;
 import microbat.model.BreakPoint;
-import microbat.model.ClassLocation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
-import sav.strategies.dto.AppJavaClassPath;
-import soot.Scene;
-import soot.options.Options;
 
 /**
  * This detail inspector provides a more intelligent way to recommend 
@@ -139,25 +133,6 @@ public class DataOmissionInspector extends DetailInspector {
 		}
 		
 		return specificWrongVar;
-	}
-
-
-	private List<ClassLocation> findSeedStatemets(VarValue specificVar, TraceNode start, TraceNode end) {
-		AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
-		
-		String classPathString = appClassPath.getClasspathStr();
-		String rtJar = appClassPath.getJavaHome() + File.separator + "jre" + File.separator + "lib" + File.separator + "rt.jar";
-		classPathString += File.pathSeparator + rtJar;
-		
-		Scene.v().setSootClassPath(classPathString);
-		Options.v().set_keep_line_number(true);
-		Options.v().set_debug(true);
-		Options.v().set_via_shimple(true);
-		Options.v().setPhaseOption("jb", "use-original-names");
-		
-		
-		
-		return null;
 	}
 
 }
