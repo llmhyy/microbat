@@ -62,7 +62,7 @@ public class TraversingDistanceCalculator {
 	private Traverse evaluateTraverse(ASTNode testNode, ASTNode avoidNode) {
 		
 		ASTNode commonParent = findCommonParent(testNode, avoidNode);
-
+		System.currentTimeMillis();
 		if(commonParent.equals(testNode)) {
 			int depth = getDepth(avoidNode, commonParent);
 			return new Traverse(0, depth, 1);
@@ -115,6 +115,8 @@ public class TraversingDistanceCalculator {
 		List<ASTNode> testParents = findParentsIncludeItself(testNode);
 		List<ASTNode> avoidParents = findParentsIncludeItself(avoidNode);
 		
+		System.currentTimeMillis();
+		
 		for(ASTNode tParent: testParents) {
 			if(avoidParents.contains(tParent)) {
 				return tParent;
@@ -129,7 +131,7 @@ public class TraversingDistanceCalculator {
 		list.add(node);
 		
 		ASTNode parent = node.getParent();
-		while(parent!=null && parent instanceof MethodDeclaration) {
+		while(parent!=null && !(parent instanceof MethodDeclaration)) {
 			list.add(parent);
 			parent = parent.getParent();
 		}
