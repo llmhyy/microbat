@@ -68,8 +68,8 @@ public class StartDebugHandler extends AbstractHandler {
 			appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
 		}
 		
-		InstrumentationExecutor ex = new InstrumentationExecutor(appClassPath);
-		ex.run();
+//		InstrumentationExecutor ex = new InstrumentationExecutor(appClassPath);
+//		ex.run();
 		
 		try {
 			new BehaviorReader().readXLSX();

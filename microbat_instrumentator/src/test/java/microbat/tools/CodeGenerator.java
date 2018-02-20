@@ -7,8 +7,8 @@ import java.util.List;
 
 import org.junit.Test;
 
-import microbat.instrumentation.trace.data.ExecutionTracer;
-import microbat.instrumentation.trace.data.IExecutionTracer;
+import microbat.instrumentation.runtime.ExecutionTracer;
+import microbat.instrumentation.runtime.IExecutionTracer;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.SignatureUtils;
 

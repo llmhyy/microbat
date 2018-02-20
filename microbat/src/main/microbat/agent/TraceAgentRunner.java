@@ -8,9 +8,9 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
-import microbat.instrumentation.io.TraceOutputReader;
-import microbat.instrumentation.trace.InstrConstants;
+import microbat.instrumentation.output.TraceOutputReader;
 import microbat.model.trace.Trace;
 import sav.common.core.SavException;
 import sav.common.core.SavRtException;
@@ -25,7 +25,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 	private String testFailureMessage;
 	
 	public TraceAgentRunner(String agentJar) {
-		super(agentJar, InstrConstants.AGENT_OPTION_SEPARATOR, InstrConstants.AGENT_PARAMS_SEPARATOR);
+		super(agentJar, AgentConstants.AGENT_OPTION_SEPARATOR, AgentConstants.AGENT_PARAMS_SEPARATOR);
 	}
 	
 	public boolean runWithDumpFileOption(VMConfiguration config) throws SavException {

@@ -69,6 +69,9 @@ public class AgentVmRunner extends VMRunner {
 	}
 	
 	public void addAgentParam(String opt, String value) {
+		if (value == null || value.isEmpty()) {
+			return;
+		}
 		agentParams.put(opt, value);
 	}
 	

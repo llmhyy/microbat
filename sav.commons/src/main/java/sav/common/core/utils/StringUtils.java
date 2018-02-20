@@ -9,7 +9,6 @@
 package sav.common.core.utils;
 
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,17 +32,25 @@ public class StringUtils {
     }
 	
 	public static String join(Collection<?> vals, String separator) {
-		if (CollectionUtils.isEmpty(vals)) {
+		if (vals == null || vals.isEmpty()) {
 			return EMPTY;
 		}
-		List<String> valStrs = new ArrayList<String>();
+		StringBuilder varSb = new StringBuilder();
+		int i = 0;
 		for (Object val : vals) {
-			String valStr = toStringNullToEmpty(val);
-			if (!isEmpty(valStr)) {
-				valStrs.add(valStr);
+			i ++;
+			if (val != null) {
+				varSb.append(val.toString());
+				if (i != vals.size()) {
+					varSb.append(separator);
+				}
 			}
 		}
-		return org.apache.commons.lang.StringUtils.join(valStrs, separator);
+		String str = varSb.toString();
+		if (str.endsWith(separator)) {
+			return str.substring(0, str.length() - separator.length());
+		}
+		return str;
 	}
 
 	public static String join(String separator, Object... params) {

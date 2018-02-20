@@ -8,7 +8,6 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
-import microbat.instrumentation.trace.InstrConstants;
 import microbat.instrumentation.trace.testdata.Sample;
 import sav.common.core.SavException;
 import sav.common.core.utils.CollectionBuilder;
@@ -28,7 +27,7 @@ public class AgentTest {
 	}
 
 	private void startVm() throws Exception {
-		AgentVmRunner vmRunner = new AgentVmRunner(JAR_PATH, InstrConstants.AGENT_OPTION_SEPARATOR, InstrConstants.AGENT_PARAMS_SEPARATOR);
+		AgentVmRunner vmRunner = new AgentVmRunner(JAR_PATH, AgentConstants.AGENT_OPTION_SEPARATOR, AgentConstants.AGENT_PARAMS_SEPARATOR);
 		VMConfiguration config = new VMConfiguration();
 		config.setJavaHome(TestConfiguration.getJavaHome());
 		config.addClasspath(BASE_DIR + "/bin");

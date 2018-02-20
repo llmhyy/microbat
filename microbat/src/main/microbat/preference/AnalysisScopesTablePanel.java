@@ -104,7 +104,7 @@ public class AnalysisScopesTablePanel extends TableViewerEditablePanel<String> {
 					hint = "Ex: \njava.util.* : include all types and packages under package java.util, "
 							+ "\njava.util.*\\ : include all types only under package java.util, "
 							+ "\njava.util.Arrays : include type Arrays only"
-							+ "\njava.util.Arrays\\ : include type Arrays and its inner types";
+							+ "\njava.util.Arrays* : include type Arrays and its inner types";
 				}
 				InputDialog dialog = new InputDialog(getShell(), "Add Filter Text", hint, "", null);
 				if (dialog.open() == Window.OK) {

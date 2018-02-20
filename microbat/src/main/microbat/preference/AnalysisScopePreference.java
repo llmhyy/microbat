@@ -24,8 +24,8 @@ import sav.common.core.utils.StringUtils;
 public class AnalysisScopePreference extends PreferencePage implements IWorkbenchPreferencePage {
 	public static final String EXCLUDED_LIBS = "excludedLibs";
 	public static final String INCLUDED_LIBS = "includedLibs";
+	public static final String LIBS_SEPARATOR = ";";
 	private static final String ID = "microbat.preference.analysisScope";
-	private static final String LIBS_SEPARATOR = ";";
 	private AnalysisScopesTablePanel excludedTable;
 	private AnalysisScopesTablePanel includedTable;
 	

@@ -1,17 +1,18 @@
 package microbat.codeanalysis.runtime;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 
 import microbat.agent.TraceAgentRunner;
+import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
 import microbat.model.trace.Trace;
+import microbat.preference.AnalysisScopePreference;
 import sav.common.core.SavException;
+import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.vm.VMConfiguration;
 
@@ -49,6 +50,14 @@ public class InstrumentationExecutor {
 		agentRunner.addAgentParam(AgentParams.OPT_JAVA_HOME, config.getJavaHome());
 		agentRunner.addAgentParam(AgentParams.OPT_CLASS_PATH, config.getClasspathStr());
 		agentRunner.addAgentParam(AgentParams.OPT_WORKING_DIR, config.getWorkingDirectory());
+		/* build includes & excludes params */
+		agentRunner.addAgentParam(AgentParams.OPT_INCLUDES,
+				StringUtils.join(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR,
+						(Object[]) AnalysisScopePreference.getIncludedLibs()));
+		agentRunner.addAgentParam(AgentParams.OPT_EXCLUDES,
+				StringUtils.join(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR,
+						(Object[]) AnalysisScopePreference.getExcludedLibs()));
+		
 		try {
 			agentRunner.runWithDumpFileOption(config);
 		} catch (SavException e1) {

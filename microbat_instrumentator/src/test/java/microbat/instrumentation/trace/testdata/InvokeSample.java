@@ -3,8 +3,8 @@ package microbat.instrumentation.trace.testdata;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.instrumentation.trace.data.ExecutionTracer;
-import microbat.instrumentation.trace.data.IExecutionTracer;
+import microbat.instrumentation.runtime.ExecutionTracer;
+import microbat.instrumentation.runtime.IExecutionTracer;
 
 public class InvokeSample {
 	

@@ -144,7 +144,7 @@ public class FilterUtils {
 	 *  java.util.* : include all types and packages under java.util package
 	 *  java.util.*\ : include all types only under java.util package
 	 *  java.util.Arrays : include type Arrays only
-	 *  java.util.Arrays\ : include type Arrays and its inner types
+	 *  java.util.Arrays* : include type Arrays and its inner types
 	 */
 	private static <T>boolean expandPkgFilter(PackagesContainer<T> container, String pkgFilter, String incl,
 			Set<String> expandedExclSet) {
@@ -163,12 +163,12 @@ public class FilterUtils {
 			inclFrags = StringUtils.dotSplit(incl.substring(0, typeSimpleNameSIdx));
 			if (incl.endsWith("*\\")) {
 				inclTypeSimpleName = "";
-			} else if (!incl.endsWith("*")) {
-				if (!incl.endsWith("\\")) {
-					inclTypeSimpleName = incl.substring(typeSimpleNameSIdx + 1);
+			} else if (!incl.endsWith(".*")) {
+				if (incl.endsWith("*")) {
+					inclTypeSimpleName = incl.substring(typeSimpleNameSIdx + 1, incl.length() - 1);
 					subTypePrefix = inclTypeSimpleName + "$";
 				} else {
-					inclTypeSimpleName = incl.substring(typeSimpleNameSIdx + 1, incl.length() - 1);
+					inclTypeSimpleName = incl.substring(typeSimpleNameSIdx + 1);
 				}
 			} 
 			/* build up exclude list */

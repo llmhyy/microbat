@@ -19,9 +19,12 @@ public class Sample2 {
 		str = "abc";
 		RefVar var = new RefVar();
 		intVal ++;
-		intVal += 3;
+		intVal += -3;
 		intVal --;
 		longVal ++;
+		System.out.println(longVal);
+		char bol = 'a';
+		bol += 1;
 		/* READ ARRAY ELEMENT */
 		String b0 = b[0];
 		int a01 = a[0][1];
