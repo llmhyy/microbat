@@ -1,5 +1,6 @@
 package microbat.codeanalysis.bytecode;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -12,6 +13,10 @@ import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.Select;
 
+import microbat.model.variable.ArrayElementVar;
+import microbat.model.variable.FieldVar;
+import microbat.model.variable.LocalVar;
+import microbat.model.variable.Variable;
 import microbat.util.JavaUtil;
 
 /**
@@ -31,19 +36,141 @@ public class CFGConstructor {
 		
 		CFG cfg = constructCFG(code);
 		
-//		System.currentTimeMillis();
-		
 		constructPostDomination(cfg);
 		constructControlDependency(cfg);
 		
-//		LineNumberTable table = code.getLineNumberTable();
+//		constructDataDependency(cfg);
 		
 		return cfg;
 	}
 	
+	public void constructDataDependency(CFG cfg) {
+		for(CFGNode node: cfg.getNodeList()){
+			node.parseReadWrittenVariable(code);
+			node.intializeGenSet();
+		}
+		
+		System.currentTimeMillis();
+		
+		boolean change = true;
+		while(change){
+			change = false;
+			
+			for(CFGNode node: cfg.getNodeList()){
+				List<CFGNode> oldOutSet = clone(node.getOutSet());
+				
+				List<CFGNode> inSet = new ArrayList<>();
+				for(CFGNode parent: node.getParents()){
+					union(inSet, parent.getOutSet());
+				}
+				union(inSet, node.getOutSet());
+				union(inSet, node.getGenSet());
+				
+				List<CFGNode> newOutSet = kill(inSet, node);
+				node.setOutSet(newOutSet);
+				
+				if(!equal(oldOutSet, newOutSet)){
+					change = true;
+				}
+			}
+		}
+		
+		for(CFGNode useNode: cfg.getNodeList()){
+			for(CFGNode defNode: useNode.getOutSet()){
+				boolean isRDChain = isRDChain(defNode, useNode);
+				if(isRDChain){
+					useNode.addDefineNode(defNode);
+					defNode.addUseNode(useNode);
+				}
+			}
+		}
+	}
+	
+	private boolean isRDChain(CFGNode defNode, CFGNode useNode) {
+		for(Variable var1: defNode.getWrittenVars()){
+			for(Variable var2: useNode.getReadVars()){
+				if(isSame(var1, var2)){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private void union(List<CFGNode> inSet, List<CFGNode> genSet) {
+		for(CFGNode genNode: genSet){
+			if(!inSet.contains(genNode)){
+				inSet.add(genNode);
+			}
+		}
+	}
+
+	private boolean equal(List<CFGNode> oldOutSet, List<CFGNode> newOutSet) {
+		if(oldOutSet.size()!=newOutSet.size()){
+			return false;
+		}
+		
+		int count = 0;
+		for(CFGNode n: oldOutSet){
+			for(CFGNode m: newOutSet){
+				if(n.equals(m)){
+					count++;
+					break;
+				}
+			}
+		}
+		
+		return count==oldOutSet.size();
+	}
+
+	private List<CFGNode> kill(List<CFGNode> inSet, CFGNode node) {
+		Iterator<CFGNode> iter = inSet.iterator();
+		while(iter.hasNext()){
+			CFGNode inNode = iter.next();
+			for(Variable var1: inNode.getWrittenVars()){
+				for(Variable var2: node.getWrittenVars()){
+					if(isSame(var1, var2) && !node.getGenSet().contains(inNode)){
+						iter.remove();
+					}
+				}
+			}
+		}
+		
+		return inSet;
+	}
+
+	private boolean isSame(Variable var1, Variable var2) {
+		if(var1 instanceof FieldVar && var2 instanceof FieldVar){
+			FieldVar fVar1 = (FieldVar)var1;
+			FieldVar fVar2 = (FieldVar)var2;
+			return fVar1.getDeclaringType().equals(fVar2.getDeclaringType()) &&
+					fVar1.getName().equals(fVar2.getName());
+		}
+		else if(var1 instanceof LocalVar && var2 instanceof LocalVar){
+			LocalVar lVar1 = (LocalVar)var1;
+			LocalVar lVar2 = (LocalVar)var2;
+			return lVar1.getByteCodeIndex()==lVar2.getByteCodeIndex();
+		}
+		else if(var1 instanceof ArrayElementVar && var2 instanceof ArrayElementVar){
+			ArrayElementVar aVar1 = (ArrayElementVar)var1;
+			ArrayElementVar aVar2 = (ArrayElementVar)var2;
+			return aVar1.getType().equals(aVar2.getType());
+		}
+		
+		return false;
+	}
+
+	private List<CFGNode> clone(List<CFGNode> outSet) {
+		List<CFGNode> list = new ArrayList<>();
+		for(CFGNode node: outSet){
+			list.add(node);
+		}
+		return list;
+	}
+
 	@SuppressWarnings("rawtypes")
 	public CFG constructCFG(Code code){
-		CFG cfg = new CFG();
+		CFG cfg = new CFG(code);
 		CFGNode previousNode = null;
 		
 		InstructionList list = new InstructionList(code.getCode());

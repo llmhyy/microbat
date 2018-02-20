@@ -3,13 +3,25 @@ package microbat.codeanalysis.bytecode;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.bcel.classfile.Code;
 import org.apache.bcel.generic.InstructionHandle;
 
 public class CFG {
 	private List<CFGNode> nodeList = new ArrayList<>();
 	private CFGNode startNode;
 	private List<CFGNode> exitList = new ArrayList<>();
+	
+	private Code code;
+	
+	public CFG(Code code) {
+		super();
+		this.code = code;
+	}
 
+	public int getLineNumber(CFGNode node){
+		return this.code.getLineNumberTable().getSourceLine(node.getInstructionHandle().getPosition());
+	}
+	
 	public CFGNode getStartNode() {
 		return startNode;
 	}

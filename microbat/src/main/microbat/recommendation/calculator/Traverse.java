@@ -1,4 +1,4 @@
-package microbat.recommendation;
+package microbat.recommendation.calculator;
 
 public class Traverse {
 	private int moveUps;

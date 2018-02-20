@@ -1,4 +1,4 @@
-package microbat.recommendation;
+package microbat.recommendation.calculator;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -5,6 +5,7 @@ public class LocalVar extends Variable{
 //	private String type;
 	private int lineNumber;
 	private String locationClass;
+	private int byteCodeIndex;
 	
 	private boolean isParameter = false;
 	
@@ -90,5 +91,13 @@ public class LocalVar extends Variable{
 
 	public void setParameter(boolean isParameter) {
 		this.isParameter = isParameter;
+	}
+
+	public int getByteCodeIndex() {
+		return byteCodeIndex;
+	}
+
+	public void setByteCodeIndex(int byteCodeIndex) {
+		this.byteCodeIndex = byteCodeIndex;
 	}
 }

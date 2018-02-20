@@ -146,6 +146,7 @@ Export-Package: microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,or
    org.eclipse.jface.preference,
    org.eclipse.jface.viewers",
  microbat.recommendation,
+ microbat.recommendation.calculator,
  microbat.recommendation.conflicts;uses:="microbat.model.trace",
  microbat.sql;uses:="microbat.model.trace",
  microbat.test.handler;uses:="org.eclipse.core.commands",
