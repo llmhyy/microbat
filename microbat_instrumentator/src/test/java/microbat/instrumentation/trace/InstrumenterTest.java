@@ -7,7 +7,8 @@ import java.io.FileOutputStream;
 import org.junit.Test;
 
 import microbat.instrumentation.AgentParams;
-import microbat.instrumentation.trace.model.EntryPoint;
+import microbat.instrumentation.instr.TraceInstrumenter;
+import microbat.instrumentation.instr.instruction.info.EntryPoint;
 import microbat.instrumentation.trace.testdata.Sample3;
 import sav.common.core.utils.FileUtils;
 
@@ -22,7 +23,9 @@ public class InstrumenterTest {
 	@Test
 	public void writeFile() throws Exception {
 		String className = Sample3.class.getName();
-		
+		String classFolder = CLASS_FOLDER;
+//		String className = "org.jfree.chart.renderer.category.junit.AbstractCategoryItemRendererTests";
+//		String classFolder = "E:/linyun/bug_repo/Chart/1/bug/build-tests";
 		String classPath = className.replace(".", "/") + ".class";
 		String clazzFile = new StringBuilder("/").append(classPath).toString();
 
@@ -31,7 +34,7 @@ public class InstrumenterTest {
 		FileOutputStream out = new FileOutputStream(outFile);
 		System.out.println(outFile.getAbsolutePath());
 		
-		File inFile = new File(CLASS_FOLDER + clazzFile);
+		File inFile = new File(classFolder + clazzFile);
 		FileInputStream in = new FileInputStream(inFile);
 
 		byte[] data = new byte[100000];

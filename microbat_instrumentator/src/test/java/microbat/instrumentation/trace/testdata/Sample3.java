@@ -14,7 +14,7 @@ public class Sample3 {
 	
 	public static void main(String[] args){
 		for(int i=0; i<3; i++){
-			
+			i+= -3;
 		}
 		System.out.println("new");
 		int[] c = new int[]{1, 3};

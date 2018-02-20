@@ -1,18 +1,17 @@
 package microbat.instrumentation;
 
-import microbat.instrumentation.io.TraceOutputWriter;
-import microbat.instrumentation.io.file.FileOutputHandler;
-import microbat.instrumentation.io.tcp.TcpConnector;
-import microbat.instrumentation.trace.data.ExecutionTracer;
-import microbat.instrumentation.trace.data.FilterChecker;
-import microbat.instrumentation.trace.data.IExecutionTracer;
+import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.output.TraceOutputWriter;
+import microbat.instrumentation.output.file.FileOutputHandler;
+import microbat.instrumentation.output.tcp.TcpConnector;
+import microbat.instrumentation.runtime.ExecutionTracer;
+import microbat.instrumentation.runtime.IExecutionTracer;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.sql.TraceRecorder;
-import sav.common.core.utils.SingleTimer;
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -35,7 +34,7 @@ public class Agent {
 			appPath.addClasspath(cp);
 		}
 		appPath.setWorkingDirectory(agentParams.getWorkingDirectory());
-		FilterChecker.setup(appPath);
+		FilterChecker.setup(appPath, agentParams.getIncludesExpression(), agentParams.getExcludesExpression());
 		ExecutionTracer.appJavaClassPath = appPath;
 		
 		Runtime.getRuntime().addShutdownHook(new Thread() {

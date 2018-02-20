@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import microbat.instrumentation.trace.InstrConstants;
-import microbat.instrumentation.trace.model.EntryPoint;
+import microbat.instrumentation.instr.instruction.info.EntryPoint;
+import sav.common.core.utils.CollectionUtils;
 
 public class AgentParams {
 	public static final String OPT_ENTRY_POINT = "entry_point";
@@ -16,6 +16,8 @@ public class AgentParams {
 	public static final String OPT_WORKING_DIR = "working_dir";
 	public static final String OPT_TCP_PORT = "tcp_port";
 	public static final String OPT_DUMP_FILE = "dump_file_path";
+	public static final String OPT_INCLUDES = "includes";
+	public static final String OPT_EXCLUDES = "excludes";
 	private EntryPoint entryPoint;
 	
 	private List<String> classPaths = new ArrayList<>();
@@ -25,17 +27,15 @@ public class AgentParams {
 	private String launchClass;
 	private int tcpPort = -1;
 	private String dumpFile;
-
+	/* format: java.lang.*;java.util.ArrayList;java.util.*\;java.util.Arrays*        */
+	private String includesExpression;
+	private String excludesExpression;
+	
 	public static AgentParams parse(String agentArgs) {
-		String[] args = agentArgs.split(InstrConstants.AGENT_PARAMS_SEPARATOR);
-		Map<String, String> argMap = new HashMap<>();
-		for (String arg : args) {
-			String[] keyValue = arg.split(InstrConstants.AGENT_OPTION_SEPARATOR);
-			argMap.put(keyValue[0], keyValue[1]);
-		}
+		CommandLine cmd = CommandLine.parse(agentArgs);
 		AgentParams params = new AgentParams();
 		
-		String entryPointStr = argMap.get(OPT_ENTRY_POINT);
+		String entryPointStr = cmd.getString(OPT_ENTRY_POINT);
 		if (entryPointStr != null) {
 			int idx = entryPointStr.lastIndexOf(".");
 			String mainClass = entryPointStr.substring(0, idx);
@@ -45,25 +45,20 @@ public class AgentParams {
 			params.entryPoint = entryPoint;
 		}
 		
-		params.setJavaHome(argMap.get(OPT_JAVA_HOME));
-		params.setWorkingDirectory(argMap.get(OPT_WORKING_DIR));
+		params.setJavaHome(cmd.getString(OPT_JAVA_HOME));
+		params.setWorkingDirectory(cmd.getString(OPT_WORKING_DIR));
 
-		String launchClass = argMap.get(OPT_LAUNCH_CLASS);
+		String launchClass = cmd.getString(OPT_LAUNCH_CLASS);
 		if (launchClass == null && params.entryPoint != null) {
 			launchClass = params.entryPoint.getClassName();
 		}
 		params.setLaunchClass(launchClass);
 		
-		String classPathString = argMap.get(OPT_CLASS_PATH);
-		String[] classPaths = classPathString.split(";");
-		for(String classPath: classPaths){
-			params.getClassPaths().add(classPath);
-		}
-		String portStr = argMap.get(OPT_TCP_PORT);
-		if (portStr != null) {
-			params.tcpPort = Integer.valueOf(portStr);
-		}
-		params.dumpFile = argMap.get(OPT_DUMP_FILE);
+		params.classPaths = cmd.getStrings(OPT_CLASS_PATH);
+		params.tcpPort = cmd.getInt(OPT_TCP_PORT, -1);
+		params.dumpFile = cmd.getString(OPT_DUMP_FILE);
+		params.includesExpression = cmd.getString(OPT_INCLUDES);
+		params.excludesExpression = cmd.getString(OPT_EXCLUDES);
 		//		String bootstrpString = argMap.get("bootstrp_path");
 //		String[] bootstrpStrings = bootstrpString.split(";");
 //		for(String bootstrp: bootstrpStrings){
@@ -71,6 +66,41 @@ public class AgentParams {
 //		}
 		
 		return params;
+	}
+	
+	private static class CommandLine {
+		private Map<String, String> argMap = new HashMap<>();
+		
+		public static CommandLine parse(String agentArgs) {
+			CommandLine cmd = new CommandLine();
+			String[] args = agentArgs.split(AgentConstants.AGENT_PARAMS_SEPARATOR);
+			for (String arg : args) {
+				String[] keyValue = arg.split(AgentConstants.AGENT_OPTION_SEPARATOR);
+				cmd.argMap.put(keyValue[0], keyValue[1]);
+			}
+			return cmd;
+		}
+
+		public int getInt(String option, int defaultValue) {
+			String strVal = getString(option);
+			if (strVal != null) {
+				return Integer.valueOf(strVal);
+			}
+			return defaultValue;
+		}
+
+		public List<String> getStrings(String option) {
+			String value = getString(option);
+			if (value == null || value.isEmpty()) {
+				return new ArrayList<>(0);
+			}
+
+			return CollectionUtils.toArrayList(value.split(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR));
+		}
+
+		public String getString(String option) {
+			return argMap.get(option);
+		}
 	}
 
 	public EntryPoint getEntryPoint() {
@@ -128,4 +158,13 @@ public class AgentParams {
 	public String getDumpFile() {
 		return dumpFile;
 	}
+
+	public String getExcludesExpression() {
+		return excludesExpression;
+	}
+	
+	public String getIncludesExpression() {
+		return includesExpression;
+	}
+	
 }

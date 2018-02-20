@@ -10,7 +10,7 @@ import java.util.Set;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
-import microbat.instrumentation.trace.data.InvokingDetail;
+import microbat.instrumentation.runtime.InvokingDetail;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;

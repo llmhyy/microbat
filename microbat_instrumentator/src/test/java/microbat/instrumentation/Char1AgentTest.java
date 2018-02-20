@@ -2,7 +2,6 @@ package microbat.instrumentation;
 
 import org.junit.Test;
 
-import microbat.instrumentation.trace.InstrConstants;
 import sav.common.core.SavException;
 import sav.commons.TestConfiguration;
 import sav.strategies.vm.AgentVmRunner;
@@ -12,8 +11,8 @@ public class Char1AgentTest extends AgentTest {
 
 	@Test
 	public void runChar1() throws SavException {
-		AgentVmRunner vmRunner = new AgentVmRunner(JAR_PATH, InstrConstants.AGENT_OPTION_SEPARATOR,
-				InstrConstants.AGENT_PARAMS_SEPARATOR);
+		AgentVmRunner vmRunner = new AgentVmRunner(JAR_PATH, AgentConstants.AGENT_OPTION_SEPARATOR,
+				AgentConstants.AGENT_PARAMS_SEPARATOR);
 		VMConfiguration config = new VMConfiguration();
 		config.setJavaHome(TestConfiguration.getJavaHome());
 		config.addClasspath("E:/lyly/eclipse-java-mars-clean/eclipse/dropins/junit_lib/org.hamcrest.core.jar");
@@ -43,8 +42,8 @@ public class Char1AgentTest extends AgentTest {
 	
 	@Test
 	public void runCom0Test() throws SavException {
-		AgentVmRunner vmRunner = new AgentVmRunner(JAR_PATH, InstrConstants.AGENT_OPTION_SEPARATOR,
-				InstrConstants.AGENT_PARAMS_SEPARATOR);
+		AgentVmRunner vmRunner = new AgentVmRunner(JAR_PATH, AgentConstants.AGENT_OPTION_SEPARATOR,
+				AgentConstants.AGENT_PARAMS_SEPARATOR);
 		VMConfiguration config = new VMConfiguration();
 		config.setJavaHome(TestConfiguration.getJavaHome());
 		config.addClasspath("E:/lyly/workspace/microbat_instrumentation/instrument.test/bin");

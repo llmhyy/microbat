@@ -10,7 +10,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
 
-import microbat.instrumentation.trace.TraceTransformer;
+import microbat.instrumentation.instr.TestRunnerTranformer;
+import microbat.instrumentation.instr.TraceTransformer;
 
 public class Premain {
 
