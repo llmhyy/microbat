@@ -103,6 +103,7 @@ import microbat.model.variable.VirtualVar;
 import microbat.util.BreakpointUtils;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
+import microbat.util.PrimitiveUtils;
 import microbat.util.Settings;
 import sav.common.core.SavException;
 import sav.common.core.utils.CollectionUtils;
@@ -1692,10 +1693,14 @@ public class ProgramExecutor extends Executor {
 			pStr = pStr.trim();
 			if(pStr.contains(" ")) {
 				String paramType = pStr.substring(0, pStr.indexOf(" "));
-				String paramName = pStr.substring(pStr.indexOf(" ")+1, pStr.length());
+				if(PrimitiveUtils.isPrimitiveType(paramType)){
+					String paramName = pStr.substring(pStr.indexOf(" ")+1, pStr.length());
+					
+					Param param = new Param(paramType, paramName);
+					paramList.add(param);				
+					
+				}
 				
-				Param param = new Param(paramType, paramName);
-				paramList.add(param);				
 			}
 		}
 		
