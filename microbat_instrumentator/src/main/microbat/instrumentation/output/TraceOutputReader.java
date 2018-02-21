@@ -24,7 +24,7 @@ public class TraceOutputReader extends DataInputStream {
 	}
 
 	public Trace readTrace() throws IOException {
-		int traceNo = readInt();
+		int traceNo = readVarInt();
 		if (traceNo == 0) {
 			return null;
 		}
@@ -41,11 +41,11 @@ public class TraceOutputReader extends DataInputStream {
 	}
 
 	private List<BreakPoint> readLocations() throws IOException {
-		int bkpTotal = readInt();
-		int numOfClasses = readInt();
+		int bkpTotal = readVarInt();
+		int numOfClasses = readVarInt();
 		List<BreakPoint> allLocs = new ArrayList<>(bkpTotal);
 		for (int i = 0; i < numOfClasses; i++) {
-			int lines = readInt();
+			int lines = readVarInt();
 			if (lines <= 0) {
 				continue;
 			}
@@ -60,7 +60,7 @@ public class TraceOutputReader extends DataInputStream {
 	}
 
 	private List<TraceNode> readSteps(Trace trace, List<BreakPoint> locationList) throws IOException {
-		int size = readInt();
+		int size = readVarInt();
 		List<TraceNode> allSteps = new ArrayList<>();
 		for (int i = 0; i < size; i++) {
 			TraceNode node = new TraceNode(null, null, i + 1, trace);
@@ -69,7 +69,7 @@ public class TraceOutputReader extends DataInputStream {
 
 		for (int i = 0; i < size; i++) {
 			TraceNode step = allSteps.get(i);
-			step.setBreakPoint(locationList.get(readInt()));
+			step.setBreakPoint(locationList.get(readVarInt()));
 			TraceNode controlDominator = readNode(allSteps);
 			step.setControlDominator(controlDominator);
 			if (controlDominator != null) {
@@ -111,7 +111,7 @@ public class TraceOutputReader extends DataInputStream {
 	}
 
 	private TraceNode readNode(List<TraceNode> allSteps) throws IOException {
-		int nodeOrder = readInt();
+		int nodeOrder = readVarInt();
 		if (nodeOrder == -1) {
 			return null;
 		}
@@ -120,7 +120,7 @@ public class TraceOutputReader extends DataInputStream {
 
 	private BreakPoint readLocation(String className, String declaringCompilationUnitName) throws IOException {
 		String methodSig = readString();
-		int lineNo = readInt();
+		int lineNo = readVarInt();
 		boolean isConditional = readBoolean();
 		boolean isReturnStatement = readBoolean();
 		BreakPoint location = new BreakPoint(className, declaringCompilationUnitName, methodSig, lineNo);
@@ -132,52 +132,52 @@ public class TraceOutputReader extends DataInputStream {
 	}
 
 	private ControlScope readControlScope() throws IOException {
-		int rangeSize = readInt();
+		int rangeSize = readVarInt();
 		if (rangeSize == 0) {
 			return null;
 		}
 		ControlScope scope = new ControlScope();
 		scope.setLoop(readBoolean());
 		for (int i = 0; i < rangeSize; i++) {
-			ClassLocation controlLoc = new ClassLocation(readString(), null, readInt());
+			ClassLocation controlLoc = new ClassLocation(readString(), null, readVarInt());
 			scope.addLocation(controlLoc);
 		}
 		return null;
 	}
 
 	private SourceScope readLoopScope() throws IOException {
-		int size = readInt();
+		int size = readVarInt();
 		if (size == 0) {
 			return null;
 		}
 		SourceScope scope = new SourceScope();
 		scope.setClassName(readString());
-		scope.setStartLine(readInt());
-		scope.setEndLine(readInt());
+		scope.setStartLine(readVarInt());
+		scope.setEndLine(readVarInt());
 		return scope;
 	}
 	
 	private void readStepVariableRelation(Trace trace) throws IOException {
 		Map<String, StepVariableRelationEntry> stepVariableTable = trace.getStepVariableTable();
-		int size = readInt();
+		int size = readVarInt();
 		for (int i = 0; i < size; i++) {
 			StepVariableRelationEntry entry = new StepVariableRelationEntry(readString());
-			int producerSize = readInt();
+			int producerSize = readVarInt();
 			for (int p = 0; p < producerSize; p++) {
 				entry.addProducer(readNode(trace.getExecutionList()));
-				readInt();
+				readVarInt();
 			}
-			int consumerSize = readInt();
+			int consumerSize = readVarInt();
 			for (int p = 0; p < consumerSize; p++) {
 				entry.addConsumer(readNode(trace.getExecutionList()));
-				readInt();
+				readVarInt();
 			}
 			stepVariableTable.put(entry.getVarID(), entry);
 		}
 	}
 
 	public String readString() throws IOException {
-		int len = readInt();
+		int len = readVarInt();
 		if (len == -1) {
 			return null;
 		} else if (len == 0) {
@@ -187,5 +187,13 @@ public class TraceOutputReader extends DataInputStream {
 			readFully(bytes);
 			return new String(bytes);
 		}
+	}
+	
+	public int readVarInt() throws IOException {
+		final int value = 0xFF & readByte();
+		if ((value & 0x80) == 0) {
+			return value;
+		}
+		return (value & 0x7F) | (readVarInt() << 7);
 	}
 }
