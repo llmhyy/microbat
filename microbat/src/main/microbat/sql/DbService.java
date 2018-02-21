@@ -26,6 +26,7 @@ import microbat.util.IResourceUtils;
 import sav.common.core.utils.CollectionUtils;
 
 public class DbService {
+	protected static final int BATCH_SIZE = 1000;
 	private static final List<String> MICROBAT_TABLES;
 	private static int dbSettingsVersion = -1;
 	private static MysqlDataSource dataSource;

@@ -18,6 +18,7 @@ public class AgentParams {
 	public static final String OPT_DUMP_FILE = "dump_file_path";
 	public static final String OPT_INCLUDES = "includes";
 	public static final String OPT_EXCLUDES = "excludes";
+	public static final String OPT_VARIABLE_LAYER = "varLayer";
 	private EntryPoint entryPoint;
 	
 	private List<String> classPaths = new ArrayList<>();
@@ -27,6 +28,7 @@ public class AgentParams {
 	private String launchClass;
 	private int tcpPort = -1;
 	private String dumpFile;
+	private int variableLayer;
 	/* format: java.lang.*;java.util.ArrayList;java.util.*\;java.util.Arrays*        */
 	private String includesExpression;
 	private String excludesExpression;
@@ -59,6 +61,7 @@ public class AgentParams {
 		params.dumpFile = cmd.getString(OPT_DUMP_FILE);
 		params.includesExpression = cmd.getString(OPT_INCLUDES);
 		params.excludesExpression = cmd.getString(OPT_EXCLUDES);
+		params.variableLayer = cmd.getInt(OPT_VARIABLE_LAYER, 2);
 		//		String bootstrpString = argMap.get("bootstrp_path");
 //		String[] bootstrpStrings = bootstrpString.split(";");
 //		for(String bootstrp: bootstrpStrings){
@@ -167,4 +170,7 @@ public class AgentParams {
 		return includesExpression;
 	}
 	
+	public int getVariableLayer() {
+		return variableLayer;
+	}
 }

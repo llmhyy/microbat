@@ -15,6 +15,7 @@ import microbat.model.variable.Variable;
  *
  */
 public class StringValue extends PrimitiveValue {
+	private static final long serialVersionUID = -4758264964156129332L;
 	public static final String TYPE = "String";
 	
 	public StringValue(String val, boolean isRoot, Variable var) {

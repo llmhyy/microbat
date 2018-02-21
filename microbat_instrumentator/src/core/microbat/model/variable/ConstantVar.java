@@ -1,7 +1,7 @@
 package microbat.model.variable;
 
 public class ConstantVar extends Variable {
-
+	private static final long serialVersionUID = 3271962488703645239L;
 	private String value;
 	
 	public ConstantVar(String name, String type) {

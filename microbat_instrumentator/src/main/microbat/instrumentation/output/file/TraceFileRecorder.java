@@ -10,10 +10,10 @@ import java.io.OutputStream;
 import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.model.trace.Trace;
 
-public class FileOutputHandler {
+public class TraceFileRecorder {
 	private File file;
 
-	public FileOutputHandler(final String fileName) throws FileNotFoundException {
+	public TraceFileRecorder(final String fileName) throws FileNotFoundException {
 		File file = new File(fileName);
 		final File folder = file.getParentFile();
 		if (folder != null) {
@@ -22,7 +22,7 @@ public class FileOutputHandler {
 		this.file = file;
 	}
 
-	public void save(String message, Trace trace, final boolean append) throws IOException {
+	public void writeTrace(String message, Trace trace, final boolean append) throws IOException {
 		final FileOutputStream fileStream = new FileOutputStream(file, append);
 		// Avoid concurrent writes from other processes:
 		fileStream.getChannel().lock();

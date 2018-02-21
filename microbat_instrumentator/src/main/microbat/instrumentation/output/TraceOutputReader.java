@@ -24,7 +24,7 @@ public class TraceOutputReader extends DataInputStream {
 	}
 
 	public Trace readTrace() throws IOException {
-		int traceNo = readInt();
+		int traceNo = readVarInt();
 		if (traceNo == 0) {
 			return null;
 		}
@@ -34,13 +34,33 @@ public class TraceOutputReader extends DataInputStream {
 		readString(); // launchClass
 		readString(); // launchMethod
 		trace.setMultiThread(readBoolean());
-		trace.setExectionList(readSteps(trace));
+		List<BreakPoint> locationList = readLocations();
+		trace.setExectionList(readSteps(trace, locationList));
 		readStepVariableRelation(trace);
 		return trace;
 	}
 
-	private List<TraceNode> readSteps(Trace trace) throws IOException {
-		int size = readInt();
+	private List<BreakPoint> readLocations() throws IOException {
+		int bkpTotal = readVarInt();
+		int numOfClasses = readVarInt();
+		List<BreakPoint> allLocs = new ArrayList<>(bkpTotal);
+		for (int i = 0; i < numOfClasses; i++) {
+			int lines = readVarInt();
+			if (lines <= 0) {
+				continue;
+			}
+			String classCanonicalName = readString();
+			String declaringCompilationUnitName = readString();
+			for (int j = 0; j < lines; j++) {
+				BreakPoint loc = readLocation(classCanonicalName, declaringCompilationUnitName);
+				allLocs.add(loc);
+			}
+		}
+		return allLocs;
+	}
+
+	private List<TraceNode> readSteps(Trace trace, List<BreakPoint> locationList) throws IOException {
+		int size = readVarInt();
 		List<TraceNode> allSteps = new ArrayList<>();
 		for (int i = 0; i < size; i++) {
 			TraceNode node = new TraceNode(null, null, i + 1, trace);
@@ -49,7 +69,7 @@ public class TraceOutputReader extends DataInputStream {
 
 		for (int i = 0; i < size; i++) {
 			TraceNode step = allSteps.get(i);
-			step.setBreakPoint(readLocation());
+			step.setBreakPoint(locationList.get(readVarInt()));
 			TraceNode controlDominator = readNode(allSteps);
 			step.setControlDominator(controlDominator);
 			if (controlDominator != null) {
@@ -85,24 +105,33 @@ public class TraceOutputReader extends DataInputStream {
 		return allSteps;
 	}
 
+	@SuppressWarnings("unchecked")
 	protected List<VarValue> readVarValue() throws IOException {
-		// xmlContent = xmlContent.replace("&#", "#");
-		return VarValueXmlReader.read(readString());
+		byte[] bytes = readByteArray();
+		if (bytes == null || bytes.length == 0) {
+			return new ArrayList<>(0);
+		}
+		List<VarValue> varValues;
+		try {
+			varValues = (List<VarValue>) ByteConverter.convertFromBytes(bytes);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			throw new IOException(e);
+		}
+		return varValues;
 	}
 
 	private TraceNode readNode(List<TraceNode> allSteps) throws IOException {
-		int nodeOrder = readInt();
+		int nodeOrder = readVarInt();
 		if (nodeOrder == -1) {
 			return null;
 		}
 		return allSteps.get(nodeOrder - 1);
 	}
 
-	private BreakPoint readLocation() throws IOException {
-		String className = readString();
-		String declaringCompilationUnitName = readString();
+	private BreakPoint readLocation(String className, String declaringCompilationUnitName) throws IOException {
 		String methodSig = readString();
-		int lineNo = readInt();
+		int lineNo = readVarInt();
 		boolean isConditional = readBoolean();
 		boolean isReturnStatement = readBoolean();
 		BreakPoint location = new BreakPoint(className, declaringCompilationUnitName, methodSig, lineNo);
@@ -114,52 +143,52 @@ public class TraceOutputReader extends DataInputStream {
 	}
 
 	private ControlScope readControlScope() throws IOException {
-		int rangeSize = readInt();
+		int rangeSize = readVarInt();
 		if (rangeSize == 0) {
 			return null;
 		}
 		ControlScope scope = new ControlScope();
 		scope.setLoop(readBoolean());
 		for (int i = 0; i < rangeSize; i++) {
-			ClassLocation controlLoc = new ClassLocation(readString(), null, readInt());
+			ClassLocation controlLoc = new ClassLocation(readString(), null, readVarInt());
 			scope.addLocation(controlLoc);
 		}
 		return null;
 	}
 
 	private SourceScope readLoopScope() throws IOException {
-		int size = readInt();
+		int size = readVarInt();
 		if (size == 0) {
 			return null;
 		}
 		SourceScope scope = new SourceScope();
 		scope.setClassName(readString());
-		scope.setStartLine(readInt());
-		scope.setEndLine(readInt());
+		scope.setStartLine(readVarInt());
+		scope.setEndLine(readVarInt());
 		return scope;
 	}
 	
 	private void readStepVariableRelation(Trace trace) throws IOException {
 		Map<String, StepVariableRelationEntry> stepVariableTable = trace.getStepVariableTable();
-		int size = readInt();
+		int size = readVarInt();
 		for (int i = 0; i < size; i++) {
 			StepVariableRelationEntry entry = new StepVariableRelationEntry(readString());
-			int producerSize = readInt();
+			int producerSize = readVarInt();
 			for (int p = 0; p < producerSize; p++) {
 				entry.addProducer(readNode(trace.getExecutionList()));
-				readInt();
+				readVarInt();
 			}
-			int consumerSize = readInt();
+			int consumerSize = readVarInt();
 			for (int p = 0; p < consumerSize; p++) {
 				entry.addConsumer(readNode(trace.getExecutionList()));
-				readInt();
+				readVarInt();
 			}
 			stepVariableTable.put(entry.getVarID(), entry);
 		}
 	}
 
 	public String readString() throws IOException {
-		int len = readInt();
+		int len = readVarInt();
 		if (len == -1) {
 			return null;
 		} else if (len == 0) {
@@ -169,5 +198,26 @@ public class TraceOutputReader extends DataInputStream {
 			readFully(bytes);
 			return new String(bytes);
 		}
+	}
+	
+	public byte[] readByteArray() throws IOException {
+		int len = readVarInt();
+		if (len == -1) {
+			return null;
+		} else if (len == 0) {
+			return new byte[0];
+		} else {
+			byte[] bytes = new byte[len];
+			readFully(bytes);
+			return bytes;
+		}
+	}
+	
+	public int readVarInt() throws IOException {
+		final int value = 0xFF & readByte();
+		if ((value & 0x80) == 0) {
+			return value;
+		}
+		return (value & 0x7F) | (readVarInt() << 7);
 	}
 }

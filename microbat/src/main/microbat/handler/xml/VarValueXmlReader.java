@@ -41,11 +41,10 @@ public class VarValueXmlReader {
 		if (StringUtils.isEmpty(str)) {
 			return new ArrayList<>();
 		}
-		String filterStr = str.replace("&#", "#"); // LLT: TO REMOVE (temporary keep for old db)
 		VarValueXmlReader reader = new VarValueXmlReader();
 		ByteArrayInputStream in;
 		try {
-			in = new ByteArrayInputStream(filterStr.getBytes("UTF-8"));
+			in = new ByteArrayInputStream(str.getBytes("UTF-8"));
 			return reader.read(in);
 		} catch (UnsupportedEncodingException e) {
 			throw new SavRtException(e);
@@ -121,16 +120,7 @@ public class VarValueXmlReader {
 
 	private String getStringValueProperty(Element valueEle) {
 		String str = getProperty(valueEle, VALUE_STRING_VALUE_PROP);
-		if (str != null && str.startsWith(VarValueXmlWriter.SPECIAL_STRING_PREFIX)) {
-			str = str.substring(VarValueXmlWriter.SPECIAL_STRING_PREFIX.length());
-			String[] bytesArr = str.split(",");
-			byte[] bytes = new byte[bytesArr.length];
-			for (int i = 0; i < bytesArr.length; i++) {
-				bytes[i] = Byte.valueOf(bytesArr[i]);
-			}
-			str = new String(bytes);
-		}
-		return str;
+		return XmlFilter.getValue(str);
 	}
 	
 	/**

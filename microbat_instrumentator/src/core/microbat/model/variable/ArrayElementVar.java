@@ -1,6 +1,7 @@
 package microbat.model.variable;
 
 public class ArrayElementVar extends Variable {
+	private static final long serialVersionUID = 9214338494353676319L;
 
 	public ArrayElementVar(String name, String type, String aliasVarID) {
 		super(name, type);

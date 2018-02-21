@@ -13,7 +13,7 @@ import microbat.model.variable.Variable;
 
 
 public class ArrayValue extends ReferenceValue {
-	
+	private static final long serialVersionUID = -1194381666885038425L;
 	private String componentType;
 
 	public ArrayValue(boolean isNull, boolean isRoot, Variable var) {

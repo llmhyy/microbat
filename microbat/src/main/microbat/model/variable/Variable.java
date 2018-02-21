@@ -1,7 +1,10 @@
 package microbat.model.variable;
 
-public abstract class Variable {
-	
+import java.io.Serializable;
+
+public abstract class Variable implements Serializable {
+	private static final long serialVersionUID = -1126075634497698926L;
+
 	public static final String UNKNOWN_TYPE = "unknown type";
 	
 	public static String READ = "read";
