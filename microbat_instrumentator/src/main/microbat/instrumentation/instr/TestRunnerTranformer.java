@@ -82,10 +82,34 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 				LocalVariableTable localVariableTable = methodGen.getLocalVariableTable(constPool);
 				LocalVariable localVariable = localVariableTable.getLocalVariable(varIdx, 0);
 				Type argType = methodGen.getArgumentType(0);
-				int index = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "setProgramMsg",
+				int index = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_setProgramMsg",
 						"(Ljava/lang/String;)V");
 				
 				newInsns.append(InstructionFactory.createLoad(argType, localVariable.getIndex()));
+				newInsns.append(new INVOKESTATIC(index));
+				InstructionList instructionList = methodGen.getInstructionList();
+				InstructionHandle startInsn = instructionList.getStart();
+				InstructionHandle pos = instructionList.insert(startInsn, newInsns);
+				TraceInstrumenter.updateTargeters(startInsn, pos);
+				instructionList.setPositions();
+				methodGen.setMaxStack();
+				methodGen.setMaxLocals();
+				classGen.replaceMethod(method, methodGen.getMethod());
+			} else if ("$testStarted".equals(method.getName())) {
+				MethodGen methodGen = new MethodGen(method, classFName, constPool);
+				InstructionList newInsns = new InstructionList();
+				int varIdx = 1;
+				LocalVariableTable localVariableTable = methodGen.getLocalVariableTable(constPool);
+				LocalVariable junitClassVar = localVariableTable.getLocalVariable(varIdx, 0);
+				Type junitClassVarType = methodGen.getArgumentType(0);
+				varIdx++;
+				LocalVariable junitMethodVar = localVariableTable.getLocalVariable(varIdx, 0);
+				Type junitMethodVarType = methodGen.getArgumentType(0);
+				int index = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_startTest",
+						"(Ljava/lang/String;Ljava/lang/String;)V");
+				
+				newInsns.append(InstructionFactory.createLoad(junitClassVarType, junitClassVar.getIndex()));
+				newInsns.append(InstructionFactory.createLoad(junitMethodVarType, junitMethodVar.getIndex()));
 				newInsns.append(new INVOKESTATIC(index));
 				InstructionList instructionList = methodGen.getInstructionList();
 				InstructionHandle startInsn = instructionList.getStart();

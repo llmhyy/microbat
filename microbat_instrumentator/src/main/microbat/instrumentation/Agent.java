@@ -142,8 +142,12 @@ public class Agent {
 		}
 	}
 	
-	public static void setProgramMsg(String programMsg) {
+	public static void _setProgramMsg(String programMsg) {
 		Agent.programMsg = programMsg;
+	}
+	
+	public static void _startTest(String junitClass, String junitMethod) {
+		ExecutionTracer.onTestStated();
 	}
 
 	public static String extrctJarPath() {

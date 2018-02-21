@@ -540,11 +540,18 @@ public class ExecutionTracer implements IExecutionTracer {
 	private static LockedThreads lockedThreads = new LockedThreads();
 	private static final Locker gLocker = new Locker();
 	
-	public synchronized static IExecutionTracer _getTracer(boolean startTracing, String className, String methodSig,
+	public synchronized static IExecutionTracer _getTracer(boolean isAppClass, String className, String methodSig,
 			int methodStartLine, int methodEndLine, String paramNamesCode, String paramTypeSignsCode, Object[] params) {
-		if (gLocker.isLock() && !startTracing) {
-			return EmptyExecutionTracer.getInstance();
+		if (gLocker.isLock()) {
+			if (state == State.TEST_STARTED && isAppClass) {
+				state = State.RECORDING;
+				// entry point
+				gLocker.unLock();
+			} else {
+				return EmptyExecutionTracer.getInstance();
+			}
 		}
+		
 		gLocker.lock();
 		long threadId = Thread.currentThread().getId();
 		if (lockedThreads.contains(threadId)) {
@@ -591,14 +598,18 @@ public class ExecutionTracer implements IExecutionTracer {
 		return EmptyExecutionTracer.getInstance();
 	}
 	
-	private static boolean shutdown;
+	private static State state = State.INIT;
 	public static void shutdown() {
 		gLocker.lock();
-		shutdown = true;
+		state = State.SHUTDOWN;
+	}
+	
+	public static void onTestStated() {
+		state = State.TEST_STARTED;
 	}
 	
 	public static boolean isShutdown() {
-		return shutdown;
+		return state == State.SHUTDOWN;
 	}
 	
 	public Trace getTrace() {
@@ -646,5 +657,12 @@ public class ExecutionTracer implements IExecutionTracer {
 	@Override
 	public void unLock() {
 		locker.unLock();
+	}
+	
+	private static enum State {
+		INIT,
+		TEST_STARTED,
+		RECORDING,
+		SHUTDOWN
 	}
 }

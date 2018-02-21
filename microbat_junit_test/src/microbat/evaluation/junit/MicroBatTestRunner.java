@@ -3,10 +3,12 @@ package microbat.evaluation.junit;
 import java.net.URLClassLoader;
 import java.util.List;
 
+import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 
 public class MicroBatTestRunner {
 	
@@ -27,11 +29,18 @@ public class MicroBatTestRunner {
 	}
 	
 	
-	public void runTest(String className, String methodName){
+	public void runTest(final String className, final String methodName){
 		Request request;
 		try {
 			request = Request.method(Class.forName(className), methodName);
-			Result result = new JUnitCore().run(request);
+			JUnitCore jUnitCore = new JUnitCore();
+			jUnitCore.addListener(new RunListener() {
+				@Override
+				public void testStarted(Description description) throws Exception {
+					$testStarted(className, methodName);
+				}
+			});
+			Result result = jUnitCore.run(request);
 			setSuccessful(result.wasSuccessful());
 			
 			List<Failure> failures = result.getFailures();
@@ -48,6 +57,10 @@ public class MicroBatTestRunner {
 		System.out.println("is successful? " + successful);
 		System.out.println(this.failureMessage);
 		$setProgramMessage(successful + ";" + this.failureMessage);
+	}
+	
+	private void $testStarted(String className, String methodName) {
+		// for agent part.
 	}
 	
 	private void $setProgramMessage(String resultMsg) {

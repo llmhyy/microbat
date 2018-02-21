@@ -77,6 +77,7 @@ public class TraceRecorder extends DbService {
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		Map<TraceNode, Integer> locationIdMap = insertLocation(traceId, exectionList, conn, closables);
+		int count = 0;
 		for (int i = 0; i < exectionList.size(); i++) {
 			TraceNode node = exectionList.get(i);
 			int idx = 1;
@@ -91,8 +92,14 @@ public class TraceRecorder extends DbService {
 			ps.setString(idx++, generateXmlContent(node.getReadVariables()));
 			ps.setString(idx++, generateXmlContent(node.getWrittenVariables()));
 			ps.addBatch();
+			if (++count == BATCH_SIZE) {
+				ps.executeBatch();
+				count = 0;
+			}
 		}
-		ps.executeBatch();
+		if (count > 0) {
+			ps.executeBatch();
+		}
 	}
 
 	protected String generateXmlContent(List<VarValue> varValues) {
@@ -107,6 +114,7 @@ public class TraceRecorder extends DbService {
 		String sql = "INSERT INTO StepVariableRelation (var_id, trace_id, step_order, rw) VALUES (?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
+		int count = 0;
 		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {
 			for (TraceNode node : entry.getProducers()) {
 				int idx = 1;
@@ -124,8 +132,14 @@ public class TraceRecorder extends DbService {
 				ps.setInt(idx++, READ);
 				ps.addBatch();
 			}
+			if (++count >= BATCH_SIZE) {
+				ps.executeBatch();
+				count = 0;
+			}
 		}
-		ps.executeBatch();
+		if (count > 0) {
+			ps.executeBatch();
+		}
 	}
 
 	private void setNodeOrder(PreparedStatement ps, int idx, TraceNode node) throws SQLException {
@@ -142,6 +156,7 @@ public class TraceRecorder extends DbService {
 				+ "VALUES (?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 		closables.add(ps);
+		int count = 0;
 		for (TraceNode node : nodes) {
 			BreakPoint location = node.getBreakPoint();
 			int idx = 1;
@@ -151,8 +166,14 @@ public class TraceRecorder extends DbService {
 			ps.setBoolean(idx++, location.isConditional());
 			ps.setBoolean(idx++, location.isReturnStatement());
 			ps.addBatch();
+			if (++count == BATCH_SIZE) {
+				ps.executeBatch();
+				count = 0;
+			}
 		}
-		ps.executeBatch();
+		if (count > 0) {
+			ps.executeBatch();
+		}
 		List<Integer> ids = getGeneratedIntIds(ps);
 		if (ids.size() != nodes.size()) {
 			throw new SQLException("Number of locations is incorrect!");
@@ -172,6 +193,7 @@ public class TraceRecorder extends DbService {
 		String sql = "INSERT INTO ControlScope (trace_id, location_id, class_name, line_number, is_loop) VALUES (?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
+		int count = 0;
 		for (Entry<TraceNode, Integer> entry : locationIdMap.entrySet()) {
 			ControlScope controlScope = entry.getKey().getBreakPoint().getControlScope();
 			if (controlScope != null && !controlScope.getRangeList().isEmpty()) {
@@ -184,12 +206,15 @@ public class TraceRecorder extends DbService {
 					ps.setInt(idx++, controlLoc.getLineNumber());
 					ps.setBoolean(idx++, controlScope.isLoop());
 					ps.addBatch();
+					if (++count == BATCH_SIZE) {
+						ps.executeBatch();
+						count = 0;
+					}
 				}
 			}
 		}
-		int[] rs = ps.executeBatch();
-		if (rs.length > 1000) {
-			System.out.println("total controlScope batches: " + rs.length);
+		if (count > 0) {
+			ps.executeBatch();
 		}
 	}
 	
@@ -198,6 +223,8 @@ public class TraceRecorder extends DbService {
 		String sql = "INSERT INTO LoopScope (trace_id, location_id, class_name, start_line, end_line) VALUES (?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
+		
+		int count = 0;
 		for (Entry<TraceNode, Integer> entry : locationIdMap.entrySet()) {
 			SourceScope loopScope = entry.getKey().getBreakPoint().getLoopScope();
 			if (loopScope != null) {
@@ -209,9 +236,15 @@ public class TraceRecorder extends DbService {
 				ps.setInt(idx++, loopScope.getStartLine());
 				ps.setInt(idx++, loopScope.getEndLine());
 				ps.addBatch();
+				if (++count == BATCH_SIZE) {
+					ps.executeBatch();
+					count = 0;
+				}
 			}
 		}
-		ps.executeBatch();
+		if (count > 0) {
+			ps.executeBatch();
+		}
 	}
 
 	

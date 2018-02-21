@@ -970,6 +970,10 @@ public class TraceInstrumenter {
 			int varIdx = (Const.ACC_STATIC & methodGen.getAccessFlags()) != 0 ? 0 : 1;
 			for (int i = 0; i < methodGen.getArgumentTypes().length; i++) {
 				LocalVariable localVariable = localVariableTable.getLocalVariable(varIdx, 0);
+				if (localVariable == null) {
+					System.out.println("Warning: localVariable is empty, varIdx=" + varIdx);
+					break;
+				}
 				newInsns.append(new ALOAD(argObjsVar.getIndex()));
 				newInsns.append(new PUSH(constPool, i));
 				Type argType = methodGen.getArgumentType(i);

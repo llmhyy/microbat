@@ -12,6 +12,7 @@ import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import sav.common.core.utils.CollectionUtils;
 
 public class DbService {
+	protected static final int BATCH_SIZE = 1000;
 	private static MysqlDataSource dataSource;
 	
 	static {

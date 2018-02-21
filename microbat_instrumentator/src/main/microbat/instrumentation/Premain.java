@@ -69,6 +69,7 @@ public class Premain {
 			bootJarPaths = getJarFilesDevMode();
 		}
 		for (JarFile jarfile : bootJarPaths) {
+			System.out.println("append to boostrap classloader: " + jarfile.getName());
 			inst.appendToBootstrapClassLoaderSearch(jarfile);
 			if (jarfile.getName().contains("mysql-connector-java")) {
 				inst.appendToSystemClassLoaderSearch(jarfile);
