@@ -34,12 +34,32 @@ public class TraceOutputReader extends DataInputStream {
 		readString(); // launchClass
 		readString(); // launchMethod
 		trace.setMultiThread(readBoolean());
-		trace.setExectionList(readSteps(trace));
+		List<BreakPoint> locationList = readLocations();
+		trace.setExectionList(readSteps(trace, locationList));
 		readStepVariableRelation(trace);
 		return trace;
 	}
 
-	private List<TraceNode> readSteps(Trace trace) throws IOException {
+	private List<BreakPoint> readLocations() throws IOException {
+		int bkpTotal = readInt();
+		int numOfClasses = readInt();
+		List<BreakPoint> allLocs = new ArrayList<>(bkpTotal);
+		for (int i = 0; i < numOfClasses; i++) {
+			int lines = readInt();
+			if (lines <= 0) {
+				continue;
+			}
+			String classCanonicalName = readString();
+			String declaringCompilationUnitName = readString();
+			for (int j = 0; j < lines; j++) {
+				BreakPoint loc = readLocation(classCanonicalName, declaringCompilationUnitName);
+				allLocs.add(loc);
+			}
+		}
+		return allLocs;
+	}
+
+	private List<TraceNode> readSteps(Trace trace, List<BreakPoint> locationList) throws IOException {
 		int size = readInt();
 		List<TraceNode> allSteps = new ArrayList<>();
 		for (int i = 0; i < size; i++) {
@@ -49,7 +69,7 @@ public class TraceOutputReader extends DataInputStream {
 
 		for (int i = 0; i < size; i++) {
 			TraceNode step = allSteps.get(i);
-			step.setBreakPoint(readLocation());
+			step.setBreakPoint(locationList.get(readInt()));
 			TraceNode controlDominator = readNode(allSteps);
 			step.setControlDominator(controlDominator);
 			if (controlDominator != null) {
@@ -98,9 +118,7 @@ public class TraceOutputReader extends DataInputStream {
 		return allSteps.get(nodeOrder - 1);
 	}
 
-	private BreakPoint readLocation() throws IOException {
-		String className = readString();
-		String declaringCompilationUnitName = readString();
+	private BreakPoint readLocation(String className, String declaringCompilationUnitName) throws IOException {
 		String methodSig = readString();
 		int lineNo = readInt();
 		boolean isConditional = readBoolean();

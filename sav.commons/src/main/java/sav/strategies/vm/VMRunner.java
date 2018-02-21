@@ -109,6 +109,7 @@ public class VMRunner {
 //						if (error) {
 //							log.warn(line);
 //						}
+						System.out.println(line);
 						if (!line.contains("Class JavaLaunchHelper is implemented in both")) {
 							sb.append(line).append("\n");
 						}

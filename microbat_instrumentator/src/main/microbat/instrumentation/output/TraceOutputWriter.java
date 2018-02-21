@@ -3,7 +3,11 @@ package microbat.instrumentation.output;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import microbat.handler.xml.VarValueXmlWriter;
 import microbat.model.BreakPoint;
@@ -14,6 +18,7 @@ import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.util.BreakpointUtils;
 import sav.common.core.utils.CollectionUtils;
 
 public class TraceOutputWriter extends DataOutputStream {
@@ -48,15 +53,64 @@ public class TraceOutputWriter extends DataOutputStream {
 		writeString(launchClass);
 		writeString(launchMethod);
 		writeBoolean(trace.isMultiThread());
-		writeSteps(trace.getExecutionList());
+		Map<String, Integer> locIdIdxMap = writeLocations(trace);
+		writeSteps(trace.getExecutionList(), locIdIdxMap);
 		writeStepVariableRelation(trace);
 	}
 	
-	private void writeSteps(List<TraceNode> exectionList) throws IOException {
+	private Map<String, Integer> writeLocations(Trace trace) throws IOException {
+		Map<String, Set<BreakPoint>> locationMap = getExecutedLocation(trace);
+		writeInt(getNumberOfBkps(locationMap)); // number of bkps
+		writeInt(locationMap.size()); // numberOfClass
+		int idx = 0;
+		Map<String, Integer> locIdIdxMap = new HashMap<>();
+		for (String className : locationMap.keySet()) {
+			Set<BreakPoint> bkps = locationMap.get(className);
+			writeInt(bkps.size()); // lines
+			if (bkps.size() <= 0) {
+				continue;
+			}
+			int i = 0;
+			for (BreakPoint bkp : bkps) {
+				if (i == 0) {
+					writeString(bkp.getClassCanonicalName()); // ClassCanonicalName
+					writeString(bkp.getDeclaringCompilationUnitName()); // DeclaringCompilationUnitName
+					i++;
+				}
+				writeLocation(bkp); // writeLocation
+				locIdIdxMap.put(BreakpointUtils.getLocationId(bkp), idx++);
+			}
+		}
+		return locIdIdxMap;
+ 	}
+	
+	private int getNumberOfBkps(Map<String, Set<BreakPoint>> locationMap) {
+		int size = 0;
+		for (Set<BreakPoint> vals : locationMap.values()) {
+			size += vals.size();
+		}
+		return size;
+	}
+
+	public Map<String, Set<BreakPoint>> getExecutedLocation(Trace trace){
+		Map<String, Set<BreakPoint>> locationMap = new HashMap<>();
+		for(TraceNode node: trace.getExecutionList()){
+			Set<BreakPoint> bkps = locationMap.get(node.getDeclaringCompilationUnitName());
+			if(bkps == null){	
+				bkps = new HashSet<>();
+				locationMap.put(node.getDeclaringCompilationUnitName(), bkps);
+			}
+			bkps.add(node.getBreakPoint());
+		}
+		
+		return locationMap;
+	}
+	
+	private void writeSteps(List<TraceNode> exectionList, Map<String, Integer> locIdIdxMap) throws IOException {
 		writeInt(exectionList.size());
 		for (int i = 0; i < exectionList.size(); i++) {
 			TraceNode node = exectionList.get(i);
-			writeLocation(node.getBreakPoint());
+			writeInt(locIdIdxMap.get(node.getBreakPoint().getId()));
 			writeNodeOrder(node.getControlDominator());
 			writeNodeOrder(node.getStepInNext());
 			writeNodeOrder(node.getStepOverNext());
@@ -100,8 +154,6 @@ public class TraceOutputWriter extends DataOutputStream {
 	}
 	
 	private void writeLocation(BreakPoint location) throws IOException {
-		writeString(location.getClassCanonicalName());
-		writeString(location.getDeclaringCompilationUnitName());
 		writeString(location.getMethodSign());
 		writeInt(location.getLineNumber());
 		writeBoolean(location.isConditional());
