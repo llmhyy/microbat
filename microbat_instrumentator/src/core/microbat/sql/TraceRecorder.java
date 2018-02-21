@@ -157,6 +157,7 @@ public class TraceRecorder extends DbService {
 		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 		closables.add(ps);
 		int count = 0;
+		List<Integer> ids = new ArrayList<>();
 		for (TraceNode node : nodes) {
 			BreakPoint location = node.getBreakPoint();
 			int idx = 1;
@@ -168,13 +169,14 @@ public class TraceRecorder extends DbService {
 			ps.addBatch();
 			if (++count == BATCH_SIZE) {
 				ps.executeBatch();
+				ids.addAll(getGeneratedIntIds(ps));
 				count = 0;
 			}
 		}
 		if (count > 0) {
 			ps.executeBatch();
 		}
-		List<Integer> ids = getGeneratedIntIds(ps);
+		ids.addAll(getGeneratedIntIds(ps));
 		if (ids.size() != nodes.size()) {
 			throw new SQLException("Number of locations is incorrect!");
 		}
