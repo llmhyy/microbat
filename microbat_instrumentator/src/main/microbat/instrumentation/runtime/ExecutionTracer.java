@@ -86,7 +86,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	/* TODO: Set aliasVarId*/
 	private VarValue appendVarValue(Object value, Variable var, VarValue parent, int retrieveLayer) {
-		if (retrieveLayer < 0) {
+		if (retrieveLayer <= 0) {
 			return null;
 		}
 		retrieveLayer--;
