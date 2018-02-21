@@ -11,6 +11,7 @@ import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
+import microbat.preference.MicrobatPreference;
 import sav.common.core.SavException;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
@@ -57,7 +58,7 @@ public class InstrumentationExecutor {
 		agentRunner.addAgentParam(AgentParams.OPT_EXCLUDES,
 				StringUtils.join(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR,
 						(Object[]) AnalysisScopePreference.getExcludedLibs()));
-		
+		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
 		try {
 			agentRunner.runWithDumpFileOption(config);
 		} catch (SavException e1) {
