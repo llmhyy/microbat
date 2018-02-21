@@ -78,4 +78,8 @@ public class InvokingDetail {
 	public String getInvokeNodeId() {
 		return invokeNodeId;
 	}
+	
+	public List<VarValue> getWrittenVarValue() {
+		return writtenVarValue;
+	}
 }

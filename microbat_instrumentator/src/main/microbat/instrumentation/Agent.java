@@ -2,7 +2,7 @@ package microbat.instrumentation;
 
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.output.TraceOutputWriter;
-import microbat.instrumentation.output.file.FileOutputHandler;
+import microbat.instrumentation.output.file.TraceFileRecorder;
 import microbat.instrumentation.output.tcp.TcpConnector;
 import microbat.instrumentation.runtime.ExecutionTracer;
 import microbat.instrumentation.runtime.IExecutionTracer;
@@ -36,6 +36,7 @@ public class Agent {
 		appPath.setWorkingDirectory(agentParams.getWorkingDirectory());
 		FilterChecker.setup(appPath, agentParams.getIncludesExpression(), agentParams.getExcludesExpression());
 		ExecutionTracer.appJavaClassPath = appPath;
+		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
@@ -69,8 +70,8 @@ public class Agent {
 	private void writeOutput(Trace trace) throws Exception {
 		System.out.println("Recording trace...");
 		if (agentParams.getDumpFile() != null) {
-			FileOutputHandler fileHandler = new FileOutputHandler(agentParams.getDumpFile());
-			fileHandler.save(programMsg, trace, false);
+			TraceFileRecorder traceRecorder = new TraceFileRecorder(agentParams.getDumpFile());
+			traceRecorder.writeTrace(programMsg, trace, false);
 		} else if (agentParams.getTcpPort() != -1) {
 			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
 			TraceOutputWriter traceWriter = tcpConnector.connect();

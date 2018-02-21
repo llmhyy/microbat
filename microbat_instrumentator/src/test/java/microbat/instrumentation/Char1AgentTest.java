@@ -1,5 +1,7 @@
 package microbat.instrumentation;
 
+import java.util.ArrayList;
+
 import org.junit.Test;
 
 import sav.common.core.SavException;
@@ -59,6 +61,7 @@ public class Char1AgentTest extends AgentTest {
 		config.setNoVerify(true);
 		vmRunner.addAgentParam(AgentParams.OPT_LAUNCH_CLASS, launchClass);
 		vmRunner.addAgentParam(AgentParams.OPT_ENTRY_POINT, launchClass + ".main");
+		vmRunner.addAgentParam(AgentParams.OPT_INCLUDES, ArrayList.class.getName());
 		vmRunner.addAgentParam("java_home", config.getJavaHome());
 		vmRunner.addAgentParam("class_path", config.getClasspathStr());
 		vmRunner.addAgentParam("working_dir", "E:/lyly/workspace/microbat_instrumentation/instrument.test");

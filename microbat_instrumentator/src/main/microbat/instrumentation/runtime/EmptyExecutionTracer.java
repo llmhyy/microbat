@@ -8,7 +8,7 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 	}
 
 	@Override
-	public void _afterInvoke(String loc, int line) {
+	public void _afterInvoke(int line, String residingClassName, String residingMethodSignature) {
 		// TODO Auto-generated method stub
 		
 	}

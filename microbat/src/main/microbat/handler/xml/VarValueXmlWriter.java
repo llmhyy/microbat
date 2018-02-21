@@ -56,7 +56,6 @@ import sav.common.core.utils.StringUtils;
 		</variableValues>
  */
 public class VarValueXmlWriter {
-	public static final String SPECIAL_STRING_PREFIX = "$__byteArr_";
 	private List<VarValue> varValues;
 	
 	public VarValueXmlWriter(List<VarValue> varValues) {
@@ -151,27 +150,9 @@ public class VarValueXmlWriter {
 		}
 
 		private void addValueStringValueProperty(Element valueEle, String strVal) {
-			String xml10pattern = "[^"
-                    + "\u0009\r\n"
-                    + "\u0020-\uD7FF"
-                    + "\uE000-\uFFFD"
-                    + "\ud800\udc00-\udbff\udfff"
-                    + "]";
-			if (strVal.matches(xml10pattern)) {
-				// convert to byteArray
-				StringBuilder sb = new StringBuilder(SPECIAL_STRING_PREFIX);
-				byte[] bytes = strVal.getBytes();
-				for (int i = 0; i < bytes.length; ) {
-					sb.append(bytes[i]);
-					if ((i++) != bytes.length) {
-						sb.append(",");
-					}
-				}
-				addProperty(valueEle, VALUE_STRING_VALUE_PROP, sb.toString(), true);
-			} else {
-				addProperty(valueEle, VALUE_STRING_VALUE_PROP, strVal, false);
-			}
+			addProperty(valueEle, VALUE_STRING_VALUE_PROP, XmlFilter.filter(strVal), false);
 		}
+		
 		
 		private String generateValueId(VarValue varValue) {
 			String id = Integer.toString(++valueIdCounter);

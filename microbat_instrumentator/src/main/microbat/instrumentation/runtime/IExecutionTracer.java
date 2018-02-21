@@ -35,7 +35,7 @@ public interface IExecutionTracer {
 
 	public void _writeArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line, String className, String methodSignature);
 
-	public void _afterInvoke(String loc, int line);
+	void _afterInvoke(int line, String residingClassName, String residingMethodSignature);
 
 	public void _hitMethodEnd(int line);
 	

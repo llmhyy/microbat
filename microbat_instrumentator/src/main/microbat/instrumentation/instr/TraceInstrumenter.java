@@ -62,9 +62,9 @@ import org.apache.bcel.generic.Type;
 
 import microbat.codeanalysis.bytecode.CFG;
 import microbat.codeanalysis.bytecode.CFGConstructor;
+import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.filter.FilterChecker;
-import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.instr.instruction.info.ArrayInstructionInfo;
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
 import microbat.instrumentation.instr.instruction.info.FieldInstructionInfo;
@@ -498,8 +498,9 @@ public class TraceInstrumenter {
 		/* after */
 		newInsns = new InstructionList();
 		newInsns.append(new ALOAD(tracerVar.getIndex()));
-		newInsns.append(new PUSH(constPool, methodGen.getClassName()));
 		newInsns.append(new PUSH(constPool, line));
+		newInsns.append(new ALOAD(classNameVar.getIndex()));
+		newInsns.append(new ALOAD(methodSigVar.getIndex()));
 		appendTracerMethodInvoke(newInsns, TracerMethods.AFTER_INVOKE, constPool);
 		appendInstruction(insnList, insnHandler, newInsns);
 		newInsns.dispose();

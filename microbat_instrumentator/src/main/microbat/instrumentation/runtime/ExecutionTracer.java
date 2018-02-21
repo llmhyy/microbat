@@ -35,9 +35,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	private static long mainThreadId = -1;
 	
 	public static AppJavaClassPath appJavaClassPath;
-	
-	//TODO this parameter should be controlled by user.
 	public static int variableLayer = 2;
+	
 	static {
 		rtStores = new HashMap<>();
 	}
@@ -255,14 +254,9 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 	
 	@Override
-	public void _afterInvoke(String loc, int line) {
-		locker.lock();
-//		if (methodEntry.getClassCanonicalName().equals(loc) && methodEntry.getLineNumber() == line) {
-//			/* exit success */
-//		} else {
-//			exitMethod(-1);
-//		}
-		locker.unLock();
+	public void _afterInvoke(int line, String residingClassName, String residingMethodSignature) {
+//		locker.lock();
+//		locker.unLock();
 	}
 	
 	/**
@@ -368,7 +362,6 @@ public class ExecutionTracer implements IExecutionTracer {
 	 * @param fieldName
 	 * @param fieldTypeSign
 	 * @param line
-	 * TODO LLT: handle relevant?
 	 */
 	@Override
 	public void _writeStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line, String className, String methodSignature) {
