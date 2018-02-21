@@ -105,9 +105,20 @@ public class TraceOutputReader extends DataInputStream {
 		return allSteps;
 	}
 
+	@SuppressWarnings("unchecked")
 	protected List<VarValue> readVarValue() throws IOException {
-		// xmlContent = xmlContent.replace("&#", "#");
-		return VarValueXmlReader.read(readString());
+		byte[] bytes = readByteArray();
+		if (bytes == null || bytes.length == 0) {
+			return new ArrayList<>(0);
+		}
+		List<VarValue> varValues;
+		try {
+			varValues = (List<VarValue>) ByteConverter.convertFromBytes(bytes);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			throw new IOException(e);
+		}
+		return varValues;
 	}
 
 	private TraceNode readNode(List<TraceNode> allSteps) throws IOException {
@@ -186,6 +197,19 @@ public class TraceOutputReader extends DataInputStream {
 			byte[] bytes = new byte[len];
 			readFully(bytes);
 			return new String(bytes);
+		}
+	}
+	
+	public byte[] readByteArray() throws IOException {
+		int len = readVarInt();
+		if (len == -1) {
+			return null;
+		} else if (len == 0) {
+			return new byte[0];
+		} else {
+			byte[] bytes = new byte[len];
+			readFully(bytes);
+			return bytes;
 		}
 	}
 	

@@ -1,6 +1,7 @@
 package microbat.model.variable;
 
 public class FieldVar extends Variable{
+	private static final long serialVersionUID = -1516127948248246001L;
 	private boolean isStatic;
 	private String declaringType;
 	

@@ -8,6 +8,7 @@
 
 package microbat.model.value;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,8 +25,8 @@ import microbat.model.variable.Variable;
  * @author Yun Lin
  *
  */
-public abstract class VarValue implements GraphNode{
-	
+public abstract class VarValue implements GraphNode, Serializable {
+	private static final long serialVersionUID = -4243257984929286188L;
 	protected String stringValue;
 	protected List<VarValue> parents = new ArrayList<>();
 	protected Variable variable;

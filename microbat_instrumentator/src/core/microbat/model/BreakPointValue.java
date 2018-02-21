@@ -18,7 +18,7 @@ import microbat.model.value.VarValue;
  * 
  */
 public class BreakPointValue extends VarValue {
-
+	private static final long serialVersionUID = -8762384056186966652L;
 	private String name;
 	
 	public BreakPointValue(String name) {

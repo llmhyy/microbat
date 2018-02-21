@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import microbat.handler.xml.VarValueXmlWriter;
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
 import microbat.model.ControlScope;
@@ -19,7 +18,6 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.util.BreakpointUtils;
-import sav.common.core.utils.CollectionUtils;
 
 public class TraceOutputWriter extends DataOutputStream {
 	public static final int READ = 1;
@@ -43,6 +41,17 @@ public class TraceOutputWriter extends DataOutputStream {
 		} else {
 			writeVarInt(str.length());
 			writeBytes(str);
+		}
+	}
+	
+	public final void writeByteArr(byte[] bytes) throws IOException {
+		if (bytes == null) {
+			writeVarInt(-1);
+		} else if (bytes.length == 0) {
+			writeVarInt(0);
+		} else {
+			writeVarInt(bytes.length);
+			write(bytes, 0, bytes.length);
 		}
 	}
 	
@@ -125,9 +134,14 @@ public class TraceOutputWriter extends DataOutputStream {
 			writeNodeOrder(node.getStepOverNext());
 			writeNodeOrder(node.getInvocationParent());
 			writeNodeOrder(node.getLoopParent());
-			writeString(generateXmlContent(node.getReadVariables()));
-			writeString(generateXmlContent(node.getWrittenVariables()));
+			writeVarValues(node.getReadVariables());
+			writeVarValues(node.getWrittenVariables());
 		}
+	}
+
+	private void writeVarValues(List<VarValue> readVariables) throws IOException {
+		byte[] bytes = ByteConverter.convertToBytes(readVariables);
+		writeByteArr(bytes);
 	}
 
 	private void writeNodeOrder(TraceNode node) throws IOException {
@@ -138,13 +152,6 @@ public class TraceOutputWriter extends DataOutputStream {
 		}
 	}
 
-	protected String generateXmlContent(List<VarValue> varValues) {
-		if (CollectionUtils.isEmpty(varValues)) {
-			return null;
-		}
-		return VarValueXmlWriter.generateXmlContent(varValues);
-	}
-	
 	private void writeStepVariableRelation(Trace trace) throws IOException {
 		writeVarInt(trace.getStepVariableTable().values().size());
 		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {

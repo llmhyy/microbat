@@ -20,7 +20,7 @@ import microbat.model.variable.Variable;
  */
 
 public class ReferenceValue extends VarValue {
-	
+	private static final long serialVersionUID = -8836805668691107575L;
 	protected long uniqueID;
 	protected boolean isNull;
 	
