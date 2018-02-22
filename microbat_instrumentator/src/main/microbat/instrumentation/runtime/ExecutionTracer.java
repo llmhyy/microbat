@@ -180,11 +180,19 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.lock();
 		exclusive = FilterChecker.isExclusive(className, methodSignature);
 //		currentNode = null;
+		
+		TraceNode latestNode = trace.getLatestNode();
 		if (!exclusive) {
+			
+			if(latestNode!=null){
+				methodCallStack.push(latestNode, exclusive);
+			}
+			
 			_hitLine(methodStartLine, className, methodSignature);
 			locker.lock();
 		}
-		TraceNode latestNode = trace.getLatestNode();
+		
+		latestNode = trace.getLatestNode();
 		if(latestNode!=null){
 			int varScopeStart = methodStartLine;
 			int varScopeEnd = methodEndLine;
@@ -205,10 +213,6 @@ public class ExecutionTracer implements IExecutionTracer {
 					addRWriteValue(value, true);
 				}
 			}
-		}
-		
-		if(latestNode!=null){
-			methodCallStack.push(latestNode, exclusive);
 		}
 		
 		locker.unLock();
