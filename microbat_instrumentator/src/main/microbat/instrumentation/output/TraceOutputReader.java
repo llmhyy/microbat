@@ -153,7 +153,7 @@ public class TraceOutputReader extends DataInputStream {
 			ClassLocation controlLoc = new ClassLocation(readString(), null, readVarInt());
 			scope.addLocation(controlLoc);
 		}
-		return null;
+		return scope;
 	}
 
 	private SourceScope readLoopScope() throws IOException {
