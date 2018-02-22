@@ -47,7 +47,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	/*
 	 * For exclusive case, invokeTrack will be recorded to collect data.
 	 */
-	private boolean exclusive;
+//	private boolean exclusive;
 //	private InvokingTrack invokeTrack = new EmptyInvokingTrack();
 	private MethodCallStack methodCallStack;
 	private Locker locker;
@@ -182,7 +182,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void enterMethod(String className, String methodSignature, int methodStartLine, int methodEndLine, 
 			String paramTypeSignsCode, String paramNamesCode, Object[] params) {
 		locker.lock();
-		exclusive = FilterChecker.isExclusive(className, methodSignature);
+		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 //		currentNode = null;
 		
 		TraceNode latestNode = trace.getLatestNode();
@@ -222,12 +222,12 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.unLock();
 	}
 
-	public void exitMethod(int line) {
+	public void exitMethod(int line, String className, String methodSignature) {
 		locker.lock();
-		OnWorkingMethod onWorkingMethod = methodCallStack.safePop();
-		if (onWorkingMethod != null) {
-			this.exclusive = onWorkingMethod.isExclusive();
-		}
+		methodCallStack.safePop();
+//		if (onWorkingMethod != null) {
+//			this.exclusive = onWorkingMethod.isExclusive();
+//		}
 		locker.unLock();
 	}
 
@@ -269,11 +269,11 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 	
 	@Override
-	public void _hitMethodEnd(int line){
+	public void _hitMethodEnd(int line, String className, String methodSignature){
 		try {
-			exitMethod(line);
-		} catch (Throwable t) {
-			System.out.println(t);
+			exitMethod(line, className, methodSignature);
+		} catch (Exception e) {
+			System.out.println(e);
 		}
 	}
 	
@@ -320,7 +320,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void _hitLine(int line, String className, String methodSignature) {
 		locker.lock();
 		try {
-			exclusive = FilterChecker.isExclusive(className, methodSignature);
+			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
 				locker.unLock();
 				return;
@@ -409,6 +409,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	 */
 	@Override
 	public void _writeStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line, String className, String methodSignature) {
+		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 		if (exclusive) {
 			return;
 		}
@@ -462,6 +463,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	@Override
 	public void _readStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line,
 			String className, String methodSignature) {
+		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 		if (exclusive) {
 			return;
 		}
@@ -488,6 +490,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	@Override
 	public void _writeLocalVar(Object varValue, String varName, String varType, int line, int bcLocalVarIdx,
 			int varScopeStartLine, int varScopeEndLine, String className, String methodSignature) {
+		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 		if (exclusive) {
 			return;
 		}

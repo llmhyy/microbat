@@ -37,7 +37,7 @@ public interface IExecutionTracer {
 
 	void _afterInvoke(int line, String residingClassName, String residingMethodSignature);
 
-	public void _hitMethodEnd(int line);
+	public void _hitMethodEnd(int line, String className, String methodSignature);
 	
 	/**
 	 * 

@@ -265,7 +265,7 @@ public class TraceInstrumenter {
 			 * instrument exit instructions
 			 */
 			for (InstructionHandle exitInsHandle : lineInfo.getExitInsns()) {
-				injectCodeTracerExit(exitInsHandle, insnList, constPool, tracerVar, line);
+				injectCodeTracerExit(exitInsHandle, insnList, constPool, tracerVar, line, classNameVar, methodSigVar);
 			}
 
 			lineInfo.dispose();
@@ -333,10 +333,13 @@ public class TraceInstrumenter {
 	}
 	
 	private void injectCodeTracerExit(InstructionHandle exitInsHandle, InstructionList insnList, 
-			ConstantPoolGen constPool, LocalVariableGen tracerVar, int line) {
+			ConstantPoolGen constPool, LocalVariableGen tracerVar, int line, LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
 		InstructionList newInsns = new InstructionList();
+		
 		newInsns.append(new ALOAD(tracerVar.getIndex()));
 		newInsns.append(new PUSH(constPool, line));
+		newInsns.append(new ALOAD(classNameVar.getIndex()));
+		newInsns.append(new ALOAD(methodSigVar.getIndex()));
 		appendTracerMethodInvoke(newInsns, TracerMethods.HIT_METHOD_END, constPool);
 		
 		insertInsnHandler(insnList, newInsns, exitInsHandle);
