@@ -224,7 +224,10 @@ public class ExecutionTracer implements IExecutionTracer {
 
 	public void exitMethod(int line, String className, String methodSignature) {
 		locker.lock();
-		methodCallStack.safePop();
+		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+		if(!exclusive){
+			methodCallStack.safePop();			
+		}
 //		if (onWorkingMethod != null) {
 //			this.exclusive = onWorkingMethod.isExclusive();
 //		}
