@@ -42,7 +42,7 @@ public class TraceConstructor {
 		agentRunner.addAgentParam("class_path", config.getClasspathStr());
 		agentRunner.addAgentParam("working_dir", "E:/linyun/bug_repo/Chart/1/bug");
 		long start = System.currentTimeMillis();
-		agentRunner.runWithDumpFileOption(config);
+		agentRunner.runWithDumpFileOption(config, null);
 //		agentRunner.runWithSocket(config);
 		Trace trace = agentRunner.getTrace();
 		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());

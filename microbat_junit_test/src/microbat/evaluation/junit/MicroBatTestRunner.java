@@ -39,6 +39,11 @@ public class MicroBatTestRunner {
 				public void testStarted(Description description) throws Exception {
 					$testStarted(className, methodName);
 				}
+				
+				@Override
+				public void testFinished(Description description) throws Exception {
+					$testFinished(className, methodName);
+				}
 			});
 			Result result = jUnitCore.run(request);
 			setSuccessful(result.wasSuccessful());
@@ -59,6 +64,10 @@ public class MicroBatTestRunner {
 		$setProgramMessage(successful + ";" + this.failureMessage);
 	}
 	
+	private void $testFinished(String className, String methodName) {
+		// for agent part.
+	}
+
 	private void $testStarted(String className, String methodName) {
 		// for agent part.
 	}

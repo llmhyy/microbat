@@ -19,6 +19,7 @@ import sav.strategies.vm.VMConfiguration;
 
 public class InstrumentationExecutor {
 	private final static String TEST_CASE_RUNNER = "microbat.evaluation.junit.MicroBatTestRunner";
+	private final static String TRACE_FILE_OUTPUT_FOLDER = "trace";
 	
 	private AppJavaClassPath appPath;
 	
@@ -60,7 +61,7 @@ public class InstrumentationExecutor {
 						(Object[]) AnalysisScopePreference.getExcludedLibs()));
 		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
 		try {
-			agentRunner.runWithDumpFileOption(config);
+			agentRunner.runWithDumpFileOption(config, generateTraceFilePath());
 		} catch (SavException e1) {
 			e1.printStackTrace();
 		}
@@ -74,6 +75,13 @@ public class InstrumentationExecutor {
 		
 	}
 	
+	private String generateTraceFilePath() {
+		appPath.getWorkingDirectory();
+		//TODO LLT
+		return null;
+	}
+
+
 //	public void run() {
 //		List<String> command = new ArrayList<>();
 //		command.add(this.appPath.getJavaHome()+File.separator+"bin"+File.separator+"java");
