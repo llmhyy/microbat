@@ -2,7 +2,6 @@ package microbat.instrumentation.runtime;
 
 import java.util.Stack;
 
-import microbat.model.BreakPoint;
 import microbat.model.trace.TraceNode;
 
 public class MethodCallStack extends Stack<OnWorkingMethod> {
