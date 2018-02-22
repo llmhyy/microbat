@@ -150,6 +150,7 @@ public class ExecutionTracer implements IExecutionTracer {
 								if(fieldValue != null){
 									FieldVar fieldVar = new FieldVar(Modifier.isStatic(field.getModifiers()),
 											field.getName(), fieldTypeStr, field.getDeclaringClass().getName());
+									fieldVar.setVarID(TraceUtils.getFieldVarId(var.getVarID(), field.getName(), fieldTypeStr, fieldValue));
 									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer);
 								}
 							}
