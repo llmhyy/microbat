@@ -1,4 +1,0 @@
-Manifest-Version: 1.0
-Boot-Class-Path: /lib/bcel-6.0.jar
-Premain-Class: microbat.instrumentation.Premain
-Can-Retransform-Classes: true

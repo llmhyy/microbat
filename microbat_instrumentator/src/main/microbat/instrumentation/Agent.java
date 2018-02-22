@@ -62,13 +62,13 @@ public class Agent {
 		createVirtualDataRelation(trace);
 		trace.constructControlDomianceRelation();
 //		trace.constructLoopParentRelation();
-		timer.newPoint("Recording trace");
+		timer.newPoint("Saving trace");
 		writeOutput(trace);
 		System.out.println(timer.getResultString());
 	}
 
 	private void writeOutput(Trace trace) throws Exception {
-		System.out.println("Recording trace...");
+		System.out.println("Saving trace...");
 		if (agentParams.getDumpFile() != null) {
 			TraceFileRecorder traceRecorder = new TraceFileRecorder(agentParams.getDumpFile());
 			traceRecorder.writeTrace(programMsg, trace, false);
@@ -84,7 +84,7 @@ public class Agent {
 			TraceRecorder traceRecorder = new TraceRecorder();
 			traceRecorder.storeTrace(trace );
 		}
-		System.out.println("Finish recording.");
+		System.out.println("Trace saved.");
 	}
 	
 	private void createVirtualDataRelation(Trace trace) {

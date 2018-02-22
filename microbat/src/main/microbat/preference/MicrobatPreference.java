@@ -49,9 +49,13 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultAdvancedDetailInspector = Activator.getDefault().getPreferenceStore().getString(APPLY_ADVANCE_INSPECTOR);
 		this.defaultStepLimit = Activator.getDefault().getPreferenceStore().getString(STEP_LIMIT);
 		this.defaultRunTest = Activator.getDefault().getPreferenceStore().getString(RUN_TEST);
-		this.defaultVariableLayer = Activator.getDefault().getPreferenceStore().getString(VARIABLE_LAYER);
+		this.defaultVariableLayer = getVariableValue();
 		this.defaultJava7HomePath = Activator.getDefault().getPreferenceStore().getString(JAVA7HOME_PATH);
 		this.defaultApplyRecodingOptimization = Activator.getDefault().getPreferenceStore().getString(RECORDING_OPTIMIZATION);
+	}
+
+	public static String getVariableValue() {
+		return Activator.getDefault().getPreferenceStore().getString(VARIABLE_LAYER);
 	}
 	
 	public static final String TARGET_PORJECT = "targetProjectName";

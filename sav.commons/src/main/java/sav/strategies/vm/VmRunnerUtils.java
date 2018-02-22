@@ -21,6 +21,10 @@ public class VmRunnerUtils {
 		return StringUtils.join(Constants.FILE_SEPARATOR, config.getJavaHome(), "bin", "java");
 	}
 	
+	public static String buildJavaExecArg(String javaHome) {
+		return StringUtils.join(Constants.FILE_SEPARATOR, javaHome, "bin", "java");
+	}
+	
 	public static String buildJavaCPrefix(VMConfiguration config) {
 		return StringUtils.join(Constants.FILE_SEPARATOR, config.getJavaHome(), "bin", "javac");
 	}

@@ -87,7 +87,8 @@ public class FileUtils {
 	}
 	
 	public static String copyFileToFolder(String sourceFile, String destFolder, boolean preserveFileDate) {
-		String fileName = sourceFile.substring(sourceFile.lastIndexOf(Constants.FILE_SEPARATOR) + 1, sourceFile.length());
+		sourceFile = sourceFile.replace(Constants.FILE_SEPARATOR, "/");
+		String fileName = sourceFile.substring(sourceFile.lastIndexOf("/") + 1, sourceFile.length());
 		String destFile = getFilePath(destFolder, fileName);
 		try {
 			org.apache.commons.io.FileUtils.copyFile(new File(sourceFile), new File(destFile), preserveFileDate);
