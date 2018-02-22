@@ -14,6 +14,7 @@ import microbat.instrumentation.instr.TestRunnerTranformer;
 import microbat.instrumentation.instr.TraceTransformer;
 
 public class Premain {
+	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent.jar";
 
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
 		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
@@ -55,7 +56,7 @@ public class Premain {
 		System.out.println("Temp folder to extract jars: " + tempFolder.getAbsolutePath());
 		List<JarFile> bootJarPaths = getJarFiles("instrumentator_all.jar");
 		if (bootJarPaths.isEmpty()) {
-			bootJarPaths = getJarFiles("instrumentator_rt.jar", 
+			bootJarPaths = getJarFiles(INSTRUMENTATION_STANTDALONE_JAR, 
 										"bcel-6.0.jar",
 										"javassist.jar",
 										"commons-lang-2.6.jar",
@@ -82,7 +83,7 @@ public class Premain {
 		List<JarFile> jars = new ArrayList<>();
 		for (String jarName : jarNames) {
 			File file = new File(tempFolder.getAbsolutePath(), jarName);
-			if (file.exists()) {
+			if (INSTRUMENTATION_STANTDALONE_JAR.equals(file.getName()) && file.exists()) {
 				file.delete();
 			}
 			if (!file.exists()) {
@@ -91,7 +92,7 @@ public class Premain {
 					boolean success = extractJar(jarResourcePath, file.getAbsolutePath());
 					if (!success) {
 						System.out.println("Could not extract jar: " + jarResourcePath);
-						if (jarName.endsWith("instrumentator_rt.jar")) {
+						if (jarName.endsWith(INSTRUMENTATION_STANTDALONE_JAR)) {
 							jars.clear();
 							return jars;
 						}

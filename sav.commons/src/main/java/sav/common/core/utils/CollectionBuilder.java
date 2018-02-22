@@ -42,6 +42,10 @@ public class CollectionBuilder<E, T extends Collection<E>> {
 		return orgCol;
 	}
 	
+	public void clear() {
+		orgCol.clear();
+	}
+	
 	@SuppressWarnings("unchecked")
 	public <R extends Collection<?>>R getResult() {
 		return (R) orgCol;
