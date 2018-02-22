@@ -545,8 +545,10 @@ public class DebugFeedbackView extends ViewPart {
 	
 	private boolean isValidToInferBugType(){
 		if(currentNode != null){
-			boolean flag1 = currentNode.getReadVarCorrectness(Settings.interestedVariables, true)==TraceNode.READ_VARS_CORRECT &&
-					currentNode.getWittenVarCorrectness(Settings.interestedVariables, true)==TraceNode.WRITTEN_VARS_INCORRECT;
+			return true;
+			
+//			boolean flag1 = currentNode.getReadVarCorrectness(Settings.interestedVariables, true)==TraceNode.READ_VARS_CORRECT &&
+//					currentNode.getWittenVarCorrectness(Settings.interestedVariables, true)==TraceNode.WRITTEN_VARS_INCORRECT;
 //			boolean flag2 = recommender.getState()==SuspiciousNodeRecommender.BINARY_SEARCH;
 //		
 //			boolean flag3 = false;
@@ -558,8 +560,8 @@ public class DebugFeedbackView extends ViewPart {
 //			boolean flag4 = recommender.getState()==SuspiciousNodeRecommender.SKIP;
 			
 //			return (flag1 && flag2 && flag3) || (flag1 && flag4);
-			
-			return flag1;
+//			
+//			return flag1;
 		}
 		else{
 			return false;
