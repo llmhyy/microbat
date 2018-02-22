@@ -75,6 +75,7 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		JavaClass newJC = null;
 		for (Method method : jc.getMethods()) {
+			int agentMethodIdx = -1;
 			if ("$setProgramMessage".equals(method.getName())) {
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
 				InstructionList newInsns = new InstructionList();
@@ -96,6 +97,13 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 				methodGen.setMaxLocals();
 				classGen.replaceMethod(method, methodGen.getMethod());
 			} else if ("$testStarted".equals(method.getName())) {
+				agentMethodIdx = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_startTest",
+						"(Ljava/lang/String;Ljava/lang/String;)V");
+			} else if ("$testFinished".equals(method.getName())) {
+				agentMethodIdx = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_finishTest",
+						"(Ljava/lang/String;Ljava/lang/String;)V");
+			}
+			if (agentMethodIdx >= 0) {
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
 				InstructionList newInsns = new InstructionList();
 				int varIdx = 1;
@@ -105,12 +113,10 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 				varIdx++;
 				LocalVariable junitMethodVar = localVariableTable.getLocalVariable(varIdx, 0);
 				Type junitMethodVarType = methodGen.getArgumentType(0);
-				int index = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_startTest",
-						"(Ljava/lang/String;Ljava/lang/String;)V");
 				
 				newInsns.append(InstructionFactory.createLoad(junitClassVarType, junitClassVar.getIndex()));
 				newInsns.append(InstructionFactory.createLoad(junitMethodVarType, junitMethodVar.getIndex()));
-				newInsns.append(new INVOKESTATIC(index));
+				newInsns.append(new INVOKESTATIC(agentMethodIdx));
 				InstructionList instructionList = methodGen.getInstructionList();
 				InstructionHandle startInsn = instructionList.getStart();
 				InstructionHandle pos = instructionList.insert(startInsn, newInsns);
@@ -120,6 +126,7 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 				methodGen.setMaxLocals();
 				classGen.replaceMethod(method, methodGen.getMethod());
 			}
+			
 		}
 		newJC = classGen.getJavaClass();
 		newJC.setConstantPool(constPool.getFinalConstantPool());

@@ -149,6 +149,10 @@ public class Agent {
 	public static void _startTest(String junitClass, String junitMethod) {
 		ExecutionTracer.onTestStated();
 	}
+	
+	public static void _finishTest(String junitClass, String junitMethod) {
+		ExecutionTracer.shutdown();
+	}
 
 	public static String extrctJarPath() {
 		// TODO Auto-generated method stub

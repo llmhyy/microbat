@@ -159,7 +159,7 @@ public class ExecutionTracer implements IExecutionTracer {
 								}
 							}
 						} catch (Exception e) {
-							e.printStackTrace();
+							handleException(e);
 						}
 					}
 				}
@@ -170,7 +170,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 		return varValue;
 	}
-	
+
 	private String getStringValue(Object obj) {
 		return StringUtils.toString(obj, null);
 	}
@@ -246,7 +246,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			}
 			// latestNode.setInvokingDetail(invokeDetail);
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		
 		locker.unLock();
@@ -263,7 +263,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				latestNode.setInvokingMethod(methodName+paramTypeSignsCode);				
 			}
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -305,10 +305,14 @@ public class ExecutionTracer implements IExecutionTracer {
 				}
 			}
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		
 		locker.unLock();
+	}
+
+	private void handleException(Throwable t) {
+		System.out.println(t);
 	}
 	
 	@Override
@@ -343,7 +347,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				currentNode.setInvocationParent(caller);			
 			}
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		
 		locker.unLock();
@@ -378,7 +382,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			//		}
 
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -421,7 +425,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			VarValue value = appendVarValue(fieldValue, var, null);
 			addRWriteValue(value, true);
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -448,7 +452,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			VarValue value = appendVarValue(fieldValue, var, null);
 			addRWriteValue(value, false);
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -475,7 +479,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			VarValue value = appendVarValue(fieldValue, var, null);
 			addRWriteValue(value, false);
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -503,7 +507,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			VarValue value = appendVarValue(varValue, var, null);
 			addRWriteValue(value, true);
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -527,7 +531,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			VarValue value = appendVarValue(varValue, var, null);
 			addRWriteValue(value, false);
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -546,7 +550,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			VarValue writtenValue = appendVarValue(varValueAfter, var, null);
 			addRWriteValue(writtenValue, true); // add written var
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -572,7 +576,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			//		}
 			addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, false);
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -600,7 +604,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
 			//		invokeTrack.addWrittenValue(value);
 		} catch (Throwable t) {
-			System.out.println(t);
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -652,10 +656,15 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 	
 	private static ExecutionTracer getTracer(long threadId) {
+		boolean locked = gLocker.isLock();
+		gLocker.lock();
 		ExecutionTracer store = rtStores.get(threadId);
 		if (store == null) {
 			store = new ExecutionTracer(threadId);
 			rtStores.put(threadId, store);
+		}
+		if (!locked) {
+			gLocker.unLock();
 		}
 		return store;
 	}
@@ -669,12 +678,17 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 	
 	public synchronized static IExecutionTracer getCurrentThreadStore() {
+		boolean locked = gLocker.isLock();
+		gLocker.lock();
 		long threadId = Thread.currentThread().getId();
-		ExecutionTracer store = rtStores.get(threadId);
-		if (store != null) {
-			return store;
+		IExecutionTracer store = rtStores.get(threadId);
+		if (store == null) {
+			store = EmptyExecutionTracer.getInstance();
 		}
-		return EmptyExecutionTracer.getInstance();
+		if (!locked) {
+			gLocker.unLock();
+		}
+		return store;
 	}
 	
 	private static State state = State.INIT;
