@@ -97,8 +97,10 @@ public class Agent {
 				nextNode.setStepInPrevious(currentNode);
 			}
 			else if(order==trace.size()){
-				TraceNode prevNode = trace.getTraceNode(order-1);
-				currentNode.setStepInPrevious(prevNode);
+				if(order>1){
+					TraceNode prevNode = trace.getTraceNode(order-1);
+					currentNode.setStepInPrevious(prevNode);					
+				}
 			}
 			
 			if(currentNode.getInvocationParent()!=null && !currentNode.getPassParameters().isEmpty()){
