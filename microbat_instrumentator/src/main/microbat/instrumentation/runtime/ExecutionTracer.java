@@ -270,11 +270,13 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	@Override
 	public void _hitMethodEnd(int line, String className, String methodSignature){
+		locker.lock();
 		try {
 			exitMethod(line, className, methodSignature);
 		} catch (Exception e) {
 			System.out.println(e);
 		}
+		locker.unLock();
 	}
 	
 	@Override
@@ -413,6 +415,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	 */
 	@Override
 	public void _writeStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line, String className, String methodSignature) {
+		locker.lock();
 		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 		if (exclusive) {
 			return;
@@ -467,6 +470,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	@Override
 	public void _readStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line,
 			String className, String methodSignature) {
+		locker.lock();
 		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 		if (exclusive) {
 			return;
@@ -494,6 +498,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	@Override
 	public void _writeLocalVar(Object varValue, String varName, String varType, int line, int bcLocalVarIdx,
 			int varScopeStartLine, int varScopeEndLine, String className, String methodSignature) {
+		locker.lock();
 		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 		if (exclusive) {
 			return;

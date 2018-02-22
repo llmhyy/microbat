@@ -39,7 +39,7 @@ public class WildcardMatcher {
 		if ((endIdx = endsWith(expression, ".*")) > 0) { 
 			suffix = ".*"; // any character
 		} 
-		// java.util.\
+		// java.util.*\
 		else if ((endIdx = endsWith(expression, ".*\\")) > 0) {
 			suffix = "[^\\.]*";
 		} 
