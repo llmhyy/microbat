@@ -60,6 +60,10 @@ public class ExecutionTracer implements IExecutionTracer {
 
 	private void buildDataRelation(Variable var, String rw){
 		TraceNode currentNode = trace.getLatestNode();
+		if(currentNode==null){
+			return;
+		}
+		
 		String order = trace.findDefiningNodeOrder(rw, currentNode, var.getVarID(), var.getAliasVarID());
 		String varID = var.getVarID() + ":" + order;
 		var.setVarID(varID);
@@ -237,7 +241,9 @@ public class ExecutionTracer implements IExecutionTracer {
 			// TraceUtils.parseArgTypes(paramTypeSignsCode));
 			
 			TraceNode latestNode = trace.getLatestNode();
-			latestNode.setInvokingMethod(methodSig);
+			if(latestNode!=null){
+				latestNode.setInvokingMethod(methodSig);				
+			}
 			// latestNode.setInvokingDetail(invokeDetail);
 		} catch (Throwable t) {
 			System.out.println(t);
@@ -253,7 +259,9 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.lock();
 		try {
 			TraceNode latestNode = trace.getLatestNode();
-			latestNode.setInvokingMethod(methodName+paramTypeSignsCode);
+			if(latestNode!=null){
+				latestNode.setInvokingMethod(methodName+paramTypeSignsCode);				
+			}
 		} catch (Throwable t) {
 			System.out.println(t);
 		}
@@ -292,7 +300,9 @@ public class ExecutionTracer implements IExecutionTracer {
 			VarValue returnVal = appendVarValue(returnObj, returnVar, null);
 			if (returnVal != null) {
 				TraceNode latestNode = trace.getLatestNode();
-				latestNode.addReturnVariable(returnVal);
+				if(latestNode!=null){
+					latestNode.addReturnVariable(returnVal);					
+				}
 			}
 		} catch (Throwable t) {
 			System.out.println(t);
