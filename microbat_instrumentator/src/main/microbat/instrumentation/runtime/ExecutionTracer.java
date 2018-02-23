@@ -452,7 +452,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	 * @param line
 	 */
 	@Override
-	public void _writeStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line, String className, String methodSignature) {
+	public void _writeStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line,
+			String className, String methodSignature) {
 		locker.lock();
 		try {
 //			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
@@ -623,12 +624,15 @@ public class ExecutionTracer implements IExecutionTracer {
 			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
 				TraceNode latestNode = trace.getLatestNode();
+				boolean relevant = false;
 				if (latestNode != null && latestNode.getInvokingDetail() != null) {
 					InvokingDetail invokingDetail = latestNode.getInvokingDetail();
-					invokingDetail.updateRelevantVar(arrayRef, eleValue, elementType);
+					relevant = invokingDetail.updateRelevantVar(arrayRef, eleValue, elementType);
 				}
-				locker.unLock();
-				return;
+				if (!relevant) {
+					locker.unLock();
+					return;
+				}
 			}
 			_hitLine(line, className, methodSignature);
 			addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, false);

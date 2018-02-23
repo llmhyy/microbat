@@ -11,14 +11,12 @@ import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.FieldInstruction;
-import org.apache.bcel.generic.GETFIELD;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableInstruction;
-import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Type;
@@ -84,8 +82,7 @@ public class LineInstructionInfo {
 			 * For external libraries, only store for the case of 
 			 * Written Fields or ArrayElement.
 			 *  */
-			if (!(isAppClass || (insn instanceof PUTFIELD)
-								|| (insn instanceof GETFIELD)
+			if (!(isAppClass || (insn instanceof FieldInstruction)
 								|| ((insn instanceof ArrayInstruction)))) {
 				continue;
 			}
