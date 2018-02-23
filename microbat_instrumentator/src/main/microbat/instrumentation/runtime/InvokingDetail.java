@@ -1,14 +1,10 @@
 package microbat.instrumentation.runtime;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import microbat.model.BreakPoint;
-import microbat.model.value.VarValue;
+import microbat.model.trace.TraceNode;
 import microbat.util.PrimitiveUtils;
-import sav.common.core.utils.StringUtils;
 
 /**
  * 
@@ -17,69 +13,47 @@ import sav.common.core.utils.StringUtils;
  *         will be recorded. (That means writeField will be handle in ExecutionTracer.
  */
 public class InvokingDetail {
-	private Set<String> relevantVarIds;
-	private VarValue returnValue;
-	private BreakPoint invokerEntry;
-	private List<VarValue> writtenVarValue;
-	private String invokeNodeId;
+	private TraceNode node;
+	private Set<String> relevantVars = null;
 	
-	public InvokingDetail() {
-		// EMTPY CONSTRUCTOR
+	public InvokingDetail(TraceNode node) {
+		this.node = node;
 	}
-
-	/* TODO LLT: check if need to convert paramtype from signature to name */
-	public InvokingDetail(Object invokeObj, String className, String methodName, Object[] params, String[] paramTypes) {
-		/* extract object Ids */
-		relevantVarIds = new HashSet<>(params.length + 1);
-		if (invokeObj == null) {
-			invokeNodeId = StringUtils.dotJoin(className, methodName);
-		} else {
-			String objectVarId = TraceUtils.getObjectVarId(invokeObj);
-			invokeNodeId = StringUtils.dotJoin(objectVarId, methodName);
-			relevantVarIds.add(objectVarId);
+	
+	public boolean updateRelevantVar(Object refValue, Object fieldValue, String fieldType) {
+		if (refValue == null) {
+			return false;
 		}
-		for (int i = 0; i < paramTypes.length; i++) {
-			if (!PrimitiveUtils.isPrimitiveType(paramTypes[i])) {
-				relevantVarIds.add(TraceUtils.getObjectVarId(params[i]));
+		
+		String objectVarId = TraceUtils.getObjectVarId(refValue);
+		boolean relevant = relevantVars.contains(objectVarId);
+		if (!relevant && (node.getBreakPoint().getClassCanonicalName().equals(refValue.getClass().getName()))) {
+			relevant = true;
+		}
+		if (relevant && !PrimitiveUtils.isPrimitive(fieldType)) {
+			relevantVars.add(TraceUtils.getObjectVarId(fieldValue));
+		}
+		return relevant;
+	}
+	
+	public void initRelevantVars(Object invokeObj, Object[] args, String[] argType) {
+		if (relevantVars == null) {
+			relevantVars = new HashSet<>();
+			if (invokeObj != null) {
+				relevantVars.add(TraceUtils.getObjectVarId(invokeObj));
+			}
+			for (int i = 0; i < argType.length; i++) {
+				if (!PrimitiveUtils.isPrimitive(argType[i])) {
+					relevantVars.add(TraceUtils.getObjectVarId(args[i]));
+				}
 			}
 		}
-		writtenVarValue = new ArrayList<>(relevantVarIds.size());
 	}
-	
-	public boolean updateRelevant(String parentVarId, String fieldVarId) {
-		if (relevantVarIds.contains(parentVarId)) {
-			boolean relevant = true;
-			relevantVarIds.add(fieldVarId);
-			return relevant;
+
+	public void initRelevantVars(Object invokeObj, Object[] params, String paramTypeSignsCode) {
+		if (relevantVars != null) {
+			return;
 		}
-		return false;
-	}
-
-	public VarValue getReturnValue() {
-		return returnValue;
-	}
-
-	public void setReturnValue(VarValue returnValue) {
-		this.returnValue = returnValue;
-	}
-
-	public BreakPoint getInvokerEntry() {
-		return invokerEntry;
-	}
-
-	public void setInvokerEntry(BreakPoint invokerEntry) {
-		this.invokerEntry = invokerEntry;
-	}
-
-	public void addWrittenValue(VarValue value) {
-		writtenVarValue.add(value);
-	}
-
-	public String getInvokeNodeId() {
-		return invokeNodeId;
-	}
-	
-	public List<VarValue> getWrittenVarValue() {
-		return writtenVarValue;
+		initRelevantVars(invokeObj, params, TraceUtils.parseArgTypesOrNames(paramTypeSignsCode));
 	}
 }
