@@ -32,7 +32,7 @@ public class CodeGenerator {
 			}
 			boolean ifaceMethod = true;
 			String className = IExecutionTracer.class.getName();
-			if (CollectionUtils.existIn(method.getName(), "_getTracer", "_startTracing")) {
+			if (CollectionUtils.existIn(method.getName(), "_getTracer", "_start")) {
 				className = ExecutionTracer.class.getName();
 				ifaceMethod = false;
 			}

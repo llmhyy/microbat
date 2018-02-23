@@ -18,4 +18,11 @@ public class MethodCallStack extends Stack<TraceNode> {
 		return super.push(node);
 	}
 	
+	@Override
+	public synchronized TraceNode peek() {
+		if (isEmpty()) {
+			return null;
+		}
+		return super.peek();
+	}
 }

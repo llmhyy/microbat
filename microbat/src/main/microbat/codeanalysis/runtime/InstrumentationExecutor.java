@@ -40,13 +40,13 @@ public class InstrumentationExecutor {
 		config.setLaunchClass(appPath.getLaunchClass());
 		config.setWorkingDirectory(appPath.getWorkingDirectory());
 				
-		if(appPath.getOptionalTestClass()!=null) {
+		if (appPath.getOptionalTestClass() != null) {
 			config.addProgramArgs(appPath.getOptionalTestClass());
-			config.addProgramArgs(appPath.getOptionalTestMethod());			
+			config.addProgramArgs(appPath.getOptionalTestMethod());
 			agentRunner.addAgentParam(AgentParams.OPT_LAUNCH_CLASS, appPath.getOptionalTestClass());
-		}
-		else {
-			agentRunner.addAgentParam(AgentParams.OPT_LAUNCH_CLASS, appPath.getLaunchClass());
+		} else {
+			agentRunner.addAgentParam(AgentParams.OPT_ENTRY_POINT,
+					appPath.getLaunchClass() + "." + "main([Ljava/lang/String;)V");
 		}
 		
 		agentRunner.addAgentParam(AgentParams.OPT_JAVA_HOME, config.getJavaHome());

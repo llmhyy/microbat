@@ -149,7 +149,7 @@ public class Agent {
 	}
 	
 	public static void _startTest(String junitClass, String junitMethod) {
-		ExecutionTracer.onTestStated();
+		ExecutionTracer._start();
 	}
 	
 	public static void _finishTest(String junitClass, String junitMethod) {
