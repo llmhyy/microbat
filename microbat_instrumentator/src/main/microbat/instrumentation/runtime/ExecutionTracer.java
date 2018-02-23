@@ -421,7 +421,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			}
 			String parentVarId = TraceUtils.getObjectVarId(refValue);
 			String fieldVarId = TraceUtils.getFieldVarId(parentVarId, fieldName, fieldType, fieldValue);
-			Variable var = new FieldVar(false, fieldName, fieldType, fieldType);
+			Variable var = new FieldVar(false, fieldName, fieldType, refValue.getClass().getName());
 			var.setVarID(fieldVarId);
 			VarValue value = appendVarValue(fieldValue, var, null);
 			addRWriteValue(value, true);
@@ -465,7 +465,7 @@ public class ExecutionTracer implements IExecutionTracer {
 //				return;
 //			}
 			_hitLine(line, className, methodSignature);
-			Variable var = new FieldVar(false, fieldName, fieldType, fieldType);
+			Variable var = new FieldVar(false, fieldName, fieldType, refType);
 			var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
 			VarValue value = appendVarValue(fieldValue, var, null);
 			addRWriteValue(value, true);
@@ -506,7 +506,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			//		if (exclusive) {
 			//			return;
 			//		}
-			Variable var = new FieldVar(false, fieldName, fieldType, fieldType);
+			Variable var = new FieldVar(false, fieldName, fieldType, refValue.getClass().getName());
 			var.setVarID(fieldVarId);
 			VarValue value = appendVarValue(fieldValue, var, null);
 			addRWriteValue(value, false);
@@ -527,7 +527,7 @@ public class ExecutionTracer implements IExecutionTracer {
 //				return;
 //			}
 			_hitLine(line, className, methodSignature);
-			Variable var = new FieldVar(true, fieldName, fieldType, fieldType);
+			Variable var = new FieldVar(true, fieldName, fieldType, refType);
 			var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
 			VarValue value = appendVarValue(fieldValue, var, null);
 			addRWriteValue(value, false);
