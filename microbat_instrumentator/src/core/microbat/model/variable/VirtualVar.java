@@ -12,7 +12,7 @@ import microbat.util.PrimitiveUtils;
 public class VirtualVar extends Variable {
 	private static final long serialVersionUID = -1820253033144176089L;
 	public static final String VIRTUAL_TYPE = "RV";
-	public static final String VIRTUAL_PREFIX = "vir:";
+	public static final String VIRTUAL_PREFIX = "vir_";
 
 	public VirtualVar(String name, String type) {
 		super(name, type);
