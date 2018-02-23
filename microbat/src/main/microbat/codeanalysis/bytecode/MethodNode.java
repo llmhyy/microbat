@@ -143,6 +143,7 @@ public class MethodNode {
 				PUTFIELD ins = (PUTFIELD)instruction;
 				String fieldName = ins.getFieldName(gen);
 				String className = ins.getReferenceType(gen).getSignature();
+				className = SignatureUtils.signatureToName(className);
 				
 				if(field.getName().equals(fieldName) && field.getDeclaringType().equals(className)){
 					hList.add(handle);
@@ -153,6 +154,7 @@ public class MethodNode {
 				PUTSTATIC ins = (PUTSTATIC)instruction;
 				String fieldName = ins.getFieldName(gen);
 				String className = ins.getReferenceType(gen).getSignature();
+				className = SignatureUtils.signatureToName(className);
 				
 				if(field.getName().equals(fieldName) && field.getDeclaringType().equals(className)){
 					hList.add(handle);

@@ -123,16 +123,16 @@ public class DataOmissionInspector extends DetailInspector {
 		List<VarValue> writtenChildrenVarList = writtenVar.getAllDescedentChildren();
 		correctWrittenVarList.addAll(writtenChildrenVarList);
 		
-		VarValue specificWrongVar = null;
-		for(VarValue wrongReadVar: wrongReadVarList){
-			for(VarValue correctWrittenVar: correctWrittenVarList){
-				if(wrongReadVar.equals(correctWrittenVar)){
-					specificWrongVar = wrongReadVar;
-				}
-			}
-		}
+//		VarValue specificWrongVar = null;
+//		for(VarValue wrongReadVar: wrongReadVarList){
+//			for(VarValue correctWrittenVar: correctWrittenVarList){
+//				if(wrongReadVar.equals(correctWrittenVar)){
+//					specificWrongVar = wrongReadVar;
+//				}
+//			}
+//		}
 		
-		return specificWrongVar;
+		return wrongReadVarList.get(0);
 	}
 
 }
