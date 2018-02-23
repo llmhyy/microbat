@@ -11,6 +11,7 @@ import org.apache.bcel.generic.BranchInstruction;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Select;
 
 import microbat.model.variable.ArrayElementVar;
@@ -255,6 +256,11 @@ public class CFGConstructor {
 		for(CFGNode node: cfg.getNodeList()){
 			if(node.getChildren().isEmpty()){
 				cfg.addExitNode(node);
+			}
+			else{
+				if(node.getInstructionHandle().getInstruction() instanceof ReturnInstruction){
+					cfg.addExitNode(node);
+				}
 			}
 		}
 	}

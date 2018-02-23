@@ -48,7 +48,7 @@ public class CFGConstructor {
 	public CFG constructCFG(Code code){
 		CFG cfg = new CFG();
 		CFGNode previousNode = null;
-		
+//		System.currentTimeMillis();
 		InstructionList list = new InstructionList(code.getCode());
 		Iterator iter = list.iterator();
 		while(iter.hasNext()){
@@ -131,6 +131,11 @@ public class CFGConstructor {
 		for(CFGNode node: cfg.getNodeList()){
 			if(node.getChildren().isEmpty()){
 				cfg.addExitNode(node);
+			}
+			else{
+				if(node.getInstructionHandle().getInstruction() instanceof ReturnInstruction){
+					cfg.addExitNode(node);
+				}
 			}
 		}
 	}
