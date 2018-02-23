@@ -48,8 +48,6 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 
 	@Override
 	public void _hitLine(int line, String className, String methodSignature) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override

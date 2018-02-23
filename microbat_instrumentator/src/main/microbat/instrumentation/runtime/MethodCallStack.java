@@ -18,4 +18,11 @@ public class MethodCallStack extends Stack<OnWorkingMethod> {
 		super.push(new OnWorkingMethod(node, exclusive));
 	}
 	
+	@Override
+	public synchronized OnWorkingMethod peek() {
+		if (isEmpty()) {
+			return null;
+		}
+		 return super.peek();
+	}
 }

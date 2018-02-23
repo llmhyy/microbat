@@ -101,30 +101,21 @@ public class TraceInstrumenter {
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		JavaClass newJC = null;
-		boolean entry = entryPoint != null ? className.equals(entryPoint.getClassName()) : 
-									FilterChecker.isAppClass(classFName);
-		boolean isArrayList = "java/util/ArrayList".equals(classFName);
+		boolean entry = entryPoint == null ? false : className.equals(entryPoint.getClassName());
+		boolean isAppClass = FilterChecker.isAppClass(classFName) || entry;
 		for (Method method : jc.getMethods()) {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
 			}
 			
-//			if (isArrayList && !CollectionUtils.existIn(method.getName(), "<init>", 
-//					"trimToSize", "ensureCapacity", "ensureCapacityInternal", "ensureExplicitCapacity",
-//					"grow", "hugeCapacity", "isEmpty", "size", "add", "remove")) {
-//				continue;
-//			}
-//			if (isArrayList && !CollectionUtils.existIn(method.getName(), "size")) {
-//				continue;
-//			}
 			try {
 				boolean changed = false;
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
 				boolean startTracing = false;
-				if (entry && (entryPoint == null || entryPoint.matchMethod(method.getName(), method.getSignature()))) {
+				if (entry && entryPoint.matchMethod(method.getName(), method.getSignature())) {
 					startTracing = true;
 				}
-				changed = instrumentMethod(classGen, constPool, methodGen, method, startTracing);
+				changed = instrumentMethod(classGen, constPool, methodGen, method, isAppClass, startTracing);
 				if (changed) {
 					// All changes made, so finish off the method:
 					InstructionList instructionList = methodGen.getInstructionList();
@@ -162,7 +153,7 @@ public class TraceInstrumenter {
 	}
 
 	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
-			boolean startTracing) {
+			boolean isAppClass, boolean startTracing) {
 		tempVarIdx = 0;
 		InstructionList insnList = methodGen.getInstructionList();
 		List<LineInstructionInfo> lineInsnInfos = new ArrayList<>();
@@ -203,11 +194,10 @@ public class TraceInstrumenter {
 		if (startLine == Integer.MAX_VALUE) {
 			startLine = AgentConstants.UNKNOWN_LINE;
 		}
-
 		LocalVariableGen classNameVar = createLocalVariable(CLASS_NAME, methodGen, constPool, startLine);
 		LocalVariableGen methodSigVar = createLocalVariable(METHOD_SIGNATURE, methodGen, constPool, startLine);
-		LocalVariableGen tracerVar = injectCodeInitTracer(methodGen, constPool, startLine, endLine, startTracing, classNameVar,
-				methodSigVar);
+		LocalVariableGen tracerVar = injectCodeInitTracer(methodGen, constPool, startLine, endLine, isAppClass, classNameVar,
+				methodSigVar, startTracing);
 
 		for (LineInstructionInfo lineInfo : lineInsnInfos) {
 			/* instrument RW instructions */
@@ -921,7 +911,7 @@ public class TraceInstrumenter {
 	}
 
 	private LocalVariableGen injectCodeInitTracer(MethodGen methodGen, ConstantPoolGen constPool, int methodStartLine,
-			int methodEndLine, boolean startTracing, LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
+			int methodEndLine, boolean isAppClass, LocalVariableGen classNameVar, LocalVariableGen methodSigVar, boolean startTracing) {
 		InstructionList insnList = methodGen.getInstructionList();
 		InstructionHandle startInsn = insnList.getStart();
 		if (startInsn == null) {
@@ -930,7 +920,9 @@ public class TraceInstrumenter {
 		LocalVariableGen tracerVar = methodGen.addLocalVariable(TRACER_VAR_NAME, Type.getType(IExecutionTracer.class),
 				insnList.getStart(), insnList.getEnd());
 		InstructionList newInsns = new InstructionList();
-		
+		if (startTracing) {
+			appendTracerMethodInvoke(newInsns, TracerMethods.START, constPool);
+		}
 		/* store classNameVar */
 		String className = methodGen.getClassName();
 		className = className.replace("/", ".");
@@ -945,7 +937,7 @@ public class TraceInstrumenter {
 		newInsns.append(new ASTORE(methodSigVar.getIndex())); 
 		
 		/* invoke _getTracer()  */
-		newInsns.append(new PUSH(constPool, startTracing)); // startTracing
+		newInsns.append(new PUSH(constPool, isAppClass)); // startTracing
 		newInsns.append(new ALOAD(classNameVar.getIndex())); // startTracing, className
 		newInsns.append(new ALOAD(methodSigVar.getIndex())); // startTracing, className, String methodSig
 		newInsns.append(new PUSH(constPool, methodStartLine));	// startTracing, className, String methodSig, int methodStartLine	
