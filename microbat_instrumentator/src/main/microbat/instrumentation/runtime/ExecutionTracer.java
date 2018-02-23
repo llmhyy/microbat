@@ -58,6 +58,22 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 		
 		String order = trace.findDefiningNodeOrder(rw, currentNode, var.getVarID(), var.getAliasVarID());
+		
+		if(order.equals("0")){
+			if(var instanceof FieldVar){
+				FieldVar fieldVar = (FieldVar)var;
+				String fieldID = fieldVar.getVarID();
+				String parentID = fieldID.substring(0, fieldID.lastIndexOf("."));
+				order = trace.findDefiningNodeOrder(rw, currentNode, parentID, parentID);
+			}
+			else if(var instanceof ArrayElementVar){
+				ArrayElementVar arrayEle = (ArrayElementVar)var;
+				String arrayID = arrayEle.getVarID();
+				String parentID = arrayID.substring(0, arrayID.lastIndexOf("["));
+				order = trace.findDefiningNodeOrder(rw, currentNode, parentID, parentID);
+			}
+		}
+		
 		String varID = var.getVarID() + ":" + order;
 		var.setVarID(varID);
 		if(var.getAliasVarID()!=null){
