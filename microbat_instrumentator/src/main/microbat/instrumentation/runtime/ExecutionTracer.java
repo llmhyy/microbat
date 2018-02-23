@@ -640,7 +640,6 @@ public class ExecutionTracer implements IExecutionTracer {
 		Variable var = new ArrayElementVar(name, elementType, id);
 		var.setVarID(id);
 		VarValue value = appendVarValue(eleValue, var, null);
-		addRWriteValue(value, write);
 		return value;
 	}
 	
