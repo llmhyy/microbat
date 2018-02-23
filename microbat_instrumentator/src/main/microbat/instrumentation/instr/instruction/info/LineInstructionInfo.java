@@ -83,7 +83,7 @@ public class LineInstructionInfo {
 			 * For external libraries, only store for the case of 
 			 * Written Fields or ArrayElement.
 			 *  */
-			if (!(isAppClass || (insn instanceof PUTFIELD) || ((insn instanceof ArrayInstruction) 
+			if (!(isAppClass || (insn instanceof FieldInstruction) || ((insn instanceof ArrayInstruction) 
 					&& existIn(insn.getOpcode(), Const.AASTORE, Const.FASTORE,
 							Const.LASTORE, Const.CASTORE, Const.IASTORE, 
 							Const.BASTORE, Const.SASTORE, Const.DASTORE)))) {
