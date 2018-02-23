@@ -4,18 +4,18 @@ import java.util.Stack;
 
 import microbat.model.trace.TraceNode;
 
-public class MethodCallStack extends Stack<OnWorkingMethod> {
+public class MethodCallStack extends Stack<TraceNode> {
 	private static final long serialVersionUID = 1L;
 
-	public OnWorkingMethod safePop() {
+	public TraceNode safePop() {
 		if (size() != 0) {
 			return pop();
 		}
 		return null;
 	}
 
-	public void push(TraceNode node, boolean exclusive) {
-		super.push(new OnWorkingMethod(node, exclusive));
+	public TraceNode push(TraceNode node) {
+		return super.push(node);
 	}
 	
 }

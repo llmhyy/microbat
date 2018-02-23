@@ -189,7 +189,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		if (!exclusive) {
 			
 			if(latestNode!=null){
-				methodCallStack.push(latestNode, exclusive);
+				methodCallStack.push(latestNode);
 			}
 			
 			_hitLine(methodStartLine, className, methodSignature);
@@ -346,8 +346,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			trace.addTraceNode(currentNode);
 			
 			if(!methodCallStack.isEmpty()){
-				OnWorkingMethod owm = methodCallStack.peek();
-				TraceNode caller = owm.getCurrentNode();
+				TraceNode caller = methodCallStack.peek();
 				caller.addInvocationChild(currentNode);
 				currentNode.setInvocationParent(caller);			
 			}
