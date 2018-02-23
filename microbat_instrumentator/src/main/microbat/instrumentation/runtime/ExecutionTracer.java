@@ -468,12 +468,15 @@ public class ExecutionTracer implements IExecutionTracer {
 			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
 				TraceNode latestNode = trace.getLatestNode();
+				boolean relevant = false;
 				if (latestNode != null && latestNode.getInvokingDetail() != null) {
 					InvokingDetail invokingDetail = latestNode.getInvokingDetail();
-					invokingDetail.updateRelevantVar(refValue, fieldValue, fieldType);
+					relevant = invokingDetail.updateRelevantVar(refValue, fieldValue, fieldType);
 				}
-				locker.unLock();
-				return;
+				if (!relevant) {
+					locker.unLock();
+					return;
+				}
 			}
 			_hitLine(line, className, methodSignature);
 			String parentVarId = TraceUtils.getObjectVarId(refValue);
