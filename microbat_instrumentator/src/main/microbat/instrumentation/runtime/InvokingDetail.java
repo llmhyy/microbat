@@ -31,7 +31,7 @@ public class InvokingDetail {
 			relevant = true;
 		}
 		if (relevant && !PrimitiveUtils.isPrimitive(fieldType)) {
-			relevantVars.add(objectVarId);
+			relevantVars.add(TraceUtils.getObjectVarId(fieldValue));
 		}
 		return relevant;
 	}
