@@ -124,7 +124,7 @@ public class DebugFeedbackView extends ViewPart {
 	public void refresh(TraceNode node){
 		this.currentNode = node;
 		
-		BreakPointValue thisState = node.getProgramState();
+//		BreakPointValue thisState = node.getProgramState();
 //		BreakPointValue afterState = node.getAfterState();
 		
 //		List<GraphDiff> cons = node.getConsequences();
@@ -133,7 +133,7 @@ public class DebugFeedbackView extends ViewPart {
 //		differ.diff(thisState, afterState);
 		
 //		createConsequenceContent(cons);
-		createStateContent(thisState);
+//		createStateContent(thisState);
 		createWrittenVariableContent(node.getWrittenVariables());
 		createReadVariableContect(node.getReadVariables());
 		
@@ -208,9 +208,9 @@ public class DebugFeedbackView extends ViewPart {
 		
 		this.writtenVariableTreeViewer = createVarGroup(variableForm, "Written Variables: ");
 		this.readVariableTreeViewer = createVarGroup(variableForm, "Read Variables: ");
-		this.stateTreeViewer = createVarGroup(variableForm, "States: ");
+//		this.stateTreeViewer = createVarGroup(variableForm, "States: ");
 
-		variableForm.setWeights(new int[] {3, 3, 4});
+		variableForm.setWeights(new int[] {5, 5});
 		
 		addListener();
 	}
@@ -298,13 +298,13 @@ public class DebugFeedbackView extends ViewPart {
 				
 				setChecks(writtenVariableTreeViewer, RW);
 				setChecks(readVariableTreeViewer, RW);
-				setChecks(stateTreeViewer, STATE);
+//				setChecks(stateTreeViewer, STATE);
 				
 				bugTypeInferenceButton.setEnabled(isValidToInferBugType());
 				
 				writtenVariableTreeViewer.refresh();
 				readVariableTreeViewer.refresh();
-				stateTreeViewer.refresh();	
+//				stateTreeViewer.refresh();	
 				
 				//setCurrentNodeChecked(trace, currentNode);
 			}
@@ -321,7 +321,7 @@ public class DebugFeedbackView extends ViewPart {
 				
 				setChecks(readVariableTreeViewer, RW);
 				setChecks(writtenVariableTreeViewer, RW);
-				setChecks(stateTreeViewer, STATE);
+//				setChecks(stateTreeViewer, STATE);
 				
 				Display.getDefault().asyncExec(new Runnable() {
 					
@@ -329,7 +329,7 @@ public class DebugFeedbackView extends ViewPart {
 					public void run() {
 						readVariableTreeViewer.refresh();
 						writtenVariableTreeViewer.refresh();
-						stateTreeViewer.refresh();	
+//						stateTreeViewer.refresh();	
 					}
 				});
 				
@@ -345,11 +345,11 @@ public class DebugFeedbackView extends ViewPart {
 		
 		this.readVariableTreeViewer.addTreeListener(treeListener);
 		this.writtenVariableTreeViewer.addTreeListener(treeListener);
-		this.stateTreeViewer.addTreeListener(treeListener);
+//		this.stateTreeViewer.addTreeListener(treeListener);
 		
 		this.writtenVariableTreeViewer.addCheckStateListener(new RWVarListener(Variable.WRITTEN));
 		this.readVariableTreeViewer.addCheckStateListener(new RWVarListener(Variable.READ));
-		this.stateTreeViewer.addCheckStateListener(new RWVarListener(Variable.READ));
+//		this.stateTreeViewer.addCheckStateListener(new RWVarListener(Variable.READ));
 		
 	}
 
