@@ -18,6 +18,7 @@ import microbat.model.ControlScope;
 import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
 import microbat.model.value.VarValue;
+import microbat.model.variable.Variable;
 import microbat.util.Settings;
 
 public class TraceNode{
@@ -538,9 +539,25 @@ public class TraceNode{
 	}
 	
 	public void addReadVariable(VarValue var){
-		this.readVariables.add(var);
+		VarValue readVar = find(this.readVariables, var);
+		if(readVar != null){
+			readVar.setStringValue(var.getStringValue());
+		}
+		else{
+			this.readVariables.add(var);			
+		}
 	}
 	
+	private VarValue find(List<VarValue> variables, VarValue var) {
+		for(VarValue existingVar: variables){
+			String simpleID = Variable.truncateSimpleID(existingVar.getVarID());
+			if(simpleID.equals(var.getVarID())){
+				return existingVar;
+			}
+		}
+		return null;
+	}
+
 //	public void addHiddenReadVariable(VarValue var){
 //		this.hiddenReadVariables.add(var);
 //	}
@@ -558,7 +575,13 @@ public class TraceNode{
 	}
 	
 	public void addWrittenVariable(VarValue var){
-		this.writtenVariables.add(var);
+		VarValue writtenVar = find(this.writtenVariables, var);
+		if(writtenVar != null){
+			writtenVar.setStringValue(var.getStringValue());
+		}
+		else{
+			this.writtenVariables.add(var);			
+		}
 	}
 
 	public Double getSuspicousScore(AttributionVar var) {
