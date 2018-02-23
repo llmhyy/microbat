@@ -441,6 +441,11 @@ public class ExecutionTracer implements IExecutionTracer {
 			String className, String methodSignature) {
 		locker.lock();
 		try {
+			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			if (exclusive) {
+				locker.unLock();
+				return;
+			}
 			_hitLine(line, className, methodSignature);
 			String parentVarId = TraceUtils.getObjectVarId(refValue);
 			String fieldVarId = TraceUtils.getFieldVarId(parentVarId, fieldName, fieldType, fieldValue);
@@ -472,6 +477,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		try {
 			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
+				locker.unLock();
 				return;
 			}
 			_hitLine(line, className, methodSignature);
@@ -499,6 +505,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		try {
 			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
+				locker.unLock();
 				return;
 			}
 			_hitLine(line, className, methodSignature);
@@ -527,6 +534,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		try {
 			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
+				locker.unLock();
 				return;
 			}
 			_hitLine(line, className, methodSignature);
@@ -548,6 +556,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		try {
 			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
+				locker.unLock();
 				return;
 			}
 			_hitLine(line, className, methodSignature);
