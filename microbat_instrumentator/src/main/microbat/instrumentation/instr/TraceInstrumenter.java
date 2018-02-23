@@ -167,7 +167,7 @@ public class TraceInstrumenter {
 			if (!visitedLines.contains(lineGen.getSourceLine())) {
 				String loc = StringUtils.dotJoin(classGen.getClassName(), method.getName(), lineGen.getSourceLine());
 				lineInsnInfos.add(new LineInstructionInfo(loc, method.getLocalVariableTable(), constPool,
-						lineNumberTable, lineGen, insnList, cfg));
+						lineNumberTable, lineGen, insnList, cfg, isAppClass));
 				visitedLines.add(lineGen.getSourceLine());
 			}
 		}
@@ -179,7 +179,7 @@ public class TraceInstrumenter {
 		/* class does not include line number */
 		if (visitedLines.isEmpty()) {
 			String loc = classGen.getClassName() + "." + method.getName();
-			lineInsnInfos.add(new UnknownLineInstructionInfo(loc, constPool, insnList));
+			lineInsnInfos.add(new UnknownLineInstructionInfo(loc, constPool, insnList, isAppClass));
 		}
 		int startLine = Integer.MAX_VALUE;
 		int endLine = AgentConstants.UNKNOWN_LINE;

@@ -17,6 +17,7 @@ import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableInstruction;
+import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Type;
@@ -37,19 +38,21 @@ public class LineInstructionInfo {
 	protected List<InstructionHandle> returnInsns;
 	private List<InstructionHandle> exitInsns;
 	
-	LineInstructionInfo() {
-		
+	public LineInstructionInfo() {
+		// 
 	}
 	
+	
 	public LineInstructionInfo(String locId, LocalVariableTable localVariableTable, ConstantPoolGen constPool, 
-			LineNumberTable lineNumberTable, LineNumberGen lineGen, InstructionList insnList, CFG cfg) {
+			LineNumberTable lineNumberTable, LineNumberGen lineGen, InstructionList insnList, CFG cfg,
+			boolean isAppClass) {
 		this.line = lineGen.getSourceLine();
 		this.lineNumberInsn = lineGen.getInstruction();
 		this.localVarTable = localVariableTable;
 		this.constPool = constPool;
 		this.lineNumberTable = lineNumberTable;
 		lineInsns = findCorrespondingInstructions(insnList, lineNumberTable, lineGen.getSourceLine());
-		rwInsructionInfo = extractRWInstructions(locId);
+		rwInsructionInfo = extractRWInstructions(locId, isAppClass);
 		invokeInsns = extractInvokeInstructions(lineInsns);
 		returnInsns = extractReturnInstructions(lineInsns);
 		exitInsns = extractExitInsns(cfg, lineInsns);
@@ -72,10 +75,22 @@ public class LineInstructionInfo {
 		return rwInsructionInfo;
 	}
 
-	protected List<RWInstructionInfo> extractRWInstructions(String locId) {
+	protected List<RWInstructionInfo> extractRWInstructions(String locId, boolean isAppClass) {
 		List<RWInstructionInfo> rwInsns = new ArrayList<>();
 		for (InstructionHandle insnHandler : lineInsns) {
 			Instruction insn = insnHandler.getInstruction();
+			/* filter instrumentation
+			 * For external libraries, only store for the case of 
+			 * Written Fields or ArrayElement.
+			 *  */
+			if (!(isAppClass || (insn instanceof PUTFIELD) || ((insn instanceof ArrayInstruction) 
+					&& existIn(insn.getOpcode(), Const.AASTORE, Const.FASTORE,
+							Const.LASTORE, Const.CASTORE, Const.IASTORE, 
+							Const.BASTORE, Const.SASTORE, Const.DASTORE)))) {
+				continue;
+			}
+			
+			/* collect instruction info */
 			if (insn instanceof FieldInstruction) {
 				FieldInstruction fieldInsn = (FieldInstruction) insn;
 				ReferenceType refType = fieldInsn.getReferenceType(constPool);

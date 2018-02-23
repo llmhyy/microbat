@@ -65,6 +65,7 @@ public class FilterChecker implements IFilterChecker {
 	}
 	@Override
 	public boolean checkTransformable(String classFName, String path, boolean isBootstrap) {
+		boolean match = false;
 		if (isBootstrap) {
 			if (bootstrapIncludes.contains(classFName)) {
 				return true;
@@ -75,31 +76,33 @@ public class FilterChecker implements IFilterChecker {
 			if (file.isFile()) {
 				for (String extLib : extLibs) {
 					if (path.startsWith(extLib)) {
-						return true;
+						match = true;
+						break;
 					}
 				}
 			} else {
 				for (String binFolder : appBinFolders) {
 					if (binFolder.equals(path)) {
+						match = true;
 						includes.add(classFName);
-						return true;
+						break;
 					}
 				}
 			}
 		}
-		boolean match = matchExtIncludes(classFName);
+		match = matchExtIncludes(classFName, match);
 		if (match && isBootstrap) {
 			bootstrapIncludes.add(classFName);
 		}
 		return match;
 	}
 	
-	private boolean matchExtIncludes(String classFName) {
-		if (extIncludesMatcher == null) {
-			return false;
-		}
+	private boolean matchExtIncludes(String classFName, boolean match) {
 		String className = classFName.replace("/", ".");
-		boolean match = extIncludesMatcher.matches(className);
+		if (!match && (extIncludesMatcher != null)) {
+			match = extIncludesMatcher.matches(className);
+		}
+		
 		if (extExcludesMatcher != null) {
 			match &= !extExcludesMatcher.matches(className);
 		}
