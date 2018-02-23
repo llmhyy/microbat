@@ -334,7 +334,13 @@ public class ExecutionTracer implements IExecutionTracer {
 			_hitLine(line, className, methodSignature);
 			String returnGeneralType = SignatureUtils.signatureToName(returnGeneralTypeSign);
 			Variable returnVar = new VirtualVar(methodSignature, returnGeneralType);
-			String varID = VirtualVar.VIRTUAL_PREFIX + methodSignature;
+			String varID = null;
+			if(PrimitiveUtils.isPrimitive(returnGeneralType)){
+				varID = VirtualVar.VIRTUAL_PREFIX + methodSignature;
+			}
+			else{
+				varID = TraceUtils.getObjectVarId(returnObj, returnGeneralTypeSign);
+			}
 			returnVar.setVarID(varID);
 			VarValue returnVal = appendVarValue(returnObj, returnVar, null);
 			if (returnVal != null) {
@@ -419,7 +425,7 @@ public class ExecutionTracer implements IExecutionTracer {
 					return;
 				}
 			}
-			String parentVarId = TraceUtils.getObjectVarId(refValue);
+			String parentVarId = TraceUtils.getObjectVarId(refValue, refValue.getClass().getName());
 			String fieldVarId = TraceUtils.getFieldVarId(parentVarId, fieldName, fieldType, fieldValue);
 			Variable var = new FieldVar(false, fieldName, fieldType, refValue.getClass().getName());
 			var.setVarID(fieldVarId);
@@ -500,7 +506,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				}
 			}
 			_hitLine(line, className, methodSignature);
-			String parentVarId = TraceUtils.getObjectVarId(refValue);
+			String parentVarId = TraceUtils.getObjectVarId(refValue, refValue.getClass().getName());
 			String fieldVarId = TraceUtils.getFieldVarId(parentVarId, fieldName, fieldType, fieldValue);
 			//		invokeTrack.updateRelevant(parentVarId, fieldVarId);
 			//		if (exclusive) {
@@ -689,7 +695,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	private VarValue addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType, int line,
 			boolean write) {
-		String id = new StringBuilder(TraceUtils.getObjectVarId(arrayRef)).append("[").append(index).append("]").toString();
+		String id = new StringBuilder(TraceUtils.getObjectVarId(arrayRef, elementType+"[]")).append("[").append(index).append("]").toString();
 		String name = id;
 		Variable var = new ArrayElementVar(name, elementType, id);
 		var.setVarID(id);

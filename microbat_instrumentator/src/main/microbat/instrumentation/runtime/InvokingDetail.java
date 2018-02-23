@@ -25,13 +25,13 @@ public class InvokingDetail {
 			return false;
 		}
 		
-		String objectVarId = TraceUtils.getObjectVarId(refValue);
+		String objectVarId = TraceUtils.getObjectVarId(refValue, fieldType);
 		boolean relevant = relevantVars.contains(objectVarId);
 		if (!relevant && (node.getBreakPoint().getClassCanonicalName().equals(refValue.getClass().getName()))) {
 			relevant = true;
 		}
 		if (relevant && !PrimitiveUtils.isPrimitive(fieldType)) {
-			relevantVars.add(TraceUtils.getObjectVarId(fieldValue));
+			relevantVars.add(TraceUtils.getObjectVarId(fieldValue, fieldType));
 		}
 		return relevant;
 	}
@@ -40,11 +40,11 @@ public class InvokingDetail {
 		if (relevantVars == null) {
 			relevantVars = new HashSet<>();
 			if (invokeObj != null) {
-				relevantVars.add(TraceUtils.getObjectVarId(invokeObj));
+				relevantVars.add(TraceUtils.getObjectVarId(invokeObj, invokeObj.getClass().getName()));
 			}
 			for (int i = 0; i < argType.length; i++) {
 				if (!PrimitiveUtils.isPrimitive(argType[i])) {
-					relevantVars.add(TraceUtils.getObjectVarId(args[i]));
+					relevantVars.add(TraceUtils.getObjectVarId(args[i], argType[i]));
 				}
 			}
 		}

@@ -8,9 +8,9 @@ import microbat.util.PrimitiveUtils;
 public class TraceUtils {
 	private TraceUtils(){}
 	
-	public static String getObjectVarId(Object refValue) {
+	public static String getObjectVarId(Object refValue, String type) {
 		if (refValue == null) {
-			return "null";
+			return type + "_null";
 		}
 		return String.valueOf(getUniqueId(refValue));
 	}
@@ -30,7 +30,7 @@ public class TraceUtils {
 		if (PrimitiveUtils.isPrimitive(fieldType)) {
 			return Variable.concanateFieldVarID(parentVarId, fieldName);
 		}
-		return getObjectVarId(fieldValue);
+		return getObjectVarId(fieldValue, fieldType);
 	}
 	
 	public static String getLocalVarId(String className, int startLine, int endLine, 
@@ -38,14 +38,14 @@ public class TraceUtils {
 		if (PrimitiveUtils.isPrimitive(varType)) {
 			return Variable.concanateLocalVarID(className, varName, startLine, endLine);
 		}
-		return getObjectVarId(varValue);
+		return getObjectVarId(varValue, varType);
 	}
 
 	public static String getArrayElementVarId(String parentVarId, int index, String elementType, Object eleValue) {
 		if (PrimitiveUtils.isPrimitive(elementType)) {
 			return Variable.concanateArrayElementVarID(parentVarId, String.valueOf(index));
 		}
-		return getObjectVarId(eleValue);
+		return getObjectVarId(eleValue, elementType);
 	}
 	
 	private static final String ARG_TYPE_SEPARATOR = ":";
