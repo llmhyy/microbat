@@ -26,5 +26,13 @@ public class VariableSimilarity {
 		this.isSameArrayIndex = isSameArrayIndex;
 	}
 	
-	
+	public double computeSimilarity(VariableSimilarity vs){
+		double numerator = isSameLocalVarType*vs.isSameLocalVarType + isSameLocalVarName*vs.isSameLocalVarName +
+				isSameFieldParent*vs.isSameFieldParent + isSameFieldType*vs.isSameFieldType +
+				isSameFieldName*vs.isSameFieldName + isSameArrayParent*vs.isSameArrayParent +
+				isSameArrayType*vs.isSameArrayType + isSameArrayIndex*vs.isSameArrayIndex;
+		double demoninator = 7;
+		
+		return numerator/demoninator;
+	}
 }

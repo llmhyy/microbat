@@ -16,15 +16,37 @@ public class VariableSimilarityCalculator {
 		this.missingAssignValue = missingAssignVar;
 	}
 	
-	public List<VariableSimilarity> calculateVarSimilarity(TraceNode node){
+	public VariableSimilarity[] calculateVarSimilarity(TraceNode node){
+		VariableSimilarity[] vs = new VariableSimilarity[2];
 		
-		for(VarValue readVar: node.getReadVariables()){
-			
-		}
+		VariableSimilarity readVS = findVariableSimilarity(node.getReadVariables());
+		vs[0] = readVS;
 		
-		return null;
+		VariableSimilarity writtenVS = findVariableSimilarity(node.getWrittenVariables());
+		vs[1] = writtenVS;
+		
+		return vs;
 	}
 	
+	private VariableSimilarity findVariableSimilarity(List<VarValue> variables) {
+		VariableSimilarity vs = new VariableSimilarity(0, 0, 0, 0, 0, 0, 0, 0);
+		if(variables.isEmpty()){
+			return vs;
+		}
+		
+		double bestSim = 0;
+		for(VarValue value: variables){
+			VariableSimilarity tmp = calculateVarSimilarity(value);
+			double sim = tmp.computeSimilarity(vs);
+			if(sim > bestSim){
+				bestSim = sim;
+				vs = tmp;
+			}
+		}
+		
+		return vs;
+	}
+
 	private VariableSimilarity calculateVarSimilarity(VarValue value){
 		Variable var = value.getVariable();
 		Variable missingAssignVar = this.missingAssignValue.getVariable();
