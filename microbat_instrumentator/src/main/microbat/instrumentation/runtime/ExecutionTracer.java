@@ -600,9 +600,13 @@ public class ExecutionTracer implements IExecutionTracer {
 			Variable var = new LocalVar(varName, varType, className, line);
 			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
 			var.setVarID(varID);
-			VarValue value = appendVarValue(varValue, var, null);
+			
+			Variable varBefore = var.clone();
+			VarValue value = appendVarValue(varValue, varBefore, null);
 			addRWriteValue(value, false); // add read var
-			VarValue writtenValue = appendVarValue(varValueAfter, var, null);
+			
+			Variable varAfter = var.clone();
+			VarValue writtenValue = appendVarValue(varValueAfter, varAfter, null);
 			addRWriteValue(writtenValue, true); // add written var
 		} catch (Throwable t) {
 			handleException(t);
