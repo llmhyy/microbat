@@ -244,7 +244,8 @@ public class TraceInstrumenter {
 			/* instrument Invocation instructions */
 			InstructionFactory instructionFactory = new InstructionFactory(classGen, constPool);
 			for (InstructionHandle insn : lineInfo.getInvokeInstructions()) {
-				injectCodeTracerInvokeMethod(methodGen, insnList, constPool, instructionFactory, tracerVar, insn, line, classNameVar, methodSigVar);
+				injectCodeTracerInvokeMethod(methodGen, insnList, constPool, instructionFactory, tracerVar, insn, line,
+						classNameVar, methodSigVar, isAppClass);
 			}
 			/* instrument Return instructions */
 			for (InstructionHandle insn : lineInfo.getReturnInsns()) {
@@ -386,7 +387,7 @@ public class TraceInstrumenter {
 
 	private void injectCodeTracerInvokeMethod(MethodGen methodGen, InstructionList insnList, ConstantPoolGen constPool,
 			InstructionFactory instructionFactory, LocalVariableGen tracerVar, InstructionHandle insnHandler,
-			int line, LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
+			int line, LocalVariableGen classNameVar, LocalVariableGen methodSigVar, boolean isAppClass) {
 		InvokeInstruction insn = (InvokeInstruction) insnHandler.getInstruction();
 		String className = insn.getClassName(constPool);
 
@@ -489,14 +490,16 @@ public class TraceInstrumenter {
 		insertInsnHandler(insnList, newInsns, insnHandler);
 		newInsns.dispose();
 		/* after */
-		newInsns = new InstructionList();
-		newInsns.append(new ALOAD(tracerVar.getIndex()));
-		newInsns.append(new PUSH(constPool, line));
-		newInsns.append(new ALOAD(classNameVar.getIndex()));
-		newInsns.append(new ALOAD(methodSigVar.getIndex()));
-		appendTracerMethodInvoke(newInsns, TracerMethods.AFTER_INVOKE, constPool);
-		appendInstruction(insnList, insnHandler, newInsns);
-		newInsns.dispose();
+		if (isAppClass) {
+			newInsns = new InstructionList();
+			newInsns.append(new ALOAD(tracerVar.getIndex()));
+			newInsns.append(new PUSH(constPool, line));
+			newInsns.append(new ALOAD(classNameVar.getIndex()));
+			newInsns.append(new ALOAD(methodSigVar.getIndex()));
+			appendTracerMethodInvoke(newInsns, TracerMethods.AFTER_INVOKE, constPool);
+			appendInstruction(insnList, insnHandler, newInsns);
+			newInsns.dispose();
+		}
 	}
 
 	private InstructionList getInjectCodeTracerRWriteField(ConstantPoolGen constPool, LocalVariableGen tracerVar,
