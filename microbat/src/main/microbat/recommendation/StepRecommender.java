@@ -405,16 +405,20 @@ public class StepRecommender {
 		 *
 		 */
 		TraceNode suspiciousNode = trace.getProducer(wrongVarID);
-		String parentVarID = wrongVarID;
-		while(suspiciousNode == null){
-			parentVarID = VariableUtil.generateSimpleParentVariableID(parentVarID);
-			/** It means that the wrong variable ID has a parent*/
-			if(parentVarID != null){
-				suspiciousNode = trace.getLatestProducerBySimpleVarIDForm(currentNode.getOrder(), parentVarID);
-			}
-			else{
-				return currentNode;			
-			}
+//		String parentVarID = wrongVarID;
+//		while(suspiciousNode == null){
+//			parentVarID = VariableUtil.generateSimpleParentVariableID(parentVarID);
+//			/** It means that the wrong variable ID has a parent*/
+//			if(parentVarID != null){
+//				suspiciousNode = trace.getLatestProducerBySimpleVarIDForm(currentNode.getOrder(), parentVarID);
+//			}
+//			else{
+//				return currentNode;			
+//			}
+//		}
+		
+		if(suspiciousNode==null){
+			return currentNode;
 		}
 		
 		if(userFeedBackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)){

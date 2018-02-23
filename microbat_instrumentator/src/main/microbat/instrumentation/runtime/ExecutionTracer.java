@@ -83,6 +83,10 @@ public class ExecutionTracer implements IExecutionTracer {
 		StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
 		if(entry == null){
 			entry = new StepVariableRelationEntry(varID);
+			if(!order.equals("0")){
+				TraceNode producer = trace.getTraceNode(Integer.valueOf(order));
+				entry.addProducer(producer);
+			}
 		}
 		if(rw.equals(Variable.READ)){
 			entry.addConsumer(currentNode);
