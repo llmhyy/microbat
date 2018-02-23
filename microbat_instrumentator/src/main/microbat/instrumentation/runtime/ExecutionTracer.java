@@ -195,20 +195,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void enterMethod(String className, String methodSignature, int methodStartLine, int methodEndLine, 
 			String paramTypeSignsCode, String paramNamesCode, Object[] params) {
 		locker.lock();
-		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
-		
 		TraceNode latestNode = trace.getLatestNode();
-		if (!exclusive) {
-			if(latestNode!=null){
-				methodCallStack.push(latestNode);
-			}
-			_hitLine(methodStartLine, className, methodSignature);
-		} else {
-			locker.unLock();
-			return;
-		}
 		
-		latestNode = trace.getLatestNode();
 		if(latestNode!=null){
 			int varScopeStart = methodStartLine;
 			int varScopeEnd = methodEndLine;
@@ -229,6 +217,17 @@ public class ExecutionTracer implements IExecutionTracer {
 					addRWriteValue(value, true);
 				}
 			}
+		}
+		
+		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+		if (!exclusive) {
+			if(latestNode!=null){
+				methodCallStack.push(latestNode);
+			}
+			_hitLine(methodStartLine, className, methodSignature);
+		} else {
+			locker.unLock();
+			return;
 		}
 		locker.unLock();
 	}
