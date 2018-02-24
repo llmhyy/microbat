@@ -3,8 +3,6 @@ package microbat.instrumentation.runtime;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,12 +140,6 @@ public class ExecutionTracer implements IExecutionTracer {
 				boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(objClass);
 				if (needParseFields) {
 					List<Field> allFields = CollectionUtils.toArrayList(objClass.getDeclaredFields());
-					Collections.sort(allFields, new Comparator<Field>() {
-						@Override
-						public int compare(Field o1, Field o2) {
-							return o1.getName().compareTo(o2.getName());
-						}
-					});
 					for (Field field : allFields) {
 						field.setAccessible(true);
 						try {
