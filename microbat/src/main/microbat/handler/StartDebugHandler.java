@@ -92,7 +92,7 @@ public class StartDebugHandler extends AbstractHandler {
 						
 						InstrumentationExecutor exectuor = new InstrumentationExecutor(appClassPath);
 						
-						final Trace trace = exectuor.run();
+						final Trace trace = exectuor.run(false);
 						trace.setAppJavaClassPath(appClassPath);
 						
 						monitor.worked(80);

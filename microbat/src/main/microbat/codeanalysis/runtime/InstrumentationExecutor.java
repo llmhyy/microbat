@@ -29,7 +29,7 @@ public class InstrumentationExecutor {
 	}
 	
 	
-	public Trace run(){
+	public Trace run(boolean isPrecheck){
 		String jarPath = appPath.getAgentLib();
 		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath);
 		VMConfiguration config = new VMConfiguration();
@@ -51,6 +51,7 @@ public class InstrumentationExecutor {
 		agentRunner.addAgentParam(AgentParams.OPT_JAVA_HOME, config.getJavaHome());
 		agentRunner.addAgentParam(AgentParams.OPT_CLASS_PATH, config.getClasspathStr());
 		agentRunner.addAgentParam(AgentParams.OPT_WORKING_DIR, config.getWorkingDirectory());
+		agentRunner.addAgentParam(AgentParams.OPT_PRECHECK, String.valueOf(isPrecheck));
 		/* build includes & excludes params */
 		agentRunner.addAgentParam(AgentParams.OPT_INCLUDES,
 				StringUtils.join(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR,
