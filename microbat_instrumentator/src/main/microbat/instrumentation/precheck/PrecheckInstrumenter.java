@@ -1,0 +1,189 @@
+package microbat.instrumentation.precheck;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.bcel.classfile.ClassParser;
+import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.ALOAD;
+import org.apache.bcel.generic.ASTORE;
+import org.apache.bcel.generic.ClassGen;
+import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.INVOKESTATIC;
+import org.apache.bcel.generic.INVOKEVIRTUAL;
+import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.LineNumberGen;
+import org.apache.bcel.generic.LocalVariableGen;
+import org.apache.bcel.generic.MethodGen;
+import org.apache.bcel.generic.PUSH;
+import org.apache.bcel.generic.Type;
+
+import microbat.instrumentation.instr.AbstraceInstrumenter;
+
+public class PrecheckInstrumenter extends AbstraceInstrumenter {
+	private static final String MEASUREMENT_VAR_NAME = "$tracerMs";
+
+	public byte[] instrument(String classFName, byte[] classfileBuffer) throws Exception {
+		ClassParser cp = new ClassParser(new java.io.ByteArrayInputStream(classfileBuffer), classFName);
+		JavaClass jc = cp.parse();
+		// First, make sure we have to instrument this class:
+		if (!jc.isClass()) {
+			// could be an interface
+			return null;
+		}
+		ClassGen classGen = new ClassGen(jc);
+		ConstantPoolGen constPool = classGen.getConstantPool();
+		JavaClass newJC = null;
+		for (Method method : jc.getMethods()) {
+			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
+				continue; // Only instrument methods with code in them!
+			}
+			
+			try {
+				boolean changed = false;
+				MethodGen methodGen = new MethodGen(method, classFName, constPool);
+				changed = instrumentMethod(classGen, constPool, methodGen, method);
+				if (changed) {
+					// All changes made, so finish off the method:
+					InstructionList instructionList = methodGen.getInstructionList();
+					instructionList.setPositions();
+					methodGen.setMaxStack();
+					methodGen.setMaxLocals();
+					classGen.replaceMethod(method, methodGen.getMethod());
+				}
+				newJC = classGen.getJavaClass();
+				newJC.setConstantPool(constPool.getFinalConstantPool());
+			} catch (Exception e) {
+				System.err.println(String.format("Error when instrumenting: %s.%s", classFName, method.getName()));
+				e.printStackTrace();
+			}
+		}
+		if (newJC != null) {
+			byte[] data = newJC.getBytes();
+			return data;
+		}
+		return null;
+	}
+
+	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method) {
+		InstructionList insnList = methodGen.getInstructionList();
+
+		Set<Integer> visitedLines = new HashSet<>();
+		List<LineNumberGen> lineInsnInfos = new ArrayList<>();
+		for (LineNumberGen lineGen : methodGen.getLineNumbers()) {
+			if (!visitedLines.contains(lineGen.getSourceLine())) {
+				lineInsnInfos.add(lineGen);
+				visitedLines.add(lineGen.getSourceLine());
+			}
+		}
+		InstructionHandle startInsn = insnList.getStart();
+		if (startInsn == null || visitedLines.isEmpty()) {
+			// empty method
+			return false;
+		}
+		
+		LocalVariableGen classNameVar = createLocalVariable(CLASS_NAME, methodGen, constPool);
+		LocalVariableGen methodSigVar = createLocalVariable(METHOD_SIGNATURE, methodGen, constPool);
+		LocalVariableGen tracerVar = methodGen.addLocalVariable(MEASUREMENT_VAR_NAME,
+				Type.getType(TraceMeasurement.class), insnList.getStart(), insnList.getEnd());
+
+		for (LineNumberGen lineInfo : lineInsnInfos) {
+			injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getSourceLine(),
+						lineInfo.getInstruction(), classNameVar, methodSigVar);
+		}
+		injectCodeInitMeasurement(methodGen, constPool, classNameVar, methodSigVar, tracerVar);
+		return true;
+	}
+
+	private void injectCodeTracerHitLine(InstructionList insnList, ConstantPoolGen constPool,
+			LocalVariableGen tracerVar, int sourceLine, InstructionHandle lineNumberInsn, LocalVariableGen classNameVar,
+			LocalVariableGen methodSigVar) {
+		InstructionList newInsns = new InstructionList();
+		newInsns.append(new ALOAD(tracerVar.getIndex()));
+		newInsns.append(new PUSH(constPool, sourceLine));
+		newInsns.append(new ALOAD(classNameVar.getIndex()));
+		newInsns.append(new ALOAD(methodSigVar.getIndex()));
+		appendTracerMethodInvoke(newInsns, MeasurementMethods.HIT_LINE, constPool, false);
+		insertInsnHandler(insnList, newInsns, lineNumberInsn);
+		newInsns.dispose();
+	}
+
+	private LocalVariableGen injectCodeInitMeasurement(MethodGen methodGen, ConstantPoolGen constPool,
+			LocalVariableGen classNameVar, LocalVariableGen methodSigVar, LocalVariableGen tracerVar) {
+		InstructionList insnList = methodGen.getInstructionList();
+		InstructionHandle startInsn = insnList.getStart();
+		if (startInsn == null) {
+			return null;
+		}
+		
+		InstructionList newInsns = new InstructionList();
+		/* store classNameVar */
+		String className = methodGen.getClassName();
+		className = className.replace("/", ".");
+		newInsns.append(new PUSH(constPool, className));
+		newInsns.append(new ASTORE(classNameVar.getIndex()));
+		
+		/* store methodSignVar */
+		String sig = methodGen.getSignature();
+		String methodName = methodGen.getName();
+		String mSig = className + "#" + methodName + sig;
+		newInsns.append(new PUSH(constPool, mSig));
+		newInsns.append(new ASTORE(methodSigVar.getIndex())); 
+		
+		/* invoke _getTracer()  */
+		newInsns.append(new ALOAD(classNameVar.getIndex())); // startTracing, className
+		newInsns.append(new ALOAD(methodSigVar.getIndex())); // startTracing, className, String methodSig
+		appendTracerMethodInvoke(newInsns, MeasurementMethods.GET_TRACER, constPool, true);
+		InstructionHandle tracerStartPos = newInsns.append(new ASTORE(tracerVar.getIndex()));
+		tracerVar.setStart(tracerStartPos);
+		insertInsnHandler(insnList, newInsns, startInsn);
+		newInsns.dispose();
+		return tracerVar;
+	}
+	
+	private void appendTracerMethodInvoke(InstructionList newInsns, MeasurementMethods method,
+			ConstantPoolGen constPool, boolean isStatic) {
+		if (isStatic) {
+			int index = constPool.addMethodref(method.getDeclareClass(), method.getMethodName(),
+					method.getMethodSign());
+			newInsns.append(new INVOKESTATIC(index));
+
+		} else {
+			int index = constPool.addInterfaceMethodref(method.getDeclareClass(), method.getMethodName(),
+					method.getMethodSign());
+			newInsns.append(new INVOKEVIRTUAL(index));
+		}
+	}
+	
+	private enum MeasurementMethods {
+		GET_TRACER("microbat/instrumentation/precheck/TraceMeasurement", "_getTracer", "(Ljava/lang/String;Ljava/lang/String;)Lmicrobat/instrumentation/precheck/TraceMeasurement;"),
+		HIT_LINE("microbat/instrumentation/precheck/TraceMeasurement", "_hitLine", "(ILjava/lang/String;Ljava/lang/String;)V")
+	
+		;
+		private String declareClass;
+		private String methodName;
+		private String methodSign;
+
+		private MeasurementMethods(String declareClass, String methodName, String methodSign) {
+			this.declareClass = declareClass;
+			this.methodName = methodName;
+			this.methodSign = methodSign;
+		}
+
+		public String getDeclareClass() {
+			return declareClass;
+		}
+
+		public String getMethodName() {
+			return methodName;
+		}
+
+		public String getMethodSign() {
+			return methodSign;
+		}
+	}
+}

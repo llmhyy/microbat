@@ -662,14 +662,12 @@ public class ExecutionTracer implements IExecutionTracer {
 			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
 				TraceNode latestNode = trace.getLatestNode();
+				boolean relevant = false;
 				if (latestNode != null && latestNode.getInvokingDetail() != null) {
 					InvokingDetail invokingDetail = latestNode.getInvokingDetail();
-					boolean relevant = invokingDetail.updateRelevantVar(arrayRef, eleValue, elementType);
-					if (!relevant) {
-						locker.unLock();
-						return;
-					}
-				} else {
+					relevant = invokingDetail.updateRelevantVar(arrayRef, eleValue, elementType);
+				} 
+				if (!relevant) {
 					locker.unLock();
 					return;
 				}
@@ -677,7 +675,6 @@ public class ExecutionTracer implements IExecutionTracer {
 			_hitLine(line, className, methodSignature);
 			VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
 			addRWriteValue(value, true);
-			//		invokeTrack.addWrittenValue(value);
 		} catch (Throwable t) {
 			handleException(t);
 		}

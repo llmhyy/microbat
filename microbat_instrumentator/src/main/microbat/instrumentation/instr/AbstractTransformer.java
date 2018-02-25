@@ -33,7 +33,7 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 	protected abstract byte[] doTransform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException;
 		
-	private void log(byte[] data, String className, boolean dump) {
+	public static void log(byte[] data, String className, boolean dump) {
 		if (data == null) {
 			return;
 		}

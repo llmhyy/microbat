@@ -7,19 +7,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import microbat.instrumentation.AgentUtils;
 import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.model.trace.Trace;
 
 public class TraceFileRecorder {
 	private File file;
 
-	public TraceFileRecorder(final String fileName) throws FileNotFoundException {
-		File file = new File(fileName);
-		final File folder = file.getParentFile();
-		if (folder != null) {
-			folder.mkdirs();
-		}
-		this.file = file;
+	public TraceFileRecorder(String filePath) throws FileNotFoundException {
+		file = AgentUtils.getFileCreateIfNotExist(filePath);
 	}
 
 	public void writeTrace(String message, Trace trace, final boolean append) throws IOException {

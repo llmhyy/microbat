@@ -24,7 +24,6 @@ public class InstrumentationExecutor {
 	private AppJavaClassPath appPath;
 	
 	
-	
 	public InstrumentationExecutor(AppJavaClassPath appPath){
 		this.appPath = appPath;
 	}
@@ -61,6 +60,9 @@ public class InstrumentationExecutor {
 						(Object[]) AnalysisScopePreference.getExcludedLibs()));
 		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
 		try {
+			agentRunner.precheck(config);
+			System.out.println(agentRunner.getPrecheckInfo());
+			
 			agentRunner.runWithDumpFileOption(config, generateTraceFilePath());
 		} catch (SavException e1) {
 			e1.printStackTrace();

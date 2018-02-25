@@ -22,7 +22,6 @@ import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ArrayType;
 import org.apache.bcel.generic.BasicType;
 import org.apache.bcel.generic.ClassGen;
-import org.apache.bcel.generic.ClassGenException;
 import org.apache.bcel.generic.CodeExceptionGen;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.DUP;
@@ -76,11 +75,10 @@ import microbat.instrumentation.runtime.IExecutionTracer;
 import microbat.instrumentation.runtime.TraceUtils;
 import sav.common.core.utils.StringUtils;
 
-public class TraceInstrumenter {
+public class TraceInstrumenter extends AbstraceInstrumenter {
 	private static final String TRACER_VAR_NAME = "$tracer"; // local var
 	private static final String TEMP_VAR_NAME = "$tempVar"; // local var
-	private static final String CLASS_NAME = "$className"; // local var
-	private static final String METHOD_SIGNATURE = "$methodSignature"; // local var
+	
 	private BasicTypeSupporter basicTypeSupporter = new BasicTypeSupporter();
 	private int tempVarIdx = 0;
 	private EntryPoint entryPoint;
@@ -127,7 +125,7 @@ public class TraceInstrumenter {
 				newJC = classGen.getJavaClass();
 				newJC.setConstantPool(constPool.getFinalConstantPool());
 			} catch (Exception e) {
-				System.err.println(String.format("Error when instrumenting: %s.%s", classFName, method.getName()));
+				System.err.println(String.format("Error when run instrumentation: %s.%s", classFName, method.getName()));
 				e.printStackTrace();
 			}
 		}
@@ -194,10 +192,10 @@ public class TraceInstrumenter {
 		if (startLine == Integer.MAX_VALUE) {
 			startLine = AgentConstants.UNKNOWN_LINE;
 		}
-		LocalVariableGen classNameVar = createLocalVariable(CLASS_NAME, methodGen, constPool, startLine);
-		LocalVariableGen methodSigVar = createLocalVariable(METHOD_SIGNATURE, methodGen, constPool, startLine);
-		LocalVariableGen tracerVar = injectCodeInitTracer(methodGen, constPool, startLine, endLine, isAppClass, classNameVar,
-				methodSigVar, startTracing);
+		LocalVariableGen classNameVar = createLocalVariable(CLASS_NAME, methodGen, constPool);
+		LocalVariableGen methodSigVar = createLocalVariable(METHOD_SIGNATURE, methodGen, constPool);
+		LocalVariableGen tracerVar = methodGen.addLocalVariable(TRACER_VAR_NAME, Type.getType(IExecutionTracer.class),
+				insnList.getStart(), insnList.getEnd());
 
 		for (LineInstructionInfo lineInfo : lineInsnInfos) {
 			/* instrument RW instructions */
@@ -228,11 +226,10 @@ public class TraceInstrumenter {
 						insertInsnHandler(insnList, newInsns, insnHandler);
 						newInsns.dispose();
 					} else {
-						InstructionHandle pos = insertInsnHandler(insnList, newInsns, insnHandler);
+						insertInsnHandler(insnList, newInsns, insnHandler);
 						try {
 							updateExceptionTable(insnHandler, insnHandler.getPrev(), insnHandler.getNext());
 							insnList.delete(insnHandler);
-//							updateTargeters(insnHandler, pos);
 						} catch (TargetLostException e) {
 							e.printStackTrace();
 						}
@@ -261,68 +258,16 @@ public class TraceInstrumenter {
 
 			lineInfo.dispose();
 		}
+		injectCodeInitTracer(methodGen, constPool, startLine, endLine, isAppClass, classNameVar,
+				methodSigVar, startTracing, tracerVar);
 		return true;
-	}
-
-	private LocalVariableGen createLocalVariable(String varName, MethodGen methodGen, ConstantPoolGen constPool,
-			int startLine) {
-		InstructionList list = methodGen.getInstructionList();
-		LocalVariableGen varGen = methodGen.addLocalVariable(varName, Type.STRING, list.getStart(), list.getEnd());
-		return varGen;
 	}
 
 	private void appendInstruction(InstructionList insnList, InstructionHandle insnHandler, InstructionList newInsns) {
 		updateExceptionTable(insnHandler, insnHandler, newInsns.getEnd());
-		InstructionHandle pos = insnList.append(insnHandler, newInsns);
-//		updateTargeters(insnHandler, pos);
+		insnList.append(insnHandler, newInsns);
 	}
 
-	private InstructionHandle insertInsnHandler(InstructionList insnList, InstructionList newInsns,
-			InstructionHandle insnHandler) {
-		updateExceptionTable(insnHandler, newInsns.getStart(), insnHandler);
-		InstructionHandle pos = insnList.insert(insnHandler, newInsns);
-//		updateTargeters(insnHandler, pos);
-		return pos;
-	}
-	
-	private static void updateExceptionTable(InstructionHandle oldPos, InstructionHandle newStart,
-			InstructionHandle newEnd) {
-		InstructionTargeter[] itList = oldPos.getTargeters();
-		if (itList != null) {
-			for (InstructionTargeter it : itList) {
-				if (it instanceof CodeExceptionGen) {
-					CodeExceptionGen exception = (CodeExceptionGen)it;
-					if (exception.getStartPC() == oldPos) {
-						exception.setStartPC(newStart);
-					}
-					if (exception.getEndPC() == oldPos) {
-						exception.setEndPC(newEnd);
-					}
-					if (exception.getHandlerPC() == oldPos) {
-						exception.setHandlerPC(newStart);
-					}
-				} else if (it instanceof LocalVariableGen) {
-					LocalVariableGen localVarGen = (LocalVariableGen) it;
-					boolean targeted = false;
-					if (localVarGen.getStart() == oldPos) {
-						targeted = true;
-						localVarGen.setStart(newStart);
-					}
-					if (localVarGen.getEnd() == oldPos) {
-						targeted = true;
-						localVarGen.setEnd(newEnd);
-					}
-					if (!targeted) {
-						throw new ClassGenException("Not targeting " + oldPos + ", but {" + localVarGen.getStart()
-								+ ", " + localVarGen.getEnd() + "}");
-					}
-				} else {
-					it.updateTarget(oldPos, newStart);
-				}
-			}
-		}
-	}
-	
 	private void injectCodeTracerExit(InstructionHandle exitInsHandle, InstructionList insnList, 
 			ConstantPoolGen constPool, LocalVariableGen tracerVar, int line, LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
 		InstructionList newInsns = new InstructionList();
@@ -914,14 +859,14 @@ public class TraceInstrumenter {
 	}
 
 	private LocalVariableGen injectCodeInitTracer(MethodGen methodGen, ConstantPoolGen constPool, int methodStartLine,
-			int methodEndLine, boolean isAppClass, LocalVariableGen classNameVar, LocalVariableGen methodSigVar, boolean startTracing) {
+			int methodEndLine, boolean isAppClass, LocalVariableGen classNameVar, LocalVariableGen methodSigVar,
+			boolean startTracing, LocalVariableGen tracerVar) {
 		InstructionList insnList = methodGen.getInstructionList();
 		InstructionHandle startInsn = insnList.getStart();
 		if (startInsn == null) {
 			return null;
 		}
-		LocalVariableGen tracerVar = methodGen.addLocalVariable(TRACER_VAR_NAME, Type.getType(IExecutionTracer.class),
-				insnList.getStart(), insnList.getEnd());
+		
 		InstructionList newInsns = new InstructionList();
 		if (startTracing) {
 			appendTracerMethodInvoke(newInsns, TracerMethods.START, constPool);

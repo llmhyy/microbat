@@ -27,13 +27,7 @@ public class Agent {
 		final StopTimer timer = new StopTimer("Trace Construction");
 		timer.newPoint("Execution");
 		/* init filter */
-		AppJavaClassPath appPath = new AppJavaClassPath();
-		appPath.setLaunchClass(agentParams.getLaunchClass());
-		appPath.setJavaHome(agentParams.getJavaHome());
-		for(String cp: agentParams.getClassPaths()){
-			appPath.addClasspath(cp);
-		}
-		appPath.setWorkingDirectory(agentParams.getWorkingDirectory());
+		AppJavaClassPath appPath = agentParams.initAppClassPath();
 		FilterChecker.setup(appPath, agentParams.getIncludesExpression(), agentParams.getExcludesExpression());
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();

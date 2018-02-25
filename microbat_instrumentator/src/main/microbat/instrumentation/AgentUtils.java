@@ -5,7 +5,25 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import sav.common.core.SavRtException;
+
 public class AgentUtils {
+	
+	public static File getFileCreateIfNotExist(String path) {
+		File file = new File(path);
+		if (!file.exists()) {
+			File folder = file.getParentFile();
+			if (!folder.exists()) {
+				folder.mkdirs();
+			}
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				throw new SavRtException(e);
+			}
+		}
+		return file;
+	}
 
 	public static File createTempFolder(String folderName) throws Exception {
 		File folder = getFileInTempFolder(folderName);

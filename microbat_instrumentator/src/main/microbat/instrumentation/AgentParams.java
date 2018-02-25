@@ -7,8 +7,10 @@ import java.util.Map;
 
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
 import sav.common.core.utils.CollectionUtils;
+import sav.strategies.dto.AppJavaClassPath;
 
 public class AgentParams {
+	public static final String OPT_PRECHECK = "precheck";
 	public static final String OPT_ENTRY_POINT = "entry_point";
 	public static final String OPT_LAUNCH_CLASS = "launch_class";
 	public static final String OPT_JAVA_HOME = "java_home";
@@ -19,6 +21,8 @@ public class AgentParams {
 	public static final String OPT_INCLUDES = "includes";
 	public static final String OPT_EXCLUDES = "excludes";
 	public static final String OPT_VARIABLE_LAYER = "varLayer";
+	
+	private boolean precheck;
 	private EntryPoint entryPoint;
 	
 	private List<String> classPaths = new ArrayList<>();
@@ -37,6 +41,7 @@ public class AgentParams {
 		CommandLine cmd = CommandLine.parse(agentArgs);
 		AgentParams params = new AgentParams();
 		
+		params.precheck = cmd.getBoolean(OPT_PRECHECK, false);
 		String entryPointStr = cmd.getString(OPT_ENTRY_POINT);
 		if (entryPointStr != null) {
 			int idx = entryPointStr.lastIndexOf(".");
@@ -82,6 +87,14 @@ public class AgentParams {
 				cmd.argMap.put(keyValue[0], keyValue[1]);
 			}
 			return cmd;
+		}
+
+		public boolean getBoolean(String option, boolean defaultValue) {
+			String strVal = getString(option);
+			if (strVal != null) {
+				return Boolean.valueOf(strVal);
+			}
+			return defaultValue;
 		}
 
 		public int getInt(String option, int defaultValue) {
@@ -172,5 +185,20 @@ public class AgentParams {
 	
 	public int getVariableLayer() {
 		return variableLayer;
+	}
+	
+	public boolean isPrecheck() {
+		return precheck;
+	}
+
+	public AppJavaClassPath initAppClassPath() {
+		AppJavaClassPath appPath = new AppJavaClassPath();
+		appPath.setLaunchClass(getLaunchClass());
+		appPath.setJavaHome(getJavaHome());
+		for(String cp: getClassPaths()){
+			appPath.addClasspath(cp);
+		}
+		appPath.setWorkingDirectory(getWorkingDirectory());
+		return appPath;
 	}
 }
