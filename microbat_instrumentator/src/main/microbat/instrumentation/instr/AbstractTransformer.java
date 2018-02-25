@@ -1,5 +1,6 @@
 package microbat.instrumentation.instr;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
@@ -41,9 +42,12 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 			System.out.println("instrumented class: " + className);
 			return;
 		}
-		String filePath = "E:/lyly/Projects/inst_src/test/" + className.substring(className.lastIndexOf(".") + 1)
+		
+		
+		String filePath = /*"E:/lyly/Projects/inst_src/test/" +*/ className.substring(className.lastIndexOf(".") + 1)
 				+ ".class";
-		System.out.println("dump instrumented class to file: " + filePath);
+		File f = new File(filePath);
+		System.out.println("dump instrumented class to file: " + f.getAbsolutePath());
 		FileUtils.getFileCreateIfNotExist(filePath);
 		FileOutputStream out = null;
 		try {
