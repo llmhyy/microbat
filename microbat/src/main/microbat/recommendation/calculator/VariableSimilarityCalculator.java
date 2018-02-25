@@ -37,7 +37,7 @@ public class VariableSimilarityCalculator {
 		double bestSim = 0;
 		for(VarValue value: variables){
 			VariableSimilarity tmp = calculateVarSimilarity(value);
-			double sim = tmp.computeSimilarity(vs);
+			double sim = tmp.computeSimilarity();
 			if(sim > bestSim){
 				bestSim = sim;
 				vs = tmp;
