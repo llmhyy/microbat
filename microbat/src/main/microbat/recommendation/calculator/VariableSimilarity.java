@@ -1,16 +1,16 @@
 package microbat.recommendation.calculator;
 
 public class VariableSimilarity {
-	int isSameLocalVarType;
-	int isSameLocalVarName;
+	public int isSameLocalVarType;
+	public int isSameLocalVarName;
 	
-	int isSameFieldParent;
-	int isSameFieldType;
-	int isSameFieldName;
+	public int isSameFieldParent;
+	public int isSameFieldType;
+	public int isSameFieldName;
 	
-	int isSameArrayParent;
-	int isSameArrayType;
-	int isSameArrayIndex;
+	public int isSameArrayParent;
+	public int isSameArrayType;
+	public int isSameArrayIndex;
 	
 	public VariableSimilarity(int isSameLocalVarType, int isSameLocalVarName, int isSameFieldParent,
 			int isSameFieldType, int isSameFieldName, int isSameArrayParent, int isSameArrayType,
