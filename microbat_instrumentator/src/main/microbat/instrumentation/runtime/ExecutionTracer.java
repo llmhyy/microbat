@@ -49,7 +49,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		trace = new Trace(appJavaClassPath);
 	}
 
-	private void buildDataRelation(Variable var, String rw){
+	private void buildDataRelation(VarValue value, String rw){
+		Variable var = value.getVariable();
 		TraceNode currentNode = trace.getLatestNode();
 		if(currentNode==null){
 			return;
@@ -58,17 +59,12 @@ public class ExecutionTracer implements IExecutionTracer {
 		String order = trace.findDefiningNodeOrder(rw, currentNode, var.getVarID(), var.getAliasVarID());
 		
 		if(order.equals("0")){
-			if(var instanceof FieldVar){
-				FieldVar fieldVar = (FieldVar)var;
-				String fieldID = fieldVar.getVarID();
-				String parentID = fieldID.substring(0, fieldID.lastIndexOf("."));
-				order = trace.findDefiningNodeOrder(rw, currentNode, parentID, parentID);
-			}
-			else if(var instanceof ArrayElementVar){
-				ArrayElementVar arrayEle = (ArrayElementVar)var;
-				String arrayID = arrayEle.getVarID();
-				String parentID = arrayID.substring(0, arrayID.lastIndexOf("["));
-				order = trace.findDefiningNodeOrder(rw, currentNode, parentID, parentID);
+			if(var instanceof FieldVar || var instanceof ArrayElementVar){
+				if(!value.getParents().isEmpty()){
+					String parentID = value.getParents().get(0).getVarID();
+					order = trace.findDefiningNodeOrder(rw, currentNode, parentID, parentID);					
+				}
+				
 			}
 		}
 		
@@ -421,6 +417,12 @@ public class ExecutionTracer implements IExecutionTracer {
 			Variable var = new FieldVar(false, fieldName, fieldType, refValue.getClass().getName());
 			var.setVarID(fieldVarId);
 			VarValue value = appendVarValue(fieldValue, var, null);
+			
+			Variable parentVariable = new FieldVar(false, "unknown", refValue.getClass().getName(), "unknown");
+			parentVariable.setVarID(parentVarId);
+			ReferenceValue parentValue = new ReferenceValue(false, false, parentVariable);
+			value.addParent(parentValue);
+			
 			addRWriteValue(value, true);
 		} catch (Throwable t) {
 			handleException(t);
@@ -438,10 +440,10 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 		if (isWrittenVar) {
 			currentNode.addWrittenVariable(value);
-			buildDataRelation(value.getVariable(), Variable.WRITTEN);
+			buildDataRelation(value, Variable.WRITTEN);
 		} else {
 			currentNode.addReadVariable(value);
-			buildDataRelation(value.getVariable(), Variable.READ);
+			buildDataRelation(value, Variable.READ);
 		}
 	}
 	
@@ -506,6 +508,12 @@ public class ExecutionTracer implements IExecutionTracer {
 			Variable var = new FieldVar(false, fieldName, fieldType, refValue.getClass().getName());
 			var.setVarID(fieldVarId);
 			VarValue value = appendVarValue(fieldValue, var, null);
+			
+			Variable parentVariable = new FieldVar(false, "unknown", refValue.getClass().getName(), "unknown");
+			parentVariable.setVarID(parentVarId);
+			ReferenceValue parentValue = new ReferenceValue(false, false, parentVariable);
+			value.addParent(parentValue);
+			
 			addRWriteValue(value, false);
 		} catch (Throwable t) {
 			handleException(t);
@@ -640,7 +648,15 @@ public class ExecutionTracer implements IExecutionTracer {
 				}
 			}
 			_hitLine(line, className, methodSignature);
-			addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, false);
+			VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, false);
+			
+			Variable parentVariable = new FieldVar(false, "unknown", arrayRef.getClass().getName(), "unknown");
+			String parentVarId = TraceUtils.getObjectVarId(arrayRef, arrayRef.getClass().getName());
+			parentVariable.setVarID(parentVarId);
+			ReferenceValue parentValue = new ReferenceValue(false, false, parentVariable);
+			value.addParent(parentValue);
+			
+			addRWriteValue(value, false);
 		} catch (Throwable t) {
 			handleException(t);
 		}
@@ -674,6 +690,13 @@ public class ExecutionTracer implements IExecutionTracer {
 			}
 			_hitLine(line, className, methodSignature);
 			VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
+			
+			Variable parentVariable = new FieldVar(false, "unknown", arrayRef.getClass().getName(), "unknown");
+			String parentVarId = TraceUtils.getObjectVarId(arrayRef, arrayRef.getClass().getName());
+			parentVariable.setVarID(parentVarId);
+			ReferenceValue parentValue = new ReferenceValue(false, false, parentVariable);
+			value.addParent(parentValue);
+			
 			addRWriteValue(value, true);
 		} catch (Throwable t) {
 			handleException(t);
