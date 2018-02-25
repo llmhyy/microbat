@@ -2,10 +2,11 @@ package microbat.recommendation;
 
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 
 public class SimpleDetailInspector extends DetailInspector{
 	
-	public TraceNode recommendDetailNode(TraceNode currentNode, Trace trace) {
+	public TraceNode recommendDetailNode(TraceNode currentNode, Trace trace, VarValue wrongValue) {
 		TraceNode nextNode;
 		if(currentNode.getOrder() > this.inspectingRange.endNode.getOrder()){
 			nextNode = this.inspectingRange.startNode;

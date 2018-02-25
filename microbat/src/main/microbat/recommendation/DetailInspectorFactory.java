@@ -1,5 +1,6 @@
 package microbat.recommendation;
 
+import microbat.model.value.VarValue;
 import microbat.util.Settings;
 
 public class DetailInspectorFactory {

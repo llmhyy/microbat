@@ -541,7 +541,14 @@ public class StepRecommender {
 		
 		if(userFeedBack.getFeedbackType().equals(UserFeedback.CORRECT)){
 			this.state = DebugState.DETAIL_INSPECT;
-			TraceNode nextNode = this.detailInspector.recommendDetailNode(currentNode, trace);
+			
+			VarValue wrongValue = null;
+			for(TraceNode n: lastNode.getDataDominators().keySet()){
+				if(n.getOrder()==currentNode.getOrder()){
+					wrongValue = lastNode.getDataDominators().get(currentNode);
+				}
+			}
+			TraceNode nextNode = this.detailInspector.recommendDetailNode(currentNode, trace, wrongValue);
 			return nextNode;
 		}
 		else{

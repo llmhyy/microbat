@@ -462,7 +462,7 @@ public class TraceNode{
 		Map<TraceNode, VarValue> dataDominators = new HashMap<>();
 		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
 		for(VarValue readVar: this.getReadVariables()){
-			StepVariableRelationEntry entry = table.get(readVar.getVariable());
+			StepVariableRelationEntry entry = table.get(readVar.getVariable().getVarID());
 			if(entry != null){
 				TraceNode dominator = findLatestProducer(entry);
 				if(dominator != null){

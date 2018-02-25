@@ -32,6 +32,7 @@ public class Trace {
 	
 	private int observingIndex = -1;
 	private AppJavaClassPath appJavaClassPath;
+	
 	/**
 	 * This variable is to trace whether the variables in different lines are the same
 	 * local variable.

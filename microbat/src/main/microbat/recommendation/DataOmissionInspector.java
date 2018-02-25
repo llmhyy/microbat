@@ -12,7 +12,6 @@ import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.util.Settings;
 
 /**
  * This detail inspector provides a more intelligent way to recommend 
@@ -21,9 +20,12 @@ import microbat.util.Settings;
  */
 public class DataOmissionInspector extends DetailInspector {
 
+	public DataOmissionInspector(){
+	}
+	
 	@Override
-	public TraceNode recommendDetailNode(TraceNode currentNode, Trace trace) {
-		List<TraceNode> controlDominators = analysis();
+	public TraceNode recommendDetailNode(TraceNode currentNode, Trace trace, VarValue wrongValue) {
+		List<TraceNode> controlDominators = analyze(wrongValue);
 		if(controlDominators.isEmpty()){
 			return null;			
 		}
@@ -41,7 +43,7 @@ public class DataOmissionInspector extends DetailInspector {
 		return inspector;
 	}
 	
-	public List<TraceNode> analysis(){
+	public List<TraceNode> analyze(VarValue wrongValue){	
 		
 		if(this.inspectingRange == null){
 			return new ArrayList<>();
@@ -50,10 +52,10 @@ public class DataOmissionInspector extends DetailInspector {
 		TraceNode start = this.inspectingRange.startNode;
 		TraceNode end = this.inspectingRange.endNode;
 		
-		VarValue specificVar = findSpecificWrongVar(start, end);
+//		VarValue specificVar = findSpecificWrongVar(start, end);
 		
 		SeedStatementFinder seedFinder = new SeedStatementFinder();
-		Map<MethodNode, List<InstructionHandle>> seeds = seedFinder.findSeedStatemets(specificVar, start, end);
+		Map<MethodNode, List<InstructionHandle>> seeds = seedFinder.findSeedStatemets(wrongValue, start, end);
 		
 		Trace trace = start.getTrace();
 		SeedControlDominatorFinder controlFinder = new SeedControlDominatorFinder();
@@ -115,24 +117,24 @@ public class DataOmissionInspector extends DetailInspector {
 		return false;
 	}
 
-	private VarValue findSpecificWrongVar(TraceNode start, TraceNode end){
-		VarValue writtenVar = start.getWrittenVariables().get(0);
-		List<VarValue> wrongReadVarList = end.getWrongReadVars(Settings.interestedVariables);
-		List<VarValue> correctWrittenVarList = new ArrayList<>();
-		correctWrittenVarList.add(writtenVar);
-		List<VarValue> writtenChildrenVarList = writtenVar.getAllDescedentChildren();
-		correctWrittenVarList.addAll(writtenChildrenVarList);
-		
-//		VarValue specificWrongVar = null;
-//		for(VarValue wrongReadVar: wrongReadVarList){
-//			for(VarValue correctWrittenVar: correctWrittenVarList){
-//				if(wrongReadVar.equals(correctWrittenVar)){
-//					specificWrongVar = wrongReadVar;
-//				}
-//			}
-//		}
-		
-		return wrongReadVarList.get(0);
-	}
+//	private VarValue findSpecificWrongVar(TraceNode start, TraceNode end){
+//		VarValue writtenVar = start.getWrittenVariables().get(0);
+//		List<VarValue> wrongReadVarList = end.getWrongReadVars(Settings.interestedVariables);
+//		List<VarValue> correctWrittenVarList = new ArrayList<>();
+//		correctWrittenVarList.add(writtenVar);
+//		List<VarValue> writtenChildrenVarList = writtenVar.getAllDescedentChildren();
+//		correctWrittenVarList.addAll(writtenChildrenVarList);
+//		
+////		VarValue specificWrongVar = null;
+////		for(VarValue wrongReadVar: wrongReadVarList){
+////			for(VarValue correctWrittenVar: correctWrittenVarList){
+////				if(wrongReadVar.equals(correctWrittenVar)){
+////					specificWrongVar = wrongReadVar;
+////				}
+////			}
+////		}
+//		
+//		return wrongReadVarList.get(0);
+//	}
 
 }
