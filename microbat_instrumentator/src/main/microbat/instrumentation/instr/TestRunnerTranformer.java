@@ -1,6 +1,5 @@
 package microbat.instrumentation.instr;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
@@ -13,17 +12,18 @@ import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ClassGen;
+import org.apache.bcel.generic.CodeExceptionGen;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.InstructionTargeter;
 import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.Type;
 
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.runtime.ExecutionTracer;
-import sav.common.core.utils.FileUtils;
 
 public class TestRunnerTranformer extends AbstractTransformer implements ClassFileTransformer {
 
@@ -36,36 +36,12 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 		if ("microbat/evaluation/junit/MicroBatTestRunner".equals(classFName)) {
 			try {
 				byte[] data = instrument(classFName, classfileBuffer);
-				store(data, classFName.replace("/", "."));
 				return data;
 			} catch (ClassFormatException | IOException e) {
 				e.printStackTrace();
 			}
 		}
 		return null;
-	}
-	
-	private void store(byte[] data, String className) {
-		String filePath = "E:/lyly/Projects/inst_src/test/" + className.substring(className.lastIndexOf(".") + 1)
-				+ ".class";
-		System.out.println("dump instrumented class to file: " + filePath);
-		FileUtils.getFileCreateIfNotExist(filePath);
-		FileOutputStream out = null;
-		try {
-			out = new FileOutputStream(filePath);
-			out.write(data);
-			out.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (out != null) {
-					out.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 
 	private byte[] instrument(String classFName, byte[] classfileBuffer) throws ClassFormatException, IOException {
@@ -91,7 +67,7 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 				InstructionList instructionList = methodGen.getInstructionList();
 				InstructionHandle startInsn = instructionList.getStart();
 				InstructionHandle pos = instructionList.insert(startInsn, newInsns);
-				TraceInstrumenter.updateTargeters(startInsn, pos);
+				updateTargeters(startInsn, pos);
 				instructionList.setPositions();
 				methodGen.setMaxStack();
 				methodGen.setMaxLocals();
@@ -120,7 +96,7 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 				InstructionList instructionList = methodGen.getInstructionList();
 				InstructionHandle startInsn = instructionList.getStart();
 				InstructionHandle pos = instructionList.insert(startInsn, newInsns);
-				TraceInstrumenter.updateTargeters(startInsn, pos);
+				updateTargeters(startInsn, pos);
 				instructionList.setPositions();
 				methodGen.setMaxStack();
 				methodGen.setMaxLocals();
@@ -131,6 +107,17 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 		newJC = classGen.getJavaClass();
 		newJC.setConstantPool(constPool.getFinalConstantPool());
 		return newJC.getBytes();
+	}
+	
+	private void updateTargeters(InstructionHandle oldPos, InstructionHandle newPos) {
+		InstructionTargeter[] itList = oldPos.getTargeters();
+		if (itList != null) {
+			for (InstructionTargeter it : itList) {
+				if (!(it instanceof CodeExceptionGen)) {
+					it.updateTarget(oldPos, newPos);
+				}
+			}
+		}
 	}
 
 }

@@ -1,6 +1,5 @@
 package microbat.instrumentation.instr;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
@@ -23,7 +22,7 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 		boolean needToReleaseLock = !tracer.lock();
 		
 		byte[] data = doTransform(loader, classFName, classBeingRedefined, protectionDomain, classfileBuffer);
-		log(data, classFName, false);
+		log(classfileBuffer, data, classFName, false);
 					
 		if (needToReleaseLock) {
 			tracer.unLock();
@@ -34,20 +33,28 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 	protected abstract byte[] doTransform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException;
 		
-	public static void log(byte[] data, String className, boolean dump) {
+	public static void log(byte[] classfileBuffer, byte[] data, String className, boolean dump) {
 		if (data == null) {
 			return;
 		}
+//		if ("com/google/common/base/CharMatcher$11".equals(className)) {
+//			dump = true;
+//		}
 		if (!dump) {
 			System.out.println("instrumented class: " + className);
 			return;
 		}
-		
-		
-		String filePath = /*"E:/lyly/Projects/inst_src/test/" +*/ className.substring(className.lastIndexOf(".") + 1)
+		String orgPath = "E:/lyly/Projects/inst_src/org/" + className.substring(className.lastIndexOf(".") + 1)
 				+ ".class";
-		File f = new File(filePath);
-		System.out.println("dump instrumented class to file: " + f.getAbsolutePath());
+		System.out.println("dump org class to file: " + orgPath);
+		dumpToFile(classfileBuffer, orgPath);
+		String filePath = "E:/lyly/Projects/inst_src/test/" + className.substring(className.lastIndexOf(".") + 1)
+				+ ".class";
+		System.out.println("dump instrumented class to file: " + filePath);
+		dumpToFile(data, filePath);
+	}
+
+	private static void dumpToFile(byte[] data, String filePath) {
 		FileUtils.getFileCreateIfNotExist(filePath);
 		FileOutputStream out = null;
 		try {
