@@ -64,6 +64,8 @@ public class InstrumentationExecutor {
 						(Object[]) AnalysisScopePreference.getExcludedLibs()));
 		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
 		try {
+			/* test stepLimit */
+//			agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, 3);
 			agentRunner.precheck(config);
 			PrecheckInfo info = agentRunner.getPrecheckInfo();
 			this.setPrecheckInfo(new PreCheckInformation(info.getThreadNum(), info.getStepTotal(), 
