@@ -21,6 +21,7 @@ public class PrecheckInfo {
 	private int threadNum;
 	private Set<ClassLocation> visitedLocs;
 	private int stepTotal;
+	private boolean isOverLong;
 	
 	private PrecheckInfo() {
 		
@@ -137,5 +138,13 @@ public class PrecheckInfo {
 
 	public void setStepTotal(int stepTotal) {
 		this.stepTotal = stepTotal;
+	}
+
+	public boolean isOverLong() {
+		return isOverLong;
+	}
+
+	public void setOverLong(boolean isOverLong) {
+		this.isOverLong = isOverLong;
 	}
 }
