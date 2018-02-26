@@ -28,14 +28,14 @@ public class PrecheckInfo {
 
 	public PrecheckInfo(int threadNum, TraceInfo info) {
 		super();
-		this.threadNum = threadNum;
-		this.stepTotal = info.getStepTotal();
-		visitedLocs = info.getVisitedLocs();
+		this.setThreadNum(threadNum);
+		this.setStepTotal(info.getStepTotal());
+		setVisitedLocs(info.getVisitedLocs());
 	}
 	
 	@Override
 	public String toString() {
-		return "PrecheckInfo [threadNum=" + threadNum + ", stepTotal=" + stepTotal + "]";
+		return "PrecheckInfo [threadNum=" + getThreadNum() + ", stepTotal=" + getStepTotal() + "]";
 	}
 
 	public static PrecheckInfo readFromFile(String filePath) {
@@ -49,8 +49,8 @@ public class PrecheckInfo {
 				throw new SavRtException("Invalid Precheck file result!");
 			}
 			PrecheckInfo infor = new PrecheckInfo();
-			infor.threadNum = reader.readVarInt();
-			infor.stepTotal = reader.readVarInt();
+			infor.setThreadNum(reader.readVarInt());
+			infor.setStepTotal(reader.readVarInt());
 			int locationsSize = reader.readVarInt();
 			Set<ClassLocation> visitedLocs = new HashSet<>(locationsSize);
 			for (int i = 0; i < locationsSize; i++) {
@@ -60,7 +60,7 @@ public class PrecheckInfo {
 				ClassLocation loc = new ClassLocation(className, methodSignature, lineNumber);
 				visitedLocs.add(loc);
 			}
-			infor.visitedLocs = visitedLocs;
+			infor.setVisitedLocs(visitedLocs);
 			return infor;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -91,10 +91,10 @@ public class PrecheckInfo {
 		bufferedStream = new BufferedOutputStream(fileStream);
 			outputWriter = new TraceOutputWriter(bufferedStream);
 			outputWriter.writeString(HEADER);
-			outputWriter.writeVarInt(threadNum);
-			outputWriter.writeVarInt(stepTotal);
-			outputWriter.writeVarInt(visitedLocs.size());
-			for (ClassLocation loc : visitedLocs) {
+			outputWriter.writeVarInt(getThreadNum());
+			outputWriter.writeVarInt(getStepTotal());
+			outputWriter.writeVarInt(getVisitedLocs().size());
+			for (ClassLocation loc : getVisitedLocs()) {
 				outputWriter.writeString(loc.getClassCanonicalName());
 				outputWriter.writeString(loc.getMethodSign());
 				outputWriter.writeInt(loc.getLineNumber());
@@ -113,5 +113,29 @@ public class PrecheckInfo {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public int getThreadNum() {
+		return threadNum;
+	}
+
+	public void setThreadNum(int threadNum) {
+		this.threadNum = threadNum;
+	}
+
+	public Set<ClassLocation> getVisitedLocs() {
+		return visitedLocs;
+	}
+
+	public void setVisitedLocs(Set<ClassLocation> visitedLocs) {
+		this.visitedLocs = visitedLocs;
+	}
+
+	public int getStepTotal() {
+		return stepTotal;
+	}
+
+	public void setStepTotal(int stepTotal) {
+		this.stepTotal = stepTotal;
 	}
 }
