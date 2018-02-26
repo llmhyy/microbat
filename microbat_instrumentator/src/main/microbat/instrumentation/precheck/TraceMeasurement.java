@@ -8,9 +8,13 @@ import microbat.model.ClassLocation;
 public class TraceMeasurement {
 	private static Map<Long, TraceMeasurement> rtStores = new HashMap<>();
 	private static long mainThreadId = -1;
-	private TraceInfo trace = new TraceInfo();
+	private TraceInfo trace = new TraceInfo(stepLimit);
+	private static int stepLimit = Integer.MAX_VALUE;
 
 	public void _hitLine(int line, String className, String methodSignature) {
+		if (trace.isOverLong()) {
+			throw new RuntimeException("Trace is overlong");
+		}
 		try {
 			ClassLocation lastStep = trace.getLastStep();
 			if (lastStep != null && lastStep.getClassCanonicalName().equals(className) && 
@@ -53,5 +57,9 @@ public class TraceMeasurement {
 	
 	public synchronized static PrecheckInfo getPrecheckInfo() {
 		return new PrecheckInfo(rtStores.size(), getMainThreadInstance().trace);
+	}
+	
+	public static void setStepLimit(int stepLimit) {
+		TraceMeasurement.stepLimit = stepLimit;
 	}
 }
