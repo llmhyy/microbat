@@ -4,14 +4,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 import microbat.agent.TraceAgentRunner;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
 import microbat.preference.MicrobatPreference;
+import microbat.util.Settings;
 import sav.common.core.SavException;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
@@ -22,14 +25,14 @@ public class InstrumentationExecutor {
 	private final static String TRACE_FILE_OUTPUT_FOLDER = "trace";
 	
 	private AppJavaClassPath appPath;
-	
+	private PreCheckInformation precheckInfo;
 	
 	public InstrumentationExecutor(AppJavaClassPath appPath){
 		this.appPath = appPath;
 	}
 	
 	
-	public Trace run(boolean isPrecheck){
+	public Trace run(){
 		String jarPath = appPath.getAgentLib();
 		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath);
 		VMConfiguration config = new VMConfiguration();
@@ -51,7 +54,7 @@ public class InstrumentationExecutor {
 		agentRunner.addAgentParam(AgentParams.OPT_JAVA_HOME, config.getJavaHome());
 		agentRunner.addAgentParam(AgentParams.OPT_CLASS_PATH, config.getClasspathStr());
 		agentRunner.addAgentParam(AgentParams.OPT_WORKING_DIR, config.getWorkingDirectory());
-		agentRunner.addAgentParam(AgentParams.OPT_PRECHECK, String.valueOf(isPrecheck));
+//		agentRunner.addAgentParam(AgentParams.OPT_PRECHECK, String.valueOf(isPrecheck));
 		/* build includes & excludes params */
 		agentRunner.addAgentParam(AgentParams.OPT_INCLUDES,
 				StringUtils.join(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR,
@@ -62,19 +65,26 @@ public class InstrumentationExecutor {
 		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
 		try {
 			agentRunner.precheck(config);
-			System.out.println(agentRunner.getPrecheckInfo());
-			
-			agentRunner.runWithDumpFileOption(config, generateTraceFilePath());
+			PrecheckInfo info = agentRunner.getPrecheckInfo();
+			this.setPrecheckInfo(new PreCheckInformation(info.getThreadNum(), info.getStepTotal(), 
+					info.isOverLong(), new ArrayList<>(info.getVisitedLocs())));
+			//TODO
+			if(/*info.isOverLong()*/info.getStepTotal()<Settings.stepLimit){
+				agentRunner.runWithDumpFileOption(config, generateTraceFilePath());
+//				agentRunner.runWithSocket(config);
+				Trace trace = agentRunner.getTrace();
+				System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
+				System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
+				System.out.println("finish!");
+				
+				return trace;
+			}
 		} catch (SavException e1) {
 			e1.printStackTrace();
 		}
-//		agentRunner.runWithSocket(config);
-		Trace trace = agentRunner.getTrace();
-		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
-		System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
-		System.out.println("finish!");
+
 		
-		return trace;
+		return null;
 		
 	}
 	
@@ -199,4 +209,16 @@ public class InstrumentationExecutor {
 	public void setAppPath(AppJavaClassPath appPath) {
 		this.appPath = appPath;
 	}
+
+
+	public PreCheckInformation getPrecheckInfo() {
+		return precheckInfo;
+	}
+
+
+	public void setPrecheckInfo(PreCheckInformation precheckInfo) {
+		this.precheckInfo = precheckInfo;
+	}
+
+
 }
