@@ -106,7 +106,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		VarValue varValue = null;
 		if (PrimitiveUtils.isString(var.getType())) {
 			varValue = new StringValue(getStringValue(value), isRoot, var);
-		} else if (PrimitiveUtils.isPrimitiveType(var.getType())) {
+		} else if (PrimitiveUtils.isPrimitive(var.getType())) {
 			varValue = new PrimitiveValue(getStringValue(value), isRoot, var);
 		} else if(var.getType().endsWith("[]")) {
 			/* array */
@@ -184,7 +184,6 @@ public class ExecutionTracer implements IExecutionTracer {
 			String paramTypeSignsCode, String paramNamesCode, Object[] params) {
 		locker.lock();
 		TraceNode latestNode = trace.getLatestNode();
-		
 		if(latestNode!=null){
 			int varScopeStart = methodStartLine;
 			int varScopeEnd = methodEndLine;
@@ -196,7 +195,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				String parameterType = SignatureUtils.signatureToName(pType);
 				String varName = parameterNames[i];
 				
-				if(PrimitiveUtils.isPrimitiveType(parameterType)){
+				if(PrimitiveUtils.isPrimitive(parameterType)){
 					Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
 					
 					String varID = TraceUtils.getLocalVarId(className, varScopeStart, varScopeEnd, varName, parameterType, params[i]);
@@ -264,10 +263,18 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 	}
 	
+//	int count = 0;
 	@Override
 	public void _hitInvokeStatic(String invokeTypeSign, String methodName, Object[] params,
 			String paramTypeSignsCode, String returnTypeSign, int line, String className, String methodSignature) {
 		locker.lock();
+//		if (className.contains("CharMatcher$11")) {
+//			count++;
+//			if (count % 100 == 0) {
+//				System.out.println("count = " + count);
+//			}
+////			return;
+//		}
 		try {
 			_hitLine(line, className, methodSignature);
 			TraceNode latestNode = trace.getLatestNode();
@@ -344,7 +351,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 
 	private void handleException(Throwable t) {
-		System.out.println(t);
+		t.printStackTrace();
 	}
 	
 	@Override
@@ -383,6 +390,14 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 		
 		locker.unLock(isLocked);
+	}
+	
+	@Override
+	public void _hitExeptionTarget(int line, String className, String methodSignature) {
+		locker.lock();
+		_hitLine(line, className, methodSignature);
+		trace.getLatestNode().setException(true);
+		locker.unLock();
 	}
 	
 	/**
@@ -731,7 +746,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		
 		gLocker.lock();
 		long threadId = Thread.currentThread().getId();
-		if (lockedThreads.contains(threadId)) {
+		if (lockedThreads.contains(threadId) || ((mainThreadId >= 0 && mainThreadId != threadId))) {
 			gLocker.unLock();
 			return EmptyExecutionTracer.getInstance();
 		}

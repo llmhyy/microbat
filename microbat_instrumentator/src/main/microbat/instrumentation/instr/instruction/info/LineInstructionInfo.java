@@ -3,11 +3,13 @@ package microbat.instrumentation.instr.instruction.info;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
+import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.FieldInstruction;
@@ -17,6 +19,7 @@ import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableInstruction;
+import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Type;
@@ -35,28 +38,33 @@ public class LineInstructionInfo {
 	protected List<RWInstructionInfo> rwInsructionInfo;
 	protected List<InstructionHandle> invokeInsns;
 	protected List<InstructionHandle> returnInsns;
-	private List<InstructionHandle> exitInsns;
+	private List<InstructionHandle> exitInsns; 
+	private boolean hasExceptionTarget;
 	
 	public LineInstructionInfo() {
 		// 
 	}
 	
-	
-	public LineInstructionInfo(String locId, LocalVariableTable localVariableTable, ConstantPoolGen constPool, 
-			LineNumberTable lineNumberTable, LineNumberGen lineGen, InstructionList insnList, CFG cfg,
+	public LineInstructionInfo(String locId, ConstantPoolGen constPool, Method method, MethodGen methodGen, Set<InstructionHandle> exceptionTargets, LineNumberGen lineGen, CFG cfg,
 			boolean isAppClass) {
 		this.line = lineGen.getSourceLine();
 		this.lineNumberInsn = lineGen.getInstruction();
-		this.localVarTable = localVariableTable;
+		this.localVarTable = method.getLocalVariableTable();
 		this.constPool = constPool;
-		this.lineNumberTable = lineNumberTable;
-		lineInsns = findCorrespondingInstructions(insnList, lineNumberTable, lineGen.getSourceLine());
+		this.lineNumberTable = method.getLineNumberTable();
+		InstructionList insnList = methodGen.getInstructionList();
+		lineInsns = findCorrespondingInstructions(insnList , lineNumberTable, lineGen.getSourceLine());
 		rwInsructionInfo = extractRWInstructions(locId, isAppClass);
 		invokeInsns = extractInvokeInstructions(lineInsns);
 		returnInsns = extractReturnInstructions(lineInsns);
 		exitInsns = extractExitInsns(cfg, lineInsns);
+		for (InstructionHandle insn : lineInsns) {
+			if (exceptionTargets.remove(insn)) {
+				hasExceptionTarget = true;
+			}
+		}
 	}
-	
+
 	private List<InstructionHandle> extractExitInsns(CFG cfg, List<InstructionHandle> lineInsns2) {
 		List<InstructionHandle> list = new ArrayList<>();
 		for(InstructionHandle handle: lineInsns2){
@@ -226,4 +234,7 @@ public class LineInstructionInfo {
 		return exitInsns;
 	}
 
+	public boolean hasExceptionTarget() {
+		return hasExceptionTarget;
+	}
 }

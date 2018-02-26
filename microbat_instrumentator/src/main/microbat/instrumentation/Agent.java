@@ -138,8 +138,9 @@ public class Agent {
 		}
 	}
 	
-	public static void _setProgramMsg(String programMsg) {
+	public static void _exitProgram(String programMsg) {
 		Agent.programMsg = programMsg;
+		Runtime.getRuntime().exit(1); // force program to exit to avoid getting stuck by background running threads.
 	}
 	
 	public static void _startTest(String junitClass, String junitMethod) {

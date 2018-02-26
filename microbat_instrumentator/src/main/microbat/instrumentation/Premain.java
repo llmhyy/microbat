@@ -26,6 +26,7 @@ public class Premain {
 			PrecheckAgent agent = new PrecheckAgent(agentParams);
 			agent.startup();
 			inst.addTransformer(new PrecheckTransformer());
+			inst.addTransformer(new TestRunnerTranformer());
 		} else {
 			Class<?>[] retransformableClasses = getRetransformableClasses(inst);
 			final Agent agent = new Agent(agentArgs);

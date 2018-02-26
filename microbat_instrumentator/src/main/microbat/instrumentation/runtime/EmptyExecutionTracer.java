@@ -124,4 +124,10 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 		
 	}
 
+	@Override
+	public void _hitExeptionTarget(int line, String className, String methodSignature) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

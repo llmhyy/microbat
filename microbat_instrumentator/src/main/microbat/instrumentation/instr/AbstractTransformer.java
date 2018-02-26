@@ -33,7 +33,7 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 	protected abstract byte[] doTransform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException;
 		
-	public static void log(byte[] classfileBuffer, byte[] data, String className, boolean dump) {
+	public static void log(byte[] classfileBuffer, byte[] data, String classFName, boolean dump) {
 		if (data == null) {
 			return;
 		}
@@ -41,14 +41,14 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 //			dump = true;
 //		}
 		if (!dump) {
-			System.out.println("instrumented class: " + className);
+			System.out.println("instrumented class: " + classFName);
 			return;
 		}
-		String orgPath = "E:/lyly/Projects/inst_src/org/" + className.substring(className.lastIndexOf(".") + 1)
+		String orgPath = "E:/lyly/Projects/inst_src/org/" + classFName.substring(classFName.lastIndexOf(".") + 1)
 				+ ".class";
 		System.out.println("dump org class to file: " + orgPath);
 		dumpToFile(classfileBuffer, orgPath);
-		String filePath = "E:/lyly/Projects/inst_src/test/" + className.substring(className.lastIndexOf(".") + 1)
+		String filePath = "E:/lyly/Projects/inst_src/test/" + classFName.substring(classFName.lastIndexOf(".") + 1)
 				+ ".class";
 		System.out.println("dump instrumented class to file: " + filePath);
 		dumpToFile(data, filePath);
