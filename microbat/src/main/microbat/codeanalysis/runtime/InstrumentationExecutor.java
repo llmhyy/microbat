@@ -35,6 +35,7 @@ public class InstrumentationExecutor {
 	public Trace run(){
 		String jarPath = appPath.getAgentLib();
 		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath);
+//		agentRunner.setPrintOutExecutionTrace(true);
 		VMConfiguration config = new VMConfiguration();
 		config.setNoVerify(true);
 		config.setJavaHome(appPath.getJavaHome());

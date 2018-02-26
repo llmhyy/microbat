@@ -8,6 +8,16 @@ public class ArrayElementVar extends Variable {
 		this.aliasVarID = aliasVarID;
 	}
 	
+	public String getIndex(){
+		if(varID !=null){
+			if(varID.contains("[") && varID.contains("]")){
+				return varID.substring(varID.indexOf("[")+1, varID.indexOf("]"));
+			}
+		}
+		
+		return null;
+	}
+	
 	@Override
 	public String getVarID() {
 		if(this.aliasVarID != null){
