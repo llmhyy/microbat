@@ -21,6 +21,7 @@ public class AgentParams {
 	public static final String OPT_INCLUDES = "includes";
 	public static final String OPT_EXCLUDES = "excludes";
 	public static final String OPT_VARIABLE_LAYER = "varLayer";
+	public static final String OPT_STEP_LIMIT = "stepLimit";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -36,6 +37,7 @@ public class AgentParams {
 	/* format: java.lang.*;java.util.ArrayList;java.util.*\;java.util.Arrays*        */
 	private String includesExpression;
 	private String excludesExpression;
+	private int stepLimit;
 	
 	public static AgentParams parse(String agentArgs) {
 		CommandLine cmd = CommandLine.parse(agentArgs);
@@ -72,7 +74,7 @@ public class AgentParams {
 //		for(String bootstrp: bootstrpStrings){
 //			params.bootstrapPaths.add(bootstrp);
 //		}
-		
+		params.stepLimit = cmd.getInt(OPT_STEP_LIMIT, Integer.MAX_VALUE);
 		return params;
 	}
 	
@@ -189,6 +191,10 @@ public class AgentParams {
 	
 	public boolean isPrecheck() {
 		return precheck;
+	}
+	
+	public int getStepLimit() {
+		return stepLimit;
 	}
 
 	public AppJavaClassPath initAppClassPath() {
