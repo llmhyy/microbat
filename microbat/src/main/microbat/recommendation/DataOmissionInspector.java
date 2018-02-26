@@ -56,6 +56,9 @@ public class DataOmissionInspector extends DetailInspector {
 		
 		SeedStatementFinder seedFinder = new SeedStatementFinder();
 		Map<MethodNode, List<InstructionHandle>> seeds = seedFinder.findSeedStatemets(wrongValue, start, end);
+		if(seeds==null){
+			return new ArrayList<>();
+		}
 		
 		Trace trace = start.getTrace();
 		SeedControlDominatorFinder controlFinder = new SeedControlDominatorFinder();
