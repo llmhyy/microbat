@@ -32,11 +32,12 @@ public class PrecheckInfo {
 		this.setThreadNum(threadNum);
 		this.setStepTotal(info.getStepTotal());
 		setVisitedLocs(info.getVisitedLocs());
+		isOverLong = info.isOverLong();
 	}
-	
+
 	@Override
 	public String toString() {
-		return "PrecheckInfo [threadNum=" + getThreadNum() + ", stepTotal=" + getStepTotal() + "]";
+		return "PrecheckInfo [threadNum=" + threadNum + ", counted_stepTotal=" + stepTotal + ", isOverLong=" + isOverLong + "]";
 	}
 
 	public static PrecheckInfo readFromFile(String filePath) {
@@ -51,6 +52,7 @@ public class PrecheckInfo {
 			}
 			PrecheckInfo infor = new PrecheckInfo();
 			infor.setThreadNum(reader.readVarInt());
+			infor.isOverLong = reader.readBoolean();
 			infor.setStepTotal(reader.readVarInt());
 			int locationsSize = reader.readVarInt();
 			Set<ClassLocation> visitedLocs = new HashSet<>(locationsSize);
@@ -92,7 +94,8 @@ public class PrecheckInfo {
 		bufferedStream = new BufferedOutputStream(fileStream);
 			outputWriter = new TraceOutputWriter(bufferedStream);
 			outputWriter.writeString(HEADER);
-			outputWriter.writeVarInt(getThreadNum());
+			outputWriter.writeVarInt(threadNum);
+			outputWriter.writeBoolean(isOverLong);
 			outputWriter.writeVarInt(getStepTotal());
 			outputWriter.writeVarInt(getVisitedLocs().size());
 			for (ClassLocation loc : getVisitedLocs()) {

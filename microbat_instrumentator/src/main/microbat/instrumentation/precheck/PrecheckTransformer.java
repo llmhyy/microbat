@@ -18,7 +18,7 @@ public class PrecheckTransformer implements ClassFileTransformer {
 				String path = protectionDomain.getCodeSource().getLocation().getFile();
 				if (FilterChecker.isTransformable(classFName, path, false) && FilterChecker.isAppClass(classFName)) {
 					byte[] data = instrumenter.instrument(classFName, classfileBuffer);
-					AbstractTransformer.log(data, classFName, true);
+					AbstractTransformer.log(classfileBuffer, data, classFName, false);
 					return data;
 				}
 			}
