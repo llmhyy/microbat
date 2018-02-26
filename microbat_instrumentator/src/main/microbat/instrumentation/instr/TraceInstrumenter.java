@@ -53,7 +53,6 @@ import org.apache.bcel.generic.PUSH;
 import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.PUTSTATIC;
 import org.apache.bcel.generic.RETURN;
-import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.SWAP;
 import org.apache.bcel.generic.TargetLostException;
@@ -340,6 +339,12 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 				&& methodGen.getName().equals("<init>")) {
 			return;
 		}
+		
+//		if (insn instanceof INVOKESTATIC && 
+//				methodGen.getClassName().contains("CharMatcher$11")) {
+//				insn.getReferenceType(constPool).toString().equals("com.google.common.base.CharMatcher$11")) {
+//			return;
+//		}
 
 		InstructionList newInsns = new InstructionList();
 		TracerMethods tracerMethod = TracerMethods.HIT_INVOKE;
@@ -347,8 +352,8 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		if (isInvokeStatic) {
 			tracerMethod = TracerMethods.HIT_INVOKE_STATIC;
 		}
-		/* on stack: objectRef, arg1(*), arg2(*), ... */
-		ReferenceType returnType = insn.getReferenceType(constPool);
+		/* on stack: (objectRef)+, arg1(*), arg2(*), ... */
+		Type returnType = insn.getReturnType(constPool);//getReferenceType(constPool);
 		Type[] argTypes = insn.getArgumentTypes(constPool);
 		/*
 		 * add tempVar to keep args. Object[] temp = Object[] {arg1(*), arg2(*), ...}
@@ -389,6 +394,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			newInsns.append(new ALOAD(tracerVar.getIndex()));
 			newInsns.append(new SWAP()); // objectRef, tracer, objectRef
 		} else {
+			/* empty stack */
 			newInsns.append(new ALOAD(tracerVar.getIndex())); // tracer
 		}
 		newInsns.append(new PUSH(constPool, className)); 
@@ -944,17 +950,6 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		insertInsnHandler(insnList, newInsns, startInsn);
 		newInsns.dispose();
 		return tracerVar;
-	}
-
-	public static void updateTargeters(InstructionHandle oldPos, InstructionHandle newPos) {
-		InstructionTargeter[] itList = oldPos.getTargeters();
-		if (itList != null) {
-			for (InstructionTargeter it : itList) {
-				if (!(it instanceof CodeExceptionGen)) {
-					it.updateTarget(oldPos, newPos);
-				}
-			}
-		}
 	}
 
 }

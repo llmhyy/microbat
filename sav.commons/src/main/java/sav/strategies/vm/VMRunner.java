@@ -55,6 +55,7 @@ public class VMRunner {
 	
 	protected Process process;
 	private String processError;
+	private boolean printOutExecutionTrace = false;
 	
 	public boolean startVm(VMConfiguration config) throws SavException {
 		this.isLog = config.isVmLogEnable();
@@ -109,7 +110,9 @@ public class VMRunner {
 //						if (error) {
 //							log.warn(line);
 //						}
-						System.out.println(line);
+						if (printOutExecutionTrace) {
+							System.out.println(line);
+						}
 						if (!line.contains("Class JavaLaunchHelper is implemented in both")) {
 							sb.append(line).append("\n");
 						}
@@ -270,5 +273,9 @@ public class VMRunner {
 	
 	public Process getProcess() {
 		return process;
+	}
+	
+	public void setPrintOutExecutionTrace(boolean printOutExecutionTrace) {
+		this.printOutExecutionTrace = printOutExecutionTrace;
 	}
 }
