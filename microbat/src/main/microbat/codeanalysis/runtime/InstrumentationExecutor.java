@@ -71,8 +71,7 @@ public class InstrumentationExecutor {
 			PrecheckInfo info = agentRunner.getPrecheckInfo();
 			this.setPrecheckInfo(new PreCheckInformation(info.getThreadNum(), info.getStepTotal(), 
 					info.isOverLong(), new ArrayList<>(info.getVisitedLocs())));
-			//TODO
-			if(/*info.isOverLong()*/info.getStepTotal()<Settings.stepLimit){
+			if(!info.isOverLong()){
 				agentRunner.runWithDumpFileOption(config, generateTraceFilePath());
 //				agentRunner.runWithSocket(config);
 				Trace trace = agentRunner.getTrace();
