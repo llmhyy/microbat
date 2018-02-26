@@ -8,7 +8,6 @@ import java.util.Set;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
@@ -41,7 +40,6 @@ import org.apache.bcel.generic.INVOKEVIRTUAL;
 import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
-import org.apache.bcel.generic.InstructionTargeter;
 import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableGen;
@@ -60,6 +58,7 @@ import org.apache.bcel.generic.Type;
 
 import microbat.codeanalysis.bytecode.CFG;
 import microbat.codeanalysis.bytecode.CFGConstructor;
+import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.filter.FilterChecker;
@@ -108,11 +107,11 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			try {
 				boolean changed = false;
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
-				boolean startTracing = false;
+				boolean isMainMethod = false;
 				if (entry && entryPoint.matchMethod(method.getName(), method.getSignature())) {
-					startTracing = true;
+					isMainMethod = true;
 				}
-				changed = instrumentMethod(classGen, constPool, methodGen, method, isAppClass, startTracing);
+				changed = instrumentMethod(classGen, constPool, methodGen, method, isAppClass, isMainMethod);
 				if (changed) {
 					// All changes made, so finish off the method:
 					InstructionList instructionList = methodGen.getInstructionList();
@@ -150,21 +149,19 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 	}
 
 	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
-			boolean isAppClass, boolean startTracing) {
+			boolean isAppClass, boolean isMainMethod) {
 		tempVarIdx = 0;
 		InstructionList insnList = methodGen.getInstructionList();
 		List<LineInstructionInfo> lineInsnInfos = new ArrayList<>();
-
+		Set<InstructionHandle> exceptionTargets = collectExecptionTargets(methodGen);
 		CFGConstructor cfgConstructor = new CFGConstructor();
 		CFG cfg = cfgConstructor.constructCFG(method.getCode());
 
-		LineNumberTable lineNumberTable = method.getLineNumberTable();// methodGen.getLineNumberTable(constPool);
 		Set<Integer> visitedLines = new HashSet<>();
 		for (LineNumberGen lineGen : methodGen.getLineNumbers()) {
 			if (!visitedLines.contains(lineGen.getSourceLine())) {
 				String loc = StringUtils.dotJoin(classGen.getClassName(), method.getName(), lineGen.getSourceLine());
-				lineInsnInfos.add(new LineInstructionInfo(loc, method.getLocalVariableTable(), constPool,
-						lineNumberTable, lineGen, insnList, cfg, isAppClass));
+				lineInsnInfos.add(new LineInstructionInfo(loc, constPool, method, methodGen, exceptionTargets, lineGen, cfg, isAppClass));
 				visitedLines.add(lineGen.getSourceLine());
 			}
 		}
@@ -201,7 +198,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			List<RWInstructionInfo> rwInsns = lineInfo.getRWInstructions();
 //			if (lineInfo.hasNoInstrumentation()) {
 				injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getLine(),
-						lineInfo.getLineNumberInsn(), classNameVar, methodSigVar);
+						lineInfo.getLineNumberInsn(), classNameVar, methodSigVar, lineInfo.hasExceptionTarget());
 //			}
 			for (RWInstructionInfo rwInsnInfo : rwInsns) {
 				InstructionList newInsns = null;
@@ -252,14 +249,23 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			 * instrument exit instructions
 			 */
 			for (InstructionHandle exitInsHandle : lineInfo.getExitInsns()) {
-				injectCodeTracerExit(exitInsHandle, insnList, constPool, tracerVar, line, classNameVar, methodSigVar);
+				injectCodeTracerExit(exitInsHandle, insnList, constPool, tracerVar, line, classNameVar, methodSigVar, isMainMethod);
 			}
 
 			lineInfo.dispose();
 		}
 		injectCodeInitTracer(methodGen, constPool, startLine, endLine, isAppClass, classNameVar,
-				methodSigVar, startTracing, tracerVar);
+				methodSigVar, isMainMethod, tracerVar);
+
 		return true;
+	}
+
+	private Set<InstructionHandle> collectExecptionTargets(MethodGen methodGen) {
+		Set<InstructionHandle> targets = new HashSet<>();
+		for (CodeExceptionGen exception : methodGen.getExceptionHandlers()) {
+			targets.add(exception.getHandlerPC());
+		}
+		return targets;
 	}
 
 	private void appendInstruction(InstructionList insnList, InstructionHandle insnHandler, InstructionList newInsns) {
@@ -268,7 +274,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 	}
 
 	private void injectCodeTracerExit(InstructionHandle exitInsHandle, InstructionList insnList, 
-			ConstantPoolGen constPool, LocalVariableGen tracerVar, int line, LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
+			ConstantPoolGen constPool, LocalVariableGen tracerVar, int line, LocalVariableGen classNameVar, LocalVariableGen methodSigVar, boolean isMainMethod) {
 		InstructionList newInsns = new InstructionList();
 		
 		newInsns.append(new ALOAD(tracerVar.getIndex()));
@@ -276,6 +282,14 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		newInsns.append(new ALOAD(classNameVar.getIndex()));
 		newInsns.append(new ALOAD(methodSigVar.getIndex()));
 		appendTracerMethodInvoke(newInsns, TracerMethods.HIT_METHOD_END, constPool);
+		
+		if (isMainMethod) {
+			int index = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_exitProgram",
+					"(Ljava/lang/String;)V");
+			newInsns.append(new ALOAD(classNameVar.getIndex()));
+			newInsns.append(new ALOAD(methodSigVar.getIndex()));
+			newInsns.append(new INVOKESTATIC(index));
+		}
 		
 		insertInsnHandler(insnList, newInsns, exitInsHandle);
 		newInsns.dispose();
@@ -853,13 +867,15 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 	}
 
 	private void injectCodeTracerHitLine(InstructionList insnList, ConstantPoolGen constPool,
-			LocalVariableGen tracerVar, int line, InstructionHandle lineNumberInsn, LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
+			LocalVariableGen tracerVar, int line, InstructionHandle lineNumberInsn, LocalVariableGen classNameVar,
+			LocalVariableGen methodSigVar, boolean isExceptionTarget) {
+		TracerMethods tracerMethod = isExceptionTarget ? TracerMethods.HIT_EXEPTION_TARGET : TracerMethods.HIT_LINE;
 		InstructionList newInsns = new InstructionList();
 		newInsns.append(new ALOAD(tracerVar.getIndex()));
 		newInsns.append(new PUSH(constPool, line));
 		newInsns.append(new ALOAD(classNameVar.getIndex()));
 		newInsns.append(new ALOAD(methodSigVar.getIndex()));
-		appendTracerMethodInvoke(newInsns, TracerMethods.HIT_LINE, constPool);
+		appendTracerMethodInvoke(newInsns, tracerMethod, constPool);
 		insertInsnHandler(insnList, newInsns, lineNumberInsn);
 		newInsns.dispose();
 	}

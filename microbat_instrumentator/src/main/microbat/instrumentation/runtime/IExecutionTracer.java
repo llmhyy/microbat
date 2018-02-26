@@ -13,6 +13,8 @@ public interface IExecutionTracer {
 	public void _hitVoidReturn(int line, String className, String methodSignature);
 
 	public void _hitLine(int line, String className, String methodSignature);
+	
+	public void _hitExeptionTarget(int line, String className, String methodSignature);
 
 	public void _writeField(Object refValue, Object fieldValue, String fieldName, String fieldTypeSign, int line, String className, String methodSignature);
 

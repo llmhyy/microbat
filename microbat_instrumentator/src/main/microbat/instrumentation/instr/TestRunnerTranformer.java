@@ -52,14 +52,14 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 		JavaClass newJC = null;
 		for (Method method : jc.getMethods()) {
 			int agentMethodIdx = -1;
-			if ("$setProgramMessage".equals(method.getName())) {
+			if ("$exitProgram".equals(method.getName())) {
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
 				InstructionList newInsns = new InstructionList();
 				int varIdx = 1;
 				LocalVariableTable localVariableTable = methodGen.getLocalVariableTable(constPool);
 				LocalVariable localVariable = localVariableTable.getLocalVariable(varIdx, 0);
 				Type argType = methodGen.getArgumentType(0);
-				int index = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_setProgramMsg",
+				int index = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_exitProgram",
 						"(Ljava/lang/String;)V");
 				
 				newInsns.append(InstructionFactory.createLoad(argType, localVariable.getIndex()));

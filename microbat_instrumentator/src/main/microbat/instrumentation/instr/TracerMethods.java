@@ -3,6 +3,7 @@ package microbat.instrumentation.instr;
 public enum TracerMethods {
 	AFTER_INVOKE(true, "microbat/instrumentation/runtime/IExecutionTracer", "_afterInvoke", "(ILjava/lang/String;Ljava/lang/String;)V", 4),
 	GET_TRACER(false, "microbat/instrumentation/runtime/ExecutionTracer", "_getTracer", "(ZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)Lmicrobat/instrumentation/runtime/IExecutionTracer;", 9),
+	HIT_EXEPTION_TARGET(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitExeptionTarget", "(ILjava/lang/String;Ljava/lang/String;)V", 4),
 	HIT_INVOKE(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitInvoke", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 10),
 	HIT_INVOKE_STATIC(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitInvokeStatic", "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 9),
 	HIT_LINE(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitLine", "(ILjava/lang/String;Ljava/lang/String;)V", 4),
