@@ -1,6 +1,5 @@
 package sav.common.core.utils;
 
-import org.apache.commons.lang.StringUtils;
 
 public class ConfigUtils {
 
@@ -14,7 +13,7 @@ public class ConfigUtils {
 	 */
 	public static String getProperty(final String name) {
 		String value = System.getProperty(name);
-		if (StringUtils.isBlank(value)) {
+		if (StringUtils.isEmpty(value)) {
 			value = System.getenv(name);
 		}
 		return value;

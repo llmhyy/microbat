@@ -21,7 +21,7 @@ import sav.common.core.Constants;
  * 
  */
 public class StringUtils {
-	public static final String EMPTY = org.apache.commons.lang.StringUtils.EMPTY;
+	public static final String EMPTY = "";
 	public static final String SPACE = " ";
 	
 	private StringUtils() {
@@ -121,7 +121,7 @@ public class StringUtils {
 	}
 	
 	public static boolean isStartWithUppercaseLetter(String text) {
-		if (org.apache.commons.lang.StringUtils.isEmpty(text)) {
+		if (isEmpty(text)) {
 			return false;
 		}
 		return Character.isUpperCase(text.charAt(0));

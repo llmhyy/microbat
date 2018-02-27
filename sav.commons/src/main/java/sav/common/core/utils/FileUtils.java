@@ -16,8 +16,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang.math.NumberUtils;
-
 import sav.common.core.Constants;
 import sav.common.core.Pair;
 import sav.common.core.SavRtException;
@@ -186,7 +184,13 @@ public class FileUtils {
 			String fileName = file.getName();
 			String fileIdxStr = fileName.substring(fileName.lastIndexOf(FILE_IDX_START_CH) + 1,
 					fileName.indexOf(suffix));
-			int fileIdx = NumberUtils.toInt(fileIdxStr, lastIdx);
+			int fileIdx = lastIdx;
+			try{
+				fileIdx = Integer.valueOf(fileIdxStr);
+			}
+			catch(Exception e){
+				fileIdx = lastIdx;
+			}
 			if (fileIdx > lastIdx) {
 				lastIdx = fileIdx;
 				lastFile = file;

@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
-
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
 import com.sun.jdi.ArrayType;
@@ -251,7 +249,7 @@ public class VariableValueExtractor {
 	}
 	
 	protected JDIParam recursiveMatch(JDIParam param, final String property) {
-		if (StringUtils.isBlank(property)) {
+		if (property==null || property.isEmpty()) {
 			return param;
 		}
 		Value value = param.getValue();
