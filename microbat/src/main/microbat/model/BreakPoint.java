@@ -248,4 +248,13 @@ public class BreakPoint extends ClassLocation {
 	public void setStartOfClass(boolean isStartOfClass) {
 		this.isStartOfClass = isStartOfClass;
 	}
+
+	public String getPackageName() {
+		if(this.classCanonicalName.contains(".")){
+			return this.classCanonicalName.substring(0, this.classCanonicalName.lastIndexOf("."));
+		}
+		else{
+			return "";
+		}
+	}
 }
