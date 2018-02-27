@@ -382,4 +382,9 @@ public class MicroBatUtil {
 //		
 //		return false;
 //	}
+	
+	public static String getTraceFolder() {
+		return new StringBuilder(IResourceUtils.getEclipseRootDir()).append(File.separator).append("trace")
+				.toString();
+	}
 }

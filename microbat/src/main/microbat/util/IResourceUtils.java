@@ -22,7 +22,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +36,10 @@ public class IResourceUtils {
 	private static Logger log = LoggerFactory.getLogger(IResourceUtils.class);
 	private IResourceUtils(){}
 	
-	public static void getTestTarget(IJavaProject project) {
+	public static String getEclipseRootDir() {
+		String eclipseExecutablePath = System.getProperty("eclipse.launcher");
+		String root = eclipseExecutablePath.substring(0, eclipseExecutablePath.lastIndexOf("eclipse")-1);
+		return root;
 	}
 	
 	public static String getResourceAbsolutePath(String pluginId, String resourceRelativePath)

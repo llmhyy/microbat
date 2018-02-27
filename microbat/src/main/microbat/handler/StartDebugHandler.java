@@ -26,14 +26,17 @@ import microbat.codeanalysis.runtime.ExecutionStatementCollector;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.ProgramExecutor;
 import microbat.evaluation.junit.TestCaseAnalyzer;
+import microbat.instrumentation.AgentParams;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
+import microbat.util.IResourceUtils;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import microbat.views.DebugFeedbackView;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
+import sav.common.core.utils.FileUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class StartDebugHandler extends AbstractHandler {
@@ -90,8 +93,8 @@ public class StartDebugHandler extends AbstractHandler {
 					try{
 						monitor.beginTask("Construct Trace Model", 100);
 						
-						InstrumentationExecutor exectuor = new InstrumentationExecutor(appClassPath);
-						
+						InstrumentationExecutor exectuor = new InstrumentationExecutor(appClassPath,
+								generateTraceDir(appClassPath), "trace");
 						final Trace trace = exectuor.run();
 						trace.setAppJavaClassPath(appClassPath);
 						
@@ -135,6 +138,22 @@ public class StartDebugHandler extends AbstractHandler {
 		}
 		
 		return null;
+	}
+
+	protected String generateTraceDir(AppJavaClassPath appPath) {
+		String traceFolder;
+		if (appPath.getOptionalTestClass() != null) {
+			traceFolder = FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), 
+					Settings.projectName,
+					appPath.getOptionalTestClass(), 
+					appPath.getOptionalTestMethod());
+		} else {
+			traceFolder = FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), 
+					Settings.projectName, 
+					appPath.getLaunchClass()); 
+		}
+		FileUtils.createFolder(traceFolder);
+		return traceFolder;
 	}
 
 	class MethodFinder extends ASTVisitor{
