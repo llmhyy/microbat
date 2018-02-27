@@ -74,12 +74,13 @@ public class FilterChecker implements IFilterChecker {
 			path = getPath(path);
 			File file = new File(path);
 			if (file.isFile()) {
-				for (String extLib : extLibs) {
-					if (path.startsWith(extLib)) {
-						match = true;
-						break;
-					}
-				}
+				/* exclude extLib by default */
+//				for (String extLib : extLibs) {
+//					if (path.startsWith(extLib)) {
+//						match = true;
+//						break;
+//					}
+//				}
 			} else {
 				for (String binFolder : appBinFolders) {
 					if (binFolder.equals(path)) {
