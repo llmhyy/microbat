@@ -1,6 +1,7 @@
 package microbat.codeanalysis.runtime;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -73,6 +74,7 @@ public class InstrumentationExecutor {
 //			agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, 3);
 			agentRunner.precheck(config);
 			PrecheckInfo info = agentRunner.getPrecheckInfo();
+//			System.out.println(info);
 			this.setPrecheckInfo(new PreCheckInformation(info.getThreadNum(), info.getStepTotal(), 
 					info.isOverLong(), new ArrayList<>(info.getVisitedLocs())));
 			if(!info.isOverLong()){
@@ -95,7 +97,9 @@ public class InstrumentationExecutor {
 	}
 	
 	private String generateTraceFilePath() {
-		traceExecFilePath = FileUtils.createNewFileInSeq(traceDir, traceName, TRACE_DUMP_FILE_SUFFIX).getAbsolutePath();
+		traceExecFilePath = new StringBuilder(traceDir).append(File.separator)
+						.append(traceName).append(TRACE_DUMP_FILE_SUFFIX).toString();
+//				FileUtils.createNewFileInSeq(traceDir, traceName, TRACE_DUMP_FILE_SUFFIX).getAbsolutePath();
 		return traceExecFilePath;
 	}
 
