@@ -61,7 +61,7 @@ public class MicroBatTestRunner {
 		System.currentTimeMillis();
 		System.out.println("is successful? " + successful);
 		System.out.println(this.failureMessage);
-		$setProgramMessage(successful + ";" + this.failureMessage);
+		$exitProgram(successful + ";" + this.failureMessage);
 	}
 	
 	private void $testFinished(String className, String methodName) {
@@ -72,7 +72,7 @@ public class MicroBatTestRunner {
 		// for agent part.
 	}
 	
-	private void $setProgramMessage(String resultMsg) {
+	private void $exitProgram(String resultMsg) {
 		// for agent part.
 	}
 
