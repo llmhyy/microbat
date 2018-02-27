@@ -68,8 +68,8 @@ public class Premain {
 			bootJarPaths = getJarFiles(INSTRUMENTATION_STANTDALONE_JAR, 
 										"bcel-6.0.jar",
 										"javassist.jar",
-										"commons-lang-2.6.jar",
-										"sav.commons.jar",
+//										"commons-lang-2.6.jar",
+										"sav.commons.simplified.jar",
 										"commons-io-1.3.2.jar",
 										"mysql-connector-java-5.1.44-bin.jar",
 										"slf4j-api-1.7.12.jar");
