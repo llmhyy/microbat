@@ -14,8 +14,8 @@ import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
 import microbat.preference.MicrobatPreference;
-import microbat.util.Settings;
 import sav.common.core.SavException;
+import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.vm.VMConfiguration;
@@ -23,19 +23,24 @@ import sav.strategies.vm.VMConfiguration;
 public class InstrumentationExecutor {
 	private final static String TEST_CASE_RUNNER = "microbat.evaluation.junit.MicroBatTestRunner";
 	private final static String TRACE_FILE_OUTPUT_FOLDER = "trace";
+	public final static String TRACE_DUMP_FILE_SUFFIX = ".exec";
 	
 	private AppJavaClassPath appPath;
+	private String traceDir;
+	private String traceName;
 	private PreCheckInformation precheckInfo;
+	private String traceExecFilePath;
 	
-	public InstrumentationExecutor(AppJavaClassPath appPath){
+	public InstrumentationExecutor(AppJavaClassPath appPath, String traceDir, String traceName) {
 		this.appPath = appPath;
+		this.traceDir = traceDir;
+		this.traceName = traceName;
 	}
-	
 	
 	public Trace run(){
 		String jarPath = appPath.getAgentLib();
 		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath);
-//		agentRunner.setPrintOutExecutionTrace(true);
+		agentRunner.setPrintOutExecutionTrace(true);
 		VMConfiguration config = new VMConfiguration();
 		config.setNoVerify(true);
 		config.setJavaHome(appPath.getJavaHome());
@@ -55,7 +60,6 @@ public class InstrumentationExecutor {
 		agentRunner.addAgentParam(AgentParams.OPT_JAVA_HOME, config.getJavaHome());
 		agentRunner.addAgentParam(AgentParams.OPT_CLASS_PATH, config.getClasspathStr());
 		agentRunner.addAgentParam(AgentParams.OPT_WORKING_DIR, config.getWorkingDirectory());
-//		agentRunner.addAgentParam(AgentParams.OPT_PRECHECK, String.valueOf(isPrecheck));
 		/* build includes & excludes params */
 		agentRunner.addAgentParam(AgentParams.OPT_INCLUDES,
 				StringUtils.join(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR,
@@ -91,9 +95,8 @@ public class InstrumentationExecutor {
 	}
 	
 	private String generateTraceFilePath() {
-		appPath.getWorkingDirectory();
-		//TODO LLT
-		return null;
+		traceExecFilePath = FileUtils.createNewFileInSeq(traceDir, traceName, TRACE_DUMP_FILE_SUFFIX).getAbsolutePath();
+		return traceExecFilePath;
 	}
 
 
