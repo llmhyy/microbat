@@ -72,6 +72,7 @@ public class InstrumentationExecutor {
 		try {
 			/* test stepLimit */
 //			agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, 3);
+			agentRunner.setPrintOutExecutionTrace(false);
 			agentRunner.precheck(config);
 			PrecheckInfo info = agentRunner.getPrecheckInfo();
 //			System.out.println(info);
