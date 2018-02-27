@@ -396,7 +396,23 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void _hitExeptionTarget(int line, String className, String methodSignature) {
 		locker.lock();
 		_hitLine(line, className, methodSignature);
-		trace.getLatestNode().setException(true);
+		TraceNode latestNode = trace.getLatestNode();
+		latestNode.setException(true);
+		boolean invocationLayerChanged = this.methodCallStack.popForException(methodSignature);
+		
+		if(invocationLayerChanged){
+			TraceNode caller = null;
+			if(!this.methodCallStack.isEmpty()){
+				caller = this.methodCallStack.peek();
+			}
+			
+			TraceNode olderCaller = latestNode.getInvocationParent();
+			if(olderCaller!=null){
+				olderCaller.getInvocationChildren().remove(latestNode);
+				latestNode.setInvocationParent(caller);
+			}
+		}
+		
 		locker.unLock();
 	}
 	
