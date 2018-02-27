@@ -8,6 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CatchClause;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.model.AttributionVar;
@@ -16,6 +21,7 @@ import microbat.model.BreakPointValue;
 import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
 import microbat.model.value.VarValue;
+import microbat.util.JavaUtil;
 import microbat.util.Settings;
 
 public class TraceNode{
@@ -1078,6 +1084,39 @@ public class TraceNode{
 
 	public void setRuntimePC(long runtimePC) {
 		this.runtimePC = runtimePC;
+	}
+
+	class CatchClauseFinder extends ASTVisitor{
+		int line;
+		CompilationUnit cu;
+		
+		boolean find = false;
+		
+		public CatchClauseFinder(int line, CompilationUnit cu) {
+			super();
+			this.line = line;
+			this.cu = cu;
+		}
+
+		public boolean visit(CatchClause clause){
+			int startLine = cu.getLineNumber(clause.getStartPosition());
+			int endLine = cu.getLineNumber(clause.getStartPosition()+clause.getLength());
+			
+			if(startLine<=line && line<=endLine){
+				find = true;
+			}
+			
+			return false;
+		}
+	}
+	
+	public boolean insideException() {
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(
+				this.getDeclaringCompilationUnitName(), this.getTrace().getAppJavaClassPath());
+		CatchClauseFinder finder = new CatchClauseFinder(this.breakPoint.getLineNumber(), cu);
+		cu.accept(finder);
+		
+		return finder.find;
 	}
 
 
