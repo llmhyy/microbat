@@ -1,4 +1,4 @@
-package microbat.instrumentation.trace.testdata;
+package microbattest.instrumentation.trace.testdata;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

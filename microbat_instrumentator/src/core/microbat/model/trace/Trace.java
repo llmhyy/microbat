@@ -9,7 +9,6 @@ import java.util.Stack;
 
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.InstructionHandle;
-import org.apache.commons.lang.StringUtils;
 
 import microbat.codeanalysis.ast.LocalVariableScopes;
 import microbat.codeanalysis.bytecode.ByteCodeParser;
@@ -187,31 +186,34 @@ public class Trace {
 		int lineNumber = breakPoint.getLineNumber();
 		
 		String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
-		if(StringUtils.isNumeric(expression)){
+		
+		try{
 			int order = Integer.valueOf(expression);
 			if(node.getOrder()==order){
 				resultIndex = i;
 			}
 		}
-		else if(expression.matches("id=(\\w|\\W)+:\\d+")){
-			String id = expression.replace("id=", "");
-			for(VarValue readVar: node.getReadVariables()){
-				if(readVar.getVarID().equals(id)){
-					resultIndex = i;
-				}
-				else if(readVar.getAliasVarID()!=null && readVar.getAliasVarID().equals(id)){
-					resultIndex = i;
+		catch(Exception e){
+			if(expression.matches("id=(\\w|\\W)+:\\d+")){
+				String id = expression.replace("id=", "");
+				for(VarValue readVar: node.getReadVariables()){
+					if(readVar.getVarID().equals(id)){
+						resultIndex = i;
+					}
+					else if(readVar.getAliasVarID()!=null && readVar.getAliasVarID().equals(id)){
+						resultIndex = i;
+					}
 				}
 			}
-		}
-		else{
-			String exp = combineTraceNodeExpression(className, lineNumber);
-			if(exp.equals(expression)){
-				resultIndex = i;
-			}
-			else if(simpleClassName.equals(expression)){
-				if (resultIndex==-1) {
-					resultIndex = i;					
+			else{
+				String exp = combineTraceNodeExpression(className, lineNumber);
+				if(exp.equals(expression)){
+					resultIndex = i;
+				}
+				else if(simpleClassName.equals(expression)){
+					if (resultIndex==-1) {
+						resultIndex = i;					
+					}
 				}
 			}
 		}

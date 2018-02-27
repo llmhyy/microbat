@@ -32,9 +32,7 @@ public class FilterChecker implements IFilterChecker {
 				} else { 
 					File binFolder = new File(path);
 					if (binFolder.exists() && binFolder.isDirectory()) {
-						if (!path.endsWith("/")) {
-							path = path + "/";
-						}
+						path = getDir(path);
 						appBinFolders.add(path);
 					}
 				}
@@ -48,6 +46,13 @@ public class FilterChecker implements IFilterChecker {
 		}
 	}
 	
+	private String getDir(String path) {
+		if (!path.endsWith("/")) {
+			return path + "/";
+		}
+		return path;
+	}
+
 	private String getPath(String cp) {
 		String path = cp;
 		path = path.replace("\\", "/");
@@ -83,7 +88,7 @@ public class FilterChecker implements IFilterChecker {
 //				}
 			} else {
 				for (String binFolder : appBinFolders) {
-					if (binFolder.equals(path)) {
+					if (binFolder.equals(getDir(path))) {
 						match = true;
 						includes.add(classFName);
 						break;

@@ -1,9 +1,12 @@
-package microbat.tools;
+package microbattest.tools;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Test;
+
 import microbat.instrumentation.Premain;
+import sav.common.core.SavException;
 import sav.common.core.utils.CollectionBuilder;
 import sav.commons.TestConfiguration;
 import sav.strategies.vm.VMRunner;
@@ -22,17 +25,17 @@ public class JarPackageTool {
 		CollectionBuilder<String, List<String>> cmd = new CollectionBuilder<String, List<String>>(new ArrayList<String>());
 		VMRunner vmRunner = new VMRunner();
 		
-//		/* export & copy to microbat/lib */
-//		String microbatLibJar = BASE_DIR.replace("microbat_instrumentator/", "microbat/lib/instrumentator.jar");
+		/* export & copy to microbat/lib */
+		/* export Microbat junit runner */
 //		cmd.append(TestConfiguration.getJavaHome() + "/bin/jar")
-//			.append("cfm")
-//			.append(microbatLibJar)
-//			.append(BASE_DIR + "META-INF/MANIFEST.MF")
+//			.append("cf")
+//			.append(DEPLOY_DIR + "testrunner.jar")
 //			.append("-C")
-//			.append(BASE_DIR + "bin")
-//			.append("microbat/instrumentation");
+//			.append(getBaseDir("microbat_junit_test") + "bin")
+//			.append("microbat");
 //		vmRunner.startAndWaitUntilStop(cmd.toCollection());	
 //		cmd.clear();
+//		System.out.println("Deploy testrunner.jar to " + DEPLOY_JAR_PATH);
 		
 		/* export instrumentator_agent.jar */
 		String agentJar = Premain.INSTRUMENTATION_STANTDALONE_JAR;
@@ -64,7 +67,7 @@ public class JarPackageTool {
 			.append("-C").append(BASE_DIR)
 			.append("lib/commons-lang-2.6.jar")
 			.append("-C").append(BASE_DIR)
-			.append("lib/sav.commons.jar")
+			.append("lib/sav.commons.simplified.jar")
 			.append("-C").append(BASE_DIR)
 			.append("lib/commons-io-1.3.2.jar")
 			.append("-C").append(BASE_DIR)
@@ -85,5 +88,28 @@ public class JarPackageTool {
 			path = path.substring(1, path.length());
 		}
 		return path;
+	}
+	
+	@Test
+	public void exportToMicrobatLib() throws SavException {
+		CollectionBuilder<String, List<String>> cmd = new CollectionBuilder<String, List<String>>(new ArrayList<String>());
+		VMRunner vmRunner = new VMRunner();
+		
+//		/* export & copy to microbat/lib */
+		String microbatLibJar = BASE_DIR.replace("microbat_instrumentator/", "microbat/lib/instrumentator.jar");
+		cmd.append(TestConfiguration.getJavaHome() + "/bin/jar")
+			.append("cfm")
+			.append(microbatLibJar)
+			.append(BASE_DIR + "META-INF/MANIFEST.MF")
+			.append("-C")
+			.append(BASE_DIR + "bin")
+			.append("microbat/instrumentation");
+		vmRunner.startAndWaitUntilStop(cmd.toCollection());	
+		cmd.clear();
+	}
+	
+	private static String getBaseDir(String projectName) {
+		return BASE_DIR.replace("microbat_instrumentator", projectName);
+		
 	}
 }

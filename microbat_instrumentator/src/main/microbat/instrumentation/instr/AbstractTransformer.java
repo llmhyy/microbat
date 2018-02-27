@@ -35,6 +35,7 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 		
 	public static void log(byte[] classfileBuffer, byte[] data, String classFName, boolean dump) {
 		if (data == null) {
+//			System.out.println("cannot instrument class: " + classFName);
 			return;
 		}
 //		if ("com/google/common/base/CharMatcher$11".equals(className)) {

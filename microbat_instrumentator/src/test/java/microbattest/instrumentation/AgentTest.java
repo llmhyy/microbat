@@ -1,4 +1,4 @@
-package microbat.instrumentation;
+package microbattest.instrumentation;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -8,7 +8,8 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
-import microbat.instrumentation.trace.testdata.Sample;
+import microbat.instrumentation.AgentConstants;
+import microbattest.instrumentation.trace.testdata.Sample;
 import sav.common.core.SavException;
 import sav.common.core.utils.CollectionBuilder;
 import sav.commons.TestConfiguration;

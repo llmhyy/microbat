@@ -1,4 +1,4 @@
-package microbat.instrumentation.trace.testdata;
+package microbattest.instrumentation.trace.testdata;
 
 public class Sample3 {
 	private boolean booleanVal = true;

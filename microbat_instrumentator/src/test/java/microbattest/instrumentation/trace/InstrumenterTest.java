@@ -1,4 +1,4 @@
-package microbat.instrumentation.trace;
+package microbattest.instrumentation.trace;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,7 +9,7 @@ import org.junit.Test;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.instr.TraceInstrumenter;
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
-import microbat.instrumentation.trace.testdata.Sample3;
+import microbattest.instrumentation.trace.testdata.Sample3;
 import sav.common.core.utils.FileUtils;
 
 /**

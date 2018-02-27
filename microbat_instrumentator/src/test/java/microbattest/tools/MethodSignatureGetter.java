@@ -6,7 +6,7 @@
  *  Version:  $Revision: 1 $
  */
 
-package microbat.tools;
+package microbattest.tools;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

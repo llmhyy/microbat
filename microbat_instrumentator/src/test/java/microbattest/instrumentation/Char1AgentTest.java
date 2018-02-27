@@ -1,9 +1,11 @@
-package microbat.instrumentation;
+package microbattest.instrumentation;
 
 import java.util.ArrayList;
 
 import org.junit.Test;
 
+import microbat.instrumentation.AgentConstants;
+import microbat.instrumentation.AgentParams;
 import sav.common.core.SavException;
 import sav.commons.TestConfiguration;
 import sav.strategies.vm.AgentVmRunner;

@@ -1,6 +1,8 @@
-package microbat.instrumentation.filter;
+package microbattest.instrumentation.filter;
 
 import org.junit.Test;
+
+import microbat.instrumentation.filter.WildcardMatcher;
 
 public class WildcardMatcherTest {
 
