@@ -16,7 +16,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.math.NumberUtils;
+
 import sav.common.core.Constants;
+import sav.common.core.Pair;
 import sav.common.core.SavRtException;
 
 /**
@@ -24,6 +27,9 @@ import sav.common.core.SavRtException;
  *
  */
 public class FileUtils {
+	private static final String FILE_IDX_START_CH = "_";
+	private static final int FILE_SEQ_START_IDX = 0;
+
 	private FileUtils(){}
 	
 	public static File createTempFolder(String folderName) {
@@ -33,6 +39,18 @@ public class FileUtils {
 				return folder;
 			}
 			throw new SavRtException(String.format("Cannot create temp folder: %s", folderName));
+		}
+		folder.mkdirs();
+		return folder;
+	}
+	
+	public static File createFolder(String folderPath) {
+		File folder = new File(folderPath);
+		if (folder.exists()) {
+			if (folder.isDirectory()) {
+				return folder;
+			}
+			throw new SavRtException(String.format("Path %s is not a folder!", folderPath));
 		}
 		folder.mkdirs();
 		return folder;
@@ -132,4 +150,51 @@ public class FileUtils {
 		}
 	}
 	
+	public static File createNewFileInSeq(String dir, final String filePrefix, final String fileSuffix) {
+		int fileIdx = FILE_SEQ_START_IDX;
+		Pair<File, Integer> lastFile = getLastFile(dir, filePrefix, fileSuffix);
+		if (lastFile != null) {
+			fileIdx = lastFile.b + 1;
+		}
+		String filepath = new StringBuilder(dir).append(File.separator)
+							.append(filePrefix).append(FILE_IDX_START_CH).append(fileIdx).append(fileSuffix)
+							.toString();
+		return getFileCreateIfNotExist(filepath);
+	}
+	
+	public static Pair<File, Integer> getLastFile(String dir, final String filePrefix, final String fileSuffix) {
+		File folder = new File(dir);
+		if (!folder.exists()) {
+			return null;
+		}
+		File[] files = folder.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File folder, String name) {
+				return name.endsWith(fileSuffix) && name.startsWith(filePrefix);
+			}
+		});
+		if (CollectionUtils.isEmpty(files)) {
+			return null;
+		}
+		return getLastFile(files, fileSuffix);
+	}
+	
+	public static Pair<File, Integer> getLastFile(File[] files, String suffix) {
+		int lastIdx = -1;
+		File lastFile = null;
+		for (File file : files) {
+			String fileName = file.getName();
+			String fileIdxStr = fileName.substring(fileName.lastIndexOf(FILE_IDX_START_CH) + 1,
+					fileName.indexOf(suffix));
+			int fileIdx = NumberUtils.toInt(fileIdxStr, lastIdx);
+			if (fileIdx > lastIdx) {
+				lastIdx = fileIdx;
+				lastFile = file;
+			}
+		}
+		if (lastIdx < 0) {
+			return null;
+		}
+		return Pair.of(lastFile, lastIdx);
+	}
 }
