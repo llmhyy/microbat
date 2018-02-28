@@ -80,6 +80,10 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 	private BasicTypeSupporter basicTypeSupporter = new BasicTypeSupporter();
 	private int tempVarIdx = 0;
 	private EntryPoint entryPoint;
+	
+	protected TraceInstrumenter() {
+		// do nothing
+	}
 
 	public TraceInstrumenter(AgentParams params) {
 		this.entryPoint = params.getEntryPoint();
@@ -103,7 +107,6 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
 			}
-			
 			try {
 				boolean changed = false;
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
@@ -148,7 +151,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		}
 	}
 
-	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
+	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
 			boolean isAppClass, boolean isMainMethod) {
 		tempVarIdx = 0;
 		InstructionList insnList = methodGen.getInstructionList();

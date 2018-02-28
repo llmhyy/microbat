@@ -3,6 +3,7 @@ package microbat.instrumentation.precheck;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+import java.util.List;
 
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.instr.AbstractTransformer;
@@ -26,6 +27,10 @@ public class PrecheckTransformer implements ClassFileTransformer {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public List<String> getExceedingLimitMethods() {
+		return instrumenter.getExceedLimitMethods();
 	}
 
 }

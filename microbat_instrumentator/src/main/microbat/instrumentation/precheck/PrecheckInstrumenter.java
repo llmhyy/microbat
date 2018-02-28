@@ -22,10 +22,15 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.PUSH;
 import org.apache.bcel.generic.Type;
 
-import microbat.instrumentation.instr.AbstraceInstrumenter;
+import microbat.instrumentation.instr.TraceInstrumenter;
 
-public class PrecheckInstrumenter extends AbstraceInstrumenter {
-	private static final String MEASUREMENT_VAR_NAME = "$tracerMs";
+public class PrecheckInstrumenter extends TraceInstrumenter {
+	private static final String MEASUREMENT_VAR_NAME = "$traceMs";
+	private List<String> exceedLimitMethods = new ArrayList<>();
+	
+	public PrecheckInstrumenter() {
+		super();
+	}
 
 	public byte[] instrument(String classFName, byte[] classfileBuffer) throws Exception {
 		ClassParser cp = new ClassParser(new java.io.ByteArrayInputStream(classfileBuffer), classFName);
@@ -38,6 +43,7 @@ public class PrecheckInstrumenter extends AbstraceInstrumenter {
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		JavaClass newJC = null;
+		List<Method> instrumentedMethods = new ArrayList<>();
 		for (Method method : jc.getMethods()) {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
@@ -54,6 +60,7 @@ public class PrecheckInstrumenter extends AbstraceInstrumenter {
 					methodGen.setMaxStack();
 					methodGen.setMaxLocals();
 					classGen.replaceMethod(method, methodGen.getMethod());
+					instrumentedMethods.add(method);
 				}
 				newJC = classGen.getJavaClass();
 				newJC.setConstantPool(constPool.getFinalConstantPool());
@@ -62,11 +69,39 @@ public class PrecheckInstrumenter extends AbstraceInstrumenter {
 				e.printStackTrace();
 			}
 		}
+		
 		if (newJC != null) {
 			byte[] data = newJC.getBytes();
+			newJC = null;
+			calculateTraceInstrumentation(jc , classFName, instrumentedMethods);
 			return data;
 		}
 		return null;
+	}
+
+	private void calculateTraceInstrumentation(JavaClass jc, String classFName, List<Method> instrumentedMethods) {
+		ClassGen classGen = new ClassGen(jc);
+		ConstantPoolGen constPool = classGen.getConstantPool();
+		for (Method method : instrumentedMethods) {
+			try {
+				boolean changed = false;
+				MethodGen methodGen = new MethodGen(method, classFName, constPool);
+				changed = super.instrumentMethod(classGen, constPool, methodGen, method, true, false);
+				methodGen.getMethod().toString(); // exception if exceeding limit.
+				if (changed && methodGen.getInstructionList().getByteCode().length >= (65534)) {
+					exceedLimitMethods.add(new StringBuilder(classFName.replace("/", "."))
+								.append("#").append(method.getName()).toString());
+				}
+			} catch (Exception e) {
+				if (e.getMessage().contains("offset too large")) {
+					String methodName = method.getName() + method.getSignature();
+					exceedLimitMethods.add(new StringBuilder(classFName.replace("/", "."))
+							.append("#").append(methodName).toString());
+				}
+				System.err.println(String.format("Error when instrumenting: %s.%s", classFName, method.getName()));
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method) {
@@ -157,6 +192,10 @@ public class PrecheckInstrumenter extends AbstraceInstrumenter {
 					method.getMethodSign());
 			newInsns.append(new INVOKEVIRTUAL(index));
 		}
+	}
+	
+	public List<String> getExceedLimitMethods() {
+		return exceedLimitMethods;
 	}
 	
 	private enum MeasurementMethods {

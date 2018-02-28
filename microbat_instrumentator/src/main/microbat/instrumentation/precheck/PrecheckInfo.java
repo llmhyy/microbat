@@ -7,7 +7,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import microbat.instrumentation.AgentUtils;
@@ -22,6 +24,7 @@ public class PrecheckInfo {
 	private Set<ClassLocation> visitedLocs;
 	private int stepTotal;
 	private boolean isOverLong;
+	private List<String> exceedingLimitMethods;
 	
 	private PrecheckInfo() {
 		
@@ -34,12 +37,11 @@ public class PrecheckInfo {
 		setVisitedLocs(info.getVisitedLocs());
 		isOverLong = info.isOverLong();
 	}
-	
-	
 
 	@Override
 	public String toString() {
-		return "PrecheckInfo [threadNum=" + threadNum + ", counted_stepTotal=" + stepTotal + ", isOverLong=" + isOverLong + "]";
+		return "PrecheckInfo [threadNum=" + threadNum + ", stepTcounted_stepTotalotal=" + stepTotal + ", isOverLong=" + isOverLong
+				+ ", exceedingLimitMethods=" + exceedingLimitMethods + "]";
 	}
 
 	public static PrecheckInfo readFromFile(String filePath) {
@@ -56,6 +58,12 @@ public class PrecheckInfo {
 			infor.setThreadNum(reader.readVarInt());
 			infor.isOverLong = reader.readBoolean();
 			infor.setStepTotal(reader.readVarInt());
+			int exceedingMethodsSize = reader.readVarInt();
+			List<String> exceedingMethods = new ArrayList<String>(exceedingMethodsSize);
+			for (int i = 0; i < exceedingMethodsSize; i++) {
+				exceedingMethods.add(reader.readString());
+			}
+			infor.exceedingLimitMethods = exceedingMethods;
 			int locationsSize = reader.readVarInt();
 			Set<ClassLocation> visitedLocs = new HashSet<>(locationsSize);
 			for (int i = 0; i < locationsSize; i++) {
@@ -99,6 +107,10 @@ public class PrecheckInfo {
 			outputWriter.writeVarInt(threadNum);
 			outputWriter.writeBoolean(isOverLong);
 			outputWriter.writeVarInt(getStepTotal());
+			outputWriter.writeVarInt(exceedingLimitMethods.size());
+			for (String method : exceedingLimitMethods) {
+				outputWriter.writeString(method);
+			}
 			outputWriter.writeVarInt(getVisitedLocs().size());
 			for (ClassLocation loc : getVisitedLocs()) {
 				outputWriter.writeString(loc.getClassCanonicalName());
@@ -151,5 +163,13 @@ public class PrecheckInfo {
 
 	public void setOverLong(boolean isOverLong) {
 		this.isOverLong = isOverLong;
+	}
+
+	public void setExceedingLimitMethods(List<String> exceedingLimitMethods) {
+		this.exceedingLimitMethods = exceedingLimitMethods;
+	}
+	
+	public List<String> getExceedingLimitMethods() {
+		return exceedingLimitMethods;
 	}
 }

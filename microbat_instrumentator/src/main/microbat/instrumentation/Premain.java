@@ -23,9 +23,10 @@ public class Premain {
 		System.out.println("start instrumentation...");
 		AgentParams agentParams = AgentParams.parse(agentArgs);
 		if (agentParams.isPrecheck()) {
-			PrecheckAgent agent = new PrecheckAgent(agentParams);
+			PrecheckTransformer precheckTransformer = new PrecheckTransformer();
+			PrecheckAgent agent = new PrecheckAgent(agentParams, precheckTransformer);
 			agent.startup();
-			inst.addTransformer(new PrecheckTransformer());
+			inst.addTransformer(precheckTransformer);
 			inst.addTransformer(new TestRunnerTranformer());
 		} else {
 			Class<?>[] retransformableClasses = getRetransformableClasses(inst);

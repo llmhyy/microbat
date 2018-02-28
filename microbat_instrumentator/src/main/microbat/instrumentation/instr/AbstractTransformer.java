@@ -37,9 +37,6 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 		if (data == null) {
 			return;
 		}
-//		if ("com/google/common/base/CharMatcher$11".equals(className)) {
-//			dump = true;
-//		}
 		if (!dump) {
 			System.out.println("instrumented class: " + classFName);
 			return;
