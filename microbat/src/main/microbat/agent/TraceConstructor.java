@@ -20,8 +20,8 @@ public class TraceConstructor {
 	@Test
 	public void test() throws SavException {
 		String jarPath = "E:/lyly/Projects/microbat/master/microbat_instrumentator/src/resources/instrumentator.jar";
-		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath);
 		VMConfiguration config = new VMConfiguration();
+		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath, config);
 		config.setJavaHome("E:/lyly/Tools/jdk/jdk1.7.0_80");
 		config.addClasspath("E:/lyly/eclipse-java-mars-clean/eclipse/dropins/junit_lib/org.hamcrest.core.jar");
 		config.addClasspath("E:/linyun/bug_repo/Chart/1/bug/build-tests");
@@ -42,7 +42,7 @@ public class TraceConstructor {
 		agentRunner.addAgentParam("class_path", config.getClasspathStr());
 		agentRunner.addAgentParam("working_dir", "E:/linyun/bug_repo/Chart/1/bug");
 		long start = System.currentTimeMillis();
-		agentRunner.runWithDumpFileOption(config, null);
+		agentRunner.runWithDumpFileOption(null);
 //		agentRunner.runWithSocket(config);
 		Trace trace = agentRunner.getTrace();
 		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
@@ -56,8 +56,8 @@ public class TraceConstructor {
 		String instrumentationJarPath = IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "lib")
 				+ "/instrumentation.jar";
 
-		TraceAgentRunner agentRunner = new TraceAgentRunner(instrumentationJarPath);
 		VMConfiguration config = new VMConfiguration(appClassPath);
+		TraceAgentRunner agentRunner = new TraceAgentRunner(instrumentationJarPath, config);
 		config.setLaunchClass(appClassPath.getLaunchClass());
 		config.setNoVerify(true);
 		agentRunner.addAgentParam("entry_point",

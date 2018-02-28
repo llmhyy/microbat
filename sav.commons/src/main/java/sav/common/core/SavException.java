@@ -19,6 +19,14 @@ public class SavException extends Exception {
 	protected Enum<?> type;
 	protected Object[] params;
 	
+	public SavException(String message) {
+		super(message);
+	}
+	
+	public SavException(Throwable e) {
+		super(e);
+	}
+	
 	public SavException(Enum<?> type, Object... params) {
 		this.type = type;
 		this.params = params;

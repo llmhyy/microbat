@@ -1,9 +1,7 @@
 package microbat.codeanalysis.runtime;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,8 +11,8 @@ import java.util.List;
 import microbat.agent.TraceAgentRunner;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
-import microbat.instrumentation.output.TraceOutputReader;
 import microbat.instrumentation.precheck.PrecheckInfo;
+import microbat.model.ClassLocation;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
 import microbat.preference.MicrobatPreference;
@@ -22,10 +20,9 @@ import sav.common.core.SavException;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.vm.VMConfiguration;
+import sav.strategies.vm.VMRunner;
 
 public class InstrumentationExecutor {
-	private final static String TEST_CASE_RUNNER = "microbat.evaluation.junit.MicroBatTestRunner";
-	private final static String TRACE_FILE_OUTPUT_FOLDER = "trace";
 	public final static String TRACE_DUMP_FILE_SUFFIX = ".exec";
 	
 	private AppJavaClassPath appPath;
@@ -33,18 +30,22 @@ public class InstrumentationExecutor {
 	private String traceName;
 	private PreCheckInformation precheckInfo;
 	private String traceExecFilePath;
+	private TraceAgentRunner agentRunner;
+	private long timeout = VMRunner.NO_TIME_OUT;
 	
 	public InstrumentationExecutor(AppJavaClassPath appPath, String traceDir, String traceName) {
 		this.appPath = appPath;
 		this.traceDir = traceDir;
 		this.traceName = traceName;
+		agentRunner = createTraceAgentRunner();
 	}
 	
-	public Trace run(){
+	private TraceAgentRunner createTraceAgentRunner() {
 		String jarPath = appPath.getAgentLib();
-		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath);
 //		agentRunner.setPrintOutExecutionTrace(true);
 		VMConfiguration config = new VMConfiguration();
+		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath, config);
+		agentRunner.setPrintOutExecutionTrace(true);
 		config.setNoVerify(true);
 		config.setJavaHome(appPath.getJavaHome());
 		config.setClasspath(appPath.getClasspaths());
@@ -71,38 +72,81 @@ public class InstrumentationExecutor {
 				StringUtils.join(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR,
 						(Object[]) AnalysisScopePreference.getExcludedLibs()));
 		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
+		agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, MicrobatPreference.getStepLimit());
+		return agentRunner;
+	}
+	
+	public TraceAgentRunner prepareAgentRunner() {
+		agentRunner.setTimeout(timeout);
+		return agentRunner;
+	}
+	
+	public Trace run(){
 		try {
-			/* test stepLimit */
-//			agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, 3);
-			agentRunner.precheck(config);
+			prepareAgentRunner();
+			agentRunner.precheck();
 			PrecheckInfo info = agentRunner.getPrecheckInfo();
 //			System.out.println(info);
-			this.setPrecheckInfo(new PreCheckInformation(info.getThreadNum(), info.getStepTotal(), 
-					info.isOverLong(), new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods()));
-			if(!info.isOverLong() && info.getExceedingLimitMethods().isEmpty()){
-				traceExecFilePath = generateTraceFilePath(traceDir, traceName);
-				agentRunner.runWithDumpFileOption(config, traceExecFilePath);
-//				agentRunner.runWithSocket(config);
-				Trace trace = agentRunner.getTrace();
-				System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
-				System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
-				System.out.println("finish!");
-				
-				return trace;
+
+			PreCheckInformation precheckInfomation = new PreCheckInformation(info.getThreadNum(), info.getStepTotal(),
+					info.isOverLong(), new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods());
+			precheckInfomation.setPassTest(agentRunner.isTestSuccessful());
+			this.setPrecheckInfo(precheckInfomation);
+
+			if (!info.isOverLong() && info.getExceedingLimitMethods().isEmpty()) {
+				return execute();
 			}
 		} catch (SavException e1) {
 			e1.printStackTrace();
 		}
-
 		
 		return null;
-		
+	}
+	
+	public PreCheckInformation runPrecheck(int stepLimit) {
+		try {
+			/* test stepLimit */
+			agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, stepLimit);
+			prepareAgentRunner();
+			agentRunner.precheck();
+			PrecheckInfo info = agentRunner.getPrecheckInfo();
+//			System.out.println(info);
+			System.out.println("isPassTest: " + agentRunner.isTestSuccessful());
+			PreCheckInformation result = new PreCheckInformation(info.getThreadNum(), info.getStepTotal(), info.isOverLong(),
+					new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods());
+			result.setPassTest(agentRunner.isTestSuccessful());
+			result.setTimeout(agentRunner.isUnknownTestResult());
+			this.setPrecheckInfo(result);
+			return precheckInfo;
+		} catch (SavException e1) {
+			e1.printStackTrace();
+		}
+		return new PreCheckInformation(-1, -1, false, new ArrayList<ClassLocation>(), new ArrayList<String>());
+	}
+	
+	public Trace execute() {
+		try {
+			prepareAgentRunner();
+			traceExecFilePath = generateTraceFilePath(traceDir, traceName);
+			agentRunner.runWithDumpFileOption(traceExecFilePath);
+			// agentRunner.runWithSocket();
+			Trace trace = agentRunner.getTrace();
+			System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
+			System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
+			System.out.println("finish!");
+			return trace;
+		} catch (SavException e1) {
+			e1.printStackTrace();
+		}
+
+		return null;
 	}
 	
 	public static String generateTraceFilePath(String traceDir, String traceFileName) {
-		return new StringBuilder(traceDir).append(File.separator)
-						.append(traceFileName).append(TRACE_DUMP_FILE_SUFFIX).toString();
-//				FileUtils.createNewFileInSeq(traceDir, traceName, TRACE_DUMP_FILE_SUFFIX).getAbsolutePath();
+		return new StringBuilder(traceDir).append(File.separator).append(traceFileName).append(TRACE_DUMP_FILE_SUFFIX)
+				.toString();
+		// FileUtils.createNewFileInSeq(traceDir, traceName,
+		// TRACE_DUMP_FILE_SUFFIX).getAbsolutePath();
 	}
 
 
@@ -221,7 +265,6 @@ public class InstrumentationExecutor {
 		this.appPath = appPath;
 	}
 
-
 	public PreCheckInformation getPrecheckInfo() {
 		return precheckInfo;
 	}
@@ -231,5 +274,7 @@ public class InstrumentationExecutor {
 		this.precheckInfo = precheckInfo;
 	}
 
-
+	public void setTimeout(long timeout) {
+		this.timeout = timeout;
+	}
 }

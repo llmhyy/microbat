@@ -25,6 +25,7 @@ public class PrecheckInfo {
 	private int stepTotal;
 	private boolean isOverLong;
 	private List<String> exceedingLimitMethods;
+	private String programMsg;
 	
 	private PrecheckInfo() {
 		
@@ -55,6 +56,7 @@ public class PrecheckInfo {
 				throw new SavRtException("Invalid Precheck file result!");
 			}
 			PrecheckInfo infor = new PrecheckInfo();
+			infor.programMsg = reader.readString();
 			infor.setThreadNum(reader.readVarInt());
 			infor.isOverLong = reader.readBoolean();
 			infor.setStepTotal(reader.readVarInt());
@@ -104,6 +106,7 @@ public class PrecheckInfo {
 		bufferedStream = new BufferedOutputStream(fileStream);
 			outputWriter = new TraceOutputWriter(bufferedStream);
 			outputWriter.writeString(HEADER);
+			outputWriter.writeString(programMsg);
 			outputWriter.writeVarInt(threadNum);
 			outputWriter.writeBoolean(isOverLong);
 			outputWriter.writeVarInt(getStepTotal());
@@ -171,5 +174,13 @@ public class PrecheckInfo {
 	
 	public List<String> getExceedingLimitMethods() {
 		return exceedingLimitMethods;
+	}
+	
+	public String getProgramMsg() {
+		return programMsg;
+	}
+	
+	public void setProgramMsg(String programMsg) {
+		this.programMsg = programMsg;
 	}
 }

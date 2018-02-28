@@ -11,6 +11,8 @@ public class PreCheckInformation {
 	private boolean isOverLong;
 	private List<ClassLocation> visitedLocations = new ArrayList<>();
 	private List<String> overLongMethods = new ArrayList<>();
+	private boolean isPassTest;
+	private boolean timeout = false;
 
 	public PreCheckInformation(int threadNum, int stepNum, boolean isOverLong, 
 			List<ClassLocation> visitedLocations, List<String> overLongMethods) {
@@ -61,5 +63,20 @@ public class PreCheckInformation {
 	public void setOverLongMethods(List<String> overLongMethods) {
 		this.overLongMethods = overLongMethods;
 	}
+	public boolean isPassTest() {
+		return isPassTest;
+	}
+	
+	public void setPassTest(boolean isPassTest) {
+		this.isPassTest = isPassTest;
+	}
 
+	public boolean isTimeout() {
+		return timeout;
+	}
+
+	public void setTimeout(boolean timeout) {
+		this.timeout = timeout;
+	}
+	
 }

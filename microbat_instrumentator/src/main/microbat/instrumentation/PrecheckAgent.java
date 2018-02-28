@@ -34,6 +34,7 @@ public class PrecheckAgent {
 	protected void shutdown() {
 		PrecheckInfo precheckInfo = TraceMeasurement.getPrecheckInfo();
 		precheckInfo.setExceedingLimitMethods(precheckTransformer.getExceedingLimitMethods());
+		precheckInfo.setProgramMsg(Agent.getProgramMsg());
 		System.out.println(TextFormatUtils.printCol(precheckInfo.getExceedingLimitMethods()));
 		if (agentParams.getDumpFile() != null) {
 			precheckInfo.saveToFile(agentParams.getDumpFile(), false);

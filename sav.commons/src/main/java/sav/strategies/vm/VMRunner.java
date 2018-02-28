@@ -35,7 +35,7 @@ import sav.common.core.utils.StringUtils;
  * 
  */
 public class VMRunner {
-	private static final int NO_TIME_OUT = -1;
+	public static final int NO_TIME_OUT = -1;
 	private static Logger log = LoggerFactory.getLogger(VMRunner.class);
 	protected static final String cpToken = "-cp";
 	/*
@@ -56,6 +56,7 @@ public class VMRunner {
 	protected Process process;
 	private String processError;
 	private boolean printOutExecutionTrace = false;
+	private boolean processTimeout = false;
 	
 	public boolean startVm(VMConfiguration config) throws SavException {
 		this.isLog = config.isVmLogEnable();
@@ -156,6 +157,7 @@ public class VMRunner {
 			        @Override
 			        public void run() {
 			            stop();
+			            processTimeout = true;
 			            log.info("destroy thread due to timeout!");
 			        }
 
@@ -277,5 +279,9 @@ public class VMRunner {
 	
 	public void setPrintOutExecutionTrace(boolean printOutExecutionTrace) {
 		this.printOutExecutionTrace = printOutExecutionTrace;
+	}
+	
+	public boolean isProcessTimeout() {
+		return processTimeout;
 	}
 }
