@@ -387,4 +387,11 @@ public class MicroBatUtil {
 		return new StringBuilder(IResourceUtils.getEclipseRootDir()).append(File.separator).append("trace")
 				.toString();
 	}
+	
+	public static String generateTraceDir(String projectName, String bugID) {
+		String traceFolder = sav.common.core.utils.FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), projectName,
+				bugID);
+		sav.common.core.utils.FileUtils.createFolder(traceFolder);
+		return traceFolder;
+	}
 }

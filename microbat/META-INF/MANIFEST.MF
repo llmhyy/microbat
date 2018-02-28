@@ -37,6 +37,7 @@ Bundle-ClassPath: .,
  lib/mysql-connector-java-5.1.44-bin.jar,
  lib/instrumentator.jar
 Export-Package: microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,org.eclipse.ui.plugin",
+ microbat.agent,
  microbat.algorithm.graphdiff;uses:="microbat.model.value",
  microbat.behavior,
  microbat.breakpoint,

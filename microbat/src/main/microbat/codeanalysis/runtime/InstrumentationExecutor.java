@@ -1,7 +1,9 @@
 package microbat.codeanalysis.runtime;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,12 +13,12 @@ import java.util.List;
 import microbat.agent.TraceAgentRunner;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.output.TraceOutputReader;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
 import microbat.preference.MicrobatPreference;
 import sav.common.core.SavException;
-import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.vm.VMConfiguration;
@@ -78,7 +80,8 @@ public class InstrumentationExecutor {
 			this.setPrecheckInfo(new PreCheckInformation(info.getThreadNum(), info.getStepTotal(), 
 					info.isOverLong(), new ArrayList<>(info.getVisitedLocs())));
 			if(!info.isOverLong()){
-				agentRunner.runWithDumpFileOption(config, generateTraceFilePath());
+				traceExecFilePath = generateTraceFilePath(traceDir, traceName);
+				agentRunner.runWithDumpFileOption(config, traceExecFilePath);
 //				agentRunner.runWithSocket(config);
 				Trace trace = agentRunner.getTrace();
 				System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
@@ -96,11 +99,10 @@ public class InstrumentationExecutor {
 		
 	}
 	
-	private String generateTraceFilePath() {
-		traceExecFilePath = new StringBuilder(traceDir).append(File.separator)
-						.append(traceName).append(TRACE_DUMP_FILE_SUFFIX).toString();
+	public static String generateTraceFilePath(String traceDir, String traceFileName) {
+		return new StringBuilder(traceDir).append(File.separator)
+						.append(traceFileName).append(TRACE_DUMP_FILE_SUFFIX).toString();
 //				FileUtils.createNewFileInSeq(traceDir, traceName, TRACE_DUMP_FILE_SUFFIX).getAbsolutePath();
-		return traceExecFilePath;
 	}
 
 

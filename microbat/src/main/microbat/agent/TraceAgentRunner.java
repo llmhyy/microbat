@@ -1,8 +1,6 @@
 package microbat.agent;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -61,8 +59,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 		isPrecheckMode = false;
 		StopTimer timer = new StopTimer("Building trace");
 		timer.newPoint("Execution");
-		TraceOutputReader reader = null;
-		InputStream stream = null;
+		ExecTraceFileReader execTraceReader = new ExecTraceFileReader();
 		try {
 			File dumpFile;
 			if (filePath == null) {
@@ -76,26 +73,12 @@ public class TraceAgentRunner extends AgentVmRunner {
 			super.startAndWaitUntilStop(config);
 //			System.out.println(super.getCommandLinesString(config));
 			timer.newPoint("Read output result");
-			stream = new FileInputStream(dumpFile);
-			reader = new TraceOutputReader(new BufferedInputStream(stream));
-			String msg = reader.readString();
-			updateTestResult(msg);
-			trace = reader.readTrace();
+			trace = execTraceReader.read(dumpFile);
+			updateTestResult(execTraceReader.getMsg());
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new SavRtException(e);
-		} finally {
-			try {
-				if (reader != null) {
-					reader.close();
-				}
-				if (reader != null) {
-					reader.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		} 
 		System.out.println(timer.getResultString());
 		return true;
 	}
