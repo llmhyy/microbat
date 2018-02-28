@@ -55,7 +55,7 @@ public class JavaCompiler {
 		boolean success = vmRunner.startAndWaitUntilStop(builder.toCollection());
 		if (!success ) {
 			String errorMsg = vmRunner.getProccessError();
-			throw new SavException(null, "compilation error: " + errorMsg);
+			throw new SavException("compilation error: " + errorMsg);
 		} else {
 			String errorMsg = vmRunner.getProccessError();
 			if (!StringUtils.isEmpty(errorMsg)) {

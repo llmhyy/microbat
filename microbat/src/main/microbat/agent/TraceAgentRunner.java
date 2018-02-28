@@ -13,6 +13,7 @@ import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
 import sav.common.core.SavException;
 import sav.common.core.SavRtException;
+import sav.common.core.utils.CollectionBuilder;
 import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.SingleTimer;
 import sav.common.core.utils.StopTimer;
@@ -26,13 +27,23 @@ public class TraceAgentRunner extends AgentVmRunner {
 
 	private Trace trace;
 	private boolean isTestSuccessful = false;
+	private boolean unknownTestResult;
 	private String testFailureMessage;
+	private VMConfiguration config;
+	private boolean enableSettingHeapSize = true;
 	
-	public TraceAgentRunner(String agentJar) {
+	public TraceAgentRunner(String agentJar, VMConfiguration vmConfig) {
 		super(agentJar, AgentConstants.AGENT_OPTION_SEPARATOR, AgentConstants.AGENT_PARAMS_SEPARATOR);
+		this.config = vmConfig;
 	}
 	
-	public boolean precheck(VMConfiguration config) throws SavException {
+	@Override
+	protected void buildVmOption(CollectionBuilder<String, ?> builder, VMConfiguration config) {
+		builder.appendIf("-Xmx32g", enableSettingHeapSize);
+		super.buildVmOption(builder, config);
+	}
+	
+	public boolean precheck() throws SavException {
 		isPrecheckMode = true;
 		try {
 			SingleTimer timer = SingleTimer.start("Precheck");
@@ -45,6 +56,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 //			System.out.println(super.getCommandLinesString(config));
 			/* collect result */
 			precheckInfo = PrecheckInfo.readFromFile(dumpFilePath);
+			updateTestResult(precheckInfo.getProgramMsg());
 			System.out.println(timer.getResult());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -55,7 +67,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 		return true;
 	}
 	
-	public boolean runWithDumpFileOption(VMConfiguration config, String filePath) throws SavException {
+	public boolean runWithDumpFileOption(String filePath) throws SavException {
 		isPrecheckMode = false;
 		StopTimer timer = new StopTimer("Building trace");
 		timer.newPoint("Execution");
@@ -83,7 +95,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 		return true;
 	}
 
-	public boolean runWithSocket(VMConfiguration config) throws SavException {
+	public boolean runWithSocket() throws SavException {
 		isPrecheckMode = false;
 		try {
 			int port = VMConfiguration.findFreePort();
@@ -119,6 +131,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 
 	private void updateTestResult(String msg) {
 		if (msg == null || msg.isEmpty()) {
+			unknownTestResult = true;
 			return;
 		}
 		int sIdx = msg.indexOf(";");
@@ -146,5 +159,13 @@ public class TraceAgentRunner extends AgentVmRunner {
 			throw new UnsupportedOperationException("TraceAgent has not been run in precheck mode!");
 		}
 		return precheckInfo;
+	}
+	
+	public void setVmConfig(VMConfiguration config) {
+		this.config = config;
+	}
+	
+	public boolean isUnknownTestResult() {
+		return unknownTestResult;
 	}
 }

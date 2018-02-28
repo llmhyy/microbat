@@ -47,11 +47,15 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultLanuchClass = Activator.getDefault().getPreferenceStore().getString(LANUCH_CLASS);
 		this.defaultRecordSnapshot = Activator.getDefault().getPreferenceStore().getString(RECORD_SNAPSHORT);
 		this.defaultAdvancedDetailInspector = Activator.getDefault().getPreferenceStore().getString(APPLY_ADVANCE_INSPECTOR);
-		this.defaultStepLimit = Activator.getDefault().getPreferenceStore().getString(STEP_LIMIT);
+		this.defaultStepLimit = getStepLimit();
 		this.defaultRunTest = Activator.getDefault().getPreferenceStore().getString(RUN_TEST);
 		this.defaultVariableLayer = getVariableValue();
 		this.defaultJava7HomePath = Activator.getDefault().getPreferenceStore().getString(JAVA7HOME_PATH);
 		this.defaultApplyRecodingOptimization = Activator.getDefault().getPreferenceStore().getString(RECORDING_OPTIMIZATION);
+	}
+
+	public static String getStepLimit() {
+		return Activator.getDefault().getPreferenceStore().getString(STEP_LIMIT);
 	}
 
 	public static String getVariableValue() {

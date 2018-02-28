@@ -31,6 +31,7 @@ public class Agent {
 		FilterChecker.setup(appPath, agentParams.getIncludesExpression(), agentParams.getExcludesExpression());
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
+		ExecutionTracer.stepLimit = agentParams.getStepLimit();
 		
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
@@ -141,6 +142,10 @@ public class Agent {
 	public static void _exitProgram(String programMsg) {
 		Agent.programMsg = programMsg;
 		Runtime.getRuntime().exit(1); // force program to exit to avoid getting stuck by background running threads.
+	}
+	
+	public static String getProgramMsg() {
+		return programMsg;
 	}
 	
 	public static void _startTest(String junitClass, String junitMethod) {
