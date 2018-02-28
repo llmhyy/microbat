@@ -10,13 +10,16 @@ public class PreCheckInformation {
 	private int stepNum;
 	private boolean isOverLong;
 	private List<ClassLocation> visitedLocations = new ArrayList<>();
+	private List<String> overLongMethods = new ArrayList<>();
 
-	public PreCheckInformation(int threadNum, int stepNum, boolean isOverLong, List<ClassLocation> visitedLocations) {
+	public PreCheckInformation(int threadNum, int stepNum, boolean isOverLong, 
+			List<ClassLocation> visitedLocations, List<String> overLongMethods) {
 		super();
 		this.threadNum = threadNum;
 		this.stepNum = stepNum;
 		this.isOverLong = isOverLong;
 		this.visitedLocations = visitedLocations;
+		this.overLongMethods = overLongMethods;
 	}
 
 	public int getThreadNum() {
@@ -49,6 +52,14 @@ public class PreCheckInformation {
 
 	public void setOverLong(boolean isOverLong) {
 		this.isOverLong = isOverLong;
+	}
+
+	public List<String> getOverLongMethods() {
+		return overLongMethods;
+	}
+
+	public void setOverLongMethods(List<String> overLongMethods) {
+		this.overLongMethods = overLongMethods;
 	}
 
 }
