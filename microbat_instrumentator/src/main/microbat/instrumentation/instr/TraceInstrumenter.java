@@ -701,9 +701,9 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			LocalVarInstructionInfo insnInfo, LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
 		LocalVariableInstruction insn = insnInfo.getInstruction();
 		// ignore reference to self
-		if (insn.getIndex() == 0) {
-			return null;
-		}
+//		if (insn.getIndex() == 0) {
+//			return null;
+//		}
 		InstructionList newInsns = new InstructionList();
 		Type type = insn.getType(constPool);
 		/*
