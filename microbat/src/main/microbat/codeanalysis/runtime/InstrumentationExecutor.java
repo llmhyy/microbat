@@ -45,7 +45,7 @@ public class InstrumentationExecutor {
 //		agentRunner.setPrintOutExecutionTrace(true);
 		VMConfiguration config = new VMConfiguration();
 		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath, config);
-		agentRunner.setPrintOutExecutionTrace(true);
+		agentRunner.setPrintOutExecutionTrace(false);
 		config.setNoVerify(true);
 		config.setJavaHome(appPath.getJavaHome());
 		config.setClasspath(appPath.getClasspaths());
