@@ -80,6 +80,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			if(!order.equals("0")){
 				TraceNode producer = trace.getTraceNode(Integer.valueOf(order));
 				entry.addProducer(producer);
+				trace.getStepVariableTable().put(varID, entry);
 			}
 		}
 		if(rw.equals(Variable.READ)){
