@@ -127,13 +127,6 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 		LocalVariableGen tracerVar = methodGen.addLocalVariable(MEASUREMENT_VAR_NAME,
 				Type.getType(TraceMeasurement.class), insnList.getStart(), insnList.getEnd());
 
-		List<PrecheckLineInsructionInfo> lineInfos = new ArrayList<>();
-		for (LineNumberGen lineGen : methodGen.getLineNumbers()) {
-			if (!visitedLines.contains(lineGen.getSourceLine())) {
-				lineInfos.add(new PrecheckLineInsructionInfo(lineGen));
-			}
-		}
-		
 		for (LineNumberGen lineInfo : lineInsnInfos) {
 			injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getSourceLine(),
 						lineInfo.getInstruction(), classNameVar, methodSigVar);
