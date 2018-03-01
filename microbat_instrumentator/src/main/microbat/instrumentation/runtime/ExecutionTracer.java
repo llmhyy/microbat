@@ -114,7 +114,8 @@ public class ExecutionTracer implements IExecutionTracer {
 			ArrayValue arrVal = new ArrayValue(value == null, isRoot, var);
 			arrVal.setComponentType(var.getType().substring(0, var.getType().length() - 2)); // 2 = "[]".length
 			varValue = arrVal;
-			varValue.setStringValue(getStringValue(value, arrVal.getComponentType()));
+//			varValue.setStringValue(getStringValue(value, arrVal.getComponentType()));
+			varValue.setStringValue(getStringValue(value, null));
 			if (value == null) {
 				arrVal.setNull(true);
 			} else {
@@ -131,7 +132,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		} else {
 			ReferenceValue refVal = new ReferenceValue(value == null, TraceUtils.getUniqueId(value), isRoot, var);
 			varValue = refVal;
-			varValue.setStringValue(getStringValue(value, var.getType()));
+//			varValue.setStringValue(getStringValue(value, var.getType()));
+			varValue.setStringValue(getStringValue(value, null));
 			if (value != null) {
 				Class<?> objClass = value.getClass();
 				boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(objClass);
@@ -176,27 +178,30 @@ public class ExecutionTracer implements IExecutionTracer {
 	private String getStringValue(Object obj, String type) {
 		try {
 			if (obj == null) {
-				return null;
+				return "null";
 			}
-			String className = obj.getClass().getName();
-			if (FilterChecker.isAppClazz(className)
-					|| ((type != null) && FilterChecker.isAppClazz(type))) {
-				return className;
-			}
-			if (Map.class.isAssignableFrom(obj.getClass())) {
-				Map<?, ?> map = (Map<?, ?>) obj;
-				if (!map.isEmpty()) {
-					if (FilterChecker.isAppClazz(map.keySet().iterator().next().getClass().getName())) {
-						return className + ", size=" + map.size();
-					} else if (!map.values().isEmpty()){
-						Object value = map.values().iterator().next();
-						if (value != null && FilterChecker.isAppClazz(value.getClass().getName())) {
-							return className + ", size=" + map.size();
-						}
-					}
-				}
-			}
+			
 			return obj.toString();
+//			String className = obj.getClass().getName();
+//			
+//			if (FilterChecker.isAppClazz(className)
+//					|| ((type != null) && FilterChecker.isAppClazz(type))) {
+//				return className;
+//			}
+//			if (Map.class.isAssignableFrom(obj.getClass())) {
+//				Map<?, ?> map = (Map<?, ?>) obj;
+//				if (!map.isEmpty()) {
+//					if (FilterChecker.isAppClazz(map.keySet().iterator().next().getClass().getName())) {
+//						return className + ", size=" + map.size();
+//					} else if (!map.values().isEmpty()){
+//						Object value = map.values().iterator().next();
+//						if (value != null && FilterChecker.isAppClazz(value.getClass().getName())) {
+//							return className + ", size=" + map.size();
+//						}
+//					}
+//				}
+//			}
+//			return obj.toString();
 		} catch (Throwable t) {
 			return null;
 		}
