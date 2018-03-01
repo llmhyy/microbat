@@ -93,6 +93,8 @@ public class InstrumentationExecutor {
 			precheckInfomation.setPassTest(agentRunner.isTestSuccessful());
 			this.setPrecheckInfo(precheckInfomation);
 
+			System.out.println("the trace length is: " + precheckInfomation.getStepNum());
+			
 			if (!info.isOverLong() && info.getExceedingLimitMethods().isEmpty()) {
 				return execute();
 			}
