@@ -1,8 +1,5 @@
 package microbat.instrumentation;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.instrumentation.output.file.TraceFileRecorder;
@@ -10,15 +7,12 @@ import microbat.instrumentation.output.tcp.TcpConnector;
 import microbat.instrumentation.precheck.TraceMeasurement;
 import microbat.instrumentation.runtime.ExecutionTracer;
 import microbat.instrumentation.runtime.IExecutionTracer;
-import microbat.model.BreakPoint;
-import microbat.model.ClassLocation;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.sql.TraceRecorder;
-import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -111,6 +105,15 @@ public class Agent {
 				if(order>1){
 					TraceNode prevNode = trace.getTraceNode(order-1);
 					currentNode.setStepInPrevious(prevNode);					
+				}
+			}
+			
+			TraceNode previousStepOver = currentNode.getStepOverPrevious();
+			if(previousStepOver!=null && previousStepOver.getBreakPoint().equals(currentNode.getBreakPoint())){
+				for(VarValue readVar: previousStepOver.getReadVariables()){
+					if(!currentNode.getReadVariables().contains(readVar)){
+						currentNode.addReadVariable(readVar);
+					}
 				}
 			}
 			
