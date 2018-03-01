@@ -221,14 +221,14 @@ public class ExecutionTracer implements IExecutionTracer {
 				String parameterType = SignatureUtils.signatureToName(pType);
 				String varName = parameterNames[i];
 				
-				//if(PrimitiveUtils.isPrimitive(parameterType)){
+				if(PrimitiveUtils.isPrimitive(parameterType)){
 					Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
 					
 					String varID = TraceUtils.getLocalVarId(className, varScopeStart, varScopeEnd, varName, parameterType, params[i]);
 					var.setVarID(varID);
 					VarValue value = appendVarValue(params[i], var, null);
 					addRWriteValue(value, true);
-				//}
+				}
 			}
 		}
 		
