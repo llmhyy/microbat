@@ -1,5 +1,6 @@
 package microbat.tools;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,12 +82,10 @@ public class JarPackageTool {
 	}
 	
 	public static String getBaseDir() {
-		String path = JarPackageTool.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		String path = new File(JarPackageTool.class.getProtectionDomain().getCodeSource().getLocation().getPath())
+				.getAbsolutePath();
 		path = path.replace("\\", "/");
-		path = path.replace("bin/", "");
-		if (path.startsWith("/")) {
-			path = path.substring(1, path.length());
-		}
+		path = path.replace("bin", "");
 		return path;
 	}
 	
@@ -97,6 +96,7 @@ public class JarPackageTool {
 		
 //		/* export & copy to microbat/lib */
 		String microbatLibJar = BASE_DIR.replace("microbat_instrumentator/", "microbat/lib/instrumentator.jar");
+		System.out.println("copy instrumentator.jar to " + microbatLibJar);
 		cmd.append(TestConfiguration.getJavaHome() + "/bin/jar")
 			.append("cfm")
 			.append(microbatLibJar)
@@ -106,6 +106,7 @@ public class JarPackageTool {
 			.append("microbat/instrumentation");
 		vmRunner.startAndWaitUntilStop(cmd.toCollection());	
 		cmd.clear();
+		System.out.println("Done!");
 	}
 	
 	private static String getBaseDir(String projectName) {

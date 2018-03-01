@@ -137,6 +137,10 @@ public class FilterChecker implements IFilterChecker {
 	public static boolean isAppClass(String classFName) {
 		return checker.checkAppClass(classFName);
 	}
+	
+	public static boolean isAppClazz(String className) {
+		return checker.checkAppClass(className.replace(".", "/"));
+	}
 
 	public static void setup(AppJavaClassPath appPath, String includesExpression, String exludesExpression) {
 		checker.startup(appPath, includesExpression, exludesExpression);

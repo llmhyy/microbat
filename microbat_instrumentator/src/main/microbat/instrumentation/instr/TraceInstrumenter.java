@@ -271,11 +271,6 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		return targets;
 	}
 
-	private void appendInstruction(InstructionList insnList, InstructionHandle insnHandler, InstructionList newInsns) {
-		updateExceptionTable(insnHandler, insnHandler, newInsns.getEnd());
-		insnList.append(insnHandler, newInsns);
-	}
-
 	private void injectCodeTracerExit(InstructionHandle exitInsHandle, InstructionList insnList, 
 			ConstantPoolGen constPool, LocalVariableGen tracerVar, int line, LocalVariableGen classNameVar, LocalVariableGen methodSigVar, boolean isMainMethod) {
 		InstructionList newInsns = new InstructionList();

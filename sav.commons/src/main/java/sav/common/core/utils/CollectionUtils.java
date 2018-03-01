@@ -61,6 +61,14 @@ public class CollectionUtils {
 		return list;
 	}
 	
+	public static <T>List<T> toArrayList(T[] vals, int size) {
+		List<T> list = new ArrayList<T>(size);
+		for (int i = 0; i < size; i++) {
+			list.add(vals[i]);
+		}
+		return list;
+	}
+	
 	public static <T> Set<T> toHashSet(T[] vals) {
 		Set<T> set = new HashSet<T>();
 		for (T val : vals) {
@@ -294,4 +302,5 @@ public class CollectionUtils {
 	public static <T, V>boolean isEmpty(Map<T, V> map) {
 		return map == null || map.isEmpty();
 	}
+
 }

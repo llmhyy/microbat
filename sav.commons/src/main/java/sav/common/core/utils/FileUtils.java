@@ -102,6 +102,10 @@ public class FileUtils {
 		return StringUtils.join(Arrays.asList(fragments), Constants.FILE_SEPARATOR);
 	}
 	
+	public static String getFilePath(List<String> fragments) {
+		return StringUtils.join(fragments, Constants.FILE_SEPARATOR);
+	}
+	
 	public static String copyFileToFolder(String sourceFile, String destFolder, boolean preserveFileDate) {
 		sourceFile = sourceFile.replace(Constants.FILE_SEPARATOR, "/");
 		String fileName = sourceFile.substring(sourceFile.lastIndexOf("/") + 1, sourceFile.length());
@@ -200,5 +204,23 @@ public class FileUtils {
 			return null;
 		}
 		return Pair.of(lastFile, lastIdx);
+	}
+	
+	public static File getFileEndWith(String folderPath, final String fileSuffix) {
+		File folder = new File(folderPath);
+		File[] matches = folder.listFiles(new FilenameFilter() {
+			
+			@Override
+			public boolean accept(File dir, String name) {
+				if (name.endsWith(fileSuffix)) {
+					return true;
+				}
+				return false;
+			}
+		});
+		if (CollectionUtils.isEmpty(matches)) {
+			return null;
+		}
+		return matches[0];
 	}
 }

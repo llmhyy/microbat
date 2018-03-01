@@ -25,7 +25,6 @@ import microbat.model.variable.VirtualVar;
 import microbat.util.PrimitiveUtils;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.SignatureUtils;
-import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class ExecutionTracer implements IExecutionTracer {
@@ -107,15 +106,15 @@ public class ExecutionTracer implements IExecutionTracer {
 		boolean isRoot = (parent == null);
 		VarValue varValue = null;
 		if (PrimitiveUtils.isString(var.getType())) {
-			varValue = new StringValue(getStringValue(value), isRoot, var);
+			varValue = new StringValue(getStringValue(value, null), isRoot, var);
 		} else if (PrimitiveUtils.isPrimitive(var.getType())) {
-			varValue = new PrimitiveValue(getStringValue(value), isRoot, var);
+			varValue = new PrimitiveValue(getStringValue(value, null), isRoot, var);
 		} else if(var.getType().endsWith("[]")) {
 			/* array */
 			ArrayValue arrVal = new ArrayValue(value == null, isRoot, var);
 			arrVal.setComponentType(var.getType().substring(0, var.getType().length() - 2)); // 2 = "[]".length
 			varValue = arrVal;
-			varValue.setStringValue(getStringValue(value));
+			varValue.setStringValue(getStringValue(value, arrVal.getComponentType()));
 			if (value == null) {
 				arrVal.setNull(true);
 			} else {
@@ -132,7 +131,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		} else {
 			ReferenceValue refVal = new ReferenceValue(value == null, TraceUtils.getUniqueId(value), isRoot, var);
 			varValue = refVal;
-			varValue.setStringValue(getStringValue(value));
+			varValue.setStringValue(getStringValue(value, var.getType()));
 			if (value != null) {
 				Class<?> objClass = value.getClass();
 				boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(objClass);
@@ -174,9 +173,30 @@ public class ExecutionTracer implements IExecutionTracer {
 		return varValue;
 	}
 
-	private String getStringValue(Object obj) {
+	private String getStringValue(Object obj, String type) {
 		try {
-			return StringUtils.toString(obj, null);
+			if (obj == null) {
+				return null;
+			}
+			String className = obj.getClass().getName();
+			if (FilterChecker.isAppClazz(className)
+					|| ((type != null) && FilterChecker.isAppClazz(type))) {
+				return className;
+			}
+			if (Map.class.isAssignableFrom(obj.getClass())) {
+				Map<?, ?> map = (Map<?, ?>) obj;
+				if (!map.isEmpty()) {
+					if (FilterChecker.isAppClazz(map.keySet().iterator().next().getClass().getName())) {
+						return className + ", size=" + map.size();
+					} else if (!map.values().isEmpty()){
+						Object value = map.values().iterator().next();
+						if (value != null && FilterChecker.isAppClazz(value.getClass().getName())) {
+							return className + ", size=" + map.size();
+						}
+					}
+				}
+			}
+			return obj.toString();
 		} catch (Throwable t) {
 			return null;
 		}
@@ -761,8 +781,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	public synchronized static IExecutionTracer _getTracer(boolean isAppClass, String className, String methodSig,
 			int methodStartLine, int methodEndLine, String paramNamesCode, String paramTypeSignsCode, Object[] params) {
 		if (gLocker.isLock()) {
-			if (state == State.TEST_STARTED && isAppClass) {
-				state = State.RECORDING;
+			if (state == TracingState.TEST_STARTED && isAppClass) {
+				state = TracingState.RECORDING;
 				// entry point
 				gLocker.unLock();
 			} else {
@@ -826,18 +846,18 @@ public class ExecutionTracer implements IExecutionTracer {
 		return store;
 	}
 	
-	private static State state = State.INIT;
+	private static TracingState state = TracingState.INIT;
 	public static void shutdown() {
 		gLocker.lock();
-		state = State.SHUTDOWN;
+		state = TracingState.SHUTDOWN;
 	}
 	
 	public static void _start() {
-		state = State.TEST_STARTED;
+		state = TracingState.TEST_STARTED;
 	}
 	
 	public static boolean isShutdown() {
-		return state == State.SHUTDOWN;
+		return state == TracingState.SHUTDOWN;
 	}
 	
 	public Trace getTrace() {
@@ -893,10 +913,4 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.unLock();
 	}
 	
-	private static enum State {
-		INIT,
-		TEST_STARTED,
-		RECORDING,
-		SHUTDOWN
-	}
 }

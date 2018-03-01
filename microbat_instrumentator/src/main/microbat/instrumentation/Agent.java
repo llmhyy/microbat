@@ -1,23 +1,31 @@
 package microbat.instrumentation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.instrumentation.output.file.TraceFileRecorder;
 import microbat.instrumentation.output.tcp.TcpConnector;
+import microbat.instrumentation.precheck.TraceMeasurement;
 import microbat.instrumentation.runtime.ExecutionTracer;
 import microbat.instrumentation.runtime.IExecutionTracer;
+import microbat.model.BreakPoint;
+import microbat.model.ClassLocation;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.sql.TraceRecorder;
+import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class Agent {
 	private AgentParams agentParams;
 	private static String programMsg = "";
+	public static boolean isPrecheck;
 	
 	public Agent(String agentArgs) {
 		agentParams = AgentParams.parse(agentArgs);
@@ -32,7 +40,7 @@ public class Agent {
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.stepLimit = agentParams.getStepLimit();
-		
+		isPrecheck = agentParams.isPrecheck();
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
@@ -53,6 +61,14 @@ public class Agent {
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 	
 		Trace trace = ((ExecutionTracer) tracer).getTrace();
+		
+//		List<ClassLocation> locs = new ArrayList<>();
+//		for (TraceNode node : trace.getExecutionList()) {
+//			BreakPoint bkp = node.getBreakPoint();
+//			locs.add(new ClassLocation(bkp.getClassCanonicalName(), bkp.getMethodSign(), bkp.getLineNumber()));
+//		}
+//		FileUtils.writeFile("E:/lyly/WorkingFolder/step_run.txt", locs.toString());
+//		System.out.println("Trace size = " + trace.getExecutionList().size());
 		
 		createVirtualDataRelation(trace);
 		trace.constructControlDomianceRelation();
@@ -149,11 +165,19 @@ public class Agent {
 	}
 	
 	public static void _startTest(String junitClass, String junitMethod) {
-		ExecutionTracer._start();
+		if (isPrecheck) {
+			TraceMeasurement.startTest();
+		} else {
+			ExecutionTracer._start();
+		}
 	}
 	
 	public static void _finishTest(String junitClass, String junitMethod) {
-		ExecutionTracer.shutdown();
+		if (isPrecheck) {
+			TraceMeasurement.shutdown();
+		} else {
+			ExecutionTracer.shutdown();
+		}
 	}
 
 	public static String extrctJarPath() {

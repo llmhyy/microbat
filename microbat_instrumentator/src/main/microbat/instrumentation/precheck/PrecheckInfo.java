@@ -37,6 +37,8 @@ public class PrecheckInfo {
 		this.setStepTotal(info.getStepTotal());
 		setVisitedLocs(info.getVisitedLocs());
 		isOverLong = info.isOverLong();
+//		FileUtils.writeFile("E:/lyly/WorkingFolder/step_precheck.txt", info.getSteps().toString());
+//		System.out.println("size = " + getStepTotal());
 	}
 
 	@Override
@@ -97,13 +99,14 @@ public class PrecheckInfo {
 	public void saveToFile(String filePath, boolean append) {
 		OutputStream bufferedStream = null;
 		TraceOutputWriter outputWriter = null;
+		FileOutputStream fileStream = null;
 		
 		try {
-		File file = AgentUtils.getFileCreateIfNotExist(filePath);
-		final FileOutputStream fileStream = new FileOutputStream(file, append);
-		// Avoid concurrent writes from other processes:
-		fileStream.getChannel().lock();
-		bufferedStream = new BufferedOutputStream(fileStream);
+			File file = AgentUtils.getFileCreateIfNotExist(filePath);
+			fileStream = new FileOutputStream(file, append);
+			// Avoid concurrent writes from other processes:
+			fileStream.getChannel().lock();
+			bufferedStream = new BufferedOutputStream(fileStream);
 			outputWriter = new TraceOutputWriter(bufferedStream);
 			outputWriter.writeString(HEADER);
 			outputWriter.writeString(programMsg);
@@ -129,6 +132,9 @@ public class PrecheckInfo {
 				}
 				if (outputWriter != null) {
 					outputWriter.close();
+				}
+				if (fileStream != null) {
+					fileStream.close();
 				}
 			} catch (IOException e) {
 				e.printStackTrace();

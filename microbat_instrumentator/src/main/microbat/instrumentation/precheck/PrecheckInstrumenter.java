@@ -23,6 +23,7 @@ import org.apache.bcel.generic.PUSH;
 import org.apache.bcel.generic.Type;
 
 import microbat.instrumentation.instr.TraceInstrumenter;
+import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
 
 public class PrecheckInstrumenter extends TraceInstrumenter {
 	private static final String MEASUREMENT_VAR_NAME = "$traceMs";
@@ -126,25 +127,51 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 		LocalVariableGen tracerVar = methodGen.addLocalVariable(MEASUREMENT_VAR_NAME,
 				Type.getType(TraceMeasurement.class), insnList.getStart(), insnList.getEnd());
 
+		List<PrecheckLineInsructionInfo> lineInfos = new ArrayList<>();
+		for (LineNumberGen lineGen : methodGen.getLineNumbers()) {
+			if (!visitedLines.contains(lineGen.getSourceLine())) {
+				lineInfos.add(new PrecheckLineInsructionInfo(lineGen));
+			}
+		}
+		
 		for (LineNumberGen lineInfo : lineInsnInfos) {
 			injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getSourceLine(),
 						lineInfo.getInstruction(), classNameVar, methodSigVar);
+			for (InstructionHandle insn : LineInstructionInfo.getApplicationInvokeInstructions(insnList,
+					method.getLineNumberTable(), lineInfo.getSourceLine())) {
+				injectCodeTracerInvokeMethod(insn, methodGen, insnList, constPool, tracerVar, classNameVar, methodSigVar, lineInfo.getSourceLine());
+			}
+			
 		}
 		injectCodeInitMeasurement(methodGen, constPool, classNameVar, methodSigVar, tracerVar);
 		return true;
 	}
 
+	private void injectCodeTracerInvokeMethod(InstructionHandle insn, MethodGen methodGen, InstructionList insnList,
+			ConstantPoolGen constPool, LocalVariableGen tracerVar, LocalVariableGen classNameVar,
+			LocalVariableGen methodSigVar, int sourceLine) {
+		InstructionList newInsns = getHitLineCode(constPool, tracerVar, sourceLine, classNameVar, methodSigVar);
+		appendInstruction(insnList, insn, newInsns);
+		newInsns.dispose();
+	}
+
 	private void injectCodeTracerHitLine(InstructionList insnList, ConstantPoolGen constPool,
 			LocalVariableGen tracerVar, int sourceLine, InstructionHandle lineNumberInsn, LocalVariableGen classNameVar,
 			LocalVariableGen methodSigVar) {
+		InstructionList newInsns = getHitLineCode(constPool, tracerVar, sourceLine, classNameVar, methodSigVar);
+		insertInsnHandler(insnList, newInsns, lineNumberInsn);
+		newInsns.dispose();
+	}
+
+	private InstructionList getHitLineCode(ConstantPoolGen constPool, LocalVariableGen tracerVar, int sourceLine,
+			LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
 		InstructionList newInsns = new InstructionList();
 		newInsns.append(new ALOAD(tracerVar.getIndex()));
 		newInsns.append(new PUSH(constPool, sourceLine));
 		newInsns.append(new ALOAD(classNameVar.getIndex()));
 		newInsns.append(new ALOAD(methodSigVar.getIndex()));
 		appendTracerMethodInvoke(newInsns, MeasurementMethods.HIT_LINE, constPool, false);
-		insertInsnHandler(insnList, newInsns, lineNumberInsn);
-		newInsns.dispose();
+		return newInsns;
 	}
 
 	private LocalVariableGen injectCodeInitMeasurement(MethodGen methodGen, ConstantPoolGen constPool,

@@ -166,7 +166,7 @@ public class LineInstructionInfo {
 		return invokeInsns;
 	}
 	
-	private static List<InstructionHandle> findCorrespondingInstructions(InstructionList list, LineNumberTable lineTable,
+	public static List<InstructionHandle> findCorrespondingInstructions(InstructionList list, LineNumberTable lineTable,
 			int lineNumber) {
 		List<InstructionHandle> correspondingInstructions = new ArrayList<>();
 		Iterator<?> iter = list.iterator();
@@ -236,5 +236,21 @@ public class LineInstructionInfo {
 
 	public boolean hasExceptionTarget() {
 		return hasExceptionTarget;
+	}
+
+	public static List<InstructionHandle> getApplicationInvokeInstructions(InstructionList list,
+			LineNumberTable lineTable, int lineNumber) {
+		List<InstructionHandle> result = new ArrayList<>();
+		List<InstructionHandle> correspondingInsns = findCorrespondingInstructions(list, lineTable, lineNumber);
+		int i = 0;
+		for (InstructionHandle insn : correspondingInsns) {
+			i++;
+			if (insn.getInstruction() instanceof InvokeInstruction
+					&& !(insn.getNext().getInstruction() instanceof ReturnInstruction)
+					&& (i != correspondingInsns.size())) {
+				result.add(insn);
+			}
+		}
+		return result;
 	}
 }

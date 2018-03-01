@@ -16,6 +16,7 @@ public class PrecheckAgent {
 	}
 	
 	public void startup() {
+		Agent.isPrecheck = agentParams.isPrecheck();
 		FilterChecker.setup(agentParams.initAppClassPath(), agentParams.getIncludesExpression(),
 				agentParams.getExcludesExpression());
 		TraceMeasurement.setStepLimit(agentParams.getStepLimit());

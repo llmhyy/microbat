@@ -3,6 +3,7 @@ package microbat.instrumentation.precheck;
 import java.util.HashMap;
 import java.util.Map;
 
+import microbat.instrumentation.runtime.TracingState;
 import microbat.model.ClassLocation;
 
 public class TraceMeasurement {
@@ -10,12 +11,16 @@ public class TraceMeasurement {
 	private static long mainThreadId = -1;
 	private TraceInfo trace = new TraceInfo(stepLimit);
 	private static int stepLimit = Integer.MAX_VALUE;
+	private static TracingState state = TracingState.INIT;
 
 	public void _hitLine(int line, String className, String methodSignature) {
 		if (trace.isOverLong()) {
 			throw new RuntimeException("Trace is overlong");
 		}
 		try {
+			if (state != TracingState.RECORDING) {
+				return;
+			}
 			ClassLocation lastStep = trace.getLastStep();
 			if (lastStep != null && lastStep.getClassCanonicalName().equals(className) && 
 					lastStep.getLineNumber() == line) {
@@ -36,6 +41,10 @@ public class TraceMeasurement {
 		}
 		TraceMeasurement instance = getInstance(threadId);
 		return instance;
+	}
+	
+	public static void startTest() {
+		state = TracingState.RECORDING;
 	}
 	
 	public synchronized static int getThreadNumber() {
@@ -61,5 +70,9 @@ public class TraceMeasurement {
 	
 	public static void setStepLimit(int stepLimit) {
 		TraceMeasurement.stepLimit = stepLimit;
+	}
+
+	public static void shutdown() {
+		state = TracingState.SHUTDOWN;
 	}
 }

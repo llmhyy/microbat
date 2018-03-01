@@ -27,6 +27,11 @@ public class AbstraceInstrumenter {
 		return pos;
 	}
 	
+	protected void appendInstruction(InstructionList insnList, InstructionHandle insnHandler, InstructionList newInsns) {
+		updateExceptionTable(insnHandler, insnHandler, newInsns.getEnd());
+		insnList.append(insnHandler, newInsns);
+	}
+	
 	protected void updateExceptionTable(InstructionHandle oldPos, InstructionHandle newStart,
 			InstructionHandle newEnd) {
 		InstructionTargeter[] itList = oldPos.getTargeters();
