@@ -22,6 +22,7 @@ import mutation.mutator.mapping.MutationMap;
 import mutation.parser.ClassAnalyzer;
 import mutation.parser.ClassDescriptor;
 import mutation.parser.JParser;
+import sav.common.core.SavRtException;
 import sav.common.core.utils.BreakpointUtils;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.Randomness;
@@ -34,6 +35,7 @@ import sav.strategies.mutanbug.MutationResult;
  * Created by hoangtung on 4/9/15.
  */
 public class Mutator implements IMutator {
+	public static final String MUTATION_BASE_DIR = "mutation.basedir";
 	//TODO LLT: correct the configuration file path, temporary fix for running in eclipse
 	private static final String OPERATOR_MAP_FILE = "\\src\\main\\resources\\MuMap.txt";
 	private static final int MU_TOTAL_NO_LIMIT = -1;
@@ -166,9 +168,13 @@ public class Mutator implements IMutator {
 					String mutationDir = userDir + File.separator + "dropins" + File.separator + "MuMap.txt";
 					opMapConfig = MuMapParser.parse(mutationDir);
 				}
-			}
-			else{
-				opMapConfig = MuMapParser.parse("./src/main/resources/MuMap.txt");
+			} else {
+				try {
+					opMapConfig = MuMapParser.parse("./src/main/resources/MuMap.txt");
+				} catch (SavRtException ex) {
+					String mutationBasedir = System.getProperty(MUTATION_BASE_DIR);
+					opMapConfig = MuMapParser.parse(mutationBasedir + "/src/main/resources/MuMap.txt");
+				}
 			}
 		}
 		return opMapConfig;

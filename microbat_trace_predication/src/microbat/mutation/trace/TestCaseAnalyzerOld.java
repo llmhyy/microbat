@@ -18,9 +18,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
-import microbat.codeanalysis.runtime.InstrumentationExecutor;
-import microbat.codeanalysis.runtime.PreCheckInformation;
 import microbat.evaluation.io.IgnoredTestCaseFiles;
+import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.mutation.mutation.TraceMutationVisitor;
 import microbat.mutation.trace.handlers.MutationGenerationHandler;
@@ -30,6 +29,7 @@ import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import mutation.mutator.Mutator;
+import sav.common.core.Constants;
 import sav.common.core.SavException;
 import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.FileUtils;
@@ -38,27 +38,60 @@ import sav.strategies.dto.ClassLocation;
 import sav.strategies.mutanbug.MutationResult;
 import sav.strategies.vm.JavaCompiler;
 import sav.strategies.vm.VMConfiguration;
+import tregression.TraceModelConstructor;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.Simulator;
 import tregression.empiricalstudy.TestCase;
 import tregression.io.ExcelReporter;
 import tregression.junit.ParsedTrials;
+import tregression.junit.TestCaseRunner;
 import tregression.model.PairList;
 import tregression.model.Trial;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.tracematch.LCSBasedTraceMatcher;
 
-public class TestCaseAnalyzer {
+public class TestCaseAnalyzerOld {
 	
 	public static final String TEST_RUNNER = "microbat.evaluation.junit.MicroBatTestRunner";
 	private static final String TMP_DIRECTORY = MutationGenerationHandler.TMP_DIRECTORY;
 	private static final String SOURCE_FOLDER_KEY = "sourceFolderPath";
-	private static final int STEP_LIMIT = 10000;
 	private int muTotal = 10;
 	
-	public TestCaseAnalyzer(){
+	public TestCaseAnalyzerOld(){
 	}
 	
+	private Map<String, MutationResult> generateMutationFiles(List<ClassLocation> locationList){
+		ClassLocation cl = locationList.get(0);
+		String cName = cl.getClassCanonicalName();
+		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName);
+		IPath uri = unit.getResource().getFullPath();
+		String sourceFolderPath = IResourceUtils.getAbsolutePathOsStr(uri);
+		cName = ClassUtils.getJFilePath(cName);
+		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName));
+		
+		cleanClassInTestPackage(sourceFolderPath, locationList);
+		
+		Mutator mutator = new Mutator(sourceFolderPath, TMP_DIRECTORY, muTotal);
+		TraceMutationVisitor mutationVisitor = new TraceMutationVisitor();
+		Map<String, MutationResult> mutations = mutator.mutate(locationList, mutationVisitor);
+		
+		return mutations;
+	}
+	
+	private void cleanClassInTestPackage(String sourceFolderPath,
+			List<ClassLocation> locationList) {
+		Iterator<ClassLocation> iterator = locationList.iterator();
+		while(iterator.hasNext()){
+			ClassLocation location = iterator.next();
+			String className = location.getClassCanonicalName();
+			String fileName  = ClassUtils.getJFilePath(sourceFolderPath, className);
+			File file = new File(fileName);
+			if(!file.exists()){
+				iterator.remove();
+			}
+		}
+	}
+
 	public void runEvaluation(IPackageFragment pack, ExcelReporter reporter, boolean isLimitTrialNum, 
 			IgnoredTestCaseFiles ignoredTestCaseFiles, ParsedTrials parsedTrials, 
 			int trialNumPerTestCase, double[] unclearRates, int optionSearchLimit, IProgressMonitor monitor) throws JavaModelException {
@@ -79,9 +112,6 @@ public class TestCaseAnalyzer {
 					for(MethodDeclaration testingMethod: testingMethods){
 						String methodName = testingMethod.getName().getIdentifier();
 						try{
-							if (monitor.isCanceled()) {
-								return;
-							}
 							runEvaluationForSingleTestCase(className, methodName, reporter, 
 									isLimitTrialNum, ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, 
 									optionSearchLimit, monitor);							
@@ -92,10 +122,6 @@ public class TestCaseAnalyzer {
 					}
 					
 				}
-			}
-			if (monitor.isCanceled()) {
-				System.out.println("Process cancel!");
-				return;
 			}
 		}
 		
@@ -113,17 +139,21 @@ public class TestCaseAnalyzer {
 			return false;
 		}
 		
-		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig,
-				generateTraceDir(Settings.projectName, testCaseName, null), "fix");
+		TestCaseRunner checker = new TestCaseRunner();
+		checker.checkValidity(testcaseConfig);
 		
-		PreCheckInformation precheckInfo = executor.runPrecheck(STEP_LIMIT);
-		if(precheckInfo.isPassTest() && !precheckInfo.isOverLong()){
+		Trace correctTrace = null;
+		if(checker.isPassingTest()){
 			System.out.println(testCaseName + " is a passed test case");
+			List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig, true);
+			List<BreakPoint> executionOrderList = checker.getExecutionOrderList();
+			if(checker.isOverLong()){
+				return false;
+			}
 			
 			System.out.println("identifying the possible mutated location for " + testCaseName);
-			List<ClassLocation> executingStatements = convertClassLocation(precheckInfo.getVisitedLocations());
 			List<ClassLocation> locationList = findMutationLocation(junitClassName, executingStatements, testcaseConfig);
-			Trace correctTrace = executor.execute();
+			
 			int thisTrialNum = 0;
 			if(!locationList.isEmpty()){
 				System.out.println("mutating the tested methods of " + testCaseName);
@@ -160,8 +190,9 @@ public class TestCaseAnalyzer {
 							}
 							testcaseConfig.getPreferences().set(SOURCE_FOLDER_KEY, result.getSourceFolder());
 							EvaluationInfo evalInfo = runEvaluationForSingleTrial(tobeMutatedClass, mutationFile, 
-									testcaseConfig, line, testCaseName, correctTrace, executingStatements,
-									reporter, tmpTrial, unclearRates, precheckInfo.getStepNum(), optionSearchLimit);
+									testcaseConfig, line, testCaseName, correctTrace, executingStatements, executionOrderList,
+									reporter, tmpTrial, unclearRates, checker.getStepNum(), optionSearchLimit);
+							correctTrace = evalInfo.correctTrace;
 							
 							if(!evalInfo.isLoopEffective && evalInfo.isValid){
 								break;
@@ -193,30 +224,6 @@ public class TestCaseAnalyzer {
 		return false;
 	}
 	
-	private List<ClassLocation> convertClassLocation(List<microbat.model.ClassLocation> visitedLocations) {
-		List<ClassLocation> locs = new ArrayList<>(visitedLocations.size());
-		for (microbat.model.ClassLocation loc : visitedLocations) {
-			locs.add(new ClassLocation(loc.getClassCanonicalName(), loc.getMethodSign(), loc.getLineNumber()));
-		}
-		return locs;
-	}
-
-	/**
-	 * refer to getMuBugId()
-	 */
-	private String generateTraceDir(String projectName, String testCaseName, String muBugId) {
-		String traceFolder;
-		if (muBugId == null) {
-			traceFolder = sav.common.core.utils.FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), projectName,
-					testCaseName);
-		} else {
-			traceFolder = sav.common.core.utils.FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), projectName,
-					testCaseName, muBugId);
-		}
-		sav.common.core.utils.FileUtils.createFolder(traceFolder);
-		return traceFolder;
-	}
-	
 	class EvaluationInfo{
 		boolean isLoopEffective;
 		boolean isValid;
@@ -232,12 +239,11 @@ public class TestCaseAnalyzer {
 		}
 	}
 	
-	private EvaluationInfo runEvaluationForSingleTrial(String tobeMutatedClass, File mutationFile,
-			AppJavaClassPath testcaseConfig, int line, String testCaseName, Trace correctTrace,
-			List<ClassLocation> executingStatements, ExcelReporter reporter, Trial tmpTrial, double[] unclearRates,
-			int stepNum, int optionSearchLimit) throws JavaModelException {
+	private EvaluationInfo runEvaluationForSingleTrial(String tobeMutatedClass, File mutationFile, AppJavaClassPath testcaseConfig, 
+			int line, String testCaseName, Trace correctTrace, List<BreakPoint> executingStatements, List<BreakPoint> executionOrderList,
+			ExcelReporter reporter, Trial tmpTrial, double[] unclearRates, int stepNum, int optionSearchLimit) throws JavaModelException {
 		try {
-			MutateInfo mutateInfo = getMutatedTrace(tobeMutatedClass, mutationFile, testcaseConfig, line, testCaseName);
+			MutateInfo mutateInfo = mutateCode(tobeMutatedClass, mutationFile, testcaseConfig, line, testCaseName);
 			if (mutateInfo == null) {
 				return new EvaluationInfo(false, correctTrace, false);
 			}
@@ -250,10 +256,12 @@ public class TestCaseAnalyzer {
 			boolean isLoopEffective = false;
 			Trace killingMutatantTrace = mutateInfo.killingMutateTrace;
 			if(killingMutatantTrace != null && killingMutatantTrace.size() > 1){
-				if (null == correctTrace) {
+				if(null == correctTrace){
 					System.out.println("The correct trace of " + stepNum + " steps is to be generated for " + testCaseName);
-					
+					correctTrace = new TraceModelConstructor().
+							constructTraceModel(testcaseConfig, executingStatements, executionOrderList, stepNum, true, true);
 				}
+				ClassLocation mutatedLocation = new ClassLocation(tobeMutatedClass, null, line);
 				
 				LCSBasedTraceMatcher traceMatcher = new LCSBasedTraceMatcher();
 				PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, null); 
@@ -279,6 +287,10 @@ public class TestCaseAnalyzer {
 
 					EmpiricalTrial trial = trials0.get(0);
 					trials.add(trial);
+					MuTrial muTrial = new MuTrial(trial, orgFilePath, mutationFilePath, tobeMutatedClass);
+					MuRegressionRecorder dbRecorder = new MuRegressionRecorder();
+					dbRecorder.record(muTrial, killingMutatantTrace, correctTrace, pairList,
+							iunit.getJavaProject().getElementName(), getMuBugId(mutationFilePath));
 				}
 				// TODO
 				return new EvaluationInfo(true, correctTrace, isLoopEffective);
@@ -290,6 +302,15 @@ public class TestCaseAnalyzer {
 		} 
 		
 		return new EvaluationInfo(false, correctTrace, false);
+	}
+
+	private String getMuBugId(String mutationFilePath) {
+		int endIdx = mutationFilePath.lastIndexOf(Constants.FILE_SEPARATOR);
+		int startIdx = mutationFilePath.substring(0, endIdx).lastIndexOf(Constants.FILE_SEPARATOR) + 1;
+		// org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolator_82_13_1
+		String className = mutationFilePath.substring(startIdx, endIdx);
+		startIdx = className.lastIndexOf(".") + 1;
+		return "mu-" + className.substring(startIdx);
 	}
 
 	class TraceFilePair{
@@ -335,41 +356,42 @@ public class TestCaseAnalyzer {
 		}
 	}
 	
-	private MutateInfo generateMutateTrace(AppJavaClassPath testcaseConfig, String testCaseName, String toBeMutatedClass, int mutatedLine, 
+	private MutateInfo generateMutateTrace(AppJavaClassPath testcaseConfig, ICompilationUnit iunit, int mutatedLine, 
 			String mutatedFile){
 		Trace killingMutantTrace = null;
 		boolean isTooLong = false;
 		boolean isKill = true;
 		boolean isTimeOut = false;
 		try{
-			String traceDir = generateTraceDir(Settings.projectName, testCaseName, MuRegressionUtils.getMuBugId(mutatedFile));
-			InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig,
-					traceDir, "bug");
-			executor.setTimeout(30000l);
-			PreCheckInformation precheck = executor.runPrecheck(STEP_LIMIT);
-			isTimeOut = precheck.isTimeout();
-			isKill = !precheck.isPassTest() && !precheck.isTimeout(); 
+			TestCaseRunner checker = new TestCaseRunner();
+			checker.checkValidity(testcaseConfig);
+			
+			isKill = !checker.isPassingTest() && !checker.hasCompilationError();
 			String testMethod = testcaseConfig.getOptionalTestClass() + "#" + testcaseConfig.getOptionalTestMethod();
 			
 			if(isKill){
 				System.out.println("KILLED: Now generating trace for " + testMethod + " (mutation: " + mutatedFile + ")");
-				if(precheck.isOverLong()){
+				TraceModelConstructor constructor = new TraceModelConstructor();
+				
+				List<BreakPoint> executingStatements = checker.collectBreakPoints(testcaseConfig, true);
+				List<BreakPoint> executionOrderList = checker.getExecutionOrderList();
+				System.currentTimeMillis();
+				
+				if(checker.isOverLong()){
 					System.out.println("The trace is over long for " + testMethod + " (mutation: " + mutatedFile + ")");
 					killingMutantTrace = null;
 					isTooLong = true;
 				}
 				else{
-					System.out.println("A valid trace of " + precheck.getStepNum() + 
+					System.out.println("A valid trace of " + checker.getStepNum() + 
 							" steps is to be generated for " + testMethod + " (mutation: " + mutatedFile + ")");
 					killingMutantTrace = null;
 					long t1 = System.currentTimeMillis();
-					killingMutantTrace = executor.execute();
+					killingMutantTrace = constructor.constructTraceModel(testcaseConfig, 
+							executingStatements, executionOrderList, checker.getStepNum(), true, true);
 					long t2 = System.currentTimeMillis();
 					int time = (int) ((t2-t1)/1000);
 					killingMutantTrace.setConstructTime(time);
-					/* store valid mutated file */
-					String destinationFile = FileUtils.getFilePath(traceDir, toBeMutatedClass + ".java");
-					FileUtils.copyFile(mutatedFile, destinationFile, true);
 				}
 			}
 			else{
@@ -386,7 +408,7 @@ public class TestCaseAnalyzer {
 		return mutateInfo;
 	}
 	
-	private MutateInfo getMutatedTrace(String toBeMutatedClass, File mutationFile, AppJavaClassPath testcaseConfig,
+	private MutateInfo mutateCode(String toBeMutatedClass, File mutationFile, AppJavaClassPath testcaseConfig,
 			int mutatedLine, String testCaseName)
 					throws MalformedURLException, JavaModelException, IOException, NullPointerException, SavException {
 	
@@ -408,11 +430,10 @@ public class TestCaseAnalyzer {
 
 			/* generate trace */
 			MutateInfo mutateInfo = null;
-			mutateInfo = generateMutateTrace(testcaseConfig, testCaseName, toBeMutatedClass, mutatedLine, mutationFile.toString());
+			mutateInfo = generateMutateTrace(testcaseConfig, iunit, mutatedLine, mutationFile.toString());
 			return mutateInfo;
-		} catch (SavException e) {
-			System.out.println("Compilation error");
-//			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
 		} finally {
 			/* revert */
 			FileUtils.copyFile(backupClassFilePath, orgClassFilePath, true);
@@ -420,54 +441,21 @@ public class TestCaseAnalyzer {
 		return null;
 	}
 	
-	private List<ClassLocation> findMutationLocation(String junitClassName, List<ClassLocation> executingStatements,
-			AppJavaClassPath appPath) {
+	private List<ClassLocation> findMutationLocation(String junitClassName, List<BreakPoint> executingStatements, AppJavaClassPath appPath) {
 		List<ClassLocation> locations = new ArrayList<>();
-
-		for (ClassLocation point : executingStatements) {
-			if (junitClassName.equals(point.getClassCanonicalName())) {
+		
+		for(BreakPoint point: executingStatements){
+			if (junitClassName.equals(point.getDeclaringCompilationUnitName())) {
 				continue; // ignore junitClass
 			}
-			ClassLocation location = new ClassLocation(point.getClassCanonicalName(), null, point.getLineNo());
-			locations.add(location);
+			ClassLocation location = new ClassLocation(point.getDeclaringCompilationUnitName(), 
+					null, point.getLineNumber());
+			locations.add(location);	
 		}
-
+		
 		return locations;
 	}
 	
-	private Map<String, MutationResult> generateMutationFiles(List<ClassLocation> locationList){
-		ClassLocation cl = locationList.get(0);
-		String cName = cl.getClassCanonicalName();
-		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName);
-		IPath uri = unit.getResource().getFullPath();
-		String sourceFolderPath = IResourceUtils.getAbsolutePathOsStr(uri);
-		cName = ClassUtils.getJFilePath(cName);
-		System.out.println(sourceFolderPath);
-		System.out.println(cName);
-		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName));
-		
-		cleanClassInTestPackage(sourceFolderPath, locationList);
-		
-		Mutator mutator = new Mutator(sourceFolderPath, TMP_DIRECTORY, muTotal);
-		TraceMutationVisitor mutationVisitor = new TraceMutationVisitor();
-		Map<String, MutationResult> mutations = mutator.mutate(locationList, mutationVisitor);
-		
-		return mutations;
-	}
-	
-	private void cleanClassInTestPackage(String sourceFolderPath,
-			List<ClassLocation> locationList) {
-		Iterator<ClassLocation> iterator = locationList.iterator();
-		while(iterator.hasNext()){
-			ClassLocation location = iterator.next();
-			String className = location.getClassCanonicalName();
-			String fileName  = ClassUtils.getJFilePath(sourceFolderPath, className);
-			File file = new File(fileName);
-			if(!file.exists()){
-				iterator.remove();
-			}
-		}
-	}
 
 	private AppJavaClassPath createProjectClassPath(String className, String methodName){
 		AppJavaClassPath classPath = MicroBatUtil.constructClassPaths();

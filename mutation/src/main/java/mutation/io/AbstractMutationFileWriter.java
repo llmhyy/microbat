@@ -32,11 +32,14 @@ public class AbstractMutationFileWriter {
 		this.scrFolder = srcFolder;
 		try {
 			srcFolder.replace("/", Constants.FILE_SEPARATOR);
-			String projName = srcFolder.substring(0, srcFolder.indexOf(Constants.FILE_SEPARATOR + "src"));
-			projName = projName.substring(projName.lastIndexOf(Constants.FILE_SEPARATOR)+1, projName.length());
-			
-			if(projName.length() < 5){
-				projName = "mutation";
+			int srcStartIdx = srcFolder.indexOf(Constants.FILE_SEPARATOR + "src");
+			String projName = "mutation";
+			if (srcStartIdx >= 0) {
+				projName = srcFolder.substring(0, srcStartIdx);
+				projName = projName.substring(projName.lastIndexOf(Constants.FILE_SEPARATOR)+1, projName.length());
+				if(projName.length() < 5){ //?
+					projName = "mutation";
+				}
 			}
 			
 			File tmpFile = new File(tmpFileString);

@@ -1,6 +1,6 @@
 package microbat.mutation.trace.preference;
 
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,12 +19,11 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import microbat.Activator;
-import microbat.mutation.trace.MuRegressionUtils;
+import microbat.mutation.trace.MuRegressionRetriever;
 import microbat.util.SWTFactory;
 import microbat.util.WorkbenchUtils;
-import sav.common.core.utils.StringUtils;
 
-public class MuRegressionPreference extends PreferencePage implements IWorkbenchPreferencePage {
+public class MuRegressionPreferenceOld extends PreferencePage implements IWorkbenchPreferencePage {
 	public static final String TARGET_PROJECT_KEY = "targetProject";
 	public static final String BUG_ID_KEY = "bugId";
 	
@@ -33,8 +32,8 @@ public class MuRegressionPreference extends PreferencePage implements IWorkbench
 	private Combo bugIdCombo;
 	
 	/* other fields */
+	private MuRegressionRetriever dbRetriver = new MuRegressionRetriever();
 	private Map<String, List<String>> cacheBugIds = new HashMap<String, List<String>>();
-	private Map<String, String> muBugMap = new HashMap<>();
 	
 	@Override
 	public void init(IWorkbench workbench) {
@@ -78,10 +77,11 @@ public class MuRegressionPreference extends PreferencePage implements IWorkbench
 		String targetProject = projectCombo.getText();
 		List<String> bugIds = cacheBugIds.get(targetProject);
 		if (bugIds == null && targetProject != null) {
-			System.out.println();
-			Map<String, String> bugIdMap = MuRegressionUtils.getMuBugIds(targetProject);
-			muBugMap.putAll(bugIdMap);
-			bugIds = new ArrayList<>(bugIdMap.keySet());
+			try {
+				bugIds = dbRetriver.getMuBugIds(targetProject);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 			cacheBugIds.put(targetProject, bugIds);
 		}
 		String selectedBugId = bugIdCombo.getText();
@@ -91,11 +91,7 @@ public class MuRegressionPreference extends PreferencePage implements IWorkbench
 
 	private void setDefaultValue() {
 		projectCombo.setText(Activator.getDefault().getPreferenceStore().getString(TARGET_PROJECT_KEY));
-		String bugExecPath = Activator.getDefault().getPreferenceStore().getString(BUG_ID_KEY);
-		if (!StringUtils.isEmpty(bugExecPath)) {
-			bugExecPath = MuRegressionUtils.extractMuBugId(bugExecPath);
-		}
-		bugIdCombo.setText(bugExecPath);
+		bugIdCombo.setText(Activator.getDefault().getPreferenceStore().getString(BUG_ID_KEY));
 		updateBugIdList();
 	}
 
@@ -106,7 +102,7 @@ public class MuRegressionPreference extends PreferencePage implements IWorkbench
 		preferences.put(TARGET_PROJECT_KEY, this.projectCombo.getText());
 		preferences.put(BUG_ID_KEY, this.bugIdCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PROJECT_KEY, this.projectCombo.getText());
-		Activator.getDefault().getPreferenceStore().putValue(BUG_ID_KEY, muBugMap.get(this.bugIdCombo.getText()));
+		Activator.getDefault().getPreferenceStore().putValue(BUG_ID_KEY, this.bugIdCombo.getText());
 		return true;
 	}
 }

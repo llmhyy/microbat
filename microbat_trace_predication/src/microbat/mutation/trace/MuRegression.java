@@ -1,14 +1,20 @@
 package microbat.mutation.trace;
 
+import java.io.File;
+
 import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.StringUtils;
 import tregression.empiricalstudy.Regression;
 
 public class MuRegression {
 	private Regression regression;
+	private String mutationClassName;
+	private String mutationFile;
+	private String orgFile;
+	
+	/* to remove */
 	private String mutationCode;
 	private String orginalCode;
-	private String mutationClassName;
 
 	public Regression getRegression() {
 		return regression;
@@ -39,5 +45,24 @@ public class MuRegression {
 	public String getMutationClassName() {
 		return mutationClassName;
 	}
+
+	public String getMutationFile() {
+		return mutationFile;
+	}
+
+	public void setMutationFile(String mutationFile) {
+		this.mutationFile = mutationFile;
+	}
+
+	public String getOrgFile() {
+		return orgFile;
+	}
+
+	public void setOrgFile(String orgFile) {
+		this.orgFile = orgFile;
+	}
 	
+	public void setMutationClassName(String mutationClassName) {
+		this.mutationClassName = mutationClassName;
+	}
 }
