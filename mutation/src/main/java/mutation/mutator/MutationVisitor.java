@@ -84,9 +84,9 @@ public class MutationVisitor extends AbstractMutationVisitor {
 		}
 	}
 	
-	protected MutationNode newNode(Node node) {
-		MutationNode muNode = new MutationNode(node);
-		CollectionUtils.getListInitIfEmpty(result, node.getBeginLine())
+	protected MutationNode newNode(Node n) {
+		MutationNode muNode = new MutationNode(n);
+		CollectionUtils.getListInitIfEmpty(result, n.getBeginLine())
 				.add(muNode);
 		return muNode;
 	}

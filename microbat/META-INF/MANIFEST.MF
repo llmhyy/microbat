@@ -180,4 +180,6 @@ Export-Package: microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,or
    org.eclipse.ui.texteditor,
    org.eclipse.jface.resource,
    org.eclipse.ui.part",
- org.apache.bcel;uses:="org.apache.bcel.classfile,org.apache.bcel.util"
+ org.apache.bcel;uses:="org.apache.bcel.classfile,org.apache.bcel.util",
+ org.apache.bcel.classfile,
+ org.apache.bcel.generic

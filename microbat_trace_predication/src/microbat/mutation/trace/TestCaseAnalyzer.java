@@ -18,17 +18,21 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
+import microbat.codeanalysis.bytecode.ByteCodeParser;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.PreCheckInformation;
 import microbat.evaluation.io.IgnoredTestCaseFiles;
 import microbat.model.trace.Trace;
+import microbat.mutation.mutation.ControlDominatedMutationVisitor;
 import microbat.mutation.mutation.TraceMutationVisitor;
 import microbat.mutation.trace.handlers.MutationGenerationHandler;
+import microbat.util.BreakpointUtils;
 import microbat.util.IResourceUtils;
 import microbat.util.JTestUtil;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
+import mutation.mutator.MutationVisitor;
 import mutation.mutator.Mutator;
 import sav.common.core.SavException;
 import sav.common.core.utils.ClassUtils;
@@ -122,13 +126,13 @@ public class TestCaseAnalyzer {
 			
 			System.out.println("identifying the possible mutated location for " + testCaseName);
 			List<ClassLocation> executingStatements = convertClassLocation(precheckInfo.getVisitedLocations());
-			List<ClassLocation> locationList = findMutationLocation(junitClassName, executingStatements, testcaseConfig);
-			List<ClassLocation> dominatedLocations = findDominatedMuLocation(junitClassName, executingStatements, testcaseConfig);
+			List<ClassLocation> mutationLocs = findMutationLocation(junitClassName, executingStatements, testcaseConfig);
+			List<ClassLocation> staticCandidates = findStaticMutationLocation(junitClassName, mutationLocs, testcaseConfig);
 			Trace correctTrace = executor.execute(precheckInfo);
 			int thisTrialNum = 0;
-			if(!locationList.isEmpty() || !dominatedLocations.isEmpty()){
+			if(!mutationLocs.isEmpty() || !staticCandidates.isEmpty()){
 				System.out.println("mutating the tested methods of " + testCaseName);
-				Map<String, MutationResult> mutations = generateMutationFiles(locationList);
+				Map<String, MutationResult> mutations = generateMutationFiles(mutationLocs, staticCandidates);
 				System.out.println("mutation done for " + testCaseName);
 				
 				if(!mutations.keySet().isEmpty()){
@@ -194,11 +198,24 @@ public class TestCaseAnalyzer {
 		return false;
 	}
 	
-	private List<ClassLocation> findDominatedMuLocation(String junitClassName, List<ClassLocation> executingStatements,
+	private List<ClassLocation> findStaticMutationLocation(String junitClassName, List<ClassLocation> mutationLocs,
 			AppJavaClassPath testcaseConfig) {
-		
-		// TODO Auto-generated method stub
-		return null;
+		Map<String, List<microbat.model.ClassLocation>> class2PointMap = BreakpointUtils.initBrkpsMap(toMicrobatClassLocation(mutationLocs));
+		List<microbat.model.ClassLocation> matchingLocations = new ArrayList<>();
+		for(String className: class2PointMap.keySet()){
+			LineVisitor visitor = new LineVisitor(class2PointMap.get(className));
+			ByteCodeParser.parse(className, visitor, testcaseConfig);
+			matchingLocations.addAll(visitor.getResult());
+		}
+		return convertClassLocation(matchingLocations);
+	}
+
+	private List<microbat.model.ClassLocation> toMicrobatClassLocation(List<ClassLocation> locs) {
+		List<microbat.model.ClassLocation> result = new ArrayList<>(locs.size());
+		for (ClassLocation loc : locs) {
+			result.add(new microbat.model.ClassLocation(loc.getClassCanonicalName(), loc.getMethodSign(), loc.getLineNo()));
+		}
+		return result;
 	}
 
 	private List<ClassLocation> convertClassLocation(List<microbat.model.ClassLocation> visitedLocations) {
@@ -443,8 +460,9 @@ public class TestCaseAnalyzer {
 		return locations;
 	}
 	
-	private Map<String, MutationResult> generateMutationFiles(List<ClassLocation> locationList){
-		ClassLocation cl = locationList.get(0);
+	private Map<String, MutationResult> generateMutationFiles(List<ClassLocation> dynamicCandidates,
+			List<ClassLocation> staticCandidates) {
+		ClassLocation cl = dynamicCandidates.get(0);
 		String cName = cl.getClassCanonicalName();
 		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName);
 		IPath uri = unit.getResource().getFullPath();
@@ -454,11 +472,14 @@ public class TestCaseAnalyzer {
 		System.out.println(cName);
 		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName));
 		
-		cleanClassInTestPackage(sourceFolderPath, locationList);
+		cleanClassInTestPackage(sourceFolderPath, dynamicCandidates);
 		
 		Mutator mutator = new Mutator(sourceFolderPath, TMP_DIRECTORY, muTotal);
-		TraceMutationVisitor mutationVisitor = new TraceMutationVisitor();
-		Map<String, MutationResult> mutations = mutator.mutate(locationList, mutationVisitor);
+		MutationVisitor visitor = new TraceMutationVisitor();
+		Map<String, MutationResult> mutations = mutator.mutate(dynamicCandidates, visitor);
+		visitor = new ControlDominatedMutationVisitor();
+		Map<String, MutationResult> cdMutations = mutator.mutate(staticCandidates, visitor);
+		MutationResult.merge(mutations, cdMutations);
 		
 		return mutations;
 	}
