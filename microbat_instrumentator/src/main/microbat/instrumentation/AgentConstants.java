@@ -9,4 +9,5 @@ public class AgentConstants {
 	public static final String AGENT_PARAMS_SEPARATOR = ",";
 	public static final String AGENT_PARAMS_MULTI_VALUE_SEPARATOR = ";";
 	public static final String INSTRUMENT_RESULT = "$$microbat_instrumentation_result";
+	public static final String PROGRESS_HEADER = "$progress ";
 }

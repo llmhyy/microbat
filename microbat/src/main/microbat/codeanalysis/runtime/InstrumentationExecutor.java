@@ -135,6 +135,7 @@ public class InstrumentationExecutor {
 			agentRunner.runWithDumpFileOption(traceExecFilePath);
 			// agentRunner.runWithSocket();
 			RunningInfo result = agentRunner.getRunningInfo();
+//			System.out.println(result);
 			System.out.println("isExpectedStepsMet? " + result.isExpectedStepsMet());
 			System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 			System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());

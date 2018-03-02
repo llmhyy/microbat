@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.model.BreakPoint;
 import microbat.model.trace.StepVariableRelationEntry;
@@ -420,7 +421,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			int order = trace.size() + 1;
 			TraceNode currentNode = new TraceNode(bkp, null, order, trace); // leave programState empty.
 			trace.addTraceNode(currentNode);
-			
+			sendProgress();
 			if(!methodCallStack.isEmpty()){
 				TraceNode caller = methodCallStack.peek();
 				caller.addInvocationChild(currentNode);
@@ -431,6 +432,11 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 		
 		locker.unLock(isLocked);
+	}
+
+	private void sendProgress() {
+		System.out.println(new StringBuffer().append(AgentConstants.PROGRESS_HEADER)
+				.append(trace.size()).append(" ").append(expectedSteps));
 	}
 	
 	@Override

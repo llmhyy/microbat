@@ -129,6 +129,44 @@ public class TraceAgentRunner extends AgentVmRunner {
 		}
 		return true;
 	}
+	
+	protected void printOut(String line) {
+		if (printOutExecutionTrace) {
+			System.out.println(line);
+		} else if (line.startsWith(AgentConstants.PROGRESS_HEADER)) {
+			String[] frags = line.split(" ");
+			printProgress(Integer.valueOf(frags[1]), Integer.valueOf(frags[2]));
+		}
+	};
+	
+	private void printProgress(int size, int stepNum) {
+		double progress = ((double) size) / stepNum;
+
+		double preProgr = 0;
+		if (size == 1) {
+			System.out.print("progress: ");
+		} else {
+			preProgr = ((double) (size - 1)) / stepNum;
+		}
+
+		int prog = (int) (progress * 100);
+		int preP = (int) (preProgr * 100);
+
+		int diff = prog - preP;
+		StringBuffer buffer = new StringBuffer();
+		for (int i = 0; i < diff; i++) {
+			buffer.append("=");
+		}
+		System.out.print(buffer.toString());
+
+		int[] percentiles = { 10, 20, 30, 40, 50, 60, 70, 80, 90 };
+		for (int i = 0; i < percentiles.length; i++) {
+			int percentile = percentiles[i];
+			if (preP < percentile && percentile <= prog) {
+				System.out.print(prog + "%");
+			}
+		}
+	}
 
 	private void updateTestResult(String msg) {
 		if (msg == null || msg.isEmpty()) {

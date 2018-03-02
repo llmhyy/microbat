@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -448,11 +450,13 @@ public class TestCaseAnalyzer {
 	private List<ClassLocation> findMutationLocation(String junitClassName, List<ClassLocation> executingStatements,
 			AppJavaClassPath appPath) {
 		List<ClassLocation> locations = new ArrayList<>();
-
+		Set<String> srcClasses = new HashSet<>();
+		Set<String> testClasses = new HashSet<>();
 		for (ClassLocation point : executingStatements) {
 			if (junitClassName.equals(point.getClassCanonicalName())) {
 				continue; // ignore junitClass
 			}
+//			appPath.getSoureCodePath()
 			ClassLocation location = new ClassLocation(point.getClassCanonicalName(), null, point.getLineNo());
 			locations.add(location);
 		}
@@ -467,12 +471,17 @@ public class TestCaseAnalyzer {
 		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName);
 		IPath uri = unit.getResource().getFullPath();
 		String sourceFolderPath = IResourceUtils.getAbsolutePathOsStr(uri);
+		int idx = cName.indexOf("$");
+		if (idx >= 0) {
+			cName = cName.substring(0, idx);
+		}
 		cName = ClassUtils.getJFilePath(cName);
+		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName));
 		System.out.println(sourceFolderPath);
 		System.out.println(cName);
-		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName));
 		
 		cleanClassInTestPackage(sourceFolderPath, dynamicCandidates);
+		cleanClassInTestPackage(sourceFolderPath, staticCandidates);
 		
 		Mutator mutator = new Mutator(sourceFolderPath, TMP_DIRECTORY, muTotal);
 		MutationVisitor visitor = new TraceMutationVisitor();

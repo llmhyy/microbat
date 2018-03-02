@@ -55,7 +55,7 @@ public class VMRunner {
 	
 	protected Process process;
 	private String processError;
-	private boolean printOutExecutionTrace = false;
+	protected boolean printOutExecutionTrace = false;
 	private boolean processTimeout = false;
 	
 	public boolean startVm(VMConfiguration config) throws SavException {
@@ -111,9 +111,7 @@ public class VMRunner {
 //						if (error) {
 //							log.warn(line);
 //						}
-						if (printOutExecutionTrace) {
-							System.out.println(line);
-						}
+						printOut(line);
 						if (!line.contains("Class JavaLaunchHelper is implemented in both")) {
 							sb.append(line).append("\n");
 						}
@@ -127,6 +125,12 @@ public class VMRunner {
 				}
 			}
 		}).start();
+	}
+	
+	protected void printOut(String line) {
+		if (printOutExecutionTrace) {
+			System.out.println(line);
+		}
 	}
 
 	protected void buildVmOption(CollectionBuilder<String, ?> builder, VMConfiguration config) {
