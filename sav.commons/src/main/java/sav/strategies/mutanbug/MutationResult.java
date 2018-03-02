@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import sav.common.core.utils.CollectionUtils;
+
 
 /**
  * Created by hoangtung on 4/9/15.
@@ -48,10 +50,44 @@ public class MutationResult {
 	public String getSourceFolder() {
 		return sourceFolder;
 	}
+	
+	public void merge(MutationResult other) {
+		if (!this.sourceFolder.equals(other.sourceFolder)
+				|| this.className.equals(other.className)) {
+			return;
+		}
+		for (Integer line : this.mutatedFiles.keySet()) {
+			List<File> files = this.mutatedFiles.get(line);
+			List<File> otherFiles = other.mutatedFiles.get(line);
+			if (CollectionUtils.isNotEmpty(otherFiles)) {
+				files.addAll(otherFiles);
+			}
+		}
+		for (Integer line : other.mutatedFiles.keySet()) {
+			if (!this.mutatedFiles.containsKey(line)) {
+				this.mutatedFiles.put(line, other.mutatedFiles.get(line));
+			}
+		}
+	}
 
 	@Override
 	public String toString() {
 		return "MutationResult [className=" + className + ", mutatedFiles="
 				+ mutatedFiles + "]";
+	}
+
+	public static void merge(Map<String, MutationResult> to, Map<String, MutationResult> from) {
+		for (String className : to.keySet()) {
+			MutationResult otherMuResult = from.get(className);
+			if (otherMuResult != null) {
+				to.get(className).merge(otherMuResult);
+			}
+		}
+		for (String className : from.keySet()) {
+			MutationResult thisMutationResult = to.get(className);
+			if (thisMutationResult == null) {
+				to.put(className, from.get(className));
+			}
+		}
 	}
 }
