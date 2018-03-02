@@ -35,7 +35,7 @@ public class Agent {
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.stepLimit = agentParams.getStepLimit();
 		if (agentParams.getExpectedSteps() > 0) {
-			ExecutionTracer.stepLimit = agentParams.getExpectedSteps();
+			ExecutionTracer.expectedSteps = agentParams.getExpectedSteps();
 		}
 		isPrecheck = agentParams.isPrecheck();
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -81,7 +81,7 @@ public class Agent {
 			RunningInfo result = new RunningInfo();
 			result.setProgramMsg(programMsg);
 			result.setTrace(trace);
-			result.setActualSteps(trace.getExecutionList().size());
+			result.setCollectedSteps(trace.getExecutionList().size());
 			result.setExpectedSteps(agentParams.getExpectedSteps());
 			result.saveToFile(agentParams.getDumpFile(), false);
 		} else if (agentParams.getTcpPort() != -1) {

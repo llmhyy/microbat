@@ -34,6 +34,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	public static AppJavaClassPath appJavaClassPath;
 	public static int variableLayer = 2;
 	public static int stepLimit = Integer.MAX_VALUE;
+	public static int expectedSteps = Integer.MAX_VALUE;
 	
 	static {
 		rtStores = new HashMap<>();
@@ -394,9 +395,14 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void _hitLine(int line, String className, String methodSignature) {
 		boolean isLocked = locker.isLock();
 		locker.lock();
-		if (trace.getExecutionList().size() >= stepLimit) {
+		int traceSize = trace.getExecutionList().size();
+		if (traceSize > stepLimit) {
 			shutdown();
-			throw new RuntimeException("Trace is overlong");
+			throw new RuntimeException("Trace is overlong!");
+		}
+		if (traceSize > expectedSteps) {
+			shutdown();
+			throw new RuntimeException("Trace size exceeds expected_steps! ");
 		}
 		try {
 			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);

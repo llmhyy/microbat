@@ -17,7 +17,7 @@ public class RunningInfo {
 	private Trace trace;
 	private String programMsg;
 	private int expectedSteps;
-	private int actualSteps;
+	private int collectedSteps;
 	
 	public static RunningInfo readFromFile(String execTraceFile) { 
 		return readFromFile(new File(execTraceFile));
@@ -34,7 +34,7 @@ public class RunningInfo {
 			if (HEADER.equals(header)) {
 				info.programMsg = reader.readString();
 				info.expectedSteps = reader.readInt();
-				info.actualSteps = reader.readInt();
+				info.collectedSteps = reader.readInt();
 			} else {
 				info.programMsg = header; // for compatible reason with old version. TO BE REMOVED.
 			}
@@ -68,7 +68,7 @@ public class RunningInfo {
 			outputWriter.writeString(HEADER);
 			outputWriter.writeString(programMsg);
 			outputWriter.writeInt(expectedSteps);
-			outputWriter.writeInt(actualSteps);
+			outputWriter.writeInt(collectedSteps);
 			outputWriter.writeTrace(trace);
 		} finally {
 			bufferedStream.close();
@@ -102,15 +102,21 @@ public class RunningInfo {
 		this.expectedSteps = expectedSteps;
 	}
 
-	public int getActualSteps() {
-		return actualSteps;
+	public int getCollectedSteps() {
+		return collectedSteps;
 	}
 
-	public void setActualSteps(int actualSteps) {
-		this.actualSteps = actualSteps;
+	public void setCollectedSteps(int actualSteps) {
+		this.collectedSteps = actualSteps;
 	}
 
 	public boolean isExpectedStepsMet() {
-		return (expectedSteps < 0) || (expectedSteps == actualSteps);
+		return (expectedSteps < 0) || (expectedSteps == collectedSteps);
+	}
+
+	@Override
+	public String toString() {
+		return "RunningInfo [programMsg=" + programMsg + ", expectedSteps=" + expectedSteps + ", collectedSteps="
+				+ collectedSteps + "]";
 	}
 }
