@@ -11,6 +11,7 @@ import java.util.List;
 import microbat.agent.TraceAgentRunner;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.ClassLocation;
 import microbat.model.trace.Trace;
@@ -96,7 +97,7 @@ public class InstrumentationExecutor {
 			System.out.println("the trace length is: " + precheckInfomation.getStepNum());
 			
 			if (!info.isOverLong() && info.getExceedingLimitMethods().isEmpty()) {
-				return execute();
+				return execute(precheckInfomation);
 			}
 		} catch (SavException e1) {
 			e1.printStackTrace();
@@ -126,17 +127,20 @@ public class InstrumentationExecutor {
 		return new PreCheckInformation(-1, -1, false, new ArrayList<ClassLocation>(), new ArrayList<String>());
 	}
 	
-	public Trace execute() {
+	public Trace execute(PreCheckInformation info) {
 		try {
 			prepareAgentRunner();
+			agentRunner.addAgentParam(AgentParams.OPT_EXPECTED_STEP, info.getStepNum());
 			traceExecFilePath = generateTraceFilePath(traceDir, traceName);
 			agentRunner.runWithDumpFileOption(traceExecFilePath);
 			// agentRunner.runWithSocket();
-			Trace trace = agentRunner.getTrace();
+			RunningInfo result = agentRunner.getRunningInfo();
+			System.out.println("isExpectedStepsMet? " + result.isExpectedStepsMet());
 			System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 			System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 			System.out.println("finish!");
-			return trace;
+			agentRunner.removeAgentParam(AgentParams.OPT_EXPECTED_STEP);
+			return result.getTrace();
 		} catch (SavException e1) {
 			e1.printStackTrace();
 		}

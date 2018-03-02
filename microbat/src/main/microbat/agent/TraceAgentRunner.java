@@ -8,6 +8,7 @@ import java.net.Socket;
 
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.output.TraceOutputReader;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
@@ -25,7 +26,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 	private boolean isPrecheckMode = false;
 	private PrecheckInfo precheckInfo;
 
-	private Trace trace;
+	private RunningInfo runningInfo;
 	private boolean isTestSuccessful = false;
 	private boolean unknownTestResult;
 	private String testFailureMessage;
@@ -71,7 +72,6 @@ public class TraceAgentRunner extends AgentVmRunner {
 		isPrecheckMode = false;
 		StopTimer timer = new StopTimer("Building trace");
 		timer.newPoint("Execution");
-		ExecTraceFileReader execTraceReader = new ExecTraceFileReader();
 		try {
 			File dumpFile;
 			if (filePath == null) {
@@ -85,8 +85,8 @@ public class TraceAgentRunner extends AgentVmRunner {
 			super.startAndWaitUntilStop(config);
 //			System.out.println(super.getCommandLinesString(config));
 			timer.newPoint("Read output result");
-			trace = execTraceReader.read(dumpFile);
-			updateTestResult(execTraceReader.getMsg());
+			runningInfo = RunningInfo.readFromFile(dumpFile);
+			updateTestResult(runningInfo.getProgramMsg());
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new SavRtException(e);
@@ -114,7 +114,8 @@ public class TraceAgentRunner extends AgentVmRunner {
 			reader = new TraceOutputReader(inputStream);
 			String msg = reader.readString();
 			updateTestResult(msg);
-			trace = reader.readTrace();
+			runningInfo = new RunningInfo();
+			runningInfo.setTrace(reader.readTrace());
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -151,7 +152,11 @@ public class TraceAgentRunner extends AgentVmRunner {
 		if (isPrecheckMode) {
 			throw new UnsupportedOperationException("TraceAgent has been run in precheck mode!");
 		}
-		return trace;
+		return runningInfo.getTrace();
+	}
+	
+	public RunningInfo getRunningInfo() {
+		return runningInfo;
 	}
 	
 	public PrecheckInfo getPrecheckInfo() {

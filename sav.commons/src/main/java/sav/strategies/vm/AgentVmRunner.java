@@ -75,6 +75,10 @@ public class AgentVmRunner extends VMRunner {
 		agentParams.put(opt, value);
 	}
 	
+	public void removeAgentParam(String opt) {
+		agentParams.remove(opt);
+	}
+	
 	public void addAgentParam(String opt, boolean value) {
 		agentParams.put(opt, String.valueOf(value));
 	}

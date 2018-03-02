@@ -123,9 +123,10 @@ public class TestCaseAnalyzer {
 			System.out.println("identifying the possible mutated location for " + testCaseName);
 			List<ClassLocation> executingStatements = convertClassLocation(precheckInfo.getVisitedLocations());
 			List<ClassLocation> locationList = findMutationLocation(junitClassName, executingStatements, testcaseConfig);
-			Trace correctTrace = executor.execute();
+			List<ClassLocation> dominatedLocations = findDominatedMuLocation(junitClassName, executingStatements, testcaseConfig);
+			Trace correctTrace = executor.execute(precheckInfo);
 			int thisTrialNum = 0;
-			if(!locationList.isEmpty()){
+			if(!locationList.isEmpty() || !dominatedLocations.isEmpty()){
 				System.out.println("mutating the tested methods of " + testCaseName);
 				Map<String, MutationResult> mutations = generateMutationFiles(locationList);
 				System.out.println("mutation done for " + testCaseName);
@@ -193,6 +194,13 @@ public class TestCaseAnalyzer {
 		return false;
 	}
 	
+	private List<ClassLocation> findDominatedMuLocation(String junitClassName, List<ClassLocation> executingStatements,
+			AppJavaClassPath testcaseConfig) {
+		
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	private List<ClassLocation> convertClassLocation(List<microbat.model.ClassLocation> visitedLocations) {
 		List<ClassLocation> locs = new ArrayList<>(visitedLocations.size());
 		for (microbat.model.ClassLocation loc : visitedLocations) {
@@ -363,7 +371,7 @@ public class TestCaseAnalyzer {
 							" steps is to be generated for " + testMethod + " (mutation: " + mutatedFile + ")");
 					killingMutantTrace = null;
 					long t1 = System.currentTimeMillis();
-					killingMutantTrace = executor.execute();
+					killingMutantTrace = executor.execute(precheck);
 					long t2 = System.currentTimeMillis();
 					int time = (int) ((t2-t1)/1000);
 					killingMutantTrace.setConstructTime(time);

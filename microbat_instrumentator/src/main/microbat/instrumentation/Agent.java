@@ -1,8 +1,8 @@
 package microbat.instrumentation;
 
 import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.output.TraceOutputWriter;
-import microbat.instrumentation.output.file.TraceFileRecorder;
 import microbat.instrumentation.output.tcp.TcpConnector;
 import microbat.instrumentation.precheck.TraceMeasurement;
 import microbat.instrumentation.runtime.ExecutionTracer;
@@ -34,6 +34,9 @@ public class Agent {
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.stepLimit = agentParams.getStepLimit();
+		if (agentParams.getExpectedSteps() > 0) {
+			ExecutionTracer.stepLimit = agentParams.getExpectedSteps();
+		}
 		isPrecheck = agentParams.isPrecheck();
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
@@ -61,7 +64,7 @@ public class Agent {
 //			BreakPoint bkp = node.getBreakPoint();
 //			locs.add(new ClassLocation(bkp.getClassCanonicalName(), bkp.getMethodSign(), bkp.getLineNumber()));
 //		}
-//		FileUtils.writeFile("E:/lyly/WorkingFolder/step_run.txt", locs.toString());
+//		FileUtils.writeFile("E:/lyly/WorkingFolder/step_run.txt", StringUtils.join(locs, "\n"));
 //		System.out.println("Trace size = " + trace.getExecutionList().size());
 		
 		createVirtualDataRelation(trace);
@@ -75,8 +78,12 @@ public class Agent {
 	private void writeOutput(Trace trace) throws Exception {
 		System.out.println("Saving trace...");
 		if (agentParams.getDumpFile() != null) {
-			TraceFileRecorder traceRecorder = new TraceFileRecorder(agentParams.getDumpFile());
-			traceRecorder.writeTrace(programMsg, trace, false);
+			RunningInfo result = new RunningInfo();
+			result.setProgramMsg(programMsg);
+			result.setTrace(trace);
+			result.setActualSteps(trace.getExecutionList().size());
+			result.setExpectedSteps(agentParams.getExpectedSteps());
+			result.saveToFile(agentParams.getDumpFile(), false);
 		} else if (agentParams.getTcpPort() != -1) {
 			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
 			TraceOutputWriter traceWriter = tcpConnector.connect();

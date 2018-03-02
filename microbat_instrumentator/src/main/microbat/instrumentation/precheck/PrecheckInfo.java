@@ -17,6 +17,8 @@ import microbat.instrumentation.output.TraceOutputReader;
 import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.model.ClassLocation;
 import sav.common.core.SavRtException;
+import sav.common.core.utils.FileUtils;
+import sav.common.core.utils.StringUtils;
 
 public class PrecheckInfo {
 	private static final String HEADER = "Precheck";
@@ -37,7 +39,7 @@ public class PrecheckInfo {
 		this.setStepTotal(info.getStepTotal());
 		setVisitedLocs(info.getVisitedLocs());
 		isOverLong = info.isOverLong();
-//		FileUtils.writeFile("E:/lyly/WorkingFolder/step_precheck.txt", info.getSteps().toString());
+//		FileUtils.writeFile("E:/lyly/WorkingFolder/step_precheck.txt", StringUtils.join(info.getSteps(), "\n"));
 //		System.out.println("size = " + getStepTotal());
 	}
 
