@@ -46,6 +46,8 @@ public class AppJavaClassPath {
 	private String soureCodePath;
 	private String testCodePath;
 	
+	private List<String> additionalSourceFolders = new ArrayList<>();
+	
 	private SystemPreferences preferences;
 
 	public AppJavaClassPath() {
@@ -157,6 +159,25 @@ public class AppJavaClassPath {
 		this.agentBootstrapPathList = agentBootstrapPathList;
 	}
 
+	public List<String> getAdditionalSourceFolders() {
+		return additionalSourceFolders;
+	}
+
+	public void setAdditionalSourceFolders(List<String> additionalSourceFolders) {
+		this.additionalSourceFolders = additionalSourceFolders;
+	}
+
+	public List<String> getAllSourceFolders(){
+		List<String> candidateSourceFolders = new ArrayList<>();
+		candidateSourceFolders.add(getSoureCodePath());
+		candidateSourceFolders.add(getTestCodePath());
+		for(String additionalFolder: getAdditionalSourceFolders()){
+			String path = additionalFolder;
+			candidateSourceFolders.add(path);
+		}
+		
+		return candidateSourceFolders;
+	}
 	
 
 }
