@@ -266,10 +266,8 @@ public class TraceRetriever extends DbService {
 		closables.add(rs);
 		Map<Integer, SourceScope> map = new HashMap<>();
 		while(rs.next()) {
-			SourceScope scope = new SourceScope();
-			scope.setClassName(rs.getString("class_name"));
-			scope.setStartLine(rs.getInt("start_line"));
-			scope.setEndLine(rs.getInt("end_line"));
+			SourceScope scope = new SourceScope(rs.getString("class_name"), rs.getInt("start_line"), rs.getInt("end_line"));
+			
 			map.put(rs.getInt("location_id"), scope);
 		}
 		return map;

@@ -85,12 +85,10 @@ public class SourceScopeParser {
 		}
 		
 		private void setScope(Statement statement, boolean isLoop){
-			scope = new SourceScope();
 			String className = JavaUtil.getFullNameOfCompilationUnit(cu);
-			scope.setClassName(className);
-			scope.setStartLine(cu.getLineNumber(statement.getStartPosition())); 
-			scope.setEndLine(cu.getLineNumber(statement.getStartPosition()+statement.getLength())); 
-			scope.setLoopScope(isLoop);
+			int start = cu.getLineNumber(statement.getStartPosition()); 
+			int end = cu.getLineNumber(statement.getStartPosition()+statement.getLength()); 
+			scope = new SourceScope(className, start, end, isLoop);
 			
 			JumpStatementFinder jumpStatementFinder = new JumpStatementFinder();
 			statement.accept(jumpStatementFinder);

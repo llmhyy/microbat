@@ -12,9 +12,12 @@ import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SwitchStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
+import org.eclipse.jdt.ui.JavaUI;
 
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
+import microbat.model.SourceScope;
+import microbat.util.JavaUtil;
 
 
 public class LoopHeadParser extends ASTVisitor{
@@ -111,5 +114,19 @@ public class LoopHeadParser extends ASTVisitor{
 			locationList.add(location);
 		}
 		return locationList;
+	}
+	
+	public SourceScope extractScope(){
+		String className = JavaUtil.getFullNameOfCompilationUnit(cu);
+		if(this.conditionASTStatement == null){
+			return new SourceScope(className, 0, 0, false);
+		}
+		
+		int startLine = cu.getLineNumber(this.conditionASTStatement.getStartPosition());
+		int endLine = cu.getLineNumber(this.conditionASTStatement.getStartPosition()+this.conditionASTStatement.getLength());
+		
+		SourceScope ss = new SourceScope(className, startLine, endLine, true);
+		
+		return ss;
 	}
 }
