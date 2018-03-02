@@ -3,6 +3,7 @@ package microbat.mutation.trace.handlers;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -17,6 +18,8 @@ import microbat.mutation.trace.MuDiffMatcher;
 import microbat.mutation.trace.MuRegression;
 import microbat.mutation.trace.MuRegressionUtils;
 import microbat.mutation.trace.preference.MuRegressionPreference;
+import microbat.recommendation.DebugState;
+import microbat.recommendation.UserFeedback;
 import microbat.util.IResourceUtils;
 import microbat.util.MicroBatUtil;
 import sav.common.core.SavRtException;
@@ -24,9 +27,15 @@ import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.FileUtils;
 import sav.strategies.dto.AppJavaClassPath;
+import tregression.SimulationFailException;
+import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.Regression;
+import tregression.empiricalstudy.RootCauseFinder;
+import tregression.empiricalstudy.Simulator;
 import tregression.empiricalstudy.TestCase;
+import tregression.empiricalstudy.solutionpattern.PatternIdentifier;
 import tregression.model.PairList;
+import tregression.model.StepOperationTuple;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.tracematch.ControlPathBasedTraceMatcher;
 import tregression.views.Visualizer;
@@ -80,11 +89,68 @@ public class MuRegressionRetrieverHandler extends AbstractHandler {
 			PairList pairList = buildPairList(correctTrace, buggyTrace, diffMatcher);
 			Visualizer visualizer = new Visualizer();
 			visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
+			
+			try {
+				EmpiricalTrial trial = simulate(buggyTrace, correctTrace, pairList, diffMatcher);
+				System.out.println(trial);
+			} catch (SimulationFailException e) {
+				e.printStackTrace();
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}	
 		
 		return null;
+	}
+	
+	private EmpiricalTrial simulate(Trace buggyTrace, Trace correctTrace, PairList pairList, DiffMatcher diffMatcher)
+			throws SimulationFailException {
+		long time1 = System.currentTimeMillis();
+		System.out.println("start simulating debugging...");
+		Simulator simulator = new Simulator();
+		simulator.prepare(buggyTrace, correctTrace, pairList, diffMatcher);
+//		TraceNode node = buggyTrace.getExecutionList().get(8667);
+//		simulator.setObservedFault(node);
+
+		RootCauseFinder rootcauseFinder = new RootCauseFinder();
+		rootcauseFinder.getRootCauseBasedOnDefects4J(pairList, diffMatcher, buggyTrace, correctTrace);
+
+		if (rootcauseFinder.getRealRootCaseList().isEmpty()) {
+			EmpiricalTrial trial = EmpiricalTrial.createDumpTrial("cannot find real root cause");
+			if (buggyTrace.isMultiThread() || correctTrace.isMultiThread()) {
+				trial.setMultiThread(true);
+				StepOperationTuple tuple = new StepOperationTuple(simulator.getObservedFault(),
+						new UserFeedback(UserFeedback.UNCLEAR), simulator.getObservedFault(), DebugState.UNCLEAR);
+				trial.getCheckList().add(tuple);
+			}
+
+			return trial;
+		}
+
+		if (simulator.getObservedFault() == null) {
+			EmpiricalTrial trial = EmpiricalTrial.createDumpTrial("cannot find observable fault");
+			return trial;
+		}
+
+		List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(buggyTrace, correctTrace, diffMatcher, 0);
+
+		long time2 = System.currentTimeMillis();
+		int simulationTime = (int) (time2 - time1);
+		System.out.println("finish simulating debugging, taking " + simulationTime / 1000 + "s");
+
+		for (EmpiricalTrial trial : trials0) {
+			trial.setTraceCollectionTime(buggyTrace.getConstructTime() + correctTrace.getConstructTime());
+			trial.setBuggyTrace(buggyTrace);
+			trial.setFixedTrace(correctTrace);
+			trial.setPairList(pairList);
+			trial.setDiffMatcher(diffMatcher);
+
+			PatternIdentifier identifier = new PatternIdentifier();
+			identifier.identifyPattern(trial);
+		}
+
+		EmpiricalTrial trial = trials0.get(0);
+		return trial;
 	}
 
 	private MuRegression loadMuRegression(String projectName, String bugExec) throws SQLException {
