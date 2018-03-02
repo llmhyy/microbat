@@ -80,7 +80,7 @@ public class IResourceUtils {
     public static String getSourceFolderPath(String projectName, String cName) {
 		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName, projectName);
 		String javaFilePath = IResourceUtils.getAbsolutePathOsStr(unit.getPath());
-		return javaFilePath.substring(0, javaFilePath.indexOf(cName.replace(".", Constants.FILE_SEPARATOR)));
+		return javaFilePath.substring(0, javaFilePath.indexOf(cName.replace(".", Constants.FILE_SEPARATOR)) - 1);
 	}
     
     public static String getRelativeSourceFolderPath(String projectFolder, String projectName, String cName) {
