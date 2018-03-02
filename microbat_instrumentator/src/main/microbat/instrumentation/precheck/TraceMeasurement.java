@@ -12,15 +12,16 @@ public class TraceMeasurement {
 	private TraceInfo trace = new TraceInfo(stepLimit);
 	private static int stepLimit = Integer.MAX_VALUE;
 	private static TracingState state = TracingState.INIT;
+	private long threadId;
 
 	public void _hitLine(int line, String className, String methodSignature) {
+		if (state != TracingState.RECORDING || (threadId != mainThreadId)) {
+			return;
+		}
 		if (trace.isOverLong()) {
 			throw new RuntimeException("Trace is overlong");
 		}
 		try {
-			if (state != TracingState.RECORDING) {
-				return;
-			}
 			ClassLocation lastStep = trace.getLastStep();
 			if (lastStep != null && lastStep.getClassCanonicalName().equals(className) && 
 					lastStep.getLineNumber() == line) {
@@ -34,12 +35,13 @@ public class TraceMeasurement {
 		}
 	}
 	
-	public synchronized static TraceMeasurement _getTracer(String className, String methodSig) {
+	public synchronized static TraceMeasurement _getTracer(String className, String methodSig, int methodStartLine) {
 		long threadId = Thread.currentThread().getId();
 		if (mainThreadId < 0) {
 			mainThreadId = threadId;
 		}
 		TraceMeasurement instance = getInstance(threadId);
+		instance._hitLine(methodStartLine, className, methodSig);
 		return instance;
 	}
 	
@@ -59,6 +61,7 @@ public class TraceMeasurement {
 		TraceMeasurement store = rtStores.get(threadId);
 		if (store == null) {
 			store = new TraceMeasurement();
+			store.threadId = threadId;
 			rtStores.put(threadId, store);
 		}
 		return store;

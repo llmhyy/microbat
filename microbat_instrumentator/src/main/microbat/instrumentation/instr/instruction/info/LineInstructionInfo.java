@@ -238,17 +238,16 @@ public class LineInstructionInfo {
 		return hasExceptionTarget;
 	}
 
-	public static List<InstructionHandle> getApplicationInvokeInstructions(InstructionList list,
+	public static List<InstructionHandle> getInstrInstructions(InstructionList list,
 			LineNumberTable lineTable, int lineNumber) {
 		List<InstructionHandle> result = new ArrayList<>();
 		List<InstructionHandle> correspondingInsns = findCorrespondingInstructions(list, lineTable, lineNumber);
-		int i = 0;
-		for (InstructionHandle insn : correspondingInsns) {
-			i++;
-			if (insn.getInstruction() instanceof InvokeInstruction
-					&& !(insn.getNext().getInstruction() instanceof ReturnInstruction)
-					&& (i != correspondingInsns.size())) {
-				result.add(insn);
+		for (InstructionHandle insnHandler : correspondingInsns) {
+			Instruction insn = insnHandler.getInstruction();
+			if ((insn instanceof FieldInstruction) || (insn instanceof LocalVariableInstruction)
+					|| (insn instanceof ArrayInstruction) || (insn instanceof ReturnInstruction)
+					|| (insn instanceof InvokeInstruction)) {
+				result.add(insnHandler);
 			}
 		}
 		return result;

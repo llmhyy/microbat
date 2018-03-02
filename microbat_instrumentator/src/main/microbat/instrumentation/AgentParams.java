@@ -22,6 +22,7 @@ public class AgentParams {
 	public static final String OPT_EXCLUDES = "excludes";
 	public static final String OPT_VARIABLE_LAYER = "varLayer";
 	public static final String OPT_STEP_LIMIT = "stepLimit";
+	public static final String OPT_EXPECTED_STEP = "expectedSteps";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -38,6 +39,7 @@ public class AgentParams {
 	private String includesExpression;
 	private String excludesExpression;
 	private int stepLimit;
+	private int expectedSteps;
 	
 	public static AgentParams parse(String agentArgs) {
 		CommandLine cmd = CommandLine.parse(agentArgs);
@@ -75,6 +77,7 @@ public class AgentParams {
 //			params.bootstrapPaths.add(bootstrp);
 //		}
 		params.stepLimit = cmd.getInt(OPT_STEP_LIMIT, Integer.MAX_VALUE);
+		params.expectedSteps = cmd.getInt(OPT_EXPECTED_STEP, -1);
 		return params;
 	}
 	
@@ -197,6 +200,10 @@ public class AgentParams {
 		return stepLimit;
 	}
 
+	public int getExpectedSteps() {
+		return expectedSteps;
+	}
+	
 	public AppJavaClassPath initAppClassPath() {
 		AppJavaClassPath appPath = new AppJavaClassPath();
 		appPath.setLaunchClass(getLaunchClass());

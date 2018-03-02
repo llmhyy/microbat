@@ -804,6 +804,11 @@ public class ExecutionTracer implements IExecutionTracer {
 		if (mainThreadId < 0) {
 			mainThreadId = threadId;
 		}
+		if (threadId != mainThreadId) {
+			// ignore other thread.
+			gLocker.unLock();
+			return EmptyExecutionTracer.getInstance();
+		}
 		ExecutionTracer tracer = getTracer(threadId);
 		if (tracer.locker.isLock()) {
 			gLocker.unLock();
