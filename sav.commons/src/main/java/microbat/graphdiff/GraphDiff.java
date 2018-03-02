@@ -2,7 +2,7 @@ package microbat.graphdiff;
 
 import sav.strategies.dto.execute.value.GraphNode;
 
-public class GraphDiff {
+public class GraphDiff { 
 	public static final String ADD = "add";
 	public static final String REMOVE = "remove";
 	public static final String UPDATE = "update";
