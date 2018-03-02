@@ -1005,4 +1005,10 @@ public class Trace {
 		
 		return locations;
 	}
+
+	public void setSourceVersion(boolean isBuggy) {
+		for(TraceNode node: this.exectionList){
+			node.setSourceVersion(isBuggy);
+		}
+	}
 }

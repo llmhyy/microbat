@@ -1118,6 +1118,10 @@ public class TraceNode{
 		
 		return finder.find;
 	}
+	
+	public void setSourceVersion(boolean flag){
+		this.breakPoint.setSourceVersion(flag);
+	}
 
 
 //	public List<VarValue> getHiddenReadVariables() {

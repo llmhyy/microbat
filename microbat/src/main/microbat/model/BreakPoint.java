@@ -236,10 +236,8 @@ public class BreakPoint extends ClassLocation {
 		return shortSig;
 	}
 	
-	public boolean isSourceVersion() {
-		String flag = File.separator + "bug" + File.separator;
-		return this.getFullJavaFilePath().contains(flag);
-	}
+	private boolean isSourceVersion;
+	
 
 	public boolean isStartOfClass() {
 		return isStartOfClass;
@@ -256,5 +254,13 @@ public class BreakPoint extends ClassLocation {
 		else{
 			return "";
 		}
+	}
+
+	public boolean isSourceVersion() {
+		return isSourceVersion;
+	}
+
+	public void setSourceVersion(boolean isSourceVersion) {
+		this.isSourceVersion = isSourceVersion;
 	}
 }

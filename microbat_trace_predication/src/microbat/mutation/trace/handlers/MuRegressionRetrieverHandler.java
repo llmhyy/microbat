@@ -117,7 +117,9 @@ public class MuRegressionRetrieverHandler extends AbstractHandler {
 		/* build trace from exec files */
 		ExecTraceFileReader execTraceReader = new ExecTraceFileReader();
 		Trace buggyTrace = execTraceReader.read(bugExec);
+		buggyTrace.setSourceVersion(true);
 		Trace fixTrace = execTraceReader.read(fixExec);
+		fixTrace.setSourceVersion(false);
 		Regression regression = new Regression(buggyTrace, fixTrace, null);
 		regression.setTestCase(tc.testClass, tc.testMethod);
 		
