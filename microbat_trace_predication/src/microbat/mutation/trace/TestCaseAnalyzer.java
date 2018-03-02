@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import microbat.codeanalysis.bytecode.ByteCodeParser;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.PreCheckInformation;
+import microbat.codeanalysis.runtime.RunningInformation;
 import microbat.evaluation.io.IgnoredTestCaseFiles;
 import microbat.model.trace.Trace;
 import microbat.mutation.mutation.ControlDominatedMutationVisitor;
@@ -130,7 +131,12 @@ public class TestCaseAnalyzer {
 			List<ClassLocation> executingStatements = convertClassLocation(precheckInfo.getVisitedLocations());
 			List<ClassLocation> mutationLocs = findMutationLocation(junitClassName, executingStatements, testcaseConfig);
 			List<ClassLocation> staticCandidates = findStaticMutationLocation(junitClassName, mutationLocs, testcaseConfig);
-			Trace correctTrace = executor.execute(precheckInfo);
+			RunningInformation info = executor.execute(precheckInfo);
+			if(!info.isExpectedStepsMet()){
+				return false;
+			}
+			
+			Trace correctTrace = info.getTrace();
 			int thisTrialNum = 0;
 			if(!mutationLocs.isEmpty() || !staticCandidates.isEmpty()){
 				System.out.println("mutating the tested methods of " + testCaseName);
@@ -390,13 +396,16 @@ public class TestCaseAnalyzer {
 							" steps is to be generated for " + testMethod + " (mutation: " + mutatedFile + ")");
 					killingMutantTrace = null;
 					long t1 = System.currentTimeMillis();
-					killingMutantTrace = executor.execute(precheck);
-					long t2 = System.currentTimeMillis();
-					int time = (int) ((t2-t1)/1000);
-					killingMutantTrace.setConstructTime(time);
-					/* store valid mutated file */
-					String destinationFile = FileUtils.getFilePath(traceDir, toBeMutatedClass + ".java");
-					FileUtils.copyFile(mutatedFile, destinationFile, true);
+					RunningInformation info = executor.execute(precheck);
+					if(info.isExpectedStepsMet()){
+						killingMutantTrace = info.getTrace();
+						long t2 = System.currentTimeMillis();
+						int time = (int) ((t2-t1)/1000);
+						killingMutantTrace.setConstructTime(time);
+						/* store valid mutated file */
+						String destinationFile = FileUtils.getFilePath(traceDir, toBeMutatedClass + ".java");
+						FileUtils.copyFile(mutatedFile, destinationFile, true);
+					}
 				}
 			}
 			else{

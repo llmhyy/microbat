@@ -14,7 +14,6 @@ import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.ClassLocation;
-import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
 import microbat.preference.MicrobatPreference;
 import sav.common.core.SavException;
@@ -82,7 +81,7 @@ public class InstrumentationExecutor {
 		return agentRunner;
 	}
 	
-	public Trace run(){
+	public RunningInformation run(){
 		try {
 			prepareAgentRunner();
 			agentRunner.precheck();
@@ -127,7 +126,7 @@ public class InstrumentationExecutor {
 		return new PreCheckInformation(-1, -1, false, new ArrayList<ClassLocation>(), new ArrayList<String>());
 	}
 	
-	public Trace execute(PreCheckInformation info) {
+	public RunningInformation execute(PreCheckInformation info) {
 		try {
 			prepareAgentRunner();
 			agentRunner.addAgentParam(AgentParams.OPT_EXPECTED_STEP, info.getStepNum());
@@ -141,7 +140,11 @@ public class InstrumentationExecutor {
 			System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 			System.out.println("finish!");
 			agentRunner.removeAgentParam(AgentParams.OPT_EXPECTED_STEP);
-			return result.getTrace();
+			
+			RunningInformation information = new RunningInformation(result.getProgramMsg(), result.getExpectedSteps(), 
+					result.getCollectedSteps(), result.getTrace());
+			
+			return information;
 		} catch (SavException e1) {
 			e1.printStackTrace();
 		}
