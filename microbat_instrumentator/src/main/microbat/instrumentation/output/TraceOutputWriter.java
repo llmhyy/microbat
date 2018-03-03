@@ -91,7 +91,6 @@ public class TraceOutputWriter extends DataOutputStream {
 			int i = 0;
 			for (BreakPoint bkp : bkps) {
 				if (i == 0) {
-					writeString(bkp.getClassCanonicalName()); // ClassCanonicalName
 					writeString(bkp.getDeclaringCompilationUnitName()); // DeclaringCompilationUnitName
 					i++;
 				}
@@ -170,6 +169,7 @@ public class TraceOutputWriter extends DataOutputStream {
 	}
 	
 	private void writeLocation(BreakPoint location) throws IOException {
+		writeString(location.getClassCanonicalName()); // ClassCanonicalName
 		writeString(location.getMethodSign());
 		writeVarInt(location.getLineNumber());
 		writeBoolean(location.isConditional());

@@ -48,10 +48,9 @@ public class TraceOutputReader extends DataInputStream {
 			if (lines <= 0) {
 				continue;
 			}
-			String classCanonicalName = readString();
 			String declaringCompilationUnitName = readString();
 			for (int j = 0; j < lines; j++) {
-				BreakPoint loc = readLocation(classCanonicalName, declaringCompilationUnitName);
+				BreakPoint loc = readLocation(declaringCompilationUnitName);
 				allLocs.add(loc);
 			}
 		}
@@ -128,12 +127,13 @@ public class TraceOutputReader extends DataInputStream {
 		return allSteps.get(nodeOrder - 1);
 	}
 
-	private BreakPoint readLocation(String className, String declaringCompilationUnitName) throws IOException {
+	private BreakPoint readLocation(String declaringCompilationUnitName) throws IOException {
+		String classCanonicalName = readString();
 		String methodSig = readString();
 		int lineNo = readVarInt();
 		boolean isConditional = readBoolean();
 		boolean isReturnStatement = readBoolean();
-		BreakPoint location = new BreakPoint(className, declaringCompilationUnitName, methodSig, lineNo);
+		BreakPoint location = new BreakPoint(classCanonicalName, declaringCompilationUnitName, methodSig, lineNo);
 		location.setConditional(isConditional);
 		location.setReturnStatement(isReturnStatement);
 		location.setControlScope(readControlScope());
