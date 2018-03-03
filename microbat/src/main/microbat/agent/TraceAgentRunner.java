@@ -40,7 +40,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 	
 	@Override
 	protected void buildVmOption(CollectionBuilder<String, ?> builder, VMConfiguration config) {
-		builder.appendIf("-Xmx32g", enableSettingHeapSize);
+		builder.appendIf("-Xmx30g", enableSettingHeapSize);
 		super.buildVmOption(builder, config);
 	}
 	
