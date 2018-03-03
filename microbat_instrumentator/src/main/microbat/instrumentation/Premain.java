@@ -93,10 +93,7 @@ public class Premain {
 		List<JarFile> jars = new ArrayList<>();
 		for (String jarName : jarNames) {
 			File file = new File(tempFolder.getAbsolutePath(), jarName);
-			if (INSTRUMENTATION_STANTDALONE_JAR.equals(file.getName()) && file.exists()) {
-				file.delete();
-			}
-			if (!file.exists()) {
+			if (INSTRUMENTATION_STANTDALONE_JAR.equals(file.getName()) || !file.exists()) {
 				try {
 					String jarResourcePath = "lib/" + jarName;
 					boolean success = extractJar(jarResourcePath, file.getAbsolutePath());
@@ -125,7 +122,16 @@ public class Premain {
 		if (inputJarStream == null) {
 			return false;
 		}
-		AgentUtils.copy(inputJarStream, new FileOutputStream(filePath));
+		FileOutputStream outStream = null;
+		try {
+			outStream = new FileOutputStream(filePath);
+			outStream.getChannel().force(true);
+			AgentUtils.copy(inputJarStream, outStream);
+		} finally {
+			if (outStream != null) {
+				outStream.close();
+			}
+		}
 		return true;
 	}
 
