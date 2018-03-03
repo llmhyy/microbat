@@ -12,6 +12,7 @@ public class TraceMeasurement {
 	private static long mainThreadId = -1;
 	private TraceInfo trace = new TraceInfo(stepLimit);
 	private static int stepLimit = Integer.MAX_VALUE;
+	private static int maxSteps = stepLimit;
 	private static TracingState state = TracingState.INIT;
 	private long threadId;
 
@@ -19,7 +20,7 @@ public class TraceMeasurement {
 		if (state != TracingState.RECORDING || (threadId != mainThreadId)) {
 			return;
 		}
-		if (trace.isOverLong()) {
+		if (trace.getStepTotal() > maxSteps) {
 			Agent._exitProgram("fail;Trace is over long!");
 		}
 		try {
@@ -73,7 +74,8 @@ public class TraceMeasurement {
 	}
 	
 	public static void setStepLimit(int stepLimit) {
-		TraceMeasurement.stepLimit = (int) (stepLimit * 1.05);
+		TraceMeasurement.stepLimit = stepLimit;
+		TraceMeasurement.maxSteps = (int) (stepLimit * 1.05);
 	}
 
 	public static void shutdown() {
