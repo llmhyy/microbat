@@ -169,7 +169,7 @@ public class MuRegressionRetrieverHandler extends AbstractHandler {
 				FileUtils.getFilePath(CollectionUtils.toArrayList(bugExecFrags, bugExecFrags.length - 1)),
 				classSimpleName + ".java");
 		if (muFile == null) {
-			throw new SavRtException("Cannot file mutated java file");
+			throw new SavRtException("Cannot find mutated java file");
 		}
 		/* class Name */
 		String className = muFile.getName();

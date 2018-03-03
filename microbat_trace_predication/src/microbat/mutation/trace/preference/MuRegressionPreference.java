@@ -86,7 +86,9 @@ public class MuRegressionPreference extends PreferencePage implements IWorkbench
 		}
 		String selectedBugId = bugIdCombo.getText();
 		bugIdCombo.setItems((String[]) bugIds.toArray(new String[0]));
-		bugIdCombo.setText(selectedBugId);
+		if (bugIds.contains(selectedBugId)) {
+			bugIdCombo.setText(selectedBugId);
+		}
 	}
 
 	private void setDefaultValue() {
@@ -102,11 +104,15 @@ public class MuRegressionPreference extends PreferencePage implements IWorkbench
 	@Override
 	public boolean performOk(){
 		cacheBugIds.clear();
+		String bugId = muBugMap.get(this.bugIdCombo.getText());
+		if (bugId == null) {
+			bugId = "";
+		}
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode("muregression.preference");
 		preferences.put(TARGET_PROJECT_KEY, this.projectCombo.getText());
-		preferences.put(BUG_ID_KEY, this.bugIdCombo.getText());
+		preferences.put(BUG_ID_KEY, bugId);
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PROJECT_KEY, this.projectCombo.getText());
-		Activator.getDefault().getPreferenceStore().putValue(BUG_ID_KEY, muBugMap.get(this.bugIdCombo.getText()));
+		Activator.getDefault().getPreferenceStore().putValue(BUG_ID_KEY, bugId);
 		return true;
 	}
 }

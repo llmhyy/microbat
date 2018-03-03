@@ -26,6 +26,7 @@ import microbat.codeanalysis.runtime.PreCheckInformation;
 import microbat.codeanalysis.runtime.RunningInformation;
 import microbat.evaluation.io.IgnoredTestCaseFiles;
 import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
 import microbat.mutation.mutation.ControlDominatedMutationVisitor;
 import microbat.mutation.mutation.TraceMutationVisitor;
 import microbat.mutation.trace.handlers.MutationGenerationHandler;
@@ -304,17 +305,26 @@ public class TestCaseAnalyzer {
 				List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
 					
 				List<EmpiricalTrial> trials = new ArrayList<>();
+				boolean foundRootCause = false;
 				if (trials0 != null) {
 					for (EmpiricalTrial trial : trials0) {
 						TestCase tc = new TestCase(testCaseName, testCaseName);
 						trial.setTestcase(tc.testClass + "#" + tc.testMethod);
+						TraceNode rootCause = trial.getRootCauseFinder().retrieveRootCause(pairList, diffMatcher, killingMutatantTrace, correctTrace);
+						if (rootCause != null) {
+							foundRootCause = true;
+						}
 					}
-
 					EmpiricalTrial trial = trials0.get(0);
 					trials.add(trial);
 				}
-				// TODO
-				return new EvaluationInfo(true, correctTrace, isLoopEffective);
+				if (foundRootCause) {
+					return new EvaluationInfo(true, correctTrace, isLoopEffective);
+				} else {
+					if (mutateInfo.traceExecFile != null) {
+						new File(mutateInfo.traceExecFile).delete();
+					}
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -358,6 +368,7 @@ public class TestCaseAnalyzer {
 		boolean isTooLong = false;
 		boolean isKill = false;
 		boolean isTimeOut = false;
+		String traceExecFile;
 		
 		public MutateInfo(Trace killingMutatnt, boolean isTooLong, boolean isKill, boolean isTimeOut) {
 			super();
@@ -374,6 +385,7 @@ public class TestCaseAnalyzer {
 		boolean isTooLong = false;
 		boolean isKill = true;
 		boolean isTimeOut = false;
+		String traceExec = null;
 		try{
 			String traceDir = generateTraceDir(Settings.projectName, testCaseName, MuRegressionUtils.getMuBugId(mutatedFile));
 			InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig,
@@ -402,9 +414,16 @@ public class TestCaseAnalyzer {
 						long t2 = System.currentTimeMillis();
 						int time = (int) ((t2-t1)/1000);
 						killingMutantTrace.setConstructTime(time);
+						
 						/* store valid mutated file */
 						String destinationFile = FileUtils.getFilePath(traceDir, toBeMutatedClass + ".java");
 						FileUtils.copyFile(mutatedFile, destinationFile, true);
+						if (!new File(destinationFile).exists()) {
+							destinationFile = FileUtils.getFilePath(traceDir, toBeMutatedClass
+									.substring(toBeMutatedClass.lastIndexOf("." + 1), toBeMutatedClass.length()) + ".java");
+							FileUtils.copyFile(mutatedFile, destinationFile, true);
+						}
+						traceExec = executor.getTraceExecFilePath();
 					}
 				}
 			}
@@ -419,6 +438,7 @@ public class TestCaseAnalyzer {
 		}
 		
 		MutateInfo mutateInfo = new MutateInfo(killingMutantTrace, isTooLong, isKill, isTimeOut);
+		mutateInfo.traceExecFile = traceExec;
 		return mutateInfo;
 	}
 	
