@@ -1,6 +1,5 @@
 package microbat.model;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +27,7 @@ public class BreakPoint extends ClassLocation {
 	private ControlScope controlScope;
 	private SourceScope loopScope;
 	private List<ClassLocation> targets = new ArrayList<>();
-	private String declaringCompilationUnitName;
+	
 	
 	public BreakPoint(String className, String methodSinature, int linNum){
 		super(className, methodSinature, linNum);
@@ -163,10 +162,6 @@ public class BreakPoint extends ClassLocation {
 		this.isReturnStatement = isReturnStatement;
 	}
 	
-	public String getDeclaringCompilationUnitName(){
-		return this.declaringCompilationUnitName;
-	}
-	
 	public String getClassCanonicalName(){
 		return super.getClassCanonicalName();
 	}
@@ -223,10 +218,6 @@ public class BreakPoint extends ClassLocation {
 
 	public void setLoopScope(SourceScope loopScope) {
 		this.loopScope = loopScope;
-	}
-
-	public void setDeclaringCompilationUnitName(String declaringCompilationUnitName) {
-		this.declaringCompilationUnitName = declaringCompilationUnitName;
 	}
 
 	public String getShortMethodSignature() {
