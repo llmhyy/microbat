@@ -34,6 +34,7 @@ public class Agent {
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.stepLimit = agentParams.getStepLimit();
+		ExecutionTracer.printProgress = agentParams.isPrintProgress();
 		if (agentParams.getExpectedSteps() > 0) {
 			ExecutionTracer.expectedSteps = agentParams.getExpectedSteps();
 		}

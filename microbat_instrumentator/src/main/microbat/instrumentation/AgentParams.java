@@ -23,6 +23,7 @@ public class AgentParams {
 	public static final String OPT_VARIABLE_LAYER = "varLayer";
 	public static final String OPT_STEP_LIMIT = "stepLimit";
 	public static final String OPT_EXPECTED_STEP = "expectedSteps";
+	public static final String OPT_PRINT_PROGRESS = "printProgress";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -40,6 +41,7 @@ public class AgentParams {
 	private String excludesExpression;
 	private int stepLimit;
 	private int expectedSteps;
+	private boolean printProgress;
 	
 	public static AgentParams parse(String agentArgs) {
 		CommandLine cmd = CommandLine.parse(agentArgs);
@@ -78,6 +80,7 @@ public class AgentParams {
 //		}
 		params.stepLimit = cmd.getInt(OPT_STEP_LIMIT, Integer.MAX_VALUE);
 		params.expectedSteps = cmd.getInt(OPT_EXPECTED_STEP, -1);
+		params.printProgress = cmd.getBoolean(OPT_PRINT_PROGRESS, false);
 		return params;
 	}
 	
@@ -202,6 +205,10 @@ public class AgentParams {
 
 	public int getExpectedSteps() {
 		return expectedSteps;
+	}
+	
+	public boolean isPrintProgress() {
+		return printProgress;
 	}
 	
 	public AppJavaClassPath initAppClassPath() {

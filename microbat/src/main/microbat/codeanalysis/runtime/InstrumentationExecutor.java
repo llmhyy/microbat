@@ -42,10 +42,10 @@ public class InstrumentationExecutor {
 	
 	private TraceAgentRunner createTraceAgentRunner() {
 		String jarPath = appPath.getAgentLib();
-//		agentRunner.setPrintOutExecutionTrace(true);
 		VMConfiguration config = new VMConfiguration();
+//		config.setDebug(true);
 		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath, config);
-		agentRunner.setPrintOutExecutionTrace(false);
+//		agentRunner.setPrintOutExecutionTrace(true);
 		config.setNoVerify(true);
 		config.setJavaHome(appPath.getJavaHome());
 		config.setClasspath(appPath.getClasspaths());
@@ -73,6 +73,7 @@ public class InstrumentationExecutor {
 						(Object[]) AnalysisScopePreference.getExcludedLibs()));
 		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
 		agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, MicrobatPreference.getStepLimit());
+		agentRunner.addAgentParam(AgentParams.OPT_PRINT_PROGRESS, true);
 		return agentRunner;
 	}
 	
@@ -102,7 +103,7 @@ public class InstrumentationExecutor {
 			e1.printStackTrace();
 		}
 		
-		return null;
+		return new RunningInformation("", -1, -1, null);
 	}
 	
 	public PreCheckInformation runPrecheck(int stepLimit) {
@@ -286,5 +287,9 @@ public class InstrumentationExecutor {
 
 	public void setTimeout(long timeout) {
 		this.timeout = timeout;
+	}
+	
+	public String getTraceExecFilePath() {
+		return traceExecFilePath;
 	}
 }

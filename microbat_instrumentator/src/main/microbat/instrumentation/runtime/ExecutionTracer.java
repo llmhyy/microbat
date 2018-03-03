@@ -37,6 +37,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	public static int variableLayer = 2;
 	public static int stepLimit = Integer.MAX_VALUE;
 	public static int expectedSteps = Integer.MAX_VALUE;
+	public static boolean printProgress = false;
 	
 	static {
 		rtStores = new HashMap<>();
@@ -437,8 +438,10 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 
 	private void sendProgress() {
-		System.out.println(new StringBuffer().append(AgentConstants.PROGRESS_HEADER)
-				.append(trace.size()).append(" ").append(expectedSteps));
+		if (printProgress) {
+			System.out.println(new StringBuffer().append(AgentConstants.PROGRESS_HEADER)
+					.append(trace.size()).append(" ").append(expectedSteps));
+		}
 	}
 	
 	@Override
