@@ -75,6 +75,9 @@ public class RunningInfo {
 			if (outputWriter != null) {
 				outputWriter.close();
 			}
+			if (fileStream != null) {
+				fileStream.close();
+			}
 		}
 	}
 	

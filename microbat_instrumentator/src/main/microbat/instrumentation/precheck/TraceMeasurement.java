@@ -51,7 +51,7 @@ public class TraceMeasurement {
 		state = TracingState.RECORDING;
 	}
 	
-	public synchronized static int getThreadNumber() {
+	public static int getThreadNumber() {
 		return rtStores.size();
 	}
 	
@@ -69,7 +69,7 @@ public class TraceMeasurement {
 		return store;
 	}
 	
-	public synchronized static PrecheckInfo getPrecheckInfo() {
+	public static PrecheckInfo getPrecheckInfo() {
 		return new PrecheckInfo(rtStores.size(), getMainThreadInstance().trace);
 	}
 	
