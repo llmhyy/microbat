@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.model.BreakPoint;
@@ -400,11 +401,11 @@ public class ExecutionTracer implements IExecutionTracer {
 		int traceSize = trace.getExecutionList().size();
 		if (traceSize > stepLimit) {
 			shutdown();
-			throw new RuntimeException("Trace is overlong!");
+			Agent._exitProgram("fail;Trace is over long!");
 		}
 		if (traceSize > expectedSteps) {
 			shutdown();
-			throw new RuntimeException("Trace size exceeds expected_steps! ");
+			Agent._exitProgram("fail;Trace size exceeds expected_steps!");
 		}
 		try {
 			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);

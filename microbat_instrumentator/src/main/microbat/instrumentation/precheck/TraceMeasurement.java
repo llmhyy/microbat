@@ -3,6 +3,7 @@ package microbat.instrumentation.precheck;
 import java.util.HashMap;
 import java.util.Map;
 
+import microbat.instrumentation.Agent;
 import microbat.instrumentation.runtime.TracingState;
 import microbat.model.ClassLocation;
 
@@ -19,7 +20,7 @@ public class TraceMeasurement {
 			return;
 		}
 		if (trace.isOverLong()) {
-			throw new RuntimeException("Trace is overlong");
+			Agent._exitProgram("fail;Trace is over long!");
 		}
 		try {
 			ClassLocation lastStep = trace.getLastStep();
