@@ -29,7 +29,7 @@ public class VariableSimilarityCalculator {
 	}
 	
 	private VariableSimilarity findVariableSimilarity(List<VarValue> variables) {
-		VariableSimilarity vs = new VariableSimilarity(0, 0, 0, 0, 0, 0, 0, 0);
+		VariableSimilarity vs = new VariableSimilarity(0, 0, 0, 0, 0, 0, 0, 0, 0);
 		if(variables.isEmpty()){
 			return vs;
 		}
@@ -66,7 +66,7 @@ public class VariableSimilarityCalculator {
 			return calculateArrayElementSimilarity(aVar1, missingAssignValue, aVar2, value);
 		}
 		
-		return new VariableSimilarity(0, 0, 0, 0, 0, 0, 0, 0);
+		return new VariableSimilarity(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	}
 
 	private VariableSimilarity calculateArrayElementSimilarity(ArrayElementVar aVar1, VarValue aValue1,
@@ -82,31 +82,34 @@ public class VariableSimilarityCalculator {
 		int isSameName = aVar1.getName().equals(aVar2.getName()) ? 1 : 0;
 		
 		
-		return new VariableSimilarity(0, 0, 0, 0, 0, isSameObject, isSameType, isSameName);
+		return new VariableSimilarity(0, 0, 0, 0, 0, 0, isSameObject, isSameType, isSameName);
 	}
 
 	private VariableSimilarity calculateLocalVarSimilarity(LocalVar lVar1, LocalVar lVar2) {
 		int isSameType = lVar1.getType().equals(lVar2.getType()) ? 1 : 0;
 		int isSameName = lVar1.getName().equals(lVar2.getName()) ? 1 : 0;
 		
-		return new VariableSimilarity(isSameType, isSameName, 0, 0, 0, 0, 0, 0);
+		return new VariableSimilarity(isSameType, isSameName, 0, 0, 0, 0, 0, 0, 0);
 	}
 
 	private VariableSimilarity calculateFieldSimilarity(FieldVar fVar1, VarValue fValue1, FieldVar fVar2, VarValue fValue2) {
 		int isSameObject = 0;
+		int isSameObjectType = 0;
 		if(fValue1.getParents().isEmpty() && fValue2.getParents().isEmpty()){
 			isSameObject = fVar1.getDeclaringType().equals(fVar2.getDeclaringType()) ? 1 : 0;
+			isSameObjectType = isSameObject;
 		}
 		else if(!fValue1.getParents().isEmpty() && !fValue2.getParents().isEmpty()){
 			VarValue p1 = fValue1.getParents().get(0);
 			VarValue p2 = fValue2.getParents().get(0);
 			isSameObject = p1.getVarID().equals(p2.getVarID()) ? 1 : 0;
+			isSameObjectType = fVar1.getDeclaringType().equals(fVar2.getDeclaringType()) ? 1 : 0;
 		}
 		
 		int isSameType = fVar1.getType().equals(fVar2.getType()) ? 1 : 0;
 		int isSameName = fVar1.getName().equals(fVar2.getName()) ? 1 : 0;
 		
 		
-		return new VariableSimilarity(0, 0, isSameObject, isSameType, isSameName, 0, 0, 0);
+		return new VariableSimilarity(0, 0, isSameObject, isSameObjectType, isSameType, isSameName, 0, 0, 0);
 	}
 }
