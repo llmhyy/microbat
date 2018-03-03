@@ -73,7 +73,7 @@ public class TraceMeasurement {
 	}
 	
 	public static void setStepLimit(int stepLimit) {
-		TraceMeasurement.stepLimit = stepLimit;
+		TraceMeasurement.stepLimit = (int) (stepLimit * 1.05);
 	}
 
 	public static void shutdown() {
