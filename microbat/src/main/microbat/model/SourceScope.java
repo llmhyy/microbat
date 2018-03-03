@@ -68,7 +68,7 @@ public class SourceScope implements Scope{
 
 	@Override
 	public boolean containLocation(ClassLocation location) {
-		String nodeClassName = location.getClassCanonicalName();
+		String nodeClassName = location.getDeclaringCompilationUnitName();
 
 		if (nodeClassName.equals(className)) {
 			int line = location.getLineNumber();

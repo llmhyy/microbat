@@ -22,6 +22,8 @@ public class ClassLocation {
 	protected String methodSign;
 	protected int lineNo = -1; // started with 1?
 	
+	protected String declaringCompilationUnitName;
+	
 	/**
 	 * This field is set for distinguishing src/target file.
 	 */
@@ -40,6 +42,14 @@ public class ClassLocation {
 
 	public String getClassCanonicalName() {
 		return classCanonicalName;
+	}
+	
+	public String getDeclaringCompilationUnitName(){
+		return this.declaringCompilationUnitName;
+	}
+	
+	public void setDeclaringCompilationUnitName(String declaringCompilationUnitName) {
+		this.declaringCompilationUnitName = declaringCompilationUnitName;
 	}
 
 	public void setClassCanonicalName(String classCanonicalName) {
