@@ -705,6 +705,10 @@ public class TraceNode{
 		return this.breakPoint.isConditional();
 	}
 	
+	public boolean isBranch(){
+		return this.breakPoint.isBranch();
+	}
+	
 	public Scope getControlScope(){
 		return this.breakPoint.getControlScope();
 	}

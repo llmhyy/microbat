@@ -1141,6 +1141,10 @@ public class TraceNode{
 		this.breakPoint.setControlScope(scope);;
 	}
 
+	public boolean isBranch() {
+		return this.breakPoint.isBranch();
+	}
+
 
 //	public List<VarValue> getHiddenReadVariables() {
 //		return hiddenReadVariables;

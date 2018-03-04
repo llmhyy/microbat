@@ -17,6 +17,7 @@ public class BreakPoint extends ClassLocation {
 	private boolean isStartOfClass = false;
 	
 	private boolean isConditional;
+	private boolean isBranch;
 	
 	/**
 	 * The reason to differentiate control scope and loop scope is that
@@ -253,5 +254,13 @@ public class BreakPoint extends ClassLocation {
 
 	public void setSourceVersion(boolean isSourceVersion) {
 		this.isSourceVersion = isSourceVersion;
+	}
+
+	public boolean isBranch() {
+		return isBranch;
+	}
+
+	public void setBranch(boolean isBranch) {
+		this.isBranch = isBranch;
 	}
 }

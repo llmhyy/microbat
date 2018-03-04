@@ -173,6 +173,7 @@ public class TraceOutputWriter extends DataOutputStream {
 		writeString(location.getMethodSign());
 		writeVarInt(location.getLineNumber());
 		writeBoolean(location.isConditional());
+		writeBoolean(location.isBranch());
 		writeBoolean(location.isReturnStatement());
 		writeConstrolScope(location.getControlScope());
 		writeLoopScope(location.getLoopScope());

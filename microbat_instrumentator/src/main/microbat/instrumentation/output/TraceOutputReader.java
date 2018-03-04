@@ -132,9 +132,11 @@ public class TraceOutputReader extends DataInputStream {
 		String methodSig = readString();
 		int lineNo = readVarInt();
 		boolean isConditional = readBoolean();
+		boolean isBranch = readBoolean();
 		boolean isReturnStatement = readBoolean();
 		BreakPoint location = new BreakPoint(classCanonicalName, declaringCompilationUnitName, methodSig, lineNo);
 		location.setConditional(isConditional);
+		location.setBranch(isBranch);
 		location.setReturnStatement(isReturnStatement);
 		location.setControlScope(readControlScope());
 		location.setLoopScope(readLoopScope());

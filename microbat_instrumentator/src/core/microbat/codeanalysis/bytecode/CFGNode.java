@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.Select;
 
 public class CFGNode {
 
@@ -22,9 +24,12 @@ public class CFGNode {
 	}
 
 	public boolean isBranch(){
-//		return this.instructionHandle.getInstruction() instanceof Select
-//				|| this.instructionHandle.getInstruction() instanceof IfInstruction;
 		return getChildren().size()>1;
+	}
+	
+	public boolean isConditional(){
+		return this.instructionHandle.getInstruction() instanceof Select
+				|| this.instructionHandle.getInstruction() instanceof IfInstruction;
 	}
 	
 	public InstructionHandle getInstructionHandle() {

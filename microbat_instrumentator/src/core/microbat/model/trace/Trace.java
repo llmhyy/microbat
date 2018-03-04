@@ -368,6 +368,8 @@ public class Trace {
 		
 		ControlScope scope = controlScopeMap.get(breakPoint);
 		if(scope!=null){
+			breakPoint.setConditional(scope.isCondition());
+			breakPoint.setBranch(scope.isBranch());
 			return scope;
 		}
 		
@@ -389,8 +391,12 @@ public class Trace {
 		
 		for(InstructionHandle ins: correspondingList){
 			CFGNode cfgNode = cfg.findNode(ins);
-			if(cfgNode.isBranch()){
-				breakPoint.setConditional(true);
+			if(!breakPoint.isConditional()){
+				breakPoint.setConditional(cfgNode.isConditional());				
+			}
+			
+			if(!breakPoint.isBranch()){
+				breakPoint.setBranch(cfgNode.isBranch());				
 			}
 			
 			List<ClassLocation> controlScope0 = findControlledLines(cfgNode.getControlDependentees(), cfg.getMethod(), breakPoint);
@@ -400,6 +406,7 @@ public class Trace {
 		scope = new ControlScope();
 		scope.setRangeList(ranges);
 		scope.setCondition(breakPoint.isConditional());
+		scope.setBranch(breakPoint.isBranch());
 		controlScopeMap.put(breakPoint, scope);
 		
 		return scope;
@@ -433,9 +440,9 @@ public class Trace {
 	public void constructControlDomianceRelation() {
 		TraceNode controlDominator = null;
 		for(TraceNode node: this.exectionList){
-			ControlScope scope = parseControlScope(node.getBreakPoint());			
+			ControlScope scope = parseControlScope(node.getBreakPoint());		
+			System.currentTimeMillis();
 			node.setControlScope(scope);
-			node.getBreakPoint().setConditional(scope.isCondition());
 			
 			if(controlDominator != null){
 				
@@ -454,7 +461,7 @@ public class Trace {
 				}
 			}
 			
-			if(node.isConditional()){
+			if(node.isBranch()){
 				controlDominator = node;
 			}
 		}

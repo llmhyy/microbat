@@ -10,9 +10,11 @@ import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.IINC;
+import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.LoadInstruction;
 import org.apache.bcel.generic.LocalVariableInstruction;
+import org.apache.bcel.generic.Select;
 import org.apache.bcel.generic.StoreInstruction;
 import org.apache.bcel.generic.Type;
 
@@ -118,9 +120,12 @@ public class CFGNode {
 	}
 
 	public boolean isBranch(){
-//		return this.instructionHandle.getInstruction() instanceof Select
-//				|| this.instructionHandle.getInstruction() instanceof IfInstruction;
 		return getChildren().size()>1;
+	}
+	
+	public boolean isConditional(){
+		return this.instructionHandle.getInstruction() instanceof Select
+				|| this.instructionHandle.getInstruction() instanceof IfInstruction;
 	}
 	
 	public InstructionHandle getInstructionHandle() {
