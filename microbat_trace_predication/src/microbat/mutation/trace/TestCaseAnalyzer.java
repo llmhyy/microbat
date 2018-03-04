@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.bcel.Repository;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdi.TimeoutException;
@@ -46,9 +47,16 @@ import sav.strategies.dto.ClassLocation;
 import sav.strategies.mutanbug.MutationResult;
 import sav.strategies.vm.JavaCompiler;
 import sav.strategies.vm.VMConfiguration;
+import tregression.empiricalstudy.DeadEndRecord;
+import tregression.empiricalstudy.DeadEndReporter;
 import tregression.empiricalstudy.EmpiricalTrial;
+import tregression.empiricalstudy.Regression;
 import tregression.empiricalstudy.Simulator;
 import tregression.empiricalstudy.TestCase;
+import tregression.empiricalstudy.TrialRecorder;
+import tregression.empiricalstudy.training.DED;
+import tregression.empiricalstudy.training.DeadEndData;
+import tregression.empiricalstudy.training.TrainingDataTransfer;
 import tregression.io.ExcelReporter;
 import tregression.junit.ParsedTrials;
 import tregression.model.PairList;
@@ -115,6 +123,7 @@ public class TestCaseAnalyzer {
 			throws JavaModelException {
 		
 		AppJavaClassPath testcaseConfig = createProjectClassPath(junitClassName, methodName);
+		
 		String testCaseName = junitClassName + "#" + methodName;
 		
 		if(ignoredTestCaseFiles.contains(testCaseName)){
@@ -138,6 +147,7 @@ public class TestCaseAnalyzer {
 			}
 			
 			Trace correctTrace = info.getTrace();
+			Regression.fillMissingInfor(correctTrace, testcaseConfig);
 			int thisTrialNum = 0;
 			if(!mutationLocs.isEmpty() || !staticCandidates.isEmpty()){
 				System.out.println("mutating the tested methods of " + testCaseName);
@@ -258,6 +268,7 @@ public class TestCaseAnalyzer {
 		 * for performance
 		 */
 		Trace correctTrace;
+		
 		public EvaluationInfo(boolean isValid, Trace correctTrace, boolean isLoopEffective) {
 			super();
 			this.isValid = isValid;
@@ -288,10 +299,10 @@ public class TestCaseAnalyzer {
 					System.out.println("The correct trace of " + stepNum + " steps is to be generated for " + testCaseName);
 					
 				}
-				
+				long start = System.currentTimeMillis();
 				LCSBasedTraceMatcher traceMatcher = new LCSBasedTraceMatcher();
 				PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, null); 
-				
+				int matchTime = (int) (System.currentTimeMillis() - start);
 				ICompilationUnit iunit = JavaUtil.findNonCacheICompilationUnitInProject(tobeMutatedClass);
 				String orgFilePath = IResourceUtils.getAbsolutePathOsStr(iunit.getPath());
 				String mutationFilePath = mutationFile.getAbsolutePath();
@@ -304,26 +315,57 @@ public class TestCaseAnalyzer {
 				
 				List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
 					
-				List<EmpiricalTrial> trials = new ArrayList<>();
-				boolean foundRootCause = false;
-				if (trials0 != null) {
-					for (EmpiricalTrial trial : trials0) {
+				
+				TrialRecorder recorder;
+				String muBugId = MuRegressionUtils.getMuBugId(mutationFilePath);
+				try {
+					recorder = new TrialRecorder();
+					recorder.export(trials0, Settings.projectName, muBugId);
+					boolean foundRootCause = false;
+					for(EmpiricalTrial trial: trials0){
 						TestCase tc = new TestCase(testCaseName, testCaseName);
 						trial.setTestcase(tc.testClass + "#" + tc.testMethod);
+						trial.setTraceCollectionTime(killingMutatantTrace.getConstructTime() + correctTrace.getConstructTime());
+						trial.setTraceMatchTime(matchTime);
+						trial.setBuggyTrace(killingMutatantTrace);
+						trial.setFixedTrace(correctTrace);
+						trial.setPairList(pairList);
+						trial.setDiffMatcher(diffMatcher);
 						TraceNode rootCause = trial.getRootCauseFinder().retrieveRootCause(pairList, diffMatcher, killingMutatantTrace, correctTrace);
 						if (rootCause != null) {
 							foundRootCause = true;
 						}
+						
+						String backupJFile = orgFilePath.replace(".java", "_bk.java");
+						FileUtils.copyFile(orgFilePath, backupJFile, true);
+						try {
+							FileUtils.copyFile(mutationFilePath, orgFilePath, true);
+							Settings.iCompilationUnitMap.remove(tobeMutatedClass);
+							Settings.compilationUnitMap.remove(tobeMutatedClass);
+							if(!trial.getDeadEndRecordList().isEmpty()){
+								Repository.clearCache();
+								DeadEndRecord record = trial.getDeadEndRecordList().get(0);
+								DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
+								setTestCase(datas, trial.getTestcase());						
+									new DeadEndReporter().export(datas.getAllData(), Settings.projectName, muBugId);
+							}
+						} catch (NumberFormatException | IOException e) {
+							e.printStackTrace();
+						} finally {
+							FileUtils.copyFile(backupJFile, orgFilePath, true);
+							Settings.iCompilationUnitMap.remove(tobeMutatedClass);
+							Settings.compilationUnitMap.remove(tobeMutatedClass);
+						}
 					}
-					EmpiricalTrial trial = trials0.get(0);
-					trials.add(trial);
-				}
-				if (foundRootCause) {
-					return new EvaluationInfo(true, correctTrace, isLoopEffective);
-				} else {
-					if (mutateInfo.traceExecFile != null) {
-						new File(mutateInfo.traceExecFile).delete();
+					if (foundRootCause) {
+						return new EvaluationInfo(true, correctTrace, isLoopEffective);
+					} else {
+						if (mutateInfo.traceExecFile != null) {
+							new File(mutateInfo.traceExecFile).delete();
+						}
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		} catch (Exception e) {
@@ -333,6 +375,13 @@ public class TestCaseAnalyzer {
 		} 
 		
 		return new EvaluationInfo(false, correctTrace, false);
+	}
+
+	private void setTestCase(DED datas, String tc) {
+		datas.getTrueData().testcase = tc;
+		for(DeadEndData data: datas.getFalseDatas()){
+			data.testcase = tc;
+		}
 	}
 
 	class TraceFilePair{
@@ -414,7 +463,9 @@ public class TestCaseAnalyzer {
 						long t2 = System.currentTimeMillis();
 						int time = (int) ((t2-t1)/1000);
 						killingMutantTrace.setConstructTime(time);
-						
+						/* filling up trace */
+						MuRegressionUtils.fillMuBkpJavaFilePath(killingMutantTrace, mutatedFile, toBeMutatedClass);
+						Regression.fillMissingInfor(killingMutantTrace, testcaseConfig);
 						/* store valid mutated file */
 						String destinationFile = FileUtils.getFilePath(traceDir, toBeMutatedClass + ".java");
 						FileUtils.copyFile(mutatedFile, destinationFile, true);
@@ -497,17 +548,7 @@ public class TestCaseAnalyzer {
 			List<ClassLocation> staticCandidates) {
 		ClassLocation cl = dynamicCandidates.get(0);
 		String cName = cl.getClassCanonicalName();
-		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName);
-		IPath uri = unit.getResource().getFullPath();
-		String sourceFolderPath = IResourceUtils.getAbsolutePathOsStr(uri);
-		int idx = cName.indexOf("$");
-		if (idx >= 0) {
-			cName = cName.substring(0, idx);
-		}
-		cName = ClassUtils.getJFilePath(cName);
-		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName));
-		System.out.println(sourceFolderPath);
-		System.out.println(cName);
+		String sourceFolderPath = getSourceFolder(cName);
 		
 		cleanClassInTestPackage(sourceFolderPath, dynamicCandidates);
 		cleanClassInTestPackage(sourceFolderPath, staticCandidates);
@@ -520,6 +561,17 @@ public class TestCaseAnalyzer {
 		MutationResult.merge(mutations, cdMutations);
 		
 		return mutations;
+	}
+
+	private String getSourceFolder(String cName) {
+		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName);
+		IPath uri = unit.getResource().getFullPath();
+		String sourceFolderPath = IResourceUtils.getAbsolutePathOsStr(uri);
+		cName = cName.substring(0, cName.lastIndexOf(".")).replace(".", File.separator);
+		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName) - 1);
+//		System.out.println(sourceFolderPath);
+//		System.out.println(cName);
+		return sourceFolderPath;
 	}
 	
 	private void cleanClassInTestPackage(String sourceFolderPath,
@@ -536,9 +588,18 @@ public class TestCaseAnalyzer {
 		}
 	}
 
-	private AppJavaClassPath createProjectClassPath(String className, String methodName){
+	private AppJavaClassPath createProjectClassPath(String junitClassName, String methodName){
 		AppJavaClassPath classPath = MicroBatUtil.constructClassPaths();
-		
+		classPath.setTestCodePath(getSourceFolder(junitClassName));
+		List<String> srcFolders = MicroBatUtil.getSourceFolders(Settings.projectName);
+		for (String srcFolder : srcFolders) {
+			if (!srcFolder.equals(classPath.getTestCodePath())) {
+				classPath.setSourceCodePath(srcFolder);
+			}
+		}
+		if (classPath.getSoureCodePath() == null) {
+			classPath.setSourceCodePath(classPath.getTestCodePath());
+		}
 		String userDir = System.getProperty("user.dir");
 		String junitDir = userDir + File.separator + "dropins" + File.separator + "junit_lib";
 		
@@ -552,7 +613,7 @@ public class TestCaseAnalyzer {
 		
 		classPath.addClasspath(junitDir);
 		
-		classPath.setOptionalTestClass(className);
+		classPath.setOptionalTestClass(junitClassName);
 		classPath.setOptionalTestMethod(methodName);
 		
 		classPath.setLaunchClass(TEST_RUNNER);

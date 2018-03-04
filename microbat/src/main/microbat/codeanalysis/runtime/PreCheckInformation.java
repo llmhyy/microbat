@@ -13,6 +13,9 @@ public class PreCheckInformation {
 	private List<String> overLongMethods = new ArrayList<>();
 	private boolean isPassTest;
 	private boolean timeout = false;
+	
+	public PreCheckInformation() {
+	}
 
 	public PreCheckInformation(int threadNum, int stepNum, boolean isOverLong, 
 			List<ClassLocation> visitedLocations, List<String> overLongMethods) {

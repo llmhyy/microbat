@@ -49,9 +49,7 @@ public class MicroBatUtil {
 		AppJavaClassPath appClassPath = new AppJavaClassPath();
 		
 		String projectPath = getProjectPath(projectName);
-		IWorkspaceRoot myWorkspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-		IProject iProject = myWorkspaceRoot.getProject(projectName);
-		IJavaProject javaProject = JavaCore.create(iProject);
+		IJavaProject javaProject = getJavaProject(projectName);
 		
 		/**
 		 * setting depended jars into classpath
@@ -147,6 +145,24 @@ public class MicroBatUtil {
 		
 		return appClassPath;
 		
+	}
+
+	public static IJavaProject getJavaProject(String projectName) {
+		IWorkspaceRoot myWorkspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+		IProject iProject = myWorkspaceRoot.getProject(projectName);
+		IJavaProject javaProject = JavaCore.create(iProject);
+		return javaProject;
+	}
+	
+	public static List<String> getSourceFolders(String projectName) {
+		IJavaProject javaProject = getJavaProject(projectName);
+		List<String> srcFolders = new ArrayList<>();
+		for(IClasspathEntry classpathEntry: javaProject.readRawClasspath()){
+			if (classpathEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
+				srcFolders.add(IResourceUtils.getAbsolutePathOsStr(classpathEntry.getPath()));
+			}
+		}
+		return srcFolders;
 	}
 	
 	public static IPackageFragmentRoot getRtPackageFragmentRoot() {

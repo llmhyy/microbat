@@ -142,6 +142,7 @@ public class VMRunner {
 
 	public boolean startVm(List<String> commands, boolean waitUntilStop)
 			throws SavException {
+		processTimeout = false;
 		StringBuffer sb = new StringBuffer();
 		logCommands(commands);
 		ProcessBuilder processBuilder = new ProcessBuilder(commands);

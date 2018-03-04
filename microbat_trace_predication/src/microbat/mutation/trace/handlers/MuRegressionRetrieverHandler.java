@@ -11,9 +11,7 @@ import org.eclipse.core.commands.ExecutionException;
 
 import microbat.Activator;
 import microbat.agent.ExecTraceFileReader;
-import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
-import microbat.model.trace.TraceNode;
 import microbat.mutation.trace.MuDiffMatcher;
 import microbat.mutation.trace.MuRegression;
 import microbat.mutation.trace.MuRegressionUtils;
@@ -82,9 +80,9 @@ public class MuRegressionRetrieverHandler extends AbstractHandler {
 			buggyClasspath.setTestCodePath(FileUtils.getFilePath(orgPath, testFolder));
 			fixClasspath.setSourceCodePath(FileUtils.getFilePath(orgPath, srcFolder));
 			fixClasspath.setTestCodePath(FileUtils.getFilePath(orgPath, testFolder));
-			fillMuBkpJavaFilePath(buggyTrace, muJFilePath, muRegression.getMutationClassName());
-			regression.fillMissingInfor(correctTrace, fixClasspath);
-			regression.fillMissingInfor(buggyTrace, buggyClasspath);
+			MuRegressionUtils.fillMuBkpJavaFilePath(buggyTrace, muJFilePath, muRegression.getMutationClassName());
+			Regression.fillMissingInfor(correctTrace, fixClasspath);
+			Regression.fillMissingInfor(buggyTrace, buggyClasspath);
 			
 			PairList pairList = buildPairList(correctTrace, buggyTrace, diffMatcher);
 			Visualizer visualizer = new Visualizer();
@@ -210,15 +208,6 @@ public class MuRegressionRetrieverHandler extends AbstractHandler {
 		int matchTime = (int) (time2 - time1);
 		System.out.println("finish matching trace, taking " + matchTime + "ms");
 		return pairList;
-	}
-	
-	public void fillMuBkpJavaFilePath(Trace buggyTrace, String muJFilePath, String muClassName) {
-		for (TraceNode node : buggyTrace.getExecutionList()) {
-			BreakPoint point = node.getBreakPoint();
-			if (muClassName.equals(point.getDeclaringCompilationUnitName())) {
-				point.setFullJavaFilePath(muJFilePath);
-			}
-		}
 	}
 	
 	private AppJavaClassPath initAppClasspath(String projectName) {

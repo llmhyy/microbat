@@ -111,7 +111,11 @@ public class InstrumentationExecutor {
 			/* test stepLimit */
 			agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, stepLimit);
 			prepareAgentRunner();
-			agentRunner.precheck();
+			if (!agentRunner.precheck()) {
+				precheckInfo = new PreCheckInformation();
+				precheckInfo.setTimeout(true);
+				return precheckInfo;
+			}
 			PrecheckInfo info = agentRunner.getPrecheckInfo();
 //			System.out.println(info);
 			System.out.println("isPassTest: " + agentRunner.isTestSuccessful());
@@ -141,7 +145,7 @@ public class InstrumentationExecutor {
 			System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 			System.out.println("finish!");
 			agentRunner.removeAgentParam(AgentParams.OPT_EXPECTED_STEP);
-			
+			result.getTrace().setAppJavaClassPath(appPath);
 			RunningInformation information = new RunningInformation(result.getProgramMsg(), result.getExpectedSteps(), 
 					result.getCollectedSteps(), result.getTrace());
 			

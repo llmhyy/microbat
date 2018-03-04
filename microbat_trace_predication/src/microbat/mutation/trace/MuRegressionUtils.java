@@ -7,9 +7,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import microbat.model.BreakPoint;
+import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
 import microbat.util.MicroBatUtil;
 import sav.common.core.Constants;
 import sav.common.core.utils.FileUtils;
+import tregression.empiricalstudy.Regression;
 
 public class MuRegressionUtils {
 	private MuRegressionUtils(){}
@@ -68,5 +72,14 @@ public class MuRegressionUtils {
 		String className = mutationFilePath.substring(startIdx, endIdx);
 		startIdx = className.lastIndexOf(".") + 1;
 		return "mu_" + className.substring(startIdx);
+	}
+	
+	public static void fillMuBkpJavaFilePath(Trace buggyTrace, String muJFilePath, String muClassName) {
+		for (TraceNode node : buggyTrace.getExecutionList()) {
+			BreakPoint point = node.getBreakPoint();
+			if (muClassName.equals(point.getDeclaringCompilationUnitName())) {
+				point.setFullJavaFilePath(muJFilePath);
+			}
+		}
 	}
 }
