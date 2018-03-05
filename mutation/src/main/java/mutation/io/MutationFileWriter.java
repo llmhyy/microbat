@@ -13,7 +13,9 @@ import japa.parser.ast.Node;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import mutation.mutator.MutationVisitor.MutationNode;
 import mutation.utils.FileUtils;
@@ -38,8 +40,8 @@ public class MutationFileWriter extends AbstractMutationFileWriter {
 		super(srcFolder);
 	}
 	
-	public List<File> write(List<MutationNode> data, String className, int lineNo) {
-		List<File> files = new ArrayList<File>();
+	public Map<File, String> write(List<MutationNode> data, String className, int lineNo) {
+		Map<File, String> files = new HashMap<>();
 		File javaFile = getJavaSrcFile(className);
 		
 		int count = 1;
@@ -55,7 +57,7 @@ public class MutationFileWriter extends AbstractMutationFileWriter {
 					lines = org.apache.commons.io.FileUtils.readLines(javaFile);
 					List<String> newContent = createNewContent(lines, muNode.getOrgNode(), node);
 					org.apache.commons.io.FileUtils.writeLines(file, newContent);
-					files.add(file);
+					files.put(file, muNode.getMutationType(i));
 				} catch (IOException e) {
 					log.error("Cannot write mutation file");
 					log.error(e.getMessage());
