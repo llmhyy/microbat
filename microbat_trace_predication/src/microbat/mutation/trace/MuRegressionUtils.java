@@ -3,9 +3,8 @@ package microbat.mutation.trace;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
@@ -13,24 +12,19 @@ import microbat.model.trace.TraceNode;
 import microbat.util.MicroBatUtil;
 import sav.common.core.Constants;
 import sav.common.core.utils.FileUtils;
-import tregression.empiricalstudy.Regression;
 
 public class MuRegressionUtils {
 	private MuRegressionUtils(){}
 	
-	public static Map<String, String> getMuBugIds(String targetProject) {
-		Map<String, String> result = new LinkedHashMap<>();
+	public static List<String> getMuTraceExecs(String targetProject) {
 		String folderPath = sav.common.core.utils.FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), targetProject);
 		File folder = new File(folderPath);
 		if (!folder.exists() || !folder.isDirectory()) {
-			return result;
+			return Collections.emptyList();
 		}
 		List<String> allFiles = new ArrayList<>();
 		collectBugExecFiles(folder, allFiles);
-		for (String path : allFiles) {
-			result.put(extractMuBugId(path), path);
-		}
-		return result;
+		return allFiles;
 	}
 	
 	public static String extractMuBugId(String execFilePath) {

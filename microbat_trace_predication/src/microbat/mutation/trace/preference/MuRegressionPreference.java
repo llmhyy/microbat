@@ -19,9 +19,11 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import microbat.Activator;
+import microbat.mutation.trace.MuBugInfo;
 import microbat.mutation.trace.MuRegressionUtils;
 import microbat.util.SWTFactory;
 import microbat.util.WorkbenchUtils;
+import sav.common.core.SavRtException;
 import sav.common.core.utils.StringUtils;
 
 public class MuRegressionPreference extends PreferencePage implements IWorkbenchPreferencePage {
@@ -79,9 +81,20 @@ public class MuRegressionPreference extends PreferencePage implements IWorkbench
 		List<String> bugIds = cacheBugIds.get(targetProject);
 		if (bugIds == null && targetProject != null) {
 			System.out.println();
-			Map<String, String> bugIdMap = MuRegressionUtils.getMuBugIds(targetProject);
-			muBugMap.putAll(bugIdMap);
-			bugIds = new ArrayList<>(bugIdMap.keySet());
+			List<String> bugExecs = MuRegressionUtils.getMuTraceExecs(targetProject);
+			bugIds = new ArrayList<>();
+			for (String path : bugExecs) {
+				try {
+					MuBugInfo muBugInfo = MuBugInfo.parse(path);
+					String bugId = StringUtils.join("#", muBugInfo.getTc().getClassSimpleName(),
+							muBugInfo.getTc().testMethod,
+							MuRegressionUtils.extractMuBugId(muBugInfo.getMuFile().getAbsolutePath()));
+					bugIds.add(bugId);
+					muBugMap.put(bugId, path);
+				} catch (SavRtException e) {
+					System.out.println(e.getMessage());
+				}
+			}
 			cacheBugIds.put(targetProject, bugIds);
 		}
 		String selectedBugId = bugIdCombo.getText();
