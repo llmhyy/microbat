@@ -32,6 +32,7 @@ public class TraceMutationVisitor extends MutationVisitor {
 	@Override
 	public boolean mutate(AssignExpr n) {
 		MutationNode muNode = newNode(n);
+		muNode.add(new EmptyStmt(), MutationTypes.REMOVE_ASSIGNMENT);
 		muNode.getMutatedNodes().add(new EmptyStmt());
 		return super.mutate(n);
 	}
@@ -49,15 +50,15 @@ public class TraceMutationVisitor extends MutationVisitor {
 		MutationNode muNode = newNode(n);
 		if (ifStmt.getThenStmt() == null && ifStmt.getElseStmt() == null) {
 			/* empty if or if which has return stmt in its stmt block */
-			muNode.getMutatedNodes().add(new EmptyStmt());
+			muNode.add(new EmptyStmt(), MutationTypes.REMOVE_IF_BLOCK);
 		} else {
 			if (ifStmt.getThenStmt() != null) {
 				Node newNode = ifStmt.getThenStmt().accept(nodeCloner, null);
-				muNode.getMutatedNodes().add(newNode);
+				muNode.add(newNode, MutationTypes.REMOVE_IF_CONDITION);
 			} 
 			if (ifStmt.getElseStmt() != null) {
 				Node newNode = ifStmt.getElseStmt().accept(nodeCloner, null);
-				muNode.getMutatedNodes().add(newNode);
+				muNode.add(newNode, MutationTypes.REMOVE_IF_CONDITION);
 			}
 		}
 		

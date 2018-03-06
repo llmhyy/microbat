@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -175,6 +176,7 @@ public class TestCaseAnalyzer {
 							tmpTrial.setTestCaseName(testCaseName);
 							tmpTrial.setMutatedFile(mutationFile.toString());
 							tmpTrial.setMutatedLineNumber(line);
+							tmpTrial.setMutationType(result.getMutationType(mutationFile));
 							
 							if(parsedTrials.contains(tmpTrial)){
 								continue;
@@ -310,13 +312,14 @@ public class TestCaseAnalyzer {
 				DiffMatcher diffMatcher = new MuDiffMatcher(testcaseConfig.getPreferences().get(SOURCE_FOLDER_KEY),
 						orgFilePath, mutationFilePath);
 				diffMatcher.matchCode();
-
+				/* fill mu trial info */
+				tmpTrial.setOriginalTotalSteps(correctTrace.getExecutionList().size());
+				tmpTrial.setTotalSteps(killingMutatantTrace.getExecutionList().size());
+				
 				Simulator simulator = new Simulator();
 				simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
-				
+				tmpTrial.setMutatedFile(mutateInfo.destMuFile);
 				List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
-					
-				
 				TrialRecorder recorder;
 				String muBugId = MuRegressionUtils.getMuBugId(mutationFilePath);
 				try {
@@ -360,8 +363,12 @@ public class TestCaseAnalyzer {
 						}
 					}
 					if (foundRootCause) {
+						tmpTrial.setBugFound(true);
+						reporter.export(Arrays.asList(tmpTrial));
 						return new EvaluationInfo(true, correctTrace, isLoopEffective);
 					} else {
+						tmpTrial.setBugFound(false);
+						reporter.export(Arrays.asList(tmpTrial));
 						if (mutateInfo.traceExecFile != null) {
 							new File(mutateInfo.traceExecFile).delete();
 						}
@@ -420,6 +427,7 @@ public class TestCaseAnalyzer {
 		boolean isKill = false;
 		boolean isTimeOut = false;
 		String traceExecFile;
+		String destMuFile;
 		
 		public MutateInfo(Trace killingMutatnt, boolean isTooLong, boolean isKill, boolean isTimeOut) {
 			super();
@@ -437,6 +445,7 @@ public class TestCaseAnalyzer {
 		boolean isKill = true;
 		boolean isTimeOut = false;
 		String traceExec = null;
+		String destMuFile = null;
 		try{
 			String traceDir = generateTraceDir(Settings.projectName, testCaseName, MuRegressionUtils.getMuBugId(mutatedFile));
 			InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig,
@@ -469,12 +478,12 @@ public class TestCaseAnalyzer {
 						MuRegressionUtils.fillMuBkpJavaFilePath(killingMutantTrace, mutatedFile, toBeMutatedClass);
 						Regression.fillMissingInfor(killingMutantTrace, testcaseConfig);
 						/* store valid mutated file */
-						String destinationFile = FileUtils.getFilePath(traceDir, toBeMutatedClass + ".java");
-						FileUtils.copyFile(mutatedFile, destinationFile, true);
-						if (!new File(destinationFile).exists()) {
-							destinationFile = FileUtils.getFilePath(traceDir, toBeMutatedClass
+						destMuFile = FileUtils.getFilePath(traceDir, toBeMutatedClass + ".java");
+						FileUtils.copyFile(mutatedFile, destMuFile, true);
+						if (!new File(destMuFile).exists()) {
+							destMuFile = FileUtils.getFilePath(traceDir, toBeMutatedClass
 									.substring(toBeMutatedClass.lastIndexOf("." + 1), toBeMutatedClass.length()) + ".java");
-							FileUtils.copyFile(mutatedFile, destinationFile, true);
+							FileUtils.copyFile(mutatedFile, destMuFile, true);
 						}
 						traceExec = executor.getTraceExecFilePath();
 					}
@@ -492,6 +501,7 @@ public class TestCaseAnalyzer {
 		
 		MutateInfo mutateInfo = new MutateInfo(killingMutantTrace, isTooLong, isKill, isTimeOut);
 		mutateInfo.traceExecFile = traceExec;
+		mutateInfo.destMuFile = destMuFile;
 		return mutateInfo;
 	}
 	

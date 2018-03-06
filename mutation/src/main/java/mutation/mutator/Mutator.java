@@ -99,7 +99,7 @@ public class Mutator implements IMutator {
 		for (ClassLocation loc : muMap.keySet()) {
 			MutationResult lineRes = new MutationResult(srcFolder, loc.getClassCanonicalName());
 			Integer line = loc.getLineNo();
-			List<File> muFiles = fileWriter.write(muMap.get(loc), loc.getClassCanonicalName(), line);
+			Map<File, String> muFiles = fileWriter.write(muMap.get(loc), loc.getClassCanonicalName(), line);
 			lineRes.put(line, muFiles);
 			result.put(loc.getClassCanonicalName(), lineRes);
 		}

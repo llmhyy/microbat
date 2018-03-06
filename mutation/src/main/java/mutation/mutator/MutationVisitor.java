@@ -112,10 +112,12 @@ public class MutationVisitor extends AbstractMutationVisitor {
 	public static class MutationNode {
 		private Node orgNode;
 		private List<Node> mutatedNodes;
+		private Map<Integer, String> mutationTypes;
 		
 		public MutationNode(Node orgNode) {
 			mutatedNodes = new ArrayList<Node>();
 			this.orgNode = orgNode;
+			mutationTypes = new HashMap<>();
 		}
 		
 		public static MutationNode of(Node orgNode, Node newNode) {
@@ -130,6 +132,17 @@ public class MutationVisitor extends AbstractMutationVisitor {
 
 		public List<Node> getMutatedNodes() {
 			return mutatedNodes;
+		}
+		
+		public void add(Node newNode, String mutationType) {
+			mutatedNodes.add(newNode);
+			if (mutationType != null) {
+				mutationTypes.put(mutatedNodes.size() - 1, mutationType);
+			}
+		}
+		
+		public String getMutationType(int nodeIdx) {
+			return mutationTypes.get(nodeIdx);
 		}
 	}
 

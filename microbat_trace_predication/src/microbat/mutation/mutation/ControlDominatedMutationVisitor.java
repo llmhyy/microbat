@@ -20,7 +20,7 @@ public class ControlDominatedMutationVisitor extends MutationVisitor {
 			UnaryExpr newNode = new UnaryExpr(condition, Operator.not);
 			ifStmt.setCondition(newNode);
 		}
-		muNode.getMutatedNodes().add(ifStmt);
+		muNode.add(ifStmt, MutationTypes.NEGATE_IF_CONDITION);
 		return false;
 	}
 }

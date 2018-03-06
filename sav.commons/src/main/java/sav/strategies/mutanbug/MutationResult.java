@@ -1,6 +1,7 @@
 package sav.strategies.mutanbug;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,15 +17,22 @@ public class MutationResult {
 	private String sourceFolder;
 	private String className;
 	private Map<Integer, List<File>> mutatedFiles;
+	private Map<File, String> mutationTypes;
 	
 	public MutationResult(String sourceFolder, String className) {
 		this.sourceFolder = sourceFolder;
 		this.className = className;
 		mutatedFiles = new HashMap<Integer, List<File>>();
+		mutationTypes = new HashMap<>();
 	}
 	
 	public void put(Integer line, List<File> muFiles) {
 		mutatedFiles.put(line, muFiles);
+	}
+	
+	public void put(Integer line, Map<File, String> muFiles) {
+		mutationTypes.putAll(muFiles);
+		put(line, new ArrayList<>(muFiles.keySet()));
 	}
 	
 	public List<File> getMutatedFiles(int lineNo) {
@@ -51,6 +59,10 @@ public class MutationResult {
 		return sourceFolder;
 	}
 	
+	public String getMutationType(File file) {
+		return mutationTypes.get(file);
+	}
+	
 	public void merge(MutationResult other) {
 		if (!this.sourceFolder.equals(other.sourceFolder)
 				|| this.className.equals(other.className)) {
@@ -68,6 +80,7 @@ public class MutationResult {
 				this.mutatedFiles.put(line, other.mutatedFiles.get(line));
 			}
 		}
+		this.mutationTypes.putAll(other.mutationTypes);
 	}
 
 	@Override
@@ -90,4 +103,5 @@ public class MutationResult {
 			}
 		}
 	}
+	
 }
