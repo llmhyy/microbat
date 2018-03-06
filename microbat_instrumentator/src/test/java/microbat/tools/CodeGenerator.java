@@ -67,7 +67,7 @@ public class CodeGenerator {
 		}
 	}
 	
-//	@Test
+	@Test
 	public void generateCode_Measurement() {
 		Method[] ms = TraceMeasurement.class.getMethods();
 		List<Method> methods = CollectionUtils.toArrayList(ms);

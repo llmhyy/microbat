@@ -1,6 +1,7 @@
 package microbat.instrumentation.instr.instruction.info;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +12,8 @@ import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ArrayInstruction;
+import org.apache.bcel.generic.ClassGen;
+import org.apache.bcel.generic.CodeExceptionGen;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.Instruction;
@@ -25,8 +28,10 @@ import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Type;
 
 import microbat.codeanalysis.bytecode.CFG;
+import microbat.codeanalysis.bytecode.CFGConstructor;
 import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.AgentConstants;
+import sav.common.core.utils.StringUtils;
 
 public class LineInstructionInfo {
 	protected int line;
@@ -251,5 +256,36 @@ public class LineInstructionInfo {
 			}
 		}
 		return result;
+	}
+	
+	public static List<LineInstructionInfo> buildLineInstructionInfos(ClassGen classGen, ConstantPoolGen constPool,
+			MethodGen methodGen, Method method, boolean isAppClass, InstructionList insnList) {
+		List<LineInstructionInfo> lineInsnInfos = new ArrayList<>();
+		Set<InstructionHandle> exceptionTargets = collectExecptionTargets(methodGen);
+		CFGConstructor cfgConstructor = new CFGConstructor();
+		CFG cfg = cfgConstructor.constructCFG(method.getCode());
+
+		Set<Integer> visitedLines = new HashSet<>();
+		for (LineNumberGen lineGen : methodGen.getLineNumbers()) {
+			if (!visitedLines.contains(lineGen.getSourceLine())) {
+				String loc = StringUtils.dotJoin(classGen.getClassName(), method.getName(), lineGen.getSourceLine());
+				lineInsnInfos.add(new LineInstructionInfo(loc, constPool, method, methodGen, exceptionTargets, lineGen, cfg, isAppClass));
+				visitedLines.add(lineGen.getSourceLine());
+			}
+		}
+		/* class does not include line number */
+		if (visitedLines.isEmpty()) {
+			String loc = classGen.getClassName() + "." + method.getName();
+			lineInsnInfos.add(new UnknownLineInstructionInfo(loc, constPool, insnList, isAppClass));
+		}
+		return lineInsnInfos;
+	}
+
+	private static Set<InstructionHandle> collectExecptionTargets(MethodGen methodGen) {
+		Set<InstructionHandle> targets = new HashSet<>();
+		for (CodeExceptionGen exception : methodGen.getExceptionHandlers()) {
+			targets.add(exception.getHandlerPC());
+		}
+		return targets;
 	}
 }

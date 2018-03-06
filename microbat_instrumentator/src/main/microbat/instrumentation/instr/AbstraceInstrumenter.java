@@ -1,5 +1,10 @@
 package microbat.instrumentation.instr;
 
+import java.util.List;
+
+import org.apache.bcel.classfile.ClassParser;
+import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ClassGenException;
 import org.apache.bcel.generic.CodeExceptionGen;
 import org.apache.bcel.generic.ConstantPoolGen;
@@ -10,9 +15,26 @@ import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.Type;
 
-public class AbstraceInstrumenter {
+public abstract class AbstraceInstrumenter {
 	protected static final String CLASS_NAME = "$className"; // local var
 	protected static final String METHOD_SIGNATURE = "$methodSignature"; // local var
+
+	public byte[] instrument(String classFName, byte[] classfileBuffer) throws Exception {
+		String className = classFName.replace("/", ".");
+		ClassParser cp = new ClassParser(new java.io.ByteArrayInputStream(classfileBuffer), classFName);
+		JavaClass jc = cp.parse();
+		// First, make sure we have to instrument this class:
+		if (!jc.isClass()) {
+			// could be an interface
+			return null;
+		}
+		
+		return instrument(classFName, className, jc, null);
+	}
+	
+	
+	protected abstract byte[] instrument(String classFName, String className, JavaClass jc,
+			List<Method> instrumentedMethods);
 
 	protected LocalVariableGen createLocalVariable(String varName, MethodGen methodGen, ConstantPoolGen constPool) {
 		InstructionList list = methodGen.getInstructionList();

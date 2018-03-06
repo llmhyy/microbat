@@ -1,12 +1,8 @@
 package microbat.instrumentation.instr;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.bcel.Const;
-import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
@@ -21,7 +17,6 @@ import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.ArrayType;
 import org.apache.bcel.generic.BasicType;
 import org.apache.bcel.generic.ClassGen;
-import org.apache.bcel.generic.CodeExceptionGen;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.DUP;
 import org.apache.bcel.generic.DUP2;
@@ -41,7 +36,6 @@ import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.InvokeInstruction;
-import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.LocalVariableInstruction;
 import org.apache.bcel.generic.MethodGen;
@@ -56,8 +50,6 @@ import org.apache.bcel.generic.SWAP;
 import org.apache.bcel.generic.TargetLostException;
 import org.apache.bcel.generic.Type;
 
-import microbat.codeanalysis.bytecode.CFG;
-import microbat.codeanalysis.bytecode.CFGConstructor;
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
@@ -68,10 +60,8 @@ import microbat.instrumentation.instr.instruction.info.FieldInstructionInfo;
 import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
 import microbat.instrumentation.instr.instruction.info.LocalVarInstructionInfo;
 import microbat.instrumentation.instr.instruction.info.RWInstructionInfo;
-import microbat.instrumentation.instr.instruction.info.UnknownLineInstructionInfo;
 import microbat.instrumentation.runtime.IExecutionTracer;
 import microbat.instrumentation.runtime.TraceUtils;
-import sav.common.core.utils.StringUtils;
 
 public class TraceInstrumenter extends AbstraceInstrumenter {
 	private static final String TRACER_VAR_NAME = "$tracer"; // local var
@@ -81,23 +71,13 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 	private int tempVarIdx = 0;
 	private EntryPoint entryPoint;
 	
-	protected TraceInstrumenter() {
-		// do nothing
-	}
-
 	public TraceInstrumenter(AgentParams params) {
 		this.entryPoint = params.getEntryPoint();
 	}
 
-	public byte[] instrument(String classFName, byte[] classfileBuffer) throws Exception {
-		String className = classFName.replace("/", ".");
-		ClassParser cp = new ClassParser(new java.io.ByteArrayInputStream(classfileBuffer), classFName);
-		JavaClass jc = cp.parse();
-		// First, make sure we have to instrument this class:
-		if (!jc.isClass()) {
-			// could be an interface
-			return null;
-		}
+	@Override
+	protected byte[] instrument(String classFName, String className, JavaClass jc,
+			List<Method> instrumentedMethods) {
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		JavaClass newJC = null;
@@ -122,6 +102,9 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 					methodGen.setMaxStack();
 					methodGen.setMaxLocals();
 					classGen.replaceMethod(method, methodGen.getMethod());
+					if(instrumentedMethods != null) {
+						instrumentedMethods.add(method);
+					}
 				}
 				newJC = classGen.getJavaClass();
 				newJC.setConstantPool(constPool.getFinalConstantPool());
@@ -155,32 +138,17 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			boolean isAppClass, boolean isMainMethod) {
 		tempVarIdx = 0;
 		InstructionList insnList = methodGen.getInstructionList();
-		List<LineInstructionInfo> lineInsnInfos = new ArrayList<>();
-		Set<InstructionHandle> exceptionTargets = collectExecptionTargets(methodGen);
-		CFGConstructor cfgConstructor = new CFGConstructor();
-		CFG cfg = cfgConstructor.constructCFG(method.getCode());
-
-		Set<Integer> visitedLines = new HashSet<>();
-		for (LineNumberGen lineGen : methodGen.getLineNumbers()) {
-			if (!visitedLines.contains(lineGen.getSourceLine())) {
-				String loc = StringUtils.dotJoin(classGen.getClassName(), method.getName(), lineGen.getSourceLine());
-				lineInsnInfos.add(new LineInstructionInfo(loc, constPool, method, methodGen, exceptionTargets, lineGen, cfg, isAppClass));
-				visitedLines.add(lineGen.getSourceLine());
-			}
-		}
 		InstructionHandle startInsn = insnList.getStart();
 		if (startInsn == null) {
 			// empty method
 			return false;
 		}
-		/* class does not include line number */
-		if (visitedLines.isEmpty()) {
-			String loc = classGen.getClassName() + "." + method.getName();
-			lineInsnInfos.add(new UnknownLineInstructionInfo(loc, constPool, insnList, isAppClass));
-		}
+		List<LineInstructionInfo> lineInsnInfos = LineInstructionInfo.buildLineInstructionInfos(classGen, constPool,
+				methodGen, method, isAppClass, insnList);
 		int startLine = Integer.MAX_VALUE;
 		int endLine = AgentConstants.UNKNOWN_LINE;
-		for (int line : visitedLines) {
+		for (LineInstructionInfo lineInfo : lineInsnInfos) {
+			int line = lineInfo.getLine();
 			if (line < startLine) {
 				startLine = line;
 			}
@@ -261,14 +229,6 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 				methodSigVar, isMainMethod, tracerVar);
 
 		return true;
-	}
-
-	private Set<InstructionHandle> collectExecptionTargets(MethodGen methodGen) {
-		Set<InstructionHandle> targets = new HashSet<>();
-		for (CodeExceptionGen exception : methodGen.getExceptionHandlers()) {
-			targets.add(exception.getHandlerPC());
-		}
-		return targets;
 	}
 
 	private void injectCodeTracerExit(InstructionHandle exitInsHandle, InstructionList insnList, 

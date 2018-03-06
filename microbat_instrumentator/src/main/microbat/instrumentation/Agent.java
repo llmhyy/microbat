@@ -177,7 +177,7 @@ public class Agent {
 	
 	public static void _startTest(String junitClass, String junitMethod) {
 		if (isPrecheck) {
-			TraceMeasurement.startTest();
+			TraceMeasurement._start();
 		} else {
 			ExecutionTracer._start();
 		}
@@ -191,8 +191,7 @@ public class Agent {
 		}
 	}
 
-	public static String extrctJarPath() {
-		// TODO Auto-generated method stub
+	public static String extractJarPath() {
 		return null;
 	}
 	

@@ -47,7 +47,7 @@ public class TraceMeasurement {
 		return instance;
 	}
 	
-	public static void startTest() {
+	public static void _start() {
 		state = TracingState.RECORDING;
 	}
 	

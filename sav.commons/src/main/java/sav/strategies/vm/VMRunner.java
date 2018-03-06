@@ -64,6 +64,7 @@ public class VMRunner {
 	private boolean processTimeout = false;
 	private static ExecutorService executorService = Executors.newCachedThreadPool();
 	private static ScheduledExecutorService timeoutExecutor = Executors.newSingleThreadScheduledExecutor();
+	private int vmDebugPort = -1;
 	
 	public boolean startVm(VMConfiguration config) throws SavException {
 		this.isLog = config.isVmLogEnable();
@@ -144,7 +145,8 @@ public class VMRunner {
 		builder
 		.appendIf(enableAssertionToken, config.isEnableAssertion())
 		.appendIf(noVerifyToken, config.isNoVerify())
-		.appendIf(String.format(debugToken, config.getPort()), config.isDebug());
+		.appendIf(String.format(debugToken, config.getPort()), config.isDebug() && (vmDebugPort < 0))
+		.appendIf(String.format("-agentlib:jdwp=transport=dt_socket,server=y,address=%s", vmDebugPort), vmDebugPort > 0);
 	}
 
 	public boolean startVm(List<String> commands, boolean waitUntilStop)
@@ -315,5 +317,9 @@ public class VMRunner {
 	
 	public boolean isProcessTimeout() {
 		return processTimeout;
+	}
+	
+	public void setVmDebugPort(int vmDebugPort) {
+		this.vmDebugPort = vmDebugPort;
 	}
 }

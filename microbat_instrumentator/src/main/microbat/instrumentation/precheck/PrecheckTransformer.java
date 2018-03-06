@@ -5,11 +5,17 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.List;
 
+import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.instr.AbstractTransformer;
+import microbat.instrumentation.instr.TraceInstrumenter;
 
 public class PrecheckTransformer implements ClassFileTransformer {
-	private PrecheckInstrumenter instrumenter = new PrecheckInstrumenter();
+	private PrecheckInstrumenter instrumenter;
+	
+	public PrecheckTransformer(AgentParams params) {
+		instrumenter = new PrecheckInstrumenter(params);
+	}
 
 	@Override
 	public byte[] transform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,

@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ALOAD;
@@ -22,6 +21,7 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.PUSH;
 import org.apache.bcel.generic.Type;
 
+import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.instr.TraceInstrumenter;
 import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
 
@@ -29,55 +29,20 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 	private static final String MEASUREMENT_VAR_NAME = "$traceMs";
 	private List<String> exceedLimitMethods = new ArrayList<>();
 	
-	public PrecheckInstrumenter() {
-		super();
+	public PrecheckInstrumenter(AgentParams params) {
+		super(params);
 	}
 
-	public byte[] instrument(String classFName, byte[] classfileBuffer) throws Exception {
-		ClassParser cp = new ClassParser(new java.io.ByteArrayInputStream(classfileBuffer), classFName);
-		JavaClass jc = cp.parse();
-		// First, make sure we have to instrument this class:
-		if (!jc.isClass()) {
-			// could be an interface
-			return null;
-		}
-		ClassGen classGen = new ClassGen(jc);
-		ConstantPoolGen constPool = classGen.getConstantPool();
-		JavaClass newJC = null;
-		List<Method> instrumentedMethods = new ArrayList<>();
-		for (Method method : jc.getMethods()) {
-			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
-				continue; // Only instrument methods with code in them!
-			}
-			
-			try {
-				boolean changed = false;
-				MethodGen methodGen = new MethodGen(method, classFName, constPool);
-				changed = instrumentMethod(classGen, constPool, methodGen, method);
-				if (changed) {
-					// All changes made, so finish off the method:
-					InstructionList instructionList = methodGen.getInstructionList();
-					instructionList.setPositions();
-					methodGen.setMaxStack();
-					methodGen.setMaxLocals();
-					classGen.replaceMethod(method, methodGen.getMethod());
-					instrumentedMethods.add(method);
-				}
-				newJC = classGen.getJavaClass();
-				newJC.setConstantPool(constPool.getFinalConstantPool());
-			} catch (Exception e) {
-				System.err.println(String.format("Error when instrumenting: %s.%s", classFName, method.getName()));
-				e.printStackTrace();
-			}
+	@Override
+	protected byte[] instrument(String classFName, String className, JavaClass jc, List<Method> instrumentedMethods) {
+		instrumentedMethods = new ArrayList<>();
+		byte[] data = super.instrument(classFName, className, jc, instrumentedMethods);
+		
+		if (data != null) {
+			calculateTraceInstrumentation(jc , classFName, instrumentedMethods);
 		}
 		
-		if (newJC != null) {
-			byte[] data = newJC.getBytes();
-			newJC = null;
-			calculateTraceInstrumentation(jc , classFName, instrumentedMethods);
-			return data;
-		}
-		return null;
+		return data;
 	}
 
 	private void calculateTraceInstrumentation(JavaClass jc, String classFName, List<Method> instrumentedMethods) {
@@ -104,8 +69,9 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 			}
 		}
 	}
-
-	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method) {
+	
+	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
+			boolean isAppClass, boolean isMainMethod) {
 		InstructionList insnList = methodGen.getInstructionList();
 
 		Set<Integer> visitedLines = new HashSet<>();
@@ -139,7 +105,7 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 				startLine = lineInfo.getSourceLine();
 			}
 		}
-		injectCodeInitMeasurement(methodGen, constPool, classNameVar, methodSigVar, tracerVar, startLine);
+		injectCodeInitMeasurement(methodGen, constPool, classNameVar, methodSigVar, tracerVar, startLine, isMainMethod);
 		return true;
 	}
 
@@ -163,7 +129,8 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 	}
 
 	private LocalVariableGen injectCodeInitMeasurement(MethodGen methodGen, ConstantPoolGen constPool,
-			LocalVariableGen classNameVar, LocalVariableGen methodSigVar, LocalVariableGen tracerVar, int startLine) {
+			LocalVariableGen classNameVar, LocalVariableGen methodSigVar, LocalVariableGen tracerVar, int startLine,
+			boolean startTracing) {
 		InstructionList insnList = methodGen.getInstructionList();
 		InstructionHandle startInsn = insnList.getStart();
 		if (startInsn == null) {
@@ -171,6 +138,9 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 		}
 		
 		InstructionList newInsns = new InstructionList();
+		if (startTracing) {
+			appendTracerMethodInvoke(newInsns, MeasurementMethods.START, constPool, true);
+		}
 		/* store classNameVar */
 		String className = methodGen.getClassName();
 		className = className.replace("/", ".");
@@ -216,7 +186,9 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 	
 	private enum MeasurementMethods {
 		GET_TRACER("microbat/instrumentation/precheck/TraceMeasurement", "_getTracer", "(Ljava/lang/String;Ljava/lang/String;I)Lmicrobat/instrumentation/precheck/TraceMeasurement;"),
-		HIT_LINE("microbat/instrumentation/precheck/TraceMeasurement", "_hitLine", "(ILjava/lang/String;Ljava/lang/String;)V")
+		HIT_LINE("microbat/instrumentation/precheck/TraceMeasurement", "_hitLine", "(ILjava/lang/String;Ljava/lang/String;)V"),
+		START("microbat/instrumentation/precheck/TraceMeasurement", "_start", "()V")
+
 	
 		;
 		private String declareClass;

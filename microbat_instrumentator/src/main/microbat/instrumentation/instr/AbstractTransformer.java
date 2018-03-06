@@ -37,15 +37,17 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 		if (data == null) {
 			return;
 		}
+//		String targetFolder = "E:/lyly/Projects";
+		String targetFolder = "/Users/lylytran/Projects";
 		if (!dump) {
 			System.out.println("instrumented class: " + classFName);
 			return;
 		}
-		String orgPath = "E:/lyly/Projects/inst_src/org/" + classFName.substring(classFName.lastIndexOf(".") + 1)
+		String orgPath = targetFolder + "/inst_src/org/" + classFName.substring(classFName.lastIndexOf(".") + 1)
 				+ ".class";
 		System.out.println("dump org class to file: " + orgPath);
 		dumpToFile(classfileBuffer, orgPath);
-		String filePath = "E:/lyly/Projects/inst_src/test/" + classFName.substring(classFName.lastIndexOf(".") + 1)
+		String filePath = targetFolder + "/inst_src/test/" + classFName.substring(classFName.lastIndexOf(".") + 1)
 				+ ".class";
 		System.out.println("dump instrumented class to file: " + filePath);
 		dumpToFile(data, filePath);

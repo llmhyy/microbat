@@ -23,7 +23,7 @@ public class Premain {
 		System.out.println("start instrumentation...");
 		AgentParams agentParams = AgentParams.parse(agentArgs);
 		if (agentParams.isPrecheck()) {
-			PrecheckTransformer precheckTransformer = new PrecheckTransformer();
+			PrecheckTransformer precheckTransformer = new PrecheckTransformer(agentParams);
 			PrecheckAgent agent = new PrecheckAgent(agentParams, precheckTransformer);
 			agent.startup();
 			inst.addTransformer(precheckTransformer);
