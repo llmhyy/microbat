@@ -94,7 +94,7 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 								.append("#").append(method.getName()).toString());
 				}
 			} catch (Exception e) {
-				if (e.getMessage().contains("offset too large")) {
+				if (e.getMessage() != null && e.getMessage().contains("offset too large")) {
 					String methodName = method.getName() + method.getSignature();
 					exceedLimitMethods.add(new StringBuilder(classFName.replace("/", "."))
 							.append("#").append(methodName).toString());
