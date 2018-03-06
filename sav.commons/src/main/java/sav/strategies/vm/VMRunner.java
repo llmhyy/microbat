@@ -107,7 +107,7 @@ public class VMRunner {
 				BufferedReader br = new BufferedReader(streamReader);
 				String line = null;
 				try {
-					while ((line = br.readLine()) != null) {
+					while (isProcessRunning() && ((line = br.readLine()) != null)) {
 //						if (error) {
 //							log.warn(line);
 //						}
