@@ -30,7 +30,7 @@ public class FilterChecker implements IFilterChecker {
 				if (path.endsWith(".jar") && !path.contains("junit")) {
 					extLibs.add(path);
 				} else { 
-					File binFolder = new File(path);
+					File binFolder = new File(cp);
 					if (binFolder.exists() && binFolder.isDirectory()) {
 						path = getDir(path);
 						appBinFolders.add(path);

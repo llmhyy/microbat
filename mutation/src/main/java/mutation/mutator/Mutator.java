@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
 
 import japa.parser.ast.CompilationUnit;
+import mutation.Activator;
 import mutation.io.DebugLineFileWriter;
 import mutation.io.MutationFileWriter;
 import mutation.mutator.MutationVisitor.MutationNode;
@@ -22,6 +23,7 @@ import mutation.mutator.mapping.MutationMap;
 import mutation.parser.ClassAnalyzer;
 import mutation.parser.ClassDescriptor;
 import mutation.parser.JParser;
+import mutation.utils.IResourceUtils;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.BreakpointUtils;
 import sav.common.core.utils.CollectionUtils;
@@ -150,32 +152,35 @@ public class Mutator implements IMutator {
 	
 	public Map<String, List<String>> getOpMapConfig() {
 		if (opMapConfig == null) {
-			// load default
-			Bundle bundle = Platform.getBundle("mutation");
-			if(bundle != null){
-				URL url = bundle.getEntry(OPERATOR_MAP_FILE);
-				try {
-					URL fileURL = org.eclipse.core.runtime.FileLocator.toFileURL(url);
-					String file = fileURL.getFile();
-					
-					opMapConfig = MuMapParser.parse(file);
-				} catch (IOException e) {
-					e.printStackTrace();
-				} catch (NullPointerException e){
-					e.printStackTrace();
-					
-					String userDir = System.getProperty("user.dir");
-					String mutationDir = userDir + File.separator + "dropins" + File.separator + "MuMap.txt";
-					opMapConfig = MuMapParser.parse(mutationDir);
-				}
-			} else {
-				try {
-					opMapConfig = MuMapParser.parse("./src/main/resources/MuMap.txt");
-				} catch (SavRtException ex) {
-					String mutationBasedir = System.getProperty(MUTATION_BASE_DIR);
-					opMapConfig = MuMapParser.parse(mutationBasedir + "/src/main/resources/MuMap.txt");
-				}
-			}
+			String muMapFile = IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "MuMap.txt");
+			opMapConfig = MuMapParser.parse(muMapFile);
+//			new File(muMapFile).exists();
+//			// load default
+//			Bundle bundle = Platform.getBundle("mutation");
+//			if(bundle != null){
+//				try {
+//					URL url = bundle.getEntry(OPERATOR_MAP_FILE);
+//					URL fileURL = org.eclipse.core.runtime.FileLocator.toFileURL(url);
+//					String file = fileURL.getFile();
+//					
+//					opMapConfig = MuMapParser.parse(file);
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				} catch (NullPointerException e){
+//					e.printStackTrace();
+//					
+//					String userDir = System.getProperty("user.dir");
+//					String mutationDir = userDir + File.separator + "dropins" + File.separator + "MuMap.txt";
+//					opMapConfig = MuMapParser.parse(mutationDir);
+//				}
+//			} else {
+//				try {
+//					opMapConfig = MuMapParser.parse("./src/main/resources/MuMap.txt");
+//				} catch (SavRtException ex) {
+//					String mutationBasedir = System.getProperty(MUTATION_BASE_DIR);
+//					opMapConfig = MuMapParser.parse(mutationBasedir + "/src/main/resources/MuMap.txt");
+//				}
+//			}
 		}
 		return opMapConfig;
 	}

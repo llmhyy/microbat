@@ -9,6 +9,7 @@
 package microbat.util;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.net.URI;
 import java.net.URL;
 import java.security.InvalidParameterException;
@@ -27,6 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import sav.common.core.Constants;
 import sav.common.core.SavRtException;
+import sav.common.core.utils.CollectionUtils;
+import sav.common.core.utils.FileUtils;
 
 /**
  * @author LLT
@@ -35,11 +38,54 @@ import sav.common.core.SavRtException;
 public class IResourceUtils {
 	private static Logger log = LoggerFactory.getLogger(IResourceUtils.class);
 	private IResourceUtils(){}
+	private static String DROPINS_DIR;
+	private static String ECLIPSE_ROOT_DIR;
+	
+	static {
+		initEclipseDirs();
+	}
+	
+	private static void initEclipseDirs() {
+		String eclipseExecutablePath = System.getProperty("eclipse.launcher");
+		String userDir = eclipseExecutablePath.substring(0, eclipseExecutablePath.lastIndexOf("eclipse") - 1);
+		File dropinsDir = new File(FileUtils.getFilePath(userDir, "dropins"));
+		
+		/* try the best to look up dropins folder */
+		if (!dropinsDir.exists() || !dropinsDir.isDirectory()) {
+			File dir = new File(eclipseExecutablePath).getParentFile();
+			while (!dir.exists()) {
+				dir = dir.getParentFile();
+			}
+			while (dir != null) {
+				File[] dropinsFolders = dir.listFiles(new FilenameFilter() {
+					
+					@Override
+					public boolean accept(File dir, String name) {
+						return "dropins".equals(name);
+					}
+				});
+				if (CollectionUtils.isEmpty(dropinsFolders)) {
+					dir = dir.getParentFile();
+				} else {
+					dropinsDir = dropinsFolders[0];
+					break;
+				}
+			}
+		}
+		if (!dropinsDir.exists() || !dropinsDir.isDirectory()) {
+			throw new SavRtException("Cannot find dropins folder!");
+		}
+		
+		DROPINS_DIR = dropinsDir.getAbsolutePath();
+		ECLIPSE_ROOT_DIR = dropinsDir.getParentFile().getAbsolutePath();
+	}
 	
 	public static String getEclipseRootDir() {
-		String eclipseExecutablePath = System.getProperty("eclipse.launcher");
-		String root = eclipseExecutablePath.substring(0, eclipseExecutablePath.lastIndexOf("eclipse")-1);
-		return root;
+		return ECLIPSE_ROOT_DIR;
+	}
+	
+	public static String getDropinsDir() {
+		return DROPINS_DIR;
 	}
 	
 	public static String getResourceAbsolutePath(String pluginId, String resourceRelativePath)
@@ -111,5 +157,6 @@ public class IResourceUtils {
 		}
 		return outputFolder.getLocation().toOSString();
 	}
+
 	
 }

@@ -223,4 +223,31 @@ public class FileUtils {
 		}
 		return matches[0];
 	}
+	
+	public static String lookupFile(String path, final String fileName) {
+		File file = new File(path);
+		if (file.isFile()) {
+			return lookupFile(file.getParent(), fileName);
+		} else {
+			String[] matchedFiles = file.list(new FilenameFilter() {
+				
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.equals(fileName);
+				}
+			});
+			if (CollectionUtils.isNotEmpty(matchedFiles)) {
+				return matchedFiles[0];
+			}
+			for (File sub : file.listFiles()) {
+				if (sub.isDirectory()) {
+					String match = lookupFile(sub.getAbsolutePath(), fileName);
+					if (match != null) {
+						return match;
+					}
+				}
+			}
+			return null;
+		}
+	}
 }

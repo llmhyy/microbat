@@ -43,9 +43,9 @@ public class InstrumentationExecutor {
 	private TraceAgentRunner createTraceAgentRunner() {
 		String jarPath = appPath.getAgentLib();
 		VMConfiguration config = new VMConfiguration();
-//		config.setDebug(true);
 		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath, config);
 //		agentRunner.setPrintOutExecutionTrace(true);
+//		agentRunner.setVmDebugPort(9595);
 		config.setNoVerify(true);
 		config.setJavaHome(appPath.getJavaHome());
 		config.setClasspath(appPath.getClasspaths());
@@ -62,7 +62,8 @@ public class InstrumentationExecutor {
 		}
 		
 		agentRunner.addAgentParam(AgentParams.OPT_JAVA_HOME, config.getJavaHome());
-		agentRunner.addAgentParam(AgentParams.OPT_CLASS_PATH, config.getClasspathStr());
+		agentRunner.addAgentParam(AgentParams.OPT_CLASS_PATH,
+				StringUtils.join(config.getClasspaths(), AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR));
 		agentRunner.addAgentParam(AgentParams.OPT_WORKING_DIR, config.getWorkingDirectory());
 		/* build includes & excludes params */
 		agentRunner.addAgentParam(AgentParams.OPT_INCLUDES,
