@@ -23,6 +23,8 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.preference.MicrobatPreference;
+import sav.common.core.SavRtException;
+import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -78,35 +80,7 @@ public class MicroBatUtil {
 			}
 		}
 		
-		/**
-		 * setting junit lib into classpath
-		 */
-		//String userDir = System.getProperty("user.dir");
-		String eclipseExecutablePath = System.getProperty("eclipse.launcher");
-		String userDir = eclipseExecutablePath.substring(0, eclipseExecutablePath.lastIndexOf("eclipse")-1);
-		String junitDir = userDir + File.separator + "dropins" + File.separator + "junit_lib";
-		String junitPath = junitDir + File.separator + "junit.jar";
-		String hamcrestCorePath = junitDir + File.separator + "org.hamcrest.core.jar";
-		appClassPath.addClasspath(junitPath);
-		appClassPath.addClasspath(hamcrestCorePath);
-		
-		String testRunnerDir = junitDir + File.separator + "testrunner.jar";
-		appClassPath.addClasspath(testRunnerDir);
-		
-		/**
-		 * setting bcel lib (for instrumentation) into classpath
-		 */
-		String bcelDir = junitDir + File.separator + "bcel-6.0.jar";
-		appClassPath.addClasspath(bcelDir);
-		String javassitDir = junitDir + File.separator + "javassist.jar";
-		appClassPath.addClasspath(javassitDir);
-		
-		/**
-		 * setting java agent lib 
-		 */
-		String agentLib = junitDir + File.separator + "instrumentator.jar";
-		appClassPath.setAgentLib(agentLib);
-//		appClassPath.addClasspath(agentLib);
+		setSystemJars(appClassPath);
 		
 		/**
 		 * setting output folder
@@ -128,23 +102,45 @@ public class MicroBatUtil {
 		
 		String outputPath = projectPath + File.separator + outputFolder; 
 		
-		appClassPath.setJavaHome(Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.JAVA7HOME_PATH));
+		String javaHome = getJavaHome(javaProject);
+		appClassPath.setJavaHome(javaHome);
 		appClassPath.addClasspath(outputPath);
 		appClassPath.setWorkingDirectory(projectPath);
 		appClassPath.setLaunchClass(Settings.lanuchClass);
 		
-		String instruLibString = junitDir + File.separator + "instru_lib";
-		File instruFile = new File(instruLibString);
-		if(instruFile.isDirectory()){
-			appClassPath.getAgentBootstrapPathList().add(agentLib);
-			for(File f: instruFile.listFiles()){
-				appClassPath.getAgentBootstrapPathList().add(f.getAbsolutePath());
-			}
-		}
-		
-		
 		return appClassPath;
 		
+	}
+
+	private static void setSystemJars(AppJavaClassPath appClassPath) {
+		/**
+		 * setting junit lib into classpath
+		 */
+		String dropinsDir = IResourceUtils.getDropinsDir();
+		String junitDir = dropinsDir + File.separator + "junit_lib";
+		
+		
+		String junitPath = junitDir + File.separator + "junit.jar";
+		String hamcrestCorePath = junitDir + File.separator + "org.hamcrest.core.jar";
+		appClassPath.addClasspath(junitPath);
+		appClassPath.addClasspath(hamcrestCorePath);
+		
+		String testRunnerDir = junitDir + File.separator + "testrunner.jar";
+		appClassPath.addClasspath(testRunnerDir);
+		
+		/**
+		 * setting bcel lib (for instrumentation) into classpath
+		 */
+		String bcelDir = junitDir + File.separator + "bcel-6.0.jar";
+		appClassPath.addClasspath(bcelDir);
+		String javassitDir = junitDir + File.separator + "javassist.jar";
+		appClassPath.addClasspath(javassitDir);
+		
+		/**
+		 * setting java agent lib 
+		 */
+		String agentLib = junitDir + File.separator + "instrumentator.jar";
+		appClassPath.setAgentLib(agentLib);
 	}
 
 	public static IJavaProject getJavaProject(String projectName) {
@@ -192,7 +188,11 @@ public class MicroBatUtil {
 	
 	public static String getRtJarPathInDefinedJavaHome() {
 		String javaHomePath = getDefinedJavaHomeFolder();
-		return StringUtils.join(File.separator, javaHomePath, "jre", "lib", "rt.jar");
+		String rtJarPath = StringUtils.join(File.separator, javaHomePath, "jre", "lib", "rt.jar");
+		if (!new File(rtJarPath).exists()) {
+			return lookupRtJar(javaHomePath);
+		}
+		return rtJarPath;
 	}
 
 	public static String getDefinedJavaHomeFolder() {
@@ -201,6 +201,22 @@ public class MicroBatUtil {
 			javaHomePath = javaHomePath.substring(0, javaHomePath.length() - 1);
 		}
 		return javaHomePath;
+	}
+	
+	private static String getJavaHome(IJavaProject javaProject) {
+		String javaHome = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.JAVA7HOME_PATH);
+		if (StringUtils.isEmpty(javaHome)) {
+			javaHome = IProjectUtils.getJavaHome(javaProject);
+		}
+		return javaHome;
+	}
+	
+	private static String lookupRtJar(String javaHome) {
+		String rtJarPath = FileUtils.lookupFile(javaHome, "rt.jar");
+		if (rtJarPath == null) {
+			throw new SavRtException("Cannot find rt.jar in javaHome " + javaHome);
+		}
+		return rtJarPath;
 	}
 	
 	public static List<String> extractExcludeFiles(String parentDirectory, List<String> libJars) {
