@@ -47,6 +47,7 @@ import sav.strategies.dto.ClassLocation;
 import sav.strategies.mutanbug.MutationResult;
 import sav.strategies.vm.JavaCompiler;
 import sav.strategies.vm.VMConfiguration;
+import tregression.empiricalstudy.DeadEndCSVWriter;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.DeadEndReporter;
 import tregression.empiricalstudy.EmpiricalTrial;
@@ -348,6 +349,7 @@ public class TestCaseAnalyzer {
 								DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
 								setTestCase(datas, trial.getTestcase());						
 									new DeadEndReporter().export(datas.getAllData(), Settings.projectName, muBugId);
+								new DeadEndCSVWriter().export(datas.getAllData());
 							}
 						} catch (NumberFormatException | IOException e) {
 							e.printStackTrace();
@@ -592,14 +594,13 @@ public class TestCaseAnalyzer {
 		AppJavaClassPath classPath = MicroBatUtil.constructClassPaths();
 		classPath.setTestCodePath(getSourceFolder(junitClassName));
 		List<String> srcFolders = MicroBatUtil.getSourceFolders(Settings.projectName);
+		classPath.setSourceCodePath(classPath.getTestCodePath());
 		for (String srcFolder : srcFolders) {
 			if (!srcFolder.equals(classPath.getTestCodePath())) {
-				classPath.setSourceCodePath(srcFolder);
+				classPath.getAdditionalSourceFolders().add(srcFolder);
 			}
 		}
-		if (classPath.getSoureCodePath() == null) {
-			classPath.setSourceCodePath(classPath.getTestCodePath());
-		}
+		
 		String userDir = System.getProperty("user.dir");
 		String junitDir = userDir + File.separator + "dropins" + File.separator + "junit_lib";
 		
