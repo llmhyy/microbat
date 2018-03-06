@@ -72,6 +72,7 @@ public class TestCaseAnalyzer {
 	private static final String TMP_DIRECTORY = MutationGenerationHandler.TMP_DIRECTORY;
 	private static final String SOURCE_FOLDER_KEY = "sourceFolderPath";
 	private static final int STEP_LIMIT = 10000;
+	private static final long EXECUTOR_TIMEOUT = 30000l;
 	private int muTotal = 10;
 	
 	public TestCaseAnalyzer(){
@@ -134,7 +135,7 @@ public class TestCaseAnalyzer {
 		
 		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig,
 				generateTraceDir(Settings.projectName, testCaseName, null), "fix");
-		
+		executor.setTimeout(EXECUTOR_TIMEOUT);
 		PreCheckInformation precheckInfo = executor.runPrecheck(STEP_LIMIT);
 		if(precheckInfo.isPassTest() && !precheckInfo.isOverLong()){
 			System.out.println(testCaseName + " is a passed test case");
@@ -450,7 +451,7 @@ public class TestCaseAnalyzer {
 			String traceDir = generateTraceDir(Settings.projectName, testCaseName, MuRegressionUtils.getMuBugId(mutatedFile));
 			InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig,
 					traceDir, "bug");
-			executor.setTimeout(30000l);
+			executor.setTimeout(EXECUTOR_TIMEOUT);
 			PreCheckInformation precheck = executor.runPrecheck(STEP_LIMIT);
 			isTimeOut = precheck.isTimeout();
 			isKill = !precheck.isPassTest() && !precheck.isTimeout(); 

@@ -18,6 +18,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
@@ -52,11 +56,14 @@ public class VMRunner {
 	private long timeout = NO_TIME_OUT;
 	private boolean isLog = true;
 	protected Timer timer = null;
+	protected ScheduledFuture<?> timerTask = null;
 	
 	protected Process process;
 	private String processError;
 	protected boolean printOutExecutionTrace = false;
 	private boolean processTimeout = false;
+	private static ExecutorService executorService = Executors.newCachedThreadPool();
+	private static ScheduledExecutorService timeoutExecutor = Executors.newSingleThreadScheduledExecutor();
 	
 	public boolean startVm(VMConfiguration config) throws SavException {
 		this.isLog = config.isVmLogEnable();
@@ -102,7 +109,7 @@ public class VMRunner {
 
 	public void setupInputStream(final InputStream is, final StringBuffer sb, final boolean error) {
 		final InputStreamReader streamReader = new InputStreamReader(is);
-		new Thread(new Runnable() {
+		executorService.execute(new Runnable() {
 			public void run() {
 				BufferedReader br = new BufferedReader(streamReader);
 				String line = null;
@@ -124,7 +131,7 @@ public class VMRunner {
 					IOUtils.closeQuietly(is);
 				}
 			}
-		}).start();
+		});
 	}
 	
 	protected void printOut(String line) {
@@ -154,25 +161,40 @@ public class VMRunner {
 			 * the printStream is not set */
 			setupInputStream(process.getInputStream(), new StringBuffer(), false);
 			setupOutputStream(process.getOutputStream());
+//			executorService.
 			timer = null;
+			timerTask = null;
 			if (timeout != NO_TIME_OUT) {
-				timer = new Timer();
-			    timer.schedule(new TimerTask() {
-
-			        @Override
-			        public void run() {
-			            stop();
-			            processTimeout = true;
-			            log.info("destroy thread due to timeout!");
-			        }
-
-			    }, timeout); 
+				timerTask = timeoutExecutor.schedule(new Runnable() {
+					
+					@Override
+					public void run() {
+						stop();
+						processTimeout = true;
+						log.info("destroy thread due to timeout!");
+					}
+				}, timeout, TimeUnit.MILLISECONDS);
+//				timer = new Timer();
+//			    timer.schedule(new TimerTask() {
+//
+//			        @Override
+//			        public void run() {
+//			            stop();
+//			            processTimeout = true;
+//			            log.info("destroy thread due to timeout!");
+//			        }
+//
+//			    }, timeout); 
 			}
 			if (waitUntilStop) {
 				waitUntilStop(process);
 				if (timer != null) {
 					timer.cancel();
 					timer = null;
+				}
+				if (timerTask != null) {
+					timerTask.cancel(true);
+					timerTask = null;
 				}
 				processError = sb.toString();
 				return isExecutionSuccessful();
@@ -193,7 +215,9 @@ public class VMRunner {
 	}
 	
 	protected void stop() {
-		process.destroy();
+		if (isProcessRunning()) {
+			process.destroy();
+		}
 	}
 	
 	protected void setupErrorStream(InputStream errorStream, StringBuffer sb) {
@@ -267,6 +291,9 @@ public class VMRunner {
 	public void cancelTimer() {
 		if (timer != null) {
 			timer.cancel();
+		}
+		if (timerTask != null) {
+			timerTask.cancel(true);
 		}
 	}
 	
