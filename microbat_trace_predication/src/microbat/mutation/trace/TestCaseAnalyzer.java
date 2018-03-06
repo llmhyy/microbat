@@ -323,8 +323,6 @@ public class TestCaseAnalyzer {
 				TrialRecorder recorder;
 				String muBugId = MuRegressionUtils.getMuBugId(mutationFilePath);
 				try {
-					recorder = new TrialRecorder();
-					recorder.export(trials0, Settings.projectName, muBugId);
 					boolean foundRootCause = false;
 					for(EmpiricalTrial trial: trials0){
 						TestCase tc = new TestCase(testCaseName, testCaseName);
@@ -362,6 +360,8 @@ public class TestCaseAnalyzer {
 							Settings.compilationUnitMap.remove(tobeMutatedClass);
 						}
 					}
+					recorder = new TrialRecorder();
+					recorder.export(trials0, Settings.projectName, muBugId);
 					if (foundRootCause) {
 						tmpTrial.setBugFound(true);
 						reporter.export(Arrays.asList(tmpTrial));
