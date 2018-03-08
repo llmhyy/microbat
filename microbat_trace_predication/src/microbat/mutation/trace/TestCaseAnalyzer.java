@@ -325,7 +325,7 @@ public class TestCaseAnalyzer {
 				tmpTrial.setMutatedFile(mutateInfo.destMuFile);
 				List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
 				TrialRecorder recorder;
-				String muBugId = MuRegressionUtils.getMuBugId(mutationFilePath);
+				String muBugId = MuRegressionUtils.getMuBugId(testCaseName, mutationFilePath);
 				try {
 					boolean foundRootCause = false;
 					for(EmpiricalTrial trial: trials0){
@@ -451,7 +451,7 @@ public class TestCaseAnalyzer {
 		String traceExec = null;
 		String destMuFile = null;
 		try{
-			String traceDir = generateTraceDir(Settings.projectName, testCaseName, MuRegressionUtils.getMuBugId(mutatedFile));
+			String traceDir = generateTraceDir(Settings.projectName, testCaseName, MuRegressionUtils.getMuId(mutatedFile));
 			InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig,
 					traceDir, "bug");
 			executor.setTimeout(EXECUTOR_TIMEOUT);

@@ -12,6 +12,7 @@ import microbat.model.trace.TraceNode;
 import microbat.util.MicroBatUtil;
 import sav.common.core.Constants;
 import sav.common.core.utils.FileUtils;
+import sav.common.core.utils.StringUtils;
 
 public class MuRegressionUtils {
 	private MuRegressionUtils(){}
@@ -59,7 +60,25 @@ public class MuRegressionUtils {
 		}
 	}
 	
-	public static String getMuBugId(String mutationFilePath) {
+	/**
+	 * testcaseName : package.className#method, mutationFilePath: package.className.line.column.order
+	 * @return className#method#simpleClassName_line_column_order
+	 */
+	public static String getMuBugId(String testcaseName, String mutationFilePath) {
+		String simpleTestcaseName = testcaseName.substring(testcaseName.lastIndexOf(".") + 1, testcaseName.length());
+		int endIdx = mutationFilePath.lastIndexOf(Constants.FILE_SEPARATOR);
+		int startIdx = mutationFilePath.substring(0, endIdx).lastIndexOf(Constants.FILE_SEPARATOR) + 1;
+		// org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolator_82_13_1
+		String className = mutationFilePath.substring(startIdx, endIdx);
+		startIdx = className.lastIndexOf(".") + 1;
+		return StringUtils.join("#", simpleTestcaseName, className.substring(startIdx));
+	}
+	
+	/**
+	 * testcaseName : package.className#method, mutationFilePath: package.className.line.column.order
+	 * @return className#method#simpleClassName_line_column_order
+	 */
+	public static String getMuId(String mutationFilePath) {
 		int endIdx = mutationFilePath.lastIndexOf(Constants.FILE_SEPARATOR);
 		int startIdx = mutationFilePath.substring(0, endIdx).lastIndexOf(Constants.FILE_SEPARATOR) + 1;
 		// org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolator_82_13_1
