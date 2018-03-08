@@ -64,7 +64,7 @@ import tregression.junit.ParsedTrials;
 import tregression.model.PairList;
 import tregression.model.Trial;
 import tregression.separatesnapshots.DiffMatcher;
-import tregression.tracematch.LCSBasedTraceMatcher;
+import tregression.tracematch.ControlPathBasedTraceMatcher;
 
 public class TestCaseAnalyzer {
 	
@@ -304,7 +304,7 @@ public class TestCaseAnalyzer {
 					
 				}
 				long start = System.currentTimeMillis();
-				LCSBasedTraceMatcher traceMatcher = new LCSBasedTraceMatcher();
+				ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
 				PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, null); 
 				int matchTime = (int) (System.currentTimeMillis() - start);
 				ICompilationUnit iunit = JavaUtil.findNonCacheICompilationUnitInProject(tobeMutatedClass);
