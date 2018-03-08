@@ -73,6 +73,7 @@ public class TestCaseAnalyzer {
 	private static final String SOURCE_FOLDER_KEY = "sourceFolderPath";
 	private static final int STEP_LIMIT = 10000;
 	private static final long EXECUTOR_TIMEOUT = 30000l;
+	private static boolean DEBUG = true;
 	private int muTotal = 10;
 	
 	public TestCaseAnalyzer(){
@@ -366,16 +367,13 @@ public class TestCaseAnalyzer {
 					}
 					recorder = new TrialRecorder();
 					recorder.export(trials0, Settings.projectName, muBugId, tmpTrial.getMutationType());
-					if (foundRootCause) {
-						tmpTrial.setBugFound(true);
-						reporter.export(Arrays.asList(tmpTrial));
+					tmpTrial.setBugFound(foundRootCause);
+					reporter.export(Arrays.asList(tmpTrial));
+					if (!foundRootCause && !DEBUG && mutateInfo.traceExecFile != null) {
+						new File(mutateInfo.traceExecFile).delete();
+					} 
+					if (!foundRootCause) {
 						return new EvaluationInfo(true, correctTrace, isLoopEffective);
-					} else {
-						tmpTrial.setBugFound(false);
-						reporter.export(Arrays.asList(tmpTrial));
-						if (mutateInfo.traceExecFile != null) {
-							new File(mutateInfo.traceExecFile).delete();
-						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
