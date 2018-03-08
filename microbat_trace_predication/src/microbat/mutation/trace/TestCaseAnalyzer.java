@@ -303,16 +303,19 @@ public class TestCaseAnalyzer {
 					System.out.println("The correct trace of " + stepNum + " steps is to be generated for " + testCaseName);
 					
 				}
-				long start = System.currentTimeMillis();
-				ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
-				PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, null); 
-				int matchTime = (int) (System.currentTimeMillis() - start);
+				
 				ICompilationUnit iunit = JavaUtil.findNonCacheICompilationUnitInProject(tobeMutatedClass);
 				String orgFilePath = IResourceUtils.getAbsolutePathOsStr(iunit.getPath());
 				String mutationFilePath = mutationFile.getAbsolutePath();
 				DiffMatcher diffMatcher = new MuDiffMatcher(testcaseConfig.getPreferences().get(SOURCE_FOLDER_KEY),
 						orgFilePath, mutationFilePath);
 				diffMatcher.matchCode();
+				
+				long start = System.currentTimeMillis();
+				ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
+				PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, diffMatcher); 
+				int matchTime = (int) (System.currentTimeMillis() - start);
+				
 				/* fill mu trial info */
 				tmpTrial.setOriginalTotalSteps(correctTrace.getExecutionList().size());
 				tmpTrial.setTotalSteps(killingMutatantTrace.getExecutionList().size());
