@@ -676,7 +676,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 				tracerMethod = TracerMethods.READ_LOCAL_VAR; // value
 		} 
 		/* invoke tracer */
-		if (insnInfo.getInstructionHandler().getPrev().getInstruction() instanceof ACONST_NULL) {
+		if (insnInfo.isStoreInstruction() && insnInfo.getInstructionHandler().getPrev().getInstruction() instanceof ACONST_NULL) {
 			newInsns.append(new ALOAD(tracerVar.getIndex())); // value, $tracer
 			newInsns.append(new ACONST_NULL());
 		} else {
