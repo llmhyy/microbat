@@ -1,10 +1,7 @@
 package microbat.instrumentation.instr;
 
-import java.util.List;
-
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ClassGenException;
 import org.apache.bcel.generic.CodeExceptionGen;
 import org.apache.bcel.generic.ConstantPoolGen;
@@ -29,12 +26,11 @@ public abstract class AbstraceInstrumenter {
 			return null;
 		}
 		
-		return instrument(classFName, className, jc, null);
+		return instrument(classFName, className, jc);
 	}
 	
 	
-	protected abstract byte[] instrument(String classFName, String className, JavaClass jc,
-			List<Method> instrumentedMethods);
+	protected abstract byte[] instrument(String classFName, String className, JavaClass jc);
 
 	protected LocalVariableGen createLocalVariable(String varName, MethodGen methodGen, ConstantPoolGen constPool) {
 		InstructionList list = methodGen.getInstructionList();
@@ -91,4 +87,5 @@ public abstract class AbstraceInstrumenter {
 			}
 		}
 	}
+	
 }

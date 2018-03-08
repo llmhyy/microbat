@@ -33,10 +33,11 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 		super(params);
 	}
 
+	private List<Method> instrumentedMethods = new ArrayList<>();
 	@Override
-	protected byte[] instrument(String classFName, String className, JavaClass jc, List<Method> instrumentedMethods) {
+	protected byte[] instrument(String classFName, String className, JavaClass jc) {
 		instrumentedMethods = new ArrayList<>();
-		byte[] data = super.instrument(classFName, className, jc, instrumentedMethods);
+		byte[] data = super.instrument(classFName, className, jc);
 		
 		if (data != null) {
 			calculateTraceInstrumentation(jc , classFName, instrumentedMethods);
@@ -54,7 +55,7 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
 				changed = super.instrumentMethod(classGen, constPool, methodGen, method, true, false);
 				methodGen.getMethod().toString(); // exception if exceeding limit.
-				if (changed && methodGen.getInstructionList().getByteCode().length >= (65534)) {
+				if (changed && doesBytecodeExceedLimit(methodGen)) {
 					exceedLimitMethods.add(new StringBuilder(classFName.replace("/", "."))
 								.append("#").append(method.getName()).toString());
 				}
@@ -106,6 +107,7 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 			}
 		}
 		injectCodeInitMeasurement(methodGen, constPool, classNameVar, methodSigVar, tracerVar, startLine, isMainMethod);
+		instrumentedMethods.add(method);
 		return true;
 	}
 
