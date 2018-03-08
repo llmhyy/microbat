@@ -33,7 +33,6 @@ public class TraceMutationVisitor extends MutationVisitor {
 	public boolean mutate(AssignExpr n) {
 		MutationNode muNode = newNode(n);
 		muNode.add(new EmptyStmt(), MutationTypes.REMOVE_ASSIGNMENT);
-		muNode.getMutatedNodes().add(new EmptyStmt());
 		return super.mutate(n);
 	}
 

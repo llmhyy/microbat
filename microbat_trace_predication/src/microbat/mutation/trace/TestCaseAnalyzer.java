@@ -362,7 +362,7 @@ public class TestCaseAnalyzer {
 						}
 					}
 					recorder = new TrialRecorder();
-					recorder.export(trials0, Settings.projectName, muBugId);
+					recorder.export(trials0, Settings.projectName, muBugId, tmpTrial.getMutationType());
 					if (foundRootCause) {
 						tmpTrial.setBugFound(true);
 						reporter.export(Arrays.asList(tmpTrial));
