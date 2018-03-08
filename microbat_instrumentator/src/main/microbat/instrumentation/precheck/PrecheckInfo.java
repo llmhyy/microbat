@@ -17,8 +17,6 @@ import microbat.instrumentation.output.TraceOutputReader;
 import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.model.ClassLocation;
 import sav.common.core.SavRtException;
-import sav.common.core.utils.FileUtils;
-import sav.common.core.utils.StringUtils;
 
 public class PrecheckInfo {
 	private static final String HEADER = "Precheck";
@@ -28,6 +26,7 @@ public class PrecheckInfo {
 	private boolean isOverLong;
 	private List<String> exceedingLimitMethods;
 	private String programMsg;
+	private List<String> loadedClasses;
 	
 	private PrecheckInfo() {
 		
@@ -80,6 +79,12 @@ public class PrecheckInfo {
 				visitedLocs.add(loc);
 			}
 			infor.setVisitedLocs(visitedLocs);
+			int loadedClassesSize = reader.readVarInt();
+			List<String> loadedClasses = new ArrayList<>(loadedClassesSize);
+			for (int i = 0; i < loadedClassesSize; i++) {
+				loadedClasses.add(reader.readString());
+			}
+			infor.loadedClasses = loadedClasses;
 			return infor;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -124,6 +129,10 @@ public class PrecheckInfo {
 				outputWriter.writeString(loc.getClassCanonicalName());
 				outputWriter.writeString(loc.getMethodSign());
 				outputWriter.writeInt(loc.getLineNumber());
+			}
+			outputWriter.writeVarInt(loadedClasses.size());
+			for (String loadedClass : loadedClasses) {
+				outputWriter.writeString(loadedClass);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -191,4 +200,13 @@ public class PrecheckInfo {
 	public void setProgramMsg(String programMsg) {
 		this.programMsg = programMsg;
 	}
+
+	public List<String> getLoadedClasses() {
+		return loadedClasses;
+	}
+
+	public void setLoadedClasses(List<String> loadedClasses) {
+		this.loadedClasses = loadedClasses;
+	}
+	
 }
