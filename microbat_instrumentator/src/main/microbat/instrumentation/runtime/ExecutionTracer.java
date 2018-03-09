@@ -855,11 +855,11 @@ public class ExecutionTracer implements IExecutionTracer {
 		return rtStores;
 	}
 	
-	public synchronized static IExecutionTracer getMainThreadStore() {
+	public static IExecutionTracer getMainThreadStore() {
 		return getTracer(mainThreadId);
 	}
 	
-	public synchronized static IExecutionTracer getCurrentThreadStore() {
+	public static IExecutionTracer getCurrentThreadStore() {
 		boolean locked = gLocker.isLock();
 		gLocker.lock();
 		long threadId = Thread.currentThread().getId();
