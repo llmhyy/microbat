@@ -36,7 +36,7 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 	private List<Method> instrumentedMethods = new ArrayList<>();
 	@Override
 	protected byte[] instrument(String classFName, String className, JavaClass jc) {
-		instrumentedMethods = new ArrayList<>();
+		instrumentedMethods.clear();
 		byte[] data = super.instrument(classFName, className, jc);
 		
 		if (data != null) {
