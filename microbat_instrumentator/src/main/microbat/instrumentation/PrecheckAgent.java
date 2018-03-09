@@ -6,17 +6,16 @@ import microbat.instrumentation.precheck.PrecheckTransformer;
 import microbat.instrumentation.precheck.TraceMeasurement;
 import sav.common.core.utils.TextFormatUtils;
 
-public class PrecheckAgent {
+public class PrecheckAgent implements IAgent {
 	private AgentParams agentParams;
 	private PrecheckTransformer precheckTransformer;
 
-	public PrecheckAgent(AgentParams agentParams, PrecheckTransformer precheckTransformer) {
+	public PrecheckAgent(AgentParams agentParams) {
 		this.agentParams = agentParams; 
-		this.precheckTransformer = precheckTransformer;
+		this.precheckTransformer = new PrecheckTransformer(agentParams);
 	}
 	
 	public void startup() {
-		Agent.isPrecheck = agentParams.isPrecheck();
 		FilterChecker.setup(agentParams.initAppClassPath(), agentParams.getIncludesExpression(),
 				agentParams.getExcludesExpression());
 		TraceMeasurement.setStepLimit(agentParams.getStepLimit());
@@ -32,7 +31,7 @@ public class PrecheckAgent {
 		});
 	}
 
-	protected void shutdown() {
+	public void shutdown() {
 		PrecheckInfo precheckInfo = TraceMeasurement.getPrecheckInfo();
 		precheckInfo.setExceedingLimitMethods(precheckTransformer.getExceedingLimitMethods());
 		precheckInfo.setProgramMsg(Agent.getProgramMsg());
@@ -43,6 +42,17 @@ public class PrecheckAgent {
 		}
 	}
 
-	
+	public PrecheckTransformer getTransformer() {
+		return precheckTransformer;
+	}
 
+	@Override
+	public void startTest(String junitClass, String junitMethod) {
+		TraceMeasurement._start();
+	}
+
+	@Override
+	public void finishTest(String junitClass, String junitMethod) {
+		TraceMeasurement.shutdown();
+	}
 }

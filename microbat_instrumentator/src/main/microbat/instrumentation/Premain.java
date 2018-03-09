@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.jar.JarFile;
 
 import microbat.instrumentation.instr.TestRunnerTranformer;
-import microbat.instrumentation.instr.TraceTransformer;
-import microbat.instrumentation.precheck.PrecheckTransformer;
 
 public class Premain {
 	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent.jar";
@@ -22,22 +20,18 @@ public class Premain {
 		
 		System.out.println("start instrumentation...");
 		AgentParams agentParams = AgentParams.parse(agentArgs);
-		if (agentParams.isPrecheck()) {
-			PrecheckTransformer precheckTransformer = new PrecheckTransformer(agentParams);
-			PrecheckAgent agent = new PrecheckAgent(agentParams, precheckTransformer);
-			agent.startup();
-			inst.addTransformer(precheckTransformer);
-			inst.addTransformer(new TestRunnerTranformer());
-		} else {
+		Agent agent = new Agent(agentParams);
+		agent.startup();
+		inst.addTransformer(agent.getTransformer(), true);
+		inst.addTransformer(new TestRunnerTranformer());
+		
+		if (!agentParams.isPrecheck()) {
 			Class<?>[] retransformableClasses = getRetransformableClasses(inst);
-			final Agent agent = new Agent(agentArgs);
-			agent.startup();
-			inst.addTransformer(new TraceTransformer(agent.getAgentParams()), true);
-			inst.addTransformer(new TestRunnerTranformer());
 			if (retransformableClasses.length > 0) {
 				inst.retransformClasses(retransformableClasses);
 			}
 		}
+		
 		System.out.println("after retransform");
 	}
 	
