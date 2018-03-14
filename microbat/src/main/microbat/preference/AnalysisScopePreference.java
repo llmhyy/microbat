@@ -1,5 +1,8 @@
 package microbat.preference;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -58,8 +61,26 @@ public class AnalysisScopePreference extends PreferencePage implements IWorkbenc
 		return getFilterLibs(INCLUDED_LIBS);
 	}
 	
+	public static List<String> getIncludedLibList(){
+		List<String> list = new ArrayList<>();
+		String[] array = getIncludedLibs();
+		for(String str: array){
+			list.add(str);
+		}
+		return list;
+	}
+	
 	public static String[] getExcludedLibs() {
 		return getFilterLibs(EXCLUDED_LIBS);
+	}
+	
+	public static List<String> getExcludedLibList(){
+		List<String> list = new ArrayList<>();
+		String[] array = getExcludedLibs();
+		for(String str: array){
+			list.add(str);
+		}
+		return list;
 	}
 	
 	private static String[] getFilterLibs(String key) {
