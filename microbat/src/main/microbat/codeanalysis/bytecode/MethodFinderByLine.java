@@ -48,4 +48,12 @@ public class MethodFinderByLine extends ByteCodeMethodFinder {
 			}
 		}
 	}
+
+	public List<InstructionHandle> getHandles() {
+		return handles;
+	}
+
+	public void setHandles(List<InstructionHandle> handles) {
+		this.handles = handles;
+	}
 }
