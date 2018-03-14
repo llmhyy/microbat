@@ -33,10 +33,17 @@ public class InstrumentationExecutor {
 	private TraceAgentRunner agentRunner;
 	private long timeout = VMRunner.NO_TIME_OUT;
 	
-	public InstrumentationExecutor(AppJavaClassPath appPath, String traceDir, String traceName) {
+	private List<String> includeLibs = new ArrayList<>();
+	private List<String> excludeLibs = new ArrayList<>();
+	
+	public InstrumentationExecutor(AppJavaClassPath appPath, String traceDir, String traceName, 
+			List<String> includeLibs, List<String> excludeLibs) {
 		this.appPath = appPath;
 		this.traceDir = traceDir;
 		this.traceName = traceName;
+		this.includeLibs = includeLibs;
+		this.excludeLibs = excludeLibs;
+		
 		agentRunner = createTraceAgentRunner();
 	}
 	
@@ -68,10 +75,10 @@ public class InstrumentationExecutor {
 		/* build includes & excludes params */
 		agentRunner.addAgentParam(AgentParams.OPT_INCLUDES,
 				StringUtils.join(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR,
-						(Object[]) AnalysisScopePreference.getIncludedLibs()));
+						this.includeLibs.toArray(new Object[0])));
 		agentRunner.addAgentParam(AgentParams.OPT_EXCLUDES,
 				StringUtils.join(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR,
-						(Object[]) AnalysisScopePreference.getExcludedLibs()));
+						this.excludeLibs.toArray(new Object[0])));
 		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
 		agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, MicrobatPreference.getStepLimit());
 		agentRunner.addAgentParam(AgentParams.OPT_PRINT_PROGRESS, true);
@@ -296,5 +303,21 @@ public class InstrumentationExecutor {
 	
 	public String getTraceExecFilePath() {
 		return traceExecFilePath;
+	}
+
+	public List<String> getIncludeLibs() {
+		return includeLibs;
+	}
+
+	public void setIncludeLibs(List<String> includeLibs) {
+		this.includeLibs = includeLibs;
+	}
+
+	public List<String> getExcludeLibs() {
+		return excludeLibs;
+	}
+
+	public void setExcludeLibs(List<String> excludeLibs) {
+		this.excludeLibs = excludeLibs;
 	}
 }

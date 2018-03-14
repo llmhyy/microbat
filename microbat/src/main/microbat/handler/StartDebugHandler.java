@@ -3,7 +3,6 @@ package microbat.handler;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.bcel.Repository;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -17,19 +16,14 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.swt.widgets.Display;
 
-import microbat.agent.TraceConstructor;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReader;
 import microbat.behavior.BehaviorReporter;
-import microbat.codeanalysis.runtime.ExecutionStatementCollector;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
-import microbat.codeanalysis.runtime.ProgramExecutor;
 import microbat.evaluation.junit.TestCaseAnalyzer;
-import microbat.instrumentation.AgentParams;
-import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
-import microbat.util.IResourceUtils;
+import microbat.preference.AnalysisScopePreference;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
@@ -93,8 +87,10 @@ public class StartDebugHandler extends AbstractHandler {
 					try{
 						monitor.beginTask("Construct Trace Model", 100);
 						
+						List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
+						List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
 						InstrumentationExecutor exectuor = new InstrumentationExecutor(appClassPath,
-								generateTraceDir(appClassPath), "trace");
+								generateTraceDir(appClassPath), "trace", includedClassNames, excludedClassNames);
 						final Trace trace = exectuor.run().getTrace();
 						trace.setAppJavaClassPath(appClassPath);
 						

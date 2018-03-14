@@ -32,6 +32,7 @@ import microbat.model.trace.TraceNode;
 import microbat.mutation.mutation.ControlDominatedMutationVisitor;
 import microbat.mutation.mutation.TraceMutationVisitor;
 import microbat.mutation.trace.handlers.MutationGenerationHandler;
+import microbat.preference.AnalysisScopePreference;
 import microbat.util.BreakpointUtils;
 import microbat.util.IResourceUtils;
 import microbat.util.JTestUtil;
@@ -134,8 +135,11 @@ public class TestCaseAnalyzer {
 			return false;
 		}
 		
+		List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
+		List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
 		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig,
-				generateTraceDir(Settings.projectName, testCaseName, null), "fix");
+				generateTraceDir(Settings.projectName, testCaseName, null), "fix", 
+				includedClassNames, excludedClassNames);
 		executor.setTimeout(EXECUTOR_TIMEOUT);
 		PreCheckInformation precheckInfo = executor.runPrecheck(STEP_LIMIT);
 		if(precheckInfo.isPassTest() && !precheckInfo.isOverLong()){
@@ -450,8 +454,10 @@ public class TestCaseAnalyzer {
 		String destMuFile = null;
 		try{
 			String traceDir = generateTraceDir(Settings.projectName, testCaseName, MuRegressionUtils.getMuId(mutatedFile));
+			List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
+			List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
 			InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig,
-					traceDir, "bug");
+					traceDir, "bug", includedClassNames, excludedClassNames);
 			executor.setTimeout(EXECUTOR_TIMEOUT);
 			PreCheckInformation precheck = executor.runPrecheck(STEP_LIMIT);
 			isTimeOut = precheck.isTimeout();
