@@ -14,7 +14,6 @@ import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.ClassLocation;
-import microbat.preference.AnalysisScopePreference;
 import microbat.preference.MicrobatPreference;
 import sav.common.core.SavException;
 import sav.common.core.utils.StringUtils;
@@ -98,7 +97,7 @@ public class InstrumentationExecutor {
 //			System.out.println(info);
 
 			PreCheckInformation precheckInfomation = new PreCheckInformation(info.getThreadNum(), info.getStepTotal(),
-					info.isOverLong(), new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods());
+					info.isOverLong(), new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods(), info.getLoadedClasses());
 			precheckInfomation.setPassTest(agentRunner.isTestSuccessful());
 			this.setPrecheckInfo(precheckInfomation);
 
@@ -128,7 +127,7 @@ public class InstrumentationExecutor {
 //			System.out.println(info);
 			System.out.println("isPassTest: " + agentRunner.isTestSuccessful());
 			PreCheckInformation result = new PreCheckInformation(info.getThreadNum(), info.getStepTotal(), info.isOverLong(),
-					new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods());
+					new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods(), info.getLoadedClasses());
 			result.setPassTest(agentRunner.isTestSuccessful());
 			result.setTimeout(agentRunner.isUnknownTestResult());
 			this.setPrecheckInfo(result);
@@ -136,7 +135,7 @@ public class InstrumentationExecutor {
 		} catch (SavException e1) {
 			e1.printStackTrace();
 		}
-		return new PreCheckInformation(-1, -1, false, new ArrayList<ClassLocation>(), new ArrayList<String>());
+		return new PreCheckInformation(-1, -1, false, new ArrayList<ClassLocation>(), new ArrayList<String>(), new ArrayList<String>());
 	}
 	
 	public RunningInformation execute(PreCheckInformation info) {
