@@ -7,6 +7,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.InstructionList;
+
+import microbat.codeanalysis.bytecode.ByteCodeParser;
+import microbat.codeanalysis.bytecode.MethodFinderBySignature;
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.filter.FilterChecker;
@@ -230,8 +236,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				String parameterType = SignatureUtils.signatureToName(pType);
 				String varName = parameterNames[i];
 				
-				if(PrimitiveUtils.isPrimitive(parameterType) 
-						|| PrimitiveUtils.isPrimitiveTypeOrString(parameterType)){
+				if(PrimitiveUtils.isPrimitiveTypeOrString(parameterType)){
 					Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
 					
 					String varID = TraceUtils.getLocalVarId(className, varScopeStart, varScopeEnd, varName, parameterType, params[i]);
@@ -668,13 +673,69 @@ public class ExecutionTracer implements IExecutionTracer {
 			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
 			var.setVarID(varID);
 			VarValue value = appendVarValue(varValue, var, null);
-			addRWriteValue(value, false);
+			
+			TraceNode currentNode = trace.getLatestNode();
+			String order = trace.findDefiningNodeOrder(Variable.READ, currentNode, var.getVarID(), var.getAliasVarID());
+			
+			if(value instanceof ReferenceValue && order.equals("0")){
+				if(isParameter(value, varScopeStartLine, varScopeEndLine, className)){
+					
+					TraceNode invocationParent = currentNode.getInvocationParent();
+					if(invocationParent!=null){
+						String simpleVarID = Variable.truncateSimpleID(varID);
+						varID = simpleVarID + ":" + invocationParent.getOrder();
+						value.setVarID(varID);
+						
+						if(!invocationParent.getWrittenVariables().contains(value)){
+							invocationParent.addWrittenVariable(value);							
+						}
+						if(!currentNode.getReadVariables().contains(value)){
+							currentNode.addReadVariable(value);							
+						}
+						
+						StepVariableRelationEntry entry = new StepVariableRelationEntry(varID);
+						entry.addProducer(invocationParent);
+						entry.addConsumer(currentNode);
+						trace.getStepVariableTable().put(varID, entry);
+						
+						
+					}
+				}
+			}
+			else{
+				addRWriteValue(value, false);
+			}
+			
 		} catch (Throwable t) {
 			handleException(t);
 		}
 		locker.unLock();
 	}
 	
+	private boolean isParameter(VarValue value, int varScopeStartLine, int varScopeEndLine, String className) {
+		BreakPoint point = trace.getLatestNode().getBreakPoint();
+		String fullSign = point.getMethodSign();
+		String shortSign = fullSign.substring(fullSign.indexOf("#")+1, fullSign.length());
+		MethodFinderBySignature finder = new MethodFinderBySignature(shortSign);
+		ByteCodeParser.parse(className, finder, appJavaClassPath);
+		Method method = finder.getMethod();
+		
+		if(method!=null && method.getCode()!=null){
+			InstructionList list = new InstructionList(method.getCode().getCode());
+			InstructionHandle start = list.getStart();
+			InstructionHandle end = list.getEnd();
+			
+			int startLine = method.getLineNumberTable().getSourceLine(start.getPosition());
+			int endLine = method.getLineNumberTable().getSourceLine(end.getPosition());
+			
+			if(varScopeStartLine==startLine && varScopeEndLine==endLine){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
 	/**
 	 * Instrument for: Application Classes only.
 	 */
