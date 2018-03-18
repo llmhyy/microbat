@@ -11,7 +11,6 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
