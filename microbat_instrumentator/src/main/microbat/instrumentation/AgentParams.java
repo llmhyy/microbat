@@ -219,6 +219,7 @@ public class AgentParams {
 			appPath.addClasspath(cp);
 		}
 		appPath.setWorkingDirectory(getWorkingDirectory());
+//		appPath.setOptionalTestMethod(entryPoint.getMethodSignature());
 		return appPath;
 	}
 }

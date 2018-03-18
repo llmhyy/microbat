@@ -161,6 +161,8 @@ public class TraceAgent implements IAgent {
 	@Override
 	public void startTest(String junitClass, String junitMethod) {
 		ExecutionTracer._start();
+		ExecutionTracer.appJavaClassPath.setOptionalTestClass(junitClass);
+		ExecutionTracer.appJavaClassPath.setOptionalTestMethod(junitMethod);
 	}
 
 	@Override

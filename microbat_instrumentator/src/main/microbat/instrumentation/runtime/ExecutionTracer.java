@@ -455,7 +455,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		_hitLine(line, className, methodSignature);
 		TraceNode latestNode = trace.getLatestNode();
 		latestNode.setException(true);
-		boolean invocationLayerChanged = this.methodCallStack.popForException(methodSignature);
+		boolean invocationLayerChanged = this.methodCallStack.
+				popForException(methodSignature, appJavaClassPath);
 		
 		if(invocationLayerChanged){
 			TraceNode caller = null;
