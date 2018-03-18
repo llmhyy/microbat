@@ -18,6 +18,7 @@ public class Premain {
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
 		installBootstrap(inst);
 		
+		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
 		System.out.println("start instrumentation...");
 		AgentParams agentParams = AgentParams.parse(agentArgs);
 		Agent agent = new Agent(agentParams);
@@ -26,7 +27,6 @@ public class Premain {
 		inst.addTransformer(new TestRunnerTranformer());
 		
 		if (!agentParams.isPrecheck()) {
-			Class<?>[] retransformableClasses = getRetransformableClasses(inst);
 			if (retransformableClasses.length > 0) {
 				inst.retransformClasses(retransformableClasses);
 			}
