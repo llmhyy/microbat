@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collection;
 
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
@@ -18,6 +19,7 @@ import sav.common.core.utils.CollectionBuilder;
 import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.SingleTimer;
 import sav.common.core.utils.StopTimer;
+import sav.common.core.utils.StringUtils;
 import sav.strategies.vm.AgentVmRunner;
 import sav.strategies.vm.VMConfiguration;
 
@@ -135,12 +137,13 @@ public class TraceAgentRunner extends AgentVmRunner {
 		return true;
 	}
 	
-	protected void printOut(String line) {
-		if (printOutExecutionTrace) {
-			System.out.println(line);
-		} else if (line.startsWith(AgentConstants.PROGRESS_HEADER)) {
+	@Override
+	protected void printOut(String line, boolean error) {
+		if (line.startsWith(AgentConstants.PROGRESS_HEADER)) {
 			String[] frags = line.split(" ");
 			printProgress(Integer.valueOf(frags[1]), Integer.valueOf(frags[2]));
+		} else if (error || line.startsWith(AgentConstants.LOG_HEADER)) {
+			System.out.println(line);
 		}
 	};
 	
@@ -215,5 +218,9 @@ public class TraceAgentRunner extends AgentVmRunner {
 	
 	public boolean isUnknownTestResult() {
 		return unknownTestResult;
+	}
+	
+	public void addAgentParams(String opt, Collection<?> values) {
+		super.addAgentParam(opt, StringUtils.join(values, AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR));
 	}
 }

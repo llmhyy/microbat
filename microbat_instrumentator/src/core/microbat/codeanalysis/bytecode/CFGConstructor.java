@@ -16,6 +16,8 @@ import org.apache.bcel.generic.JsrInstruction;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Select;
 
+import microbat.instrumentation.AgentLogger;
+
 /**
  * Construct CFG based on bytecode of a method.
  * 
@@ -177,7 +179,7 @@ public class CFGConstructor {
 					isClose = isClose && !isAppendNew;
 				}
 				long t6 = System.currentTimeMillis();
-				System.out.println("time for travese post dominatee: " + (t6-t5));
+				AgentLogger.debug("time for travese post dominatee: " + (t6-t5));
 				
 				node.setPostDominatee(originalSet);
 			}

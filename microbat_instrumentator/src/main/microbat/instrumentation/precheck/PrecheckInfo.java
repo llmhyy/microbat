@@ -39,7 +39,7 @@ public class PrecheckInfo {
 		setVisitedLocs(info.getVisitedLocs());
 		isOverLong = info.isOverLong();
 //		FileUtils.writeFile("E:/lyly/WorkingFolder/step_precheck.txt", StringUtils.join(info.getSteps(), "\n"));
-//		System.out.println("size = " + getStepTotal());
+//		AgentLogger.debug("size = " + getStepTotal());
 	}
 
 	@Override

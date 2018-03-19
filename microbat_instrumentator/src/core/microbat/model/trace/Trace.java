@@ -785,7 +785,7 @@ public class Trace {
 				}
 				
 //				if(node.getOrder()==203 || node.getOrder()==194){
-//					System.out.println(node.getOrder() + "(" + var.getVarID() + "):" + node.getSuspicousScore(var));
+//					AgentLogger.debug(node.getOrder() + "(" + var.getVarID() + "):" + node.getSuspicousScore(var));
 //				}
 			}
 		}

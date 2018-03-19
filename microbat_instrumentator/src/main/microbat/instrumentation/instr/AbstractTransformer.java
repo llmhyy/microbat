@@ -6,6 +6,7 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
+import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.runtime.ExecutionTracer;
 import microbat.instrumentation.runtime.IExecutionTracer;
 import sav.common.core.utils.FileUtils;
@@ -37,19 +38,19 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 		if (data == null) {
 			return;
 		}
-//		String targetFolder = "E:/lyly/Projects";
-		String targetFolder = "/Users/lylytran/Projects";
+		String targetFolder = "E:/lyly/Projects";
+//		String targetFolder = "/Users/lylytran/Projects";
 		if (!dump) {
-			System.out.println("instrumented class: " + classFName);
+			AgentLogger.debug("instrumented class: " + classFName);
 			return;
 		}
 		String orgPath = targetFolder + "/inst_src/org/" + classFName.substring(classFName.lastIndexOf(".") + 1)
 				+ ".class";
-		System.out.println("dump org class to file: " + orgPath);
+		AgentLogger.debug("dump org class to file: " + orgPath);
 		dumpToFile(classfileBuffer, orgPath);
 		String filePath = targetFolder + "/inst_src/test/" + classFName.substring(classFName.lastIndexOf(".") + 1)
 				+ ".class";
-		System.out.println("dump instrumented class to file: " + filePath);
+		AgentLogger.debug("dump instrumented class to file: " + filePath);
 		dumpToFile(data, filePath);
 	}
 

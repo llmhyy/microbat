@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import microbat.instrumentation.Agent;
+import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.runtime.TracingState;
 import microbat.model.ClassLocation;
 
@@ -33,7 +34,8 @@ public class TraceMeasurement {
 			ClassLocation newStep = new ClassLocation(className, methodSignature, line);
 			trace.addStep(newStep);
 		} catch (Throwable t) {
-			t.printStackTrace(System.out);
+			AgentLogger.info("TraceMesurement error: " + t.getMessage());
+			AgentLogger.error(t);
 		}
 	}
 	

@@ -23,7 +23,7 @@ public class AgentParams {
 	public static final String OPT_VARIABLE_LAYER = "varLayer";
 	public static final String OPT_STEP_LIMIT = "stepLimit";
 	public static final String OPT_EXPECTED_STEP = "expectedSteps";
-	public static final String OPT_PRINT_PROGRESS = "printProgress";
+	public static final String OPT_LOG = "log";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -41,7 +41,7 @@ public class AgentParams {
 	private String excludesExpression;
 	private int stepLimit;
 	private int expectedSteps;
-	private boolean printProgress;
+	private List<LogType> logTypes;
 	
 	public static AgentParams parse(String agentArgs) {
 		CommandLine cmd = CommandLine.parse(agentArgs);
@@ -80,7 +80,7 @@ public class AgentParams {
 //		}
 		params.stepLimit = cmd.getInt(OPT_STEP_LIMIT, Integer.MAX_VALUE);
 		params.expectedSteps = cmd.getInt(OPT_EXPECTED_STEP, -1);
-		params.printProgress = cmd.getBoolean(OPT_PRINT_PROGRESS, false);
+		params.logTypes = LogType.valuesOf(cmd.getStrings(OPT_LOG));
 		return params;
 	}
 	
@@ -207,8 +207,8 @@ public class AgentParams {
 		return expectedSteps;
 	}
 	
-	public boolean isPrintProgress() {
-		return printProgress;
+	public List<LogType> getLogTypes() {
+		return logTypes;
 	}
 	
 	public AppJavaClassPath initAppClassPath() {
@@ -221,5 +221,17 @@ public class AgentParams {
 		appPath.setWorkingDirectory(getWorkingDirectory());
 //		appPath.setOptionalTestMethod(entryPoint.getMethodSignature());
 		return appPath;
+	}
+	
+	public static enum LogType {
+		debug, info, printProgress, error;
+
+		public static List<LogType> valuesOf(List<String> types) {
+			List<LogType> result = new ArrayList<>(types.size());
+			for (String type : types) {
+				result.add(LogType.valueOf(type));
+			}
+			return result;
+		}
 	}
 }

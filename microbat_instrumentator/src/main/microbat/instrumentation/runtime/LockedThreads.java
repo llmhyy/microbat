@@ -1,5 +1,7 @@
 package microbat.instrumentation.runtime;
 
+import microbat.instrumentation.AgentLogger;
+
 /**
  * 
  * @author lyly
@@ -31,7 +33,7 @@ public class LockedThreads {
 				return;
 			}
 		}
-		System.out.println("LockedThreads full!");
+		AgentLogger.info("LockedThreads full!");
 	}
 
 	public void remove(long threadId) {

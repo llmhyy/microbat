@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -119,7 +118,7 @@ public class VMRunner {
 //						if (error) {
 //							log.warn(line);
 //						}
-						printOut(line);
+						printOut(line, error);
 						if (!line.contains("Class JavaLaunchHelper is implemented in both")) {
 							sb.append(line).append("\n");
 						}
@@ -135,7 +134,7 @@ public class VMRunner {
 		});
 	}
 	
-	protected void printOut(String line) {
+	protected void printOut(String line, boolean error) {
 		if (printOutExecutionTrace) {
 			System.out.println(line);
 		}

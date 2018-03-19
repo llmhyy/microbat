@@ -33,7 +33,6 @@ public class TraceAgent implements IAgent {
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.stepLimit = agentParams.getStepLimit();
-		ExecutionTracer.printProgress = agentParams.isPrintProgress();
 		if (agentParams.getExpectedSteps() > 0) {
 			ExecutionTracer.expectedSteps = agentParams.getExpectedSteps();
 		}
@@ -42,7 +41,7 @@ public class TraceAgent implements IAgent {
 	public void shutdown() throws Exception {
 		ExecutionTracer.shutdown();
 		/* collect trace & store */
-		System.out.println("Building trace dependencies ...");
+		AgentLogger.debug("Building trace dependencies ...");
 		timer.newPoint("Building trace dependencies");
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 	
@@ -54,18 +53,18 @@ public class TraceAgent implements IAgent {
 //			locs.add(new ClassLocation(bkp.getClassCanonicalName(), bkp.getMethodSign(), bkp.getLineNumber()));
 //		}
 //		FileUtils.writeFile("E:/lyly/WorkingFolder/step_run.txt", StringUtils.join(locs, "\n"));
-//		System.out.println("Trace size = " + trace.getExecutionList().size());
+//		AgentLogger.debug("Trace size = " + trace.getExecutionList().size());
 		
 		createVirtualDataRelation(trace);
 		trace.constructControlDomianceRelation();
 //		trace.constructLoopParentRelation();
 		timer.newPoint("Saving trace");
 		writeOutput(trace);
-		System.out.println(timer.getResultString());
+		AgentLogger.debug(timer.getResultString());
 	}
 
 	private void writeOutput(Trace trace) throws Exception {
-		System.out.println("Saving trace...");
+		AgentLogger.debug("Saving trace...");
 		if (agentParams.getDumpFile() != null) {
 			RunningInfo result = new RunningInfo();
 			result.setProgramMsg(Agent.getProgramMsg());
@@ -85,7 +84,7 @@ public class TraceAgent implements IAgent {
 			TraceRecorder traceRecorder = new TraceRecorder();
 			traceRecorder.storeTrace(trace );
 		}
-		System.out.println("Trace saved.");
+		AgentLogger.debug("Trace saved.");
 	}
 	
 	private void createVirtualDataRelation(Trace trace) {

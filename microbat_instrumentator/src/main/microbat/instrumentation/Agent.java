@@ -3,7 +3,6 @@ package microbat.instrumentation;
 import java.lang.instrument.ClassFileTransformer;
 
 /**
- * 
  * @author LLT
  *  the Agent proxy
  * (Real agent would be TraceAgent & PrecheckAgent)
@@ -19,6 +18,7 @@ public class Agent implements IAgent {
 		} else {
 			agent = new TraceAgent(agentParams);
 		}
+		AgentLogger.setup(agentParams.getLogTypes());
 	}
 
 	public void startup() {

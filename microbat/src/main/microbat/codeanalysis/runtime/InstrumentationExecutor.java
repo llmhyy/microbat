@@ -6,17 +6,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import microbat.agent.TraceAgentRunner;
-import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.AgentParams.LogType;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.ClassLocation;
 import microbat.preference.MicrobatPreference;
 import sav.common.core.SavException;
-import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.vm.VMConfiguration;
 import sav.strategies.vm.VMRunner;
@@ -50,7 +50,6 @@ public class InstrumentationExecutor {
 		String jarPath = appPath.getAgentLib();
 		VMConfiguration config = new VMConfiguration();
 		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath, config);
-//		agentRunner.setPrintOutExecutionTrace(true);
 //		agentRunner.setVmDebugPort(9595);
 		config.setNoVerify(true);
 		config.setJavaHome(appPath.getJavaHome());
@@ -68,19 +67,14 @@ public class InstrumentationExecutor {
 		}
 		
 		agentRunner.addAgentParam(AgentParams.OPT_JAVA_HOME, config.getJavaHome());
-		agentRunner.addAgentParam(AgentParams.OPT_CLASS_PATH,
-				StringUtils.join(config.getClasspaths(), AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR));
+		agentRunner.addAgentParams(AgentParams.OPT_CLASS_PATH, config.getClasspaths());
 		agentRunner.addAgentParam(AgentParams.OPT_WORKING_DIR, config.getWorkingDirectory());
 		/* build includes & excludes params */
-		agentRunner.addAgentParam(AgentParams.OPT_INCLUDES,
-				StringUtils.join(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR,
-						this.includeLibs.toArray(new Object[0])));
-		agentRunner.addAgentParam(AgentParams.OPT_EXCLUDES,
-				StringUtils.join(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR,
-						this.excludeLibs.toArray(new Object[0])));
+		agentRunner.addAgentParams(AgentParams.OPT_INCLUDES, this.includeLibs);
+		agentRunner.addAgentParams(AgentParams.OPT_EXCLUDES, this.excludeLibs);
 		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
 		agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, MicrobatPreference.getStepLimit());
-		agentRunner.addAgentParam(AgentParams.OPT_PRINT_PROGRESS, true);
+		agentRunner.addAgentParams(AgentParams.OPT_LOG, Arrays.asList(LogType.printProgress, LogType.info));
 		return agentRunner;
 	}
 	

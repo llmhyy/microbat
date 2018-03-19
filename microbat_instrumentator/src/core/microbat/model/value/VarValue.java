@@ -400,7 +400,7 @@ public abstract class VarValue implements GraphNode, Serializable {
 //			ExecValue parentValue = this;
 //			while(!parentValue.isRoot()){
 //				parentValue = parentValue.getParents().get(0);
-//				System.out.println("loop");
+//				AgentLogger.debug("loop");
 //			}
 //			
 //			return parentValue;

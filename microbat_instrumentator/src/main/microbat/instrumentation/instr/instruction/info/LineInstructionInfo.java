@@ -130,7 +130,7 @@ public class LineInstructionInfo {
 							insnHandler.getPosition() + insn.getLength());
 				}
 				if (localVar == null) {
-//					System.out.println(String.format("Warning: Cannot find localVar with (index = %s, pc = %s) at %s",
+//					AgentLogger.debug(String.format("Warning: Cannot find localVar with (index = %s, pc = %s) at %s",
 //							localVarInsn.getIndex(), insnHandler.getPosition(), locId));
 					Type type = localVarInsn.getType(constPool);
 					String localVarName = String.format("%s:%s", locId, insnHandler.getPosition());

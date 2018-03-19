@@ -14,7 +14,7 @@ import org.apache.bcel.generic.InstructionList;
 import microbat.codeanalysis.bytecode.ByteCodeParser;
 import microbat.codeanalysis.bytecode.MethodFinderBySignature;
 import microbat.instrumentation.Agent;
-import microbat.instrumentation.AgentConstants;
+import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.model.BreakPoint;
 import microbat.model.trace.StepVariableRelationEntry;
@@ -43,7 +43,6 @@ public class ExecutionTracer implements IExecutionTracer {
 	public static int variableLayer = 2;
 	public static int stepLimit = Integer.MAX_VALUE;
 	public static int expectedSteps = Integer.MAX_VALUE;
-	public static boolean printProgress = false;
 	
 	static {
 		rtStores = new HashMap<>();
@@ -304,18 +303,10 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 	}
 	
-//	int count = 0;
 	@Override
 	public void _hitInvokeStatic(String invokeTypeSign, String methodName, Object[] params,
 			String paramTypeSignsCode, String returnTypeSign, int line, String className, String methodSignature) {
 		locker.lock();
-//		if (className.contains("CharMatcher$11")) {
-//			count++;
-//			if (count % 100 == 0) {
-//				System.out.println("count = " + count);
-//			}
-////			return;
-//		}
 		try {
 			_hitLine(line, className, methodSignature);
 			TraceNode latestNode = trace.getLatestNode();
@@ -335,8 +326,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.lock();
 		try {
 			exitMethod(line, className, methodSignature);
-		} catch (Exception e) {
-			System.out.println(e);
+		} catch (Throwable t) {
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -392,7 +383,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 
 	private void handleException(Throwable t) {
-		t.printStackTrace();
+		AgentLogger.info("ExecutionTracer error: " + t.getMessage());
+		AgentLogger.error(t);
 	}
 	
 	@Override
@@ -429,7 +421,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			int order = trace.size() + 1;
 			TraceNode currentNode = new TraceNode(bkp, null, order, trace); // leave programState empty.
 			trace.addTraceNode(currentNode);
-			sendProgress();
+			AgentLogger.printProgress(traceSize, expectedSteps);
 			if(!methodCallStack.isEmpty()){
 				TraceNode caller = methodCallStack.peek();
 				caller.addInvocationChild(currentNode);
@@ -442,13 +434,6 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.unLock(isLocked);
 	}
 
-	private void sendProgress() {
-		if (printProgress) {
-			System.out.println(new StringBuffer().append(AgentConstants.PROGRESS_HEADER)
-					.append(trace.size()).append(" ").append(expectedSteps));
-		}
-	}
-	
 	@Override
 	public void _hitExeptionTarget(int line, String className, String methodSignature) {
 		locker.lock();
