@@ -70,6 +70,9 @@ public class FilterChecker implements IFilterChecker {
 	}
 	@Override
 	public boolean checkTransformable(String classFName, String path, boolean isBootstrap) {
+		if (!JdkFilter.filter(getClassName(classFName))) {
+			return false;
+		}
 		boolean match = false;
 		if (isBootstrap) {
 			if (bootstrapIncludes.contains(classFName)) {
@@ -104,7 +107,7 @@ public class FilterChecker implements IFilterChecker {
 	}
 	
 	private boolean matchExtIncludes(String classFName, boolean match) {
-		String className = classFName.replace("/", ".");
+		String className = getClassName(classFName);
 		if (!match && (extIncludesMatcher != null)) {
 			match = extIncludesMatcher.matches(className);
 		}
@@ -113,6 +116,10 @@ public class FilterChecker implements IFilterChecker {
 			match &= !extExcludesMatcher.matches(className);
 		}
 		return match;
+	}
+
+	private String getClassName(String classFName) {
+		return classFName.replace("/", ".");
 	}
 
 	@Override
