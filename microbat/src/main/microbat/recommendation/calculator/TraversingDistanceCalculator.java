@@ -27,7 +27,6 @@ public class TraversingDistanceCalculator {
 		}
 		
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(testPoint.getDeclaringCompilationUnitName(), appPath);
-		
 		ASTNode testNode = findSpecificNode(cu, testPoint);
 		ASTNode avoidNode = findSpecificNode(cu, avoidPoint);
 		

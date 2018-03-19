@@ -5,8 +5,11 @@ import java.util.List;
 
 import org.apache.bcel.classfile.LineNumber;
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.ATHROW;
+import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.ReturnInstruction;
 
 import microbat.model.BreakPoint;
 
@@ -47,6 +50,28 @@ public class MethodFinderByLine extends ByteCodeMethodFinder {
 				
 			}
 		}
+	}
+	
+	public boolean isThrow(){
+		for(InstructionHandle handle: handles){
+			Instruction ins = handle.getInstruction();
+			if(ins instanceof ATHROW){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public boolean isReturn(){
+		for(InstructionHandle handle: handles){
+			Instruction ins = handle.getInstruction();
+			if(ins instanceof ReturnInstruction){
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	public List<InstructionHandle> getHandles() {
