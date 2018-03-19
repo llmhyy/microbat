@@ -412,7 +412,8 @@ public class ExecutionTracer implements IExecutionTracer {
 				return;
 			}
 			TraceNode latestNode = trace.getLatestNode();
-			if (latestNode != null && latestNode.getBreakPoint().getLineNumber() == line) {
+			if (latestNode != null && latestNode.getBreakPoint().getClassCanonicalName().equals(className)
+					&& latestNode.getBreakPoint().getLineNumber() == line) {
 				locker.unLock(isLocked);
 				return;
 			}
