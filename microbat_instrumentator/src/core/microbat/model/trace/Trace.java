@@ -403,6 +403,11 @@ public class Trace {
 			ranges.addAll(controlScope0);
 		}
 		
+		ClassLocation own = new ClassLocation(breakPoint.getClassCanonicalName(), breakPoint.getMethodSign(), breakPoint.getLineNumber());
+		if(!ranges.contains(own)){
+			ranges.add(own);
+		}
+		
 		scope = new ControlScope();
 		scope.setRangeList(ranges);
 		scope.setCondition(breakPoint.isConditional());
