@@ -238,7 +238,9 @@ public class ExecutionTracer implements IExecutionTracer {
 				//if(PrimitiveUtils.isPrimitiveTypeOrString(parameterType)){
 					Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
 					
-					String varID = TraceUtils.getLocalVarId(className, varScopeStart, varScopeEnd, varName, parameterType, params[i]);
+//					String varID = TraceUtils.getLocalVarId(className, varScopeStart, varScopeEnd, varName, parameterType, params[i]);
+					
+					String varID = Variable.concanateLocalVarID(className, varName, varScopeStart, varScopeEnd);
 					var.setVarID(varID);
 					VarValue value = appendVarValue(params[i], var, null);
 					addRWriteValue(value, true);
@@ -657,41 +659,44 @@ public class ExecutionTracer implements IExecutionTracer {
 //			}
 			_hitLine(line, className, methodSignature);
 			Variable var = new LocalVar(varName, varType, className, line);
-			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
+			
+//			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
+			String varID = Variable.concanateLocalVarID(className, varName, varScopeStartLine, varScopeEndLine);
 			var.setVarID(varID);
 			VarValue value = appendVarValue(varValue, var, null);
+			addRWriteValue(value, false);
 			
-			TraceNode currentNode = trace.getLatestNode();
-			String order = trace.findDefiningNodeOrder(Variable.READ, currentNode, var.getVarID(), var.getAliasVarID());
 			
-			if(value instanceof ReferenceValue && order.equals("0")){
-				if(isParameter(value, varScopeStartLine, varScopeEndLine, className)){
-					
-					TraceNode invocationParent = currentNode.getInvocationParent();
-					if(invocationParent!=null){
-						String simpleVarID = Variable.truncateSimpleID(varID);
-						varID = simpleVarID + ":" + invocationParent.getOrder();
-						value.setVarID(varID);
-						
-						if(!invocationParent.getWrittenVariables().contains(value)){
-							invocationParent.addWrittenVariable(value);							
-						}
-						if(!currentNode.getReadVariables().contains(value)){
-							currentNode.addReadVariable(value);							
-						}
-						
-						StepVariableRelationEntry entry = new StepVariableRelationEntry(varID);
-						entry.addProducer(invocationParent);
-						entry.addConsumer(currentNode);
-						trace.getStepVariableTable().put(varID, entry);
-						
-						
-					}
-				}
-			}
-			else{
-				addRWriteValue(value, false);
-			}
+//			TraceNode currentNode = trace.getLatestNode();
+//			String order = trace.findDefiningNodeOrder(Variable.READ, currentNode, var.getVarID(), var.getAliasVarID());
+//			if(value instanceof ReferenceValue && order.equals("0")){
+//				if(isParameter(varScopeStartLine, varScopeEndLine, className)){
+//					
+//					TraceNode invocationParent = currentNode.getInvocationParent();
+//					if(invocationParent!=null){
+//						String simpleVarID = Variable.truncateSimpleID(varID);
+//						varID = simpleVarID + ":" + invocationParent.getOrder();
+//						value.setVarID(varID);
+//						
+//						if(!invocationParent.getWrittenVariables().contains(value)){
+//							invocationParent.addWrittenVariable(value);							
+//						}
+//						if(!currentNode.getReadVariables().contains(value)){
+//							currentNode.addReadVariable(value);							
+//						}
+//						
+//						StepVariableRelationEntry entry = new StepVariableRelationEntry(varID);
+//						entry.addProducer(invocationParent);
+//						entry.addConsumer(currentNode);
+//						trace.getStepVariableTable().put(varID, entry);
+//						
+//						
+//					}
+//				}
+//			}
+//			else{
+//				addRWriteValue(value, false);
+//			}
 			
 		} catch (Throwable t) {
 			handleException(t);
@@ -699,7 +704,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.unLock();
 	}
 	
-	private boolean isParameter(VarValue value, int varScopeStartLine, int varScopeEndLine, String className) {
+	private boolean isParameter(int varScopeStartLine, int varScopeEndLine, String className) {
 		BreakPoint point = trace.getLatestNode().getBreakPoint();
 		String fullSign = point.getMethodSign();
 		String shortSign = fullSign.substring(fullSign.indexOf("#")+1, fullSign.length());
