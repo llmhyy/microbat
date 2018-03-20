@@ -383,7 +383,9 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 
 	private void handleException(Throwable t) {
-		AgentLogger.info("ExecutionTracer error: " + t.getMessage());
+		if (t.getMessage() != null) {
+			AgentLogger.info("ExecutionTracer error: " + t.getMessage());
+		}
 		AgentLogger.error(t);
 	}
 	
