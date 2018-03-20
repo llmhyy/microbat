@@ -190,10 +190,11 @@ public class Trace {
 			}
 		}
 		catch(Exception e){
-			if(expression.matches("id=(\\w|\\W)+:\\d+")){
+//			if(expression.matches("id=(\\w|\\W)+:\\d+")){
+			if(expression.matches("id=(\\w|\\W)+")){
 				String id = expression.replace("id=", "");
 				for(VarValue readVar: node.getReadVariables()){
-					if(readVar.getVarID().equals(id)){
+					if(readVar.getVarID().contains(id)){
 						resultIndex = i;
 					}
 					else if(readVar.getAliasVarID()!=null && readVar.getAliasVarID().equals(id)){
