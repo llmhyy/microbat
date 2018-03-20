@@ -1,5 +1,8 @@
 package microbat.instrumentation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.instrumentation.precheck.PrecheckTransformer;
@@ -54,5 +57,13 @@ public class PrecheckAgent implements IAgent {
 	@Override
 	public void finishTest(String junitClass, String junitMethod) {
 		TraceMeasurement.shutdown();
+	}
+
+	@Override
+	public void setTransformableClasses(Class<?>[] retransformableClasses) {
+		List<String> loadedClasses = precheckTransformer.getLoadedClasses();
+		for (Class<?> clazz : retransformableClasses) {
+			loadedClasses.add(clazz.getName());
+		}
 	}
 }

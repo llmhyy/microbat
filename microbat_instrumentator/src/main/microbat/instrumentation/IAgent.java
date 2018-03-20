@@ -13,5 +13,7 @@ public interface IAgent {
 	public void finishTest(String junitClass, String junitMethod);
 	
 	public ClassFileTransformer getTransformer();
+
+	public void setTransformableClasses(Class<?>[] retransformableClasses);
 	
 }

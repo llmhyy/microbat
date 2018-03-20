@@ -85,4 +85,9 @@ public class Agent implements IAgent {
 	public ClassFileTransformer getTransformer() {
 		return agent.getTransformer();
 	}
+
+	@Override
+	public void setTransformableClasses(Class<?>[] retransformableClasses) {
+		agent.setTransformableClasses(retransformableClasses);
+	}
 }

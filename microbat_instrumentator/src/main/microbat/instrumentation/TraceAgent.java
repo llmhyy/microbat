@@ -174,4 +174,9 @@ public class TraceAgent implements IAgent {
 		return new TraceTransformer(agentParams);
 	}
 
+	@Override
+	public void setTransformableClasses(Class<?>[] retransformableClasses) {
+		// do nothing
+	}
+
 }
