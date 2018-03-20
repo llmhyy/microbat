@@ -27,24 +27,27 @@ public class TraceUtils {
 	}
 
 	public static String getFieldVarId(String parentVarId, String fieldName, String fieldType, Object fieldValue) {
-		if (PrimitiveUtils.isPrimitive(fieldType)) {
+		if (PrimitiveUtils.isPrimitive(fieldType) || fieldValue==null) {
 			return Variable.concanateFieldVarID(parentVarId, fieldName);
 		}
+		
 		return getObjectVarId(fieldValue, fieldType);
 	}
 	
 	public static String getLocalVarId(String className, int startLine, int endLine, 
 			String varName, String varType, Object varValue) {
-		if (PrimitiveUtils.isPrimitive(varType)) {
+		if (PrimitiveUtils.isPrimitive(varType) || varValue==null) {
 			return Variable.concanateLocalVarID(className, varName, startLine, endLine);
 		}
+		
 		return getObjectVarId(varValue, varType);
 	}
 
 	public static String getArrayElementVarId(String parentVarId, int index, String elementType, Object eleValue) {
-		if (PrimitiveUtils.isPrimitive(elementType)) {
+		if (PrimitiveUtils.isPrimitive(elementType) || eleValue==null) {
 			return Variable.concanateArrayElementVarID(parentVarId, String.valueOf(index));
 		}
+		
 		return getObjectVarId(eleValue, elementType);
 	}
 	
