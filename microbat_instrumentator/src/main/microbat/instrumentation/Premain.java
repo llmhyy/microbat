@@ -14,6 +14,7 @@ import microbat.instrumentation.instr.TestRunnerTranformer;
 
 public class Premain {
 	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent.jar";
+	private static final String SAV_JAR = "sav.commons.simplified.jar";
 
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
 		installBootstrap(inst);
@@ -63,8 +64,7 @@ public class Premain {
 			bootJarPaths = getJarFiles(INSTRUMENTATION_STANTDALONE_JAR, 
 										"bcel-6.0.jar",
 										"javassist.jar",
-//										"commons-lang-2.6.jar",
-										"sav.commons.simplified.jar",
+										SAV_JAR,
 										"commons-io-1.3.2.jar",
 										"mysql-connector-java-5.1.44-bin.jar",
 										"slf4j-api-1.7.12.jar");
@@ -87,7 +87,7 @@ public class Premain {
 		List<JarFile> jars = new ArrayList<>();
 		for (String jarName : jarNames) {
 			File file = new File(tempFolder.getAbsolutePath(), jarName);
-			if (INSTRUMENTATION_STANTDALONE_JAR.equals(file.getName()) || !file.exists()) {
+			if (AgentUtils.existIn(file.getName(), INSTRUMENTATION_STANTDALONE_JAR, SAV_JAR) || !file.exists()) {
 				try {
 					String jarResourcePath = "lib/" + jarName;
 					boolean success = extractJar(jarResourcePath, file.getAbsolutePath());

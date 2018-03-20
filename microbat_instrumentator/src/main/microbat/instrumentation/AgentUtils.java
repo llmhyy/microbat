@@ -56,4 +56,13 @@ public class AgentUtils {
 		}
 		return (int) count;
 	}
+	
+	public static <T> boolean existIn(T val, T... valList) {
+		for (T valInList : valList) {
+			if (val.equals(valInList)) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

@@ -174,4 +174,15 @@ public class ClassUtils {
 		throw new IllegalArgumentException(String.format("cannot find method %s in class %s", methodNameOrSign
 				, clazz.getName()));
 	}
+	
+	/**
+	 * The case which this function is missing to handle: Non-public top level class
+	 * */
+	public static String getCompilationUnitForSimpleCase(String className) {
+		if (className.contains("$")) {
+			return className.substring(0, className.indexOf("$"));
+		} else {
+			return className;
+		}
+	}
 }
