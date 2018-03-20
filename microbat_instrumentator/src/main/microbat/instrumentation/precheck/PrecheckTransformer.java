@@ -2,10 +2,12 @@ package microbat.instrumentation.precheck;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
+import java.net.URL;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
 
+import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.instr.AbstractTransformer;
@@ -24,7 +26,12 @@ public class PrecheckTransformer implements ClassFileTransformer {
 		try {
 			loadedClasses.add(classFName.replace("/", "."));
 			if (protectionDomain != null) {
-				String path = protectionDomain.getCodeSource().getLocation().getFile();
+				URL srcLocation = protectionDomain.getCodeSource().getLocation();
+				if (srcLocation == null) {
+					AgentLogger.debug(String.format("Transformer- Ignore %s [Code source undefined!]", classFName));
+					return null;
+				} 
+				String path = srcLocation.getFile();
 				if (FilterChecker.isTransformable(classFName, path, false) && FilterChecker.isAppClass(classFName)) {
 					byte[] data = instrumenter.instrument(classFName, classfileBuffer);
 					AbstractTransformer.log(classfileBuffer, data, classFName, false);
