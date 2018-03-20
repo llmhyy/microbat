@@ -652,7 +652,7 @@ public class Trace {
 		
 		return definingOrder;
 	}
-
+	
 	public TraceNode findLastestNodeDefiningPrimitiveVariable(String varID, int limitOrder){
 		for(int i=limitOrder-2; i>=0; i--){
 			TraceNode node = exectionList.get(i);

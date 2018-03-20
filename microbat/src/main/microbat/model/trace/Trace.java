@@ -285,6 +285,36 @@ public class Trace {
 		
 	}
 	
+	public List<TraceNode> findNextReadingTraceNodes(VarValue value, int startOrder){
+		String varID = value.getVarID();
+//		varID = Variable.truncateSimpleID(varID);
+		
+		List<TraceNode> list = new ArrayList<>();
+		for(int i=startOrder; i<this.exectionList.size(); i++){
+			TraceNode node = this.exectionList.get(i);
+			for(VarValue readVar: node.getReadVariables()){
+				if(readVar.getVarID().equals(varID)){
+					list.add(node);
+				}
+				
+			}
+		}
+		
+		return list;
+	}
+	
+	public List<TraceNode> findPrevReadingTraceNodes(VarValue value, int startOrder){
+		List<TraceNode> list = new ArrayList<>();
+		for(int i=startOrder-2; i>0; i--){
+			TraceNode node = this.exectionList.get(i);
+			if(node.getReadVariables().contains(value)){
+				list.add(node);
+			}
+		}
+		
+		return list;
+	}
+	
 	public void constructLoopParentRelation(){
 		Stack<TraceNode> loopParentStack = new Stack<>();
 		System.currentTimeMillis();

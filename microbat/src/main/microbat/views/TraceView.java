@@ -127,7 +127,7 @@ public class TraceView extends ViewPart {
 		});
 
 	}
-
+	
 	public void jumpToNode(String searchContent, boolean next) {
 		// Trace trace = Activator.getDefault().getCurrentTrace();
 
