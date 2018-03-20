@@ -22,8 +22,7 @@ public class ArrayValue extends ReferenceValue {
 	
 	public String toString(){
 		StringBuffer buffer = new StringBuffer();
-		buffer.append("array(");
-		buffer.append(componentType + "): ");
+		buffer.append(variable + ":");
 		buffer.append(getReferenceID());
 		String print = buffer.toString();
 		

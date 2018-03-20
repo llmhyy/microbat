@@ -40,7 +40,7 @@ public class ReferenceValue extends VarValue {
 	
 	public String toString(){
 		StringBuffer buffer = new StringBuffer();
-		buffer.append(getVariable());
+		buffer.append(variable);
 		buffer.append(": ");
 		
 		buffer.append(getVarID());

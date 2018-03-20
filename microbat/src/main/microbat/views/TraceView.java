@@ -128,7 +128,7 @@ public class TraceView extends ViewPart {
 
 	}
 
-	public void jumpToNode(String searchContent, boolean forward) {
+	public void jumpToNode(String searchContent, boolean next) {
 		// Trace trace = Activator.getDefault().getCurrentTrace();
 
 		if (!previousSearchExpression.equals(searchContent)) {
@@ -137,7 +137,7 @@ public class TraceView extends ViewPart {
 		}
 
 		int selectionIndex = -1;
-		if (forward) {
+		if (next) {
 			selectionIndex = trace.searchForwardTraceNode(searchContent);
 		} else {
 			selectionIndex = trace.searchBackwardTraceNode(searchContent);
