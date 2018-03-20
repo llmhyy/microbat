@@ -363,18 +363,32 @@ public class JavaUtil {
 					cu = convertICompilationUnitToASTNode(icu);						
 				}
 				else{
-					String sourceFile = appPath.getSoureCodePath() + File.separator + qualifiedName.replace(".", File.separator) + ".java";
-					String testFile = appPath.getTestCodePath() + File.separator + qualifiedName.replace(".", File.separator) + ".java";
+					boolean isFound = false;
+					for(String sourceFolder: appPath.getAllSourceFolders()){
+						String fileName = sourceFolder + File.separator + qualifiedName.replace(".", File.separator) + ".java";
+						if(new File(fileName).exists()){
+							cu = findCompiltionUnitBySourcePath(fileName, qualifiedName);
+							isFound = true;
+							break;
+						}
+					}
 					
-					if(new File(sourceFile).exists()) {
-						cu = findCompiltionUnitBySourcePath(sourceFile, qualifiedName);
-					}
-					else if(new File(testFile).exists()) {
-						cu = findCompiltionUnitBySourcePath(testFile, qualifiedName);
-					}
-					else {
+					if(!isFound){
 						System.err.println("cannot find the source file of " + qualifiedName);
 					}
+					
+//					String sourceFile = appPath.getSoureCodePath() + File.separator + qualifiedName.replace(".", File.separator) + ".java";
+//					String testFile = appPath.getTestCodePath() + File.separator + qualifiedName.replace(".", File.separator) + ".java";
+//					
+//					if(new File(sourceFile).exists()) {
+//						cu = findCompiltionUnitBySourcePath(sourceFile, qualifiedName);
+//					}
+//					else if(new File(testFile).exists()) {
+//						cu = findCompiltionUnitBySourcePath(testFile, qualifiedName);
+//					}
+//					else {
+//						System.err.println("cannot find the source file of " + qualifiedName);
+//					}
 					
 				}
 				
