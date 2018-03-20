@@ -10,9 +10,7 @@ package sav.strategies.dto;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import sav.common.core.utils.StringUtils;
 
@@ -23,7 +21,7 @@ import sav.common.core.utils.StringUtils;
 public class AppJavaClassPath {
 	private String javaHome;
 	private String workingDirectory;
-	private Set<String> classpaths;
+	private List<String> classpaths; // classpath order is important!
 	
 	private List<String> externalLibPaths = new ArrayList<>();
 	
@@ -51,7 +49,7 @@ public class AppJavaClassPath {
 	private SystemPreferences preferences;
 
 	public AppJavaClassPath() {
-		classpaths = new HashSet<String>();
+		classpaths = new ArrayList<>();
 		preferences = new SystemPreferences();
 	}
 

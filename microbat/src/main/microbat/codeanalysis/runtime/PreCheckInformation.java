@@ -91,5 +91,10 @@ public class PreCheckInformation {
 	public void setLoadedClasses(List<String> loadedClasses) {
 		this.loadedClasses = loadedClasses;
 	}
+
+	@Override
+	public String toString() {
+		return "PreCheckInformation [isOverLong=" + isOverLong + ", isPassTest=" + isPassTest + "]";
+	}
 	
 }

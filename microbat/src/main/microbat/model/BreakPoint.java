@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import microbat.model.variable.Variable;
+import sav.common.core.utils.ClassUtils;
 
 public class BreakPoint extends ClassLocation {
 	private List<Variable> readVariables = new ArrayList<>();
@@ -32,14 +33,7 @@ public class BreakPoint extends ClassLocation {
 	
 	public BreakPoint(String className, String methodSinature, int linNum){
 		super(className, methodSinature, linNum);
-		
-		if(className.contains("$")){
-			String declaringCompilationName = className.substring(0, className.indexOf("$"));
-			this.declaringCompilationUnitName = declaringCompilationName;
-		}
-		else{
-			this.declaringCompilationUnitName = className;
-		}
+		this.declaringCompilationUnitName = ClassUtils.getCompilationUnitForSimpleCase(className);
 	}
 	
 	public BreakPoint(String className, String declaringCompilationUnitName, String methodSign, int lineNo) {

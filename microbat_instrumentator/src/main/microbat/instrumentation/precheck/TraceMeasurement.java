@@ -7,6 +7,7 @@ import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.runtime.TracingState;
 import microbat.model.ClassLocation;
+import sav.common.core.utils.ClassUtils;
 
 public class TraceMeasurement {
 	private static Map<Long, TraceMeasurement> rtStores = new HashMap<>();
@@ -25,13 +26,14 @@ public class TraceMeasurement {
 			Agent._exitProgram("fail;Trace is over long!");
 		}
 		try {
+			String compilationUnit = ClassUtils.getCompilationUnitForSimpleCase(className);
 			ClassLocation lastStep = trace.getLastStep();
-			if (lastStep != null && lastStep.getClassCanonicalName().equals(className) && 
-					lastStep.getLineNumber() == line) {
+			if (lastStep != null && lastStep.getClassCanonicalName().equals(compilationUnit)
+					&& lastStep.getLineNumber() == line) {
 				return;
 			}
 			/* add new step */
-			ClassLocation newStep = new ClassLocation(className, methodSignature, line);
+			ClassLocation newStep = new ClassLocation(compilationUnit, methodSignature, line);
 			trace.addStep(newStep);
 		} catch (Throwable t) {
 			AgentLogger.info("TraceMesurement error: " + t.getMessage());
