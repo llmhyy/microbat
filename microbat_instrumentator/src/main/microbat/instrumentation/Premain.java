@@ -26,7 +26,7 @@ public class Premain {
 		agent.startup();
 		inst.addTransformer(agent.getTransformer(), true);
 		inst.addTransformer(new TestRunnerTranformer());
-		
+		agent.setTransformableClasses(retransformableClasses);
 		if (!agentParams.isPrecheck()) {
 			if (retransformableClasses.length > 0) {
 				inst.retransformClasses(retransformableClasses);
