@@ -32,6 +32,20 @@ public class SignatureUtils {
 		return sb.toString();
 	}
 	
+	public static boolean isSignature(String signature){
+		if(signature.length()==1){
+			return true;
+		}
+		else{
+			if((signature.startsWith("L") || signature.startsWith("["))
+					&& signature.endsWith(";")){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	public static String signatureToName(String signature){
 		signature = trimSignature(signature);
 		
