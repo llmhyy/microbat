@@ -43,12 +43,12 @@ public class Mutator implements IMutator {
 	private static final int MU_TOTAL_NO_LIMIT = -1;
 	private Map<String, List<String>> opMapConfig;
 	private String srcFolder;
-	private String tmpMutationFolder;
+	private String mutationOutputFolder;
 	private int muTotal = MU_TOTAL_NO_LIMIT;
 	
-	public Mutator(String srcFolder, String tmpMutationFolder, int muTotal) {
+	public Mutator(String srcFolder, String mutationOutputFolder, int muTotal) {
 		this.srcFolder = srcFolder;
-		this.tmpMutationFolder = tmpMutationFolder;
+		this.mutationOutputFolder = mutationOutputFolder;
 		this.muTotal = muTotal;
 	}
 	
@@ -72,7 +72,7 @@ public class Mutator implements IMutator {
 		Map<String, List<String>> opMapConfig = getOpMapConfig();
 		mutationVisitor.init(new MutationMap(opMapConfig), classAnalyzer);
 		
-		MutationFileWriter fileWriter = new MutationFileWriter(srcFolder, tmpMutationFolder);
+		MutationFileWriter fileWriter = new MutationFileWriter(srcFolder, mutationOutputFolder);
 		List<MutationObject> muResult = new ArrayList<>();
 		for (Entry<String, List<Integer>> entry : classLocationMap.entrySet()) {
 			String className = entry.getKey();
@@ -99,11 +99,14 @@ public class Mutator implements IMutator {
 		Map<String, MutationResult> result = new HashMap<String, MutationResult>();
 		Map<ClassLocation, List<MutationNode>> muMap = groupByClassLocation(muResult);
 		for (ClassLocation loc : muMap.keySet()) {
-			MutationResult lineRes = new MutationResult(srcFolder, loc.getClassCanonicalName());
+			MutationResult lineRes = result.get(loc.getClassCanonicalName());
+			if (lineRes == null) {
+				lineRes = new MutationResult(srcFolder, loc.getClassCanonicalName());
+				result.put(loc.getClassCanonicalName(), lineRes);
+			}
 			Integer line = loc.getLineNo();
 			Map<File, String> muFiles = fileWriter.write(muMap.get(loc), loc.getClassCanonicalName(), line);
 			lineRes.put(line, muFiles);
-			result.put(loc.getClassCanonicalName(), lineRes);
 		}
 		return result;
 	}
@@ -154,33 +157,6 @@ public class Mutator implements IMutator {
 		if (opMapConfig == null) {
 			String muMapFile = IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "MuMap.txt");
 			opMapConfig = MuMapParser.parse(muMapFile);
-//			new File(muMapFile).exists();
-//			// load default
-//			Bundle bundle = Platform.getBundle("mutation");
-//			if(bundle != null){
-//				try {
-//					URL url = bundle.getEntry(OPERATOR_MAP_FILE);
-//					URL fileURL = org.eclipse.core.runtime.FileLocator.toFileURL(url);
-//					String file = fileURL.getFile();
-//					
-//					opMapConfig = MuMapParser.parse(file);
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				} catch (NullPointerException e){
-//					e.printStackTrace();
-//					
-//					String userDir = System.getProperty("user.dir");
-//					String mutationDir = userDir + File.separator + "dropins" + File.separator + "MuMap.txt";
-//					opMapConfig = MuMapParser.parse(mutationDir);
-//				}
-//			} else {
-//				try {
-//					opMapConfig = MuMapParser.parse("./src/main/resources/MuMap.txt");
-//				} catch (SavRtException ex) {
-//					String mutationBasedir = System.getProperty(MUTATION_BASE_DIR);
-//					opMapConfig = MuMapParser.parse(mutationBasedir + "/src/main/resources/MuMap.txt");
-//				}
-//			}
 		}
 		return opMapConfig;
 	}
