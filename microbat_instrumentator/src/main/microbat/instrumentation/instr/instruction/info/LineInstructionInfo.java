@@ -70,9 +70,9 @@ public class LineInstructionInfo {
 		}
 	}
 
-	private List<InstructionHandle> extractExitInsns(CFG cfg, List<InstructionHandle> lineInsns2) {
+	private List<InstructionHandle> extractExitInsns(CFG cfg, List<InstructionHandle> lineInsns) {
 		List<InstructionHandle> list = new ArrayList<>();
-		for(InstructionHandle handle: lineInsns2){
+		for(InstructionHandle handle: lineInsns){
 			for(CFGNode node: cfg.getExitList()){
 				if(node.getInstructionHandle().getPosition()==handle.getPosition()){
 					list.add(handle);

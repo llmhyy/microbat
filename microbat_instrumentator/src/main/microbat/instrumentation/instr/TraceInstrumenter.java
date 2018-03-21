@@ -316,12 +316,6 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 				&& methodGen.getName().equals("<init>")) {
 			return;
 		}
-		
-//		if (insn instanceof INVOKESTATIC && 
-//				methodGen.getClassName().contains("CharMatcher$11")) {
-//				insn.getReferenceType(constPool).toString().equals("com.google.common.base.CharMatcher$11")) {
-//			return;
-//		}
 
 		InstructionList newInsns = new InstructionList();
 		TracerMethods tracerMethod = TracerMethods.HIT_INVOKE;
@@ -419,11 +413,14 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		newInsns.dispose();
 		/* after */
 		if (isAppClass) {
+			boolean revisit = !Type.VOID.equals(returnType) && ((insnHandler.getNext() == null)
+					|| !(insnHandler.getNext().getInstruction() instanceof POP));
 			newInsns = new InstructionList();
 			newInsns.append(new ALOAD(tracerVar.getIndex()));
 			newInsns.append(new PUSH(constPool, line));
 			newInsns.append(new ALOAD(classNameVar.getIndex()));
 			newInsns.append(new ALOAD(methodSigVar.getIndex()));
+			newInsns.append(new PUSH(constPool, revisit));
 			appendTracerMethodInvoke(newInsns, TracerMethods.AFTER_INVOKE, constPool);
 			appendInstruction(insnList, insnHandler, newInsns);
 			newInsns.dispose();

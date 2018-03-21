@@ -8,7 +8,7 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 	}
 
 	@Override
-	public void _afterInvoke(int line, String residingClassName, String residingMethodSignature) {
+	public void _afterInvoke(int line, String residingClassName, String residingMethodSignature, boolean needRevisiting) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -48,6 +48,9 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 
 	@Override
 	public void _hitLine(int line, String className, String methodSignature) {
+		if (line == 614) {
+			System.out.println(className + methodSignature + line);
+		}
 	}
 
 	@Override

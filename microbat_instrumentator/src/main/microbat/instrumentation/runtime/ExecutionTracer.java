@@ -338,13 +338,16 @@ public class ExecutionTracer implements IExecutionTracer {
 	 * Instrument for: Application Classes only.
 	 */
 	@Override
-	public void _afterInvoke(int line, String residingClassName, String residingMethodSignature) {
+	public void _afterInvoke(int line, String residingClassName, String residingMethodSignature, boolean needRevisiting) {
 		locker.lock();
 		boolean exclusive = FilterChecker.isExclusive(residingClassName, residingMethodSignature);
 		if (!exclusive) {
 			TraceNode latestNode = trace.getLatestNode();
 			if (latestNode != null) {
 				latestNode.setInvokingDetail(null);
+			}
+			if (needRevisiting) {
+				_hitLine(line, residingClassName, residingMethodSignature);
 			}
 		}
 		locker.unLock();
