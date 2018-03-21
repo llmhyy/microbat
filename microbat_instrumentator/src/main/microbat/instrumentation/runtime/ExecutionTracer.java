@@ -403,15 +403,6 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void _hitLine(int line, String className, String methodSignature) {
 		boolean isLocked = locker.isLock();
 		locker.lock();
-		int traceSize = trace.getExecutionList().size();
-		if (traceSize > stepLimit) {
-			shutdown();
-			Agent._exitProgram("fail;Trace is over long!");
-		}
-		if (traceSize > expectedSteps) {
-			shutdown();
-			Agent._exitProgram("fail;Trace size exceeds expected_steps!");
-		}
 		try {
 			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
@@ -425,11 +416,20 @@ public class ExecutionTracer implements IExecutionTracer {
 				return;
 			}
 			
-			BreakPoint bkp = new BreakPoint(className, methodSignature, line);
 			int order = trace.size() + 1;
+			if (order > stepLimit) {
+				shutdown();
+				Agent._exitProgram("fail;Trace is over long!");
+			}
+			if (order > expectedSteps) {
+				shutdown();
+				Agent._exitProgram("fail;Trace size exceeds expected_steps!");
+			}
+			
+			BreakPoint bkp = new BreakPoint(className, methodSignature, line);
 			TraceNode currentNode = new TraceNode(bkp, null, order, trace); // leave programState empty.
 			trace.addTraceNode(currentNode);
-			AgentLogger.printProgress(traceSize, expectedSteps);
+			AgentLogger.printProgress(order, expectedSteps);
 			if(!methodCallStack.isEmpty()){
 				TraceNode caller = methodCallStack.peek();
 				caller.addInvocationChild(currentNode);
