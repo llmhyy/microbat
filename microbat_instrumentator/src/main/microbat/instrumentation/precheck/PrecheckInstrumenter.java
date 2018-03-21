@@ -15,9 +15,11 @@ import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.INVOKEVIRTUAL;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
+import org.apache.bcel.generic.POP;
 import org.apache.bcel.generic.PUSH;
 import org.apache.bcel.generic.Type;
 
@@ -101,6 +103,16 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 					method.getLineNumberTable(), lineInfo.getSourceLine())) {
 				injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getSourceLine(), insn, classNameVar,
 						methodSigVar);
+				if (insn.getInstruction() instanceof InvokeInstruction) {
+					Type returnType = ((InvokeInstruction) insn.getInstruction()).getReturnType(constPool);
+					boolean revisit = !Type.VOID.equals(returnType) && ((insn.getNext() == null)
+							|| !(insn.getNext().getInstruction() instanceof POP));
+					if (revisit) {
+						InstructionList newInsns = getHitLineCode(constPool, tracerVar, lineInfo.getSourceLine(), classNameVar, methodSigVar);
+						appendInstruction(insnList, insn, newInsns);
+						newInsns.dispose();
+					}
+				}
 			}
 			if (lineInfo.getSourceLine() < startLine) {
 				startLine = lineInfo.getSourceLine();
