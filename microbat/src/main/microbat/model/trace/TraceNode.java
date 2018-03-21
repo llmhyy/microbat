@@ -1116,6 +1116,11 @@ public class TraceNode{
 	public boolean insideException() {
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(
 				this.getDeclaringCompilationUnitName(), this.getTrace().getAppJavaClassPath());
+		
+//		if(cu==null){
+//			return false;
+//		}
+		
 		CatchClauseFinder finder = new CatchClauseFinder(this.breakPoint.getLineNumber(), cu);
 		cu.accept(finder);
 		
