@@ -126,6 +126,26 @@ public class FileUtils {
 		}
 	}
 	
+	public static void deleteFolder(File file) {
+		if (!file.exists()) {
+			return;
+		}
+		if (!file.isDirectory()) {
+			if (file.getAbsolutePath().length() > 260) {
+				File newFile = new File(FileUtils.getFilePath(file.getParent(), "$"));
+				file.renameTo(newFile);
+				newFile.delete();
+			} else {
+				file.delete();
+			}
+		} else {
+			for (File sub : file.listFiles()) {
+				deleteFolder(sub);
+			}
+		}
+		file.delete();
+	}
+	
 	public static void deleteAllFiles(String folderPath) {
 		deleteAllFiles(folderPath, null);
 	}
@@ -148,7 +168,13 @@ public class FileUtils {
 	
 	public static void deleteFiles(List<File> files) {
 		for (File file : CollectionUtils.nullToEmpty(files)) {
-			file.delete();
+			if (file.getAbsolutePath().length() > 260) {
+				File newFile = new File(file.getAbsolutePath().substring(0, 250));
+				file.renameTo(newFile);
+				newFile.delete();
+			} else {
+				file.delete();
+			}
 		}
 	}
 	

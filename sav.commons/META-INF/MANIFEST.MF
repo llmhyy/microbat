@@ -4,6 +4,7 @@ Bundle-Name: Commons
 Bundle-SymbolicName: sav.commons
 Bundle-Version: 1.0.0.qualifier
 Export-Package: microbat.graphdiff,
+ org.apache.commons.csv,
  org.apache.commons.io,
  org.apache.commons.lang,
  org.slf4j,

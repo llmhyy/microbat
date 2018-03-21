@@ -22,6 +22,7 @@ import microbat.evaluation.io.IgnoredTestCaseFiles;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.mutation.mutation.TraceMutationVisitor;
+import microbat.mutation.trace.dto.MuTrial;
 import microbat.mutation.trace.handlers.MutationGenerationHandler;
 import microbat.util.IResourceUtils;
 import microbat.util.JTestUtil;

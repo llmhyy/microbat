@@ -458,7 +458,11 @@ public class JavaUtil {
 	}
 	
 	public static ICompilationUnit findNonCacheICompilationUnitInProject(String qualifiedName) {
-		IProject iProject = getSpecificJavaProjectInWorkspace();
+		return findNonCacheICompilationUnitInProject(qualifiedName, Settings.projectName);
+	}
+	
+	public static ICompilationUnit findNonCacheICompilationUnitInProject(String qualifiedName, String projectName) {
+		IProject iProject = getSpecificJavaProjectInWorkspace(projectName);
 		if(iProject != null){
 			IJavaProject project = JavaCore.create(iProject);
 			try {
@@ -477,7 +481,11 @@ public class JavaUtil {
 	}
 	
 	public static IPackageFragmentRoot findTestPackageRootInProject(){
-		IJavaProject project = JavaCore.create(getSpecificJavaProjectInWorkspace());
+		return findTestPackageRootInProject(Settings.projectName);
+	}
+	
+	public static IPackageFragmentRoot findTestPackageRootInProject(String projectName){
+		IJavaProject project = JavaCore.create(getSpecificJavaProjectInWorkspace(projectName));
 		try {
 			for(IPackageFragmentRoot packageFragmentRoot: project.getPackageFragmentRoots()){
 				if(!(packageFragmentRoot instanceof JarPackageFragmentRoot) && packageFragmentRoot.getResource().toString().contains("test")){

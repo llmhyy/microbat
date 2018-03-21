@@ -1,7 +1,5 @@
 package microbat.mutation.trace;
 
-import java.io.File;
-
 import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.StringUtils;
 import tregression.empiricalstudy.Regression;
@@ -54,6 +52,7 @@ public class MuRegression {
 		this.mutationFile = mutationFile;
 	}
 
+	@Deprecated
 	public String getOrgFile() {
 		return orgFile;
 	}

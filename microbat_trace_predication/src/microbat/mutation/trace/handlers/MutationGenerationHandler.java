@@ -16,14 +16,13 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 
-import microbat.evaluation.io.IgnoredTestCaseFiles;
-import microbat.mutation.trace.TestCaseAnalyzer;
+import microbat.mutation.trace.MutationExperimentator;
+import microbat.mutation.trace.dto.AnalysisParams;
+import microbat.mutation.trace.MutationExperimentMonitor;
+import microbat.mutation.trace.preference.MuRegressionPreference;
 import microbat.util.IResourceUtils;
 import microbat.util.JavaUtil;
-import microbat.util.Settings;
 import sav.common.core.utils.FileUtils;
-import tregression.io.ExcelReporter;
-import tregression.junit.ParsedTrials;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -31,13 +30,8 @@ import tregression.junit.ParsedTrials;
  * @see org.eclipse.core.commands.AbstractHandler
  */
 public class MutationGenerationHandler extends AbstractHandler {
+	@Deprecated
 	public static final String TMP_DIRECTORY;
-	private IgnoredTestCaseFiles ignoredTestCaseFiles;
-	private ParsedTrials parsedTrials;
-	private int trialNumPerTestCase = 3;
-	private double[] unclearRates = {0};
-	private boolean isLimitTrialNum = false;
-	private int optionSearchLimit = 100;
 
 	static {
 		File resultFolder = new File(
@@ -54,22 +48,20 @@ public class MutationGenerationHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		ignoredTestCaseFiles = new IgnoredTestCaseFiles();
-		parsedTrials = new ParsedTrials();
-		
+		AnalysisParams analysisParams = new AnalysisParams();
 		Job job = new Job("Do evaluation") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				TestCaseAnalyzer analyzer = new TestCaseAnalyzer();
+				String targetProject = MuRegressionPreference.getTargetProject();
 				try {
-					ExcelReporter reporter = new ExcelReporter(Settings.projectName, unclearRates);
-					IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject();
-					
-					for(IJavaElement element: testRoot.getChildren()){
-						if(element instanceof IPackageFragment){
-							analyzer.runEvaluation((IPackageFragment)element, reporter, isLimitTrialNum, 
-									ignoredTestCaseFiles, parsedTrials, trialNumPerTestCase, unclearRates, 
-									optionSearchLimit, monitor);				
+					MutationExperimentMonitor experimentMonitor = new MutationExperimentMonitor(monitor, targetProject,
+							analysisParams);
+					MutationExperimentator analyzer = new MutationExperimentator();
+					IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject(targetProject);
+
+					for (IJavaElement element : testRoot.getChildren()) {
+						if (element instanceof IPackageFragment) {
+							analyzer.runEvaluation((IPackageFragment) element, analysisParams, experimentMonitor);
 						}
 					}
 				} catch (JavaModelException | IOException e) {

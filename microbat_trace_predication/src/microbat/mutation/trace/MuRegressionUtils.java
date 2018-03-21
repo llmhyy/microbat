@@ -1,91 +1,26 @@
 package microbat.mutation.trace;
 
 import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.ICompilationUnit;
 
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.mutation.trace.dto.AnalysisTestcaseParams;
+import microbat.util.IResourceUtils;
+import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
-import sav.common.core.Constants;
+import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.FileUtils;
-import sav.common.core.utils.StringUtils;
+import sav.strategies.dto.AppJavaClassPath;
 
 public class MuRegressionUtils {
+	public static final String TEST_RUNNER = "microbat.evaluation.junit.MicroBatTestRunner";
+	
 	private MuRegressionUtils(){}
-	
-	public static List<String> getMuTraceExecs(String targetProject) {
-		String folderPath = sav.common.core.utils.FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), targetProject);
-		File folder = new File(folderPath);
-		if (!folder.exists() || !folder.isDirectory()) {
-			return Collections.emptyList();
-		}
-		List<String> allFiles = new ArrayList<>();
-		collectBugExecFiles(folder, allFiles);
-		return allFiles;
-	}
-	
-	public static String extractMuBugId(String execFilePath) {
-		int muIdx = execFilePath.indexOf("mu_");
-		if (muIdx < 0) {
-			return "";
-		}
-		String bugId = execFilePath.substring(muIdx + 3 /*mu_.length*/);
-		bugId = bugId.substring(0, bugId.indexOf(File.separator));
-		return bugId;
-	}
-
-	private static void collectBugExecFiles(File folder, List<String> allFiles) {
-		folder.listFiles(new FilenameFilter() {
-			
-			@Override
-			public boolean accept(File dir, String name) {
-				if (!dir.getName().startsWith("mu_")) {
-					return false;
-				}
-				if (name.equals("bug.exec")) {
-					allFiles.add(FileUtils.getFilePath(dir.getAbsolutePath(), name));
-					return true;
-				}
-				return false;
-			}
-		});
-		for (File subFile : folder.listFiles()) {
-			if (subFile.isDirectory()) {
-				collectBugExecFiles(subFile, allFiles);
-			}
-		}
-	}
-	
-	/**
-	 * testcaseName : package.className#method, mutationFilePath: package.className.line.column.order
-	 * @return className#method#simpleClassName_line_column_order
-	 */
-	public static String getMuBugId(String testcaseName, String mutationFilePath) {
-		String simpleTestcaseName = testcaseName.substring(testcaseName.lastIndexOf(".") + 1, testcaseName.length());
-		int endIdx = mutationFilePath.lastIndexOf(Constants.FILE_SEPARATOR);
-		int startIdx = mutationFilePath.substring(0, endIdx).lastIndexOf(Constants.FILE_SEPARATOR) + 1;
-		// org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolator_82_13_1
-		String className = mutationFilePath.substring(startIdx, endIdx);
-		startIdx = className.lastIndexOf(".") + 1;
-		return StringUtils.join("#", simpleTestcaseName, className.substring(startIdx));
-	}
-	
-	/**
-	 * testcaseName : package.className#method, mutationFilePath: package.className.line.column.order
-	 * @return className#method#simpleClassName_line_column_order
-	 */
-	public static String getMuId(String mutationFilePath) {
-		int endIdx = mutationFilePath.lastIndexOf(Constants.FILE_SEPARATOR);
-		int startIdx = mutationFilePath.substring(0, endIdx).lastIndexOf(Constants.FILE_SEPARATOR) + 1;
-		// org.apache.commons.math.analysis.interpolation.BicubicSplineInterpolator_82_13_1
-		String className = mutationFilePath.substring(startIdx, endIdx);
-		startIdx = className.lastIndexOf(".") + 1;
-		return "mu_" + className.substring(startIdx);
-	}
 	
 	public static void fillMuBkpJavaFilePath(Trace buggyTrace, String muJFilePath, String muClassName) {
 		for (TraceNode node : buggyTrace.getExecutionList()) {
@@ -95,4 +30,58 @@ public class MuRegressionUtils {
 			}
 		}
 	}
+	
+	public static AppJavaClassPath createProjectClassPath(AnalysisTestcaseParams params){
+		AppJavaClassPath classPath = MicroBatUtil.constructClassPaths(params.getProjectName());
+		classPath.setTestCodePath(getSourceFolder(params.getJunitClassName(), params.getProjectName()));
+		List<String> srcFolders = MicroBatUtil.getSourceFolders(params.getProjectName());
+		classPath.setSourceCodePath(classPath.getTestCodePath());
+		for (String srcFolder : srcFolders) {
+			if (!srcFolder.equals(classPath.getTestCodePath())) {
+				classPath.getAdditionalSourceFolders().add(srcFolder);
+			}
+		}
+		
+		String userDir = System.getProperty("user.dir");
+		String junitDir = userDir + File.separator + "dropins" + File.separator + "junit_lib";
+		
+		String junitPath = junitDir + File.separator + "junit.jar";
+		String hamcrestCorePath = junitDir + File.separator + "org.hamcrest.core.jar";
+		String testRunnerPath = junitDir  + File.separator + "testrunner.jar";
+		
+		classPath.addClasspath(junitPath);
+		classPath.addClasspath(hamcrestCorePath);
+		classPath.addClasspath(testRunnerPath);
+		
+		classPath.addClasspath(junitDir);
+		
+		classPath.setOptionalTestClass(params.getJunitClassName());
+		classPath.setOptionalTestMethod(params.getTestMethod());
+		
+		classPath.setLaunchClass(TEST_RUNNER);
+		return classPath;
+	}
+	
+	public static String getSourceFolder(String cName, String projectName) {
+		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName, projectName);
+		IPath uri = unit.getResource().getFullPath();
+		String sourceFolderPath = IResourceUtils.getAbsolutePathOsStr(uri);
+		cName = cName.substring(0, cName.lastIndexOf(".")).replace(".", File.separator);
+		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName) - 1);
+		return sourceFolderPath;
+	}
+	
+	public static String getMutationOutputFolder(String projectName) {
+		return FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), "mutation", projectName);
+	}
+	
+	public static String getMutationCaseFilePath(String projectName) {
+		return FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), "mutation", projectName, "mutationCases.csv");
+	}
+	
+	public static String getAnalysisOutputFolder(String projectName, String junitClassName, String testMethod) {
+		return FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), "mutation", projectName,
+				ClassUtils.getSimpleName(junitClassName), testMethod);
+	}
+	
 }

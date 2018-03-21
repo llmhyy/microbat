@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import microbat.model.trace.Trace;
+import microbat.mutation.trace.dto.MuTrial;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.io.RegressionRecorder;

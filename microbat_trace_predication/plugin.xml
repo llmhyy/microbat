@@ -18,6 +18,11 @@
             id="microbat_mutation_trace.commands.muregression"
             name="Retrieve From DB">
       </command>
+      <command
+            categoryId="microbat_mutation_trace.commands.category"
+            id="microbat_mutation_trace.commands.singleRun"
+            name="Run Single Mutation">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -26,8 +31,8 @@
             class="microbat.mutation.trace.handlers.MutationGenerationHandler">
       </handler>
       <handler
-            class="microbat.mutation.trace.handlers.MuRegressionRetrieverHandler"
-            commandId="microbat_mutation_trace.commands.muregression">
+            class="microbat.mutation.trace.handlers.RunSingleMutationHandler"
+            commandId="microbat_mutation_trace.commands.singleRun">
       </handler>
    </extension>
    <extension
@@ -53,9 +58,9 @@
                   id="microbat_mutation_trace.menus.sampleCommand">
             </command>
              <command
-                  commandId="microbat_mutation_trace.commands.muregression"
-                  id="microbat_mutation_trace.menus.muregression">
-            </command>
+                   commandId="microbat_mutation_trace.commands.singleRun"
+                   id="microbat_mutation_trace.menus.singleRun">
+             </command>
          </menu>
       </menuContribution>
       <menuContribution

@@ -1,4 +1,4 @@
-package microbat.mutation.trace;
+package microbat.mutation.trace.dto;
 
 import tregression.empiricalstudy.EmpiricalTrial;
 
