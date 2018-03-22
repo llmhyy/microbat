@@ -639,7 +639,9 @@ public class ExecutionTracer implements IExecutionTracer {
 //			}
 			_hitLine(line, className, methodSignature);
 			Variable var = new LocalVar(varName, varType, className, line);
-			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
+			
+//			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
+			String varID = Variable.concanateLocalVarID(className, varName, varScopeStartLine, varScopeEndLine);
 			var.setVarID(varID);
 			VarValue value = appendVarValue(varValue, var, null);
 			addRWriteValue(value, true);
