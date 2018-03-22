@@ -59,15 +59,11 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					correctTrace.setAppJavaClassPath(fixClasspath);
 					
 					/* init path for diffMatcher */
-//					String muPath = IResourceUtils.getFolderPath(targetProject, "microbat/mutation/" + muBugId + "/bug");
-//					String muPath = MuRegressionUtils.getMutationOutputFolder(projectName)
 					String orgPath = IResourceUtils.getProjectPath(targetProject);
 					String srcFolder = IResourceUtils.getRelativeSourceFolderPath(orgPath, targetProject,
 							muRegression.getMutationClassName());
 					String testFolder = IResourceUtils.getRelativeSourceFolderPath(orgPath, targetProject, regression.getTestClass());
 					String orgJFilePath = ClassUtils.getJFilePath(FileUtils.getFilePath(orgPath, srcFolder), muRegression.getMutationClassName());
-//					String muJFilePath = ClassUtils.getJFilePath(FileUtils.getFilePath(muPath, srcFolder), muRegression.getMutationClassName());
-//					FileUtils.copyFile(muRegression.getMutationFile(), muJFilePath, true);
 					String muJFilePath = muRegression.getMutationFile();
 					
 					MuDiffMatcher diffMatcher = new MuDiffMatcher(srcFolder, orgJFilePath, muJFilePath);

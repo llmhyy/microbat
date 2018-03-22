@@ -1,4 +1,4 @@
-package microbat.mutation.trace;
+package microbat.mutation.trace.report;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -16,19 +16,14 @@ import tregression.empiricalstudy.TrialRecorder;
 import tregression.io.ExcelReporter;
 import tregression.model.Trial;
 
-public class MutationExperimentMonitor implements IMutationExperimentMonitor {
-	private IProgressMonitor progressMonitor;
+public class MutationExperimentMonitor extends BasicMutationExperimentMonitor implements IMutationExperimentMonitor {
+	
 	private ExcelReporter reporter;
 
 	public MutationExperimentMonitor(IProgressMonitor progressMonitor, String targetProject,
 			AnalysisParams analysisParams) throws IOException {
-		this.progressMonitor = progressMonitor;
+		super(progressMonitor);
 		reporter = new ExcelReporter(targetProject, analysisParams.getUnclearRates());
-	}
-
-	@Override
-	public boolean isCanceled() {
-		return progressMonitor.isCanceled();
 	}
 
 	@Override

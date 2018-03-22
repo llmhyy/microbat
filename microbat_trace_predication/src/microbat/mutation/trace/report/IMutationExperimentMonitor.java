@@ -1,4 +1,4 @@
-package microbat.mutation.trace;
+package microbat.mutation.trace.report;
 
 import java.io.IOException;
 import java.util.List;

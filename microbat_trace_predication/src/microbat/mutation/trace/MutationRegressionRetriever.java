@@ -13,6 +13,8 @@ import microbat.mutation.trace.dto.AnalysisTestcaseParams;
 import microbat.mutation.trace.dto.MutationCase;
 import microbat.mutation.trace.dto.SingleMutation;
 import microbat.mutation.trace.preference.MuRegressionPreference;
+import microbat.mutation.trace.report.BasicMutationExperimentMonitor;
+import microbat.mutation.trace.report.IMutationExperimentMonitor;
 import tregression.empiricalstudy.Regression;
 
 public class MutationRegressionRetriever {
@@ -22,8 +24,7 @@ public class MutationRegressionRetriever {
 			throws SQLException, IOException {
 		MutationCase mutationCase = MutationCase.load(targetProject, mutationBugId);
 		AnalysisParams analysisParams = new AnalysisParams();
-		MutationExperimentMonitor experimentMonitor = new MutationExperimentMonitor(monitor, targetProject,
-				analysisParams);
+		IMutationExperimentMonitor experimentMonitor = new BasicMutationExperimentMonitor(monitor);
 
 		MutationExperimentator analyzer = new MutationExperimentator();
 

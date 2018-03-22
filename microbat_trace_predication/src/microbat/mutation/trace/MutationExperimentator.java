@@ -30,6 +30,7 @@ import microbat.mutation.trace.dto.AnalysisTestcaseParams;
 import microbat.mutation.trace.dto.MutationTrace;
 import microbat.mutation.trace.dto.SingleMutation;
 import microbat.mutation.trace.dto.TraceExecutionInfo;
+import microbat.mutation.trace.report.IMutationExperimentMonitor;
 import microbat.preference.AnalysisScopePreference;
 import microbat.util.BreakpointUtils;
 import microbat.util.IResourceUtils;
@@ -178,7 +179,7 @@ public class MutationExperimentator {
 	}
 	
 	public MutationExecutionResult runSingleMutationTrial(SingleMutation mutation,
-			AnalysisTestcaseParams testcaseParams, MutationExperimentMonitor experimentMonitor) {
+			AnalysisTestcaseParams testcaseParams, IMutationExperimentMonitor experimentMonitor) {
 		TraceExecutionInfo correctTrace = executeTestcase(testcaseParams);
 		return runSingleMutationTrial(mutation, testcaseParams, correctTrace, experimentMonitor);
 	}
