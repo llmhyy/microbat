@@ -48,9 +48,7 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 
 	@Override
 	public void _hitLine(int line, String className, String methodSignature) {
-		if (line == 614) {
-			System.out.println(className + methodSignature + line);
-		}
+
 	}
 
 	@Override
