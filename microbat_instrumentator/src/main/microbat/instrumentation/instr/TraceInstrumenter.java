@@ -65,7 +65,7 @@ import microbat.instrumentation.runtime.IExecutionTracer;
 import microbat.instrumentation.runtime.TraceUtils;
 
 public class TraceInstrumenter extends AbstraceInstrumenter {
-	private static final String TRACER_VAR_NAME = "$tracer"; // local var
+	protected static final String TRACER_VAR_NAME = "$tracer"; // local var
 	private static final String TEMP_VAR_NAME = "$tempVar"; // local var
 	
 	private BasicTypeSupporter basicTypeSupporter = new BasicTypeSupporter();
@@ -826,7 +826,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		return methodGen.addLocalVariable(TEMP_VAR_NAME + (++tempVarIdx), type, insnHandler, insnHandler.getNext());
 	}
 
-	private void injectCodeTracerHitLine(InstructionList insnList, ConstantPoolGen constPool,
+	protected void injectCodeTracerHitLine(InstructionList insnList, ConstantPoolGen constPool,
 			LocalVariableGen tracerVar, int line, InstructionHandle lineNumberInsn, LocalVariableGen classNameVar,
 			LocalVariableGen methodSigVar, boolean isExceptionTarget) {
 		TracerMethods tracerMethod = isExceptionTarget ? TracerMethods.HIT_EXEPTION_TARGET : TracerMethods.HIT_LINE;
@@ -840,7 +840,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		newInsns.dispose();
 	}
 
-	private LocalVariableGen injectCodeInitTracer(MethodGen methodGen, ConstantPoolGen constPool, int methodStartLine,
+	protected LocalVariableGen injectCodeInitTracer(MethodGen methodGen, ConstantPoolGen constPool, int methodStartLine,
 			int methodEndLine, boolean isAppClass, LocalVariableGen classNameVar, LocalVariableGen methodSigVar,
 			boolean startTracing, LocalVariableGen tracerVar) {
 		InstructionList insnList = methodGen.getInstructionList();

@@ -871,8 +871,11 @@ public class ExecutionTracer implements IExecutionTracer {
 				return EmptyExecutionTracer.getInstance();
 			}
 		}
-		
 		gLocker.lock();
+		if (ClassLoader.class.getName().equals(className)) {
+			gLocker.unLock();
+			return ClassLoaderHandler.getInstance();
+		}
 		long threadId = Thread.currentThread().getId();
 		if (lockedThreads.contains(threadId) || ((mainThreadId >= 0 && mainThreadId != threadId))) {
 			gLocker.unLock();
@@ -891,7 +894,6 @@ public class ExecutionTracer implements IExecutionTracer {
 			gLocker.unLock();
 			return EmptyExecutionTracer.getInstance();
 		}
-		
 		tracer.enterMethod(className, methodSig, methodStartLine, methodEndLine, paramTypeSignsCode, paramNamesCode, params);
 		gLocker.unLock();
 		return tracer;
@@ -909,6 +911,16 @@ public class ExecutionTracer implements IExecutionTracer {
 			gLocker.unLock();
 		}
 		return store;
+	}
+	
+	public static boolean glock() {
+		boolean isLocked = gLocker.isLock();
+		gLocker.lock();
+		return isLocked;
+	}
+	
+	public static void gUnlock(boolean isLocked) {
+		gLocker.unLock(isLocked);
 	}
 	
 	public static Map<Long, ExecutionTracer> getRtStores() {

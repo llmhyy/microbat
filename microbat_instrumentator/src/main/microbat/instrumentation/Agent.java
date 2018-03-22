@@ -28,8 +28,8 @@ public class Agent implements IAgent {
 			public void run() {
 				try {
 					shutdown();
-				} catch (Exception e) {
-					e.printStackTrace();
+				} catch (Throwable e) {
+					AgentLogger.error(e);
 				}
 			}
 		});
@@ -42,8 +42,8 @@ public class Agent implements IAgent {
 				agent.shutdown();
 			}
 			shutdowned = true;
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Throwable e) {
+			AgentLogger.error(e);
 		}
 		Runtime.getRuntime().exit(1); // force program to exit to avoid getting stuck by background running threads.
 	}
@@ -53,18 +53,30 @@ public class Agent implements IAgent {
 	}
 	
 	public void shutdown() throws Exception {
-		if (!shutdowned) {
-			agent.shutdown();
+		try {
+			if (!shutdowned) {
+				agent.shutdown();
+			}
+			shutdowned = true;
+		} catch (Throwable e) {
+			AgentLogger.error(e);
 		}
-		shutdowned = true;
 	}
 	
 	public static void _startTest(String junitClass, String junitMethod) {
-		agent.startTest(junitClass, junitMethod);
+		try {
+			agent.startTest(junitClass, junitMethod);
+		} catch (Throwable e) {
+			AgentLogger.error(e);
+		}
 	}
 	
 	public static void _finishTest(String junitClass, String junitMethod) {
-		agent.finishTest(junitClass, junitMethod);
+		try {
+			agent.finishTest(junitClass, junitMethod);
+		} catch (Throwable e) {
+			AgentLogger.error(e);
+		}
 	}
 
 	public static String extractJarPath() {
@@ -73,12 +85,20 @@ public class Agent implements IAgent {
 	
 	@Override
 	public void startTest(String junitClass, String junitMethod) {
-		agent.startTest(junitClass, junitMethod);
+		try {
+			agent.startTest(junitClass, junitMethod);
+		} catch (Throwable e) {
+			AgentLogger.error(e);
+		}
 	}
 
 	@Override
 	public void finishTest(String junitClass, String junitMethod) {
-		agent.finishTest(junitClass, junitMethod);
+		try {
+			agent.finishTest(junitClass, junitMethod);
+		} catch (Throwable e) {
+			AgentLogger.error(e);
+		}
 	}
 
 	@Override

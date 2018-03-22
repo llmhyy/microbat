@@ -23,6 +23,7 @@ import org.apache.bcel.generic.POP;
 import org.apache.bcel.generic.PUSH;
 import org.apache.bcel.generic.Type;
 
+import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.instr.TraceInstrumenter;
 import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
@@ -62,13 +63,15 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 								.append("#").append(method.getName()).toString());
 				}
 			} catch (Exception e) {
+				String message = e.getMessage();
 				if (e.getMessage() != null && e.getMessage().contains("offset too large")) {
+					message = "offset too large";
 					String methodName = method.getName() + method.getSignature();
 					exceedLimitMethods.add(new StringBuilder(classFName.replace("/", "."))
 							.append("#").append(methodName).toString());
 				}
-				System.err.println(String.format("Error when instrumenting: %s.%s", classFName, method.getName()));
-				e.printStackTrace();
+				AgentLogger.info(String.format("Instrumentation error: %s.%s [%s]", classFName, method.getName(), message));
+				AgentLogger.error(e);
 			}
 		}
 	}
