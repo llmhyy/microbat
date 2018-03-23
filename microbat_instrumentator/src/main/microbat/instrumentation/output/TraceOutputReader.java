@@ -105,6 +105,10 @@ public class TraceOutputReader extends DataInputStream {
 
 	@SuppressWarnings("unchecked")
 	protected List<VarValue> readVarValue() throws IOException {
+		int size = readVarInt();
+		if (size == 0) {
+			return new ArrayList<>(0);
+		}
 		byte[] bytes = readByteArray();
 		if (bytes == null || bytes.length == 0) {
 			return new ArrayList<>(0);

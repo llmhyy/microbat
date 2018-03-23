@@ -14,16 +14,16 @@ public class ByteConverter {
 		byte[] bytes;
 		ByteArrayOutputStream bos = null;
 		ObjectOutput out = null;
-		try{
+		try {
 			bos = new ByteArrayOutputStream();
 			out = new ObjectOutputStream(bos);
 			out.writeObject(object);
 			bytes = bos.toByteArray();
-		}finally{
+		} finally {
 			bos.close();
 			out.close();
 		}
-	    return bytes;
+		return bytes;
 	}
 	
 

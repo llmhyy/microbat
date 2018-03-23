@@ -138,9 +138,14 @@ public class TraceOutputWriter extends DataOutputStream {
 		}
 	}
 
-	private void writeVarValues(List<VarValue> readVariables) throws IOException {
-		byte[] bytes = ByteConverter.convertToBytes(readVariables);
-		writeByteArr(bytes);
+	private void writeVarValues(List<VarValue> varValues) throws IOException {
+		if (varValues == null || varValues.isEmpty()) {
+			writeVarInt(0);
+		} else {
+			writeVarInt(varValues.size());
+			byte[] bytes = ByteConverter.convertToBytes(varValues);
+			writeByteArr(bytes);
+		}
 	}
 
 	private void writeNodeOrder(TraceNode node) throws IOException {
