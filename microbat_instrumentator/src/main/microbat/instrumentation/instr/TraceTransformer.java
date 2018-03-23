@@ -25,14 +25,14 @@ public class TraceTransformer extends AbstractTransformer implements ClassFileTr
 	protected byte[] doTransform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
 //		AgentLogger.debug("load Class: " + classFName);
-		if ("java/lang/ClassLoader".equals(classFName)) {
-			try {
-				byte[] data = classLoaderInstrumenter.instrument(classFName, classfileBuffer);
-				return data;
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+//		if ("java/lang/ClassLoader".equals(classFName)) {
+//			try {
+//				byte[] data = classLoaderInstrumenter.instrument(classFName, classfileBuffer);
+//				return data;
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
 		/* bootstrap classes */
 		if ((loader == null) || (protectionDomain == null)) {
 			if (!FilterChecker.isTransformable(classFName, null, true)) {
