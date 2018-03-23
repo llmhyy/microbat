@@ -12,7 +12,7 @@ import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.instr.AbstractTransformer;
 
-public class PrecheckTransformer implements ClassFileTransformer {
+public class PrecheckTransformer extends AbstractTransformer implements ClassFileTransformer {
 	private PrecheckInstrumenter instrumenter;
 	private List<String> loadedClasses = new ArrayList<>();
 	
@@ -21,7 +21,7 @@ public class PrecheckTransformer implements ClassFileTransformer {
 	}
 
 	@Override
-	public byte[] transform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
+	protected byte[] doTransform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
 		try {
 			loadedClasses.add(classFName.replace("/", "."));

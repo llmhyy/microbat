@@ -14,25 +14,15 @@ import microbat.instrumentation.filter.FilterChecker;
  */
 public class TraceTransformer extends AbstractTransformer implements ClassFileTransformer {
 	private TraceInstrumenter instrumenter;
-	private ClassLoaderInstrumenter classLoaderInstrumenter;
 	
 	public TraceTransformer(AgentParams params) {
 		instrumenter = new TraceInstrumenter(params);
-		classLoaderInstrumenter = new ClassLoaderInstrumenter(params);
 	}
 	
 	@Override
 	protected byte[] doTransform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
 //		AgentLogger.debug("load Class: " + classFName);
-//		if ("java/lang/ClassLoader".equals(classFName)) {
-//			try {
-//				byte[] data = classLoaderInstrumenter.instrument(classFName, classfileBuffer);
-//				return data;
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
 		/* bootstrap classes */
 		if ((loader == null) || (protectionDomain == null)) {
 			if (!FilterChecker.isTransformable(classFName, null, true)) {

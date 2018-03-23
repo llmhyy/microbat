@@ -40,17 +40,17 @@ public abstract class AbstraceInstrumenter {
 	
 	protected InstructionHandle insertInsnHandler(InstructionList insnList, InstructionList newInsns,
 			InstructionHandle insnHandler) {
-		updateExceptionTable(insnHandler, newInsns.getStart(), insnHandler);
+		updateTarget(insnHandler, newInsns.getStart(), insnHandler);
 		InstructionHandle pos = insnList.insert(insnHandler, newInsns);
 		return pos;
 	}
 	
 	protected void appendInstruction(InstructionList insnList, InstructionHandle insnHandler, InstructionList newInsns) {
-		updateExceptionTable(insnHandler, insnHandler, newInsns.getEnd());
+		updateTarget(insnHandler, insnHandler, newInsns.getEnd());
 		insnList.append(insnHandler, newInsns);
 	}
 	
-	protected void updateExceptionTable(InstructionHandle oldPos, InstructionHandle newStart,
+	protected void updateTarget(InstructionHandle oldPos, InstructionHandle newStart,
 			InstructionHandle newEnd) {
 		InstructionTargeter[] itList = oldPos.getTargeters();
 		if (itList != null) {

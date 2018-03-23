@@ -55,6 +55,8 @@ import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.filter.IInstrFilter;
+import microbat.instrumentation.filter.InstrumentationFilter;
 import microbat.instrumentation.instr.instruction.info.ArrayInstructionInfo;
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
 import microbat.instrumentation.instr.instruction.info.FieldInstructionInfo;
@@ -72,6 +74,9 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 	private int tempVarIdx = 0;
 	private EntryPoint entryPoint;
 	
+	TraceInstrumenter() {
+	}
+	
 	public TraceInstrumenter(AgentParams params) {
 		this.entryPoint = params.getEntryPoint();
 	}
@@ -88,6 +93,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 				continue; // Only instrument methods with code in them!
 			}
 			try {
+				
 				boolean changed = false;
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
 				boolean isMainMethod = false;
@@ -141,6 +147,9 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 
 	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
 			boolean isAppClass, boolean isMainMethod) {
+		IInstrFilter instrFilter = InstrumentationFilter.getFilter(classGen.getClassName(), method.getName(), method.getArgumentTypes(),
+				constPool);
+		
 		tempVarIdx = 0;
 		InstructionList insnList = methodGen.getInstructionList();
 		InstructionHandle startInsn = insnList.getStart();
@@ -148,6 +157,10 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			// empty method
 			return false;
 		}
+		
+		/* fill up missing variables in localVariableTable */
+		LocalVariableSupporter.fillUpVariableTable(methodGen, method, constPool);
+		
 		List<LineInstructionInfo> lineInsnInfos = LineInstructionInfo.buildLineInstructionInfos(classGen, constPool,
 				methodGen, method, isAppClass, insnList);
 		int startLine = Integer.MAX_VALUE;
@@ -200,7 +213,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 					} else {
 						insertInsnHandler(insnList, newInsns, insnHandler);
 						try {
-							updateExceptionTable(insnHandler, insnHandler.getPrev(), insnHandler.getNext());
+							updateTarget(insnHandler, insnHandler.getPrev(), insnHandler.getNext());
 							insnList.delete(insnHandler);
 						} catch (TargetLostException e) {
 							e.printStackTrace();
@@ -213,6 +226,9 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			/* instrument Invocation instructions */
 			InstructionFactory instructionFactory = new InstructionFactory(classGen, constPool);
 			for (InstructionHandle insn : lineInfo.getInvokeInstructions()) {
+				if (!instrFilter.isValid((InvokeInstruction) insn.getInstruction())) {
+					continue;
+				}
 				injectCodeTracerInvokeMethod(methodGen, insnList, constPool, instructionFactory, tracerVar, insn, line,
 						classNameVar, methodSigVar, isAppClass);
 			}
@@ -232,7 +248,6 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		}
 		injectCodeInitTracer(methodGen, constPool, startLine, endLine, isAppClass, classNameVar,
 				methodSigVar, isMainMethod, tracerVar);
-
 		return true;
 	}
 

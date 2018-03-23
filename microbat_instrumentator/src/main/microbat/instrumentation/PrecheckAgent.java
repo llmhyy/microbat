@@ -1,13 +1,11 @@
 package microbat.instrumentation;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.instrumentation.precheck.PrecheckTransformer;
 import microbat.instrumentation.precheck.TraceMeasurement;
-import sav.common.core.utils.TextFormatUtils;
 
 public class PrecheckAgent implements IAgent {
 	private AgentParams agentParams;
@@ -39,7 +37,7 @@ public class PrecheckAgent implements IAgent {
 		precheckInfo.setExceedingLimitMethods(precheckTransformer.getExceedingLimitMethods());
 		precheckInfo.setProgramMsg(Agent.getProgramMsg());
 		precheckInfo.setLoadedClasses(precheckTransformer.getLoadedClasses());
-		AgentLogger.debug(TextFormatUtils.printCol(precheckInfo.getExceedingLimitMethods()));
+		AgentLogger.debug(precheckInfo.toString());
 		if (agentParams.getDumpFile() != null) {
 			precheckInfo.saveToFile(agentParams.getDumpFile(), false);
 		}
