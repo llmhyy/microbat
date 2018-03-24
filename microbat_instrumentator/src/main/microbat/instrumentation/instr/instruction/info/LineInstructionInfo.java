@@ -149,8 +149,37 @@ public class LineInstructionInfo {
 							Const.ISTORE, Const.LSTORE));
 					Type type = localVarInsn.getType(constPool);
 					info.setVarStackSize(type.getSize());
-					info.setVarScopeStartLine(lineNumberTable.getSourceLine(localVar.getStartPC()));
-					info.setVarScopeEndLine(lineNumberTable.getSourceLine(localVar.getStartPC() + localVar.getLength()));
+					
+					/**
+					 * Lin Yun: provide an over-estimation for the scope of a local variable, note
+					 * that, a local variable may have multiple start PC, we may need to consider
+					 * all of them.
+					 */
+					int startPC = -1;
+					int endPC = -1;
+					for(LocalVariable v: localVarTable.getLocalVariableTable()){
+						if(v.getIndex()==localVar.getIndex()){
+							if(startPC==-1){
+								startPC = v.getStartPC();
+								endPC = startPC + v.getLength();
+							}
+							else{
+								int sPC = v.getStartPC();
+								int ePC = sPC + v.getLength();
+								
+								if(sPC < startPC){
+									startPC = sPC;
+								}
+								
+								if(ePC > endPC){
+									endPC = ePC;
+								}
+							}
+						}
+					}
+					
+					info.setVarScopeStartLine(lineNumberTable.getSourceLine(startPC));
+					info.setVarScopeEndLine(lineNumberTable.getSourceLine(endPC));
 					rwInsns.add(info);
 				}
 			}
