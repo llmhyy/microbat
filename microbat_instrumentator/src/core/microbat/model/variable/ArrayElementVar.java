@@ -10,10 +10,6 @@ public class ArrayElementVar extends Variable {
 	
 	@Override
 	public String getVarID() {
-		if(this.aliasVarID != null){
-			return this.aliasVarID;
-		}
-		
 		return this.varID;
 	}
 
