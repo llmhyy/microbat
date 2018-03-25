@@ -365,14 +365,10 @@ public class ExecutionTracer implements IExecutionTracer {
 			_hitLine(line, className, methodSignature);
 			String returnGeneralType = SignatureUtils.signatureToName(returnGeneralTypeSign);
 			Variable returnVar = new VirtualVar(methodSignature, returnGeneralType);
-			String varID = null;
-			if(PrimitiveUtils.isPrimitive(returnGeneralType)){
-				varID = VirtualVar.VIRTUAL_PREFIX + methodSignature;
-			}
-			else{
-				varID = TraceUtils.getObjectVarId(returnObj, returnGeneralTypeSign);
-			}
+			String varID = VirtualVar.VIRTUAL_PREFIX + methodSignature;
 			returnVar.setVarID(varID);
+			String aliasID = TraceUtils.getObjectVarId(returnObj, returnGeneralTypeSign);
+			returnVar.setAliasVarID(aliasID);
 			VarValue returnVal = appendVarValue(returnObj, returnVar, null);
 			if (returnVal != null) {
 				TraceNode latestNode = trace.getLatestNode();

@@ -14,20 +14,15 @@ public abstract class Variable implements Serializable {
 	protected String variableName;
 	
 	/**
-	 * allow some variable has double variable id, for example, an array element of Object type
-	 * can be 123 (its object unique id) and 122[0] (its parent id + its index).
-	 * 
-	 * using unique id for array element is for dynamic alias analysis; using its parent id+index
-	 * is for set-null-operation for array element, e.g., a[0]=null;
+	 * the JVM heap address
 	 */
 	protected String aliasVarID;
 	
 	/**
 	 * The id of an object (non-primitive type) is its object id + the order of trace node defining it, 
-	 * e.g., 100:33 . 
+	 * e.g., 100.a:33 . 
 	 * <br><br>
-	 * For primitive type:
-	 * if it is a non-static field, its id is: its parent's object id + field name + the order of trace node defining it, 
+	 * If a variable is a non-static field, its id is: its parent's object id + field name + the order of trace node defining it, 
 	 * e.g., 100.a:33 ;
 	 * if it is a static field, its id is: its field name + the order of trace node defining it,
 	 * e.g., Class.a:33;
