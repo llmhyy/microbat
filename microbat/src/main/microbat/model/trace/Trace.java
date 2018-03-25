@@ -689,16 +689,19 @@ public class Trace {
 		return definingOrder;
 	}
 
-	public TraceNode findLastestNodeDefiningPrimitiveVariable(String varID, int limitOrder){
+	public TraceNode findLastestNodeDefiningVariable(String varID, int limitOrder){
 		for(int i=limitOrder-2; i>=0; i--){
 			TraceNode node = exectionList.get(i);
 			for(VarValue var: node.getWrittenVariables()){
 				String writtenVarID = var.getVarID();
-				if(writtenVarID.contains(":")){
-					String simpleVarID = writtenVarID.substring(0, writtenVarID.indexOf(":"));
-					if(simpleVarID.equals(varID)){
-						return node;
-					}
+				String simpleVarID = Variable.truncateSimpleID(writtenVarID);
+				String simpleAliasID = Variable.truncateSimpleID(var.getAliasVarID());
+				if(simpleVarID.equals(varID)){
+					return node;
+				}
+				
+				if(simpleAliasID!=null && simpleAliasID.equals(varID)){
+					return node;
 				}
 			}
 		}
@@ -707,23 +710,8 @@ public class Trace {
 	}
 
 	public TraceNode findLastestNodeDefiningPrimitiveVariable(String varID) {
-		TraceNode node = findLastestNodeDefiningPrimitiveVariable(varID, exectionList.size());
+		TraceNode node = findLastestNodeDefiningVariable(varID, exectionList.size());
 		return node;
-		
-//		for(int i=exectionList.size()-2; i>=0; i--){
-//			TraceNode node = exectionList.get(i);
-//			for(VarValue var: node.getWrittenVariables()){
-//				String writtenVarID = var.getVarID();
-//				if(writtenVarID.contains(":")){
-//					String simpleVarID = writtenVarID.substring(0, writtenVarID.indexOf(":"));
-//					if(simpleVarID.equals(varID)){
-//						return node;
-//					}
-//				}
-//			}
-//		}
-//		
-//		return null;
 	}
 
 	/**
