@@ -94,7 +94,8 @@ public class InstrumentationExecutor {
 			System.out.println("the trace length is: " + precheckInfomation.getStepNum());
 			
 			if (!info.isOverLong() && info.getExceedingLimitMethods().isEmpty()) {
-				return execute(precheckInfomation);
+				RunningInformation rInfo = execute(precheckInfomation);
+				return rInfo;
 			}
 		} catch (SavException e1) {
 			e1.printStackTrace();
