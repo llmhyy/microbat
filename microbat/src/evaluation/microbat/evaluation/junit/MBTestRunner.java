@@ -8,12 +8,12 @@ import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
-public class MicroBatTestRunner {
+public class MBTestRunner {
 	
 	private boolean successful = false;
 	private String failureMessage = "no fail";
 	
-	public MicroBatTestRunner(){
+	public MBTestRunner(){
 		
 	}
 	
@@ -22,7 +22,7 @@ public class MicroBatTestRunner {
 		String className = args[0];
 		String methodName = args[1];
 		
-		MicroBatTestRunner testRunner = new MicroBatTestRunner();
+		MBTestRunner testRunner = new MBTestRunner();
 		testRunner.runTest(className, methodName);
 	}
 	
