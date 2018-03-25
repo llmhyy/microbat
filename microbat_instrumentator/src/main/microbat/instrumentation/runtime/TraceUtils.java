@@ -9,7 +9,7 @@ public class TraceUtils {
 	private TraceUtils(){}
 	
 	public static String getObjectVarId(Object refValue, String type) {
-		if (refValue == null || PrimitiveUtils.isPrimitiveTypeOrString(type)) {
+		if (refValue == null) {
 			return null;
 		}
 		

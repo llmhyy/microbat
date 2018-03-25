@@ -40,11 +40,14 @@ public class InvokingDetail {
 		if (relevantVars == null) {
 			relevantVars = new HashSet<>();
 			if (invokeObj != null) {
-				relevantVars.add(TraceUtils.getObjectVarId(invokeObj, invokeObj.getClass().getName()));
+				String objID = TraceUtils.getObjectVarId(invokeObj, invokeObj.getClass().getName());
+				relevantVars.add(objID);
 			}
 			for (int i = 0; i < argType.length; i++) {
 				if (!PrimitiveUtils.isPrimitive(argType[i])) {
-					relevantVars.add(TraceUtils.getObjectVarId(args[i], argType[i]));
+					if(args[i]!=null){
+						relevantVars.add(TraceUtils.getObjectVarId(args[i], argType[i]));						
+					}
 				}
 			}
 		}
