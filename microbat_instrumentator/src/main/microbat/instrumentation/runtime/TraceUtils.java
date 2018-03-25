@@ -9,9 +9,10 @@ public class TraceUtils {
 	private TraceUtils(){}
 	
 	public static String getObjectVarId(Object refValue, String type) {
-		if (refValue == null) {
-			return type + "_null";
+		if (refValue == null || PrimitiveUtils.isPrimitiveTypeOrString(type)) {
+			return null;
 		}
+		
 		return String.valueOf(getUniqueId(refValue));
 	}
 
@@ -27,28 +28,16 @@ public class TraceUtils {
 	}
 
 	public static String getFieldVarId(String parentVarId, String fieldName, String fieldType, Object fieldValue) {
-		if (PrimitiveUtils.isPrimitive(fieldType) || fieldValue==null) {
-			return Variable.concanateFieldVarID(parentVarId, fieldName);
-		}
-		
-		return getObjectVarId(fieldValue, fieldType);
+		return Variable.concanateFieldVarID(parentVarId, fieldName);
 	}
 	
 	public static String getLocalVarId(String className, int startLine, int endLine, 
 			String varName, String varType, Object varValue) {
-		if (PrimitiveUtils.isPrimitive(varType) || varValue==null) {
-			return Variable.concanateLocalVarID(className, varName, startLine, endLine);
-		}
-		
-		return getObjectVarId(varValue, varType);
+		return Variable.concanateLocalVarID(className, varName, startLine, endLine);
 	}
 
 	public static String getArrayElementVarId(String parentVarId, int index, String elementType, Object eleValue) {
-		if (PrimitiveUtils.isPrimitive(elementType) || eleValue==null) {
-			return Variable.concanateArrayElementVarID(parentVarId, String.valueOf(index));
-		}
-		
-		return getObjectVarId(eleValue, elementType);
+		return Variable.concanateArrayElementVarID(parentVarId, String.valueOf(index));
 	}
 	
 	private static final String ARG_TYPE_SEPARATOR = ":";
