@@ -36,6 +36,17 @@ public class MethodCallStack extends Stack<TraceNode> {
 		if(!this.isEmpty()){
 			int popLayer = 0;
 			boolean needPop = false;
+			
+			if(!this.isEmpty()){
+				TraceNode caller = this.peek();
+				String m = caller.getInvokingMethod();
+				
+				if(m.equals(methodSignature)){
+					return false;
+				}
+				System.currentTimeMillis();
+			}
+			
 			for(int i=this.size()-1; i>=0; i--){
 				TraceNode caller = this.get(i);
 				popLayer++;
