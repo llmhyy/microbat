@@ -3,7 +3,6 @@ package microbat.instrumentation.runtime;
 import org.apache.bcel.generic.Type;
 
 import microbat.model.variable.Variable;
-import microbat.util.PrimitiveUtils;
 
 public class TraceUtils {
 	private TraceUtils(){}

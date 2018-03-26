@@ -494,9 +494,10 @@ public class ExecutionTracer implements IExecutionTracer {
 			String fieldVarId = TraceUtils.getFieldVarId(parentVarId, fieldName, fieldType, fieldValue);
 			Variable var = new FieldVar(false, fieldName, fieldType, refValue.getClass().getName());
 			var.setVarID(fieldVarId);
-			
-			String aliasID = TraceUtils.getObjectVarId(fieldValue, fieldType);
-			var.setAliasVarID(aliasID);
+			if(!PrimitiveUtils.isPrimitive(fieldType)){
+				String aliasID = TraceUtils.getObjectVarId(fieldValue, fieldType);
+				var.setAliasVarID(aliasID);				
+			}
 			
 			VarValue value = appendVarValue(fieldValue, var, null);
 			
@@ -548,8 +549,10 @@ public class ExecutionTracer implements IExecutionTracer {
 			_hitLine(line, className, methodSignature);
 			Variable var = new FieldVar(false, fieldName, fieldType, refType);
 			var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
-			String aliasVarID = TraceUtils.getObjectVarId(fieldValue, fieldType);
-			var.setAliasVarID(aliasVarID);
+			if(!PrimitiveUtils.isPrimitive(fieldType)){
+				String aliasVarID = TraceUtils.getObjectVarId(fieldValue, fieldType);
+				var.setAliasVarID(aliasVarID);				
+			}
 			VarValue value = appendVarValue(fieldValue, var, null);
 			addRWriteValue(value, true);
 		} catch (Throwable t) {
@@ -652,8 +655,10 @@ public class ExecutionTracer implements IExecutionTracer {
 //			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
 			String varID = Variable.concanateLocalVarID(className, varName, varScopeStartLine, varScopeEndLine);
 			var.setVarID(varID);
-			String aliasID = TraceUtils.getObjectVarId(varValue, varType);
-			var.setAliasVarID(aliasID);
+			if(!PrimitiveUtils.isPrimitive(varType)){
+				String aliasID = TraceUtils.getObjectVarId(varValue, varType);
+				var.setAliasVarID(aliasID);				
+			}
 			
 			VarValue value = appendVarValue(varValue, var, null);
 			addRWriteValue(value, true);
@@ -868,8 +873,10 @@ public class ExecutionTracer implements IExecutionTracer {
 		Variable var = new ArrayElementVar(name, elementType, id);
 		var.setVarID(id);
 		
-		String aliasID = TraceUtils.getObjectVarId(eleValue, elementType);
-		var.setAliasVarID(aliasID);
+		if(!PrimitiveUtils.isPrimitive(elementType)){
+			String aliasID = TraceUtils.getObjectVarId(eleValue, elementType);
+			var.setAliasVarID(aliasID);			
+		}
 		
 		VarValue value = appendVarValue(eleValue, var, null);
 		return value;
