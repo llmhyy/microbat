@@ -306,14 +306,14 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 	
 	@Override
-	public void _hitInvokeStatic(String invokeTypeSign, String methodName, Object[] params,
+	public void _hitInvokeStatic(String invokeTypeSign, String methodSig, Object[] params,
 			String paramTypeSignsCode, String returnTypeSign, int line, String className, String methodSignature) {
 		locker.lock();
 		try {
 			_hitLine(line, className, methodSignature);
 			TraceNode latestNode = trace.getLatestNode();
 			if (latestNode != null) {
-				latestNode.setInvokingMethod(methodName + paramTypeSignsCode);
+				latestNode.setInvokingMethod(methodSig);
 				initInvokingDetail(null, invokeTypeSign, methodSignature, params, paramTypeSignsCode, className,
 						latestNode);
 			}
