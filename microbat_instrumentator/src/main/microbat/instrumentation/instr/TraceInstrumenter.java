@@ -572,7 +572,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		return newInsns;
 	}
 
-	private void appendTracerMethodInvoke(InstructionList newInsns, TracerMethods method, ConstantPoolGen constPool) {
+	protected void appendTracerMethodInvoke(InstructionList newInsns, TracerMethods method, ConstantPoolGen constPool) {
 		if (method.isInterfaceMethod()) {
 			int index = constPool.addInterfaceMethodref(method.getDeclareClass(), method.getMethodName(),
 					method.getMethodSign());
