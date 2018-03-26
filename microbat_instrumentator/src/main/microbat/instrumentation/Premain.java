@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
 
-import microbat.instrumentation.instr.SystemClassTransformer;
 import microbat.instrumentation.instr.TestRunnerTranformer;
 
 public class Premain {
@@ -21,6 +20,7 @@ public class Premain {
 		installBootstrap(inst);
 		
 		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
+		
 		AgentLogger.debug("start instrumentation...");
 		AgentParams agentParams = AgentParams.parse(agentArgs);
 		Agent agent = new Agent(agentParams);
