@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.JavaModelException;
 
 import microbat.mutation.trace.MutationExperimentator;
 import microbat.mutation.trace.dto.AnalysisParams;
-import microbat.mutation.trace.preference.MuRegressionPreference;
+import microbat.mutation.trace.preference.MutationRegressionPreference;
 import microbat.mutation.trace.report.MutationExperimentMonitor;
 import microbat.util.IResourceUtils;
 import microbat.util.JavaUtil;
@@ -52,7 +52,7 @@ public class MutationGenerationHandler extends AbstractHandler {
 		Job job = new Job("Do evaluation") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				String targetProject = MuRegressionPreference.getTargetProject();
+				String targetProject = MutationRegressionPreference.getTargetProject();
 				try {
 					MutationExperimentMonitor experimentMonitor = new MutationExperimentMonitor(monitor, targetProject,
 							analysisParams);

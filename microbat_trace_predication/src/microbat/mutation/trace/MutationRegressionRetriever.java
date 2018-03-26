@@ -12,7 +12,7 @@ import microbat.mutation.trace.dto.AnalysisParams;
 import microbat.mutation.trace.dto.AnalysisTestcaseParams;
 import microbat.mutation.trace.dto.MutationCase;
 import microbat.mutation.trace.dto.SingleMutation;
-import microbat.mutation.trace.preference.MuRegressionPreference;
+import microbat.mutation.trace.preference.MutationRegressionPreference;
 import microbat.mutation.trace.report.BasicMutationExperimentMonitor;
 import microbat.mutation.trace.report.IMutationExperimentMonitor;
 import tregression.empiricalstudy.Regression;
@@ -30,7 +30,7 @@ public class MutationRegressionRetriever {
 
 		mutationCase.getTestcaseParams().setAnalysisParams(analysisParams);
 		SingleMutation mutation = mutationCase.getMutation();
-		if (MuRegressionPreference.getRerunFlag()) {
+		if (MutationRegressionPreference.getRerunFlag()) {
 			MutationExecutionResult executionResult = analyzer.runSingleMutationTrial(mutation,
 					mutationCase.getTestcaseParams(), experimentMonitor);
 			return buildRegression(mutationCase, executionResult);

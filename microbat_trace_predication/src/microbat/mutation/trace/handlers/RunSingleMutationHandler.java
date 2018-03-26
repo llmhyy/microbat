@@ -15,7 +15,7 @@ import microbat.mutation.trace.MuDiffMatcher;
 import microbat.mutation.trace.MuRegression;
 import microbat.mutation.trace.MuRegressionUtils;
 import microbat.mutation.trace.MutationRegressionRetriever;
-import microbat.mutation.trace.preference.MuRegressionPreference;
+import microbat.mutation.trace.preference.MutationRegressionPreference;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.UserFeedback;
 import microbat.util.IResourceUtils;
@@ -44,8 +44,8 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					String muBugId = MuRegressionPreference.getMuBugId();
-					String targetProject = MuRegressionPreference.getTargetProject();
+					String muBugId = MutationRegressionPreference.getMuBugId();
+					String targetProject = MutationRegressionPreference.getTargetProject();
 					
 					MutationRegressionRetriever retriever = new MutationRegressionRetriever();
 					MuRegression muRegression = retriever.retrieveRegression(targetProject, muBugId, monitor);

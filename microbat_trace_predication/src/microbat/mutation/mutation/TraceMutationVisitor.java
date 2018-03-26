@@ -20,9 +20,11 @@ import sav.common.core.utils.CollectionUtils;
  *
  */
 public class TraceMutationVisitor extends MutationVisitor {
-	
-	public TraceMutationVisitor() {
+	private List<MutationType> mutationTypes;
+
+	public TraceMutationVisitor(List<MutationType> mutationTypes) {
 		super();
+		this.mutationTypes = mutationTypes;
 	}
 
 	public TraceMutationVisitor(MutationMap mutationMap, ClassAnalyzer classAnalyzer) {
@@ -31,13 +33,20 @@ public class TraceMutationVisitor extends MutationVisitor {
 	
 	@Override
 	public boolean mutate(AssignExpr n) {
-		MutationNode muNode = newNode(n);
-		muNode.add(new EmptyStmt(), MutationTypes.REMOVE_ASSIGNMENT);
+		if (mutationTypes.contains(MutationType.REMOVE_ASSIGNMENT)) {
+			MutationNode muNode = newNode(n);
+			muNode.add(new EmptyStmt(), MutationType.REMOVE_ASSIGNMENT.name());
+		}
 		return super.mutate(n);
 	}
 
 	@Override
 	public boolean mutate(IfStmt n) {
+		boolean ribType = mutationTypes.contains(MutationType.REMOVE_IF_BLOCK);
+		boolean ricType = mutationTypes.contains(MutationType.REMOVE_IF_CONDITION);
+		if (!ribType && !ricType) {
+			return super.mutate(n);
+		}
 		IfStmt ifStmt = (IfStmt) nodeCloner.visit(n, null);
 		// remove Stmt Block Which Has Return Stmt 
 		if (isEmptyOrContainReturnStmt(ifStmt.getThenStmt())) {
@@ -48,16 +57,20 @@ public class TraceMutationVisitor extends MutationVisitor {
 		}
 		MutationNode muNode = newNode(n);
 		if (ifStmt.getThenStmt() == null && ifStmt.getElseStmt() == null) {
-			/* empty if or if which has return stmt in its stmt block */
-			muNode.add(new EmptyStmt(), MutationTypes.REMOVE_IF_BLOCK);
+			if (ribType) {
+				/* empty if or if which has return stmt in its stmt block */
+				muNode.add(new EmptyStmt(), MutationType.REMOVE_IF_BLOCK.name());
+			}
 		} else {
-			if (ifStmt.getThenStmt() != null) {
-				Node newNode = ifStmt.getThenStmt().accept(nodeCloner, null);
-				muNode.add(newNode, MutationTypes.REMOVE_IF_CONDITION);
-			} 
-			if (ifStmt.getElseStmt() != null) {
-				Node newNode = ifStmt.getElseStmt().accept(nodeCloner, null);
-				muNode.add(newNode, MutationTypes.REMOVE_IF_CONDITION);
+			if (ricType) {
+				if (ifStmt.getThenStmt() != null) {
+					Node newNode = ifStmt.getThenStmt().accept(nodeCloner, null);
+					muNode.add(newNode, MutationType.REMOVE_IF_CONDITION.name());
+				} 
+				if (ifStmt.getElseStmt() != null) {
+					Node newNode = ifStmt.getElseStmt().accept(nodeCloner, null);
+					muNode.add(newNode, MutationType.REMOVE_IF_CONDITION.name());
+				}
 			}
 		}
 		

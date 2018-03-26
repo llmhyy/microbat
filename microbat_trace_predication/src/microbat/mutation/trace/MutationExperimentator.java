@@ -24,6 +24,7 @@ import microbat.codeanalysis.runtime.RunningInformation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.mutation.mutation.ControlDominatedMutationVisitor;
+import microbat.mutation.mutation.MutationType;
 import microbat.mutation.mutation.TraceMutationVisitor;
 import microbat.mutation.trace.dto.AnalysisParams;
 import microbat.mutation.trace.dto.AnalysisTestcaseParams;
@@ -431,11 +432,14 @@ public class MutationExperimentator {
 		
 		Mutator mutator = new Mutator(sourceFolderPath, params.getAnalysisOutputFolder(),
 				params.getAnalysisParams().getMuTotal());
-		MutationVisitor visitor = new TraceMutationVisitor();
+		MutationVisitor visitor = new TraceMutationVisitor(params.getAnalysisParams().getMutationTypes());
 		Map<String, MutationResult> mutations = mutator.mutate(muLocations, visitor);
-		visitor = new ControlDominatedMutationVisitor();
-		Map<String, MutationResult> cdMutations = mutator.mutate(staticCandidates, visitor);
-		MutationResult.merge(mutations, cdMutations);
+		
+		if (params.getAnalysisParams().getMutationTypes().contains(MutationType.NEGATE_IF_CONDITION)) {
+			visitor = new ControlDominatedMutationVisitor();
+			Map<String, MutationResult> cdMutations = mutator.mutate(staticCandidates, visitor);
+			MutationResult.merge(mutations, cdMutations);
+		}
 		
 		List<SingleMutation> result = SingleMutation.from(mutations, params.getJunitClassName(),
 				params.getTestMethod());

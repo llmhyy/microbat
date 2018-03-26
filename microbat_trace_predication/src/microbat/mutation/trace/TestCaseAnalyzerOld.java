@@ -73,7 +73,7 @@ public class TestCaseAnalyzerOld {
 		cleanClassInTestPackage(sourceFolderPath, locationList);
 		
 		Mutator mutator = new Mutator(sourceFolderPath, TMP_DIRECTORY, muTotal);
-		TraceMutationVisitor mutationVisitor = new TraceMutationVisitor();
+		TraceMutationVisitor mutationVisitor = new TraceMutationVisitor(null);
 		Map<String, MutationResult> mutations = mutator.mutate(locationList, mutationVisitor);
 		
 		return mutations;

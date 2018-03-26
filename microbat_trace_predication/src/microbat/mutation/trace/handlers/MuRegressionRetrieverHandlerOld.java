@@ -13,7 +13,7 @@ import microbat.model.trace.TraceNode;
 import microbat.mutation.trace.MuDiffMatcher;
 import microbat.mutation.trace.MuRegression;
 import microbat.mutation.trace.MuRegressionRetriever;
-import microbat.mutation.trace.preference.MuRegressionPreference;
+import microbat.mutation.trace.preference.MutationRegressionPreference;
 import microbat.util.IResourceUtils;
 import microbat.util.MicroBatUtil;
 import sav.common.core.utils.ClassUtils;
@@ -27,8 +27,8 @@ public class MuRegressionRetrieverHandlerOld extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		String projectName = Activator.getDefault().getPreferenceStore().getString(MuRegressionPreference.TARGET_PROJECT_KEY);
-		String bugId = Activator.getDefault().getPreferenceStore().getString(MuRegressionPreference.BUG_ID_KEY);
+		String projectName = Activator.getDefault().getPreferenceStore().getString(MutationRegressionPreference.TARGET_PROJECT_KEY);
+		String bugId = Activator.getDefault().getPreferenceStore().getString(MutationRegressionPreference.BUG_ID_KEY);
 		
 		try {
 			MuRegression muRegression = new MuRegressionRetriever().retrieveRegression(projectName, bugId);

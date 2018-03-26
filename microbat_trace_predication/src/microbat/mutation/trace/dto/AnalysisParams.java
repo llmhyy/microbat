@@ -1,6 +1,10 @@
 package microbat.mutation.trace.dto;
 
+import java.util.List;
+
 import microbat.evaluation.io.IgnoredTestCaseFiles;
+import microbat.mutation.mutation.MutationType;
+import microbat.mutation.trace.preference.MutationRegressionPreference;
 import tregression.junit.ParsedTrials;
 
 public class AnalysisParams {
@@ -11,6 +15,7 @@ public class AnalysisParams {
 	private boolean isLimitTrialNum = false;
 	private int optionSearchLimit = 100;
 	private int muTotal = 10;
+	private List<MutationType> mutationTypes = MutationRegressionPreference.getSelectedMutationTypes();
 
 	public IgnoredTestCaseFiles getIgnoredTestCaseFiles() {
 		return ignoredTestCaseFiles;
@@ -66,5 +71,9 @@ public class AnalysisParams {
 
 	public void updateIgnoredTestcase(String testCaseName) {
 		ignoredTestCaseFiles.addTestCase(testCaseName);
+	}
+	
+	public List<MutationType> getMutationTypes() {
+		return mutationTypes;
 	}
 }

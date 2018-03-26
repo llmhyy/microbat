@@ -8,6 +8,9 @@ import mutation.mutator.MutationVisitor;
 
 public class ControlDominatedMutationVisitor extends MutationVisitor {
 
+	public ControlDominatedMutationVisitor() {
+	}
+
 	@Override
 	public boolean mutate(IfStmt n) {
 		IfStmt ifStmt = (IfStmt) nodeCloner.visit(n, null);
@@ -20,7 +23,7 @@ public class ControlDominatedMutationVisitor extends MutationVisitor {
 			UnaryExpr newNode = new UnaryExpr(condition, Operator.not);
 			ifStmt.setCondition(newNode);
 		}
-		muNode.add(ifStmt, MutationTypes.NEGATE_IF_CONDITION);
+		muNode.add(ifStmt, MutationType.NEGATE_IF_CONDITION.name());
 		return false;
 	}
 }
