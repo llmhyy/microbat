@@ -1,12 +1,14 @@
 package microbat.instrumentation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
 import sav.common.core.utils.CollectionUtils;
+import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class AgentParams {
@@ -24,6 +26,8 @@ public class AgentParams {
 	public static final String OPT_STEP_LIMIT = "stepLimit";
 	public static final String OPT_EXPECTED_STEP = "expectedSteps";
 	public static final String OPT_LOG = "log";
+	public static final String OPT_INCLUDES_FILE = "includes_file";
+	public static final String OPT_EXCLUDES_FILE = "excludes_file";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -70,18 +74,27 @@ public class AgentParams {
 		params.classPaths = cmd.getStrings(OPT_CLASS_PATH);
 		params.tcpPort = cmd.getInt(OPT_TCP_PORT, -1);
 		params.dumpFile = cmd.getString(OPT_DUMP_FILE);
-		params.includesExpression = cmd.getString(OPT_INCLUDES);
-		params.excludesExpression = cmd.getString(OPT_EXCLUDES);
+		params.includesExpression = getFilterExpression(cmd, OPT_INCLUDES_FILE, OPT_INCLUDES);
+		params.excludesExpression = getFilterExpression(cmd, OPT_EXCLUDES_FILE, OPT_EXCLUDES);
 		params.variableLayer = cmd.getInt(OPT_VARIABLE_LAYER, 2);
-		//		String bootstrpString = argMap.get("bootstrp_path");
-//		String[] bootstrpStrings = bootstrpString.split(";");
-//		for(String bootstrp: bootstrpStrings){
-//			params.bootstrapPaths.add(bootstrp);
-//		}
+		
 		params.stepLimit = cmd.getInt(OPT_STEP_LIMIT, Integer.MAX_VALUE);
 		params.expectedSteps = cmd.getInt(OPT_EXPECTED_STEP, -1);
 		params.logTypes = LogType.valuesOf(cmd.getStrings(OPT_LOG));
 		return params;
+	}
+
+	private static String getFilterExpression(CommandLine cmd, String fileOpt, String opt) {
+		String filePath = cmd.getString(fileOpt);
+		String expression = null;
+		Collection<?> vals = AgentUtils.readLines(filePath);
+		if (!CollectionUtils.isEmpty(vals)) {
+			expression = StringUtils.join(vals, AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR);
+		}
+		if (expression == null) {
+			expression = cmd.getString(OPT_INCLUDES);
+		}
+		return expression;
 	}
 	
 	private static class CommandLine {

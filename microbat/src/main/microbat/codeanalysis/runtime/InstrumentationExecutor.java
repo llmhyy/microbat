@@ -66,8 +66,8 @@ public class InstrumentationExecutor {
 		agentRunner.addAgentParams(AgentParams.OPT_CLASS_PATH, config.getClasspaths());
 		agentRunner.addAgentParam(AgentParams.OPT_WORKING_DIR, config.getWorkingDirectory());
 		/* build includes & excludes params */
-		agentRunner.addAgentParams(AgentParams.OPT_INCLUDES, this.includeLibs);
-		agentRunner.addAgentParams(AgentParams.OPT_EXCLUDES, this.excludeLibs);
+		agentRunner.addIncludesParam(this.includeLibs);
+		agentRunner.addExcludesParam(this.excludeLibs);
 		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
 		agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, MicrobatPreference.getStepLimit());
 		agentRunner.addAgentParams(AgentParams.OPT_LOG, Arrays.asList(LogType.printProgress, LogType.info));

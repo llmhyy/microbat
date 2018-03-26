@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collection;
+import java.util.List;
 
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
@@ -24,6 +25,7 @@ import sav.strategies.vm.AgentVmRunner;
 import sav.strategies.vm.VMConfiguration;
 
 public class TraceAgentRunner extends AgentVmRunner {
+	private boolean allowFilterFileOpt = false;
 	private ServerSocket serverSocket;
 	private boolean isPrecheckMode = false;
 	private PrecheckInfo precheckInfo;
@@ -222,5 +224,30 @@ public class TraceAgentRunner extends AgentVmRunner {
 	
 	public void addAgentParams(String opt, Collection<?> values) {
 		super.addAgentParam(opt, StringUtils.join(values, AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR));
+	}
+
+	public void addIncludesParam(List<String> includeLibs) {
+		addFilterParam(includeLibs, AgentParams.OPT_INCLUDES_FILE, AgentParams.OPT_INCLUDES, "includes");
+	}
+	
+	public void addExcludesParam(List<String> excludeLibs) {
+		addFilterParam(excludeLibs, AgentParams.OPT_EXCLUDES_FILE, AgentParams.OPT_EXCLUDES, "excludes");
+	}
+	
+	public void addFilterParam(List<String> filterLibs, String fileOpt, String opt, String filterType) {
+		if (filterLibs.size() > 10 && allowFilterFileOpt) {
+			File filterFile;
+			try {
+				System.out.println(String.format("%s : %s", filterType, filterLibs));
+				filterFile = File.createTempFile(filterType, "txt");
+				filterFile.deleteOnExit();
+				FileUtils.writeFile(filterFile.getAbsolutePath(), StringUtils.newLineJoin(filterLibs));
+				addAgentParam(fileOpt, filterFile.getAbsolutePath());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			addAgentParams(opt, filterLibs);
+		}
 	}
 }
