@@ -6,6 +6,7 @@ import japa.parser.ast.Node;
 import japa.parser.ast.expr.AssignExpr;
 import japa.parser.ast.stmt.BlockStmt;
 import japa.parser.ast.stmt.EmptyStmt;
+import japa.parser.ast.stmt.ExpressionStmt;
 import japa.parser.ast.stmt.IfStmt;
 import japa.parser.ast.stmt.ReturnStmt;
 import japa.parser.ast.stmt.Statement;
@@ -30,11 +31,16 @@ public class TraceMutationVisitor extends MutationVisitor {
 	public TraceMutationVisitor(MutationMap mutationMap, ClassAnalyzer classAnalyzer) {
 		super(mutationMap, classAnalyzer);
 	}
-	
+
 	@Override
 	public boolean mutate(AssignExpr n) {
 		if (mutationTypes.contains(MutationType.REMOVE_ASSIGNMENT)) {
-			MutationNode muNode = newNode(n);
+			MutationNode muNode;
+			if (n.getParentNode() instanceof ExpressionStmt) {
+				muNode = newNode(n.getParentNode());
+			} else {
+				muNode = newNode(n);
+			}
 			muNode.add(new EmptyStmt(), MutationType.REMOVE_ASSIGNMENT.name());
 		}
 		return super.mutate(n);

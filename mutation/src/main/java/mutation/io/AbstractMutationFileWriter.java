@@ -10,11 +10,15 @@ package mutation.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import japa.parser.ast.Node;
+import japa.parser.ast.stmt.BlockStmt;
+import japa.parser.ast.stmt.EmptyStmt;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.ClassUtils;
+import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.StringUtils;
 
 /**
@@ -63,7 +67,18 @@ public class AbstractMutationFileWriter {
 	}
 
 	protected String[] toString(Node node) {
-		return node.toString().split("\n");
+		if (node instanceof EmptyStmt) {
+			return new String[0];
+		}
+		String[] lines = node.toString().split("\n");
+		if (CollectionUtils.isEmpty(lines)) {
+			return lines;
+		}
+		if ((node instanceof BlockStmt) 
+				&& "{".equals(lines[0]) && "}".equals(lines[lines.length - 1])) {
+			lines = Arrays.copyOfRange(lines, 1, lines.length - 1);
+		} 
+		return lines;
 	}
 	
 	protected String extractStrAfterNode(List<?> lines, Node node) {
