@@ -11,10 +11,7 @@ import java.util.Set;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.InstructionHandle;
 
-import microbat.codeanalysis.bytecode.ByteCodeParser;
-import microbat.codeanalysis.bytecode.CFGConstructor;
 import microbat.codeanalysis.bytecode.CallGraph;
-import microbat.codeanalysis.bytecode.MethodFinderByLine;
 import microbat.codeanalysis.bytecode.MethodNode;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
@@ -49,7 +46,9 @@ public class SeedStatementFinder {
 	private Map<MethodNode, List<InstructionHandle>> matchVarLocally(TraceNode start, VarValue specificVar) {
 		Map<MethodNode, List<InstructionHandle>> map = new HashMap<>();
 		
-		Method method = new CallGraph(start.getTrace().getAppJavaClassPath()).findByteCodeMethod(start.getBreakPoint());
+		Trace trace = start.getTrace();
+		Method method = new CallGraph(trace.getAppJavaClassPath(), trace.getIncludedLibraryClasses()).
+				findByteCodeMethod(start.getBreakPoint());
 		
 		MethodNode methodNode = new MethodNode(start.getMethodSign(), method);
 		List<InstructionHandle> list = methodNode.findVariableDefinition(specificVar.getVariable());
@@ -68,7 +67,7 @@ public class SeedStatementFinder {
 		Set<MethodNode> executedAppMethods = new HashSet<>();
 		
 		long t1 = System.currentTimeMillis();
-		graph = new CallGraph(appClassPath);
+		graph = new CallGraph(appClassPath, trace.getIncludedLibraryClasses());
 		
 		for(BreakPoint location: collectedBreakPoints){
 			MethodNode node = graph.findOrCreateMethodNode(location);

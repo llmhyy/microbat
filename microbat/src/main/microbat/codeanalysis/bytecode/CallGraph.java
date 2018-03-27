@@ -27,11 +27,13 @@ import sav.strategies.dto.AppJavaClassPath;
 
 public class CallGraph {
 	private AppJavaClassPath appPath;
+	private List<String> includeLibraries = new ArrayList<>();
 
 	private Map<String, MethodNode> methodMaps = new HashMap<>();
 
-	public CallGraph(AppJavaClassPath appPath) {
+	public CallGraph(AppJavaClassPath appPath, List<String> includeLibraries) {
 		this.appPath = appPath;
+		this.includeLibraries = includeLibraries;
 	}
 
 	public MethodNode findOrCreateMethodNode(BreakPoint location) {
@@ -56,7 +58,7 @@ public class CallGraph {
 	}
 	
 	private boolean isValidClass(String className){
-		for(String include: Executor.libIncludes){
+		for(String include: includeLibraries){
 			String includeStr = include.replace("\\", "");
 			includeStr = includeStr.replace("*", "");
 			
@@ -333,6 +335,14 @@ public class CallGraph {
 
 	public void setMethodMaps(Map<String, MethodNode> methodMaps) {
 		this.methodMaps = methodMaps;
+	}
+
+	public List<String> getIncludeLibraries() {
+		return includeLibraries;
+	}
+
+	public void setIncludeLibraries(List<String> includeLibraries) {
+		this.includeLibraries = includeLibraries;
 	}
 
 }
