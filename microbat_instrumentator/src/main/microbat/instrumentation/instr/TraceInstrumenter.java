@@ -144,7 +144,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			}
 		}
 	}
-
+	
 	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
 			boolean isAppClass, boolean isMainMethod) {
 		IInstrFilter instrFilter = InstrumentationFilter.getFilter(classGen.getClassName(), method.getName(), method.getArgumentTypes(),

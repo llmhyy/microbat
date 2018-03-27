@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.bcel.classfile.LocalVariable;
+import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
@@ -230,21 +232,22 @@ public class ExecutionTracer implements IExecutionTracer {
 			
 			String[] parameterTypes = TraceUtils.parseArgTypesOrNames(paramTypeSignsCode);
 			String[] parameterNames = paramNamesCode.split(":");
+			if(parameterNames.length != 0){
+				int adjust = adjustVariableStartScope(methodSignature, className);
+				varScopeStart = (adjust > 0) ? adjust : varScopeStart;
+			}
+			
 			for(int i=0; i<parameterTypes.length; i++){
 				String pType = parameterTypes[i];
 				String parameterType = SignatureUtils.signatureToName(pType);
 				String varName = parameterNames[i];
 				
-				//if(PrimitiveUtils.isPrimitiveTypeOrString(parameterType)){
-					Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
-					
-//					String varID = TraceUtils.getLocalVarId(className, varScopeStart, varScopeEnd, varName, parameterType, params[i]);
-					
-					String varID = Variable.concanateLocalVarID(className, varName, varScopeStart, varScopeEnd);
-					var.setVarID(varID);
-					VarValue value = appendVarValue(params[i], var, null);
-					addRWriteValue(value, true);
-				//}
+				Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
+				
+				String varID = Variable.concanateLocalVarID(className, varName, varScopeStart, varScopeEnd);
+				var.setVarID(varID);
+				VarValue value = appendVarValue(params[i], var, null);
+				addRWriteValue(value, true);
 			}
 		}
 		
@@ -261,15 +264,38 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.unLock();
 	}
 
+	private int adjustVariableStartScope(String fullSign, String className) {
+		String shortSign = fullSign.substring(fullSign.indexOf("#")+1, fullSign.length());
+		MethodFinderBySignature finder = new MethodFinderBySignature(shortSign);
+		ByteCodeParser.parse(className, finder, appJavaClassPath);
+		Method method = finder.getMethod();
+		
+		LocalVariableTable table = method.getLocalVariableTable();
+		if(table!=null){
+			int start = -1;
+			for(LocalVariable v: table.getLocalVariableTable()){
+				int line = method.getCode().getLineNumberTable().getSourceLine(v.getStartPC());
+				if(start==-1){
+					start = line;
+				}
+				else{
+					if(start > line){
+						start = line;
+					}
+				}
+			}
+			return start;
+		}
+		
+		return -1;
+	}
+	
 	public void exitMethod(int line, String className, String methodSignature) {
 		locker.lock();
 		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 		if(!exclusive){
 			methodCallStack.safePop();			
 		}
-//		if (onWorkingMethod != null) {
-//			this.exclusive = onWorkingMethod.isExclusive();
-//		}
 		locker.unLock();
 	}
 
