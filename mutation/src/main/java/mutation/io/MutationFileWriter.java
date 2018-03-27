@@ -76,11 +76,13 @@ public class MutationFileWriter extends AbstractMutationFileWriter {
 		String beforeNode = extractStrBeforeNode(lines, orgNode);
 		String afterNode = extractStrAfterNode(lines, orgNode);
 		String[] nLines = toString(node);
-		if (nLines.length == 1) {
+		if (nLines.length == 0) {
+			newContent.add(StringUtils.spaceJoin(beforeNode, afterNode));
+		} else if (nLines.length == 1) {
 			newContent.add(StringUtils.join("", beforeNode, nLines[0], afterNode));
 		} else {
 			newContent.add(StringUtils.spaceJoin(beforeNode, nLines[0]));
-			for (int i = 1; i < nLines.length; i++) {
+			for (int i = 1; i < nLines.length - 1; i++) {
 				newContent.add(nLines[i]);
 			}
 			newContent.add(StringUtils.spaceJoin(nLines[nLines.length - 1], afterNode));
