@@ -95,6 +95,8 @@ public class InstrumentationExecutor {
 			
 			if (!info.isOverLong() && info.getExceedingLimitMethods().isEmpty()) {
 				RunningInformation rInfo = execute(precheckInfomation);
+				rInfo.getTrace().setIncludedLibraryClasses(includeLibs);
+				rInfo.getTrace().setExcludedLibraryClasses(excludeLibs);
 				return rInfo;
 			}
 		} catch (SavException e1) {
