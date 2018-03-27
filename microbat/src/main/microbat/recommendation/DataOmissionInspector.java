@@ -76,7 +76,6 @@ public class DataOmissionInspector extends DetailInspector {
 				}
 			}
 		}
-		
 		return controlDominators;
 	}
 	
@@ -89,7 +88,8 @@ public class DataOmissionInspector extends DetailInspector {
 				List<InstructionHandle> sites = seeds.get(method);
 				for(InstructionHandle site: sites){
 					int siteLine = table.getSourceLine(site.getPosition());
-					
+					//TODO need to find whether siteLine need to revert the boolean
+					//evaluation of the controlDominator.
 					if(isExecute(siteLine, controlDominator.getControlDominatees(), endOrder)){
 						return true;
 					}

@@ -53,8 +53,6 @@ public class SeedStatementFinder {
 		MethodNode methodNode = new MethodNode(start.getMethodSign(), method);
 		List<InstructionHandle> list = methodNode.findVariableDefinition(specificVar.getVariable());
 		
-		System.currentTimeMillis();
-		
 		map.put(methodNode, list);
 		
 		return map;
@@ -81,7 +79,7 @@ public class SeedStatementFinder {
 		Map<MethodNode, List<InstructionHandle>> allSeeds = 
 				findAllSeedMethods(seeds, executedAppMethods, specificVar.getVariable());
 		
-		System.currentTimeMillis();
+//		System.currentTimeMillis();
 		return allSeeds;
 	}
 
@@ -89,28 +87,24 @@ public class SeedStatementFinder {
 			List<MethodNode> seedMethods, Set<MethodNode> executedAppMethods, Variable var) {
 		Map<MethodNode, List<InstructionHandle>> allSeedMethods = new HashMap<>();
 		for(MethodNode node: seedMethods){
-			if(executedAppMethods.contains(node)){
-				List<InstructionHandle> defs = node.findVariableDefinition(var);
-				allSeedMethods.put(node, defs);
-			}
+			List<InstructionHandle> defs = node.findVariableDefinition(var);
+			allSeedMethods.put(node, defs);
 			
 			System.currentTimeMillis();
 			Map<MethodNode, List<InstructionHandle>> allCallers = node.getAllCallers();
 			for(MethodNode caller: allCallers.keySet()){
-				if(executedAppMethods.contains(caller)){
-					List<InstructionHandle> hList = allCallers.get(caller);
-					allSeedMethods.put(caller, hList);
-				}
+				List<InstructionHandle> hList = allCallers.get(caller);
+				allSeedMethods.put(caller, hList);
 			}
 		}
 		
-		Iterator<MethodNode> iter = allSeedMethods.keySet().iterator();
-		while(iter.hasNext()){
-			MethodNode node = iter.next();
-			if(!executedAppMethods.contains(node)){
-				iter.remove();
-			}
-		}
+//		Iterator<MethodNode> iter = allSeedMethods.keySet().iterator();
+//		while(iter.hasNext()){
+//			MethodNode node = iter.next();
+//			if(!executedAppMethods.contains(node)){
+//				iter.remove();
+//			}
+//		}
 		
 		return allSeedMethods;
 	}
