@@ -92,12 +92,7 @@ public class AgentParams {
 			expression = StringUtils.join(vals, AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR);
 		}
 		if (expression == null) {
-			if(fileOpt.equals(OPT_INCLUDES_FILE)){
-				expression = cmd.getString(OPT_INCLUDES);				
-			}
-			else if(fileOpt.equals(OPT_EXCLUDES_FILE)){
-				expression = cmd.getString(OPT_EXCLUDES);
-			}
+			expression = cmd.getString(opt);
 		}
 		return expression;
 	}
