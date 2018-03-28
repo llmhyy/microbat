@@ -28,7 +28,7 @@ public class RunningInfo {
 		InputStream stream = null;
 		try {
 			stream = new FileInputStream(execTraceFile);
-			reader = new TraceOutputReader(new BufferedInputStream(stream));
+			reader = new TraceOutputReader(new BufferedInputStream(stream), execTraceFile.getParent());
 			RunningInfo info = new RunningInfo();
 			String header = reader.readString();
 			if (HEADER.equals(header)) {
@@ -58,13 +58,16 @@ public class RunningInfo {
 	}
 	
 	public void saveToFile(String dumpFile, boolean append) throws IOException {
+		File file = new File(dumpFile);
+		String traceExecFolder = file.getParent();
 		final FileOutputStream fileStream = new FileOutputStream(dumpFile, append);
 		// Avoid concurrent writes from other processes:
 		fileStream.getChannel().lock();
 		final OutputStream bufferedStream = new BufferedOutputStream(fileStream);
 		TraceOutputWriter outputWriter = null;
 		try {
-			outputWriter = new TraceOutputWriter(bufferedStream);
+			outputWriter = new TraceOutputWriter(bufferedStream, traceExecFolder,
+					file.getName().substring(0, file.getName().lastIndexOf(".")));
 			outputWriter.writeString(HEADER);
 			outputWriter.writeString(programMsg);
 			outputWriter.writeInt(expectedSteps);

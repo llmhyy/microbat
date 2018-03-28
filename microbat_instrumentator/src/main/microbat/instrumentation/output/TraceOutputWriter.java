@@ -19,13 +19,23 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.util.BreakpointUtils;
+import sav.common.core.utils.FileUtils;
+import sav.common.core.utils.StringUtils;
 
 public class TraceOutputWriter extends DataOutputStream {
 	public static final int READ = 1;
 	public static final int WRITE = 2;
+	private String traceExecFolder;
+	private String filterFilePrefix;
 	
 	public TraceOutputWriter(OutputStream out) {
 		super(out);
+	}
+	
+	public TraceOutputWriter(OutputStream out, String traceExecFolder, String filterFilePrefix) {
+		super(out);
+		this.traceExecFolder = traceExecFolder;
+		this.filterFilePrefix = filterFilePrefix;
 	}
 	
 	public void writeTrace(Trace trace) throws IOException {
@@ -72,15 +82,24 @@ public class TraceOutputWriter extends DataOutputStream {
 		writeString(launchClass);
 		writeString(launchMethod);
 		writeBoolean(trace.isMultiThread());
-		writeFilterInfo(trace.getIncludedLibraryClasses());
-		writeFilterInfo(trace.getExcludedLibraryClasses());
+		writeFilterInfo(trace.getIncludedLibraryClasses(), true);
+		writeFilterInfo(trace.getExcludedLibraryClasses(), false);
 		Map<String, Integer> locIdIdxMap = writeLocations(trace);
 		writeSteps(trace.getExecutionList(), locIdIdxMap);
 		writeStepVariableRelation(trace);
 	}
 	
-	private void writeFilterInfo(List<String> libClasses) throws IOException {
-		writeSerializableList(libClasses);
+	private void writeFilterInfo(List<String> libClasses, boolean isInclusive) throws IOException {
+		if (libClasses.size() > 300 && (traceExecFolder != null)) {
+			writeBoolean(true); // write file
+			String fileName = filterFilePrefix + (isInclusive ? "_includes.info" : "_excludes.info");
+			String filePath = FileUtils.getFilePath(traceExecFolder, fileName);
+			FileUtils.writeFile(filePath, StringUtils.newLineJoin(libClasses));
+			writeString(fileName);
+		} else {
+			writeBoolean(false);
+			writeSerializableList(libClasses);
+		}
 	}
 
 	private Map<String, Integer> writeLocations(Trace trace) throws IOException {

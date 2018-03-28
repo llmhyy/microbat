@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import microbat.instrumentation.AgentUtils;
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
 import microbat.model.ControlScope;
@@ -15,11 +16,18 @@ import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import sav.common.core.utils.FileUtils;
 
 public class TraceOutputReader extends DataInputStream {
-
+	private String traceExecFolder;
+	
 	public TraceOutputReader(InputStream in) {
 		super(in);
+	}
+	
+	public TraceOutputReader(InputStream in, String traceExecFolder) {
+		super(in);
+		this.traceExecFolder = traceExecFolder;
 	}
 
 	public Trace readTrace() throws IOException {
@@ -42,7 +50,17 @@ public class TraceOutputReader extends DataInputStream {
 	}
 
 	private List<String> readFilterInfo() throws IOException {
-		return readSerializableList();
+		boolean inFile = readBoolean();
+		if (inFile) {
+			if (traceExecFolder == null) {
+				throw new IllegalArgumentException("missing define traceExecFolder!");
+			}
+			String fileName = readString();
+			String filePath = FileUtils.getFilePath(traceExecFolder, fileName);
+			return AgentUtils.readLines(filePath);
+		} else {
+			return readSerializableList();
+		}
 	}
 
 	private List<BreakPoint> readLocations() throws IOException {
