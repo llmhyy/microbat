@@ -3,6 +3,7 @@ package microbat.instrumentation.output;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -71,11 +72,17 @@ public class TraceOutputWriter extends DataOutputStream {
 		writeString(launchClass);
 		writeString(launchMethod);
 		writeBoolean(trace.isMultiThread());
+		writeFilterInfo(trace.getIncludedLibraryClasses());
+		writeFilterInfo(trace.getExcludedLibraryClasses());
 		Map<String, Integer> locIdIdxMap = writeLocations(trace);
 		writeSteps(trace.getExecutionList(), locIdIdxMap);
 		writeStepVariableRelation(trace);
 	}
 	
+	private void writeFilterInfo(List<String> libClasses) throws IOException {
+		writeSerializableList(libClasses);
+	}
+
 	private Map<String, Integer> writeLocations(Trace trace) throws IOException {
 		Map<String, Set<BreakPoint>> locationMap = getExecutedLocation(trace);
 		writeVarInt(getNumberOfBkps(locationMap)); // number of bkps
@@ -139,11 +146,15 @@ public class TraceOutputWriter extends DataOutputStream {
 	}
 
 	private void writeVarValues(List<VarValue> varValues) throws IOException {
-		if (varValues == null || varValues.isEmpty()) {
+		writeSerializableList(varValues);
+	}
+	
+	private <T extends Serializable> void writeSerializableList(List<T> list) throws IOException {
+		if (list == null || list.isEmpty()) {
 			writeVarInt(0);
 		} else {
-			writeVarInt(varValues.size());
-			byte[] bytes = ByteConverter.convertToBytes(varValues);
+			writeVarInt(list.size());
+			byte[] bytes = ByteConverter.convertToBytes(list);
 			writeByteArr(bytes);
 		}
 	}

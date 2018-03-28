@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import microbat.model.trace.Trace;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -18,6 +19,9 @@ public class FilterChecker implements IFilterChecker {
 	private Set<String> includes = new HashSet<>();
 	private WildcardMatcher extIncludesMatcher; // className
 	private WildcardMatcher extExcludesMatcher; // className
+	
+	private List<String> includedLibraryClasses = new ArrayList<>();
+	private List<String> excludedLibraryClasses = new ArrayList<>();
 	
 	@Override
 	public void startup(AppJavaClassPath appClasspath, String includeExpression, String excludeExpression) {
@@ -71,9 +75,11 @@ public class FilterChecker implements IFilterChecker {
 	@Override
 	public boolean checkTransformable(String classFName, String path, boolean isBootstrap) {
 		if (!JdkFilter.filter(getClassName(classFName))) {
+			logIncludeExtLib(classFName, true, false);
 			return false;
 		}
 		boolean match = false;
+		boolean isExtLib = true;
 		if (isBootstrap) {
 			if (bootstrapIncludes.contains(classFName)) {
 				return true;
@@ -93,6 +99,7 @@ public class FilterChecker implements IFilterChecker {
 				for (String binFolder : appBinFolders) {
 					if (binFolder.equals(getDir(path))) {
 						match = true;
+						isExtLib = false;
 						includes.add(classFName);
 						break;
 					}
@@ -103,7 +110,22 @@ public class FilterChecker implements IFilterChecker {
 		if (match && isBootstrap) {
 			bootstrapIncludes.add(classFName);
 		}
+		logIncludeExtLib(classFName, isExtLib, match);
 		return match;
+	}
+	
+	private void logIncludeExtLib(String classFName, boolean isExtLib, boolean isIncluded) {
+		if (isExtLib) {
+			String className = getClassName(classFName);
+			if (className.startsWith("microbat.")){
+				return;
+			}
+			if (isIncluded) {
+				includedLibraryClasses.add(className);
+			} else {
+				excludedLibraryClasses.add(className);
+			}
+		}
 	}
 	
 	private boolean matchExtIncludes(String classFName, boolean match) {
@@ -153,4 +175,11 @@ public class FilterChecker implements IFilterChecker {
 		checker.startup(appPath, includesExpression, exludesExpression);
 	}
 
+	public static void addFilterInfo(Trace trace) {
+		if (checker instanceof FilterChecker) {
+			FilterChecker filterChecker = (FilterChecker) checker;
+			trace.setExcludedLibraryClasses(filterChecker.excludedLibraryClasses);
+			trace.setIncludedLibraryClasses(filterChecker.includedLibraryClasses);
+		}
+	}
 }

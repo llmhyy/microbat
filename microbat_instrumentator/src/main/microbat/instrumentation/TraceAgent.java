@@ -46,15 +46,9 @@ public class TraceAgent implements IAgent {
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 	
 		Trace trace = ((ExecutionTracer) tracer).getTrace();
+		FilterChecker.addFilterInfo(trace);
 		
-//		List<ClassLocation> locs = new ArrayList<>();
-//		for (TraceNode node : trace.getExecutionList()) {
-//			BreakPoint bkp = node.getBreakPoint();
-//			locs.add(new ClassLocation(bkp.getClassCanonicalName(), bkp.getMethodSign(), bkp.getLineNumber()));
-//		}
-//		FileUtils.writeFile("E:/lyly/WorkingFolder/step_run.txt", StringUtils.join(locs, "\n"));
-//		AgentLogger.debug("Trace size = " + trace.getExecutionList().size());
-		
+		StepMismatchChecker.logNormalSteps(trace);
 		createVirtualDataRelation(trace);
 		trace.constructControlDomianceRelation();
 //		trace.constructLoopParentRelation();

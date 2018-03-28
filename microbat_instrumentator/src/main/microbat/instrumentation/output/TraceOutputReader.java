@@ -33,10 +33,16 @@ public class TraceOutputReader extends DataInputStream {
 		readString(); // launchClass
 		readString(); // launchMethod
 		trace.setMultiThread(readBoolean());
+		trace.setIncludedLibraryClasses(readFilterInfo());
+		trace.setExcludedLibraryClasses(readFilterInfo());
 		List<BreakPoint> locationList = readLocations();
 		trace.setExectionList(readSteps(trace, locationList));
 		readStepVariableRelation(trace);
 		return trace;
+	}
+
+	private List<String> readFilterInfo() throws IOException {
+		return readSerializableList();
 	}
 
 	private List<BreakPoint> readLocations() throws IOException {
@@ -103,8 +109,12 @@ public class TraceOutputReader extends DataInputStream {
 		return allSteps;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected List<VarValue> readVarValue() throws IOException {
+		return readSerializableList();
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected <T>List<T> readSerializableList() throws IOException {
 		int size = readVarInt();
 		if (size == 0) {
 			return new ArrayList<>(0);
@@ -113,9 +123,9 @@ public class TraceOutputReader extends DataInputStream {
 		if (bytes == null || bytes.length == 0) {
 			return new ArrayList<>(0);
 		}
-		List<VarValue> varValues;
+		List<T> varValues;
 		try {
-			varValues = (List<VarValue>) ByteConverter.convertFromBytes(bytes);
+			varValues = (List<T>) ByteConverter.convertFromBytes(bytes);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 			throw new IOException(e);

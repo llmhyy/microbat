@@ -36,6 +36,8 @@ public class Trace {
 	
 	private int observingIndex = -1;
 	private AppJavaClassPath appJavaClassPath;
+	private List<String> includedLibraryClasses = new ArrayList<>();
+	private List<String> excludedLibraryClasses = new ArrayList<>();
 	/**
 	 * This variable is to trace whether the variables in different lines are the same
 	 * local variable.
@@ -988,5 +990,21 @@ public class Trace {
 
 	public void setMultiThread(boolean isMultiThread) {
 		this.isMultiThread = isMultiThread;
+	}
+	
+	public List<String> getIncludedLibraryClasses() {
+		return includedLibraryClasses;
+	}
+
+	public void setIncludedLibraryClasses(List<String> includedLibraryClasses) {
+		this.includedLibraryClasses = includedLibraryClasses;
+	}
+
+	public List<String> getExcludedLibraryClasses() {
+		return excludedLibraryClasses;
+	}
+
+	public void setExcludedLibraryClasses(List<String> excludedLibraryClasses) {
+		this.excludedLibraryClasses = excludedLibraryClasses;
 	}
 }
