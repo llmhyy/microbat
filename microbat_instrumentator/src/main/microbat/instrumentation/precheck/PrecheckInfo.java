@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 import microbat.instrumentation.AgentUtils;
+import microbat.instrumentation.StepMismatchChecker;
 import microbat.instrumentation.output.TraceOutputReader;
 import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.model.ClassLocation;
@@ -38,8 +39,7 @@ public class PrecheckInfo {
 		this.setStepTotal(info.getStepTotal());
 		setVisitedLocs(info.getVisitedLocs());
 		isOverLong = info.isOverLong();
-//		FileUtils.writeFile("E:/lyly/WorkingFolder/step_precheck.txt", StringUtils.join(info.getSteps(), "\n"));
-//		AgentLogger.debug("size = " + getStepTotal());
+		StepMismatchChecker.logPrecheckSteps(info);
 	}
 
 	@Override
