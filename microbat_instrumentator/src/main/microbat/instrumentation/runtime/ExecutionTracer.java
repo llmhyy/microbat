@@ -67,13 +67,12 @@ public class ExecutionTracer implements IExecutionTracer {
 			return;
 		}
 		
-		String order = trace.findDefiningNodeOrder(rw, currentNode, var.getVarID(), var.getAliasVarID());
+		String order = trace.findDefiningNodeOrder(rw, currentNode, var);
 		
 		if(order.equals("0")){
 			if(var instanceof FieldVar || var instanceof ArrayElementVar){
 				if(!value.getParents().isEmpty()){
-					String parentID = value.getParents().get(0).getVarID();
-					order = trace.findDefiningNodeOrder(rw, currentNode, parentID, parentID);					
+					order = trace.findDefiningNodeOrder(rw, currentNode, value.getParents().get(0).getVariable());					
 				}
 				
 			}
@@ -244,7 +243,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				
 				Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
 				
-				String varID = Variable.concanateLocalVarID(className, varName, varScopeStart, varScopeEnd);
+				String varID = Variable.concanateLocalVarID(className, varName, varScopeStart, varScopeEnd, latestNode.getInvocationLevel()+1);
 				var.setVarID(varID);
 				VarValue value = appendVarValue(params[i], var, null);
 				addRWriteValue(value, true);
@@ -689,8 +688,9 @@ public class ExecutionTracer implements IExecutionTracer {
 			_hitLine(line, className, methodSignature);
 			Variable var = new LocalVar(varName, varType, className, line);
 			
-//			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
-			String varID = Variable.concanateLocalVarID(className, varName, varScopeStartLine, varScopeEndLine);
+			TraceNode latestNode = trace.getLatestNode();
+			String varID = Variable.concanateLocalVarID(className, varName, 
+					varScopeStartLine, varScopeEndLine, latestNode.getInvocationLevel());
 			var.setVarID(varID);
 			if(!PrimitiveUtils.isPrimitive(varType)){
 				String aliasID = TraceUtils.getObjectVarId(varValue, varType);
@@ -719,9 +719,11 @@ public class ExecutionTracer implements IExecutionTracer {
 //				return;
 //			}
 			_hitLine(line, className, methodSignature);
+			TraceNode latestNode = trace.getLatestNode();
 			Variable var = new LocalVar(varName, varType, className, line);
 			
-			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);				
+			String varID = Variable.concanateLocalVarID(className, varName, varScopeStartLine, varScopeEndLine, latestNode.getInvocationLevel());
+//			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);				
 			var.setVarID(varID);
 			String aliasVarID = TraceUtils.getObjectVarId(varValue, varType);
 			var.setAliasVarID(aliasVarID);
@@ -805,8 +807,11 @@ public class ExecutionTracer implements IExecutionTracer {
 //				return;
 //			}
 			_hitLine(line, className, methodSignature);
+			
+			TraceNode latestNode = trace.getLatestNode();
 			Variable var = new LocalVar(varName, varType, className, line);
-			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
+			String varID = Variable.concanateLocalVarID(className, varName, varScopeStartLine, varScopeEndLine, latestNode.getInvocationLevel());
+//			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
 			var.setVarID(varID);
 			
 			Variable varBefore = var.clone();

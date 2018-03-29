@@ -28,9 +28,10 @@ public abstract class Variable implements Serializable {
 	 * e.g., Class.a:33;
 	 * if it is an array element, its id is: its parent's object id + index + the order of trace node defining it,
 	 * e.g., 100[1]:33 ;
-	 * if it is a local variable, its id is: its scope (i.e., class[startLine, endLine]) + variable name + the order
-	 * of trace node defining it,
-	 * e.g., com/Main{12, 21}a:33 ;
+	 * if it is a local variable, its id is: its scope (i.e., class[startLine, endLine]) + variable name 
+	 * + invocation_layer + the order of trace node defining it, invocation_layer is for distinguish recursive
+	 * methods.
+	 * e.g., com/Main{12, 21}a-3:33 ;
 	 * if it is a virtual variable, its id is: "virtualVar" + the order of the relevant return-trace-node. 
 	 * <br><br>
 	 * Note that if the user want to concanate a variable ID, such as local variable ID, field ID, etc. He

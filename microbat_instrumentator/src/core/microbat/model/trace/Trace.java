@@ -23,6 +23,7 @@ import microbat.model.ControlScope;
 import microbat.model.Scope;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
+import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.util.Settings;
 import sav.strategies.dto.AppJavaClassPath;
@@ -622,7 +623,9 @@ public class Trace {
 	 * @return
 	 */
 	public String findDefiningNodeOrder(String accessType, TraceNode currentNode,
-			String varID, String aliasVarID) {
+			Variable var) {
+		String varID = var.getVarID(); 
+		String aliasVarID = var.getAliasVarID();
 		varID = Variable.truncateSimpleID(varID);
 		aliasVarID = Variable.truncateSimpleID(aliasVarID);
 		String definingOrder = "0";
@@ -638,15 +641,21 @@ public class Trace {
 			TraceNode node2 = latestNodeDefiningVariableMap.get(aliasVarID);
 			
 			int order = 0;
-			if(node1!=null && node2==null){
-				order = node1.getOrder();
+			if(var instanceof LocalVar){
+				if(node1!=null && node2==null){
+					order = node1.getOrder();
+				}
+				else if(node1==null && node2!=null){
+					order = node2.getOrder();
+				}
+				else if(node1!=null && node2!=null){
+					order = (node1.getOrder()>node2.getOrder())?node1.getOrder():node2.getOrder();
+				}
 			}
-			else if(node1==null && node2!=null){
-				order = node2.getOrder();
-			}
-			else if(node1!=null && node2!=null){
-				order = (node1.getOrder()>node2.getOrder())?node1.getOrder():node2.getOrder();
-//				order = node2.getOrder();
+			else{
+				if(node1!=null){
+					order = node1.getOrder();
+				}
 			}
 			
 			definingOrder = String.valueOf(order);

@@ -30,10 +30,10 @@ public class TraceUtils {
 		return Variable.concanateFieldVarID(parentVarId, fieldName);
 	}
 	
-	public static String getLocalVarId(String className, int startLine, int endLine, 
-			String varName, String varType, Object varValue) {
-		return Variable.concanateLocalVarID(className, varName, startLine, endLine);
-	}
+//	public static String getLocalVarId(String className, int startLine, int endLine, 
+//			String varName, String varType, Object varValue) {
+//		return Variable.concanateLocalVarID(className, varName, startLine, endLine);
+//	}
 
 	public static String getArrayElementVarId(String parentVarId, int index, String elementType, Object eleValue) {
 		return Variable.concanateArrayElementVarID(parentVarId, String.valueOf(index));

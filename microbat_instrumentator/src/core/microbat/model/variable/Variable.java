@@ -94,9 +94,10 @@ public abstract class Variable implements Serializable {
 		return parentID + "[" + indexValueString + "]";
 	}
 	
-	public static String concanateLocalVarID(String className, String varName, int startLine, int endLine){
+	public static String concanateLocalVarID(String className, String varName, int startLine, 
+			int endLine, int invocationLayer){
 		String clazzName = className.replace(".", "/");
-		return clazzName + "{" + startLine + "," + endLine + "}" + varName;	
+		return clazzName + "{" + startLine + "," + endLine + "}" + varName + "-" + invocationLayer;	
 	}
 	
 	public static String truncateSimpleID(String completeVarID){
