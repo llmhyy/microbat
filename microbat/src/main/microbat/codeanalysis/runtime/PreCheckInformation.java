@@ -14,6 +14,7 @@ public class PreCheckInformation {
 	private boolean isPassTest;
 	private boolean timeout = false;
 	private List<String> loadedClasses = new ArrayList<>();
+	private boolean undeterministic = false;
 	
 	public PreCheckInformation() {
 	}
@@ -90,6 +91,14 @@ public class PreCheckInformation {
 
 	public void setLoadedClasses(List<String> loadedClasses) {
 		this.loadedClasses = loadedClasses;
+	}
+
+	public boolean isUndeterministic() {
+		return undeterministic;
+	}
+
+	public void setUndeterministic(boolean undeterministic) {
+		this.undeterministic = undeterministic;
 	}
 
 	@Override
