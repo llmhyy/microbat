@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
@@ -760,11 +761,26 @@ public class TraceNode{
 		return new ArrayList<TraceNode>(allControlDominatees);
 	}
 
+//	private void findAllControlDominatees(TraceNode node, HashSet<TraceNode> controlDominatees) {
+//		System.out.println("Node: " + node.getOrder());
+//		for(TraceNode dominatee: node.getControlDominatees()){
+//			if(!controlDominatees.contains(dominatee)){
+//				controlDominatees.add(dominatee);
+//				findAllControlDominatees(dominatee, controlDominatees);				
+//			}
+//		}
+//	}
+	
 	private void findAllControlDominatees(TraceNode node, HashSet<TraceNode> controlDominatees) {
-		for(TraceNode dominatee: node.getControlDominatees()){
-			if(!controlDominatees.contains(dominatee)){
-				controlDominatees.add(dominatee);
-				findAllControlDominatees(dominatee, controlDominatees);				
+		Stack<TraceNode> stack = new Stack<>();
+		stack.push(node);
+		while (!stack.isEmpty()) {
+			TraceNode curNode = stack.pop();
+			for(TraceNode dominatee: curNode.getControlDominatees()){
+				if(!controlDominatees.contains(dominatee)){
+					controlDominatees.add(dominatee);
+					stack.push(dominatee);
+				}
 			}
 		}
 	}
