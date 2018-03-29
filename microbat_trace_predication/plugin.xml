@@ -79,7 +79,7 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            class="microbat.mutation.trace.preference.MuRegressionPreference"
+            class="microbat.mutation.trace.preference.MutationRegressionPreference"
             id="muregression.preference"
             name="MuRegression">
       </page>

@@ -104,6 +104,7 @@ public class MutationExperimentator {
 				return;
 			}
 		}
+		System.out.println("Finish evaluation all!");
 	}
 	
 	public TraceExecutionInfo executeTestcase(AnalysisTestcaseParams params) {
@@ -391,7 +392,8 @@ public class MutationExperimentator {
 			MutationTrace mutateInfo = executeTestcaseWithMutation(testcaseConfig, params.getTestcaseName(), mutation);
 			return mutateInfo;
 		} catch (SavException e) {
-			System.out.println("Compilation error");
+			System.out.println("Compilation error: " + e.getMessage());
+			System.out.println();
 		} finally {
 			/* revert */
 			FileUtils.copyFile(backupClassFilePath, orgClassFilePath, true);
