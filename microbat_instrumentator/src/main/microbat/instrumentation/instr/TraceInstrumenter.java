@@ -428,8 +428,9 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		newInsns.dispose();
 		/* after */
 		if (isAppClass) {
-			boolean revisit = !Type.VOID.equals(returnType) && ((insnHandler.getNext() == null)
-					|| !(insnHandler.getNext().getInstruction() instanceof POP));
+			boolean revisit = !Type.VOID.equals(returnType); 
+//					&& ((insnHandler.getNext() == null)
+//					|| !(insnHandler.getNext().getInstruction() instanceof POP));
 			newInsns = new InstructionList();
 			newInsns.append(new ALOAD(tracerVar.getIndex()));
 			newInsns.append(new PUSH(constPool, line));
