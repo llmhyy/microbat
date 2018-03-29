@@ -21,7 +21,7 @@ public class JdkFilter {
 		jdkExclusives.add("java.lang.Thread");
 		jdkExclusives.add("java.lang.ThreadLocal");
 		jdkExclusives.add("java.lang.Error");
-		jdkExclusives.add("java.lang.Throwable");
+//		jdkExclusives.add("java.lang.Throwable");
 		jdkExclusives.add("java.lang.AssertionError");
 		jdkExclusives.add("java.lang.Class");
 	}
