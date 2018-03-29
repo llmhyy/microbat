@@ -41,7 +41,7 @@ public class MethodCallStack extends Stack<TraceNode> {
 				TraceNode caller = this.peek();
 				String m = caller.getInvokingMethod();
 				
-				if(m.equals(methodSignature)){
+				if(m == null || m.equals(methodSignature)){
 					return false;
 				}
 				System.currentTimeMillis();
