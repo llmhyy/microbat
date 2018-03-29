@@ -366,15 +366,19 @@ public class ExecutionTracer implements IExecutionTracer {
 	@Override
 	public void _afterInvoke(int line, String residingClassName, String residingMethodSignature, boolean needRevisiting) {
 		locker.lock();
-		boolean exclusive = FilterChecker.isExclusive(residingClassName, residingMethodSignature);
-		if (!exclusive) {
-			TraceNode latestNode = trace.getLatestNode();
-			if (latestNode != null) {
-				latestNode.setInvokingDetail(null);
+		try {
+			boolean exclusive = FilterChecker.isExclusive(residingClassName, residingMethodSignature);
+			if (!exclusive) {
+				TraceNode latestNode = trace.getLatestNode();
+				if (latestNode != null) {
+					latestNode.setInvokingDetail(null);
+				}
+				if (needRevisiting) {
+					_hitLine(line, residingClassName, residingMethodSignature);
+				}
 			}
-			if (needRevisiting) {
-				_hitLine(line, residingClassName, residingMethodSignature);
-			}
+		} catch (Throwable t) {
+			handleException(t);
 		}
 		locker.unLock();
 	}
@@ -418,7 +422,11 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	@Override
 	public void _hitVoidReturn(int line, String className, String methodSignature) {
-		_hitLine(line, className, methodSignature);
+		try {
+			_hitLine(line, className, methodSignature);
+		} catch (Throwable t) {
+			handleException(t);
+		}
 	}
 
 	@Override
@@ -467,25 +475,28 @@ public class ExecutionTracer implements IExecutionTracer {
 	@Override
 	public void _hitExeptionTarget(int line, String className, String methodSignature) {
 		locker.lock();
-		_hitLine(line, className, methodSignature);
-		TraceNode latestNode = trace.getLatestNode();
-		latestNode.setException(true);
-		boolean invocationLayerChanged = this.methodCallStack.
-				popForException(methodSignature, appJavaClassPath);
-		
-		if(invocationLayerChanged){
-			TraceNode caller = null;
-			if(!this.methodCallStack.isEmpty()){
-				caller = this.methodCallStack.peek();
-			}
+		try {
+			_hitLine(line, className, methodSignature);
+			TraceNode latestNode = trace.getLatestNode();
+			latestNode.setException(true);
+			boolean invocationLayerChanged = this.methodCallStack.
+					popForException(methodSignature, appJavaClassPath);
 			
-			TraceNode olderCaller = latestNode.getInvocationParent();
-			if(olderCaller!=null){
-				olderCaller.getInvocationChildren().remove(latestNode);
-				latestNode.setInvocationParent(caller);
+			if(invocationLayerChanged){
+				TraceNode caller = null;
+				if(!this.methodCallStack.isEmpty()){
+					caller = this.methodCallStack.peek();
+				}
+				
+				TraceNode olderCaller = latestNode.getInvocationParent();
+				if(olderCaller!=null){
+					olderCaller.getInvocationChildren().remove(latestNode);
+					latestNode.setInvocationParent(caller);
+				}
 			}
+		} catch (Throwable t) {
+			handleException(t);
 		}
-		
 		locker.unLock();
 	}
 	
