@@ -443,10 +443,10 @@ public class ExecutionTracer implements IExecutionTracer {
 				shutdown();
 				Agent._exitProgram("fail;Trace is over long!");
 			}
-			if (order > expectedSteps) {
-				shutdown();
-				Agent._exitProgram("fail;Trace size exceeds expected_steps!");
-			}
+//			if (order > expectedSteps) {
+//				shutdown();
+//				Agent._exitProgram("fail;Trace size exceeds expected_steps!");
+//			}
 			
 			BreakPoint bkp = new BreakPoint(className, methodSignature, line);
 			TraceNode currentNode = new TraceNode(bkp, null, order, trace); // leave programState empty.
