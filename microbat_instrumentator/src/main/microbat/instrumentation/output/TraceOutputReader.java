@@ -123,6 +123,7 @@ public class TraceOutputReader extends DataInputStream {
 			}
 			step.setReadVariables(readVarValue());
 			step.setWrittenVariables(readVarValue());
+			step.setException(readBoolean());
 		}
 		return allSteps;
 	}

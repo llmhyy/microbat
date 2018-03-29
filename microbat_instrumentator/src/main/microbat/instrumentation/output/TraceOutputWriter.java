@@ -161,6 +161,7 @@ public class TraceOutputWriter extends DataOutputStream {
 			writeNodeOrder(node.getLoopParent());
 			writeVarValues(node.getReadVariables());
 			writeVarValues(node.getWrittenVariables());
+			writeBoolean(node.isException());
 		}
 	}
 
