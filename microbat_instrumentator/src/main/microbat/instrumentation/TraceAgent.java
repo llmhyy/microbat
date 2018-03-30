@@ -124,12 +124,16 @@ public class TraceAgent implements IAgent {
 			
 			if(currentNode.getInvocationParent()!=null && !currentNode.getReturnedVariables().isEmpty()){
 				TraceNode invocationParent = currentNode.getInvocationParent();
-				TraceNode stepOverNext = invocationParent.getStepOverNext();
-				System.currentTimeMillis();
-				if(stepOverNext!=null){
+				TraceNode returnStep = invocationParent.getStepOverNext();
+				
+				if(returnStep==null){
+					returnStep = currentNode.getStepInNext();
+				}
+				
+				if(returnStep!=null){
 					for(VarValue value: currentNode.getReturnedVariables()){
 						currentNode.addWrittenVariable(value);
-						stepOverNext.addReadVariable(value);
+						returnStep.addReadVariable(value);
 						String varID = value.getVarID();
 						String definingOrder = trace.findDefiningNodeOrder(Variable.WRITTEN, currentNode, value.getVariable());
 						varID = varID+":"+definingOrder;
@@ -139,7 +143,7 @@ public class TraceAgent implements IAgent {
 							entry = new StepVariableRelationEntry(varID);
 						}
 						entry.addProducer(currentNode);
-						entry.addConsumer(stepOverNext);
+						entry.addConsumer(returnStep);
 						trace.getStepVariableTable().put(varID, entry);
 					}
 				}
