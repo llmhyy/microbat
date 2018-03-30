@@ -125,7 +125,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			arrVal.setComponentType(var.getType().substring(0, var.getType().length() - 2)); // 2 = "[]".length
 			varValue = arrVal;
 //			varValue.setStringValue(getStringValue(value, arrVal.getComponentType()));
-			varValue.setStringValue(getStringValue(value, null));
+			varValue.setStringValue(getStringValue(value, var.getType()));
 			if (value == null) {
 				arrVal.setNull(true);
 			} else {
@@ -191,7 +191,19 @@ public class ExecutionTracer implements IExecutionTracer {
 				return "null";
 			}
 			
-			return obj.toString();
+			String simpleType = null;
+			if(type!=null && type.contains("[]")){
+				simpleType = type.substring(0, type.indexOf("[]"));
+			}
+			
+			if(simpleType!=null){
+				if(simpleType.equals("char")){
+					char[] charArray = (char[])obj;
+					return String.valueOf(charArray);
+				}
+			}
+			
+			return String.valueOf(obj);//obj.toString();
 //			String className = obj.getClass().getName();
 //			
 //			if (FilterChecker.isAppClazz(className)
