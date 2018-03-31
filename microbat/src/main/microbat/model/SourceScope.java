@@ -7,6 +7,9 @@ public class SourceScope implements Scope{
 	private int startLine;
 	private int endLine;
 	
+	public SourceScope() {
+	}
+	
 	public SourceScope(String className, int startLine, int endLine, boolean isLoopScope) {
 		super();
 		this.className = className;
