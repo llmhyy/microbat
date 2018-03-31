@@ -135,8 +135,8 @@ public class TraceAgent implements IAgent {
 						currentNode.addWrittenVariable(value);
 						returnStep.addReadVariable(value);
 						String varID = value.getVarID();
-						String definingOrder = trace.findDefiningNodeOrder(Variable.WRITTEN, currentNode, value.getVariable());
-						varID = varID+":"+definingOrder;
+//						String definingOrder = trace.findDefiningNodeOrder(Variable.WRITTEN, currentNode, value.getVariable());
+//						varID = varID+":"+definingOrder;
 						value.setVarID(varID);
 						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
 						if(entry==null){
