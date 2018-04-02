@@ -9,17 +9,20 @@
 package microbat.model;
 
 import microbat.util.BreakpointUtils;
-import sav.common.core.utils.SignatureUtils;
 
 /**
  * @author Yun Lin, modified from LLT
  * 
  */
 public class ClassLocation {
+	public static String UNKNOWN_METHOD_SIGN = "unknown";
+	
 	protected String id;
 	protected String classCanonicalName;
 	protected String methodSign;
 	protected int lineNo = -1; // started with 1?
+	
+	protected String declaringCompilationUnitName;
 	
 	/**
 	 * This field is set for distinguishing src/target file.
@@ -31,14 +34,22 @@ public class ClassLocation {
 		return location;
 	}
 
-	public ClassLocation(String className, String methodSignature, int lineNumber) {
+	public ClassLocation(String className, String methodName, int lineNumber) {
 		this.classCanonicalName = className;
-		this.methodSign = methodSignature;
+		this.methodSign = methodName;
 		this.lineNo = lineNumber;
 	}
 
 	public String getClassCanonicalName() {
 		return classCanonicalName;
+	}
+	
+	public String getDeclaringCompilationUnitName(){
+		return this.declaringCompilationUnitName;
+	}
+	
+	public void setDeclaringCompilationUnitName(String declaringCompilationUnitName) {
+		this.declaringCompilationUnitName = declaringCompilationUnitName;
 	}
 
 	public void setClassCanonicalName(String classCanonicalName) {
@@ -100,7 +111,12 @@ public class ClassLocation {
 		if(methodSign==null){
 			return null;
 		}
-		return methodSign.substring(methodSign.indexOf("#")+1, methodSign.indexOf("("));
+		
+		if(methodSign.contains("#")) {
+			return methodSign.substring(methodSign.indexOf("#")+1, methodSign.indexOf("("));			
+		}
+		
+		return methodSign;
 	}
 
 	

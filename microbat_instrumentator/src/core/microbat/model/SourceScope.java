@@ -7,6 +7,21 @@ public class SourceScope implements Scope{
 	private int startLine;
 	private int endLine;
 	
+	public SourceScope(String className, int startLine, int endLine, boolean isLoopScope) {
+		super();
+		this.className = className;
+		this.startLine = startLine;
+		this.endLine = endLine;
+		this.isLoopScope = isLoopScope;
+	}
+
+	public SourceScope(String className, int start, int end) {
+		super();
+		this.className = className;
+		this.startLine = start;
+		this.endLine = end;
+	}
+
 	/**
 	 * whether the scope contains some jump statments such as break, continue, 
 	 * return, and throw.
@@ -53,7 +68,7 @@ public class SourceScope implements Scope{
 
 	@Override
 	public boolean containLocation(ClassLocation location) {
-		String nodeClassName = location.getClassCanonicalName();
+		String nodeClassName = location.getDeclaringCompilationUnitName();
 
 		if (nodeClassName.equals(className)) {
 			int line = location.getLineNumber();
