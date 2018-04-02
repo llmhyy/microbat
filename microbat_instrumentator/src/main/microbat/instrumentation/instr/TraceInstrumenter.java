@@ -116,7 +116,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 				newJC = classGen.getJavaClass();
 				newJC.setConstantPool(constPool.getFinalConstantPool());
 			} catch (Exception e) {
-				System.err.println(String.format("Error when run instrumentation: %s.%s", classFName, method.getName()));
+				System.err.println(String.format("Error when running instrumentation: %s.%s", classFName, method.getName()));
 				e.printStackTrace();
 			}
 		}
@@ -147,8 +147,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 	
 	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
 			boolean isAppClass, boolean isMainMethod) {
-		IInstrFilter instrFilter = InstrumentationFilter.getFilter(classGen.getClassName(), method.getName(), method.getArgumentTypes(),
-				constPool);
+		IInstrFilter instrFilter = InstrumentationFilter.getFilter(classGen.getClassName(), method, constPool);
 		
 		tempVarIdx = 0;
 		InstructionList insnList = methodGen.getInstructionList();
@@ -192,10 +191,14 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			for (RWInstructionInfo rwInsnInfo : rwInsns) {
 				InstructionList newInsns = null;
 				if (rwInsnInfo instanceof FieldInstructionInfo) {
-					newInsns = getInjectCodeTracerRWriteField(constPool, tracerVar, (FieldInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
+					if (instrFilter.isValid((FieldInstruction) rwInsnInfo.getInstruction())) {
+						newInsns = getInjectCodeTracerRWriteField(constPool, tracerVar, (FieldInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
+					}
 				} else if (rwInsnInfo instanceof ArrayInstructionInfo) {
-					newInsns = getInjectCodeTracerRWriteArray(methodGen, constPool, tracerVar,
-							(ArrayInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
+					if (instrFilter.isValid((ArrayInstruction) rwInsnInfo.getInstruction())) {
+						newInsns = getInjectCodeTracerRWriteArray(methodGen, constPool, tracerVar,
+								(ArrayInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
+					}
 				} else if (rwInsnInfo instanceof LocalVarInstructionInfo) {
 					if (rwInsnInfo.getInstruction() instanceof IINC) {
 						newInsns = getInjectCodeTracerIINC(constPool, tracerVar,
@@ -226,11 +229,10 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			/* instrument Invocation instructions */
 			InstructionFactory instructionFactory = new InstructionFactory(classGen, constPool);
 			for (InstructionHandle insn : lineInfo.getInvokeInstructions()) {
-				if (!instrFilter.isValid((InvokeInstruction) insn.getInstruction())) {
-					continue;
+				if (instrFilter.isValid((InvokeInstruction) insn.getInstruction(), constPool)) {
+					injectCodeTracerInvokeMethod(methodGen, insnList, constPool, instructionFactory, tracerVar, insn, line,
+							classNameVar, methodSigVar, isAppClass);
 				}
-				injectCodeTracerInvokeMethod(methodGen, insnList, constPool, instructionFactory, tracerVar, insn, line,
-						classNameVar, methodSigVar, isAppClass);
 			}
 			/* instrument Return instructions */
 			for (InstructionHandle insn : lineInfo.getReturnInsns()) {

@@ -3,8 +3,10 @@ package microbat.instrumentation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
 import sav.common.core.utils.CollectionUtils;
@@ -28,6 +30,7 @@ public class AgentParams {
 	public static final String OPT_LOG = "log";
 	public static final String OPT_INCLUDES_FILE = "includes_file";
 	public static final String OPT_EXCLUDES_FILE = "excludes_file";
+	public static final String OPT_OVER_LONG_METHODS = "overlong_methods";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -46,6 +49,7 @@ public class AgentParams {
 	private int stepLimit;
 	private int expectedSteps;
 	private List<LogType> logTypes;
+	private Set<String> overlongMethods;
 	
 	public static AgentParams parse(String agentArgs) {
 		CommandLine cmd = CommandLine.parse(agentArgs);
@@ -71,7 +75,7 @@ public class AgentParams {
 		}
 		params.setLaunchClass(launchClass);
 		
-		params.classPaths = cmd.getStrings(OPT_CLASS_PATH);
+		params.classPaths = cmd.getStringList(OPT_CLASS_PATH);
 		params.tcpPort = cmd.getInt(OPT_TCP_PORT, -1);
 		params.dumpFile = cmd.getString(OPT_DUMP_FILE);
 		params.includesExpression = getFilterExpression(cmd, OPT_INCLUDES_FILE, OPT_INCLUDES);
@@ -80,7 +84,8 @@ public class AgentParams {
 		
 		params.stepLimit = cmd.getInt(OPT_STEP_LIMIT, Integer.MAX_VALUE);
 		params.expectedSteps = cmd.getInt(OPT_EXPECTED_STEP, -1);
-		params.logTypes = LogType.valuesOf(cmd.getStrings(OPT_LOG));
+		params.logTypes = LogType.valuesOf(cmd.getStringList(OPT_LOG));
+		params.overlongMethods = cmd.getStringSet(OPT_OVER_LONG_METHODS);
 		return params;
 	}
 
@@ -126,13 +131,22 @@ public class AgentParams {
 			return defaultValue;
 		}
 
-		public List<String> getStrings(String option) {
+		public List<String> getStringList(String option) {
 			String value = getString(option);
 			if (value == null || value.isEmpty()) {
 				return new ArrayList<>(0);
 			}
 
 			return CollectionUtils.toArrayList(value.split(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR));
+		}
+		
+		public Set<String> getStringSet(String option) {
+			String value = getString(option);
+			if (value == null || value.isEmpty()) {
+				return new HashSet<>(0);
+			}
+
+			return CollectionUtils.toHashSet(value.split(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR));
 		}
 
 		public String getString(String option) {
@@ -222,6 +236,10 @@ public class AgentParams {
 	
 	public List<LogType> getLogTypes() {
 		return logTypes;
+	}
+	
+	public Set<String> getOverlongMethods() {
+		return overlongMethods;
 	}
 	
 	public AppJavaClassPath initAppClassPath() {

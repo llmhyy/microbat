@@ -1,6 +1,7 @@
 package microbat.instrumentation;
 
 import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.filter.InstrumentationFilter;
 import microbat.instrumentation.instr.TraceTransformer;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.output.TraceOutputWriter;
@@ -33,6 +34,7 @@ public class TraceAgent implements IAgent {
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.stepLimit = agentParams.getStepLimit();
+		InstrumentationFilter.overLongMethods = agentParams.getOverlongMethods();
 		if (agentParams.getExpectedSteps() > 0) {
 			ExecutionTracer.expectedSteps = agentParams.getExpectedSteps();
 		}
