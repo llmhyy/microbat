@@ -854,7 +854,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		newInsns.append(new ALOAD(classNameVar.getIndex()));
 		newInsns.append(new ALOAD(methodSigVar.getIndex()));
 		appendTracerMethodInvoke(newInsns, tracerMethod, constPool);
-		insertInsnHandler(insnList, newInsns, lineNumberInsn);
+		appendInstruction(insnList, lineNumberInsn, newInsns);
 		newInsns.dispose();
 	}
 
