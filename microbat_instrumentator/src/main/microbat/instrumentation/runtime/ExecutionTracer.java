@@ -321,6 +321,10 @@ public class ExecutionTracer implements IExecutionTracer {
 				latestNode.setInvokingMethod(methodSig);
 				initInvokingDetail(invokeObj, invokeTypeSign, methodSig, params, paramTypeSignsCode, residingClassName,
 						latestNode);
+				
+				if(methodSig.contains("clone")){
+					System.currentTimeMillis();
+				}
 			}
 		} catch (Throwable t) {
 			handleException(t);
