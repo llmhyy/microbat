@@ -132,9 +132,9 @@ public class ExecutionTracer implements IExecutionTracer {
 				int length = Array.getLength(value);
 				for (int i = 0; i < length; i++) {
 					String parentSimpleID = Variable.truncateSimpleID(var.getVarID());
-					String aliasVarID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
-					String varName = String.valueOf(i);
-					ArrayElementVar varElement = new ArrayElementVar(varName, arrVal.getComponentType(), aliasVarID);
+					String arrayElementID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
+					String varName = arrayElementID;
+					ArrayElementVar varElement = new ArrayElementVar(varName, arrVal.getComponentType(), arrayElementID);
 					Object elementValue = Array.get(value, i);
 					appendVarValue(elementValue, varElement, arrVal, retrieveLayer);
 				}
@@ -303,9 +303,13 @@ public class ExecutionTracer implements IExecutionTracer {
 						latestNode);
 				
 				if(methodSig.contains("clone()")){
+					
 					String type = SignatureUtils.signatureToName(invokeTypeSign);
 					Variable var = new LocalVar("$tmp", type, null, -1);
 					VarValue value = new ReferenceValue(false, false, var);
+					
+					String varID = TraceUtils.getObjectVarId(invokeObj, invokeTypeSign);
+					value.setVarID(varID);
 					
 					appendVarValue(invokeObj, var, value, 2);
 					
