@@ -26,17 +26,22 @@ public class Agent implements IAgent {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				try {
-					shutdown();
-				} catch (Throwable e) {
-					AgentLogger.error(e);
-				}
+				Agent.stop();
 			}
 		});
 	}
 
 	public static void _exitProgram(String programMsg) {
 		Agent.programMsg = programMsg;
+		stop();
+		Runtime.getRuntime().exit(1); // force program to exit to avoid getting stuck by background running threads.
+	}
+	
+	public static String getProgramMsg() {
+		return programMsg;
+	}
+	
+	public static synchronized void stop() {
 		try {
 			if (!shutdowned) {
 				agent.shutdown();
@@ -45,19 +50,11 @@ public class Agent implements IAgent {
 		} catch (Throwable e) {
 			AgentLogger.error(e);
 		}
-		Runtime.getRuntime().exit(1); // force program to exit to avoid getting stuck by background running threads.
-	}
-	
-	public static String getProgramMsg() {
-		return programMsg;
 	}
 	
 	public void shutdown() throws Exception {
 		try {
-			if (!shutdowned) {
-				agent.shutdown();
-			}
-			shutdowned = true;
+			agent.shutdown();
 		} catch (Throwable e) {
 			AgentLogger.error(e);
 		}

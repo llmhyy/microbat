@@ -19,12 +19,12 @@ import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
-import org.apache.bcel.generic.POP;
 import org.apache.bcel.generic.PUSH;
 import org.apache.bcel.generic.Type;
 
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.ClassGenUtils;
 import microbat.instrumentation.instr.TraceInstrumenter;
 import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
 
@@ -53,24 +53,22 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		for (Method method : instrumentedMethods) {
+			String classMethod = ClassGenUtils.getMethodFullName(classGen.getClassName(), method);
 			try {
 				boolean changed = false;
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
 				changed = super.instrumentMethod(classGen, constPool, methodGen, method, true, false);
 				methodGen.getMethod().toString(); // exception if exceeding limit.
 				if (changed && doesBytecodeExceedLimit(methodGen)) {
-					exceedLimitMethods.add(new StringBuilder(classFName.replace("/", "."))
-								.append("#").append(method.getName()).toString());
+					exceedLimitMethods.add(classMethod);
 				}
 			} catch (Exception e) {
 				String message = e.getMessage();
 				if (e.getMessage() != null && e.getMessage().contains("offset too large")) {
 					message = "offset too large";
-					String methodName = method.getName() + method.getSignature();
-					exceedLimitMethods.add(new StringBuilder(classFName.replace("/", "."))
-							.append("#").append(methodName).toString());
+					exceedLimitMethods.add(classMethod);
 				}
-				AgentLogger.info(String.format("Instrumentation error: %s.%s [%s]", classFName, method.getName(), message));
+				AgentLogger.info(String.format("Warning: %s [%s]", classMethod, message));
 				AgentLogger.error(e);
 			}
 		}
@@ -108,11 +106,12 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 						methodSigVar);
 				if (insn.getInstruction() instanceof InvokeInstruction) {
 					Type returnType = ((InvokeInstruction) insn.getInstruction()).getReturnType(constPool);
-					boolean revisit = !Type.VOID.equals(returnType) && ((insn.getNext() == null)
-							|| !(insn.getNext().getInstruction() instanceof POP));
+					boolean revisit = !Type.VOID.equals(returnType);
+//							&& ((insn.getNext() == null)
+//							|| !(insn.getNext().getInstruction() instanceof POP));
 					if (revisit) {
 						InstructionList newInsns = getHitLineCode(constPool, tracerVar, lineInfo.getSourceLine(), classNameVar, methodSigVar);
-						appendInstruction(insnList, insn, newInsns);
+						appendInstruction(insnList, newInsns, insn);
 						newInsns.dispose();
 					}
 				}

@@ -1,27 +1,38 @@
 package microbat.instrumentation.filter;
 
+import java.util.Collections;
+import java.util.Set;
+
+import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.Type;
 
+import microbat.instrumentation.AgentLogger;
+import microbat.instrumentation.ClassGenUtils;
 import sav.common.core.utils.CollectionUtils;
 
 public class InstrumentationFilter {
 
-	public static IInstrFilter getFilter(String className, String methodName, Type[] argumentTypes,
-			final ConstantPoolGen constPool) {
+	public static Set<String> overLongMethods = Collections.emptySet();
+
+	public static IInstrFilter getFilter(String className, Method method, final ConstantPoolGen constPool) {
 		if ("java.lang.AbstractStringBuilder".equals(className) 
-				&& "append".equals(methodName)
-				&& Type.INT.equals(argumentTypes[0])) {
-			return new IInstrFilter() {
+				&& "append".equals(method.getName())
+				&& Type.INT.equals(method.getArgumentTypes()[0])) {
+			return new EmptyInstrFilter() {
 
 				@Override
-				public boolean isValid(InvokeInstruction instruction) {
+				public boolean isValid(InvokeInstruction instruction, ConstantPoolGen constPool) {
 					return !CollectionUtils.existIn(instruction.getMethodName(constPool), "ensureCapacityInternal",
 							"getChars", "stringSize");
 				}
-				
 			};
+		}
+		String methodFullName = ClassGenUtils.getMethodFullName(className, method);
+		if (overLongMethods.contains(methodFullName)) {
+//			AgentLogger.info("Apply overlongFilter: " + methodFullName);
+			return new OverLongFilter();
 		}
 		return EmptyInstrFilter.getInstance();
 	}

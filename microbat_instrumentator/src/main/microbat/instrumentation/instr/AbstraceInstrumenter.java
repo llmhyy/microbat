@@ -45,7 +45,7 @@ public abstract class AbstraceInstrumenter {
 		return pos;
 	}
 	
-	protected void appendInstruction(InstructionList insnList, InstructionHandle insnHandler, InstructionList newInsns) {
+	protected void appendInstruction(InstructionList insnList, InstructionList newInsns, InstructionHandle insnHandler) {
 		updateTarget(insnHandler, insnHandler, newInsns.getEnd());
 		insnList.append(insnHandler, newInsns);
 	}

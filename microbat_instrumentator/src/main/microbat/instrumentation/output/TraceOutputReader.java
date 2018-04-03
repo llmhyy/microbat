@@ -195,10 +195,11 @@ public class TraceOutputReader extends DataInputStream {
 		if (size == 0) {
 			return null;
 		}
-		SourceScope scope = new SourceScope();
-		scope.setClassName(readString());
-		scope.setStartLine(readVarInt());
-		scope.setEndLine(readVarInt());
+		String className = readString();
+		int startLine = readVarInt();
+		int endLine = readVarInt();
+		SourceScope scope = new SourceScope(className, startLine, endLine);
+		
 		return scope;
 	}
 	

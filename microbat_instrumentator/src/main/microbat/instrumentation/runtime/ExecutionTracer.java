@@ -204,26 +204,6 @@ public class ExecutionTracer implements IExecutionTracer {
 			}
 			
 			return String.valueOf(obj);//obj.toString();
-//			String className = obj.getClass().getName();
-//			
-//			if (FilterChecker.isAppClazz(className)
-//					|| ((type != null) && FilterChecker.isAppClazz(type))) {
-//				return className;
-//			}
-//			if (Map.class.isAssignableFrom(obj.getClass())) {
-//				Map<?, ?> map = (Map<?, ?>) obj;
-//				if (!map.isEmpty()) {
-//					if (FilterChecker.isAppClazz(map.keySet().iterator().next().getClass().getName())) {
-//						return className + ", size=" + map.size();
-//					} else if (!map.values().isEmpty()){
-//						Object value = map.values().iterator().next();
-//						if (value != null && FilterChecker.isAppClazz(value.getClass().getName())) {
-//							return className + ", size=" + map.size();
-//						}
-//					}
-//				}
-//			}
-//			return obj.toString();
 		} catch (Throwable t) {
 			return null;
 		}
