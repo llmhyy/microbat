@@ -440,7 +440,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			newInsns.append(new ALOAD(methodSigVar.getIndex()));
 			newInsns.append(new PUSH(constPool, revisit));
 			appendTracerMethodInvoke(newInsns, TracerMethods.AFTER_INVOKE, constPool);
-			appendInstruction(insnList, insnHandler, newInsns);
+			appendInstruction(insnList, newInsns, insnHandler);
 			newInsns.dispose();
 		}
 	}
@@ -854,7 +854,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		newInsns.append(new ALOAD(classNameVar.getIndex()));
 		newInsns.append(new ALOAD(methodSigVar.getIndex()));
 		appendTracerMethodInvoke(newInsns, tracerMethod, constPool);
-		appendInstruction(insnList, lineNumberInsn, newInsns);
+		appendInstruction(insnList, newInsns, lineNumberInsn);
 		newInsns.dispose();
 	}
 

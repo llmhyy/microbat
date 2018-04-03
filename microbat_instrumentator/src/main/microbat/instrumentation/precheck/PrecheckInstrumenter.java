@@ -111,7 +111,7 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 //							|| !(insn.getNext().getInstruction() instanceof POP));
 					if (revisit) {
 						InstructionList newInsns = getHitLineCode(constPool, tracerVar, lineInfo.getSourceLine(), classNameVar, methodSigVar);
-						appendInstruction(insnList, insn, newInsns);
+						appendInstruction(insnList, newInsns, insn);
 						newInsns.dispose();
 					}
 				}
