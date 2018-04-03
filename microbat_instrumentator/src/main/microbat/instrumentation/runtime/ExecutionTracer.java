@@ -302,8 +302,19 @@ public class ExecutionTracer implements IExecutionTracer {
 				initInvokingDetail(invokeObj, invokeTypeSign, methodSig, params, paramTypeSignsCode, residingClassName,
 						latestNode);
 				
-				if(methodSig.contains("clone")){
-					System.currentTimeMillis();
+				if(methodSig.contains("clone()")){
+					String type = SignatureUtils.signatureToName(invokeTypeSign);
+					Variable var = new LocalVar("$tmp", type, null, -1);
+					VarValue value = new ReferenceValue(false, false, var);
+					
+					appendVarValue(invokeObj, var, value, 2);
+					
+					if(!value.getChildren().isEmpty()){
+						VarValue parent = value.getChildren().get(0);
+						for(VarValue childValue: parent.getChildren()){
+							addRWriteValue(childValue, false);
+						}
+					}
 				}
 			}
 		} catch (Throwable t) {
