@@ -131,6 +131,7 @@ public class MethodNode {
 		return hList;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private List<InstructionHandle> findFieldDefinition(FieldVar field){
 		List<InstructionHandle> hList = new ArrayList<>();
 		
@@ -145,8 +146,27 @@ public class MethodNode {
 				String className = ins.getReferenceType(gen).getSignature();
 				className = SignatureUtils.signatureToName(className);
 				
-				if(field.getName().equals(fieldName) && field.getDeclaringType().equals(className)){
-					hList.add(handle);
+				if(field.getName().equals(fieldName)){
+					
+					if(field.getDeclaringType().equals(className)){
+						hList.add(handle);
+					}
+					else{
+						try {
+							Class delClass = Class.forName(field.getDeclaringType());
+							Class typeClass = Class.forName(className);
+							
+							if(typeClass.isAssignableFrom(delClass)){
+								hList.add(handle);
+							}
+							
+						} catch (ClassNotFoundException e) {
+							e.printStackTrace();
+						}
+						
+					}
+					
+					
 				}
 				
 			}
