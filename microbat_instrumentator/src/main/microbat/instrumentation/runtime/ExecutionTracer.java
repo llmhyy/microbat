@@ -343,14 +343,14 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	@Override
 	public void _hitInvokeStatic(String invokeTypeSign, String methodSig, Object[] params,
-			String paramTypeSignsCode, String returnTypeSign, int line, String className, String methodSignature) {
+			String paramTypeSignsCode, String returnTypeSign, int line, String className, String residingMethodSignature) {
 		locker.lock();
 		try {
-			_hitLine(line, className, methodSignature);
+			_hitLine(line, className, residingMethodSignature);
 			TraceNode latestNode = trace.getLatestNode();
 			if (latestNode != null) {
 				latestNode.setInvokingMethod(methodSig);
-				initInvokingDetail(null, invokeTypeSign, methodSignature, params, paramTypeSignsCode, className,
+				initInvokingDetail(null, invokeTypeSign, methodSig, params, paramTypeSignsCode, className,
 						latestNode);
 			}
 		} catch (Throwable t) {
@@ -374,7 +374,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	 * Instrument for: Application Classes only.
 	 */
 	@Override
-	public void _afterInvoke(int line, String residingClassName, String residingMethodSignature, boolean needRevisiting) {
+	public void _afterInvoke(Object invokeObj, String invokeMethodSig, int line, String residingClassName,
+			String residingMethodSignature, boolean needRevisiting) {
 		locker.lock();
 		try {
 			boolean exclusive = FilterChecker.isExclusive(residingClassName, residingMethodSignature);

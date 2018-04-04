@@ -386,7 +386,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 			newInsns.append(new ALOAD(tracerVar.getIndex())); // tracer
 		}
 		newInsns.append(new PUSH(constPool, className)); 
-		// ([objectRef], objectRef), invokeType
+		// ([objectRef], objectRef),  
 
 		String sig = insn.getSignature(constPool);
 		String methodName = insn.getMethodName(constPool);
@@ -413,6 +413,11 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		appendTracerMethodInvoke(newInsns, tracerMethod, constPool);
 		
 		/* on stack: (objectRef) */
+		// duplicate objectRef to use in afterInvoke
+		if (isAppClass && !isInvokeStatic) {
+			newInsns.append(new DUP()); // objectRef, objectRef
+		}
+		
 		/* restore arg values */
 		for (int i = 0; i < argTypes.length; i++) {
 			Type argType = argTypes[i];
@@ -426,15 +431,39 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 						basicTypeSupporter.getToPrimitiveValueMethodIdx((BasicType) argType, constPool)));
 			}
 		}
+		
 		insertInsnHandler(insnList, newInsns, insnHandler);
 		newInsns.dispose();
-		/* after */
+		/* after_invoke */
 		if (isAppClass) {
+			/* on stack: [objectRef]/[], returnValue */
 			boolean revisit = !Type.VOID.equals(returnType); 
 //					&& ((insnHandler.getNext() == null)
 //					|| !(insnHandler.getNext().getInstruction() instanceof POP));
 			newInsns = new InstructionList();
-			newInsns.append(new ALOAD(tracerVar.getIndex()));
+			if (isInvokeStatic) {
+				newInsns.append(new ALOAD(tracerVar.getIndex()));
+				newInsns.append(new ACONST_NULL());
+				// $tracer, null
+			} else {
+				if (Type.VOID.equals(returnType)) {
+					// objectRef
+					// do nothing
+				} else if (returnType.getSize() == 1) {
+					// objectRef, returnValue
+					newInsns.append(new SWAP());
+					// returnValue, objectRef
+				} else { // 2
+					newInsns.append(new DUP2_X1());
+					// returnValue*, objectRef, returnValue*
+					newInsns.append(new POP2());
+					// returnValue*, objectRef
+				}
+				newInsns.append(new ALOAD(tracerVar.getIndex()));
+				newInsns.append(new SWAP());
+				// $tracer, objectRef
+			}
+			newInsns.append(new PUSH(constPool, mSig));
 			newInsns.append(new PUSH(constPool, line));
 			newInsns.append(new ALOAD(classNameVar.getIndex()));
 			newInsns.append(new ALOAD(methodSigVar.getIndex()));

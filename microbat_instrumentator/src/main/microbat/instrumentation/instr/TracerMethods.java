@@ -1,7 +1,7 @@
 package microbat.instrumentation.instr;
 
 public enum TracerMethods {
-	AFTER_INVOKE(true, "microbat/instrumentation/runtime/IExecutionTracer", "_afterInvoke", "(ILjava/lang/String;Ljava/lang/String;Z)V", 5),
+	AFTER_INVOKE(true, "microbat/instrumentation/runtime/IExecutionTracer", "_afterInvoke", "(Ljava/lang/Object;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Z)V", 7),
 	GET_TRACER(false, "microbat/instrumentation/runtime/ExecutionTracer", "_getTracer", "(ZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)Lmicrobat/instrumentation/runtime/IExecutionTracer;", 9),
 	HIT_EXEPTION_TARGET(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitExeptionTarget", "(ILjava/lang/String;Ljava/lang/String;)V", 4),
 	HIT_INVOKE(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitInvoke", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 10),
@@ -20,7 +20,6 @@ public enum TracerMethods {
 	WRITE_FIELD(true, "microbat/instrumentation/runtime/IExecutionTracer", "_writeField", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 8),
 	WRITE_LOCAL_VAR(true, "microbat/instrumentation/runtime/IExecutionTracer", "_writeLocalVar", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;IIIILjava/lang/String;Ljava/lang/String;)V", 10),
 	WRITE_STATIC_FIELD(true, "microbat/instrumentation/runtime/IExecutionTracer", "_writeStaticField", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 8)
-
 	;
 	private boolean interfaceMethod;
 	private String declareClass;
