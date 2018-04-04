@@ -216,8 +216,12 @@ public class ExecutionTracer implements IExecutionTracer {
 	public void enterMethod(String className, String methodSignature, int methodStartLine, int methodEndLine, 
 			String paramTypeSignsCode, String paramNamesCode, Object[] params) {
 		locker.lock();
-		TraceNode latestNode = trace.getLatestNode();
-		if(latestNode!=null){
+		TraceNode caller = trace.getLatestNode();
+		if(caller!=null && caller.getMethodSign().contains("<clinit>")){
+			caller = caller.getInvocationParent();
+		}
+		
+		if(caller!=null){
 			int varScopeStart = methodStartLine;
 			int varScopeEnd = methodEndLine;
 			
@@ -235,7 +239,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				
 				Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
 				
-				String varID = Variable.concanateLocalVarID(className, varName, varScopeStart, varScopeEnd, latestNode.getInvocationLevel()+1);
+				String varID = Variable.concanateLocalVarID(className, varName, varScopeStart, varScopeEnd, caller.getInvocationLevel()+1);
 				var.setVarID(varID);
 				VarValue value = appendVarValue(params[i], var, null);
 				addRWriteValue(value, true);
@@ -244,8 +248,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		
 		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 		if (!exclusive) {
-			if(latestNode!=null){
-				methodCallStack.push(latestNode);
+			if(caller!=null){
+				methodCallStack.push(caller);
 			}
 			_hitLine(methodStartLine, className, methodSignature);
 		} else {
