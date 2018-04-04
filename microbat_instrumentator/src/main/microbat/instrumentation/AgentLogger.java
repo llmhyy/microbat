@@ -50,7 +50,7 @@ public class AgentLogger {
 	public static void printProgress(int curStep, int stepTotal) {
 		if (printProgress) {
 			System.out.println(new StringBuffer().append(AgentConstants.PROGRESS_HEADER)
-					.append(curStep).append(" ").append(stepTotal).toString());
+					.append(curStep).append(" ").append(stepTotal).append(" ").toString());
 		}
 	}
 
