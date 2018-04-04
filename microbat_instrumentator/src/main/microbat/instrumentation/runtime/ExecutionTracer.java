@@ -60,9 +60,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		trace = new Trace(appJavaClassPath);
 	}
 
-	private void buildDataRelation(VarValue value, String rw){
+	private void buildDataRelation(TraceNode currentNode, VarValue value, String rw){
 		Variable var = value.getVariable();
-		TraceNode currentNode = trace.getLatestNode();
 		if(currentNode==null){
 			return;
 		}
@@ -242,7 +241,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				String varID = Variable.concanateLocalVarID(className, varName, varScopeStart, varScopeEnd, caller.getInvocationLevel()+1);
 				var.setVarID(varID);
 				VarValue value = appendVarValue(params[i], var, null);
-				addRWriteValue(value, true);
+				addRWriteValue(caller, value, true);
 			}
 		}
 		
@@ -320,7 +319,7 @@ public class ExecutionTracer implements IExecutionTracer {
 					if(!value.getChildren().isEmpty()){
 						VarValue parent = value.getChildren().get(0);
 						for(VarValue childValue: parent.getChildren()){
-							addRWriteValue(childValue, false);
+							addRWriteValue(latestNode, childValue, false);
 						}
 					}
 				}
@@ -532,8 +531,8 @@ public class ExecutionTracer implements IExecutionTracer {
 		try {
 			_hitLine(line, className, methodSignature); 
 			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			TraceNode latestNode = trace.getLatestNode();
 			if (exclusive) {
-				TraceNode latestNode = trace.getLatestNode();
 				if (latestNode != null && latestNode.getInvokingDetail() != null) {
 					InvokingDetail invokingDetail = latestNode.getInvokingDetail();
 					boolean relevant = invokingDetail.updateRelevantVar(refValue, fieldValue, fieldType);
@@ -562,27 +561,27 @@ public class ExecutionTracer implements IExecutionTracer {
 			ReferenceValue parentValue = new ReferenceValue(false, false, parentVariable);
 			value.addParent(parentValue);
 			
-			addRWriteValue(value, true);
+			addRWriteValue(latestNode, value, true);
 		} catch (Throwable t) {
 			handleException(t);
 		}
 		locker.unLock();
 	}
 
-	private void addRWriteValue(VarValue value, boolean isWrittenVar) {
+	private void addRWriteValue(TraceNode currentNode, VarValue value, boolean isWrittenVar) {
 		if (value == null) {
 			return;
 		}
-		TraceNode currentNode = trace.getLatestNode();
+		
 		if (currentNode == null) {
 			return;
 		}
 		if (isWrittenVar) {
 			currentNode.addWrittenVariable(value);
-			buildDataRelation(value, Variable.WRITTEN);
+			buildDataRelation(currentNode, value, Variable.WRITTEN);
 		} else {
 			currentNode.addReadVariable(value);
-			buildDataRelation(value, Variable.READ);
+			buildDataRelation(currentNode, value, Variable.READ);
 		}
 	}
 	
@@ -610,7 +609,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				var.setAliasVarID(aliasVarID);				
 			}
 			VarValue value = appendVarValue(fieldValue, var, null);
-			addRWriteValue(value, true);
+			addRWriteValue(trace.getLatestNode(), value, true);
 		} catch (Throwable t) {
 			handleException(t);
 		}
@@ -660,7 +659,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			ReferenceValue parentValue = new ReferenceValue(false, false, parentVariable);
 			value.addParent(parentValue);
 			
-			addRWriteValue(value, false);
+			addRWriteValue(trace.getLatestNode(), value, false);
 		} catch (Throwable t) {
 			handleException(t);
 		}
@@ -685,7 +684,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			var.setAliasVarID(aliasID);
 			
 			VarValue value = appendVarValue(fieldValue, var, null);
-			addRWriteValue(value, false);
+			addRWriteValue(trace.getLatestNode(), value, false);
 		} catch (Throwable t) {
 			handleException(t);
 		}
@@ -718,7 +717,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			}
 			
 			VarValue value = appendVarValue(varValue, var, null);
-			addRWriteValue(value, true);
+			addRWriteValue(trace.getLatestNode(), value, true);
 		} catch (Throwable t) {
 			handleException(t);
 		}
@@ -749,7 +748,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			var.setAliasVarID(aliasVarID);
 			
 			VarValue value = appendVarValue(varValue, var, null);
-			addRWriteValue(value, false);
+			addRWriteValue(trace.getLatestNode(), value, false);
 			
 			
 //			TraceNode currentNode = trace.getLatestNode();
@@ -836,11 +835,11 @@ public class ExecutionTracer implements IExecutionTracer {
 			
 			Variable varBefore = var.clone();
 			VarValue value = appendVarValue(varValue, varBefore, null);
-			addRWriteValue(value, false); // add read var
+			addRWriteValue(trace.getLatestNode(), value, false); // add read var
 			
 			Variable varAfter = var.clone();
 			VarValue writtenValue = appendVarValue(varValueAfter, varAfter, null);
-			addRWriteValue(writtenValue, true); // add written var
+			addRWriteValue(trace.getLatestNode(), writtenValue, true); // add written var
 		} catch (Throwable t) {
 			handleException(t);
 		}
@@ -880,7 +879,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			ReferenceValue parentValue = new ReferenceValue(false, false, parentVariable);
 			value.addParent(parentValue);
 			
-			addRWriteValue(value, false);
+			addRWriteValue(trace.getLatestNode(), value, false);
 		} catch (Throwable t) {
 			handleException(t);
 		}
@@ -921,7 +920,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			ReferenceValue parentValue = new ReferenceValue(false, false, parentVariable);
 			value.addParent(parentValue);
 			
-			addRWriteValue(value, true);
+			addRWriteValue(trace.getLatestNode(), value, true);
 		} catch (Throwable t) {
 			handleException(t);
 		}
