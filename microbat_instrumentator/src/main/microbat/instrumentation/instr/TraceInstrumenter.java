@@ -122,6 +122,7 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		}
 		if (newJC != null) {
 			byte[] data = newJC.getBytes();
+//			AbstractTransformer.log(data, data, classFName, true);
 			return data;
 		}
 		return null;
