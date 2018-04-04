@@ -384,9 +384,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				if (latestNode != null) {
 					latestNode.setInvokingDetail(null);
 				}
-				if (needRevisiting) {
-					_hitLine(line, residingClassName, residingMethodSignature);
-				}
+				_hitLine(line, residingClassName, residingMethodSignature);
 			}
 		} catch (Throwable t) {
 			handleException(t);
