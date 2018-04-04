@@ -395,10 +395,10 @@ public class ExecutionTracer implements IExecutionTracer {
 					Variable var = new LocalVar("$tmp", type, null, -1);
 					VarValue value = new ReferenceValue(false, false, var);
 					
-					String varID = TraceUtils.getObjectVarId(invokeObj, returnTypeSign);
+					String varID = TraceUtils.getObjectVarId(returnedValue, returnTypeSign);
 					value.setVarID(varID);
 					
-					appendVarValue(invokeObj, var, value, 2);
+					appendVarValue(returnedValue, var, value, 2);
 					
 					if(!value.getChildren().isEmpty()){
 						VarValue parent = value.getChildren().get(0);
