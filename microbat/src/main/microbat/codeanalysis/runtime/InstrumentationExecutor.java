@@ -99,8 +99,10 @@ public class InstrumentationExecutor {
 			if (precheckInfomation.isUndeterministic()) {
 				System.out.println("undeterministic!!");
 			} 
-			if (!info.isOverLong() && info.getExceedingLimitMethods().isEmpty() && 
-					!precheckInfomation.isUndeterministic()) {
+			if (!info.isOverLong() && !precheckInfomation.isUndeterministic()) {
+				if (!info.getExceedingLimitMethods().isEmpty()) {
+					agentRunner.addAgentParams(AgentParams.OPT_OVER_LONG_METHODS, info.getExceedingLimitMethods());
+				}
 				RunningInformation rInfo = execute(precheckInfomation);
 				return rInfo;
 			}
@@ -150,6 +152,7 @@ public class InstrumentationExecutor {
 			RunningInfo result = agentRunner.getRunningInfo();
 //			System.out.println(result);
 			System.out.println("isExpectedStepsMet? " + result.isExpectedStepsMet());
+			System.out.println("trace length: " + result.getTrace().size());
 			System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 			System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 			System.out.println("finish!");
