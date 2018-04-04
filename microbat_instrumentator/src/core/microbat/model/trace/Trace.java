@@ -649,8 +649,12 @@ public class Trace {
 					order = node2.getOrder();
 				}
 				else if(node1!=null && node2!=null){
-					if(node2.getInvocationParent().equals(currentNode.getInvocationParent())){
+					if(node2.getInvocationParent()==null && currentNode.getInvocationParent()==null){
 						order = (node1.getOrder()>node2.getOrder())?node1.getOrder():node2.getOrder();						
+					}
+					else if(node2.getInvocationParent()!=null && currentNode.getInvocationParent()!=null
+							&& node2.getInvocationParent().equals(currentNode.getInvocationParent())){
+						order = (node1.getOrder()>node2.getOrder())?node1.getOrder():node2.getOrder();
 					}
 					else{
 						order = node1.getOrder();
