@@ -3,10 +3,20 @@ package microbat.instrumentation.instr;
 import org.apache.bcel.Const;
 import org.apache.bcel.generic.BasicType;
 import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.INVOKESTATIC;
+import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.ReferenceType;
+import org.apache.bcel.generic.Type;
 
 public class BasicTypeSupporter {
+	
+	public void appendObjectConvertInstruction(Type returnType, InstructionList newInsns, ConstantPoolGen constPool) {
+		if (!Type.VOID.equals(returnType) && returnType instanceof BasicType) {
+			newInsns.append(
+					new INVOKESTATIC(getValueOfMethodIdx((BasicType) returnType, constPool)));
+		}
+	}
 	
 	public int getToPrimitiveValueMethodIdx(BasicType type, ConstantPoolGen cpg) {
 		int idx;

@@ -32,6 +32,7 @@ import org.apache.bcel.generic.INVOKEINTERFACE;
 import org.apache.bcel.generic.INVOKESPECIAL;
 import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.INVOKEVIRTUAL;
+import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
@@ -122,7 +123,6 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		}
 		if (newJC != null) {
 			byte[] data = newJC.getBytes();
-//			AbstractTransformer.log(data, data, classFName, true);
 			return data;
 		}
 		return null;
@@ -437,42 +437,79 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 		newInsns.dispose();
 		/* after_invoke */
 		if (isAppClass) {
-			/* on stack: [objectRef]/[], returnValue */
-			boolean revisit = !Type.VOID.equals(returnType); 
+			injectCodeAfterInvoke(insnList, constPool, tracerVar, insnHandler, line, classNameVar, methodSigVar,
+					isInvokeStatic, returnType, mSig);
+		}
+	}
+
+	private void injectCodeAfterInvoke(InstructionList insnList, ConstantPoolGen constPool, LocalVariableGen tracerVar,
+			InstructionHandle insnHandler, int line, LocalVariableGen classNameVar, LocalVariableGen methodSigVar,
+			boolean isInvokeStatic, Type returnType, String mSig) {
+		InstructionList newInsns;
+		/* on stack: [objectRef]/[], returnValue */
+		boolean revisit = !Type.VOID.equals(returnType); 
 //					&& ((insnHandler.getNext() == null)
 //					|| !(insnHandler.getNext().getInstruction() instanceof POP));
-			newInsns = new InstructionList();
-			if (isInvokeStatic) {
-				newInsns.append(new ALOAD(tracerVar.getIndex()));
-				newInsns.append(new ACONST_NULL());
-				// $tracer, null
-			} else {
-				if (Type.VOID.equals(returnType)) {
-					// objectRef
-					// do nothing
-				} else if (returnType.getSize() == 1) {
-					// objectRef, returnValue
-					newInsns.append(new SWAP());
-					// returnValue, objectRef
-				} else { // 2
-					newInsns.append(new DUP2_X1());
-					// returnValue*, objectRef, returnValue*
-					newInsns.append(new POP2());
-					// returnValue*, objectRef
-				}
-				newInsns.append(new ALOAD(tracerVar.getIndex()));
-				newInsns.append(new SWAP());
-				// $tracer, objectRef
+		newInsns = new InstructionList();
+		
+		if (isInvokeStatic) {
+			if (Type.VOID.equals(returnType)) {
+				/* on stack: [empty] */
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // $tracer
+				newInsns.append(new ACONST_NULL()); // $tracer, returnValue
+			} else if (returnType.getSize() == 1) {
+				/* on stack: returnValue */
+				newInsns.append(new DUP()); // returnValue, returnValue
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // returnValue, returnValue, $tracer
+				newInsns.append(new SWAP()); // returnValue, $tracer, returnValue
+			} else { // 2
+				/* on stack: returnValue* */
+				newInsns.append(new DUP2()); // returnValue*, returnValue*
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // returnValue*, returnValue*, $tracer
+				newInsns.append(new DUP_X2()); // returnValue*, $tracer, returnValue*, $tracer
+				newInsns.append(new POP()); // returnValue*, $tracer, returnValue*
 			}
-			newInsns.append(new PUSH(constPool, mSig));
-			newInsns.append(new PUSH(constPool, line));
-			newInsns.append(new ALOAD(classNameVar.getIndex()));
-			newInsns.append(new ALOAD(methodSigVar.getIndex()));
-			newInsns.append(new PUSH(constPool, revisit));
-			appendTracerMethodInvoke(newInsns, TracerMethods.AFTER_INVOKE, constPool);
-			appendInstruction(insnList, newInsns, insnHandler);
-			newInsns.dispose();
+			basicTypeSupporter.appendObjectConvertInstruction(returnType, newInsns, constPool);
+			newInsns.append(new ACONST_NULL()); // (returnValue(*)), $tracer, returnValue*, objectRef
+			/* no redundant obj on stack */
+		} else {
+			if (Type.VOID.equals(returnType)) {
+				// objectRef
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // objectRef, $tracer
+				newInsns.append(new SWAP()); // $tracer, objectRef
+				newInsns.append(new ACONST_NULL()); // $tracer, objectRef, returnValue_null
+				newInsns.append(new SWAP()); // $tracer, returnValue_null, objectRef
+				// do nothing
+			} else if (returnType.getSize() == 1) {
+				// objectRef, returnValue
+				newInsns.append(new DUP()); // objectRef, returnValue, returnValue
+				newInsns.append(new DUP_X2()); // returnValue, objectRef, returnValue, returnValue
+				newInsns.append(new POP()); // returnValue, objectRef, returnValue
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // [returnValue], objectRef, returnValue, $trace
+				newInsns.append(new DUP_X2()); // [returnValue], $trace, objectRef, returnValue, $trace
+				newInsns.append(new POP()); // [returnValue], $trace, objectRef, returnValue
+				basicTypeSupporter.appendObjectConvertInstruction(returnType, newInsns, constPool);
+				newInsns.append(new SWAP()); // [returnValue], $trace, returnValue, objectRef
+				// returnValue, objectRef
+			} else { // 2
+				/* on stack: objectRef, returnValue* */
+				newInsns.append(new DUP2_X1()); // returnValue*, objectRef, returnValue*
+				basicTypeSupporter.appendObjectConvertInstruction(returnType, newInsns, constPool); // returnValue*, objectRef, returnValue
+				newInsns.append(new ALOAD(tracerVar.getIndex())); // [returnValue*], objectRef, returnValue, $trace
+				newInsns.append(new DUP_X2()); // [returnValue*], $trace, objectRef, returnValue, $trace
+				newInsns.append(new POP()); // [returnValue*], $trace, objectRef, returnValue
+				newInsns.append(new SWAP()); // [returnValue*], $trace, returnValue, objectRef
+			}
+			// $tracer, returnValue, objectRef
 		}
+		newInsns.append(new PUSH(constPool, mSig));
+		newInsns.append(new PUSH(constPool, line));
+		newInsns.append(new ALOAD(classNameVar.getIndex()));
+		newInsns.append(new ALOAD(methodSigVar.getIndex()));
+		newInsns.append(new PUSH(constPool, revisit));
+		appendTracerMethodInvoke(newInsns, TracerMethods.AFTER_INVOKE, constPool);
+		appendInstruction(insnList, newInsns, insnHandler);
+		newInsns.dispose();
 	}
 
 	private InstructionList getInjectCodeTracerRWriteField(ConstantPoolGen constPool, LocalVariableGen tracerVar,
