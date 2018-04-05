@@ -33,10 +33,26 @@ public class MethodFinderByLine extends ByteCodeMethodFinder {
 	public void visitMethod(Method method){
 		if(method.getLineNumberTable()!=null){
 			
+			int min = -1;
+			int max = -1;
 			for(LineNumber lineNumber: method.getLineNumberTable().getLineNumberTable()){
-				if(lineNumber.getLineNumber()==point.getLineNumber()){
-					this.setMethod(method);
+				if(min==-1){
+					min = lineNumber.getLineNumber();
 				}
+				else if(min>lineNumber.getLineNumber()){
+					min = lineNumber.getLineNumber();
+				}
+				
+				if(max==-1){
+					max = lineNumber.getLineNumber();
+				}
+				else if(max<lineNumber.getLineNumber()){
+					max = lineNumber.getLineNumber();
+				}
+			}
+			
+			if(min<=point.getLineNumber() && point.getLineNumber()<=max){
+				this.setMethod(method);
 			}
 			
 			if(method.getCode()!=null){
