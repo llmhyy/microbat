@@ -1,7 +1,9 @@
 package microbat.codeanalysis.bytecode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.InstructionHandle;
@@ -9,7 +11,7 @@ import org.apache.bcel.generic.InstructionHandle;
 public class CFG {
 	private Method method;
 	
-	private List<CFGNode> nodeList = new ArrayList<>();
+	private Map<Integer, CFGNode> nodeList = new HashMap<>();
 	private CFGNode startNode;
 	private List<CFGNode> exitList = new ArrayList<>();
 
@@ -31,17 +33,17 @@ public class CFG {
 
 
 	public List<CFGNode> getNodeList() {
-		return nodeList;
+		return new ArrayList<>(nodeList.values());
 	}
 	
 	public void addNode(CFGNode node){
-		if(!this.nodeList.contains(node)){
-			this.nodeList.add(node);			
+		if(!this.nodeList.keySet().contains(node)){
+			this.nodeList.put(node.getInstructionHandle().getPosition(), node);			
 		}
 	}
 	
 	public boolean contains(CFGNode node){
-		return this.nodeList.contains(node);
+		return this.nodeList.keySet().contains(node.getInstructionHandle().getPosition());
 	}
 	
 	/**
@@ -55,28 +57,20 @@ public class CFG {
 		CFGNode node = findNode(handle);
 		if(node == null){
 			node = new CFGNode(handle);
-			this.nodeList.add(node);
+			this.nodeList.put(handle.getPosition(), node);
 		}
 		
 		return node;
 	}
 	
 	public CFGNode findNode(InstructionHandle handle){
-		for(CFGNode node: this.nodeList){
-			if(node.getInstructionHandle().getPosition() == handle.getPosition()){
-				return node;
-			}
-		}
-		return null;
+		CFGNode node = this.nodeList.get(handle.getPosition());
+		return node;
 	}
 	
 	public CFGNode findNode(int offset){
-		for(CFGNode node: this.nodeList){
-			if(node.getInstructionHandle().getPosition() == offset){
-				return node;
-			}
-		}
-		return null;
+		CFGNode node = this.nodeList.get(offset);
+		return node;
 	}
 
 	public int size() {

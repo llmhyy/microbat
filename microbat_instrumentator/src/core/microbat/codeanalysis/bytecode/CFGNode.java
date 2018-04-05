@@ -71,6 +71,11 @@ public class CFGNode {
 	}
 
 	@Override
+	public int hashCode(){
+		return this.instructionHandle.getPosition();
+	}
+	
+	@Override
 	public boolean equals(Object obj) {
 		if(obj instanceof CFGNode){
 			CFGNode otherNode = (CFGNode)obj;

@@ -51,8 +51,17 @@ public class TraceAgent implements IAgent {
 		FilterChecker.addFilterInfo(trace);
 		
 		StepMismatchChecker.logNormalSteps(trace);
+		
+		long t1 = System.currentTimeMillis();
 		createVirtualDataRelation(trace);
+		long t2 = System.currentTimeMillis();
+		AgentLogger.debug("time for createVirtualDataRelation: "  + (t2-t1)/1000);
+		
+		t1 = System.currentTimeMillis();
 		trace.constructControlDomianceRelation();
+		t2 = System.currentTimeMillis();
+		AgentLogger.debug("time for constructControlDomianceRelation: "  + (t2-t1)/1000);
+		
 //		trace.constructLoopParentRelation();
 		timer.newPoint("Saving trace");
 		writeOutput(trace);
