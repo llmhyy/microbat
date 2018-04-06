@@ -252,6 +252,7 @@ public class MutationExperimentator {
 						FileUtils.copyFile(backupJFile, orgFilePath, true);
 						Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
 						Settings.compilationUnitMap.remove(mutation.getMutatedClass());
+						new File(backupJFile).delete();
 					}
 				}
 				monitor.reportTrial(params, correctTraceInfo, muTrace.getTraceExecInfo(), mutation, foundRootCause);
