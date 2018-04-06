@@ -70,6 +70,7 @@ public class MutationExperimentator {
 	public void runEvaluation(IPackageFragment pack, AnalysisParams analysisParams,
 			IMutationExperimentMonitor monitor) throws JavaModelException {
 
+		String testSourceFolder = null;
 		for (IJavaElement javaElement : pack.getChildren()) {
 			if (javaElement instanceof IPackageFragment) {
 				runEvaluation((IPackageFragment) javaElement, analysisParams, monitor);
@@ -92,6 +93,10 @@ public class MutationExperimentator {
 						if (analysisParams.getIgnoredTestCaseFiles().contains(tcParams.getTestcaseName())) {
 							continue;
 						}
+						if (testSourceFolder == null) {
+							testSourceFolder = IResourceUtils.getSourceFolderPath(tcParams.getProjectName(), className);
+						}
+						tcParams.setTestSourceFolder(testSourceFolder);
 						TraceExecutionInfo correctTrace = executeTestcase(tcParams);
 						runSingleTestcase(correctTrace, tcParams, monitor);
 					} catch (Exception e) {
@@ -428,13 +433,13 @@ public class MutationExperimentator {
 		if (muLocations.isEmpty() && staticCandidates.isEmpty()) {
 			return Collections.emptyList();
 		}
+		
+		filterLocationsInTestPackage(params.getTestSourceFolder(), muLocations);
+		filterLocationsInTestPackage(params.getTestSourceFolder(), staticCandidates);
+		
 		ClassLocation cl = muLocations.isEmpty() ? staticCandidates.get(0) : muLocations.get(0);
 		String cName = cl.getClassCanonicalName();
 		String sourceFolderPath = MuRegressionUtils.getSourceFolder(cName, params.getProjectName());
-		
-		filterLocationsInTestPackage(sourceFolderPath, muLocations);
-		filterLocationsInTestPackage(sourceFolderPath, staticCandidates);
-		
 		Mutator mutator = new Mutator(sourceFolderPath, params.getAnalysisOutputFolder(),
 				params.getAnalysisParams().getMuTotal());
 		MutationVisitor visitor = new TraceMutationVisitor(params.getAnalysisParams().getMutationTypes());
@@ -451,16 +456,16 @@ public class MutationExperimentator {
 		return result;
 	}
 
-	private void filterLocationsInTestPackage(String sourceFolderPath,
+	private void filterLocationsInTestPackage(String testSrcFolderPath,
 			List<ClassLocation> locationList) {
 		Iterator<ClassLocation> iterator = locationList.iterator();
 		while(iterator.hasNext()){
 			ClassLocation location = iterator.next();
 			String className = location.getClassCanonicalName();
-			String fileName  = ClassUtils.getJFilePath(sourceFolderPath, className);
+			String fileName  = ClassUtils.getJFilePath(testSrcFolderPath, className);
 			File file = new File(fileName);
-			/* if location's owner class is not in source folder, then remove it */
-			if(!file.exists()){
+			/* if location's owner class is in test source folder, then remove it */
+			if(file.exists()){
 				iterator.remove();
 			}
 		}
