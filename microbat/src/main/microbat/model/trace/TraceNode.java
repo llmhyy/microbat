@@ -85,6 +85,8 @@ public class TraceNode{
 	
 	private boolean isException;
 	
+	private TraceNode invokingMatchNode;
+	
 	private long runtimePC;
 	private Trace trace;
 	
@@ -1145,6 +1147,14 @@ public class TraceNode{
 	
 	public void setSourceVersion(boolean flag){
 		this.breakPoint.setSourceVersion(flag);
+	}
+
+	public TraceNode getInvokingMatchNode() {
+		return invokingMatchNode;
+	}
+
+	public void setInvokingMatchNode(TraceNode invokingMatchNode) {
+		this.invokingMatchNode = invokingMatchNode;
 	}
 
 

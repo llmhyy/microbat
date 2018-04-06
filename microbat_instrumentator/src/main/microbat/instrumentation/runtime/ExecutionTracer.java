@@ -3,6 +3,7 @@ package microbat.instrumentation.runtime;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -389,11 +390,16 @@ public class ExecutionTracer implements IExecutionTracer {
 		try {
 			boolean exclusive = FilterChecker.isExclusive(residingClassName, residingMethodSignature);
 			if (!exclusive) {
+				_hitLine(line, residingClassName, residingMethodSignature);
 				TraceNode latestNode = trace.getLatestNode();
 				if (latestNode != null) {
 					latestNode.setInvokingDetail(null);
+//					TraceNode invokingMatchNode = findInvokingMatchNode(latestNode, invokeMethodSig);
+//					if(invokingMatchNode!=null){
+//						invokingMatchNode.setInvokingMatchNode(latestNode);
+//						latestNode.setInvokingMatchNode(invokingMatchNode);
+//					}
 				}
-				_hitLine(line, residingClassName, residingMethodSignature);
 				
 				if(returnedValue!=null && invokeMethodSig.contains("clone()")){
 					String returnTypeSign = returnedValue.getClass().getName();
@@ -420,6 +426,31 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.unLock();
 	}
 	
+	private TraceNode findInvokingMatchNode(TraceNode latestNode, String invokingMethodSig) {
+		List<TraceNode> candidates = new ArrayList<>();
+		if(latestNode.getInvocationParent()!=null){
+			candidates = latestNode.getInvocationParent().getInvocationChildren();
+		}
+		else{
+			candidates = trace.getTopMethodLevelNodes();
+		}
+		
+		for(int i=candidates.size()-1; i>=0; i--){
+			TraceNode prevOver = candidates.get(i);
+			if(prevOver.getOrder()!=latestNode.getOrder()){
+				String prevOverInvocation = prevOver.getInvokingMethod();
+				if(prevOverInvocation!=null && prevOverInvocation.equals(invokingMethodSig)){
+					
+					if(prevOver.getInvokingMatchNode()==null){
+						return prevOver;						
+					}
+				}
+			}
+		}
+		System.currentTimeMillis();
+		return null;
+	}
+
 	/**
 	 * @param line
 	 * @param returnObj
