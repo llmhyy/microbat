@@ -44,7 +44,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	public static AppJavaClassPath appJavaClassPath;
 	public static int variableLayer = 2;
 	public static int stepLimit = Integer.MAX_VALUE;
-	public static int expectedSteps = Integer.MAX_VALUE;
+	private static int expectedSteps = Integer.MAX_VALUE;
+	private static int tolerantExpectedSteps = expectedSteps;
 	
 	static {
 		rtStores = new HashMap<>();
@@ -53,6 +54,11 @@ public class ExecutionTracer implements IExecutionTracer {
 
 	private MethodCallStack methodCallStack;
 	private Locker locker;
+	
+	public static void setExpectedSteps(int expectedSteps) {
+		ExecutionTracer.expectedSteps = expectedSteps;
+		tolerantExpectedSteps = expectedSteps * 2;
+	}
 
 	public ExecutionTracer(long threadId) {
 		locker = new Locker(threadId);
@@ -488,10 +494,10 @@ public class ExecutionTracer implements IExecutionTracer {
 				shutdown();
 				Agent._exitProgram("fail;Trace is over long!");
 			}
-//			if (order > expectedSteps) {
-//				shutdown();
-//				Agent._exitProgram("fail;Trace size exceeds expected_steps!");
-//			}
+			if (order > tolerantExpectedSteps) {
+				shutdown();
+				Agent._exitProgram("fail;Trace size exceeds expected_steps!");
+			}
 			
 			BreakPoint bkp = new BreakPoint(className, methodSignature, line);
 			TraceNode currentNode = new TraceNode(bkp, null, order, trace); // leave programState empty.

@@ -12,7 +12,6 @@ import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.model.variable.Variable;
 import microbat.sql.TraceRecorder;
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
@@ -36,7 +35,7 @@ public class TraceAgent implements IAgent {
 		ExecutionTracer.stepLimit = agentParams.getStepLimit();
 		InstrumentationFilter.overLongMethods = agentParams.getOverlongMethods();
 		if (agentParams.getExpectedSteps() > 0) {
-			ExecutionTracer.expectedSteps = agentParams.getExpectedSteps();
+			ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
 		}
 	}
 
