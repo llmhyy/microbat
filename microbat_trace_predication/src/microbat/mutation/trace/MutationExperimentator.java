@@ -54,6 +54,7 @@ import tregression.empiricalstudy.DeadEndReporter;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.Regression;
 import tregression.empiricalstudy.Simulator;
+import tregression.empiricalstudy.solutionpattern.PatternIdentifier;
 import tregression.empiricalstudy.training.DED;
 import tregression.empiricalstudy.training.DeadEndData;
 import tregression.empiricalstudy.training.TrainingDataTransfer;
@@ -227,6 +228,10 @@ public class MutationExperimentator {
 					trial.setFixedTrace(correctTrace);
 					trial.setPairList(pairList);
 					trial.setDiffMatcher(diffMatcher);
+					
+					PatternIdentifier identifier = new PatternIdentifier();
+					identifier.identifyPattern(trial);
+					
 					TraceNode rootCause = trial.getRootCauseFinder().retrieveRootCause(pairList, diffMatcher, killingMutatantTrace, correctTrace);
 					if (rootCause != null) {
 						foundRootCause  = true;
