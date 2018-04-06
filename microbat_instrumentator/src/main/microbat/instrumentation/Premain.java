@@ -24,11 +24,11 @@ public class Premain {
 		AgentLogger.debug("start instrumentation...");
 		AgentParams agentParams = AgentParams.parse(agentArgs);
 		Agent agent = new Agent(agentParams);
+		agent.setTransformableClasses(retransformableClasses);
 		agent.startup();
 		if (!agentParams.isPrecheck()) {
 			//SystemClassTransformer.transformClassLoader(inst);
 		}
-		agent.setTransformableClasses(retransformableClasses);
 		inst.addTransformer(agent.getTransformer(), true);
 		inst.addTransformer(new TestRunnerTranformer());
 		if (!agentParams.isPrecheck()) {

@@ -11,6 +11,7 @@ public class AnalysisTestcaseParams {
 	/* internal use fields */
 	private String testcaseName;
 	private AnalysisParams analysisParams;
+	private String testSourceFolder;
 	
 	public AnalysisTestcaseParams(String projectName, String junitClassName, String testMethod,
 			AnalysisParams analysisParams) {
@@ -56,6 +57,14 @@ public class AnalysisTestcaseParams {
 
 	public void setAnalysisParams(AnalysisParams analysisParams) {
 		this.analysisParams = analysisParams;
+	}
+
+	public String getTestSourceFolder() {
+		return testSourceFolder;
+	}
+
+	public void setTestSourceFolder(String testSourceFolder) {
+		this.testSourceFolder = testSourceFolder;
 	}
 	
 }
