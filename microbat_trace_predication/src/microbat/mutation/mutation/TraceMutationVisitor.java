@@ -3,16 +3,30 @@ package microbat.mutation.mutation;
 import java.util.List;
 
 import japa.parser.ast.Node;
+import japa.parser.ast.body.ModifierSet;
 import japa.parser.ast.expr.AssignExpr;
+import japa.parser.ast.expr.BooleanLiteralExpr;
+import japa.parser.ast.expr.CharLiteralExpr;
+import japa.parser.ast.expr.DoubleLiteralExpr;
+import japa.parser.ast.expr.Expression;
+import japa.parser.ast.expr.FieldAccessExpr;
+import japa.parser.ast.expr.IntegerLiteralExpr;
+import japa.parser.ast.expr.LongLiteralExpr;
+import japa.parser.ast.expr.NullLiteralExpr;
+import japa.parser.ast.expr.VariableDeclarationExpr;
 import japa.parser.ast.stmt.BlockStmt;
 import japa.parser.ast.stmt.EmptyStmt;
 import japa.parser.ast.stmt.ExpressionStmt;
 import japa.parser.ast.stmt.IfStmt;
 import japa.parser.ast.stmt.ReturnStmt;
 import japa.parser.ast.stmt.Statement;
+import japa.parser.ast.type.PrimitiveType;
+import japa.parser.ast.type.ReferenceType;
+import japa.parser.ast.type.Type;
 import mutation.mutator.MutationVisitor;
 import mutation.mutator.mapping.MutationMap;
 import mutation.parser.ClassAnalyzer;
+import mutation.parser.VariableDescriptor;
 import sav.common.core.utils.CollectionUtils;
 
 /**
@@ -22,15 +36,22 @@ import sav.common.core.utils.CollectionUtils;
  */
 public class TraceMutationVisitor extends MutationVisitor {
 	private List<MutationType> mutationTypes;
+	private VarNameFinder varNameFinder = new VarNameFinder();
 
 	public TraceMutationVisitor(List<MutationType> mutationTypes) {
 		super();
 		this.mutationTypes = mutationTypes;
 	}
 
-	public TraceMutationVisitor(MutationMap mutationMap, ClassAnalyzer classAnalyzer) {
+ 	public TraceMutationVisitor(MutationMap mutationMap, ClassAnalyzer classAnalyzer) {
 		super(mutationMap, classAnalyzer);
 	}
+ 	
+ 	@Override
+ 	public void visit(VariableDeclarationExpr n, Boolean arg) {
+ 		//TODO LLT
+ 		super.visit(n, arg);
+ 	}
 
 	@Override
 	public boolean mutate(AssignExpr n) {
@@ -41,9 +62,60 @@ public class TraceMutationVisitor extends MutationVisitor {
 			} else {
 				muNode = newNode(n);
 			}
-			muNode.add(new EmptyStmt(), MutationType.REMOVE_ASSIGNMENT.name());
+			Node stmt = null;
+			/* 
+			 * to prevent the compilation error for removing final field assignments in constructor
+			 *  */
+			VariableDescriptor finalField = getCorrespondingFinalField(n.getTarget());
+			if (finalField != null) {
+				Type fieldType = finalField.getType();
+				AssignExpr newAssignExpr = (AssignExpr)nodeCloner.visit(n, null);
+				if (fieldType instanceof ReferenceType) {
+					newAssignExpr.setValue(new NullLiteralExpr());
+				} else if (fieldType instanceof PrimitiveType){
+					switch (((PrimitiveType) fieldType).getType()) {
+					case Boolean:
+						newAssignExpr.setValue(new BooleanLiteralExpr());
+					case Char:
+						newAssignExpr.setValue(new CharLiteralExpr());
+					case Byte:
+					case Int:
+					case Short:
+						newAssignExpr.setValue(new IntegerLiteralExpr("0"));
+					case Double:
+						newAssignExpr.setValue(new DoubleLiteralExpr("0.0"));
+					case Float:
+						newAssignExpr.setValue(new LongLiteralExpr("0f"));
+					case Long:
+						newAssignExpr.setValue(new LongLiteralExpr("0l"));
+					}
+				}
+				if (n.getParentNode() instanceof ExpressionStmt) {
+					stmt = new ExpressionStmt(newAssignExpr);
+				} else {
+					stmt = newAssignExpr;
+				}
+			}
+			if (stmt == null) {
+				stmt = new EmptyStmt();
+			}
+			muNode.add(stmt, MutationType.REMOVE_ASSIGNMENT.name());
 		}
 		return super.mutate(n);
+	}
+
+	private VariableDescriptor getCorrespondingFinalField(Expression target) {
+		if (!(target instanceof FieldAccessExpr)) {
+			return null;
+		}
+		varNameFinder.reset();
+		target.accept(varNameFinder, true);
+		String varName = varNameFinder.getVarName();
+		VariableDescriptor field = classDescriptor.getFieldByName(varName);
+		if (field != null && ModifierSet.isFinal(field.getModifier())) {
+			return field;
+		}
+		return null;
 	}
 
 	@Override

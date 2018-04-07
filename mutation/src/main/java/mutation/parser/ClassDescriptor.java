@@ -84,6 +84,15 @@ public class ClassDescriptor {
 	public void setFields(List<VariableDescriptor> fields) {
 		this.fields = fields;
 	}
+	
+	public VariableDescriptor getFieldByName(String name) {
+		for (VariableDescriptor field : fields) {
+			if (field.getName().equals(name)) {
+				return field;
+			}
+		}
+		return null;
+	}
 
 	public String getPackageName() {
 		return packageName;
