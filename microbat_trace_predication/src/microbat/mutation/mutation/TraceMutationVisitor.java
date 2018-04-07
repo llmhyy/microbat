@@ -76,18 +76,24 @@ public class TraceMutationVisitor extends MutationVisitor {
 					switch (((PrimitiveType) fieldType).getType()) {
 					case Boolean:
 						newAssignExpr.setValue(new BooleanLiteralExpr());
+						break;
 					case Char:
 						newAssignExpr.setValue(new CharLiteralExpr());
+						break;
 					case Byte:
 					case Int:
 					case Short:
 						newAssignExpr.setValue(new IntegerLiteralExpr("0"));
+						break;
 					case Double:
 						newAssignExpr.setValue(new DoubleLiteralExpr("0.0"));
+						break;
 					case Float:
 						newAssignExpr.setValue(new LongLiteralExpr("0f"));
+						break;
 					case Long:
 						newAssignExpr.setValue(new LongLiteralExpr("0l"));
+						break;
 					}
 				}
 				if (n.getParentNode() instanceof ExpressionStmt) {
