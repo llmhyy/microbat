@@ -63,7 +63,7 @@ public class TraversingDistanceCalculator {
 		ASTNode commonParent = findCommonParent(testNode, avoidNode);
 		if(commonParent.equals(testNode)) {
 			int depth = getDepth(avoidNode, commonParent);
-			return new Traverse(0, depth, 1);
+			return new Traverse(0, depth, 0);
 		}
 		else {
 			int ups = getDepth(testNode, commonParent)-1;
