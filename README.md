@@ -10,3 +10,8 @@ We support four types of feedback, i.e., correct-step, wrong-variable-value, wro
 
 # Evaluation
 Our evaluation on Microbat shows promising results. The __detailed evaluation results__ can be checked at http://linyun.info/microbat/index.html
+
+## Citation
+If you need to reference our technique, please use the following citations:
+
+Yun Lin, Jun Sun, Yinxing Xue, Yang Liu, and Jinsong Dong. Feedback-based Debugging. The 39th ACM SIGSOFT International Conference on Software Engineering (ICSE 2017), pp. 393-403.
