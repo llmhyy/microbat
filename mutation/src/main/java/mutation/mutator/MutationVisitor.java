@@ -23,9 +23,9 @@ public class MutationVisitor extends AbstractMutationVisitor {
 	private Map<Integer, List<MutationNode>> result;
 	protected MutationMap mutationMap;
 	protected CloneVisitor nodeCloner;
-	private ClassAnalyzer clasAnalyzer;
-	private ClassDescriptor classDescriptor;
-	private VariableSubstitution varSubstitution;
+	protected ClassAnalyzer clasAnalyzer;
+	protected ClassDescriptor classDescriptor;
+	protected VariableSubstitution varSubstitution;
 	
 	public void reset(ClassDescriptor classDescriptor, List<Integer> lineNos) {
 		this.lineNumbers = lineNos;
