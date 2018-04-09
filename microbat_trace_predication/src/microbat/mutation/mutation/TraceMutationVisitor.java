@@ -2,8 +2,11 @@ package microbat.mutation.mutation;
 
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.VariableDeclaration;
+
 import japa.parser.ast.Node;
 import japa.parser.ast.body.ModifierSet;
+import japa.parser.ast.body.VariableDeclarator;
 import japa.parser.ast.expr.AssignExpr;
 import japa.parser.ast.expr.BooleanLiteralExpr;
 import japa.parser.ast.expr.CharLiteralExpr;
@@ -48,11 +51,57 @@ public class TraceMutationVisitor extends MutationVisitor {
 	}
  	
  	@Override
- 	public void visit(VariableDeclarationExpr n, Boolean arg) {
- 		//TODO LLT
- 		super.visit(n, arg);
+ 	public boolean mutate(VariableDeclarationExpr n) {
+ 		if (!mutationTypes.contains(MutationType.REMOVE_ASSIGNMENT)) {
+ 			return super.mutate(n);
+ 		}
+ 		MutationNode muNode;
+ 		VariableDeclarationExpr newVarDeclExpr = (VariableDeclarationExpr) nodeCloner.visit(n, null);
+ 		Node newNode = null;
+		if (n.getParentNode() instanceof ExpressionStmt) {
+			muNode = newNode(n.getParentNode());
+		} else {
+			muNode = newNode(n);
+		}
+		Type fieldType = n.getType();
+		for (VariableDeclarator var : newVarDeclExpr.getVars()) {
+			var.setInit(getInitValueExpr(fieldType));
+		}
+		
+		if (n.getParentNode() instanceof ExpressionStmt) {
+			newNode = new ExpressionStmt(newVarDeclExpr);
+		} else {
+			newNode = newVarDeclExpr;
+		}
+		
+		muNode.add(newNode, MutationType.REMOVE_ASSIGNMENT.name());
+		return false;
  	}
-
+ 	
+ 	private Expression getInitValueExpr(Type fieldType) {
+ 		if (fieldType instanceof ReferenceType) {
+			return new NullLiteralExpr();
+		} else if (fieldType instanceof PrimitiveType){
+			switch (((PrimitiveType) fieldType).getType()) {
+			case Boolean:
+				return new BooleanLiteralExpr();
+			case Char:
+				return new CharLiteralExpr();
+			case Byte:
+			case Int:
+			case Short:
+				return new IntegerLiteralExpr("0");
+			case Double:
+				return new DoubleLiteralExpr("0.0");
+			case Float:
+				return new LongLiteralExpr("0f");
+			case Long:
+				return new LongLiteralExpr("0l");
+			}
+		}
+ 		return null;
+ 	}
+ 	
 	@Override
 	public boolean mutate(AssignExpr n) {
 		if (mutationTypes.contains(MutationType.REMOVE_ASSIGNMENT)) {
@@ -70,32 +119,8 @@ public class TraceMutationVisitor extends MutationVisitor {
 			if (finalField != null) {
 				Type fieldType = finalField.getType();
 				AssignExpr newAssignExpr = (AssignExpr)nodeCloner.visit(n, null);
-				if (fieldType instanceof ReferenceType) {
-					newAssignExpr.setValue(new NullLiteralExpr());
-				} else if (fieldType instanceof PrimitiveType){
-					switch (((PrimitiveType) fieldType).getType()) {
-					case Boolean:
-						newAssignExpr.setValue(new BooleanLiteralExpr());
-						break;
-					case Char:
-						newAssignExpr.setValue(new CharLiteralExpr());
-						break;
-					case Byte:
-					case Int:
-					case Short:
-						newAssignExpr.setValue(new IntegerLiteralExpr("0"));
-						break;
-					case Double:
-						newAssignExpr.setValue(new DoubleLiteralExpr("0.0"));
-						break;
-					case Float:
-						newAssignExpr.setValue(new LongLiteralExpr("0f"));
-						break;
-					case Long:
-						newAssignExpr.setValue(new LongLiteralExpr("0l"));
-						break;
-					}
-				}
+				Expression initValueExpr = getInitValueExpr(fieldType);
+				newAssignExpr.setValue(initValueExpr);
 				if (n.getParentNode() instanceof ExpressionStmt) {
 					stmt = new ExpressionStmt(newAssignExpr);
 				} else {
