@@ -21,7 +21,10 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 		}
 		IExecutionTracer tracer = ExecutionTracer.getCurrentThreadStore();
 		boolean needToReleaseLock = !tracer.lock();
-		
+		if (classFName == null) {
+			AgentLogger.debug("AbstractTransformation-Warning: ClassFName is null");
+			return null;
+		}
 		byte[] data = doTransform(loader, classFName, classBeingRedefined, protectionDomain, classfileBuffer);
 		log(classfileBuffer, data, classFName, false);
 					
