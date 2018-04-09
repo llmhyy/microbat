@@ -254,7 +254,7 @@ public class MutationExperimentator {
 							DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
 							setTestCase(datas, trial.getTestcase());						
 								new DeadEndReporter().export(datas.getAllData(), params.getProjectName(), muBugId);
-							new DeadEndCSVWriter().export(datas.getAllData(), params.getProjectName(), muBugId);
+							new DeadEndCSVWriter().export(datas.getAllData());
 						}
 					} catch (NumberFormatException | IOException e) {
 						e.printStackTrace();

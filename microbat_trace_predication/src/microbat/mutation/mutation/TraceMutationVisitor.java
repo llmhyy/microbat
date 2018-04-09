@@ -2,8 +2,6 @@ package microbat.mutation.mutation;
 
 import java.util.List;
 
-import org.eclipse.jdt.core.dom.VariableDeclaration;
-
 import japa.parser.ast.Node;
 import japa.parser.ast.body.ModifierSet;
 import japa.parser.ast.body.VariableDeclarator;
@@ -23,6 +21,7 @@ import japa.parser.ast.stmt.ExpressionStmt;
 import japa.parser.ast.stmt.IfStmt;
 import japa.parser.ast.stmt.ReturnStmt;
 import japa.parser.ast.stmt.Statement;
+import japa.parser.ast.stmt.ThrowStmt;
 import japa.parser.ast.type.PrimitiveType;
 import japa.parser.ast.type.ReferenceType;
 import japa.parser.ast.type.Type;
@@ -65,7 +64,7 @@ public class TraceMutationVisitor extends MutationVisitor {
 		}
 		Type fieldType = n.getType();
 		for (VariableDeclarator var : newVarDeclExpr.getVars()) {
-			var.setInit(getInitValueExpr(fieldType));
+			var.setInit(getInitValueExpr(fieldType, var.getId().getArrayCount() > 0));
 		}
 		
 		if (n.getParentNode() instanceof ExpressionStmt) {
@@ -78,8 +77,8 @@ public class TraceMutationVisitor extends MutationVisitor {
 		return false;
  	}
  	
- 	private Expression getInitValueExpr(Type fieldType) {
- 		if (fieldType instanceof ReferenceType) {
+ 	private Expression getInitValueExpr(Type fieldType, boolean isArray) {
+ 		if (isArray || fieldType instanceof ReferenceType) {
 			return new NullLiteralExpr();
 		} else if (fieldType instanceof PrimitiveType){
 			switch (((PrimitiveType) fieldType).getType()) {
@@ -119,7 +118,7 @@ public class TraceMutationVisitor extends MutationVisitor {
 			if (finalField != null) {
 				Type fieldType = finalField.getType();
 				AssignExpr newAssignExpr = (AssignExpr)nodeCloner.visit(n, null);
-				Expression initValueExpr = getInitValueExpr(fieldType);
+				Expression initValueExpr = getInitValueExpr(fieldType, finalField.getDimension() > 0);
 				newAssignExpr.setValue(initValueExpr);
 				if (n.getParentNode() instanceof ExpressionStmt) {
 					stmt = new ExpressionStmt(newAssignExpr);
@@ -136,15 +135,14 @@ public class TraceMutationVisitor extends MutationVisitor {
 	}
 
 	private VariableDescriptor getCorrespondingFinalField(Expression target) {
-		if (!(target instanceof FieldAccessExpr)) {
-			return null;
-		}
 		varNameFinder.reset();
 		target.accept(varNameFinder, true);
 		String varName = varNameFinder.getVarName();
-		VariableDescriptor field = classDescriptor.getFieldByName(varName);
-		if (field != null && ModifierSet.isFinal(field.getModifier())) {
-			return field;
+		if (varName != null) {
+			VariableDescriptor field = classDescriptor.getFieldByName(varName);
+			if (field != null && ModifierSet.isFinal(field.getModifier())) {
+				return field;
+			}
 		}
 		return null;
 	}
@@ -200,6 +198,9 @@ public class TraceMutationVisitor extends MutationVisitor {
 			}
 			for (Statement subStmt : subStmts) {
 				if (subStmt instanceof ReturnStmt) {
+					return true;
+				}
+				if (subStmt instanceof ThrowStmt) {
 					return true;
 				}
 			}
