@@ -63,10 +63,16 @@ public class TraceMutationVisitor extends MutationVisitor {
 			muNode = newNode(n);
 		}
 		Type fieldType = n.getType();
+		boolean changed = false;
 		for (VariableDeclarator var : newVarDeclExpr.getVars()) {
-			var.setInit(getInitValueExpr(fieldType, var.getId().getArrayCount() > 0));
+			if (var.getInit() != null) {
+				var.setInit(getInitValueExpr(fieldType, var.getId().getArrayCount() > 0));
+				changed = true;
+			}
 		}
-		
+		if (!changed) {
+			return false;
+		}
 		if (n.getParentNode() instanceof ExpressionStmt) {
 			newNode = new ExpressionStmt(newVarDeclExpr);
 		} else {
