@@ -31,19 +31,19 @@ import sav.common.core.utils.FileUtils;
  */
 public class MutationGenerationHandler extends AbstractHandler {
 	@Deprecated
-	public static final String TMP_DIRECTORY;
+	public static final String TMP_DIRECTORY = "";
 
 	static {
-		File resultFolder = new File(
-				IResourceUtils.getResourceAbsolutePath("microbat_trace_predication", "mutation_result"));
-		TMP_DIRECTORY = resultFolder.getAbsolutePath();
-		FileUtils.deleteAllFiles(TMP_DIRECTORY, new FilenameFilter() {
-			
-			@Override
-			public boolean accept(File dir, String name) {
-				return !".gitkeep".equals(name);
-			}
-		});
+//		File resultFolder = new File(
+//				IResourceUtils.getResourceAbsolutePath("microbat_trace_predication", "mutation_result"));
+//		TMP_DIRECTORY = resultFolder.getAbsolutePath();
+//		FileUtils.deleteAllFiles(TMP_DIRECTORY, new FilenameFilter() {
+//			
+//			@Override
+//			public boolean accept(File dir, String name) {
+//				return !".gitkeep".equals(name);
+//			}
+//		});
 	}
 
 	@Override

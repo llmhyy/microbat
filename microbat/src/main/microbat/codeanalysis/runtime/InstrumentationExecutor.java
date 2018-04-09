@@ -85,11 +85,11 @@ public class InstrumentationExecutor {
 			System.out.println("first precheck..");
 			agentRunner.precheck();
 			PrecheckInfo firstPrecheckInfo = agentRunner.getPrecheckInfo();
-//			System.out.println(firstPrecheckInfo);
+			System.out.println(firstPrecheckInfo);
 			System.out.println("second precheck..");
 			agentRunner.precheck();
 			PrecheckInfo info = agentRunner.getPrecheckInfo();
-//			System.out.println(info);
+			System.out.println(info);
 			PreCheckInformation precheckInfomation = new PreCheckInformation(info.getThreadNum(), info.getStepTotal(),
 					info.isOverLong(), new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods(), info.getLoadedClasses());
 			precheckInfomation.setPassTest(agentRunner.isTestSuccessful());
