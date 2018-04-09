@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentUtils;
 import microbat.instrumentation.StepMismatchChecker;
 import microbat.instrumentation.output.TraceOutputReader;
@@ -111,8 +112,13 @@ public class PrecheckInfo {
 		try {
 			File file = AgentUtils.getFileCreateIfNotExist(filePath);
 			fileStream = new FileOutputStream(file, append);
-			// Avoid concurrent writes from other processes:
-			fileStream.getChannel().lock();
+			try {
+				// Avoid concurrent writes from other processes:
+				fileStream.getChannel().lock();
+			} catch (IOException e)  {
+				// ignore
+				AgentLogger.error(e);
+			}
 			bufferedStream = new BufferedOutputStream(fileStream);
 			outputWriter = new TraceOutputWriter(bufferedStream);
 			outputWriter.writeString(HEADER);

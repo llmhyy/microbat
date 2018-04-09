@@ -34,12 +34,8 @@ public class MinimumASTNodeFinder extends ASTVisitor{
 			else{
 				boolean flag = false;
 				
-				if(startLine<start){
+				if(startLine<start && end<endLine && startLine!=line){
 					startLine = start;
-					flag = true;
-				}
-				
-				if(endLine>end){
 					endLine = end;
 					flag = true;
 				}
