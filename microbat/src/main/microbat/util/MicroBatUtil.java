@@ -112,7 +112,8 @@ public class MicroBatUtil {
 		
 	}
 
-	private static void setSystemJars(AppJavaClassPath appClassPath) {
+	/** for centralization */
+	public static void setSystemJars(AppJavaClassPath appClassPath) {
 		/**
 		 * setting junit lib into classpath
 		 */

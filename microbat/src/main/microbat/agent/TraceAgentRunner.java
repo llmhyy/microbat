@@ -62,7 +62,6 @@ public class TraceAgentRunner extends AgentVmRunner {
 				return false;
 			}
 			System.out.println();
-//			System.out.println(super.getCommandLinesString(config));
 			/* collect result */
 			precheckInfo = PrecheckInfo.readFromFile(dumpFilePath);
 			updateTestResult(precheckInfo.getProgramMsg());
