@@ -44,6 +44,7 @@ public class BreakPoint extends ClassLocation {
 	public Object clone(){
 		ClassLocation location = (ClassLocation) super.clone();
 		BreakPoint point = new BreakPoint(location.getClassCanonicalName(), declaringCompilationUnitName, lineNo);
+		point.setMethodSign(location.getMethodSign());
 		point.setAllVisibleVariables(allVisibleVariables);
 		point.setControlScope(controlScope);
 		point.setConditional(isConditional);
