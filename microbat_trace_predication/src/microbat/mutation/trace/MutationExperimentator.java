@@ -28,6 +28,7 @@ import microbat.mutation.mutation.MutationType;
 import microbat.mutation.mutation.TraceMutationVisitor;
 import microbat.mutation.trace.dto.AnalysisParams;
 import microbat.mutation.trace.dto.AnalysisTestcaseParams;
+import microbat.mutation.trace.dto.BackupClassFiles;
 import microbat.mutation.trace.dto.MutationTrace;
 import microbat.mutation.trace.dto.SingleMutation;
 import microbat.mutation.trace.dto.TraceExecutionInfo;
@@ -214,6 +215,8 @@ public class MutationExperimentator {
 				DiffMatcher diffMatcher = new MuDiffMatcher(mutation.getSourceFolder(), orgFilePath, mutationFilePath);
 				diffMatcher.matchCode();
 				
+				setAppClassPathWrapper(killingMutatantTrace, correctTrace, params.getBkClassFiles());
+				
 				long start = System.currentTimeMillis();
 				ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
 				PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, diffMatcher); 
@@ -263,6 +266,13 @@ public class MutationExperimentator {
 						Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
 						Settings.compilationUnitMap.remove(mutation.getMutatedClass());
 						new File(backupJFile).delete();
+						BackupClassFiles bkClassFiles = params.getBkClassFiles();
+						if (bkClassFiles != null) {
+							FileUtils.copyFile(bkClassFiles.getOrgClassFilePath(), bkClassFiles.getClassFilePath(),
+									true);
+							new File(bkClassFiles.getMutatedClassFilePath()).delete();
+							new File(bkClassFiles.getOrgClassFilePath()).delete();
+						}
 					}
 				}
 				monitor.reportTrial(params, correctTraceInfo, muTrace.getTraceExecInfo(), mutation, foundRootCause);
@@ -393,26 +403,56 @@ public class MutationExperimentator {
 		/* compile mutation file */
 		// backup original .class file
 		String targetFolder = IResourceUtils.getAbsolutePathOsStr(iunit.getJavaProject().getOutputLocation());
-		String orgClassFilePath = ClassUtils.getClassFilePath(targetFolder, mutation.getMutatedClass());
-		String backupClassFilePath = orgClassFilePath.replace(".class", "_bk.class");
-		FileUtils.copyFile(orgClassFilePath, backupClassFilePath, true);
-
+		String classFilePath = ClassUtils.getClassFilePath(targetFolder, mutation.getMutatedClass());
+		String mutatedClassSimpleName = ClassUtils.getSimpleName(mutation.getMutatedClass());
+		String bkOrgClassFilePath = ClassUtils.getClassFilePath(params.getAnalysisOutputFolder(),
+				mutatedClassSimpleName);
+		FileUtils.copyFile(classFilePath, bkOrgClassFilePath, true);
+		String bkMutatedClassFilePath = null;
 		try {
 			JavaCompiler javaCompiler = new JavaCompiler(new VMConfiguration(testcaseConfig));
 			javaCompiler.compile(targetFolder, mutation.getFile());
 
 			/* generate trace */
 			MutationTrace mutateInfo = executeTestcaseWithMutation(testcaseConfig, params.getTestcaseName(), mutation);
+			bkMutatedClassFilePath = ClassUtils.getClassFilePath(mutation.getMutationOutputFolder(), mutatedClassSimpleName);
+			FileUtils.copyFile(classFilePath, bkMutatedClassFilePath, true);
 			return mutateInfo;
 		} catch (SavException e) {
 			System.out.println("Compilation error: " + e.getMessage());
 			System.out.println();
 		} finally {
+			if (bkMutatedClassFilePath != null) {
+				params.setBkClassFiles(new BackupClassFiles(classFilePath, bkOrgClassFilePath, bkMutatedClassFilePath));
+			}
 			/* revert */
-			FileUtils.copyFile(backupClassFilePath, orgClassFilePath, true);
-			new File(backupClassFilePath).delete();
+			FileUtils.copyFile(bkOrgClassFilePath, classFilePath, true);
+			
 		}
 		return null;
+	}
+	
+	/**
+	 * a dirty workaround for wrong loaded class using in RootCauseFinder.
+	 */
+	private void setAppClassPathWrapper(Trace mutationTrace, Trace correctTrace, BackupClassFiles backupClassFiles) {
+		mutationTrace.setAppJavaClassPath(new AppJavaClassPathWrapper(mutationTrace.getAppJavaClassPath()) {
+			@Override
+			public List<String> getClasspaths() {
+				FileUtils.copyFile(backupClassFiles.getMutatedClassFilePath(), backupClassFiles.getClassFilePath(),
+						true);
+				return super.getClasspaths();
+			}
+		});
+		
+		correctTrace.setAppJavaClassPath(new AppJavaClassPathWrapper(correctTrace.getAppJavaClassPath()) {
+			@Override
+			public List<String> getClasspaths() {
+				FileUtils.copyFile(backupClassFiles.getOrgClassFilePath(), backupClassFiles.getClassFilePath(),
+						true);
+				return super.getClasspaths();
+			}
+		});
 	}
 	
 	private List<ClassLocation> findMutationLocation(String junitClassName, List<ClassLocation> executingStatements,

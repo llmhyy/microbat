@@ -12,6 +12,7 @@ public class AnalysisTestcaseParams {
 	private String testcaseName;
 	private AnalysisParams analysisParams;
 	private String testSourceFolder;
+	private BackupClassFiles bkClassFiles;
 	
 	public AnalysisTestcaseParams(String projectName, String junitClassName, String testMethod,
 			AnalysisParams analysisParams) {
@@ -65,6 +66,14 @@ public class AnalysisTestcaseParams {
 
 	public void setTestSourceFolder(String testSourceFolder) {
 		this.testSourceFolder = testSourceFolder;
+	}
+
+	public BackupClassFiles getBkClassFiles() {
+		return bkClassFiles;
+	}
+
+	public void setBkClassFiles(BackupClassFiles bkClassFiles) {
+		this.bkClassFiles = bkClassFiles;
 	}
 	
 }
