@@ -9,6 +9,7 @@
 package sav.strategies.vm;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -64,6 +65,8 @@ public class VMRunner {
 	private static ExecutorService executorService = Executors.newCachedThreadPool();
 	private static ScheduledExecutorService timeoutExecutor = Executors.newSingleThreadScheduledExecutor();
 	private int vmDebugPort = -1;
+	
+	private String workingDir;
 	
 	public boolean startVm(VMConfiguration config) throws SavException {
 		this.isLog = config.isVmLogEnable();
@@ -154,6 +157,14 @@ public class VMRunner {
 		StringBuffer sb = new StringBuffer();
 		logCommands(commands);
 		ProcessBuilder processBuilder = new ProcessBuilder(commands);
+		
+		if(this.workingDir!=null){
+			File workingDirFile = new File(this.workingDir);
+			if(workingDirFile.exists()){
+				processBuilder.directory(workingDirFile);
+			}
+		}
+		
 		try {
 			process = processBuilder.start();
 			setupErrorStream(process.getErrorStream(), sb);
@@ -320,5 +331,13 @@ public class VMRunner {
 	
 	public void setVmDebugPort(int vmDebugPort) {
 		this.vmDebugPort = vmDebugPort;
+	}
+
+	public String getWorkingDir() {
+		return workingDir;
+	}
+
+	public void setWorkingDir(String workingDir) {
+		this.workingDir = workingDir;
 	}
 }
