@@ -11,15 +11,23 @@ import microbat.instrumentation.AgentLogger;
 public class SystemClassTransformer {
 	
 	public static void transformClassLoader(Instrumentation inst) {
-		final ClassLoaderInstrumenter classLoaderInstrumenter = new ClassLoaderInstrumenter();
+		transform(inst, ClassLoader.class, new ClassLoaderInstrumenter());
+	}
+	
+	public static void transformThread(Instrumentation inst) {
+		transform(inst, Thread.class, new ThreadInstrumenter());
+	}
+	
+	public static void transform(Instrumentation inst, final Class<?> clazz, final AbstractInstrumenter instrumenter) {
+		final String clazzFName = clazz.getName().replace(".", "/");
 		ClassFileTransformer transformer = new AbstractTransformer() {
 			
 			@Override
 			protected byte[] doTransform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 					ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-				if ("java/lang/ClassLoader".equals(classFName)) {
+				if (clazzFName.equals(classFName)) {
 					try {
-						byte[] data = classLoaderInstrumenter.instrument(classFName, classfileBuffer);
+						byte[] data = instrumenter.instrument(classFName, classfileBuffer);
 						return data;
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -30,9 +38,9 @@ public class SystemClassTransformer {
 		};
 		inst.addTransformer(transformer, true);
 		try {
-			inst.retransformClasses(ClassLoader.class);
+			inst.retransformClasses(clazz);
 		} catch (UnmodifiableClassException e) {
-			AgentLogger.info("Cannot instrument ClassLoader class!");
+			AgentLogger.info(String.format("Cannot instrument class %s!", clazzFName));
 		}
 		inst.removeTransformer(transformer);
 	}

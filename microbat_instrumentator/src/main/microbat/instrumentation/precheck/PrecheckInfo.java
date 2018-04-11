@@ -36,6 +36,7 @@ public class PrecheckInfo {
 
 	public PrecheckInfo(int threadNum, TraceInfo info) {
 		super();
+		AgentLogger.debug("Measurement ThreadNum = " + threadNum);
 		this.setThreadNum(threadNum);
 		this.setStepTotal(info.getStepTotal());
 		setVisitedLocs(info.getVisitedLocs());

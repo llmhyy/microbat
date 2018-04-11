@@ -27,6 +27,7 @@ public class PrecheckAgent implements IAgent {
 		precheckInfo.setExceedingLimitMethods(precheckTransformer.getExceedingLimitMethods());
 		precheckInfo.setProgramMsg(Agent.getProgramMsg());
 		precheckInfo.setLoadedClasses(precheckTransformer.getLoadedClasses());
+//		precheckInfo.setThreadNum(Agent.getNumberOfThread());
 		AgentLogger.debug(precheckInfo.toString());
 		if (agentParams.getDumpFile() != null) {
 			precheckInfo.saveToFile(agentParams.getDumpFile(), false);
