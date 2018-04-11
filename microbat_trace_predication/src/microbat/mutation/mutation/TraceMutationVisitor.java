@@ -90,7 +90,6 @@ public class TraceMutationVisitor extends MutationVisitor {
 			case Boolean:
 				return new BooleanLiteralExpr();
 			case Char:
-				return new CharLiteralExpr();
 			case Byte:
 			case Int:
 			case Short:
