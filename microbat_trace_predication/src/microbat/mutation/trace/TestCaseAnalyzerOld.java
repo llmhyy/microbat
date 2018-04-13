@@ -274,7 +274,7 @@ public class TestCaseAnalyzerOld {
 						orgFilePath, mutationFilePath);
 				diffMatcher.matchCode();
 
-				Simulator simulator = new Simulator();
+				Simulator simulator = new Simulator(false, -1);
 				simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
 				
 				List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);

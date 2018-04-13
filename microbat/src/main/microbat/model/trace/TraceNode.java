@@ -90,6 +90,8 @@ public class TraceNode{
 	private long runtimePC;
 	private Trace trace;
 	
+	private transient double sliceBreakerProbability = 0;
+	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
 		super();
 		this.breakPoint = breakPoint;
@@ -1155,6 +1157,14 @@ public class TraceNode{
 
 	public void setInvokingMatchNode(TraceNode invokingMatchNode) {
 		this.invokingMatchNode = invokingMatchNode;
+	}
+
+	public double getSliceBreakerProbability() {
+		return sliceBreakerProbability;
+	}
+
+	public void setSliceBreakerProbability(double sliceBreakerProbability) {
+		this.sliceBreakerProbability = sliceBreakerProbability;
 	}
 
 

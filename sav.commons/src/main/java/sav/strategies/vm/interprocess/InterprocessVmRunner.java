@@ -109,6 +109,7 @@ public class InterprocessVmRunner extends VMRunner {
 				process.getOutputStream();
 				inputWriter.setOutputStream(outputStream);
 				try {
+					System.currentTimeMillis();
 					while(!inputWriter.isClosed() && isProcessRunning()) {
 						if (inputWriter.isReady()) {
 							inputWriter.write();

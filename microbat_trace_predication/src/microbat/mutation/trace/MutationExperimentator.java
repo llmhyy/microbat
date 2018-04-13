@@ -222,7 +222,7 @@ public class MutationExperimentator {
 				PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, diffMatcher); 
 				int matchTime = (int) (System.currentTimeMillis() - start);
 				
-				Simulator simulator = new Simulator();
+				Simulator simulator = new Simulator(false, -1);
 				simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
 				List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
 				String muBugId = mutation.getMutationBugId();

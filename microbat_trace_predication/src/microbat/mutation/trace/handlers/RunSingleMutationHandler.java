@@ -105,7 +105,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 			throws SimulationFailException {
 		long time1 = System.currentTimeMillis();
 		System.out.println("start simulating debugging...");
-		Simulator simulator = new Simulator();
+		Simulator simulator = new Simulator(false, -1);
 		simulator.prepare(buggyTrace, correctTrace, pairList, diffMatcher);
 //		TraceNode node = buggyTrace.getExecutionList().get(8667);
 //		simulator.setObservedFault(node);
