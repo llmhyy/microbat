@@ -10,7 +10,6 @@ import japa.parser.ast.expr.BooleanLiteralExpr;
 import japa.parser.ast.expr.CharLiteralExpr;
 import japa.parser.ast.expr.DoubleLiteralExpr;
 import japa.parser.ast.expr.Expression;
-import japa.parser.ast.expr.FieldAccessExpr;
 import japa.parser.ast.expr.IntegerLiteralExpr;
 import japa.parser.ast.expr.LongLiteralExpr;
 import japa.parser.ast.expr.NullLiteralExpr;
@@ -91,7 +90,6 @@ public class TraceMutationVisitor extends MutationVisitor {
 			case Boolean:
 				return new BooleanLiteralExpr();
 			case Char:
-				return new CharLiteralExpr();
 			case Byte:
 			case Int:
 			case Short:
@@ -177,8 +175,16 @@ public class TraceMutationVisitor extends MutationVisitor {
 		} else {
 			if (ricType) {
 				if (ifStmt.getThenStmt() != null) {
-					Node newNode = ifStmt.getThenStmt().accept(nodeCloner, null);
-					muNode.add(newNode, MutationType.REMOVE_IF_CONDITION.name());
+					if (n.getParentNode() instanceof IfStmt && 
+							(n == ((IfStmt) n.getParentNode()).getElseStmt())) {
+						MutationNode anotherMuNode = newNode(n.getParentNode());
+						IfStmt anotherNewNode = (IfStmt)nodeCloner.visit((IfStmt)n.getParentNode(), null);
+						anotherNewNode.setElseStmt(n.getThenStmt());
+						anotherMuNode.add(anotherNewNode, MutationType.REMOVE_IF_CONDITION.name());
+					} else {
+						Node newNode = ifStmt.getThenStmt().accept(nodeCloner, null);
+						muNode.add(newNode, MutationType.REMOVE_IF_CONDITION.name());
+					}
 				} 
 				if (ifStmt.getElseStmt() != null) {
 					Node newNode = ifStmt.getElseStmt().accept(nodeCloner, null);

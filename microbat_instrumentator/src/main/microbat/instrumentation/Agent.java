@@ -2,6 +2,8 @@ package microbat.instrumentation;
 
 import java.lang.instrument.ClassFileTransformer;
 
+import microbat.instrumentation.filter.FilterChecker;
+
 /**
  * @author LLT
  *  the Agent proxy
@@ -11,6 +13,7 @@ public class Agent implements IAgent {
 	private static IAgent agent;
 	private static String programMsg = "";
 	private volatile static boolean shutdowned = false;
+	private static int numberOfThread = 1;
 	
 	public Agent(AgentParams agentParams) {
 		if (agentParams.isPrecheck()) {
@@ -96,6 +99,31 @@ public class Agent implements IAgent {
 		} catch (Throwable e) {
 			AgentLogger.error(e);
 		}
+	}
+	
+	public static void _onStartThread() {
+		if (!shutdowned) {
+//			boolean isCalledFromApp = false;
+//			StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+//			boolean threadStartReached = false;
+//			for (StackTraceElement ste : stackTrace) {
+//				if ("java.lang.Thread".equals(ste.getClassName()) 
+//						&& "start".equals(ste.getMethodName())) {
+//					threadStartReached = true;
+//				} else if (threadStartReached) {
+//					isCalledFromApp = FilterChecker.isAppClazz(ste.getClassName());
+//					break;
+//				}
+//			}
+//			if (isCalledFromApp) {
+//				numberOfThread++;
+//			}
+			numberOfThread++;
+		}
+	}
+	
+	public static int getNumberOfThread() {
+		return numberOfThread;
 	}
 
 	@Override

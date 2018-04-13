@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
 
+import microbat.instrumentation.instr.SystemClassTransformer;
 import microbat.instrumentation.instr.TestRunnerTranformer;
 
 public class Premain {
@@ -29,6 +30,7 @@ public class Premain {
 		if (!agentParams.isPrecheck()) {
 			//SystemClassTransformer.transformClassLoader(inst);
 		}
+		SystemClassTransformer.transformThread(inst);
 		inst.addTransformer(agent.getTransformer(), true);
 		inst.addTransformer(new TestRunnerTranformer());
 		if (!agentParams.isPrecheck()) {
@@ -143,6 +145,7 @@ public class Premain {
 				candidates.add(c);
 			}
 		}
+		candidates.remove(Thread.class);
 		AgentLogger.debug(candidates.size() + " transformable candidates");
 		return candidates.toArray(new Class<?>[candidates.size()]);
 	}

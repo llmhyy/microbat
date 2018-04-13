@@ -12,7 +12,7 @@ import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.Type;
 
-public abstract class AbstraceInstrumenter {
+public abstract class AbstractInstrumenter {
 	protected static final String CLASS_NAME = "$className"; // local var
 	protected static final String METHOD_SIGNATURE = "$methodSignature"; // local var
 

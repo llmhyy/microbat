@@ -32,7 +32,6 @@ import org.apache.bcel.generic.INVOKEINTERFACE;
 import org.apache.bcel.generic.INVOKESPECIAL;
 import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.INVOKEVIRTUAL;
-import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
@@ -67,7 +66,7 @@ import microbat.instrumentation.instr.instruction.info.RWInstructionInfo;
 import microbat.instrumentation.runtime.IExecutionTracer;
 import microbat.instrumentation.runtime.TraceUtils;
 
-public class TraceInstrumenter extends AbstraceInstrumenter {
+public class TraceInstrumenter extends AbstractInstrumenter {
 	protected static final String TRACER_VAR_NAME = "$tracer"; // local var
 	private static final String TEMP_VAR_NAME = "$tempVar"; // local var
 	
@@ -130,20 +129,6 @@ public class TraceInstrumenter extends AbstraceInstrumenter {
 	
 	protected boolean doesBytecodeExceedLimit(MethodGen methodGen) {
 		return methodGen.getInstructionList().getByteCode().length >= (65534);
-	}
-
-	private void dumpClass(JavaClass jc) {
-		ClassGen cg = new ClassGen(jc);
-		ConstantPoolGen cpg = cg.getConstantPool();
-		AgentLogger.debug(jc.toString());
-		for (Method meth : jc.getMethods()) {
-			MethodGen mg = new MethodGen(meth, jc.getClassName(), cpg);
-			AgentLogger.debug(mg.getName());
-			AgentLogger.debug("==========================================");
-			for (InstructionHandle ih : mg.getInstructionList()) {
-				AgentLogger.debug(ih.toString());
-			}
-		}
 	}
 	
 	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
