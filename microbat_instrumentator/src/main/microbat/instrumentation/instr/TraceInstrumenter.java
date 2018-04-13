@@ -906,7 +906,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		newInsns.append(new ALOAD(classNameVar.getIndex()));
 		newInsns.append(new ALOAD(methodSigVar.getIndex()));
 		appendTracerMethodInvoke(newInsns, tracerMethod, constPool);
-		appendInstruction(insnList, newInsns, lineNumberInsn);
+		insertInsnHandler(insnList, newInsns, lineNumberInsn);
 		newInsns.dispose();
 	}
 
