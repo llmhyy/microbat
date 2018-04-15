@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.bcel.classfile.Code;
+import org.apache.bcel.classfile.LineNumber;
 import org.apache.bcel.generic.InstructionHandle;
 
 public class CFG {
@@ -90,5 +91,20 @@ public class CFG {
 
 	public int size() {
 		return nodeList.size();
+	}
+
+	public int getEndLine() {
+		int max = -1;
+		for(LineNumber ln: code.getLineNumberTable().getLineNumberTable()){
+			int line = ln.getLineNumber();
+			if(max==-1){
+				max = line;
+			}
+			else{
+				max = (max > line)? max : line;
+			}
+		}
+		
+		return max;
 	}
 }

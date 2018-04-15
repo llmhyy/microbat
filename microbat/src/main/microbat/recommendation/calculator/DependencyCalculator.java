@@ -21,10 +21,6 @@ public class DependencyCalculator {
 	}
 
 	public Dependency calculateDependency(BreakPoint testPoint, BreakPoint avoidPoint) {
-		if(!testPoint.getMethodSign().equals(avoidPoint.getMethodSign())) {
-			return null;
-		}
-		
 		String methodSign = testPoint.getMethodSign();
 		String sign = methodSign.substring(methodSign.indexOf("#")+1, methodSign.length());
 		MethodFinderBySignature finder = new MethodFinderBySignature(sign);
@@ -62,11 +58,18 @@ public class DependencyCalculator {
 	}
 
 	private List<CFGNode> getAfterList(CFG cfg, BreakPoint testPoint, BreakPoint avoidPoint) {
+		
+		int upperBound = avoidPoint.getLineNumber();
+		
+		if(!testPoint.getMethodSign().equals(avoidPoint.getMethodSign())) {
+			upperBound = cfg.getEndLine();
+		}
+		
 		List<CFGNode> list = new ArrayList<>();
 		for(CFGNode node: cfg.getNodeList()){
 			int line = cfg.getLineNumber(node);
 			if(line>=testPoint.getLineNumber() &&
-					line<=avoidPoint.getLineNumber()){
+					line<=upperBound){
 				list.add(node);
 			}
 		}
