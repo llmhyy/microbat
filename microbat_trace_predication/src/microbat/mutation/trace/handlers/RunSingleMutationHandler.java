@@ -85,7 +85,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
 					
 					try {
-						EmpiricalTrial trial = simulate(buggyTrace, correctTrace, pairList, diffMatcher);
+						EmpiricalTrial trial = simulate(buggyTrace, correctTrace, pairList, diffMatcher, false, 3);
 						System.out.println(trial);
 					} catch (SimulationFailException e) {
 						e.printStackTrace();
@@ -101,11 +101,12 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 	}
 
 
-	private EmpiricalTrial simulate(Trace buggyTrace, Trace correctTrace, PairList pairList, DiffMatcher diffMatcher)
+	private EmpiricalTrial simulate(Trace buggyTrace, Trace correctTrace, PairList pairList, 
+			DiffMatcher diffMatcher, boolean useSlicer, int breakerLimit)
 			throws SimulationFailException {
 		long time1 = System.currentTimeMillis();
 		System.out.println("start simulating debugging...");
-		Simulator simulator = new Simulator(false, -1);
+		Simulator simulator = new Simulator(useSlicer, breakerLimit);
 		simulator.prepare(buggyTrace, correctTrace, pairList, diffMatcher);
 //		TraceNode node = buggyTrace.getExecutionList().get(8667);
 //		simulator.setObservedFault(node);
