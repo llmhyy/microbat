@@ -77,8 +77,8 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					fixClasspath.setSourceCodePath(FileUtils.getFilePath(orgPath, srcFolder));
 					fixClasspath.setTestCodePath(FileUtils.getFilePath(orgPath, testFolder));
 					MuRegressionUtils.fillMuBkpJavaFilePath(buggyTrace, muJFilePath, muRegression.getMutationClassName());
-					Regression.fillMissingInfor(correctTrace, fixClasspath);
-					Regression.fillMissingInfor(buggyTrace, buggyClasspath);
+					Regression.fillMissingInfo(correctTrace, fixClasspath);
+					Regression.fillMissingInfo(buggyTrace, buggyClasspath);
 					
 					PairList pairList = buildPairList(correctTrace, buggyTrace, diffMatcher);
 					Visualizer visualizer = new Visualizer();

@@ -3,15 +3,27 @@ package microbat.codeanalysis.runtime;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.io.FileUtils;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import microbat.agent.TraceAgentRunner;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.AgentParams.LogType;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
+import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
+import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
 import microbat.preference.MicrobatPreference;
+import microbat.util.JavaUtil;
 import sav.common.core.SavException;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.vm.VMConfiguration;
@@ -157,7 +169,19 @@ public class InstrumentationExecutor {
 			System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 			System.out.println("finish!");
 			agentRunner.removeAgentParam(AgentParams.OPT_EXPECTED_STEP);
-			result.getTrace().setAppJavaClassPath(appPath);
+			
+			Trace trace = result.getTrace();
+			trace.setAppJavaClassPath(appPath);
+			trace.setMultiThread(info.getThreadNum()!=1);
+			
+			Map<String, String> classNameMap = new HashMap<>();
+			Map<String, String> pathMap = new HashMap<>();
+			
+			for(TraceNode node: trace.getExecutionList()){
+				BreakPoint point = node.getBreakPoint();
+				attachFullPathInfo(point, appPath, classNameMap, pathMap);
+			}
+			
 			RunningInformation information = new RunningInformation(result.getProgramMsg(), result.getExpectedSteps(), 
 					result.getCollectedSteps(), result.getTrace());
 			
@@ -167,6 +191,103 @@ public class InstrumentationExecutor {
 		}
 
 		return null;
+	}
+	
+	public void attachFullPathInfo(BreakPoint point, AppJavaClassPath appClassPath, 
+			Map<String, String> classNameMap, Map<String, String> pathMap){
+		String relativePath = point.getDeclaringCompilationUnitName().replace(".", File.separator) + ".java";
+		List<String> candidateSourceFolders = appClassPath.getAllSourceFolders();
+		for(String candidateSourceFolder: candidateSourceFolders){
+			String filePath = candidateSourceFolder + File.separator + relativePath;
+			if(new File(filePath).exists()){
+				point.setFullJavaFilePath(filePath);
+			}
+		}
+		
+		//indicate the declaring compilation name is not correct
+		if (point.getFullJavaFilePath() == null) {
+			String fullPath = pathMap.get(point.getDeclaringCompilationUnitName());
+			if (fullPath != null) {
+				point.setFullJavaFilePath(fullPath);
+			}
+		}
+		if(point.getFullJavaFilePath()==null){
+			String canonicalClassName = point.getClassCanonicalName(); 
+			String declaringCompilationUnitName = classNameMap.get(canonicalClassName);
+			String fullPath = pathMap.get(canonicalClassName);
+			
+			if(declaringCompilationUnitName==null){
+				String packageName = point.getPackageName();
+				String packageRelativePath = packageName.replace(".", File.separator);
+				for(String candidateSourceFolder: candidateSourceFolders){
+					String packageFullPath = candidateSourceFolder + File.separator + packageRelativePath;
+					declaringCompilationUnitName = findDeclaringCompilationUnitName(packageFullPath, canonicalClassName);
+					if(declaringCompilationUnitName!=null){
+						fullPath = candidateSourceFolder + File.separator + 
+								declaringCompilationUnitName.replace(".", File.separator) + ".java";
+						break;
+					}
+				}
+			}
+			
+			classNameMap.put(canonicalClassName, declaringCompilationUnitName);
+			pathMap.put(canonicalClassName, fullPath);
+			
+			point.setDeclaringCompilationUnitName(declaringCompilationUnitName);
+			point.setFullJavaFilePath(fullPath);
+			
+			if(fullPath==null){
+				System.err.println("cannot find the source code file for " + point);
+			}
+		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	private String findDeclaringCompilationUnitName(String packagePath, String canonicalClassName) {
+		File packageFolder = new File(packagePath);
+		
+		if(!packageFolder.exists()){
+			return null;
+		}
+		
+		Collection javaFiles = FileUtils.listFiles(packageFolder, new String[]{"java"}, false);;
+		for(Object javaFileObject: javaFiles){
+			String javaFile = ((File)javaFileObject).getAbsolutePath();
+			CompilationUnit cu = JavaUtil.parseCompilationUnit(javaFile);
+			TypeNameFinder finder = new TypeNameFinder(cu, canonicalClassName);
+			cu.accept(finder);
+			if(finder.isFind){
+				return JavaUtil.getFullNameOfCompilationUnit(cu);
+			}
+		}
+		
+		return null;
+	}
+
+	class TypeNameFinder extends ASTVisitor{
+		CompilationUnit cu;
+		boolean isFind = false;
+		String canonicalClassName;
+
+		public TypeNameFinder(CompilationUnit cu, String canonicalClassName) {
+			super();
+			this.cu = cu;
+			this.canonicalClassName = canonicalClassName;
+		}
+		
+		public boolean visit(TypeDeclaration type){
+			String simpleName = canonicalClassName;
+			if(canonicalClassName.contains(".")){
+				simpleName = canonicalClassName.substring(
+						canonicalClassName.lastIndexOf(".")+1, canonicalClassName.length());
+			}
+			if(type.getName().getFullyQualifiedName().equals(simpleName)){
+				this.isFind = true;
+			}
+			
+			return false;
+		}
+		
 	}
 	
 	public static String generateTraceFilePath(String traceDir, String traceFileName) {

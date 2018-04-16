@@ -63,8 +63,8 @@ public class MuRegressionRetrieverHandlerOld extends AbstractHandler {
 			fixClasspath.setSourceCodePath(FileUtils.getFilePath(orgPath, srcFolder));
 			fixClasspath.setTestCodePath(FileUtils.getFilePath(orgPath, testFolder));
 			fillMuBkpJavaFilePath(buggyTrace, muJFilePath, muRegression.getMutationClassName());
-			regression.fillMissingInfor(correctTrace, fixClasspath);
-			regression.fillMissingInfor(buggyTrace, buggyClasspath);
+			regression.fillMissingInfo(correctTrace, fixClasspath);
+			regression.fillMissingInfo(buggyTrace, buggyClasspath);
 			PairList pairList = regression.getPairList();
 			Visualizer visualizer = new Visualizer();
 			visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
