@@ -197,7 +197,9 @@ public class InstrumentationExecutor {
 		
 		for(TraceNode node: trace.getExecutionList()){
 			BreakPoint point = node.getBreakPoint();
-			attachFullPathInfo(point, appPath, classNameMap, pathMap);
+			if(point.getFullJavaFilePath()==null){
+				attachFullPathInfo(point, appPath, classNameMap, pathMap);				
+			}
 			
 			if(!node.getInvocationChildren().isEmpty() && 
 					node.getReadVariables().isEmpty()) {
