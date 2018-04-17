@@ -177,43 +177,7 @@ public class InstrumentationExecutor {
 			trace.setAppJavaClassPath(appPath);
 			trace.setMultiThread(info.getThreadNum()!=1);
 			
-			Map<String, String> classNameMap = new HashMap<>();
-			Map<String, String> pathMap = new HashMap<>();
-			
-			for(TraceNode node: trace.getExecutionList()){
-				BreakPoint point = node.getBreakPoint();
-				attachFullPathInfo(point, appPath, classNameMap, pathMap);
-				
-				if(!node.getInvocationChildren().isEmpty() && 
-						node.getReadVariables().isEmpty()) {
-					//check AST completeness
-					CompilationUnit cu = JavaUtil.findCompilationUnitInProject(
-							node.getDeclaringCompilationUnitName(), appPath);
-					MinimumASTNodeFinder finder = new MinimumASTNodeFinder(
-							node.getLineNumber(), cu);
-					cu.accept(finder);
-					ASTNode astNode = finder.getMinimumNode();
-					
-					if(astNode!=null) {
-						int start = cu.getLineNumber(astNode.getStartPosition());
-						int end = cu.getLineNumber(astNode.getStartPosition()+astNode.getLength());
-						
-						TraceNode stepOverPrev = node.getStepOverPrevious();
-						while(stepOverPrev!=null && 
-								start<=stepOverPrev.getLineNumber() &&
-								stepOverPrev.getLineNumber()<=end) {
-							List<VarValue> readVars = stepOverPrev.getReadVariables();
-							for(VarValue readVar: readVars) {
-								if(!node.getReadVariables().contains(readVar)) {
-									node.getReadVariables().add(readVar);
-								}
-							}
-							stepOverPrev = stepOverPrev.getStepOverPrevious();
-						}
-					}
-					
-				}
-			}
+			appendMissingInfo(trace, appPath);
 			
 			
 			RunningInformation information = new RunningInformation(result.getProgramMsg(), result.getExpectedSteps(), 
@@ -225,6 +189,46 @@ public class InstrumentationExecutor {
 		}
 
 		return null;
+	}
+
+	public void appendMissingInfo(Trace trace, AppJavaClassPath appPath) {
+		Map<String, String> classNameMap = new HashMap<>();
+		Map<String, String> pathMap = new HashMap<>();
+		
+		for(TraceNode node: trace.getExecutionList()){
+			BreakPoint point = node.getBreakPoint();
+			attachFullPathInfo(point, appPath, classNameMap, pathMap);
+			
+			if(!node.getInvocationChildren().isEmpty() && 
+					node.getReadVariables().isEmpty()) {
+				//check AST completeness
+				CompilationUnit cu = JavaUtil.findCompilationUnitInProject(
+						node.getDeclaringCompilationUnitName(), appPath);
+				MinimumASTNodeFinder finder = new MinimumASTNodeFinder(
+						node.getLineNumber(), cu);
+				cu.accept(finder);
+				ASTNode astNode = finder.getMinimumNode();
+				
+				if(astNode!=null) {
+					int start = cu.getLineNumber(astNode.getStartPosition());
+					int end = cu.getLineNumber(astNode.getStartPosition()+astNode.getLength());
+					
+					TraceNode stepOverPrev = node.getStepOverPrevious();
+					while(stepOverPrev!=null && 
+							start<=stepOverPrev.getLineNumber() &&
+							stepOverPrev.getLineNumber()<=end) {
+						List<VarValue> readVars = stepOverPrev.getReadVariables();
+						for(VarValue readVar: readVars) {
+							if(!node.getReadVariables().contains(readVar)) {
+								node.getReadVariables().add(readVar);
+							}
+						}
+						stepOverPrev = stepOverPrev.getStepOverPrevious();
+					}
+				}
+				
+			}
+		}
 	}
 	
 	public void attachFullPathInfo(BreakPoint point, AppJavaClassPath appClassPath, 
