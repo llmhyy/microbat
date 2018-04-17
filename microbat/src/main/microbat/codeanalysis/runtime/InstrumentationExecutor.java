@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -22,8 +23,10 @@ import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 import microbat.preference.MicrobatPreference;
 import microbat.util.JavaUtil;
+import microbat.util.MinimumASTNodeFinder;
 import sav.common.core.SavException;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.vm.VMConfiguration;
@@ -180,7 +183,38 @@ public class InstrumentationExecutor {
 			for(TraceNode node: trace.getExecutionList()){
 				BreakPoint point = node.getBreakPoint();
 				attachFullPathInfo(point, appPath, classNameMap, pathMap);
+				
+				if(!node.getInvocationChildren().isEmpty() && 
+						node.getReadVariables().isEmpty()) {
+					//check AST completeness
+					CompilationUnit cu = JavaUtil.findCompilationUnitInProject(
+							node.getDeclaringCompilationUnitName(), appPath);
+					MinimumASTNodeFinder finder = new MinimumASTNodeFinder(
+							node.getLineNumber(), cu);
+					cu.accept(finder);
+					ASTNode astNode = finder.getMinimumNode();
+					
+					if(astNode!=null) {
+						int start = cu.getLineNumber(astNode.getStartPosition());
+						int end = cu.getLineNumber(astNode.getStartPosition()+astNode.getLength());
+						
+						TraceNode stepOverPrev = node.getStepOverPrevious();
+						while(stepOverPrev!=null && 
+								start<=stepOverPrev.getLineNumber() &&
+								stepOverPrev.getLineNumber()<=end) {
+							List<VarValue> readVars = stepOverPrev.getReadVariables();
+							for(VarValue readVar: readVars) {
+								if(!node.getReadVariables().contains(readVar)) {
+									node.getReadVariables().add(readVar);
+								}
+							}
+							stepOverPrev = stepOverPrev.getStepOverPrevious();
+						}
+					}
+					
+				}
 			}
+			
 			
 			RunningInformation information = new RunningInformation(result.getProgramMsg(), result.getExpectedSteps(), 
 					result.getCollectedSteps(), result.getTrace());
