@@ -48,7 +48,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					String targetProject = MutationRegressionPreference.getTargetProject();
 					
 					MutationRegressionRetriever retriever = new MutationRegressionRetriever();
-					MuRegression muRegression = retriever.retrieveRegression(targetProject, muBugId, monitor, false, 3);
+					MuRegression muRegression = retriever.retrieveRegression(targetProject, muBugId, monitor, true, 3);
 					Regression regression = muRegression.getRegression();
 					Trace buggyTrace = regression.getBuggyTrace();
 					Trace correctTrace = regression.getCorrectTrace();
@@ -85,7 +85,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
 					
 					try {
-						EmpiricalTrial trial = simulate(buggyTrace, correctTrace, pairList, diffMatcher, false, 3);
+						EmpiricalTrial trial = simulate(buggyTrace, correctTrace, pairList, diffMatcher, true, 3);
 						System.out.println(trial);
 					} catch (SimulationFailException e) {
 						e.printStackTrace();
