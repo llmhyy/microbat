@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +44,8 @@ public class InstrumentationExecutor {
 	private TraceAgentRunner agentRunner;
 	private long timeout = VMRunner.NO_TIME_OUT;
 	
-	private List<String> includeLibs = new ArrayList<>();
-	private List<String> excludeLibs = new ArrayList<>();
+	private List<String> includeLibs = Collections.emptyList();
+	private List<String> excludeLibs = Collections.emptyList();
 	
 	public InstrumentationExecutor(AppJavaClassPath appPath, String traceDir, String traceName, 
 			List<String> includeLibs, List<String> excludeLibs) {

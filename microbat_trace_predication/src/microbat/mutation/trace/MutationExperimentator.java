@@ -228,13 +228,10 @@ public class MutationExperimentator {
 		while(!isDataFlowComplete && trialNum<trialLimit){
 			trialNum++;
 			
-			/**
-			 * TODO for Lyly: 
-			 * generate the correct and mutation trace by passing the includedClassNames 
-			 * and excludedClassNames to the agent.
-			 */
-			//Trace killingMutatantTrace = generateMutatedTrace(includedClassNames, excludedClassNames);
-			//Trace correctTrace = generateCorrectTrace(includedClassNames, excludedClassNames);
+			killingMutatantTrace = generateMutatedTrace(params.getBkClassFiles(), mutation, killingMutatantTrace.getAppJavaClassPath(),
+					buggyPrecheck, includedClassNames, excludedClassNames);
+			correctTrace = generateCorrectTrace(params, correctTrace.getAppJavaClassPath(), correctPrecheck, 
+					includedClassNames, excludedClassNames);
 			
 			DiffMatcher diffMatcher = new MuDiffMatcher(mutation.getSourceFolder(), orgFilePath, mutationFilePath);
 			diffMatcher.matchCode();
@@ -304,6 +301,28 @@ public class MutationExperimentator {
 		return new CheckResult(null, false);
 	}
 	
+	private Trace generateCorrectTrace(AnalysisTestcaseParams params, AppJavaClassPath testcaseConfig,
+			PreCheckInformation correctPrecheck, List<String> includedClassNames, List<String> excludedClassNames) {
+		String outputFolder = params.getAnalysisOutputFolder();
+		params.getBkClassFiles().restoreOrgClassFile();
+		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, outputFolder, "fix",
+				includedClassNames, excludedClassNames);
+		executor.setTimeout(EXECUTOR_TIMEOUT);
+		RunningInformation info = executor.execute(correctPrecheck);
+		return info.getTrace();
+	}
+
+	private Trace generateMutatedTrace(BackupClassFiles backupClassFiles, SingleMutation mutation, AppJavaClassPath testcaseConfig,
+			PreCheckInformation buggyPrecheck, List<String> includedClassNames, List<String> excludedClassNames) {
+		String traceDir = mutation.getMutationOutputFolder();
+		backupClassFiles.restoreMutatedClassFile();
+		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, traceDir, "bug",
+				includedClassNames, excludedClassNames);
+		executor.setTimeout(EXECUTOR_TIMEOUT);
+		RunningInformation runningInfo = executor.execute(buggyPrecheck);
+		return runningInfo.getTrace();
+	}
+
 	public MutationExecutionResult runSingleMutationTrial(SingleMutation mutation, AnalysisTestcaseParams params,
 			TraceExecutionInfo correctTraceInfo, IMutationExperimentMonitor monitor) {
 		MutationExecutionResult result = new MutationExecutionResult();
@@ -479,6 +498,8 @@ public class MutationExperimentator {
 		return muTrace;
 	}
 	
+	
+	
 	private MutationTrace generateMutatedTrace(AppJavaClassPath testcaseConfig, AnalysisTestcaseParams params,
 			SingleMutation mutation) throws Exception {
 //		Settings.compilationUnitMap.clear();
@@ -527,8 +548,7 @@ public class MutationExperimentator {
 		mutationTrace.setAppJavaClassPath(new AppJavaClassPathWrapper(mutationTrace.getAppJavaClassPath()) {
 			@Override
 			public List<String> getClasspaths() {
-				FileUtils.copyFile(backupClassFiles.getMutatedClassFilePath(), backupClassFiles.getClassFilePath(),
-						true);
+				backupClassFiles.restoreMutatedClassFile();
 				return super.getClasspaths();
 			}
 		});
@@ -536,8 +556,7 @@ public class MutationExperimentator {
 		correctTrace.setAppJavaClassPath(new AppJavaClassPathWrapper(correctTrace.getAppJavaClassPath()) {
 			@Override
 			public List<String> getClasspaths() {
-				FileUtils.copyFile(backupClassFiles.getOrgClassFilePath(), backupClassFiles.getClassFilePath(),
-						true);
+				backupClassFiles.restoreOrgClassFile();
 				return super.getClasspaths();
 			}
 		});

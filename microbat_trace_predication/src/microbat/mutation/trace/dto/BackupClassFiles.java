@@ -1,5 +1,7 @@
 package microbat.mutation.trace.dto;
 
+import sav.common.core.utils.FileUtils;
+
 public class BackupClassFiles {
 	private String classFilePath;
 	private String orgClassFilePath;
@@ -29,5 +31,13 @@ public class BackupClassFiles {
 
 	public String getClassFilePath() {
 		return classFilePath;
+	}
+	
+	public void restoreMutatedClassFile() {
+		FileUtils.copyFile(mutatedClassFilePath, classFilePath, true);
+	}
+
+	public void restoreOrgClassFile() {
+		FileUtils.copyFile(getOrgClassFilePath(), getClassFilePath(), true);
 	}
 }
