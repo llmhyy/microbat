@@ -56,7 +56,7 @@ public class MutationGenerationHandler extends AbstractHandler {
 				try {
 					MutationExperimentMonitor experimentMonitor = new MutationExperimentMonitor(monitor, targetProject,
 							analysisParams);
-					MutationExperimentator analyzer = new MutationExperimentator();
+					MutationExperimentator analyzer = new MutationExperimentator(false, 3);
 					IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject(targetProject);
 
 					for (IJavaElement element : testRoot.getChildren()) {

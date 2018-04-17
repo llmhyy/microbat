@@ -48,7 +48,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					String targetProject = MutationRegressionPreference.getTargetProject();
 					
 					MutationRegressionRetriever retriever = new MutationRegressionRetriever();
-					MuRegression muRegression = retriever.retrieveRegression(targetProject, muBugId, monitor);
+					MuRegression muRegression = retriever.retrieveRegression(targetProject, muBugId, monitor, false, 3);
 					Regression regression = muRegression.getRegression();
 					Trace buggyTrace = regression.getBuggyTrace();
 					Trace correctTrace = regression.getCorrectTrace();

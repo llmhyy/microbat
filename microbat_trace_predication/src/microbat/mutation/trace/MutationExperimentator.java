@@ -49,11 +49,14 @@ import sav.strategies.dto.ClassLocation;
 import sav.strategies.mutanbug.MutationResult;
 import sav.strategies.vm.JavaCompiler;
 import sav.strategies.vm.VMConfiguration;
+import tregression.SimulationFailException;
 import tregression.empiricalstudy.DeadEndCSVWriter;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.DeadEndReporter;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.Regression;
+import tregression.empiricalstudy.RegressionUtil;
+import tregression.empiricalstudy.RootCauseFinder;
 import tregression.empiricalstudy.Simulator;
 import tregression.empiricalstudy.solutionpattern.PatternIdentifier;
 import tregression.empiricalstudy.training.DED;
@@ -69,6 +72,15 @@ public class MutationExperimentator {
 	private static final long EXECUTOR_TIMEOUT = 30000l;
 	private static boolean DEBUG = true;
 	
+	private boolean useSliceBreaker;
+	private int breakerLimit;
+	
+	public MutationExperimentator(boolean useSliceBreaker, int breakerLimit) {
+		super();
+		this.useSliceBreaker = useSliceBreaker;
+		this.breakerLimit = breakerLimit;
+	}
+
 	public void runEvaluation(IPackageFragment pack, AnalysisParams analysisParams,
 			IMutationExperimentMonitor monitor) throws JavaModelException {
 
@@ -193,6 +205,105 @@ public class MutationExperimentator {
 		return runSingleMutationTrial(mutation, testcaseParams, correctTrace, experimentMonitor);
 	}
 
+	public class CheckResult{
+		List<EmpiricalTrial> trials;
+		boolean foundRootCause;
+		public CheckResult(List<EmpiricalTrial> trials, boolean foundRootCause) {
+			super();
+			this.trials = trials;
+			this.foundRootCause = foundRootCause;
+		}
+	}
+	
+	private CheckResult checkRootCause(SingleMutation mutation, String orgFilePath, String mutationFilePath, 
+			Trace killingMutatantTrace, Trace correctTrace, AnalysisTestcaseParams params, 
+			PreCheckInformation buggyPrecheck, PreCheckInformation correctPrecheck,
+			boolean useSliceBreaker, int breakLimit) throws SimulationFailException {
+		
+		int trialLimit = 10;
+		int trialNum = 0;
+		boolean isDataFlowComplete = false;
+		List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
+		List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
+		while(!isDataFlowComplete && trialNum<trialLimit){
+			trialNum++;
+			
+			/**
+			 * TODO for Lyly: 
+			 * generate the correct and mutation trace by passing the includedClassNames 
+			 * and excludedClassNames to the agent.
+			 */
+			//Trace killingMutatantTrace = generateMutatedTrace(includedClassNames, excludedClassNames);
+			//Trace correctTrace = generateCorrectTrace(includedClassNames, excludedClassNames);
+			
+			DiffMatcher diffMatcher = new MuDiffMatcher(mutation.getSourceFolder(), orgFilePath, mutationFilePath);
+			diffMatcher.matchCode();
+			
+			setAppClassPathWrapper(killingMutatantTrace, correctTrace, params.getBkClassFiles());
+			
+			long start = System.currentTimeMillis();
+			ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
+			PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, diffMatcher); 
+			int matchTime = (int) (System.currentTimeMillis() - start);
+			
+			Simulator simulator = new Simulator(useSliceBreaker, breakLimit);
+			simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
+			
+			RootCauseFinder rootcauseFinder = new RootCauseFinder();
+			rootcauseFinder.checkRootCause(simulator.getObservedFault(), killingMutatantTrace, correctTrace, pairList, diffMatcher);
+			TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, killingMutatantTrace, correctTrace);
+			
+			if(rootCause==null){
+				System.out.println("[Search Lib Class] Cannot find the root cause, I am searching for library classes...");
+				
+				List<TraceNode> buggySteps = rootcauseFinder.getStopStepsOnBuggyTrace();
+				List<TraceNode> correctSteps = rootcauseFinder.getStopStepsOnCorrectTrace();
+				
+				List<String> newIncludedClassNames = new ArrayList<>();
+				List<String> newIncludedBuggyClassNames = RegressionUtil.identifyIncludedClassNames(buggySteps, 
+						buggyPrecheck, rootcauseFinder.getRegressionNodeList());
+				List<String> newIncludedCorrectClassNames = RegressionUtil.identifyIncludedClassNames(correctSteps, 
+						correctPrecheck, rootcauseFinder.getCorrectNodeList());
+				newIncludedClassNames.addAll(newIncludedBuggyClassNames);
+				newIncludedClassNames.addAll(newIncludedCorrectClassNames);
+				boolean includedClassChanged = false;
+				for(String name: newIncludedClassNames){
+					if(!includedClassNames.contains(name)){
+						includedClassNames.add(name);
+						includedClassChanged = true;
+					}
+				}
+				
+				if(!includedClassChanged) {
+					trialNum = trialLimit + 1;
+				}
+				else {
+					continue;						
+				}
+			}
+			
+			isDataFlowComplete = true;
+			boolean foundRootCause = rootCause!=null;
+			
+			List<EmpiricalTrial> trials = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
+			
+			for (EmpiricalTrial t : trials) {
+				t.setTraceMatchTime(matchTime);
+				t.setBuggyTrace(killingMutatantTrace);
+				t.setFixedTrace(correctTrace);
+				t.setPairList(pairList);
+				t.setDiffMatcher(diffMatcher);
+				
+				PatternIdentifier identifier = new PatternIdentifier();
+				identifier.identifyPattern(t);
+			}
+			
+			return new CheckResult(trials, foundRootCause);
+		}
+		
+		return new CheckResult(null, false);
+	}
+	
 	public MutationExecutionResult runSingleMutationTrial(SingleMutation mutation, AnalysisTestcaseParams params,
 			TraceExecutionInfo correctTraceInfo, IMutationExperimentMonitor monitor) {
 		MutationExecutionResult result = new MutationExecutionResult();
@@ -201,11 +312,6 @@ public class MutationExperimentator {
 		try {
 			MutationTrace muTrace = generateMutatedTrace(correctTrace.getAppJavaClassPath(), params, mutation);
 			
-			/* LLT: #143 */
-			correctTraceInfo.getPrecheckInfo().getLoadedClasses();
-			muTrace.getTraceExecInfo().getPrecheckInfo().getLoadedClasses();
-			/* */
-			
 			if (muTrace != null) {
 				result.bugTrace = muTrace.getTrace();
 			}
@@ -213,76 +319,52 @@ public class MutationExperimentator {
 				System.out.println("Timeout, mutated file: " + mutation.getFile());
 				System.out.println("skip Time Out test case: " + params.getTestcaseName());
 			} else if (muTrace != null && muTrace.getTrace() != null && muTrace.getTrace().size() > 1) {
-				Trace killingMutatantTrace = muTrace.getTrace();
 				ICompilationUnit iunit = JavaUtil.findNonCacheICompilationUnitInProject(mutation.getMutatedClass(),
 						params.getProjectName());
 				String orgFilePath = IResourceUtils.getAbsolutePathOsStr(iunit.getPath());
 				String mutationFilePath = mutation.getFile().getAbsolutePath();
-				DiffMatcher diffMatcher = new MuDiffMatcher(mutation.getSourceFolder(), orgFilePath, mutationFilePath);
-				diffMatcher.matchCode();
 				
-				setAppClassPathWrapper(killingMutatantTrace, correctTrace, params.getBkClassFiles());
+				CheckResult checkResult = checkRootCause(mutation, orgFilePath, mutationFilePath, 
+						muTrace.getTrace(), correctTrace, params, muTrace.getTraceExecInfo().getPrecheckInfo(), 
+						correctTraceInfo.getPrecheckInfo(), 
+						useSliceBreaker, breakerLimit);
+				List<EmpiricalTrial> trials = checkResult.trials;
+				boolean foundRootCause = checkResult.foundRootCause;
 				
-				long start = System.currentTimeMillis();
-				ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
-				PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, diffMatcher); 
-				int matchTime = (int) (System.currentTimeMillis() - start);
-				
-				Simulator simulator = new Simulator(false, -1);
-				simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
-				List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
-				String muBugId = mutation.getMutationBugId();
-			
-				boolean foundRootCause = false;
-				for(EmpiricalTrial trial: trials0){
-					trial.setTestcase(params.getTestcaseName());
-					trial.setTraceCollectionTime(killingMutatantTrace.getConstructTime() + correctTrace.getConstructTime());
-					trial.setTraceMatchTime(matchTime);
-					trial.setBuggyTrace(killingMutatantTrace);
-					trial.setFixedTrace(correctTrace);
-					trial.setPairList(pairList);
-					trial.setDiffMatcher(diffMatcher);
-					
-					PatternIdentifier identifier = new PatternIdentifier();
-					identifier.identifyPattern(trial);
-					
-					TraceNode rootCause = trial.getRootCauseFinder().retrieveRootCause(pairList, diffMatcher, killingMutatantTrace, correctTrace);
-					if (rootCause != null) {
-						foundRootCause  = true;
+				EmpiricalTrial trial = trials.get(0);
+				String backupJFile = orgFilePath.replace(".java", "_bk.java");
+				FileUtils.copyFile(orgFilePath, backupJFile, true);
+				try {
+					FileUtils.copyFile(mutationFilePath, orgFilePath, true);
+					Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
+					Settings.compilationUnitMap.remove(mutation.getMutatedClass());
+					if(!trial.getDeadEndRecordList().isEmpty()){
+						Repository.clearCache();
+						DeadEndRecord record = trial.getDeadEndRecordList().get(0);
+						String muBugId = mutation.getMutationBugId();
+						DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
+						setTestCase(datas, trial.getTestcase());						
+							new DeadEndReporter().export(datas.getAllData(), params.getProjectName(), muBugId);
+						new DeadEndCSVWriter().export(datas.getAllData(), params.getProjectName(), muBugId);
 					}
-					
-					String backupJFile = orgFilePath.replace(".java", "_bk.java");
-					FileUtils.copyFile(orgFilePath, backupJFile, true);
-					try {
-						FileUtils.copyFile(mutationFilePath, orgFilePath, true);
-						Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
-						Settings.compilationUnitMap.remove(mutation.getMutatedClass());
-						if(!trial.getDeadEndRecordList().isEmpty()){
-							Repository.clearCache();
-							DeadEndRecord record = trial.getDeadEndRecordList().get(0);
-							DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
-							setTestCase(datas, trial.getTestcase());						
-								new DeadEndReporter().export(datas.getAllData(), params.getProjectName(), muBugId);
-							new DeadEndCSVWriter().export(datas.getAllData(), params.getProjectName(), muBugId);
-						}
-					} catch (NumberFormatException | IOException e) {
-						e.printStackTrace();
-					} finally {
-						FileUtils.copyFile(backupJFile, orgFilePath, true);
-						Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
-						Settings.compilationUnitMap.remove(mutation.getMutatedClass());
-						new File(backupJFile).delete();
-						BackupClassFiles bkClassFiles = params.getBkClassFiles();
-						if (bkClassFiles != null) {
-							FileUtils.copyFile(bkClassFiles.getOrgClassFilePath(), bkClassFiles.getClassFilePath(),
-									true);
-							new File(bkClassFiles.getMutatedClassFilePath()).delete();
-							new File(bkClassFiles.getOrgClassFilePath()).delete();
-						}
+				} catch (NumberFormatException | IOException e) {
+					e.printStackTrace();
+				} finally {
+					FileUtils.copyFile(backupJFile, orgFilePath, true);
+					Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
+					Settings.compilationUnitMap.remove(mutation.getMutatedClass());
+					new File(backupJFile).delete();
+					BackupClassFiles bkClassFiles = params.getBkClassFiles();
+					if (bkClassFiles != null) {
+						FileUtils.copyFile(bkClassFiles.getOrgClassFilePath(), bkClassFiles.getClassFilePath(),
+								true);
+						new File(bkClassFiles.getMutatedClassFilePath()).delete();
+						new File(bkClassFiles.getOrgClassFilePath()).delete();
 					}
 				}
+				
 				monitor.reportTrial(params, correctTraceInfo, muTrace.getTraceExecInfo(), mutation, foundRootCause);
-				monitor.reportEmpiralTrial(trials0, params, mutation);
+				monitor.reportEmpiralTrial(trials, params, mutation);
 				if (!foundRootCause && !DEBUG && muTrace.getTraceExecFile() == null) {
 					mutation.remove();
 				} 

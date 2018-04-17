@@ -20,13 +20,14 @@ import tregression.empiricalstudy.Regression;
 public class MutationRegressionRetriever {
 	
 	
-	public MuRegression retrieveRegression(String targetProject, String mutationBugId, IProgressMonitor monitor)
+	public MuRegression retrieveRegression(String targetProject, String mutationBugId, 
+			IProgressMonitor monitor, boolean useSliceBreaker, int breakerLimit)
 			throws SQLException, IOException {
 		MutationCase mutationCase = MutationCase.load(targetProject, mutationBugId);
 		AnalysisParams analysisParams = new AnalysisParams();
 		IMutationExperimentMonitor experimentMonitor = new BasicMutationExperimentMonitor(monitor);
 
-		MutationExperimentator analyzer = new MutationExperimentator();
+		MutationExperimentator analyzer = new MutationExperimentator(useSliceBreaker, breakerLimit);
 
 		mutationCase.getTestcaseParams().setAnalysisParams(analysisParams);
 		SingleMutation mutation = mutationCase.getMutation();
