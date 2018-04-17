@@ -138,7 +138,7 @@ public class MutationExperimentator {
 
 		Trace correctTrace = info.getTrace();
 		Regression.fillMissingInfo(correctTrace, testcaseConfig);
-		return new TraceExecutionInfo(correctTrace, executor.getTraceExecFilePath());
+		return new TraceExecutionInfo(precheckInfo, correctTrace, executor.getTraceExecFilePath());
 	}
 
 	public boolean runSingleTestcase(TraceExecutionInfo correctTrace, AnalysisTestcaseParams params,
@@ -200,6 +200,12 @@ public class MutationExperimentator {
 		result.correctTrace = correctTrace;
 		try {
 			MutationTrace muTrace = generateMutatedTrace(correctTrace.getAppJavaClassPath(), params, mutation);
+			
+			/* LLT: #143 */
+			correctTraceInfo.getPrecheckInfo().getLoadedClasses();
+			muTrace.getTraceExecInfo().getPrecheckInfo().getLoadedClasses();
+			/* */
+			
 			if (muTrace != null) {
 				result.bugTrace = muTrace.getTrace();
 			}
@@ -376,7 +382,7 @@ public class MutationExperimentator {
 						MuRegressionUtils.fillMuBkpJavaFilePath(trace, mutation.getFile().getAbsolutePath(),
 								mutation.getMutatedClass());
 						Regression.fillMissingInfo(trace, testcaseConfig);
-						muTrace.setTrace(new TraceExecutionInfo(trace, executor.getTraceExecFilePath()));
+						muTrace.setTrace(new TraceExecutionInfo(precheck, trace, executor.getTraceExecFilePath()));
 					}
 				}
 			} else {
