@@ -8,21 +8,26 @@
 
 package mutation.io;
 
-import japa.parser.ast.Node;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import mutation.mutator.MutationVisitor.MutationNode;
-import mutation.utils.FileUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import japa.parser.ast.Node;
+import japa.parser.ast.body.MethodDeclaration;
+import japa.parser.ast.stmt.BlockStmt;
+import japa.parser.ast.stmt.IfStmt;
+import japa.parser.ast.stmt.Statement;
+import japa.parser.ast.visitor.CloneVisitor;
+import mutation.mutator.MutationVisitor.MutationNode;
+import mutation.utils.AstUtils;
+import mutation.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
 
 /**
@@ -31,6 +36,7 @@ import sav.common.core.utils.StringUtils;
  */
 public class MutationFileWriter extends AbstractMutationFileWriter {
 	private static Logger log = LoggerFactory.getLogger(MutationFileWriter.class);
+	private CloneVisitor nodeCloner = new CloneVisitor();
 	
 	public MutationFileWriter(String srcFolder, String mutationOutputFolder) {
 		super(srcFolder, mutationOutputFolder);
@@ -66,8 +72,41 @@ public class MutationFileWriter extends AbstractMutationFileWriter {
 		}
 		return files;
 	}
-
+	
 	private List<String> createNewContent(List<?> lines, Node orgNode, Node node) {
+		/* handle compilation error */
+		if ((orgNode instanceof IfStmt) && (node instanceof Statement) 
+				&& AstUtils.doesContainReturnStmt((Statement) node)) {
+			BlockStmt blockStmt = getParentBlockStmt(orgNode);
+			if (blockStmt != null) {
+				BlockStmt newBlockStmt = (BlockStmt) nodeCloner.visit(blockStmt, null);
+				for (Iterator<Statement> it = newBlockStmt.getStmts().iterator(); it.hasNext();) {
+					Statement stmt = it.next();
+					if ((stmt.getBeginLine() > orgNode.getEndLine()) 
+							|| ((stmt.getBeginLine() == orgNode.getEndLine()) && 
+									stmt.getBeginColumn() > orgNode.getEndColumn())) {
+						it.remove();
+					}
+				}
+				NodeReplacementVisitor.replace(newBlockStmt, orgNode, node);
+				return generateNewContent(lines, blockStmt, newBlockStmt);
+			}
+		}
+		return generateNewContent(lines, orgNode, node);
+	}
+
+	private BlockStmt getParentBlockStmt(Node orgNode) {
+		Node node = orgNode;
+		while (!(node.getParentNode() instanceof MethodDeclaration)) {
+			if (node.getParentNode() instanceof BlockStmt) {
+				return (BlockStmt) node.getParentNode();
+			}
+			node = node.getParentNode();
+		}
+		return null;
+	}
+
+	private List<String> generateNewContent(List<?> lines, Node orgNode, Node node) {
 		List<String> newContent = new ArrayList<String>(lines.size());
 		int startLine = toFileLineIdx(orgNode.getBeginLine());
 		int endLine = toFileLineIdx(orgNode.getEndLine());
@@ -75,7 +114,7 @@ public class MutationFileWriter extends AbstractMutationFileWriter {
 		/* replace */
 		String beforeNode = extractStrBeforeNode(lines, orgNode);
 		String afterNode = extractStrAfterNode(lines, orgNode);
-		String[] nLines = toString(node);
+		String[] nLines = toString(node, orgNode);
 		if (nLines.length == 0) {
 			newContent.add(StringUtils.spaceJoin(beforeNode, afterNode));
 		} else if (nLines.length == 1) {

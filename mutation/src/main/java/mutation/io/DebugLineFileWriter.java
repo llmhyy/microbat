@@ -56,7 +56,7 @@ public class DebugLineFileWriter extends AbstractMutationFileWriter implements I
 					addIfNotEmpty(newContent, beforeNode);
 					/* add new node */
 					for (Node newNode : debugLine.getReplaceNodes()) {
-						String[] stmt = toString(newNode);
+						String[] stmt = toString(newNode, orgNode);
 						CollectionUtils.addAll(newContent, stmt);
 					}
 					/* keep content at the same line but right after the org node */

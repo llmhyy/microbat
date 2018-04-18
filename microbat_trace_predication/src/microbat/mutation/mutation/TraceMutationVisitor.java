@@ -7,20 +7,16 @@ import japa.parser.ast.body.ModifierSet;
 import japa.parser.ast.body.VariableDeclarator;
 import japa.parser.ast.expr.AssignExpr;
 import japa.parser.ast.expr.BooleanLiteralExpr;
-import japa.parser.ast.expr.CharLiteralExpr;
 import japa.parser.ast.expr.DoubleLiteralExpr;
 import japa.parser.ast.expr.Expression;
 import japa.parser.ast.expr.IntegerLiteralExpr;
 import japa.parser.ast.expr.LongLiteralExpr;
 import japa.parser.ast.expr.NullLiteralExpr;
 import japa.parser.ast.expr.VariableDeclarationExpr;
-import japa.parser.ast.stmt.BlockStmt;
 import japa.parser.ast.stmt.EmptyStmt;
 import japa.parser.ast.stmt.ExpressionStmt;
 import japa.parser.ast.stmt.IfStmt;
-import japa.parser.ast.stmt.ReturnStmt;
 import japa.parser.ast.stmt.Statement;
-import japa.parser.ast.stmt.ThrowStmt;
 import japa.parser.ast.type.PrimitiveType;
 import japa.parser.ast.type.ReferenceType;
 import japa.parser.ast.type.Type;
@@ -28,7 +24,7 @@ import mutation.mutator.MutationVisitor;
 import mutation.mutator.mapping.MutationMap;
 import mutation.parser.ClassAnalyzer;
 import mutation.parser.VariableDescriptor;
-import sav.common.core.utils.CollectionUtils;
+import mutation.utils.AstUtils;
 
 /**
  * 
@@ -158,15 +154,24 @@ public class TraceMutationVisitor extends MutationVisitor {
 		if (!ribType && !ricType) {
 			return super.mutate(n);
 		}
+		MutationNode muNode = newNode(n);
 		IfStmt ifStmt = (IfStmt) nodeCloner.visit(n, null);
+		
+		if (AstUtils.isReturnStmt(n.getThenStmt()) && ricType) {
+			muNode.add(new EmptyStmt(), MutationType.REMOVE_IF_RETURN.name());
+		}
+		
+		Node returnThenNode = null;
+		Node returnElseNode = null;
 		// remove Stmt Block Which Has Return Stmt 
-		if (isEmptyOrContainReturnStmt(ifStmt.getThenStmt())) {
+		if (AstUtils.doesContainReturnStmt(ifStmt.getThenStmt())) {
+			returnThenNode = ifStmt.getThenStmt();
 			ifStmt.setThenStmt(null);
 		}
 		if (isEmptyOrContainReturnStmt(ifStmt.getElseStmt())) {
+			returnElseNode = ifStmt.getElseStmt();
 			ifStmt.setElseStmt(null);
 		}
-		MutationNode muNode = newNode(n);
 		if (ifStmt.getThenStmt() == null && ifStmt.getElseStmt() == null) {
 			if (ribType) {
 				/* empty if or if which has return stmt in its stmt block */
@@ -192,31 +197,21 @@ public class TraceMutationVisitor extends MutationVisitor {
 				}
 			}
 		}
+		if (ricType) {
+			if (returnThenNode != null) {
+				Node newNode = returnThenNode.accept(nodeCloner, null);
+				muNode.add(newNode, MutationType.REMOVE_IF_CONDITION.name());
+			}
+			if (returnElseNode != null) {
+				Node newNode = returnElseNode.accept(nodeCloner, null);
+				muNode.add(newNode, MutationType.REMOVE_IF_CONDITION.name());
+			}
+		}
 		
 		return super.mutate(n);
 	}
-	
+
 	private boolean isEmptyOrContainReturnStmt(Statement stmt) {
-		if (stmt == null) {
-			return true;
-		}
-		if (stmt instanceof ReturnStmt) {
-			return true;
-		}
-		if (stmt instanceof BlockStmt) {
-			List<Statement> subStmts = ((BlockStmt) stmt).getStmts();
-			if (CollectionUtils.isEmpty(subStmts)) {
-				return true;
-			}
-			for (Statement subStmt : subStmts) {
-				if (subStmt instanceof ReturnStmt) {
-					return true;
-				}
-				if (subStmt instanceof ThrowStmt) {
-					return true;
-				}
-			}
-		}
-		return false; 
+		return AstUtils.isEmpty(stmt) || AstUtils.doesContainReturnStmt(stmt);
 	}
 }

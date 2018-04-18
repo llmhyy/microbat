@@ -24,7 +24,6 @@ import microbat.mutation.mutation.MutationType;
 import microbat.mutation.trace.dto.MutationCase;
 import microbat.util.SWTFactory;
 import microbat.util.WorkbenchUtils;
-import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.ObjectUtils;
 import sav.common.core.utils.StringUtils;
 
@@ -38,7 +37,7 @@ public class MutationRegressionPreference extends PreferencePage implements IWor
 	private Combo projectCombo;
 	private Combo bugIdCombo;
 	private List<Button> mutationTypeCbs;
-	private List<MutationType> mutationTypes = CollectionUtils.toArrayList(MutationType.values());
+	private List<MutationType> mutationTypes = MutationType.getPreferenceMutationTypes();
 	private Button rerunCb;
 
 	@Override

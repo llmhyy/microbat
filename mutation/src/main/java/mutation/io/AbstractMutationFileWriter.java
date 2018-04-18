@@ -66,7 +66,7 @@ public class AbstractMutationFileWriter {
 		return new File(ClassUtils.getJFilePath(scrFolder, className));
 	}
 
-	protected String[] toString(Node node) {
+	protected String[] toString(Node node, Node orgNode) {
 		if (node instanceof EmptyStmt) {
 			return new String[0];
 		}
@@ -74,7 +74,7 @@ public class AbstractMutationFileWriter {
 		if (CollectionUtils.isEmpty(lines)) {
 			return lines;
 		}
-		if ((node instanceof BlockStmt) 
+		if (!(orgNode instanceof BlockStmt) && (node instanceof BlockStmt) 
 				&& "{".equals(lines[0]) && "}".equals(lines[lines.length - 1])) {
 			lines = Arrays.copyOfRange(lines, 1, lines.length - 1);
 		} 

@@ -385,7 +385,7 @@ public class MutationExperimentator {
 				monitor.reportTrial(params, correctTraceInfo, muTrace.getTraceExecInfo(), mutation, foundRootCause);
 				monitor.reportEmpiralTrial(trials, params, mutation);
 				if (!foundRootCause && !DEBUG && muTrace.getTraceExecFile() == null) {
-					mutation.remove();
+//					mutation.remove();
 				} 
 				result.isValid = foundRootCause;
 			}
