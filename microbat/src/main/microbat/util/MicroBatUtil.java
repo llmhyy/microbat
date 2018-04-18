@@ -13,6 +13,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
@@ -160,6 +161,15 @@ public class MicroBatUtil {
 			}
 		}
 		return srcFolders;
+	}
+	
+	public static String getSourceFolder(String cName, String projectName) {
+		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName, projectName);
+		IPath uri = unit.getResource().getFullPath();
+		String sourceFolderPath = IResourceUtils.getAbsolutePathOsStr(uri);
+		cName = cName.substring(0, cName.lastIndexOf(".")).replace(".", File.separator);
+		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName) - 1);
+		return sourceFolderPath;
 	}
 	
 	public static IPackageFragmentRoot getRtPackageFragmentRoot() {

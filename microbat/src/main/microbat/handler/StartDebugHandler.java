@@ -56,13 +56,19 @@ public class StartDebugHandler extends AbstractHandler {
 	}
 	
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		
-		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		if (Settings.isRunTest) {
 			appClassPath.setOptionalTestClass(Settings.lanuchClass);
 			appClassPath.setOptionalTestMethod(Settings.testMethod);
 			appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
+			appClassPath.setTestCodePath(MicroBatUtil.getSourceFolder(Settings.lanuchClass, Settings.projectName));
+		}
+		List<String> srcFolders = MicroBatUtil.getSourceFolders(Settings.projectName);
+		appClassPath.setSourceCodePath(appClassPath.getTestCodePath());
+		for (String srcFolder : srcFolders) {
+			if (!srcFolder.equals(appClassPath.getTestCodePath())) {
+				appClassPath.getAdditionalSourceFolders().add(srcFolder);
+			}
 		}
 		
 //		InstrumentationExecutor ex = new InstrumentationExecutor(appClassPath);
