@@ -12,6 +12,7 @@ import tregression.empiricalstudy.EmpiricalTrial;
 
 public class BasicMutationExperimentMonitor implements IMutationExperimentMonitor {
 	private IProgressMonitor progressMonitor;
+	private IMutationCaseChecker checker = new EmptyMutationCaseChecker();
 
 	public BasicMutationExperimentMonitor(IProgressMonitor progressMonitor) {
 		this.progressMonitor = progressMonitor;
@@ -32,6 +33,14 @@ public class BasicMutationExperimentMonitor implements IMutationExperimentMonito
 	public void reportEmpiralTrial(List<EmpiricalTrial> trials0, AnalysisTestcaseParams params, SingleMutation mutation)
 			throws IOException {
 		// do nothing by default
+	}
+
+	/* (non-Javadoc)
+	 * @see microbat.mutation.trace.report.IMutationExperimentMonitor#getMutationCaseChecker()
+	 */
+	@Override
+	public IMutationCaseChecker getMutationCaseChecker() {
+		return checker;
 	}
 
 }

@@ -76,7 +76,7 @@ public class StringUtils {
 		return varSb.toString();
 	}
 	
-	public static String newLineJoin(List<?> params) {
+	public static String newLineJoin(Collection<?> params) {
 		return join(params, Constants.NEW_LINE);
 	}
 	

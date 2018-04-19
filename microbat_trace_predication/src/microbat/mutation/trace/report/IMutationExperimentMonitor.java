@@ -18,4 +18,6 @@ public interface IMutationExperimentMonitor {
 	void reportEmpiralTrial(List<EmpiricalTrial> trials0, AnalysisTestcaseParams params, SingleMutation mutation)
 			throws IOException;
 
+	IMutationCaseChecker getMutationCaseChecker();
+
 }

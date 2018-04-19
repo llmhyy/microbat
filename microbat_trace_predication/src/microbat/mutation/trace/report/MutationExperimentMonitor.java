@@ -17,7 +17,7 @@ import tregression.io.ExcelReporter;
 import tregression.model.Trial;
 
 public class MutationExperimentMonitor extends BasicMutationExperimentMonitor implements IMutationExperimentMonitor {
-	
+	private IMutationCaseChecker mutationCaseFilter = new EmptyMutationCaseChecker();
 	private ExcelReporter reporter;
 
 	public MutationExperimentMonitor(IProgressMonitor progressMonitor, String targetProject,
@@ -48,8 +48,13 @@ public class MutationExperimentMonitor extends BasicMutationExperimentMonitor im
 	@Override
 	public void reportEmpiralTrial(List<EmpiricalTrial> trials0, AnalysisTestcaseParams params, SingleMutation mutation)
 			throws IOException {
+		System.out.println(mutation.getMutationBugId());
 		TrialRecorder recorder = new TrialRecorder();
 		recorder.export(trials0, params.getProjectName(), mutation.getMutationBugId(), mutation.getMutationType());
-
+	}
+	
+	@Override
+	public IMutationCaseChecker getMutationCaseChecker() {
+		return mutationCaseFilter;
 	}
 }
