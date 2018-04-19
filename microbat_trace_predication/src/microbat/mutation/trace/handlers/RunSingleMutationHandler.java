@@ -39,7 +39,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		boolean useSliceBreaker = false;
+		boolean useSliceBreaker = true;
 		int breakerLimit = 3;
 		
 		
