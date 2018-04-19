@@ -39,6 +39,10 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		boolean useSliceBreaker = false;
+		int breakerLimit = 3;
+		
+		
 		Job job = new Job("Run single mutation") {
 			
 			@Override
@@ -48,7 +52,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					String targetProject = MutationRegressionPreference.getTargetProject();
 					
 					MutationRegressionRetriever retriever = new MutationRegressionRetriever();
-					MuRegression muRegression = retriever.retrieveRegression(targetProject, muBugId, monitor, true, 3);
+					MuRegression muRegression = retriever.retrieveRegression(targetProject, muBugId, monitor, useSliceBreaker, breakerLimit);
 					Regression regression = muRegression.getRegression();
 					Trace buggyTrace = regression.getBuggyTrace();
 					Trace correctTrace = regression.getCorrectTrace();
@@ -85,7 +89,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
 					
 					try {
-						EmpiricalTrial trial = simulate(buggyTrace, correctTrace, pairList, diffMatcher, true, 3);
+						EmpiricalTrial trial = simulate(buggyTrace, correctTrace, pairList, diffMatcher, useSliceBreaker, breakerLimit);
 						System.out.println(trial);
 					} catch (SimulationFailException e) {
 						e.printStackTrace();
