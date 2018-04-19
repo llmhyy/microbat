@@ -25,6 +25,7 @@ import mutation.mutator.mapping.MutationMap;
 import mutation.parser.ClassAnalyzer;
 import mutation.parser.VariableDescriptor;
 import mutation.utils.AstUtils;
+import sav.common.core.utils.FileUtils;
 
 /**
  * 
@@ -149,6 +150,14 @@ public class TraceMutationVisitor extends MutationVisitor {
 
 	@Override
 	public boolean mutate(IfStmt n) {
+//		if (!AstUtils.isEmpty(n.getThenStmt()) && !AstUtils.doesContainReturnStmt(n.getThenStmt())) {
+//			FileUtils.appendFile("E:/lyly/logIf.txt", String.format("\n\nDoes Not Contain Return Stmt in ThenStmt:(%d) \n%s", n.getBeginLine(), n));
+//			System.out.println(String.format("\n\nDoes Not Contain Return Stmt in ThenStmt:(%d) \n%s", n.getBeginLine(), n));
+//		}
+//		if (!AstUtils.isEmpty(n.getElseStmt()) && !AstUtils.doesContainReturnStmt(n.getElseStmt())) {
+//			FileUtils.appendFile("E:/lyly/logIf.txt", String.format("\n\nDoes Not Contain Return Stmt in ElseStmt:(%d) \n%s", n.getBeginLine(), n));
+//			System.out.println(String.format("\n\nDoes Not Contain Return Stmt in ElseStmt:(%d) \n%s", n.getBeginLine(), n));
+//		}
 		boolean ribType = mutationTypes.contains(MutationType.REMOVE_IF_BLOCK);
 		boolean ricType = mutationTypes.contains(MutationType.REMOVE_IF_CONDITION);
 		if (!ribType && !ricType) {
@@ -157,21 +166,25 @@ public class TraceMutationVisitor extends MutationVisitor {
 		MutationNode muNode = newNode(n);
 		IfStmt ifStmt = (IfStmt) nodeCloner.visit(n, null);
 		
-		if (AstUtils.isReturnStmt(n.getThenStmt()) && ricType) {
-			muNode.add(new EmptyStmt(), MutationType.REMOVE_IF_RETURN.name());
-		}
-		
 		Node returnThenNode = null;
 		Node returnElseNode = null;
-		// remove Stmt Block Which Has Return Stmt 
-		if (AstUtils.doesContainReturnStmt(ifStmt.getThenStmt())) {
-			returnThenNode = ifStmt.getThenStmt();
+		if (AstUtils.isReturnStmt(n.getThenStmt()) && ricType) {
+			muNode.add(new EmptyStmt(), MutationType.REMOVE_IF_RETURN.name());
 			ifStmt.setThenStmt(null);
-		}
-		if (isEmptyOrContainReturnStmt(ifStmt.getElseStmt())) {
-			returnElseNode = ifStmt.getElseStmt();
+		} else if (AstUtils.isReturnStmt(n.getElseStmt())) {
 			ifStmt.setElseStmt(null);
+		} else {
+			// remove Stmt Block Which Has Return Stmt 
+			if (AstUtils.doesContainReturnStmt(ifStmt.getThenStmt())) {
+				returnThenNode = ifStmt.getThenStmt();
+				ifStmt.setThenStmt(null);
+			}
+			if (isEmptyOrContainReturnStmt(ifStmt.getElseStmt())) {
+				returnElseNode = ifStmt.getElseStmt();
+				ifStmt.setElseStmt(null);
+			}
 		}
+		
 		if (ifStmt.getThenStmt() == null && ifStmt.getElseStmt() == null) {
 			if (ribType) {
 				/* empty if or if which has return stmt in its stmt block */
