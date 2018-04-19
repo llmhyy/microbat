@@ -1,7 +1,5 @@
 package microbat.mutation.trace.handlers;
 
-import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -20,9 +18,7 @@ import microbat.mutation.trace.MutationExperimentator;
 import microbat.mutation.trace.dto.AnalysisParams;
 import microbat.mutation.trace.preference.MutationRegressionPreference;
 import microbat.mutation.trace.report.MutationExperimentMonitor;
-import microbat.util.IResourceUtils;
 import microbat.util.JavaUtil;
-import sav.common.core.utils.FileUtils;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -48,6 +44,9 @@ public class MutationGenerationHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		boolean useSliceBreaker = false;
+		int breakerLimit = 3;
+		
 		AnalysisParams analysisParams = new AnalysisParams();
 		Job job = new Job("Do evaluation") {
 			@Override
@@ -56,7 +55,7 @@ public class MutationGenerationHandler extends AbstractHandler {
 				try {
 					MutationExperimentMonitor experimentMonitor = new MutationExperimentMonitor(monitor, targetProject,
 							analysisParams);
-					MutationExperimentator analyzer = new MutationExperimentator(true, 3);
+					MutationExperimentator analyzer = new MutationExperimentator(useSliceBreaker, breakerLimit);
 					IPackageFragmentRoot testRoot = JavaUtil.findTestPackageRootInProject(targetProject);
 
 					for (IJavaElement element : testRoot.getChildren()) {
