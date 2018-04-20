@@ -18,7 +18,7 @@ import tregression.io.ExcelReporter;
 import tregression.model.Trial;
 
 public class MutationExperimentMonitor extends BasicMutationExperimentMonitor implements IMutationExperimentMonitor {
-	private IMutationCaseChecker mutationCaseFilter = new EmptyMutationCaseChecker();
+	private IMutationCaseChecker mutationCaseFilter = new MutationCaseChecker();
 	private ExcelReporter reporter;
 
 	public MutationExperimentMonitor(IProgressMonitor progressMonitor, String targetProject,

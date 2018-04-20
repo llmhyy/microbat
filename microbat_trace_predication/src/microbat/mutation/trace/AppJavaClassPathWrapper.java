@@ -152,5 +152,11 @@ public class AppJavaClassPathWrapper extends AppJavaClassPath {
 		return appJavaClassPath.getAllSourceFolders();
 	}
 	
-	
+	public ClassLoader getClassLoader() {
+		return appJavaClassPath.getClassLoader();
+	}
+
+	public void setClassLoader(ClassLoader classLoader) {
+		appJavaClassPath.setClassLoader(classLoader);
+	}
 }

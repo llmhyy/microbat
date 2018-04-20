@@ -59,6 +59,7 @@ public class MicroBatUtil {
 		 */
 //		String workspacePath = projectPath.substring(0, projectPath.indexOf(File.separator+Settings.projectName));
 //		String workspacePath = projectPath.substring(0, projectPath.lastIndexOf(File.separator)); 
+		appClassPath.setClassLoader(IProjectUtils.getPrjClassLoader(javaProject));
 		appClassPath.addClasspath(projectPath);
 		
 		for(IClasspathEntry classpathEntry: javaProject.readRawClasspath()){
@@ -108,7 +109,6 @@ public class MicroBatUtil {
 		appClassPath.addClasspath(outputPath);
 		appClassPath.setWorkingDirectory(projectPath);
 		appClassPath.setLaunchClass(Settings.lanuchClass);
-		
 		return appClassPath;
 		
 	}

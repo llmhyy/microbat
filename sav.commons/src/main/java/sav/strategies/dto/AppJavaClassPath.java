@@ -9,6 +9,9 @@
 package sav.strategies.dto;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +50,7 @@ public class AppJavaClassPath {
 	private List<String> additionalSourceFolders = new ArrayList<>();
 	
 	private SystemPreferences preferences;
+	private ClassLoader classLoader;
 
 	public AppJavaClassPath() {
 		classpaths = new ArrayList<>();
@@ -176,6 +180,31 @@ public class AppJavaClassPath {
 		
 		return candidateSourceFolders;
 	}
-	
 
+	public ClassLoader getClassLoader() {
+		if (classLoader == null) {
+			classLoader = initClassLoader();
+		}
+		return classLoader;
+	}
+
+	private ClassLoader initClassLoader() {
+		try {
+			List<URL> urlList = new ArrayList<URL>();
+			for (String path : classpaths) {
+				URL url = new File(path).toURI().toURL();
+				urlList.add(url);
+			}
+			URL[] urls = (URL[]) urlList.toArray(new URL[urlList.size()]);
+			return new URLClassLoader(urls, this.getClass().getClassLoader());
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public void setClassLoader(ClassLoader classLoader) {
+		this.classLoader = classLoader;
+	}
+	
 }

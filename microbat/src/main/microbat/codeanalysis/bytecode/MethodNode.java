@@ -26,6 +26,7 @@ import sav.common.core.utils.SignatureUtils;
 public class MethodNode {
 	private String methodSign;
 	private Method method;
+	private ClassLoader classLoader;
 	
 	/**
 	 * the instruction handles are the call sites for each method
@@ -34,9 +35,10 @@ public class MethodNode {
 	private Map<InstructionHandle, MethodNode> callees = new HashMap<>();
 	
 	
-	public MethodNode(String methodSign, Method method){
+	public MethodNode(ClassLoader classLoader, String methodSign, Method method){
 		this.setMethodSign(methodSign);
 		this.method = method;
+		this.classLoader = classLoader;
 	}
 	
 	public List<InstructionHandle> findVariableDefinition(Variable var){
@@ -153,8 +155,8 @@ public class MethodNode {
 					}
 					else{
 						try {
-							Class delClass = Class.forName(field.getDeclaringType());
-							Class typeClass = Class.forName(className);
+							Class delClass = classLoader.loadClass(field.getDeclaringType());
+							Class typeClass = classLoader.loadClass(className);
 							
 							if(typeClass.isAssignableFrom(delClass)){
 								hList.add(handle);
