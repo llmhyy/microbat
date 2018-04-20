@@ -265,8 +265,8 @@ public abstract class VarValue implements GraphNode, Serializable {
 		return variable.getType();
 	}
 	
-	public String getRtType() {
-		return variable.getRtType();
+	public String getRuntimeType() {
+		return variable.getRuntimeType();
 	}
 	
 //	public void setType(String type){

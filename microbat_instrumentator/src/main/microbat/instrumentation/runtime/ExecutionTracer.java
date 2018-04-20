@@ -180,7 +180,7 @@ public class ExecutionTracer implements IExecutionTracer {
 										field.getName(), fieldTypeStr, field.getDeclaringClass().getName());
 								fieldVar.setVarID(TraceUtils.getFieldVarId(var.getVarID(), field.getName(), fieldTypeStr, fieldValue));
 								if (isCollectionOrHashMap && HeuristicIgnoringFieldRule
-										.isCollectionOrMapElement(var.getRtType(), field.getName())) {
+										.isCollectionOrMapElement(var.getRuntimeType(), field.getName())) {
 									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer + 1);
 								} else {
 									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer);
@@ -727,6 +727,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			
 			List<VarValue> children = getHeuristicVarChildren(value);
 			for(VarValue child: children){
+				trace.getLatestNode().addReadVariable(child);
 				addRWriteValue(trace.getLatestNode(), child, false);
 			}
 		} catch (Throwable t) {
@@ -757,6 +758,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			
 			List<VarValue> children = getHeuristicVarChildren(value);
 			for(VarValue child: children){
+				trace.getLatestNode().addReadVariable(child);
 				addRWriteValue(trace.getLatestNode(), child, false);
 			}
 		} catch (Throwable t) {
@@ -826,6 +828,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			
 			List<VarValue> children = getHeuristicVarChildren(value);
 			for(VarValue child: children){
+				trace.getLatestNode().addReadVariable(child);
 				addRWriteValue(trace.getLatestNode(), child, false);
 			}
 			
@@ -961,6 +964,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			
 			List<VarValue> children = getHeuristicVarChildren(value);
 			for(VarValue child: children){
+				trace.getLatestNode().addReadVariable(child);
 				addRWriteValue(trace.getLatestNode(), child, false);
 			}
 			
@@ -971,13 +975,13 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 	
 	private List<VarValue> getHeuristicVarChildren(VarValue value) {
-		if (ArrayList.class.getName().equals(value.getRtType())) {
+		if (ArrayList.class.getName().equals(value.getRuntimeType())) {
 			for (VarValue child : value.getChildren()) {
 				if ("elementData".equals(child.getVarName())) {
 					return getHeuristicVarChildren(child);
 				}
 			}
-		} else if (HashMap.class.getName().equals(value.getRtType())) {
+		} else if (HashMap.class.getName().equals(value.getRuntimeType())) {
 			for (VarValue child : value.getChildren()) {
 				if ("table".equals(child.getVarName())) {
 					return getHeuristicVarChildren(child);
@@ -987,7 +991,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			List<VarValue> children = new ArrayList<>(value.getChildren().size());
 			for (VarValue child : value.getChildren()) {
 				if (child.getVariable() instanceof ArrayElementVar) {
-					if ("java.util.HashMap$Node".equals(child.getRtType())) {
+					if ("java.util.HashMap$Node".equals(child.getRuntimeType())) {
 						for (VarValue nodeAttr : child.getChildren()) {
 							children.add(nodeAttr);
 						}

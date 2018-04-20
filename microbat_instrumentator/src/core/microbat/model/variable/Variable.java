@@ -143,7 +143,7 @@ public abstract class Variable implements Serializable {
 	public abstract String getSimpleName();
 	public abstract Variable clone();
 
-	public String getRtType() {
+	public String getRuntimeType() {
 		return rtType;
 	}
 
