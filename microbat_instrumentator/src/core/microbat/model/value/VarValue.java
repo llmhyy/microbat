@@ -10,6 +10,7 @@ package microbat.model.value;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -28,9 +29,9 @@ import microbat.model.variable.Variable;
 public abstract class VarValue implements GraphNode, Serializable {
 	private static final long serialVersionUID = -4243257984929286188L;
 	protected String stringValue;
-	protected List<VarValue> parents = new ArrayList<>();
+	protected List<VarValue> parents = null;
 	protected Variable variable;
-	protected List<VarValue> children = new ArrayList<>();
+	protected List<VarValue> children = null;
 	
 	/**
 	 * indicate whether this variable is a top-level variable in certain step.
@@ -103,6 +104,9 @@ public abstract class VarValue implements GraphNode, Serializable {
 	
 	@Override
 	public List<VarValue> getChildren() {
+		if (children == null) {
+			return Collections.emptyList();
+		}
 		return children;
 	}
 	
@@ -261,6 +265,10 @@ public abstract class VarValue implements GraphNode, Serializable {
 		return variable.getType();
 	}
 	
+	public String getRtType() {
+		return variable.getRtType();
+	}
+	
 //	public void setType(String type){
 //		variable.setType(type);
 //	}
@@ -346,7 +354,7 @@ public abstract class VarValue implements GraphNode, Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("(%s:%s)", this.variable.getName(), children);
+		return String.format("(%s:%s)", this.variable.getName(), getChildren());
 	}
 	
 	public boolean isElementOfArray() {
@@ -359,6 +367,9 @@ public abstract class VarValue implements GraphNode, Serializable {
 	
 	@Override
 	public List<VarValue> getParents() {
+		if (parents == null) {
+			return Collections.emptyList();
+		}
 		return parents;
 	}
 
@@ -367,6 +378,9 @@ public abstract class VarValue implements GraphNode, Serializable {
 	}
 	
 	public void addParent(VarValue parent) {
+		if (parents == null) {
+			parents = new ArrayList<>();
+		}
 		if(!this.parents.contains(parent)){
 			this.parents.add(parent);
 		}
