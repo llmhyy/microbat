@@ -83,18 +83,36 @@ public class SeedStatementFinder {
 		return allSeeds;
 	}
 
+	
+	private void createOrAppend(MethodNode node, List<InstructionHandle> defs, 
+			Map<MethodNode, List<InstructionHandle>> allSeedMethods){
+		if(!allSeedMethods.containsKey(node)){
+			allSeedMethods.put(node, defs);				
+		}
+		else{
+			List<InstructionHandle> existingDefs = allSeedMethods.get(node);
+			for(InstructionHandle def: defs){
+				if(!existingDefs.contains(def)){
+					existingDefs.add(def);
+				}
+			}
+			allSeedMethods.put(node, existingDefs);
+		}
+	}
+	
 	private Map<MethodNode, List<InstructionHandle>> findAllSeedMethods(
 			List<MethodNode> seedMethods, Set<MethodNode> executedAppMethods, Variable var) {
 		Map<MethodNode, List<InstructionHandle>> allSeedMethods = new HashMap<>();
 		for(MethodNode node: seedMethods){
 			List<InstructionHandle> defs = node.findVariableDefinition(var);
-			allSeedMethods.put(node, defs);
+			createOrAppend(node, defs, allSeedMethods);
 			
 			System.currentTimeMillis();
 			Map<MethodNode, List<InstructionHandle>> allCallers = node.getAllCallers();
 			for(MethodNode caller: allCallers.keySet()){
 				List<InstructionHandle> hList = allCallers.get(caller);
-				allSeedMethods.put(caller, hList);
+//				allSeedMethods.put(caller, hList);
+				createOrAppend(caller, hList, allSeedMethods);
 			}
 		}
 		

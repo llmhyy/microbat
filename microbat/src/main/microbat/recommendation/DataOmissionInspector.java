@@ -67,6 +67,11 @@ public class DataOmissionInspector extends DetailInspector {
 		List<TraceNode> controlDominators = new ArrayList<>();
 		for(int i=end.getOrder(); i>=start.getOrder(); i--){
 			TraceNode node = trace.getTraceNode(i);
+			
+//			if(node.getOrder()==72027){
+//				System.out.println(controlPoints.contains(node.getBreakPoint()));
+//			}
+			
 			if(controlPoints.contains(node.getBreakPoint())){
 				List<TraceNode> allControlDominatees = node.findAllControlDominatees();
 				if(!contains(allControlDominatees, controlDominators)){
