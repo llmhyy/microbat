@@ -126,7 +126,7 @@ public class BreakPointValue extends VarValue {
 //	}
 
 	public int getNumberOfAvailableVariables() {
-		if (children == null || children.isEmpty()) {
+		if (getChildren().isEmpty()) {
 			return 0;
 		} else {
 			return children.size();

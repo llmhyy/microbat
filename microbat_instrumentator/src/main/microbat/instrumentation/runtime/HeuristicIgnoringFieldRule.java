@@ -2,11 +2,17 @@ package microbat.instrumentation.runtime;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.junit.Ignore;
+
+import microbat.instrumentation.AgentLogger;
+import sav.common.core.utils.CollectionUtils;
 
 public class HeuristicIgnoringFieldRule {
 	
@@ -26,7 +32,8 @@ public class HeuristicIgnoringFieldRule {
 	 * this map store <className, list<fieldName>>, specifying which fields will be
 	 * ignored in which class.
 	 */
-	private static Map<String, ArrayList<String>> ignoringMap = new HashMap<>();
+	private static Map<String, List<String>> ignoringMap = new HashMap<>();
+	private static Set<String> toCheckIgnoreFieldClasses;
 	
 	/**
 	 * specify special JDK class to parse its fields
@@ -67,18 +74,26 @@ public class HeuristicIgnoringFieldRule {
 		fieldList3.add("ENUM$VALUES");
 		ignoringMap.put(c2, fieldList3);
 		
+		ignoringMap.put("java.util.HashMap$KeySet", Arrays.asList("this$0"));
+		ignoringMap.put("java.util.HashMap$Values", Arrays.asList("this$0"));
+		
 		String[] excArray = new String[]{"java.", "javax.", "sun.", "com.sun.", "org.junit."};
 		for(String exc: excArray){
 			prefixExcludes.add(exc);
 		}
 		
 		isSpecialToRecordFieldSet.add("java.lang.StringBuilder");
+		
+		toCheckIgnoreFieldClasses = new HashSet<>();
+		toCheckIgnoreFieldClasses.add("java.util.HashMap$KeySet");
+		toCheckIgnoreFieldClasses.add("java.util.HashMap$Values");
+		
 	}
 	
 	public static boolean isForIgnore(Class<?> type, Field field){
 		String fieldName = field.getName();
 		String className;
-		ArrayList<String> fields;
+		List<String> fields;
 		
 		if(type.isEnum()){
 			Class<?> fieldType;
@@ -95,6 +110,11 @@ public class HeuristicIgnoringFieldRule {
 		}
 		else{
 			className = type.getName();
+			
+			if (toCheckIgnoreFieldClasses.contains(className)) {
+				return CollectionUtils.nullToEmpty(ignoringMap.get(className)).contains(fieldName);
+			}
+			
 			if(isSerializableClass(type)){
 				if(isValidField(fieldName, HeuristicIgnoringFieldRule.SERIALIZABLE, ignoringMap)){
 					return true;
@@ -112,7 +132,6 @@ public class HeuristicIgnoringFieldRule {
 					return true;
 				}
 			}
-			
 			return false;
 		}
 		
@@ -179,7 +198,7 @@ public class HeuristicIgnoringFieldRule {
 	}
 
 	private static boolean isValidField(String fieldName, String className,
-			Map<String, ArrayList<String>> ignoringMap) {
+			Map<String, List<String>> ignoringMap) {
 		List<String> fields = ignoringMap.get(className);
 		if(fields != null){
 			return fields.contains(fieldName);
@@ -253,5 +272,39 @@ public class HeuristicIgnoringFieldRule {
 			}
 		}
 		return false;
+	}
+
+	private static final Map<String, List<String>> collectionMapElements = new HashMap<>();
+	static {
+		collectionMapElements.put("java.util.ArrayList", Arrays.asList("elementData"));
+		collectionMapElements.put("java.util.HashMap", Arrays.asList("keySet", "values", "table"));
+	}
+	public static boolean isCollectionOrMapElement(String className, String fieldName) {
+		return CollectionUtils.nullToEmpty(collectionMapElements.get(className)).contains(fieldName);
+	}
+
+	public static List<Field> getValidFields(Class<?> objClass, Object value) {
+		List<Field> validFields = new ArrayList<>();
+		for (Field field : objClass.getDeclaredFields()) {
+			if (!isForIgnore(objClass, field)) {
+				validFields.add(field);
+			}
+		}
+		if (isHashMapClass(objClass)) {
+			List<String> mapEleFields = collectionMapElements.get("java.util.HashMap");
+			for (Field field : objClass.getSuperclass().getDeclaredFields()) {
+				if (mapEleFields.contains(field.getName())) {
+					validFields.add(field);
+				}
+			}
+			/* hack: to make keySet & values initialized */
+			try {
+				objClass.getMethod("values").invoke(value);
+				objClass.getMethod("keySet").invoke(value);
+			} catch (Exception e) {
+				AgentLogger.error(e);
+			}
+		} 
+		return validFields;
 	}
 }

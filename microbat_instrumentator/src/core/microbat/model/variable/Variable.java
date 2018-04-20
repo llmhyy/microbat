@@ -11,6 +11,7 @@ public abstract class Variable implements Serializable {
 	public static String WRITTEN = "written";
 	
 	protected String type;
+	protected String rtType; // runtime type
 	protected String variableName;
 	
 	/**
@@ -141,4 +142,13 @@ public abstract class Variable implements Serializable {
 
 	public abstract String getSimpleName();
 	public abstract Variable clone();
+
+	public String getRtType() {
+		return rtType;
+	}
+
+	public void setRtType(String rtType) {
+		this.rtType = rtType;
+	}
+	
 }

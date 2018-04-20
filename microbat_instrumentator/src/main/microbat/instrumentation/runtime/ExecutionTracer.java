@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,6 @@ import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
 import microbat.util.PrimitiveUtils;
-import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -112,7 +112,6 @@ public class ExecutionTracer implements IExecutionTracer {
 		return appendVarValue(value, var, parent, variableLayer);
 	}
 	
-	/* TODO: Set aliasVarId*/
 	private VarValue appendVarValue(Object value, Variable var, VarValue parent, int retrieveLayer) {
 		if (retrieveLayer <= 0) {
 			return null;
@@ -142,7 +141,11 @@ public class ExecutionTracer implements IExecutionTracer {
 					String varName = arrayElementID;
 					ArrayElementVar varElement = new ArrayElementVar(varName, arrVal.getComponentType(), arrayElementID);
 					Object elementValue = Array.get(value, i);
-					appendVarValue(elementValue, varElement, arrVal, retrieveLayer);
+					if ("java.util.HashMap$Node".equals(arrVal.getComponentType())) {
+						appendVarValue(elementValue, varElement, arrVal, retrieveLayer + 1);
+					} else {
+						appendVarValue(elementValue, varElement, arrVal, retrieveLayer);
+					}
 				}
 			}
 		} else {
@@ -152,10 +155,13 @@ public class ExecutionTracer implements IExecutionTracer {
 			varValue.setStringValue(getStringValue(value, null));
 			if (value != null) {
 				Class<?> objClass = value.getClass();
+				var.setRtType(objClass.getName());
 				boolean needParseFields = HeuristicIgnoringFieldRule.isNeedParsingFields(objClass);
+				boolean isCollectionOrHashMap = HeuristicIgnoringFieldRule.isCollectionClass(objClass)
+						|| HeuristicIgnoringFieldRule.isHashMapClass(objClass);
 				if (needParseFields) {
-					List<Field> allFields = CollectionUtils.toArrayList(objClass.getDeclaredFields());
-					for (Field field : allFields) {
+					List<Field> validFields = HeuristicIgnoringFieldRule.getValidFields(objClass, value);
+					for (Field field : validFields) {
 						field.setAccessible(true);
 						try {
 							Object fieldValue = field.get(value);
@@ -169,12 +175,14 @@ public class ExecutionTracer implements IExecutionTracer {
 									continue;
 								}
 							}
-							boolean isIgnore = HeuristicIgnoringFieldRule.isForIgnore(objClass, field);
-							if(!isIgnore){
-								if(fieldValue != null){
-									FieldVar fieldVar = new FieldVar(Modifier.isStatic(field.getModifiers()),
-											field.getName(), fieldTypeStr, field.getDeclaringClass().getName());
-									fieldVar.setVarID(TraceUtils.getFieldVarId(var.getVarID(), field.getName(), fieldTypeStr, fieldValue));
+							if(fieldValue != null){
+								FieldVar fieldVar = new FieldVar(Modifier.isStatic(field.getModifiers()),
+										field.getName(), fieldTypeStr, field.getDeclaringClass().getName());
+								fieldVar.setVarID(TraceUtils.getFieldVarId(var.getVarID(), field.getName(), fieldTypeStr, fieldValue));
+								if (isCollectionOrHashMap && HeuristicIgnoringFieldRule
+										.isCollectionOrMapElement(var.getRtType(), field.getName())) {
+									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer + 1);
+								} else {
 									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer);
 								}
 							}
@@ -963,14 +971,34 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 	
 	private List<VarValue> getHeuristicVarChildren(VarValue value) {
-		//TODO for lyly, 
-		//if value is an array, we get the values of all its elements
-		//if value is ArrayList, we get the values of all the elements of its elementData field
-		//if value is HashMap, we get the values of all its value field
-		//otherwise, we return an empty list.
-		
-		
-		return new ArrayList<>();
+		if (ArrayList.class.getName().equals(value.getRtType())) {
+			for (VarValue child : value.getChildren()) {
+				if ("elementData".equals(child.getVarName())) {
+					return getHeuristicVarChildren(child);
+				}
+			}
+		} else if (HashMap.class.getName().equals(value.getRtType())) {
+			for (VarValue child : value.getChildren()) {
+				if ("table".equals(child.getVarName())) {
+					return getHeuristicVarChildren(child);
+				}
+			}
+		} else if (value instanceof ArrayValue) {
+			List<VarValue> children = new ArrayList<>(value.getChildren().size());
+			for (VarValue child : value.getChildren()) {
+				if (child.getVariable() instanceof ArrayElementVar) {
+					if ("java.util.HashMap$Node".equals(child.getRtType())) {
+						for (VarValue nodeAttr : child.getChildren()) {
+							children.add(nodeAttr);
+						}
+					} else {
+						children.add(child);
+					}
+				}
+			}
+			return children;
+		} 
+		return Collections.emptyList();
 	}
 
 	/**
