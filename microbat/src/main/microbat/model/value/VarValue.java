@@ -10,6 +10,7 @@ package microbat.model.value;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -103,6 +104,9 @@ public abstract class VarValue implements GraphNode, Serializable {
 	
 	@Override
 	public List<VarValue> getChildren() {
+		if (children == null) {
+			return Collections.emptyList();
+		}
 		return children;
 	}
 	
@@ -346,7 +350,7 @@ public abstract class VarValue implements GraphNode, Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("(%s:%s)", this.variable.getName(), children);
+		return String.format("(%s:%s)", this.variable.getName(), getChildren());
 	}
 	
 	public boolean isElementOfArray() {
@@ -359,6 +363,9 @@ public abstract class VarValue implements GraphNode, Serializable {
 	
 	@Override
 	public List<VarValue> getParents() {
+		if (parents == null) {
+			return Collections.emptyList();
+		}
 		return parents;
 	}
 
@@ -367,6 +374,9 @@ public abstract class VarValue implements GraphNode, Serializable {
 	}
 	
 	public void addParent(VarValue parent) {
+		if (parents == null) {
+			parents = new ArrayList<>();
+		}
 		if(!this.parents.contains(parent)){
 			this.parents.add(parent);
 		}
