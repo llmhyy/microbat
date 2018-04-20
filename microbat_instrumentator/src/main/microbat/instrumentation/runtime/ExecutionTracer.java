@@ -716,6 +716,11 @@ public class ExecutionTracer implements IExecutionTracer {
 			value.addParent(parentValue);
 			
 			addRWriteValue(trace.getLatestNode(), value, false);
+			
+			List<VarValue> children = getHeuristicVarChildren(value);
+			for(VarValue child: children){
+				addRWriteValue(trace.getLatestNode(), child, false);
+			}
 		} catch (Throwable t) {
 			handleException(t);
 		}
@@ -741,6 +746,11 @@ public class ExecutionTracer implements IExecutionTracer {
 			
 			VarValue value = appendVarValue(fieldValue, var, null);
 			addRWriteValue(trace.getLatestNode(), value, false);
+			
+			List<VarValue> children = getHeuristicVarChildren(value);
+			for(VarValue child: children){
+				addRWriteValue(trace.getLatestNode(), child, false);
+			}
 		} catch (Throwable t) {
 			handleException(t);
 		}
@@ -806,6 +816,10 @@ public class ExecutionTracer implements IExecutionTracer {
 			VarValue value = appendVarValue(varValue, var, null);
 			addRWriteValue(trace.getLatestNode(), value, false);
 			
+			List<VarValue> children = getHeuristicVarChildren(value);
+			for(VarValue child: children){
+				addRWriteValue(trace.getLatestNode(), child, false);
+			}
 			
 //			TraceNode currentNode = trace.getLatestNode();
 //			String order = trace.findDefiningNodeOrder(Variable.READ, currentNode, var.getVarID(), var.getAliasVarID());
@@ -936,12 +950,29 @@ public class ExecutionTracer implements IExecutionTracer {
 			value.addParent(parentValue);
 			
 			addRWriteValue(trace.getLatestNode(), value, false);
+			
+			List<VarValue> children = getHeuristicVarChildren(value);
+			for(VarValue child: children){
+				addRWriteValue(trace.getLatestNode(), child, false);
+			}
+			
 		} catch (Throwable t) {
 			handleException(t);
 		}
 		locker.unLock();
 	}
 	
+	private List<VarValue> getHeuristicVarChildren(VarValue value) {
+		//TODO for lyly, 
+		//if value is an array, we get the values of all its elements
+		//if value is ArrayList, we get the values of all the elements of its elementData field
+		//if value is HashMap, we get the values of all its value field
+		//otherwise, we return an empty list.
+		
+		
+		return new ArrayList<>();
+	}
+
 	/**
 	 * 
 	 * @param arrayRef
