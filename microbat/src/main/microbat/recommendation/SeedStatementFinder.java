@@ -3,7 +3,6 @@ package microbat.recommendation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,7 +49,7 @@ public class SeedStatementFinder {
 		Method method = new CallGraph(trace.getAppJavaClassPath(), trace.getIncludedLibraryClasses()).
 				findByteCodeMethod(start.getBreakPoint());
 		
-		MethodNode methodNode = new MethodNode(start.getMethodSign(), method);
+		MethodNode methodNode = new MethodNode(trace.getAppJavaClassPath().getClassLoader(), start.getMethodSign(), method);
 		List<InstructionHandle> list = methodNode.findVariableDefinition(specificVar.getVariable());
 		
 		map.put(methodNode, list);

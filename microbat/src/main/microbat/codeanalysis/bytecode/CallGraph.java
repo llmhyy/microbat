@@ -44,7 +44,7 @@ public class CallGraph {
 			if (node == null) {
 				Method method = findByteCodeMethod(location);
 				if (method != null) {
-					node = new MethodNode(methodSign, method);
+					node = new MethodNode(appPath.getClassLoader(), methodSign, method);
 					methodMaps.put(methodSign, node);
 
 					appendCallGraphRootAt(node);
@@ -139,7 +139,7 @@ public class CallGraph {
 						String calleeSignature = mc.clazz + "#" + mc.method.getName() + mc.method.getSignature();
 						MethodNode calleeNode = methodMaps.get(calleeSignature);
 						if (calleeNode==null) {
-							calleeNode = new MethodNode(calleeSignature, mc.method);
+							calleeNode = new MethodNode(appPath.getClassLoader(), calleeSignature, mc.method);
 							methodMaps.put(calleeSignature, calleeNode);
 							appendCallGraphRootAt(calleeNode);
 						}

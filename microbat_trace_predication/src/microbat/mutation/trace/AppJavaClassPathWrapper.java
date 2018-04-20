@@ -2,6 +2,8 @@ package microbat.mutation.trace;
 
 import java.util.List;
 
+import microbat.model.trace.Trace;
+import microbat.mutation.trace.dto.BackupClassFiles;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.dto.SystemPreferences;
 
@@ -10,6 +12,28 @@ public class AppJavaClassPathWrapper extends AppJavaClassPath {
 
 	public AppJavaClassPathWrapper(AppJavaClassPath appJavaClassPath) {
 		this.appJavaClassPath = appJavaClassPath;
+	}
+	
+	
+	/**
+	 * a dirty workaround for wrong loaded class using in RootCauseFinder.
+	 */
+	public static void wrapAppClassPath(Trace mutationTrace, Trace correctTrace, BackupClassFiles backupClassFiles) {
+		mutationTrace.setAppJavaClassPath(new AppJavaClassPathWrapper(mutationTrace.getAppJavaClassPath()) {
+			@Override
+			public List<String> getClasspaths() {
+				backupClassFiles.restoreMutatedClassFile();
+				return super.getClasspaths();
+			}
+		});
+		
+		correctTrace.setAppJavaClassPath(new AppJavaClassPathWrapper(correctTrace.getAppJavaClassPath()) {
+			@Override
+			public List<String> getClasspaths() {
+				backupClassFiles.restoreOrgClassFile();
+				return super.getClasspaths();
+			}
+		});
 	}
 
 	public String getJavaHome() {
@@ -128,5 +152,11 @@ public class AppJavaClassPathWrapper extends AppJavaClassPath {
 		return appJavaClassPath.getAllSourceFolders();
 	}
 	
-	
+	public ClassLoader getClassLoader() {
+		return appJavaClassPath.getClassLoader();
+	}
+
+	public void setClassLoader(ClassLoader classLoader) {
+		appJavaClassPath.setClassLoader(classLoader);
+	}
 }
