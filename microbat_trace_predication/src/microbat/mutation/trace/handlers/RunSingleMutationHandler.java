@@ -9,16 +9,22 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 
 import microbat.model.trace.Trace;
+import microbat.mutation.trace.AppJavaClassPathWrapper;
 import microbat.mutation.trace.MuDiffMatcher;
 import microbat.mutation.trace.MuRegression;
 import microbat.mutation.trace.MuRegressionUtils;
 import microbat.mutation.trace.MutationRegressionRetriever;
+import microbat.mutation.trace.dto.BackupClassFiles;
 import microbat.mutation.trace.preference.MutationRegressionPreference;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.UserFeedback;
+import microbat.util.IProjectUtils;
 import microbat.util.IResourceUtils;
+import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.FileUtils;
@@ -47,6 +53,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 			
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				BackupClassFiles bkClassFiles = null;
 				try {
 					String muBugId = MutationRegressionPreference.getMuBugId();
 					String targetProject = MutationRegressionPreference.getTargetProject();
@@ -61,6 +68,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					AppJavaClassPath fixClasspath = initAppClasspath(targetProject);
 					buggyTrace.setAppJavaClassPath(buggyClasspath);
 					correctTrace.setAppJavaClassPath(fixClasspath);
+					bkClassFiles = muRegression.getMutationCase().getTestcaseParams().getBkClassFiles();
 					
 					/* init path for diffMatcher */
 					String orgPath = IResourceUtils.getProjectPath(targetProject);
@@ -84,11 +92,13 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					Regression.fillMissingInfo(correctTrace, fixClasspath);
 					Regression.fillMissingInfo(buggyTrace, buggyClasspath);
 					
+					AppJavaClassPathWrapper.wrapAppClassPath(buggyTrace, correctTrace, bkClassFiles);
+					
 					PairList pairList = buildPairList(correctTrace, buggyTrace, diffMatcher);
 					Visualizer visualizer = new Visualizer();
 					visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
-					
 					try {
+						
 						EmpiricalTrial trial = simulate(buggyTrace, correctTrace, pairList, diffMatcher, useSliceBreaker, breakerLimit);
 						System.out.println(trial);
 					} catch (SimulationFailException e) {
@@ -96,6 +106,10 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
+				} finally {
+					if (bkClassFiles != null) {
+						bkClassFiles.restoreOrgClassFile();
+					}
 				}
 				return Status.OK_STATUS;
 			}

@@ -24,9 +24,14 @@ public class MutationRegressionRetriever {
 			IProgressMonitor monitor, boolean useSliceBreaker, int breakerLimit)
 			throws SQLException, IOException {
 		MutationCase mutationCase = MutationCase.load(targetProject, mutationBugId);
-		AnalysisParams analysisParams = new AnalysisParams();
 		IMutationExperimentMonitor experimentMonitor = new BasicMutationExperimentMonitor(monitor);
 
+		return buildRegression(mutationCase, experimentMonitor, useSliceBreaker, breakerLimit);
+	}
+
+	public MuRegression buildRegression(MutationCase mutationCase, IMutationExperimentMonitor experimentMonitor,
+			boolean useSliceBreaker, int breakerLimit) {
+		AnalysisParams analysisParams = new AnalysisParams();
 		MutationExperimentator analyzer = new MutationExperimentator(useSliceBreaker, breakerLimit);
 
 		mutationCase.getTestcaseParams().setAnalysisParams(analysisParams);
@@ -63,6 +68,7 @@ public class MutationRegressionRetriever {
 		SingleMutation mutation = mutationCase.getMutation();
 		muRegression.setMutationFile(mutation.getFile().getAbsolutePath());
 		muRegression.setMutationClassName(mutation.getMutatedClass());
+		muRegression.setMutationCase(mutationCase);
 		return muRegression;
 	}
 }

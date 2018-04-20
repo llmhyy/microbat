@@ -13,9 +13,15 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 
 import microbat.mutation.trace.MuRegressionUtils;
+import microbat.util.IProjectUtils;
+import microbat.util.JavaUtil;
 import sav.common.core.SavRtException;
+import sav.common.core.utils.ClassUtils;
+import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.ResourceUtils;
 
 /**
@@ -115,6 +121,15 @@ public class MutationCase {
 				MutationCase mutationCase = new MutationCase(testcaseParams, mutation);
 				mutationCase.correctTraceExec = getAbsolutePath(analysisOutputFolder, record.get(Column.CORRECT_EXEC_RELATIVE_PATH));
 				mutationCase.bugTraceExec = getAbsolutePath(analysisOutputFolder, record.get(Column.BUG_EXEC_RELATIVE_PATH));
+				
+				/* backupClassFile */
+				String classFileName = ClassUtils.getSimpleName(mutation.getMutatedClass()) + ".class";
+				IJavaProject project = JavaCore.create(JavaUtil.getSpecificJavaProjectInWorkspace(targetProject));
+				BackupClassFiles backupClassFiles = new BackupClassFiles(
+						ClassUtils.getClassFilePath(IProjectUtils.getTargetFolder(project), mutation.getMutatedClass()),
+						FileUtils.getFilePath(testcaseParams.getAnalysisOutputFolder(), classFileName),
+						FileUtils.getFilePath(mutation.getMutationOutputFolder(), classFileName));
+				testcaseParams.setBkClassFiles(backupClassFiles);
 				return mutationCase;
 			}
 		}
@@ -123,8 +138,12 @@ public class MutationCase {
 
 	private static List<CSVRecord> getRecords(String targetProject) throws IOException {
 		CSVFormat format = CSVFormat.EXCEL.withHeader(Column.allColumns());
-		String csvFile = MuRegressionUtils.getMutationCaseFilePath(targetProject);
-		CSVParser parser = CSVParser.parse(new File(csvFile), Charset.forName("UTF-8"), format);
+		String csvFilePath = MuRegressionUtils.getMutationCaseFilePath(targetProject);
+		File csvFile = new File(csvFilePath);
+		if (!csvFile.exists()) {
+			return Collections.emptyList();
+		}
+		CSVParser parser = CSVParser.parse(csvFile, Charset.forName("UTF-8"), format);
 		List<CSVRecord> records = parser.getRecords();
 		if (!records.isEmpty()) {
 			records.remove(0); // remove header

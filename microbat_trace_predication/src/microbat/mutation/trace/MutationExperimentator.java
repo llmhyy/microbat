@@ -246,7 +246,7 @@ public class MutationExperimentator {
 			DiffMatcher diffMatcher = new MuDiffMatcher(mutation.getSourceFolder(), orgFilePath, mutationFilePath);
 			diffMatcher.matchCode();
 			
-			setAppClassPathWrapper(killingMutatantTrace, correctTrace, params.getBkClassFiles());
+			AppJavaClassPathWrapper.wrapAppClassPath(killingMutatantTrace, correctTrace, params.getBkClassFiles());
 			
 			long start = System.currentTimeMillis();
 			ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
@@ -255,7 +255,7 @@ public class MutationExperimentator {
 			
 			Simulator simulator = new Simulator(useSliceBreaker, breakLimit);
 			simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
-			
+			System.currentTimeMillis();
 			RootCauseFinder rootcauseFinder = new RootCauseFinder();
 			rootcauseFinder.checkRootCause(simulator.getObservedFault(), killingMutatantTrace, correctTrace, pairList, diffMatcher);
 			TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, killingMutatantTrace, correctTrace);
@@ -563,27 +563,6 @@ public class MutationExperimentator {
 			
 		}
 		return null;
-	}
-	
-	/**
-	 * a dirty workaround for wrong loaded class using in RootCauseFinder.
-	 */
-	private void setAppClassPathWrapper(Trace mutationTrace, Trace correctTrace, BackupClassFiles backupClassFiles) {
-		mutationTrace.setAppJavaClassPath(new AppJavaClassPathWrapper(mutationTrace.getAppJavaClassPath()) {
-			@Override
-			public List<String> getClasspaths() {
-				backupClassFiles.restoreMutatedClassFile();
-				return super.getClasspaths();
-			}
-		});
-		
-		correctTrace.setAppJavaClassPath(new AppJavaClassPathWrapper(correctTrace.getAppJavaClassPath()) {
-			@Override
-			public List<String> getClasspaths() {
-				backupClassFiles.restoreOrgClassFile();
-				return super.getClasspaths();
-			}
-		});
 	}
 	
 	private List<ClassLocation> findMutationLocation(String junitClassName, List<ClassLocation> executingStatements,

@@ -1,5 +1,6 @@
 package microbat.mutation.trace;
 
+import microbat.mutation.trace.dto.MutationCase;
 import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.StringUtils;
 import tregression.empiricalstudy.Regression;
@@ -13,6 +14,7 @@ public class MuRegression {
 	/* to remove */
 	private String mutationCode;
 	private String orginalCode;
+	private MutationCase mutationCase;
 
 	public Regression getRegression() {
 		return regression;
@@ -64,4 +66,13 @@ public class MuRegression {
 	public void setMutationClassName(String mutationClassName) {
 		this.mutationClassName = mutationClassName;
 	}
+
+	public MutationCase getMutationCase() {
+		return mutationCase;
+	}
+
+	public void setMutationCase(MutationCase mutationCase) {
+		this.mutationCase = mutationCase;
+	}
+	
 }
