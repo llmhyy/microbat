@@ -65,7 +65,7 @@ public class MutationResult {
 	
 	public void merge(MutationResult other) {
 		if (!this.sourceFolder.equals(other.sourceFolder)
-				|| this.className.equals(other.className)) {
+				|| !this.className.equals(other.className)) {
 			return;
 		}
 		for (Integer line : this.mutatedFiles.keySet()) {
