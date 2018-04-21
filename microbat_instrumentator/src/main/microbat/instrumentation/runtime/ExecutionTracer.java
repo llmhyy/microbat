@@ -141,7 +141,7 @@ public class ExecutionTracer implements IExecutionTracer {
 					String varName = arrayElementID;
 					ArrayElementVar varElement = new ArrayElementVar(varName, arrVal.getComponentType(), arrayElementID);
 					Object elementValue = Array.get(value, i);
-					if ("java.util.HashMap$Node".equals(arrVal.getComponentType())) {
+					if (HeuristicIgnoringFieldRule.isHashMapTableType(arrVal.getComponentType())) {
 						appendVarValue(elementValue, varElement, arrVal, retrieveLayer + 1);
 					} else {
 						appendVarValue(elementValue, varElement, arrVal, retrieveLayer);
@@ -991,7 +991,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			List<VarValue> children = new ArrayList<>(value.getChildren().size());
 			for (VarValue child : value.getChildren()) {
 				if (child.getVariable() instanceof ArrayElementVar) {
-					if ("java.util.HashMap$Node".equals(child.getRuntimeType())) {
+					if (HeuristicIgnoringFieldRule.isHashMapTableType(child.getRuntimeType())) {
 						for (VarValue nodeAttr : child.getChildren()) {
 							children.add(nodeAttr);
 						}

@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Ignore;
-
-import microbat.instrumentation.AgentLogger;
 import sav.common.core.utils.CollectionUtils;
 
 public class HeuristicIgnoringFieldRule {
@@ -277,7 +274,7 @@ public class HeuristicIgnoringFieldRule {
 	private static final Map<String, List<String>> collectionMapElements = new HashMap<>();
 	static {
 		collectionMapElements.put("java.util.ArrayList", Arrays.asList("elementData"));
-		collectionMapElements.put("java.util.HashMap", Arrays.asList("keySet", "values", "table"));
+		collectionMapElements.put("java.util.HashMap", Arrays.asList("table"));
 	}
 	public static boolean isCollectionOrMapElement(String className, String fieldName) {
 		return CollectionUtils.nullToEmpty(collectionMapElements.get(className)).contains(fieldName);
@@ -298,13 +295,20 @@ public class HeuristicIgnoringFieldRule {
 				}
 			}
 			/* hack: to make keySet & values initialized */
-			try {
-				objClass.getMethod("values").invoke(value);
-				objClass.getMethod("keySet").invoke(value);
-			} catch (Exception e) {
-				AgentLogger.error(e);
-			}
+//			try {
+//				objClass.getMethod("values").invoke(value);
+//				objClass.getMethod("keySet").invoke(value);
+//			} catch (Exception e) {
+//				AgentLogger.error(e);
+//			}
 		} 
 		return validFields;
+	}
+
+	private static final List<String> hashMapTableType = Arrays.asList("java.util.HashMap$Node", 
+			"java.util.HashMap$Entry");
+
+	public static boolean isHashMapTableType(String type) {
+		return hashMapTableType.contains(type);
 	}
 }
