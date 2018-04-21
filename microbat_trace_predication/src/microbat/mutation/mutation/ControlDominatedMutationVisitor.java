@@ -1,5 +1,6 @@
 package microbat.mutation.mutation;
 
+import japa.parser.ast.expr.EnclosedExpr;
 import japa.parser.ast.expr.Expression;
 import japa.parser.ast.expr.UnaryExpr;
 import japa.parser.ast.expr.UnaryExpr.Operator;
@@ -20,7 +21,8 @@ public class ControlDominatedMutationVisitor extends MutationVisitor {
 				((UnaryExpr) condition).getOperator() == Operator.not) {
 			ifStmt.setCondition(((UnaryExpr) condition).getExpr());
 		} else {
-			UnaryExpr newNode = new UnaryExpr(condition, Operator.not);
+			EnclosedExpr expr = new EnclosedExpr(condition);
+			UnaryExpr newNode = new UnaryExpr(expr, Operator.not);
 			ifStmt.setCondition(newNode);
 		}
 		muNode.add(ifStmt, MutationType.NEGATE_IF_CONDITION.name());
