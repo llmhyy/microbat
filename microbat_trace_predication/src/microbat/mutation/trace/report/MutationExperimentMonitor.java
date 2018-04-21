@@ -18,13 +18,15 @@ import tregression.io.ExcelReporter;
 import tregression.model.Trial;
 
 public class MutationExperimentMonitor extends BasicMutationExperimentMonitor implements IMutationExperimentMonitor {
-	private IMutationCaseChecker mutationCaseFilter = new MutationCaseChecker();
+	private IMutationCaseChecker mutationCaseFilter;
 	private ExcelReporter reporter;
 
 	public MutationExperimentMonitor(IProgressMonitor progressMonitor, String targetProject,
 			AnalysisParams analysisParams) throws IOException {
 		super(progressMonitor);
 		reporter = new ExcelReporter(targetProject, analysisParams.getUnclearRates());
+//		mutationCaseFilter = new MutationCaseChecker(targetProject);
+		mutationCaseFilter = new EmptyMutationCaseChecker();
 	}
 
 	@Override
