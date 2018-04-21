@@ -30,7 +30,7 @@ public class Premain {
 		if (!agentParams.isPrecheck()) {
 			//SystemClassTransformer.transformClassLoader(inst);
 		}
-		SystemClassTransformer.transformThread(inst);
+//		SystemClassTransformer.transformThread(inst);
 		inst.addTransformer(agent.getTransformer(), true);
 		inst.addTransformer(new TestRunnerTranformer());
 		if (!agentParams.isPrecheck()) {
