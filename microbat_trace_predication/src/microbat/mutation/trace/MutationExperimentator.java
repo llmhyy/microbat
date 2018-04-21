@@ -373,7 +373,8 @@ public class MutationExperimentator {
 						Repository.clearCache();
 						DeadEndRecord record = trial.getDeadEndRecordList().get(0);
 						String muBugId = mutation.getMutationBugId();
-						DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
+						DED datas = record.getTransformedData(trial.getBuggyTrace());
+//						DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
 						setTestCase(datas, trial.getTestcase());						
 							new DeadEndReporter().export(datas.getAllData(), params.getProjectName(), muBugId);
 						new DeadEndCSVWriter().export(datas.getAllData(), params.getProjectName(), muBugId);
