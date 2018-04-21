@@ -2,6 +2,7 @@ package microbat.instrumentation.precheck;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -43,16 +44,16 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 		byte[] data = super.instrument(classFName, className, jc);
 		
 		if (data != null) {
-			calculateTraceInstrumentation(jc , classFName, instrumentedMethods);
+			calculateTraceInstrumentation(jc , classFName, new ArrayList<>(instrumentedMethods));
 		}
 		
 		return data;
 	}
 
-	private void calculateTraceInstrumentation(JavaClass jc, String classFName, List<Method> instrumentedMethods) {
+	private void calculateTraceInstrumentation(JavaClass jc, String classFName, List<Method> methods) {
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
-		for (Method method : instrumentedMethods) {
+		for (Method method : methods) {
 			String classMethod = ClassGenUtils.getMethodFullName(classGen.getClassName(), method);
 			try {
 				boolean changed = false;
