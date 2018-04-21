@@ -116,21 +116,25 @@ public class TraceMutationVisitor extends MutationVisitor {
 			 * to prevent the compilation error for removing final field assignments in constructor
 			 *  */
 			VariableDescriptor finalField = getCorrespondingFinalField(n.getTarget());
-			if (finalField != null) {
-				Type fieldType = finalField.getType();
-				AssignExpr newAssignExpr = (AssignExpr)nodeCloner.visit(n, null);
-				Expression initValueExpr = getInitValueExpr(fieldType, finalField.getDimension() > 0);
-				newAssignExpr.setValue(initValueExpr);
-				if (n.getParentNode() instanceof ExpressionStmt) {
-					stmt = new ExpressionStmt(newAssignExpr);
-				} else {
-					stmt = newAssignExpr;
-				}
-			}
-			if (stmt == null) {
+//			if (finalField != null) {
+//				Type fieldType = finalField.getType();
+//				AssignExpr newAssignExpr = (AssignExpr)nodeCloner.visit(n, null);
+//				Expression initValueExpr = getInitValueExpr(fieldType, finalField.getDimension() > 0);
+//				newAssignExpr.setValue(initValueExpr);
+//				if (n.getParentNode() instanceof ExpressionStmt) {
+//					stmt = new ExpressionStmt(newAssignExpr);
+//				} else {
+//					stmt = newAssignExpr;
+//				}
+//			}
+//			if (stmt == null) {
+//				stmt = new EmptyStmt();
+//			}
+//			muNode.add(stmt, MutationType.REMOVE_ASSIGNMENT.name());
+			if (finalField == null) { // ignore final field assignment statement
 				stmt = new EmptyStmt();
+				muNode.add(stmt, MutationType.REMOVE_ASSIGNMENT.name());
 			}
-			muNode.add(stmt, MutationType.REMOVE_ASSIGNMENT.name());
 		}
 		return super.mutate(n);
 	}
