@@ -27,7 +27,7 @@ public class MutationRegressionRetriever {
 		MutationRegressionSettings mutationSettings = MutationRegressionPreference.getMutationRegressionSettings();
 		AnalysisParams analysisParams = new AnalysisParams(mutationSettings);
 		MutationCase mutationCase = MutationCase.load(targetProject, mutationBugId, mutationSettings.getMutationOutputSpace(), 
-				analysisParams);
+				analysisParams, null);
 		IMutationExperimentMonitor experimentMonitor = new BasicMutationExperimentMonitor(monitor);
 		
 		MutationEvaluator evaluator = new MutationEvaluator();

@@ -118,7 +118,7 @@ public class MutationCase {
 									mutation.getMutatedClass(),
 									mutation.getLine(),
 									getRelativePath(testcaseParams.getAnalysisOutputFolder(), mutation.getFile().getAbsolutePath()),
-									mutation.getSourceFolder(),
+									getRelativePath(testcaseParams.getProjectFolder(), mutation.getSourceFolder()),
 									getRelativePath(testcaseParams.getAnalysisOutputFolder(), correctTraceExec),
 									getRelativePath(testcaseParams.getAnalysisOutputFolder(), correctPrecheckPath),
 									getRelativePath(testcaseParams.getAnalysisOutputFolder(), bugTraceExec),
@@ -146,19 +146,20 @@ public class MutationCase {
 		return new StringBuilder(parent).append(relativePath).toString();
 	}
 
-	public static MutationCase load(String targetProject, String muBugId, String mutationOutputSpace, AnalysisParams analysisParams) throws IOException {
+	public static MutationCase load(String targetProject, String muBugId, String mutationOutputSpace, AnalysisParams analysisParams,
+			String projectFolder) throws IOException {
 		List<CSVRecord> records = getRecords(targetProject, mutationOutputSpace);
 		for (CSVRecord record : records) {
 			if (muBugId.equals(record.get(Column.MUTATION_BUG_ID))) {
 				AnalysisTestcaseParams testcaseParams = new AnalysisTestcaseParams(targetProject, 
-						record.get(Column.JUNIT_CLASS_NAME), record.get(Column.TEST_METHOD), analysisParams);
+						record.get(Column.JUNIT_CLASS_NAME), record.get(Column.TEST_METHOD), analysisParams, projectFolder);
 				SingleMutation mutation = new SingleMutation();
 				mutation.setMutatedClass(record.get(Column.MUTATED_CLASS));
 				mutation.setLine(getInteger(record, Column.LINE));
 				String analysisOutputFolder = testcaseParams.getAnalysisOutputFolder();
 				mutation.setMutatedJFile(new File(getAbsolutePath(analysisOutputFolder, record.get(Column.MUTATED_JFILE_RELATIVE_PATH))));
 				mutation.setMutationType(record.get(Column.MUTATION_TYPE));
-				mutation.setSourceFolder(record.get(Column.SOURCE_FOLDER));
+				mutation.setSourceFolder(getAbsolutePath(testcaseParams.getProjectFolder(), record.get(Column.SOURCE_FOLDER)));
 				mutation.setMutationBugId(muBugId);
 				MutationCase mutationCase = new MutationCase(testcaseParams, mutation);
 				mutationCase.correctTraceExec = getAbsolutePath(analysisOutputFolder, record.get(Column.CORRECT_EXEC_RELATIVE_PATH));

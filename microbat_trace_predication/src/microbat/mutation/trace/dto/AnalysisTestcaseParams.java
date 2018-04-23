@@ -11,6 +11,7 @@ public class AnalysisTestcaseParams {
 	private String projectName;
 	private String analysisOutputFolder;
 	private String projectOutputFolder;
+	private String projectFolder;
 	
 	/* internal use fields */
 	private String testcaseName;
@@ -19,13 +20,14 @@ public class AnalysisTestcaseParams {
 	private BackupClassFiles bkClassFiles;
 	
 	public AnalysisTestcaseParams(String projectName, String junitClassName, String testMethod,
-			AnalysisParams analysisParams) {
+			AnalysisParams analysisParams, String projectFolder) {
 		this.projectName = projectName;
 		setJunitTest(junitClassName, testMethod);
 		this.analysisParams = analysisParams;
 		analysisOutputFolder = MuRegressionUtils.getAnalysisOutputFolder(analysisParams.getMutationOutputSpace(),
 				projectName, junitClassName, testMethod);
 		projectOutputFolder = FileUtils.getFilePath(analysisParams.getMutationOutputSpace(), "mutation", projectName) + File.separator;
+		this.projectFolder = projectFolder;
 	}
 
 	public String getAnalysisOutputFolder() {
@@ -85,5 +87,12 @@ public class AnalysisTestcaseParams {
 	public void setBkClassFiles(BackupClassFiles bkClassFiles) {
 		this.bkClassFiles = bkClassFiles;
 	}
+
+	public String getProjectFolder() {
+		return projectFolder;
+	}
 	
+	public void setProjectFolder(String projectFolder) {
+		this.projectFolder = projectFolder;
+	}
 }

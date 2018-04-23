@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -71,5 +72,9 @@ public class IProjectUtils {
 		}
 		String outputPath = project.getProject().getLocation().toOSString() + File.separator + outputFolder;
 		return outputPath;
+	}
+	
+	public static String getProjectFolder(IProject project) {
+		return project.getLocation().toOSString();
 	}
 }

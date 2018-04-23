@@ -16,6 +16,8 @@ import microbat.mutation.trace.dto.MutationCase;
 import microbat.mutation.trace.preference.MutationRegressionPreference;
 import microbat.mutation.trace.preference.MutationRegressionSettings;
 import microbat.mutation.trace.report.MutationExperimentMonitor;
+import microbat.util.IProjectUtils;
+import microbat.util.JavaUtil;
 
 public class RunSingleMutationHandler  extends AbstractHandler {
 
@@ -39,8 +41,9 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 	private void runSingleMutation(IProgressMonitor monitor) throws IOException {
 		MutationRegressionSettings settings = MutationRegressionPreference.getMutationRegressionSettings();
 		AnalysisParams analysisParams = new AnalysisParams(settings);
+		String projectFolder = IProjectUtils.getProjectFolder(JavaUtil.getSpecificJavaProjectInWorkspace(settings.getTargetProject()));
 		MutationCase mutationCase = MutationCase.load(settings.getTargetProject(), settings.getBugId(),
-				settings.getMutationOutputSpace(), analysisParams);
+				settings.getMutationOutputSpace(), analysisParams, projectFolder);
 		MutationEvaluator evaluator = new MutationEvaluator();
 		MutationExperimentMonitor mutationMonitor = new MutationExperimentMonitor(monitor, settings.getTargetProject(), analysisParams);
 		evaluator.runSingleMutationTrial(mutationCase, mutationMonitor);

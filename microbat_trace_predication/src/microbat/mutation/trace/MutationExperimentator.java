@@ -110,7 +110,7 @@ public class MutationExperimentator {
 					}
 					try {
 						AnalysisTestcaseParams tcParams = new AnalysisTestcaseParams(
-								pack.getJavaProject().getElementName(), className, methodName, analysisParams);
+								pack.getJavaProject().getElementName(), className, methodName, analysisParams, null);
 						if (analysisParams.getIgnoredTestCaseFiles().contains(tcParams.getTestcaseName())) {
 							continue;
 						}

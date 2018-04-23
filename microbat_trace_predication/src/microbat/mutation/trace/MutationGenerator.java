@@ -14,7 +14,6 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.ThrowStatement;
 
 import microbat.codeanalysis.bytecode.ByteCodeParser;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
@@ -34,6 +33,7 @@ import microbat.mutation.trace.report.IMutationCaseChecker;
 import microbat.mutation.trace.report.IMutationExperimentMonitor;
 import microbat.preference.AnalysisScopePreference;
 import microbat.util.BreakpointUtils;
+import microbat.util.IProjectUtils;
 import microbat.util.IResourceUtils;
 import microbat.util.JTestUtil;
 import microbat.util.JavaUtil;
@@ -60,6 +60,7 @@ public class MutationGenerator {
 			IMutationExperimentMonitor monitor) throws JavaModelException {
 		IMutationCaseChecker checker = monitor.getMutationCaseChecker();
 		String testSourceFolder = null;
+		String projectFolder = IProjectUtils.getProjectFolder(pack.getJavaProject().getProject());
 		for (IJavaElement javaElement : pack.getChildren()) {
 			if (javaElement instanceof IPackageFragment) {
 				generateMutations((IPackageFragment) javaElement, analysisParams, monitor);
@@ -83,7 +84,7 @@ public class MutationGenerator {
 						continue;
 					}
 					AnalysisTestcaseParams tcParams = new AnalysisTestcaseParams(
-							pack.getJavaProject().getElementName(), className, methodName, analysisParams);
+							pack.getJavaProject().getElementName(), className, methodName, analysisParams, projectFolder);
 					try {
 						if (analysisParams.getIgnoredTestCaseFiles().contains(tcParams.getTestcaseName())) {
 							continue;
