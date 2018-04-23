@@ -11,7 +11,7 @@
       <command
             name="Generate Mutation Trace"
             categoryId="microbat_mutation_trace.commands.category"
-            id="microbat_mutation_trace.commands.sampleCommand">
+            id="microbat_mutation_trace.commands.generate_mutation_trace">
       </command>
       <command
             categoryId="microbat_mutation_trace.commands.category"
@@ -23,16 +23,25 @@
             id="microbat_mutation_trace.commands.singleRun"
             name="Run Single Mutation">
       </command>
+      <command
+            categoryId="microbat_mutation_trace.commands.category"
+            id="microbat_mutation_trace.commands.evaluate_mutation_trace"
+            name="Evaluate Mutation Regression">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
       <handler
-            commandId="microbat_mutation_trace.commands.sampleCommand"
+            commandId="microbat_mutation_trace.commands.generate_mutation_trace"
             class="microbat.mutation.trace.handlers.MutationGenerationHandler">
       </handler>
       <handler
             class="microbat.mutation.trace.handlers.RunSingleMutationHandler"
             commandId="microbat_mutation_trace.commands.singleRun">
+      </handler>
+      <handler
+            class="microbat.mutation.trace.handlers.EvaluateMutationRegressionHandler"
+            commandId="microbat_mutation_trace.commands.evaluate_mutation_trace">
       </handler>
    </extension>
    <extension
@@ -53,10 +62,15 @@
                mnemonic="M"
                id="microbat_mutation_trace.menus.sampleMenu">
             <command
-                  commandId="microbat_mutation_trace.commands.sampleCommand"
+                  commandId="microbat_mutation_trace.commands.generate_mutation_trace"
                   mnemonic="S"
-                  id="microbat_mutation_trace.menus.sampleCommand">
+                  id="microbat_mutation_trace.menus.generate_mutation_trace">
             </command>
+             <command
+                   commandId="microbat_mutation_trace.commands.evaluate_mutation_trace"
+                   id="microbat_mutation_trace.menus.evaluate_mutation_traces"
+                   mnemonic="S">
+             </command>
              <command
                    commandId="microbat_mutation_trace.commands.singleRun"
                    id="microbat_mutation_trace.menus.singleRun">
@@ -81,7 +95,7 @@
       <page
             class="microbat.mutation.trace.preference.MutationRegressionPreference"
             id="muregression.preference"
-            name="MuRegression">
+            name="Mutation Regression">
       </page>
    </extension>
 </plugin>

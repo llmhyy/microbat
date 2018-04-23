@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import microbat.mutation.trace.dto.AnalysisTestcaseParams;
+import microbat.mutation.trace.dto.MutationTrace;
 import microbat.mutation.trace.dto.SingleMutation;
 import microbat.mutation.trace.dto.TraceExecutionInfo;
 import tregression.empiricalstudy.EmpiricalTrial;
@@ -19,5 +20,8 @@ public interface IMutationExperimentMonitor {
 			throws IOException;
 
 	IMutationCaseChecker getMutationCaseChecker();
+
+	void reportMutationCase(AnalysisTestcaseParams params, TraceExecutionInfo correctTrace,
+			MutationTrace muTrace, SingleMutation mutation);
 
 }

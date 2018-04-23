@@ -71,16 +71,13 @@ public class MuRegressionUtils {
 		return sourceFolderPath;
 	}
 	
-	public static String getMutationOutputFolder(String projectName) {
-		return FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), "mutation", projectName);
+	public static String getMutationCaseFilePath(String projectName, String mutationOutputSpace) {
+		return FileUtils.getFilePath(mutationOutputSpace, "mutation", projectName, "mutationCases.csv");
 	}
 	
-	public static String getMutationCaseFilePath(String projectName) {
-		return FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), "mutation", projectName, "mutationCases.csv");
-	}
-	
-	public static String getAnalysisOutputFolder(String projectName, String junitClassName, String testMethod) {
-		return FileUtils.getFilePath(MicroBatUtil.getTraceFolder(), "mutation", projectName,
+	public static String getAnalysisOutputFolder(String mutationOutputSpace, String projectName, String junitClassName,
+			String testMethod) {
+		return FileUtils.getFilePath(mutationOutputSpace, "mutation", projectName,
 				ClassUtils.getSimpleName(junitClassName), testMethod);
 	}
 	

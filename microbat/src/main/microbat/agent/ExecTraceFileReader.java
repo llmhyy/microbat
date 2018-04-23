@@ -1,6 +1,10 @@
 package microbat.agent;
 
+import java.util.ArrayList;
+
+import microbat.codeanalysis.runtime.PreCheckInformation;
 import microbat.instrumentation.output.RunningInfo;
+import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
 
 public class ExecTraceFileReader {
@@ -12,6 +16,13 @@ public class ExecTraceFileReader {
 		this.trace = info.getTrace();
 		this.msg = info.getProgramMsg();
 		return trace;
+	}
+	
+	public PreCheckInformation readPrecheck(String precheckFile) {
+		PrecheckInfo info = PrecheckInfo.readFromFile(precheckFile);
+		PreCheckInformation result = new PreCheckInformation(info.getThreadNum(), info.getStepTotal(), info.isOverLong(),
+				new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods(), info.getLoadedClasses());
+		return result;
 	}
 	
 	public String getMsg() {

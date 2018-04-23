@@ -1,16 +1,17 @@
 package microbat.mutation.trace.report;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
 import microbat.mutation.trace.dto.AnalysisParams;
 import microbat.mutation.trace.dto.AnalysisTestcaseParams;
 import microbat.mutation.trace.dto.MutationCase;
+import microbat.mutation.trace.dto.MutationTrace;
 import microbat.mutation.trace.dto.SingleMutation;
 import microbat.mutation.trace.dto.TraceExecutionInfo;
 import tregression.empiricalstudy.EmpiricalTrial;
@@ -43,10 +44,15 @@ public class MutationExperimentMonitor extends BasicMutationExperimentMonitor im
 		trial.setMutatedFile(mutation.getFile().getAbsolutePath());
 		trial.setBugFound(foundRootCause);
 		reporter.export(Arrays.asList(trial));
+	}
+	
+	@Override
+	public void reportMutationCase(AnalysisTestcaseParams params, TraceExecutionInfo correctTrace,
+			MutationTrace mutationTrace, SingleMutation mutation) {
 		MutationCase mutationCase = new MutationCase(params, mutation);
-		mutationCase.setBugTraceExec(killingMutatantTrace.getExecPath());
-		mutationCase.setCorrectTraceExec(correctTrace.getExecPath());
-		mutationCase.store();
+		mutationCase.setMutationTrace(mutationTrace);
+		mutationCase.setCorrectTrace(correctTrace);
+		mutationCase.store(params.getAnalysisParams().getMutationOutputSpace());
 	}
 
 	@Override
@@ -57,7 +63,7 @@ public class MutationExperimentMonitor extends BasicMutationExperimentMonitor im
 		if (fileName == null) {
 			recorder = new TrialRecorder();
 		} else {
-			recorder = new TrialRecorder(fileName);
+			recorder = new TrialRecorder(fileName, params.getProjectOutputFolder());
 		}
 		List<EmpiricalTrial> trials = new ArrayList<>(trials0.size());
 		for (EmpiricalTrial trial : trials0) {

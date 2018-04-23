@@ -37,8 +37,6 @@ public class InstrumentationExecutor {
 	public final static String TRACE_DUMP_FILE_SUFFIX = ".exec";
 	
 	private AppJavaClassPath appPath;
-	private String traceDir;
-	private String traceName;
 	private PreCheckInformation precheckInfo;
 	private String traceExecFilePath;
 	private TraceAgentRunner agentRunner;
@@ -49,9 +47,14 @@ public class InstrumentationExecutor {
 	
 	public InstrumentationExecutor(AppJavaClassPath appPath, String traceDir, String traceName, 
 			List<String> includeLibs, List<String> excludeLibs) {
+		this(appPath, generateTraceFilePath(traceDir, traceName), includeLibs, excludeLibs);
+		agentRunner = createTraceAgentRunner();
+	}
+	
+	public InstrumentationExecutor(AppJavaClassPath appPath, String traceExecFilePath, 
+			List<String> includeLibs, List<String> excludeLibs) {
 		this.appPath = appPath;
-		this.traceDir = traceDir;
-		this.traceName = traceName;
+		this.traceExecFilePath = traceExecFilePath;
 		this.includeLibs = includeLibs;
 		this.excludeLibs = excludeLibs;
 		
@@ -99,11 +102,11 @@ public class InstrumentationExecutor {
 		try {
 			prepareAgentRunner();
 			System.out.println("first precheck..");
-			agentRunner.precheck();
+			agentRunner.precheck(null);
 			PrecheckInfo firstPrecheckInfo = agentRunner.getPrecheckInfo();
 			System.out.println(firstPrecheckInfo);
 			System.out.println("second precheck..");
-			agentRunner.precheck();
+			agentRunner.precheck(null);
 			PrecheckInfo info = agentRunner.getPrecheckInfo();
 			System.out.println(info);
 			PreCheckInformation precheckInfomation = new PreCheckInformation(info.getThreadNum(), info.getStepTotal(),
@@ -133,12 +136,12 @@ public class InstrumentationExecutor {
 		return firstPrecheck.getStepTotal() != secondPrecheck.getStepTotal();
 	}
 
-	public PreCheckInformation runPrecheck(int stepLimit) {
+	public PreCheckInformation runPrecheck(String dumpFile, int stepLimit) {
 		try {
 			/* test stepLimit */
 			agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, stepLimit);
 			prepareAgentRunner();
-			if (!agentRunner.precheck()) {
+			if (!agentRunner.precheck(dumpFile)) {
 				precheckInfo = new PreCheckInformation();
 				precheckInfo.setTimeout(true);
 				return precheckInfo;
@@ -162,7 +165,6 @@ public class InstrumentationExecutor {
 		try {
 			prepareAgentRunner();
 			agentRunner.addAgentParam(AgentParams.OPT_EXPECTED_STEP, info.getStepNum());
-			traceExecFilePath = generateTraceFilePath(traceDir, traceName);
 			agentRunner.runWithDumpFileOption(traceExecFilePath);
 			// agentRunner.runWithSocket();
 			RunningInfo result = agentRunner.getRunningInfo();
@@ -192,7 +194,7 @@ public class InstrumentationExecutor {
 		return null;
 	}
 
-	public void appendMissingInfo(Trace trace, AppJavaClassPath appPath) {
+	public static void appendMissingInfo(Trace trace, AppJavaClassPath appPath) {
 		Map<String, String> classNameMap = new HashMap<>();
 		Map<String, String> pathMap = new HashMap<>();
 		
@@ -234,7 +236,7 @@ public class InstrumentationExecutor {
 		}
 	}
 	
-	public void attachFullPathInfo(BreakPoint point, AppJavaClassPath appClassPath, 
+	public static void attachFullPathInfo(BreakPoint point, AppJavaClassPath appClassPath, 
 			Map<String, String> classNameMap, Map<String, String> pathMap){
 		String relativePath = point.getDeclaringCompilationUnitName().replace(".", File.separator) + ".java";
 		List<String> candidateSourceFolders = appClassPath.getAllSourceFolders();
@@ -284,7 +286,7 @@ public class InstrumentationExecutor {
 	}
 
 	@SuppressWarnings("rawtypes")
-	private String findDeclaringCompilationUnitName(String packagePath, String canonicalClassName) {
+	private static String findDeclaringCompilationUnitName(String packagePath, String canonicalClassName) {
 		File packageFolder = new File(packagePath);
 		
 		if(!packageFolder.exists()){
@@ -305,7 +307,7 @@ public class InstrumentationExecutor {
 		return null;
 	}
 
-	class TypeNameFinder extends ASTVisitor{
+	static class TypeNameFinder extends ASTVisitor{
 		CompilationUnit cu;
 		boolean isFind = false;
 		String canonicalClassName;

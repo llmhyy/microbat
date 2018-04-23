@@ -1,14 +1,12 @@
 package microbat.mutation.trace;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.bcel.Repository;
 import org.eclipse.jdi.TimeoutException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -16,13 +14,13 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.ThrowStatement;
 
 import microbat.codeanalysis.bytecode.ByteCodeParser;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.PreCheckInformation;
 import microbat.codeanalysis.runtime.RunningInformation;
 import microbat.model.trace.Trace;
-import microbat.model.trace.TraceNode;
 import microbat.mutation.mutation.ControlDominatedMutationVisitor;
 import microbat.mutation.mutation.MutationType;
 import microbat.mutation.mutation.TraceMutationVisitor;
@@ -50,45 +48,21 @@ import sav.strategies.dto.ClassLocation;
 import sav.strategies.mutanbug.MutationResult;
 import sav.strategies.vm.JavaCompiler;
 import sav.strategies.vm.VMConfiguration;
-import tregression.SimulationFailException;
-import tregression.empiricalstudy.DeadEndCSVWriter;
-import tregression.empiricalstudy.DeadEndRecord;
-import tregression.empiricalstudy.DeadEndReporter;
-import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.Regression;
-import tregression.empiricalstudy.RegressionUtil;
-import tregression.empiricalstudy.RootCauseFinder;
-import tregression.empiricalstudy.Simulator;
-import tregression.empiricalstudy.solutionpattern.PatternIdentifier;
-import tregression.empiricalstudy.training.DED;
-import tregression.empiricalstudy.training.DeadEndData;
-import tregression.empiricalstudy.training.TrainingDataTransfer;
-import tregression.model.PairList;
-import tregression.model.Trial;
-import tregression.separatesnapshots.DiffMatcher;
-import tregression.tracematch.ControlPathBasedTraceMatcher;
 
-public class MutationExperimentator {
-	private static final int STEP_LIMIT = 10000;
-	private static final long EXECUTOR_TIMEOUT = 30000l;
-	private static boolean DEBUG = true;
+public class MutationGenerator {
 	
-	private boolean useSliceBreaker;
-	private int breakerLimit;
-	
-	public MutationExperimentator(boolean useSliceBreaker, int breakerLimit) {
+	public MutationGenerator() {
 		super();
-		this.useSliceBreaker = useSliceBreaker;
-		this.breakerLimit = breakerLimit;
 	}
 
-	public void runEvaluation(IPackageFragment pack, AnalysisParams analysisParams,
+	public void generateMutations(IPackageFragment pack, AnalysisParams analysisParams,
 			IMutationExperimentMonitor monitor) throws JavaModelException {
 		IMutationCaseChecker checker = monitor.getMutationCaseChecker();
 		String testSourceFolder = null;
 		for (IJavaElement javaElement : pack.getChildren()) {
 			if (javaElement instanceof IPackageFragment) {
-				runEvaluation((IPackageFragment) javaElement, analysisParams, monitor);
+				generateMutations((IPackageFragment) javaElement, analysisParams, monitor);
 			} else if (javaElement instanceof ICompilationUnit) {
 				ICompilationUnit icu = (ICompilationUnit) javaElement;
 				CompilationUnit cu = JavaUtil.convertICompilationUnitToASTNode(icu);
@@ -108,9 +82,9 @@ public class MutationExperimentator {
 					if (!checker.accept(className, methodName)) {
 						continue;
 					}
+					AnalysisTestcaseParams tcParams = new AnalysisTestcaseParams(
+							pack.getJavaProject().getElementName(), className, methodName, analysisParams);
 					try {
-						AnalysisTestcaseParams tcParams = new AnalysisTestcaseParams(
-								pack.getJavaProject().getElementName(), className, methodName, analysisParams);
 						if (analysisParams.getIgnoredTestCaseFiles().contains(tcParams.getTestcaseName())) {
 							continue;
 						}
@@ -120,8 +94,9 @@ public class MutationExperimentator {
 						tcParams.setTestSourceFolder(testSourceFolder);
 						TraceExecutionInfo correctTrace = executeTestcase(tcParams);
 						runSingleTestcase(correctTrace, tcParams, monitor);
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						e.printStackTrace();
+						recoverOrgClassFile(tcParams);
 					}
 				}
 			}
@@ -133,15 +108,25 @@ public class MutationExperimentator {
 		System.out.println("Finish evaluation all!");
 	}
 	
+	private void recoverOrgClassFile(AnalysisTestcaseParams params) {
+		BackupClassFiles bkClassFiles = params.getBkClassFiles();
+		if (bkClassFiles != null) {
+			FileUtils.copyFile(bkClassFiles.getOrgClassFilePath(), bkClassFiles.getClassFilePath(),
+					true);
+		}
+	}
+	
 	public TraceExecutionInfo executeTestcase(AnalysisTestcaseParams params) {
 		AppJavaClassPath testcaseConfig = MuRegressionUtils.createProjectClassPath(params);
 		List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
 		List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
 		String outputFolder = params.getAnalysisOutputFolder();
-		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, outputFolder, "fix",
+		String traceExecPath = new StringBuilder(outputFolder).append(File.separator).append("fix.exec").toString();
+		String precheckPath = traceExecPath.replace("fix.exec", "precheck.info");
+		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, traceExecPath,
 				includedClassNames, excludedClassNames);
-		executor.setTimeout(EXECUTOR_TIMEOUT);
-		PreCheckInformation precheckInfo = executor.runPrecheck(null, STEP_LIMIT);
+		executor.setTimeout(params.getAnalysisParams().getExecutionTimeout());
+		PreCheckInformation precheckInfo = executor.runPrecheck(precheckPath, params.getAnalysisParams().getStepLimit());
 
 		if (!precheckInfo.isPassTest() || precheckInfo.isOverLong()) {
 			System.out.println(params.getTestcaseName() + " is failed to get build trace: " + precheckInfo.toString());
@@ -157,7 +142,7 @@ public class MutationExperimentator {
 
 		Trace correctTrace = info.getTrace();
 		Regression.fillMissingInfo(correctTrace, testcaseConfig);
-		return new TraceExecutionInfo(precheckInfo, correctTrace, executor.getTraceExecFilePath(), null);
+		return new TraceExecutionInfo(precheckInfo, correctTrace, executor.getTraceExecFilePath(), precheckPath);
 	}
 
 	public boolean runSingleTestcase(TraceExecutionInfo correctTrace, AnalysisTestcaseParams params,
@@ -166,7 +151,6 @@ public class MutationExperimentator {
 			return false;
 		}
 		IMutationCaseChecker checker = monitor.getMutationCaseChecker();
-		AnalysisParams analysisParams = params.getAnalysisParams();
 		String testCaseName = params.getTestcaseName();
 		
 		System.out.println("mutating the tested methods of " + testCaseName);
@@ -177,7 +161,6 @@ public class MutationExperimentator {
 		}
 		System.out.println("Start executing mutants for  " + testCaseName);
 		System.out.println("===========the mutation is start=================");
-		int thisTrialNum = 0;
 		for (SingleMutation mutation : mutations) {
 			if (monitor.isCanceled()) {
 				return false;
@@ -185,267 +168,17 @@ public class MutationExperimentator {
 			if (!checker.accept(mutation.getMutationBugId(), MutationType.valueOf(mutation.getMutationType()))) {
 				continue;
 			}
-			Trial tmpTrial = new Trial();
-			tmpTrial.setTestCaseName(testCaseName);
-			tmpTrial.setMutatedFile(mutation.getFile().toString());
-			tmpTrial.setMutatedLineNumber(mutation.getLine());
-			tmpTrial.setMutationType(mutation.getMutationType());
-			if (monitor.isCanceled()) {
-				return false;
-			}
-			MutationExecutionResult experimentResult = runSingleMutationTrial(mutation, params, correctTrace, monitor);
-			if (!experimentResult.isLoopEffective && experimentResult.isValid) {
-				continue;
-			}
-
-			if (experimentResult.isValid && analysisParams.isLimitTrialNum()) {
-				thisTrialNum++;
-				if (thisTrialNum >= analysisParams.getTrialNumPerTestCase()) {
-					break;
-				}
+			try {
+				MutationTrace muTrace = generateMutationTrace(correctTrace.getTrace().getAppJavaClassPath(), params, mutation);
+				monitor.reportMutationCase(params, correctTrace, muTrace, mutation);
+			} catch (Exception e) {
+				e.printStackTrace();
+				recoverOrgClassFile(params);
 			}
 		}
 		
 		System.out.println("===========all mutation is done==================");
 		return false;
-	}
-	
-	public MutationExecutionResult runSingleMutationTrial(SingleMutation mutation,
-			AnalysisTestcaseParams testcaseParams, IMutationExperimentMonitor experimentMonitor) {
-		TraceExecutionInfo correctTrace = executeTestcase(testcaseParams);
-		return runSingleMutationTrial(mutation, testcaseParams, correctTrace, experimentMonitor);
-	}
-
-	public class CheckResult{
-		List<EmpiricalTrial> trials;
-		boolean foundRootCause;
-		public CheckResult(List<EmpiricalTrial> trials, boolean foundRootCause) {
-			super();
-			this.trials = trials;
-			this.foundRootCause = foundRootCause;
-		}
-	}
-	
-	private CheckResult checkRootCause(SingleMutation mutation, String orgFilePath, String mutationFilePath, 
-			Trace killingMutatantTrace, Trace correctTrace, AnalysisTestcaseParams params, 
-			PreCheckInformation buggyPrecheck, PreCheckInformation correctPrecheck,
-			boolean useSliceBreaker, int breakLimit, IMutationExperimentMonitor monitor) throws SimulationFailException {
-		
-		int trialLimit = 10;
-		int trialNum = 0;
-		boolean isDataFlowComplete = false;
-		List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
-		List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
-		while(!isDataFlowComplete && trialNum<trialLimit){
-			trialNum++;
-			
-			killingMutatantTrace = generateMutatedTrace(params.getBkClassFiles(), mutation, killingMutatantTrace.getAppJavaClassPath(),
-					buggyPrecheck, includedClassNames, excludedClassNames);
-			correctTrace = generateCorrectTrace(params, correctTrace.getAppJavaClassPath(), correctPrecheck, 
-					includedClassNames, excludedClassNames);
-			
-			DiffMatcher diffMatcher = new MuDiffMatcher(mutation.getSourceFolder(), orgFilePath, mutationFilePath);
-			diffMatcher.matchCode();
-			
-			AppJavaClassPathWrapper.wrapAppClassPath(killingMutatantTrace, correctTrace, params.getBkClassFiles());
-			
-			long start = System.currentTimeMillis();
-			ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
-			PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, diffMatcher); 
-			int matchTime = (int) (System.currentTimeMillis() - start);
-			
-			Simulator simulator = new Simulator(useSliceBreaker, false, breakLimit);
-			simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
-			RootCauseFinder rootcauseFinder = new RootCauseFinder();
-			rootcauseFinder.checkRootCause(simulator.getObservedFault(), killingMutatantTrace, correctTrace, pairList, diffMatcher);
-			TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, killingMutatantTrace, correctTrace);
-			
-			if(rootCause==null){
-				System.out.println("[Search Lib Class] Cannot find the root cause, I am searching for library classes...");
-				
-				List<TraceNode> buggySteps = rootcauseFinder.getStopStepsOnBuggyTrace();
-				List<TraceNode> correctSteps = rootcauseFinder.getStopStepsOnCorrectTrace();
-				
-				List<String> newIncludedClassNames = new ArrayList<>();
-				List<String> newIncludedBuggyClassNames = RegressionUtil.identifyIncludedClassNames(buggySteps, 
-						buggyPrecheck, rootcauseFinder.getRegressionNodeList());
-				List<String> newIncludedCorrectClassNames = RegressionUtil.identifyIncludedClassNames(correctSteps, 
-						correctPrecheck, rootcauseFinder.getCorrectNodeList());
-				newIncludedClassNames.addAll(newIncludedBuggyClassNames);
-				newIncludedClassNames.addAll(newIncludedCorrectClassNames);
-				boolean includedClassChanged = false;
-				for(String name: newIncludedClassNames){
-					if(!includedClassNames.contains(name)){
-						includedClassNames.add(name);
-						includedClassChanged = true;
-					}
-				}
-				
-				if(!includedClassChanged) {
-					trialNum = trialLimit + 1;
-				}
-				else {
-					continue;						
-				}
-			}
-			
-			isDataFlowComplete = true;
-			boolean foundRootCause = rootCause!=null;
-			
-			
-			boolean[] enableRandoms = new boolean[]{false, true};
-			int[] breakLimits = new int[]{1, 3, 5};
-			
-			simulator.setUseSliceBreaker(true);
-			List<EmpiricalTrial> returnTrials = new ArrayList<>();
-			for(int i=0; i<enableRandoms.length; i++){
-				for(int j=0; j<breakLimits.length; j++){
-					simulator.setEnableRandom(enableRandoms[i]);
-					simulator.setBreakerTrialLimit(breakLimits[j]);
-					
-					String fileName = "random-" + enableRandoms[i] + "-limit-" + breakLimits[j];
-					
-					List<EmpiricalTrial> trials = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
-					
-					if(i==0 && j==0){
-						returnTrials = trials;
-					}
-					
-					for (EmpiricalTrial t : trials) {
-						t.setTraceMatchTime(matchTime);
-						t.setBuggyTrace(killingMutatantTrace);
-						t.setFixedTrace(correctTrace);
-						t.setPairList(pairList);
-						t.setDiffMatcher(diffMatcher);
-						
-						PatternIdentifier identifier = new PatternIdentifier();
-						identifier.identifyPattern(t);
-					}
-					try {
-						monitor.reportEmpiralTrial(fileName, trials, params, mutation);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-			
-			return new CheckResult(returnTrials, foundRootCause);
-		}
-		
-		return new CheckResult(null, false);
-	}
-	
-	private Trace generateCorrectTrace(AnalysisTestcaseParams params, AppJavaClassPath testcaseConfig,
-			PreCheckInformation correctPrecheck, List<String> includedClassNames, List<String> excludedClassNames) {
-		String outputFolder = params.getAnalysisOutputFolder();
-		params.getBkClassFiles().restoreOrgClassFile();
-		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, outputFolder, "fix",
-				includedClassNames, excludedClassNames);
-		executor.setTimeout(EXECUTOR_TIMEOUT);
-		RunningInformation info = executor.execute(correctPrecheck);
-		return info.getTrace();
-	}
-
-	private Trace generateMutatedTrace(BackupClassFiles backupClassFiles, SingleMutation mutation, AppJavaClassPath testcaseConfig,
-			PreCheckInformation buggyPrecheck, List<String> includedClassNames, List<String> excludedClassNames) {
-		String traceDir = mutation.getMutationOutputFolder();
-		backupClassFiles.restoreMutatedClassFile();
-		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, traceDir, "bug",
-				includedClassNames, excludedClassNames);
-		executor.setTimeout(EXECUTOR_TIMEOUT);
-		RunningInformation runningInfo = executor.execute(buggyPrecheck);
-		return runningInfo.getTrace();
-	}
-
-	public MutationExecutionResult runSingleMutationTrial(SingleMutation mutation, AnalysisTestcaseParams params,
-			TraceExecutionInfo correctTraceInfo, IMutationExperimentMonitor monitor) {
-		MutationExecutionResult result = new MutationExecutionResult();
-		Trace correctTrace = correctTraceInfo.getTrace();
-		result.correctTrace = correctTrace;
-		MutationTrace muTrace = null;
-		List<EmpiricalTrial> trials = Collections.emptyList();
-		try {
-			muTrace = generateMutatedTrace(correctTrace.getAppJavaClassPath(), params, mutation);
-			
-			if (muTrace != null) {
-				result.bugTrace = muTrace.getTrace();
-			}
-			if (muTrace != null && muTrace.isTimeOut()) {
-				System.out.println("Timeout, mutated file: " + mutation.getFile());
-				System.out.println("skip Time Out test case: " + params.getTestcaseName());
-			} else if (muTrace != null && muTrace.getTrace() != null && muTrace.getTrace().size() > 1) {
-				ICompilationUnit iunit = JavaUtil.findNonCacheICompilationUnitInProject(mutation.getMutatedClass(),
-						params.getProjectName());
-				String orgFilePath = IResourceUtils.getAbsolutePathOsStr(iunit.getPath());
-				String mutationFilePath = mutation.getFile().getAbsolutePath();
-				
-				CheckResult checkResult = checkRootCause(mutation, orgFilePath, mutationFilePath, 
-						muTrace.getTrace(), correctTrace, params, muTrace.getTraceExecInfo().getPrecheckInfo(), 
-						correctTraceInfo.getPrecheckInfo(), 
-						useSliceBreaker, breakerLimit, monitor);
-				trials = checkResult.trials;
-				boolean foundRootCause = checkResult.foundRootCause;
-				
-				EmpiricalTrial trial = trials.get(0);
-				String backupJFile = orgFilePath.replace(".java", "_bk.java");
-				FileUtils.copyFile(orgFilePath, backupJFile, true);
-				try {
-					FileUtils.copyFile(mutationFilePath, orgFilePath, true);
-					Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
-					Settings.compilationUnitMap.remove(mutation.getMutatedClass());
-					if(!trial.getDeadEndRecordList().isEmpty()){
-						Repository.clearCache();
-						DeadEndRecord record = trial.getDeadEndRecordList().get(0);
-						String muBugId = mutation.getMutationBugId();
-						DED datas = record.getTransformedData(trial.getBuggyTrace());
-//						DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
-						setTestCase(datas, trial.getTestcase());						
-//						new DeadEndReporter().export(datas.getAllData(), params.getProjectName(), muBugId);
-						new DeadEndCSVWriter().export(datas.getAllData(), params.getProjectName(), muBugId);
-					}
-				} catch (Throwable e) {
-					e.printStackTrace();
-				} finally {
-					FileUtils.copyFile(backupJFile, orgFilePath, true);
-					Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
-					Settings.compilationUnitMap.remove(mutation.getMutatedClass());
-					new File(backupJFile).delete();
-					recoverOrgClassFile(params);
-				}
-				
-//				monitor.reportTrial(params, correctTraceInfo, muTrace.getTraceExecInfo(), mutation, foundRootCause);
-//				monitor.reportEmpiralTrial(null, trials, params, mutation);
-				if (!foundRootCause && !DEBUG && muTrace.getTraceExecFile() == null) {
-//					mutation.remove();
-				} 
-				result.isValid = foundRootCause;
-			}
-		} catch (Throwable e) {
-			System.err.println("test case has exception when generating trace:");
-			e.printStackTrace();
-			try {
-				monitor.reportTrial(params, correctTraceInfo, muTrace.getTraceExecInfo(), mutation, false);
-				monitor.reportEmpiralTrial(null, trials, params, mutation);
-				recoverOrgClassFile(params);
-			} catch (Throwable e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-		} 
-		if (result.bugTrace == null) {
-//			mutation.remove();
-		}
-		return result;
-	}
-
-	private void recoverOrgClassFile(AnalysisTestcaseParams params) {
-		BackupClassFiles bkClassFiles = params.getBkClassFiles();
-		if (bkClassFiles != null) {
-			FileUtils.copyFile(bkClassFiles.getOrgClassFilePath(), bkClassFiles.getClassFilePath(),
-					true);
-//						new File(bkClassFiles.getMutatedClassFilePath()).delete();
-//						new File(bkClassFiles.getOrgClassFilePath()).delete();
-		}
 	}
 	
 	private List<ClassLocation> getAllExecutedLocations(Trace fixTrace) {
@@ -487,26 +220,19 @@ public class MutationExperimentator {
 		return locs;
 	}
 
-	private void setTestCase(DED datas, String tc) {
-		if(datas.getTrueData()!=null){
-			datas.getTrueData().testcase = tc;					
-		}
-		for(DeadEndData data: datas.getFalseDatas()){
-			data.testcase = tc;
-		}
-	}
-
-	private MutationTrace executeTestcaseWithMutation(AppJavaClassPath testcaseConfig, String testCaseName,
+	private MutationTrace executeTestcaseWithMutation(AppJavaClassPath testcaseConfig, AnalysisParams analysisParams,
 			SingleMutation mutation) {
 		MutationTrace muTrace = new MutationTrace();
 		try{
 			String traceDir = mutation.getMutationOutputFolder();
 			List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
 			List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
-			InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, traceDir, "bug",
+			String traceExecPath = new StringBuilder(traceDir).append(File.separator).append("bug.exec").toString();
+			String precheckPath = traceExecPath.replace("bug.exec", "bugPrecheck.info");
+			InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, traceExecPath,
 					includedClassNames, excludedClassNames);
-			executor.setTimeout(EXECUTOR_TIMEOUT);
-			PreCheckInformation precheck = executor.runPrecheck(null, STEP_LIMIT);
+			executor.setTimeout(analysisParams.getExecutionTimeout());
+			PreCheckInformation precheck = executor.runPrecheck(precheckPath, analysisParams.getStepLimit());
 			
 			muTrace.setTimeOut(precheck.isTimeout());
 			muTrace.setKill(!precheck.isPassTest() && !precheck.isTimeout()); 
@@ -532,7 +258,7 @@ public class MutationExperimentator {
 						MuRegressionUtils.fillMuBkpJavaFilePath(trace, mutation.getFile().getAbsolutePath(),
 								mutation.getMutatedClass());
 						Regression.fillMissingInfo(trace, testcaseConfig);
-						muTrace.setTrace(new TraceExecutionInfo(precheck, trace, executor.getTraceExecFilePath(), null));
+						muTrace.setTrace(new TraceExecutionInfo(precheck, trace, executor.getTraceExecFilePath(), precheckPath));
 					}
 				}
 			} else {
@@ -547,12 +273,8 @@ public class MutationExperimentator {
 		return muTrace;
 	}
 	
-	
-	
-	private MutationTrace generateMutatedTrace(AppJavaClassPath testcaseConfig, AnalysisTestcaseParams params,
+	private MutationTrace generateMutationTrace(AppJavaClassPath testcaseConfig, AnalysisTestcaseParams params,
 			SingleMutation mutation) throws Exception {
-//		Settings.compilationUnitMap.clear();
-//		Settings.iCompilationUnitMap.clear();
 		ICompilationUnit iunit = JavaUtil.findNonCacheICompilationUnitInProject(mutation.getMutatedClass(), params.getProjectName());
 		CompilationUnit unit = JavaUtil.convertICompilationUnitToASTNode(iunit);
 		Settings.iCompilationUnitMap.put(mutation.getMutatedClass(), iunit);
@@ -572,7 +294,7 @@ public class MutationExperimentator {
 			javaCompiler.compile(targetFolder, mutation.getFile());
 
 			/* generate trace */
-			MutationTrace mutateInfo = executeTestcaseWithMutation(testcaseConfig, params.getTestcaseName(), mutation);
+			MutationTrace mutateInfo = executeTestcaseWithMutation(testcaseConfig, params.getAnalysisParams(), mutation);
 			bkMutatedClassFilePath = ClassUtils.getClassFilePath(mutation.getMutationOutputFolder(), mutatedClassSimpleName);
 			FileUtils.copyFile(classFilePath, bkMutatedClassFilePath, true);
 			return mutateInfo;
@@ -655,7 +377,6 @@ public class MutationExperimentator {
 		Trace correctTrace;
 		Trace bugTrace;
 		boolean isLoopEffective;
-		boolean isValid;
 
 		public Trace getCorrectTrace() {
 			return correctTrace;
@@ -669,8 +390,5 @@ public class MutationExperimentator {
 			return isLoopEffective;
 		}
 
-		public boolean isValid() {
-			return isValid;
-		}
 	}
 }

@@ -48,14 +48,21 @@ public class TraceAgentRunner extends AgentVmRunner {
 		super.buildVmOption(builder, config);
 	}
 	
-	public boolean precheck() throws SavException {
+	public boolean precheck(String filePath) throws SavException {
 		isPrecheckMode = true;
 		try {
 			SingleTimer timer = SingleTimer.start("Precheck");
 			addAgentParam(AgentParams.OPT_PRECHECK, "true");
-			File dumpFile = File.createTempFile("tracePrecheck", ".info");
+			File dumpFile;
+			if (filePath == null) {
+				 dumpFile = File.createTempFile("tracePrecheck", ".info");
+				dumpFile.deleteOnExit();
+			} else {
+				dumpFile = FileUtils.getFileCreateIfNotExist(filePath);
+			}
+			
 			String dumpFilePath = dumpFile.getPath();
-			System.out.println("Trace dumpfile: " + dumpFilePath);
+			System.out.println("Precheck dumpfile: " + dumpFilePath);
 			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFilePath));
 			super.startAndWaitUntilStop(config);
 			if (this.isProcessTimeout()) {

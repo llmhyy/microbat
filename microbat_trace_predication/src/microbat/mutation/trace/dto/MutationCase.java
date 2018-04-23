@@ -19,7 +19,6 @@ import org.eclipse.jdt.core.JavaCore;
 import microbat.mutation.trace.MuRegressionUtils;
 import microbat.util.IProjectUtils;
 import microbat.util.JavaUtil;
-import sav.common.core.SavRtException;
 import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.ResourceUtils;
@@ -29,10 +28,18 @@ import sav.common.core.utils.ResourceUtils;
  *
  */
 public class MutationCase {
+	private static final String ERROR_EMTPY_TRACE = "empty trace";
+	private static final String ERROR_TIMEOUT = "time out";
+	private static final String ERROR_TOO_LONG = "trace is too long";
+	
 	private AnalysisTestcaseParams testcaseParams;
 	private SingleMutation mutation;
 	private String correctTraceExec;
 	private String bugTraceExec;
+	private String correctPrecheckPath;
+	private String bugPrecheckPath;
+	private boolean isValid;
+	private String error;
 	
 	public MutationCase(AnalysisTestcaseParams testcaseParams, SingleMutation mutation) {
 		this.testcaseParams = testcaseParams;
@@ -55,18 +62,49 @@ public class MutationCase {
 		return bugTraceExec;
 	}
 
-	public void setCorrectTraceExec(String correctTraceExec) {
-		this.correctTraceExec = correctTraceExec;
+	public void setCorrectTrace(TraceExecutionInfo correctTrace) {
+		this.correctTraceExec = correctTrace.getExecPath();
+		this.correctPrecheckPath = correctTrace.getPrecheckInfoPath();
 	}
 
-	public void setBugTraceExec(String bugTraceExec) {
-		this.bugTraceExec = bugTraceExec;
+	public boolean isValid() {
+		return isValid;
 	}
 
-	public void store() {
+	public String getError() {
+		return error;
+	}
+	
+	public String getCorrectPrecheckPath() {
+		return correctPrecheckPath;
+	}
+
+	public String getBugPrecheckPath() {
+		return bugPrecheckPath;
+	}
+
+	public void setMutationTrace(MutationTrace trace) {
+		this.isValid = true;
+		if (trace == null || trace.getTrace() == null || trace.getTrace().size() < 1) {
+			this.isValid = false;
+			this.error = ERROR_EMTPY_TRACE;
+			return;
+		}
+		this.bugTraceExec = trace.getTraceExecFile();
+		this.bugPrecheckPath = trace.getTraceExecInfo().getPrecheckInfoPath();
+		if (trace.isTimeOut()) {
+			this.isValid = false;
+			this.error = ERROR_TIMEOUT;
+		} else if (trace.isTooLong()) {
+			this.isValid = false;
+			this.error = ERROR_TOO_LONG;
+		}
+	}
+
+	public void store(String mutationOutputSpace) {
 		CSVPrinter csvPrinter = null;
 		try {
-			File csvFile = new File(MuRegressionUtils.getMutationCaseFilePath(testcaseParams.getProjectName()));
+			File csvFile = new File(MuRegressionUtils.getMutationCaseFilePath(testcaseParams.getProjectName(), mutationOutputSpace));
 			CSVFormat format = CSVFormat.EXCEL;
 			if (!csvFile.exists()) {
 				format = format.withHeader(Column.allColumns());
@@ -82,7 +120,11 @@ public class MutationCase {
 									getRelativePath(testcaseParams.getAnalysisOutputFolder(), mutation.getFile().getAbsolutePath()),
 									mutation.getSourceFolder(),
 									getRelativePath(testcaseParams.getAnalysisOutputFolder(), correctTraceExec),
-									getRelativePath(testcaseParams.getAnalysisOutputFolder(), bugTraceExec)
+									getRelativePath(testcaseParams.getAnalysisOutputFolder(), correctPrecheckPath),
+									getRelativePath(testcaseParams.getAnalysisOutputFolder(), bugTraceExec),
+									getRelativePath(testcaseParams.getAnalysisOutputFolder(), bugPrecheckPath),
+									isValid,
+									error
 									);
 
 			csvPrinter.flush();
@@ -94,8 +136,8 @@ public class MutationCase {
 	}
 
 	private String getRelativePath(String parent, String absolutePath) {
-		if (!absolutePath.startsWith(parent)) {
-			throw new SavRtException(String.format("Invalid path: %s [not exist in %s]", absolutePath, parent));
+		if (absolutePath == null || !absolutePath.startsWith(parent)) {
+			return absolutePath;
 		}
 		return absolutePath.substring(parent.length());
 	}
@@ -104,12 +146,12 @@ public class MutationCase {
 		return new StringBuilder(parent).append(relativePath).toString();
 	}
 
-	public static MutationCase load(String targetProject, String muBugId) throws IOException {
-		List<CSVRecord> records = getRecords(targetProject);
+	public static MutationCase load(String targetProject, String muBugId, String mutationOutputSpace, AnalysisParams analysisParams) throws IOException {
+		List<CSVRecord> records = getRecords(targetProject, mutationOutputSpace);
 		for (CSVRecord record : records) {
 			if (muBugId.equals(record.get(Column.MUTATION_BUG_ID))) {
 				AnalysisTestcaseParams testcaseParams = new AnalysisTestcaseParams(targetProject, 
-						record.get(Column.JUNIT_CLASS_NAME), record.get(Column.TEST_METHOD), null);
+						record.get(Column.JUNIT_CLASS_NAME), record.get(Column.TEST_METHOD), analysisParams);
 				SingleMutation mutation = new SingleMutation();
 				mutation.setMutatedClass(record.get(Column.MUTATED_CLASS));
 				mutation.setLine(getInteger(record, Column.LINE));
@@ -120,7 +162,11 @@ public class MutationCase {
 				mutation.setMutationBugId(muBugId);
 				MutationCase mutationCase = new MutationCase(testcaseParams, mutation);
 				mutationCase.correctTraceExec = getAbsolutePath(analysisOutputFolder, record.get(Column.CORRECT_EXEC_RELATIVE_PATH));
+				mutationCase.correctPrecheckPath = getAbsolutePath(analysisOutputFolder, record.get(Column.CORRECT_PRECHECK_RELATIVE_PATH));
 				mutationCase.bugTraceExec = getAbsolutePath(analysisOutputFolder, record.get(Column.BUG_EXEC_RELATIVE_PATH));
+				mutationCase.bugPrecheckPath = getAbsolutePath(analysisOutputFolder, record.get(Column.BUG_PRECHECK_RELATIVE_PATH));
+				mutationCase.isValid = Boolean.valueOf(record.get(Column.IS_VALID));
+				mutationCase.error = record.get(Column.ERROR);
 				
 				/* backupClassFile */
 				String classFileName = ClassUtils.getSimpleName(mutation.getMutatedClass()) + ".class";
@@ -136,9 +182,9 @@ public class MutationCase {
 		return null;
 	}
 
-	private static List<CSVRecord> getRecords(String targetProject) throws IOException {
+	private static List<CSVRecord> getRecords(String targetProject, String mutationOutputSpace) throws IOException {
 		CSVFormat format = CSVFormat.EXCEL.withHeader(Column.allColumns());
-		String csvFilePath = MuRegressionUtils.getMutationCaseFilePath(targetProject);
+		String csvFilePath = MuRegressionUtils.getMutationCaseFilePath(targetProject, mutationOutputSpace);
 		File csvFile = new File(csvFilePath);
 		if (!csvFile.exists()) {
 			return Collections.emptyList();
@@ -151,9 +197,9 @@ public class MutationCase {
 		return records;
 	}
 	
-	public static List<String> loadAllMutationBugIds(String targetProject) {
+	public static List<String> loadAllMutationBugIds(String targetProject, String mutationOutputSpace) {
 		try {
-			List<CSVRecord> records = getRecords(targetProject);
+			List<CSVRecord> records = getRecords(targetProject, mutationOutputSpace);
 			List<String> bugIds = new ArrayList<>();
 			for (CSVRecord record : records) {
 				bugIds.add(record.get(Column.MUTATION_BUG_ID));
@@ -179,7 +225,11 @@ public class MutationCase {
 		MUTATED_JFILE_RELATIVE_PATH,
 		SOURCE_FOLDER,
 		CORRECT_EXEC_RELATIVE_PATH,
-		BUG_EXEC_RELATIVE_PATH;
+		CORRECT_PRECHECK_RELATIVE_PATH,
+		BUG_EXEC_RELATIVE_PATH,
+		BUG_PRECHECK_RELATIVE_PATH,
+		IS_VALID,
+		ERROR;
 		
 		public static String[] allColumns() {
 			Column[] values = values();

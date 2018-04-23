@@ -7,12 +7,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 import microbat.agent.ExecTraceFileReader;
 import microbat.model.trace.Trace;
-import microbat.mutation.trace.MutationExperimentator.MutationExecutionResult;
+import microbat.mutation.trace.MutationGenerator.MutationExecutionResult;
 import microbat.mutation.trace.dto.AnalysisParams;
 import microbat.mutation.trace.dto.AnalysisTestcaseParams;
 import microbat.mutation.trace.dto.MutationCase;
 import microbat.mutation.trace.dto.SingleMutation;
 import microbat.mutation.trace.preference.MutationRegressionPreference;
+import microbat.mutation.trace.preference.MutationRegressionSettings;
 import microbat.mutation.trace.report.BasicMutationExperimentMonitor;
 import microbat.mutation.trace.report.IMutationExperimentMonitor;
 import tregression.empiricalstudy.Regression;
@@ -23,23 +24,21 @@ public class MutationRegressionRetriever {
 	public MuRegression retrieveRegression(String targetProject, String mutationBugId, 
 			IProgressMonitor monitor, boolean useSliceBreaker, int breakerLimit)
 			throws SQLException, IOException {
-		MutationCase mutationCase = MutationCase.load(targetProject, mutationBugId);
+		MutationRegressionSettings mutationSettings = MutationRegressionPreference.getMutationRegressionSettings();
+		AnalysisParams analysisParams = new AnalysisParams(mutationSettings);
+		MutationCase mutationCase = MutationCase.load(targetProject, mutationBugId, mutationSettings.getMutationOutputSpace(), 
+				analysisParams);
 		IMutationExperimentMonitor experimentMonitor = new BasicMutationExperimentMonitor(monitor);
-
-		return buildRegression(mutationCase, experimentMonitor, useSliceBreaker, breakerLimit);
-	}
-
-	public MuRegression buildRegression(MutationCase mutationCase, IMutationExperimentMonitor experimentMonitor,
-			boolean useSliceBreaker, int breakerLimit) {
-		AnalysisParams analysisParams = new AnalysisParams();
-		MutationExperimentator analyzer = new MutationExperimentator(useSliceBreaker, breakerLimit);
+		
+		MutationEvaluator evaluator = new MutationEvaluator();
 
 		mutationCase.getTestcaseParams().setAnalysisParams(analysisParams);
 		SingleMutation mutation = mutationCase.getMutation();
-		if (MutationRegressionPreference.getRerunFlag()) {
-			MutationExecutionResult executionResult = analyzer.runSingleMutationTrial(mutation,
-					mutationCase.getTestcaseParams(), experimentMonitor);
-			return buildRegression(mutationCase, executionResult);
+		if (mutationSettings.isRerun()) {
+//			MutationExecutionResult executionResult = analyzer.runSingleMutationTrial(mutation,
+//					mutationCase.getTestcaseParams(), experimentMonitor);
+//			return buildRegression(mutationCase, executionResult);
+			return null;
 		} else {
 			ExecTraceFileReader execTraceReader = new ExecTraceFileReader();
 			MutationExecutionResult executionResult = new MutationExecutionResult();

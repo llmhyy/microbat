@@ -54,7 +54,7 @@ import tregression.tracematch.LCSBasedTraceMatcher;
 public class TestCaseAnalyzerOld {
 	
 	public static final String TEST_RUNNER = "microbat.evaluation.junit.MicroBatTestRunner";
-	private static final String TMP_DIRECTORY = MutationGenerationHandler.TMP_DIRECTORY;
+	private static final String TMP_DIRECTORY = "";//MutationGenerationHandler.TMP_DIRECTORY;
 	private static final String SOURCE_FOLDER_KEY = "sourceFolderPath";
 	private int muTotal = 10;
 	

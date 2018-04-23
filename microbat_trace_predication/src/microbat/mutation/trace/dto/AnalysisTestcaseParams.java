@@ -1,12 +1,16 @@
 package microbat.mutation.trace.dto;
 
+import java.io.File;
+
 import microbat.mutation.trace.MuRegressionUtils;
+import sav.common.core.utils.FileUtils;
 
 public class AnalysisTestcaseParams {
 	private String junitClassName;
 	private String testMethod;
 	private String projectName;
 	private String analysisOutputFolder;
+	private String projectOutputFolder;
 	
 	/* internal use fields */
 	private String testcaseName;
@@ -19,11 +23,17 @@ public class AnalysisTestcaseParams {
 		this.projectName = projectName;
 		setJunitTest(junitClassName, testMethod);
 		this.analysisParams = analysisParams;
-		analysisOutputFolder = MuRegressionUtils.getAnalysisOutputFolder(projectName, junitClassName, testMethod);
+		analysisOutputFolder = MuRegressionUtils.getAnalysisOutputFolder(analysisParams.getMutationOutputSpace(),
+				projectName, junitClassName, testMethod);
+		projectOutputFolder = FileUtils.getFilePath(analysisParams.getMutationOutputSpace(), "mutation", projectName) + File.separator;
 	}
 
 	public String getAnalysisOutputFolder() {
 		return analysisOutputFolder;
+	}
+	
+	public String getProjectOutputFolder() {
+		return projectOutputFolder;
 	}
 	
 	public String getJunitClassName() {
