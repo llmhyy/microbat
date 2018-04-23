@@ -365,7 +365,16 @@ public class TraceNode{
 					stepOverNext = n;
 					return n;
 				}
-				else if(p1!=null && p2!=null) {
+				
+				if(p2!=null){
+					int index = p2.getInvocationChildren().size()-1;
+					TraceNode lastChild = p2.getInvocationChildren().get(index);
+					if(n.getOrder()>lastChild.getOrder()){
+						break;						
+					}
+				}
+				
+				if(p1!=null && p2!=null) {
 					if(p1.getOrder()==p2.getOrder()) {
 						stepOverNext = n;
 						return n;
@@ -391,11 +400,17 @@ public class TraceNode{
 			while(n!=null) {
 				TraceNode p1 = n.getInvocationParent();
 				TraceNode p2 = this.getInvocationParent();
+				
 				if(p1==null && p2==null) {
 					stepOverPrevious = n;
 					return n;
 				}
-				else if(p1!=null && p2!=null) {
+				
+				if(p2!=null && n.getOrder()<=p2.getOrder()){
+					break;
+				}
+				
+				if(p1!=null && p2!=null) {
 					if(p1.getOrder()==p2.getOrder()) {
 						stepOverPrevious = n;
 						return n;
