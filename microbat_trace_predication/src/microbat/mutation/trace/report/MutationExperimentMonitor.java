@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
@@ -49,10 +50,15 @@ public class MutationExperimentMonitor extends BasicMutationExperimentMonitor im
 	}
 
 	@Override
-	public void reportEmpiralTrial(List<EmpiricalTrial> trials0, AnalysisTestcaseParams params, SingleMutation mutation)
+	public void reportEmpiralTrial(String fileName, List<EmpiricalTrial> trials0, AnalysisTestcaseParams params, SingleMutation mutation)
 			throws IOException {
 		System.out.println(mutation.getMutationBugId());
-		TrialRecorder recorder = new TrialRecorder();
+		TrialRecorder recorder = null;
+		if (fileName == null) {
+			recorder = new TrialRecorder();
+		} else {
+			recorder = new TrialRecorder(fileName);
+		}
 		List<EmpiricalTrial> trials = new ArrayList<>(trials0.size());
 		for (EmpiricalTrial trial : trials0) {
 			if (trial.getBugType() != EmpiricalTrial.FIND_BUG) {

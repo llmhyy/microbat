@@ -15,7 +15,7 @@ public interface IMutationExperimentMonitor {
 	void reportTrial(AnalysisTestcaseParams params, TraceExecutionInfo correctTraceInfo,
 			TraceExecutionInfo traceExecInfo, SingleMutation mutation, boolean foundRootCause);
 
-	void reportEmpiralTrial(List<EmpiricalTrial> trials0, AnalysisTestcaseParams params, SingleMutation mutation)
+	void reportEmpiralTrial(String fileName, List<EmpiricalTrial> trials0, AnalysisTestcaseParams params, SingleMutation mutation)
 			throws IOException;
 
 	IMutationCaseChecker getMutationCaseChecker();

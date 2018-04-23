@@ -390,7 +390,7 @@ public class MutationExperimentator {
 				}
 				
 				monitor.reportTrial(params, correctTraceInfo, muTrace.getTraceExecInfo(), mutation, foundRootCause);
-				monitor.reportEmpiralTrial(trials, params, mutation);
+				monitor.reportEmpiralTrial(null, trials, params, mutation);
 				if (!foundRootCause && !DEBUG && muTrace.getTraceExecFile() == null) {
 //					mutation.remove();
 				} 
@@ -401,7 +401,7 @@ public class MutationExperimentator {
 			e.printStackTrace();
 			try {
 				monitor.reportTrial(params, correctTraceInfo, muTrace.getTraceExecInfo(), mutation, false);
-				monitor.reportEmpiralTrial(trials, params, mutation);
+				monitor.reportEmpiralTrial(null, trials, params, mutation);
 				recoverOrgClassFile(params);
 			} catch (Throwable e1) {
 				// TODO Auto-generated catch block

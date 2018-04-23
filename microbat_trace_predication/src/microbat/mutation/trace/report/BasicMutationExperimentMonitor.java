@@ -30,7 +30,7 @@ public class BasicMutationExperimentMonitor implements IMutationExperimentMonito
 	}
 
 	@Override
-	public void reportEmpiralTrial(List<EmpiricalTrial> trials0, AnalysisTestcaseParams params, SingleMutation mutation)
+	public void reportEmpiralTrial(String fileName, List<EmpiricalTrial> trials0, AnalysisTestcaseParams params, SingleMutation mutation)
 			throws IOException {
 		// do nothing by default
 	}
