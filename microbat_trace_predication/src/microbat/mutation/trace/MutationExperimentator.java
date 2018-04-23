@@ -1,6 +1,7 @@
 package microbat.mutation.trace;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -228,7 +229,7 @@ public class MutationExperimentator {
 	private CheckResult checkRootCause(SingleMutation mutation, String orgFilePath, String mutationFilePath, 
 			Trace killingMutatantTrace, Trace correctTrace, AnalysisTestcaseParams params, 
 			PreCheckInformation buggyPrecheck, PreCheckInformation correctPrecheck,
-			boolean useSliceBreaker, int breakLimit) throws SimulationFailException {
+			boolean useSliceBreaker, int breakLimit, IMutationExperimentMonitor monitor) throws SimulationFailException {
 		
 		int trialLimit = 10;
 		int trialNum = 0;
@@ -252,10 +253,9 @@ public class MutationExperimentator {
 			ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
 			PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, diffMatcher); 
 			int matchTime = (int) (System.currentTimeMillis() - start);
-			//TODO
+			
 			Simulator simulator = new Simulator(useSliceBreaker, false, breakLimit);
 			simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
-			System.currentTimeMillis();
 			RootCauseFinder rootcauseFinder = new RootCauseFinder();
 			rootcauseFinder.checkRootCause(simulator.getObservedFault(), killingMutatantTrace, correctTrace, pairList, diffMatcher);
 			TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, killingMutatantTrace, correctTrace);
@@ -292,20 +292,44 @@ public class MutationExperimentator {
 			isDataFlowComplete = true;
 			boolean foundRootCause = rootCause!=null;
 			
-			List<EmpiricalTrial> trials = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
 			
-			for (EmpiricalTrial t : trials) {
-				t.setTraceMatchTime(matchTime);
-				t.setBuggyTrace(killingMutatantTrace);
-				t.setFixedTrace(correctTrace);
-				t.setPairList(pairList);
-				t.setDiffMatcher(diffMatcher);
-				
-				PatternIdentifier identifier = new PatternIdentifier();
-				identifier.identifyPattern(t);
+			boolean[] enableRandoms = new boolean[]{false, true};
+			int[] breakLimits = new int[]{1, 3, 5};
+			
+			simulator.setUseSliceBreaker(true);
+			List<EmpiricalTrial> returnTrials = new ArrayList<>();
+			for(int i=0; i<enableRandoms.length; i++){
+				for(int j=0; j<breakLimits.length; j++){
+					simulator.setEnableRandom(enableRandoms[i]);
+					simulator.setBreakerTrialLimit(breakLimits[j]);
+					
+					String fileName = "random-" + enableRandoms[i] + "-limit-" + breakLimits[j];
+					
+					List<EmpiricalTrial> trials = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
+					
+					if(i==0 && j==0){
+						returnTrials = trials;
+					}
+					
+					for (EmpiricalTrial t : trials) {
+						t.setTraceMatchTime(matchTime);
+						t.setBuggyTrace(killingMutatantTrace);
+						t.setFixedTrace(correctTrace);
+						t.setPairList(pairList);
+						t.setDiffMatcher(diffMatcher);
+						
+						PatternIdentifier identifier = new PatternIdentifier();
+						identifier.identifyPattern(t);
+					}
+					try {
+						monitor.reportEmpiralTrial(fileName, trials, params, mutation);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
 			}
 			
-			return new CheckResult(trials, foundRootCause);
+			return new CheckResult(returnTrials, foundRootCause);
 		}
 		
 		return new CheckResult(null, false);
@@ -358,7 +382,7 @@ public class MutationExperimentator {
 				CheckResult checkResult = checkRootCause(mutation, orgFilePath, mutationFilePath, 
 						muTrace.getTrace(), correctTrace, params, muTrace.getTraceExecInfo().getPrecheckInfo(), 
 						correctTraceInfo.getPrecheckInfo(), 
-						useSliceBreaker, breakerLimit);
+						useSliceBreaker, breakerLimit, monitor);
 				trials = checkResult.trials;
 				boolean foundRootCause = checkResult.foundRootCause;
 				
@@ -376,7 +400,7 @@ public class MutationExperimentator {
 						DED datas = record.getTransformedData(trial.getBuggyTrace());
 //						DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
 						setTestCase(datas, trial.getTestcase());						
-							new DeadEndReporter().export(datas.getAllData(), params.getProjectName(), muBugId);
+//						new DeadEndReporter().export(datas.getAllData(), params.getProjectName(), muBugId);
 						new DeadEndCSVWriter().export(datas.getAllData(), params.getProjectName(), muBugId);
 					}
 				} catch (Throwable e) {
@@ -389,8 +413,8 @@ public class MutationExperimentator {
 					recoverOrgClassFile(params);
 				}
 				
-				monitor.reportTrial(params, correctTraceInfo, muTrace.getTraceExecInfo(), mutation, foundRootCause);
-				monitor.reportEmpiralTrial(null, trials, params, mutation);
+//				monitor.reportTrial(params, correctTraceInfo, muTrace.getTraceExecInfo(), mutation, foundRootCause);
+//				monitor.reportEmpiralTrial(null, trials, params, mutation);
 				if (!foundRootCause && !DEBUG && muTrace.getTraceExecFile() == null) {
 //					mutation.remove();
 				} 
