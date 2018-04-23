@@ -9,8 +9,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
 
 import microbat.model.trace.Trace;
 import microbat.mutation.trace.AppJavaClassPathWrapper;
@@ -22,9 +20,7 @@ import microbat.mutation.trace.dto.BackupClassFiles;
 import microbat.mutation.trace.preference.MutationRegressionPreference;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.UserFeedback;
-import microbat.util.IProjectUtils;
 import microbat.util.IResourceUtils;
-import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import sav.common.core.utils.ClassUtils;
 import sav.common.core.utils.FileUtils;
@@ -46,6 +42,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		boolean useSliceBreaker = true;
+		boolean enableRandom = false;
 		int breakerLimit = 3;
 		
 		
@@ -99,7 +96,8 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 					visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
 					try {
 						
-						EmpiricalTrial trial = simulate(buggyTrace, correctTrace, pairList, diffMatcher, useSliceBreaker, breakerLimit);
+						EmpiricalTrial trial = simulate(buggyTrace, correctTrace, pairList, 
+								diffMatcher, useSliceBreaker, enableRandom, breakerLimit);
 						System.out.println(trial);
 					} catch (SimulationFailException e) {
 						e.printStackTrace();
@@ -120,11 +118,11 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 
 
 	private EmpiricalTrial simulate(Trace buggyTrace, Trace correctTrace, PairList pairList, 
-			DiffMatcher diffMatcher, boolean useSlicer, int breakerLimit)
+			DiffMatcher diffMatcher, boolean useSlicer, boolean enableRandom, int breakerLimit)
 			throws SimulationFailException {
 		long time1 = System.currentTimeMillis();
 		System.out.println("start simulating debugging...");
-		Simulator simulator = new Simulator(useSlicer, breakerLimit);
+		Simulator simulator = new Simulator(useSlicer, enableRandom, breakerLimit);
 		simulator.prepare(buggyTrace, correctTrace, pairList, diffMatcher);
 //		TraceNode node = buggyTrace.getExecutionList().get(8667);
 //		simulator.setObservedFault(node);

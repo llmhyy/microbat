@@ -252,8 +252,8 @@ public class MutationExperimentator {
 			ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
 			PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, diffMatcher); 
 			int matchTime = (int) (System.currentTimeMillis() - start);
-			
-			Simulator simulator = new Simulator(useSliceBreaker, breakLimit);
+			//TODO
+			Simulator simulator = new Simulator(useSliceBreaker, false, breakLimit);
 			simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
 			System.currentTimeMillis();
 			RootCauseFinder rootcauseFinder = new RootCauseFinder();
