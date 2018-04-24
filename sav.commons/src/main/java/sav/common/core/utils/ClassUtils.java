@@ -46,6 +46,12 @@ public class ClassUtils {
 				+ Constants.JAVA_EXT_WITH_DOT;
 	}
 	
+	public static String getPackageFolderPath(String sourcePath, String className) {
+		String packageName = className.substring(0, className.lastIndexOf("."));
+		return sourcePath + Constants.FILE_SEPARATOR
+				+ packageName.replace(Constants.DOT, Constants.FILE_SEPARATOR);
+	}
+	
 	public static String getJFilePath(String className) {
 		return className.replace(Constants.DOT, Constants.FILE_SEPARATOR)
 				+ Constants.JAVA_EXT_WITH_DOT;
