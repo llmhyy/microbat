@@ -1062,7 +1062,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		return value;
 	}
 	
-	private static LockedThreads lockedThreads = new LockedThreads();
+	private static volatile LockedThreads lockedThreads = new LockedThreads();
 	private static final Locker gLocker = new Locker();
 	
 	public synchronized static IExecutionTracer _getTracer(boolean isAppClass, String className, String methodSig,
@@ -1118,16 +1118,6 @@ public class ExecutionTracer implements IExecutionTracer {
 		return store;
 	}
 	
-	public static boolean glock() {
-		boolean isLocked = gLocker.isLock();
-		gLocker.lock();
-		return isLocked;
-	}
-	
-	public static void gUnlock(boolean isLocked) {
-		gLocker.unLock(isLocked);
-	}
-	
 	public static Map<Long, ExecutionTracer> getRtStores() {
 		return rtStores;
 	}
@@ -1136,18 +1126,20 @@ public class ExecutionTracer implements IExecutionTracer {
 		return getTracer(mainThreadId);
 	}
 	
-	public static IExecutionTracer getCurrentThreadStore() {
-		boolean locked = gLocker.isLock();
-		gLocker.lock();
-		long threadId = Thread.currentThread().getId();
-		IExecutionTracer store = rtStores.get(threadId);
-		if (store == null) {
-			store = EmptyExecutionTracer.getInstance();
+	public static synchronized IExecutionTracer getCurrentThreadStore() {
+		synchronized (gLocker) {
+			boolean locked = gLocker.isLock();
+			gLocker.lock();
+			long threadId = Thread.currentThread().getId();
+			IExecutionTracer store = rtStores.get(threadId);
+			if (store == null) {
+				store = EmptyExecutionTracer.getInstance();
+			}
+			if (!locked) {
+				gLocker.unLock();
+			}
+			return store;
 		}
-		if (!locked) {
-			gLocker.unLock();
-		}
-		return store;
 	}
 	
 	private static TracingState state = TracingState.INIT;
