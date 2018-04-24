@@ -26,7 +26,7 @@ public class MutationExperimentMonitor extends BasicMutationExperimentMonitor im
 			AnalysisParams analysisParams) throws IOException {
 		super(progressMonitor);
 		reporter = new ExcelReporter(targetProject, analysisParams.getUnclearRates());
-//		mutationCaseFilter = new MutationCaseChecker(targetProject);
+//		mutationCaseFilter = new MutationCaseChecker(targetProject, analysisParams);
 		mutationCaseFilter = new EmptyMutationCaseChecker();
 	}
 

@@ -191,7 +191,7 @@ public class MutationCase {
 		return null;
 	}
 
-	private static List<CSVRecord> getRecords(String targetProject, String mutationOutputSpace) throws IOException {
+	public static List<CSVRecord> getRecords(String targetProject, String mutationOutputSpace) throws IOException {
 		CSVFormat format = CSVFormat.EXCEL.withHeader(Column.allColumns());
 		String csvFilePath = MuRegressionUtils.getMutationCaseFilePath(targetProject, mutationOutputSpace);
 		File csvFile = new File(csvFilePath);
@@ -226,7 +226,7 @@ public class MutationCase {
 		return Integer.valueOf(record.get(col));
 	}
 	
-	private static enum Column {
+	public static enum Column {
 		MUTATION_BUG_ID,
 		JUNIT_CLASS_NAME,
 		TEST_METHOD,
