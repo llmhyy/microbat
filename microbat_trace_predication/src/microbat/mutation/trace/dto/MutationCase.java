@@ -102,9 +102,17 @@ public class MutationCase {
 	}
 
 	public void store(String mutationOutputSpace) {
+		if (isValid) {
+			String validPath = FileUtils.getFilePath(mutationOutputSpace, "mutation", testcaseParams.getProjectName(), "validMutationCases.csv");
+			storeCsv(validPath);
+		}
+		storeCsv(MuRegressionUtils.getMutationCaseFilePath(testcaseParams.getProjectName(), mutationOutputSpace));
+	}
+	
+	public void storeCsv(String csvFilePath) {
 		CSVPrinter csvPrinter = null;
 		try {
-			File csvFile = new File(MuRegressionUtils.getMutationCaseFilePath(testcaseParams.getProjectName(), mutationOutputSpace));
+			File csvFile = new File(csvFilePath);
 			CSVFormat format = CSVFormat.EXCEL;
 			if (!csvFile.exists()) {
 				format = format.withHeader(Column.allColumns());
@@ -183,7 +191,7 @@ public class MutationCase {
 		return null;
 	}
 
-	private static List<CSVRecord> getRecords(String targetProject, String mutationOutputSpace) throws IOException {
+	public static List<CSVRecord> getRecords(String targetProject, String mutationOutputSpace) throws IOException {
 		CSVFormat format = CSVFormat.EXCEL.withHeader(Column.allColumns());
 		String csvFilePath = MuRegressionUtils.getMutationCaseFilePath(targetProject, mutationOutputSpace);
 		File csvFile = new File(csvFilePath);
@@ -218,7 +226,7 @@ public class MutationCase {
 		return Integer.valueOf(record.get(col));
 	}
 	
-	private static enum Column {
+	public static enum Column {
 		MUTATION_BUG_ID,
 		JUNIT_CLASS_NAME,
 		TEST_METHOD,

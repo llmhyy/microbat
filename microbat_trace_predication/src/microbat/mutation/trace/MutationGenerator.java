@@ -126,8 +126,7 @@ public class MutationGenerator {
 	private void recoverOrgClassFile(AnalysisTestcaseParams params) {
 		BackupClassFiles bkClassFiles = params.getBkClassFiles();
 		if (bkClassFiles != null) {
-			FileUtils.copyFile(bkClassFiles.getOrgClassFilePath(), bkClassFiles.getClassFilePath(),
-					true);
+			bkClassFiles.restoreOrgClassFile();
 		}
 	}
 	
@@ -227,7 +226,7 @@ public class MutationGenerator {
 		int trialNum = 0;
 		while (trialNum < trialLimit) {
 			trialNum++;
-		
+			
 			Simulator simulator = new Simulator(params.getAnalysisParams().isUseSliceBreaker(), false,
 					params.getAnalysisParams().getBreakerLimit());
 			simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -93,6 +94,15 @@ public class AgentParams {
 		String filePath = cmd.getString(fileOpt);
 		String expression = null;
 		Collection<?> vals = AgentUtils.readLines(filePath);
+		if (vals != null) {
+			for (Iterator<?> it = vals.iterator(); it.hasNext();) {
+				String line = (String) it.next();
+				if (line.startsWith("#")) {
+					it.remove();
+				}
+			}
+		}
+		
 		if (!CollectionUtils.isEmpty(vals)) {
 			expression = StringUtils.join(vals, AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR);
 		}
