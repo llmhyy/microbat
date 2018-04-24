@@ -102,9 +102,17 @@ public class MutationCase {
 	}
 
 	public void store(String mutationOutputSpace) {
+		if (isValid) {
+			String validPath = FileUtils.getFilePath(mutationOutputSpace, "mutation", testcaseParams.getProjectName(), "validMutationCases.csv");
+			storeCsv(validPath);
+		}
+		storeCsv(MuRegressionUtils.getMutationCaseFilePath(testcaseParams.getProjectName(), mutationOutputSpace));
+	}
+	
+	public void storeCsv(String csvFilePath) {
 		CSVPrinter csvPrinter = null;
 		try {
-			File csvFile = new File(MuRegressionUtils.getMutationCaseFilePath(testcaseParams.getProjectName(), mutationOutputSpace));
+			File csvFile = new File(csvFilePath);
 			CSVFormat format = CSVFormat.EXCEL;
 			if (!csvFile.exists()) {
 				format = format.withHeader(Column.allColumns());

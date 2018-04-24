@@ -49,6 +49,7 @@ public class MutationGenerationHandler extends AbstractHandler {
 				} catch (JavaModelException | IOException e) {
 					e.printStackTrace();
 				}
+				System.out.println("Complete Mutation Generation!");
 				return Status.OK_STATUS;
 			}
 		};
