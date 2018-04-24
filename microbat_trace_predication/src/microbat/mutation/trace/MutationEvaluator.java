@@ -43,6 +43,7 @@ public class MutationEvaluator {
 	private ExecTraceFileReader execTraceReader = new ExecTraceFileReader();
 	
 	public MutationExecutionResult runSingleMutationTrial(MutationCase mutationCase, IMutationExperimentMonitor monitor) {
+		System.out.println("Start Mutation case: " + mutationCase.getMutation().getMutationBugId());
 		if (!mutationCase.isValid()) {
 			return null;
 		}

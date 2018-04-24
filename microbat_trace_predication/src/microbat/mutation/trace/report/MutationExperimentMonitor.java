@@ -1,6 +1,5 @@
 package microbat.mutation.trace.report;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,7 +57,6 @@ public class MutationExperimentMonitor extends BasicMutationExperimentMonitor im
 	@Override
 	public void reportEmpiralTrial(String fileName, List<EmpiricalTrial> trials0, AnalysisTestcaseParams params, SingleMutation mutation)
 			throws IOException {
-		System.out.println(mutation.getMutationBugId());
 		TrialRecorder recorder = null;
 		if (fileName == null) {
 			recorder = new TrialRecorder();
