@@ -47,4 +47,11 @@ public class MutationTrace {
 	public String getTraceExecFile() {
 		return trace.getExecPath();
 	}
+
+	public boolean isValid() {
+		if (trace == null || trace.getTrace() == null || trace.getTrace().size() < 1) {
+			return false;
+		}
+		return isKill && !isTooLong;
+	}
 }

@@ -32,4 +32,8 @@ public class TraceExecutionInfo {
 	public String getPrecheckInfoPath() {
 		return precheckInfoPath;
 	}
+	
+	public void setTrace(Trace trace) {
+		this.trace = trace;
+	}
 }

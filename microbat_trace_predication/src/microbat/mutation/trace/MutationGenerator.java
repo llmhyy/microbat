@@ -20,6 +20,7 @@ import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.PreCheckInformation;
 import microbat.codeanalysis.runtime.RunningInformation;
 import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
 import microbat.mutation.mutation.ControlDominatedMutationVisitor;
 import microbat.mutation.mutation.MutationType;
 import microbat.mutation.mutation.TraceMutationVisitor;
@@ -48,7 +49,14 @@ import sav.strategies.dto.ClassLocation;
 import sav.strategies.mutanbug.MutationResult;
 import sav.strategies.vm.JavaCompiler;
 import sav.strategies.vm.VMConfiguration;
+import tregression.SimulationFailException;
 import tregression.empiricalstudy.Regression;
+import tregression.empiricalstudy.RegressionUtil;
+import tregression.empiricalstudy.RootCauseFinder;
+import tregression.empiricalstudy.Simulator;
+import tregression.model.PairList;
+import tregression.separatesnapshots.DiffMatcher;
+import tregression.tracematch.ControlPathBasedTraceMatcher;
 
 public class MutationGenerator {
 	
@@ -171,15 +179,113 @@ public class MutationGenerator {
 			}
 			try {
 				MutationTrace muTrace = generateMutationTrace(correctTrace.getTrace().getAppJavaClassPath(), params, mutation);
+				ICompilationUnit iunit = JavaUtil.findNonCacheICompilationUnitInProject(mutation.getMutatedClass(),
+						params.getProjectName());
+				String orgFilePath = IResourceUtils.getAbsolutePathOsStr(iunit.getPath());
+				String mutationFilePath = mutation.getFile().getAbsolutePath();
+				if (muTrace != null && muTrace.isValid()) {
+					checkRootCause(mutation, orgFilePath, mutationFilePath, muTrace.getTraceExecInfo(), correctTrace, params, monitor);
+				}
 				monitor.reportMutationCase(params, correctTrace, muTrace, mutation);
 			} catch (Exception e) {
 				e.printStackTrace();
+			} finally {
 				recoverOrgClassFile(params);
 			}
 		}
 		
 		System.out.println("===========all mutation is done==================");
 		return false;
+	}
+	
+	private void checkRootCause(SingleMutation mutation, String orgFilePath, String mutationFilePath,
+			TraceExecutionInfo mutationTraceInfo, TraceExecutionInfo correctTraceInfo, AnalysisTestcaseParams params,
+			IMutationExperimentMonitor monitor) throws SimulationFailException {
+		AppJavaClassPath testCaseConfig = correctTraceInfo.getTrace().getAppJavaClassPath();
+		AppJavaClassPathWrapper.wrapAppClassPath(mutationTraceInfo.getTrace(), correctTraceInfo.getTrace(),
+				params.getBkClassFiles());
+		
+		List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
+		List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
+		Trace killingMutatantTrace = mutationTraceInfo.getTrace();
+		PreCheckInformation buggyPrecheck = mutationTraceInfo.getPrecheckInfo();
+		Trace correctTrace = correctTraceInfo.getTrace();
+		PreCheckInformation correctPrecheck = correctTraceInfo.getPrecheckInfo();
+
+		DiffMatcher diffMatcher = new MuDiffMatcher(mutation.getSourceFolder(), orgFilePath, mutationFilePath);
+		diffMatcher.matchCode();
+		ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
+		PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, diffMatcher); 
+		
+		int trialLimit = 10;
+		int trialNum = 0;
+		while (trialNum < trialLimit) {
+			trialNum++;
+		
+			Simulator simulator = new Simulator(params.getAnalysisParams().isUseSliceBreaker(), false,
+					params.getAnalysisParams().getBreakerLimit());
+			simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
+			RootCauseFinder rootcauseFinder = new RootCauseFinder();
+			rootcauseFinder.checkRootCause(simulator.getObservedFault(), killingMutatantTrace, correctTrace, pairList, diffMatcher);
+			TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, killingMutatantTrace, correctTrace);
+			
+			boolean includedClassChanged = false;
+			if (rootCause == null) {
+				System.out.println("[Search Lib Class] Cannot find the root cause, I am searching for library classes...");
+				
+				List<TraceNode> buggySteps = rootcauseFinder.getStopStepsOnBuggyTrace();
+				List<TraceNode> correctSteps = rootcauseFinder.getStopStepsOnCorrectTrace();
+				
+				List<String> newIncludedClassNames = new ArrayList<>();
+				List<String> newIncludedBuggyClassNames = RegressionUtil.identifyIncludedClassNames(buggySteps, 
+						buggyPrecheck, rootcauseFinder.getRegressionNodeList());
+				List<String> newIncludedCorrectClassNames = RegressionUtil.identifyIncludedClassNames(correctSteps, 
+						correctPrecheck, rootcauseFinder.getCorrectNodeList());
+				newIncludedClassNames.addAll(newIncludedBuggyClassNames);
+				newIncludedClassNames.addAll(newIncludedCorrectClassNames);
+				for(String name: newIncludedClassNames){
+					if(!includedClassNames.contains(name)){
+						includedClassNames.add(name);
+						includedClassChanged = true;
+					}
+				}
+			}
+			
+			if(!includedClassChanged) {
+				break;
+			} else {
+				killingMutatantTrace = generateMutatedTrace(params, mutation, testCaseConfig, buggyPrecheck,
+						includedClassNames, excludedClassNames);
+				correctTrace = generateCorrectTrace(params, testCaseConfig, correctPrecheck, includedClassNames,
+						excludedClassNames);
+				killingMutatantTrace.setAppJavaClassPath(mutationTraceInfo.getTrace().getAppJavaClassPath());
+				correctTrace.setAppJavaClassPath(correctTraceInfo.getTrace().getAppJavaClassPath());
+			}
+		}
+		mutationTraceInfo.setTrace(killingMutatantTrace);
+		correctTraceInfo.setTrace(correctTrace);
+	}
+	
+	private Trace generateMutatedTrace(AnalysisTestcaseParams params, SingleMutation mutation, AppJavaClassPath testcaseConfig,
+			PreCheckInformation buggyPrecheck, List<String> includedClassNames, List<String> excludedClassNames) {
+		String traceDir = mutation.getMutationOutputFolder();
+		params.getBkClassFiles().restoreMutatedClassFile();
+		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, traceDir, "bug",
+				includedClassNames, excludedClassNames);
+		executor.setTimeout(params.getAnalysisParams().getExecutionTimeout());
+		RunningInformation runningInfo = executor.execute(buggyPrecheck);
+		return runningInfo.getTrace();
+	}
+	
+	private Trace generateCorrectTrace(AnalysisTestcaseParams params, AppJavaClassPath testcaseConfig,
+			PreCheckInformation correctPrecheck, List<String> includedClassNames, List<String> excludedClassNames) {
+		String outputFolder = params.getAnalysisOutputFolder();
+		params.getBkClassFiles().restoreOrgClassFile();
+		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, outputFolder, "fix",
+				includedClassNames, excludedClassNames);
+		executor.setTimeout(params.getAnalysisParams().getExecutionTimeout());
+		RunningInformation info = executor.execute(correctPrecheck);
+		return info.getTrace();
 	}
 	
 	private List<ClassLocation> getAllExecutedLocations(Trace fixTrace) {

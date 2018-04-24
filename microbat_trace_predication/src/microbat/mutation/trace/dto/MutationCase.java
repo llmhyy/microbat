@@ -203,7 +203,9 @@ public class MutationCase {
 			List<CSVRecord> records = getRecords(targetProject, mutationOutputSpace);
 			List<String> bugIds = new ArrayList<>();
 			for (CSVRecord record : records) {
-				bugIds.add(record.get(Column.MUTATION_BUG_ID));
+				if (Boolean.valueOf(record.get(Column.IS_VALID))) {
+					bugIds.add(record.get(Column.MUTATION_BUG_ID));
+				}
 			}
 			return bugIds;
 		} catch (IOException e) {
