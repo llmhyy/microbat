@@ -10,11 +10,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
 
-import microbat.instrumentation.instr.SystemClassTransformer;
 import microbat.instrumentation.instr.TestRunnerTranformer;
 
 public class Premain {
-	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent.jar";
+	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent_v01.jar";
 	private static final String SAV_JAR = "sav.commons.simplified.jar";
 
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
@@ -91,9 +90,11 @@ public class Premain {
 	private static List<JarFile> getJarFiles(String... jarNames) throws Exception {
 		File tempFolder = AgentUtils.createTempFolder("microbat");
 		List<JarFile> jars = new ArrayList<>();
+		
+		boolean isUptodate = checkInstrumentatorVersion(tempFolder.getAbsolutePath());
 		for (String jarName : jarNames) {
 			File file = new File(tempFolder.getAbsolutePath(), jarName);
-			if (AgentUtils.existIn(file.getName(), INSTRUMENTATION_STANTDALONE_JAR, SAV_JAR) || !file.exists()) {
+			if ((!isUptodate && AgentUtils.existIn(file.getName(), INSTRUMENTATION_STANTDALONE_JAR, SAV_JAR)) || !file.exists()) {
 				try {
 					String jarResourcePath = "lib/" + jarName;
 					boolean success = extractJar(jarResourcePath, file.getAbsolutePath());
@@ -117,6 +118,11 @@ public class Premain {
 		return jars;
 	}
 	
+	private static boolean checkInstrumentatorVersion(String tempFolder) {
+		File file = new File(tempFolder, INSTRUMENTATION_STANTDALONE_JAR);
+		return file.exists();
+	}
+
 	public static boolean extractJar(String jarResourcePath, String filePath) throws IOException {
 		final InputStream inputJarStream = Premain.class.getClassLoader().getResourceAsStream(jarResourcePath);
 		if (inputJarStream == null) {
