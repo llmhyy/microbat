@@ -1,6 +1,7 @@
 package microbat.mutation.trace;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -50,10 +51,15 @@ import sav.strategies.mutanbug.MutationResult;
 import sav.strategies.vm.JavaCompiler;
 import sav.strategies.vm.VMConfiguration;
 import tregression.SimulationFailException;
+import tregression.empiricalstudy.DeadEndCSVWriter;
+import tregression.empiricalstudy.DeadEndRecord;
+import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.Regression;
 import tregression.empiricalstudy.RegressionUtil;
 import tregression.empiricalstudy.RootCauseFinder;
 import tregression.empiricalstudy.Simulator;
+import tregression.empiricalstudy.solutionpattern.PatternIdentifier;
+import tregression.empiricalstudy.training.DED;
 import tregression.model.PairList;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.tracematch.ControlPathBasedTraceMatcher;
@@ -262,6 +268,33 @@ public class MutationGenerator {
 				correctTrace.setAppJavaClassPath(correctTraceInfo.getTrace().getAppJavaClassPath());
 			}
 		}
+		
+		//TODO
+		Simulator simulator = new Simulator(false, false, 0);
+		simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
+		List<EmpiricalTrial> trials = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
+		for (EmpiricalTrial t : trials) {
+			t.setBuggyTrace(killingMutatantTrace);
+			t.setFixedTrace(correctTrace);
+			t.setPairList(pairList);
+			t.setDiffMatcher(diffMatcher);
+			
+			PatternIdentifier identifier = new PatternIdentifier();
+			identifier.identifyPattern(t);
+		}
+		
+		if(!trials.isEmpty()) {
+			EmpiricalTrial t = trials.get(0);
+			for(DeadEndRecord record: t.getDeadEndRecordList()) {
+				DED datas = record.getTransformedData(t.getBuggyTrace());
+				try {
+					new DeadEndCSVWriter().export(datas.getAllData(), params.getProjectName(), mutation.getMutationBugId());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		mutationTraceInfo.setTrace(killingMutatantTrace);
 		correctTraceInfo.setTrace(correctTrace);
 	}
