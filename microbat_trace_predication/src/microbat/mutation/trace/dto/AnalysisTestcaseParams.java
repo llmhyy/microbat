@@ -95,4 +95,10 @@ public class AnalysisTestcaseParams {
 	public void setProjectFolder(String projectFolder) {
 		this.projectFolder = projectFolder;
 	}
+	
+	public void recoverOrgMutatedClassFile() {
+		if (bkClassFiles != null) {
+			bkClassFiles.restoreOrgClassFile();
+		}
+	}
 }

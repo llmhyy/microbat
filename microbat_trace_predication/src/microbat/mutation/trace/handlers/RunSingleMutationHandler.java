@@ -13,9 +13,9 @@ import org.eclipse.core.runtime.jobs.Job;
 import microbat.model.trace.Trace;
 import microbat.mutation.trace.MuDiffMatcher;
 import microbat.mutation.trace.MutationEvaluator;
-import microbat.mutation.trace.MutationExperimentator.MutationExecutionResult;
 import microbat.mutation.trace.dto.AnalysisParams;
 import microbat.mutation.trace.dto.MutationCase;
+import microbat.mutation.trace.dto.MutationExecutionResult;
 import microbat.mutation.trace.dto.SingleMutation;
 import microbat.mutation.trace.preference.MutationRegressionPreference;
 import microbat.mutation.trace.preference.MutationRegressionSettings;
@@ -24,7 +24,6 @@ import microbat.util.IProjectUtils;
 import microbat.util.IResourceUtils;
 import microbat.util.JavaUtil;
 import sav.common.core.utils.ClassUtils;
-import sav.common.core.utils.FileUtils;
 import tregression.model.PairList;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.tracematch.ControlPathBasedTraceMatcher;
@@ -62,7 +61,17 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 		System.out.println(result.getTrial());
 		
 		/* init path for diffMatcher */
-		String targetProject = settings.getTargetProject();
+		MuDiffMatcher diffMatcher = initDiffMatcher(mutationCase);
+		
+		Visualizer visualizer = new Visualizer();
+		Trace buggyTrace = result.getBugTrace();
+		Trace correctTrace = result.getCorrectTrace();
+		PairList pairList = buildPairList(correctTrace, buggyTrace, diffMatcher);
+		visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
+	}
+
+	public static MuDiffMatcher initDiffMatcher(MutationCase mutationCase) {
+		String targetProject = mutationCase.getTestcaseParams().getProjectName();
 		String orgPath = IResourceUtils.getProjectPath(targetProject);
 		SingleMutation mutation = mutationCase.getMutation();
 		String srcFolder = mutation.getSourceFolder();
@@ -75,15 +84,10 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 		diffMatcher.setFixPath(orgPath);
 		diffMatcher.setTestFolderName(testFolder);
 		diffMatcher.matchCode();
-		
-		Visualizer visualizer = new Visualizer();
-		Trace buggyTrace = result.getBugTrace();
-		Trace correctTrace = result.getCorrectTrace();
-		PairList pairList = buildPairList(correctTrace, buggyTrace, diffMatcher);
-		visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
+		return diffMatcher;
 	}
 	
-	private PairList buildPairList(Trace correctTrace, Trace buggyTrace, DiffMatcher diffMatcher) {
+	public static PairList buildPairList(Trace correctTrace, Trace buggyTrace, DiffMatcher diffMatcher) {
 		/* PairList */
 		System.out.println("start matching trace..., buggy trace length: " + buggyTrace.size()
 				+ ", correct trace length: " + correctTrace.size());

@@ -14,10 +14,10 @@ import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.PreCheckInformation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
-import microbat.mutation.trace.MutationExperimentator.MutationExecutionResult;
 import microbat.mutation.trace.dto.AnalysisTestcaseParams;
 import microbat.mutation.trace.dto.BackupClassFiles;
 import microbat.mutation.trace.dto.MutationCase;
+import microbat.mutation.trace.dto.MutationExecutionResult;
 import microbat.mutation.trace.dto.SingleMutation;
 import microbat.mutation.trace.dto.TraceExecutionInfo;
 import microbat.mutation.trace.report.IMutationExperimentMonitor;
@@ -40,7 +40,7 @@ import tregression.separatesnapshots.DiffMatcher;
 import tregression.tracematch.ControlPathBasedTraceMatcher;
 
 public class MutationEvaluator {
-	private ExecTraceFileReader execTraceReader = new ExecTraceFileReader();
+	protected ExecTraceFileReader execTraceReader = new ExecTraceFileReader();
 	
 	public MutationExecutionResult runSingleMutationTrial(MutationCase mutationCase, IMutationExperimentMonitor monitor) {
 		System.out.println("Start Mutation case: " + mutationCase.getMutation().getMutationBugId());
@@ -55,14 +55,14 @@ public class MutationEvaluator {
 		TraceExecutionInfo correctTrace = restoreTrace(mutationCase.getCorrectTraceExec(),
 				mutationCase.getCorrectPrecheckPath(), mutationCase.getTestcaseParams().getProjectName(),
 				MuRegressionUtils.createProjectClassPath(params), false);
-		result.correctTrace = correctTrace.getTrace();
+		result.setCorrectTrace(correctTrace.getTrace());
 		
 		TraceExecutionInfo mutationTrace = restoreTrace(mutationCase.getBugTraceExec(),
 				mutationCase.getBugPrecheckPath(), mutationCase.getTestcaseParams().getProjectName(),
 				MuRegressionUtils.createProjectClassPath(params), true);
 		MuRegressionUtils.fillMuBkpJavaFilePath(mutationTrace.getTrace(), mutation.getMutationJavaFile(),
 				mutation.getMutatedClass());
-		result.bugTrace = mutationTrace.getTrace();
+		result.setBugTrace(mutationTrace.getTrace());
 
 		AppJavaClassPathWrapper.wrapAppClassPath(mutationTrace.getTrace(), correctTrace.getTrace(), params.getBkClassFiles());
 		List<EmpiricalTrial> trials = Collections.emptyList();
@@ -110,7 +110,7 @@ public class MutationEvaluator {
 				System.out.println("bug Not found!");
 			}
 			
-			result.isValid = foundRootCause;
+			result.setValid(foundRootCause);
 		} catch (Throwable e) {
 			System.err.println("test case has exception when generating trace:");
 			e.printStackTrace();
@@ -204,7 +204,7 @@ public class MutationEvaluator {
 		}
 	}
 
-	private TraceExecutionInfo restoreTrace(String execPath, String precheckPath, String projectName,
+	protected TraceExecutionInfo restoreTrace(String execPath, String precheckPath, String projectName,
 			AppJavaClassPath appJavaClassPath, boolean isMutationTrace) {
 		Trace trace = execTraceReader.read(execPath);
 		PreCheckInformation precheckInfo = execTraceReader.readPrecheck(precheckPath);

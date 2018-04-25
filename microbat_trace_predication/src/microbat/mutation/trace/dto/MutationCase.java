@@ -159,45 +159,64 @@ public class MutationCase {
 		return new StringBuilder(parent).append(relativePath).toString();
 	}
 
-	public static MutationCase load(String targetProject, String muBugId, String mutationOutputSpace, AnalysisParams analysisParams,
-			String projectFolder) throws IOException {
+	public static MutationCase load(String targetProject, String muBugId, String mutationOutputSpace,
+			AnalysisParams analysisParams, String projectFolder) throws IOException {
 		List<CSVRecord> records = getRecords(targetProject, mutationOutputSpace);
 		for (CSVRecord record : records) {
 			if (muBugId.equals(record.get(Column.MUTATION_BUG_ID))) {
-				AnalysisTestcaseParams testcaseParams = new AnalysisTestcaseParams(targetProject, 
-						record.get(Column.JUNIT_CLASS_NAME), record.get(Column.TEST_METHOD), analysisParams, projectFolder);
-				SingleMutation mutation = new SingleMutation();
-				mutation.setMutatedClass(record.get(Column.MUTATED_CLASS));
-				mutation.setLine(getInteger(record, Column.LINE));
-				String analysisOutputFolder = testcaseParams.getAnalysisOutputFolder();
-				mutation.setMutatedJFile(new File(getAbsolutePath(analysisOutputFolder, record.get(Column.MUTATED_JFILE_RELATIVE_PATH))));
-				mutation.setMutationType(record.get(Column.MUTATION_TYPE));
-				mutation.setSourceFolder(getAbsolutePath(testcaseParams.getProjectFolder(), record.get(Column.SOURCE_FOLDER)));
-				mutation.setMutationBugId(muBugId);
-				MutationCase mutationCase = new MutationCase(testcaseParams, mutation);
-				mutationCase.correctTraceExec = getAbsolutePath(analysisOutputFolder, record.get(Column.CORRECT_EXEC_RELATIVE_PATH));
-				mutationCase.correctPrecheckPath = getAbsolutePath(analysisOutputFolder, record.get(Column.CORRECT_PRECHECK_RELATIVE_PATH));
-				mutationCase.bugTraceExec = getAbsolutePath(analysisOutputFolder, record.get(Column.BUG_EXEC_RELATIVE_PATH));
-				mutationCase.bugPrecheckPath = getAbsolutePath(analysisOutputFolder, record.get(Column.BUG_PRECHECK_RELATIVE_PATH));
-				mutationCase.isValid = Boolean.valueOf(record.get(Column.IS_VALID));
-				mutationCase.error = record.get(Column.ERROR);
-				
-				/* backupClassFile */
-				String classFileName = ClassUtils.getSimpleName(mutation.getMutatedClass()) + ".class";
-				IJavaProject project = JavaCore.create(JavaUtil.getSpecificJavaProjectInWorkspace(targetProject));
-				BackupClassFiles backupClassFiles = new BackupClassFiles(
-						ClassUtils.getClassFilePath(IProjectUtils.getTargetFolder(project), mutation.getMutatedClass()),
-						FileUtils.getFilePath(testcaseParams.getAnalysisOutputFolder(), classFileName),
-						FileUtils.getFilePath(mutation.getMutationOutputFolder(), classFileName));
-				testcaseParams.setBkClassFiles(backupClassFiles);
-				return mutationCase;
+				return toMutationCase(targetProject, analysisParams, projectFolder, record);
 			}
 		}
 		return null;
 	}
+	
+	public static List<MutationCase> loadAllMutationCases(String targetProject,
+			String mutationOutputSpace, AnalysisParams analysisParams, String projectFolder) throws IOException {
+		List<CSVRecord> records = getRecords(targetProject, mutationOutputSpace);
+		List<MutationCase> result = new ArrayList<>(records.size());
+		for (CSVRecord record : records) {
+			result.add(toMutationCase(targetProject, analysisParams, projectFolder, record));
+		}
+		return result;
+	}
+
+	private static MutationCase toMutationCase(String targetProject, AnalysisParams analysisParams,
+			String projectFolder, CSVRecord record) {
+		AnalysisTestcaseParams testcaseParams = new AnalysisTestcaseParams(targetProject, 
+				record.get(Column.JUNIT_CLASS_NAME), record.get(Column.TEST_METHOD), analysisParams, projectFolder);
+		SingleMutation mutation = new SingleMutation();
+		mutation.setMutatedClass(record.get(Column.MUTATED_CLASS));
+		mutation.setLine(getInteger(record, Column.LINE));
+		String analysisOutputFolder = testcaseParams.getAnalysisOutputFolder();
+		mutation.setMutatedJFile(new File(getAbsolutePath(analysisOutputFolder, record.get(Column.MUTATED_JFILE_RELATIVE_PATH))));
+		mutation.setMutationType(record.get(Column.MUTATION_TYPE));
+		mutation.setSourceFolder(getAbsolutePath(testcaseParams.getProjectFolder(), record.get(Column.SOURCE_FOLDER)));
+		mutation.setMutationBugId(record.get(Column.MUTATION_BUG_ID));
+		MutationCase mutationCase = new MutationCase(testcaseParams, mutation);
+		mutationCase.correctTraceExec = getAbsolutePath(analysisOutputFolder, record.get(Column.CORRECT_EXEC_RELATIVE_PATH));
+		mutationCase.correctPrecheckPath = getAbsolutePath(analysisOutputFolder, record.get(Column.CORRECT_PRECHECK_RELATIVE_PATH));
+		mutationCase.bugTraceExec = getAbsolutePath(analysisOutputFolder, record.get(Column.BUG_EXEC_RELATIVE_PATH));
+		mutationCase.bugPrecheckPath = getAbsolutePath(analysisOutputFolder, record.get(Column.BUG_PRECHECK_RELATIVE_PATH));
+		mutationCase.isValid = Boolean.valueOf(record.get(Column.IS_VALID));
+		mutationCase.error = record.get(Column.ERROR);
+		
+		/* backupClassFile */
+		String classFileName = ClassUtils.getSimpleName(mutation.getMutatedClass()) + ".class";
+		IJavaProject project = JavaCore.create(JavaUtil.getSpecificJavaProjectInWorkspace(targetProject));
+		BackupClassFiles backupClassFiles = new BackupClassFiles(
+				ClassUtils.getClassFilePath(IProjectUtils.getTargetFolder(project), mutation.getMutatedClass()),
+				FileUtils.getFilePath(testcaseParams.getAnalysisOutputFolder(), classFileName),
+				FileUtils.getFilePath(mutation.getMutationOutputFolder(), classFileName));
+		testcaseParams.setBkClassFiles(backupClassFiles);
+		return mutationCase;
+	}
 
 	public static List<CSVRecord> getRecords(String targetProject, String mutationOutputSpace) throws IOException {
-		return getRecords(MuRegressionUtils.getMutationCaseFilePath(targetProject, mutationOutputSpace));
+		String mutationCasePath = MuRegressionUtils.getValidMutationCaseFilePath(targetProject, mutationOutputSpace);
+		if (!new File(mutationCasePath).exists()) {
+			mutationCasePath = MuRegressionUtils.getMutationCaseFilePath(targetProject, mutationOutputSpace);
+		}
+		return getRecords(mutationCasePath);
 	}
 	
 	public static List<CSVRecord> getRecords(String filePath) throws IOException {

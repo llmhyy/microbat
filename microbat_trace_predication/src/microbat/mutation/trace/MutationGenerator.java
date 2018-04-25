@@ -107,11 +107,12 @@ public class MutationGenerator {
 							testSourceFolder = IResourceUtils.getSourceFolderPath(tcParams.getProjectName(), className);
 						}
 						tcParams.setTestSourceFolder(testSourceFolder);
+//						collectTestcases(tcParams);
 						TraceExecutionInfo correctTrace = executeTestcase(tcParams);
 						runSingleTestcase(correctTrace, tcParams, monitor);
 					} catch (Throwable e) {
 						e.printStackTrace();
-						recoverOrgClassFile(tcParams);
+						tcParams.recoverOrgMutatedClassFile();
 					}
 				}
 			}
@@ -123,11 +124,8 @@ public class MutationGenerator {
 		System.out.println("Finish evaluation all!");
 	}
 	
-	private void recoverOrgClassFile(AnalysisTestcaseParams params) {
-		BackupClassFiles bkClassFiles = params.getBkClassFiles();
-		if (bkClassFiles != null) {
-			bkClassFiles.restoreOrgClassFile();
-		}
+	private void collectTestcases(AnalysisTestcaseParams tcParams) {
+		FileUtils.appendFile("/Users/lylytran/Projects/jfreechart-tcs.txt", tcParams.getTestcaseName() + "\n");
 	}
 	
 	public TraceExecutionInfo executeTestcase(AnalysisTestcaseParams params) {
@@ -195,7 +193,7 @@ public class MutationGenerator {
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
-				recoverOrgClassFile(params);
+				params.recoverOrgMutatedClassFile();
 			}
 		}
 		
@@ -276,6 +274,12 @@ public class MutationGenerator {
 		if (!foundRootCause) {
 			return;
 		}
+		runSimulator(mutation, params, killingMutatantTrace, correctTrace, diffMatcher, pairList);
+		
+	}
+
+	public void runSimulator(SingleMutation mutation, AnalysisTestcaseParams params, Trace killingMutatantTrace,
+			Trace correctTrace, DiffMatcher diffMatcher, PairList pairList) throws SimulationFailException {
 		//TODO
 		Simulator simulator = new Simulator(false, false, 0);
 		simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
@@ -301,7 +305,6 @@ public class MutationGenerator {
 				}
 			}
 		}
-		
 	}
 	
 	private Trace generateMutatedTrace(AnalysisTestcaseParams params, SingleMutation mutation, AppJavaClassPath testcaseConfig,
@@ -518,22 +521,5 @@ public class MutationGenerator {
 		}
 	}
 
-	public static class MutationExecutionResult {
-		Trace correctTrace;
-		Trace bugTrace;
-		boolean isLoopEffective;
-
-		public Trace getCorrectTrace() {
-			return correctTrace;
-		}
-
-		public Trace getBugTrace() {
-			return bugTrace;
-		}
-
-		public boolean isLoopEffective() {
-			return isLoopEffective;
-		}
-
-	}
+	
 }

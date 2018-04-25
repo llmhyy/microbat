@@ -28,6 +28,11 @@
             id="microbat_mutation_trace.commands.evaluate_mutation_trace"
             name="Evaluate Mutation Regression">
       </command>
+      <command
+            categoryId="microbat_mutation_trace.commands.category"
+            id="microbat_mutation_trace.commands.regenerate_csv"
+            name="Regenerate csv files">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -42,6 +47,10 @@
       <handler
             class="microbat.mutation.trace.handlers.EvaluateMutationRegressionHandler"
             commandId="microbat_mutation_trace.commands.evaluate_mutation_trace">
+      </handler>
+      <handler
+            class="microbat.mutation.trace.handlers.RegenerateCsvFilesHandler"
+            commandId="microbat_mutation_trace.commands.regenerate_csv">
       </handler>
    </extension>
    <extension
@@ -74,6 +83,10 @@
              <command
                    commandId="microbat_mutation_trace.commands.singleRun"
                    id="microbat_mutation_trace.menus.singleRun">
+             </command>
+             <command
+                   commandId="microbat_mutation_trace.commands.regenerate_csv"
+                   id="microbat_mutation_trace.menus.regenerate_csv">
              </command>
          </menu>
       </menuContribution>

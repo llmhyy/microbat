@@ -7,10 +7,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 import microbat.agent.ExecTraceFileReader;
 import microbat.model.trace.Trace;
-import microbat.mutation.trace.MutationGenerator.MutationExecutionResult;
 import microbat.mutation.trace.dto.AnalysisParams;
 import microbat.mutation.trace.dto.AnalysisTestcaseParams;
 import microbat.mutation.trace.dto.MutationCase;
+import microbat.mutation.trace.dto.MutationExecutionResult;
 import microbat.mutation.trace.dto.SingleMutation;
 import microbat.mutation.trace.preference.MutationRegressionPreference;
 import microbat.mutation.trace.preference.MutationRegressionSettings;

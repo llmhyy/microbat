@@ -75,6 +75,10 @@ public class MuRegressionUtils {
 		return FileUtils.getFilePath(mutationOutputSpace, "mutation", projectName, "mutationCases.csv");
 	}
 	
+	public static String getValidMutationCaseFilePath(String projectName, String mutationOutputSpace) {
+		return FileUtils.getFilePath(mutationOutputSpace, "mutation", projectName, "validMutationCases.csv");
+	}
+	
 	public static String getAnalysisOutputFolder(String mutationOutputSpace, String projectName, String junitClassName,
 			String testMethod) {
 		return FileUtils.getFilePath(mutationOutputSpace, "mutation", projectName,
