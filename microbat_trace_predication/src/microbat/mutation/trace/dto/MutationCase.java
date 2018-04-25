@@ -85,19 +85,24 @@ public class MutationCase {
 
 	public void setMutationTrace(MutationTrace trace) {
 		this.isValid = true;
-		if (trace == null || trace.getTrace() == null || trace.getTrace().size() < 1) {
+		if (trace == null) {
 			this.isValid = false;
 			this.error = ERROR_EMTPY_TRACE;
 			return;
 		}
-		this.bugTraceExec = trace.getTraceExecFile();
-		this.bugPrecheckPath = trace.getTraceExecInfo().getPrecheckInfoPath();
+		if (trace.getTrace() != null) {
+			this.bugTraceExec = trace.getTraceExecFile();
+			this.bugPrecheckPath = trace.getTraceExecInfo().getPrecheckInfoPath();
+		}
 		if (trace.isTimeOut()) {
 			this.isValid = false;
 			this.error = ERROR_TIMEOUT;
 		} else if (trace.isTooLong()) {
 			this.isValid = false;
 			this.error = ERROR_TOO_LONG;
+		} else if (trace.getTrace() == null || trace.getTrace().size() < 1) {
+			this.isValid = false;
+			this.error = ERROR_EMTPY_TRACE;
 		}
 	}
 
