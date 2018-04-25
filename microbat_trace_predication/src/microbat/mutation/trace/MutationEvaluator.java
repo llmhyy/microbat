@@ -52,11 +52,13 @@ public class MutationEvaluator {
 		AnalysisTestcaseParams params = mutationCase.getTestcaseParams();
 		TraceExecutionInfo correctTrace = restoreTrace(mutationCase.getCorrectTraceExec(), 
 				mutationCase.getCorrectPrecheckPath(), mutationCase.getTestcaseParams().getProjectName(), MuRegressionUtils.createProjectClassPath(params));
+		correctTrace.getTrace().setSourceVersion(false);
 		MutationExecutionResult result = new MutationExecutionResult();
 		result.correctTrace = correctTrace.getTrace();
-		
 		TraceExecutionInfo mutationTrace = restoreTrace(mutationCase.getBugTraceExec(),
 				mutationCase.getBugPrecheckPath(), mutationCase.getTestcaseParams().getProjectName(), MuRegressionUtils.createProjectClassPath(params));
+		mutationTrace.getTrace().setSourceVersion(true);
+		result.bugTrace = mutationTrace.getTrace();
 		AppJavaClassPathWrapper.wrapAppClassPath(mutationTrace.getTrace(), correctTrace.getTrace(), params.getBkClassFiles());
 		List<EmpiricalTrial> trials = Collections.emptyList();
 		try {

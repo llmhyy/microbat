@@ -65,7 +65,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 		SingleMutation mutation = mutationCase.getMutation();
 		String srcFolder = mutation.getSourceFolder();
 		String testFolder = IResourceUtils.getRelativeSourceFolderPath(orgPath, targetProject, mutationCase.getTestcaseParams().getJunitClassName());
-		String orgJFilePath = ClassUtils.getJFilePath(FileUtils.getFilePath(orgPath, srcFolder), mutation.getMutatedClass());
+		String orgJFilePath = ClassUtils.getJFilePath(srcFolder, mutation.getMutatedClass());
 		String muJFilePath = mutation.getFile().getAbsolutePath();
 		
 		MuDiffMatcher diffMatcher = new MuDiffMatcher(srcFolder, orgJFilePath, muJFilePath);
