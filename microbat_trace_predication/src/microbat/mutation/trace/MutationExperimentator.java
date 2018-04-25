@@ -297,6 +297,7 @@ public class MutationExperimentator {
 			int[] breakLimits = new int[]{1, 3, 5};
 			
 			simulator.setUseSliceBreaker(true);
+			simulator.setAllowCacheCriticalConditionalStep(true);
 			List<EmpiricalTrial> returnTrials = new ArrayList<>();
 			for(int i=0; i<enableRandoms.length; i++){
 				for(int j=0; j<breakLimits.length; j++){
