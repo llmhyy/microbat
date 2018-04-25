@@ -654,6 +654,7 @@ public class MutationExperimentator {
 	public static class MutationExecutionResult {
 		Trace correctTrace;
 		Trace bugTrace;
+		private EmpiricalTrial trial;
 		boolean isLoopEffective;
 		boolean isValid;
 
@@ -671,6 +672,14 @@ public class MutationExperimentator {
 
 		public boolean isValid() {
 			return isValid;
+		}
+
+		public EmpiricalTrial getTrial() {
+			return trial;
+		}
+
+		public void setTrial(EmpiricalTrial trial) {
+			this.trial = trial;
 		}
 	}
 }

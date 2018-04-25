@@ -50,15 +50,20 @@ public class MutationEvaluator {
 			
 		SingleMutation mutation = mutationCase.getMutation();
 		AnalysisTestcaseParams params = mutationCase.getTestcaseParams();
-		TraceExecutionInfo correctTrace = restoreTrace(mutationCase.getCorrectTraceExec(), 
-				mutationCase.getCorrectPrecheckPath(), mutationCase.getTestcaseParams().getProjectName(), MuRegressionUtils.createProjectClassPath(params));
-		correctTrace.getTrace().setSourceVersion(false);
 		MutationExecutionResult result = new MutationExecutionResult();
+
+		TraceExecutionInfo correctTrace = restoreTrace(mutationCase.getCorrectTraceExec(),
+				mutationCase.getCorrectPrecheckPath(), mutationCase.getTestcaseParams().getProjectName(),
+				MuRegressionUtils.createProjectClassPath(params), false);
 		result.correctTrace = correctTrace.getTrace();
+		
 		TraceExecutionInfo mutationTrace = restoreTrace(mutationCase.getBugTraceExec(),
-				mutationCase.getBugPrecheckPath(), mutationCase.getTestcaseParams().getProjectName(), MuRegressionUtils.createProjectClassPath(params));
-		mutationTrace.getTrace().setSourceVersion(true);
+				mutationCase.getBugPrecheckPath(), mutationCase.getTestcaseParams().getProjectName(),
+				MuRegressionUtils.createProjectClassPath(params), true);
+		MuRegressionUtils.fillMuBkpJavaFilePath(mutationTrace.getTrace(), mutation.getMutationJavaFile(),
+				mutation.getMutatedClass());
 		result.bugTrace = mutationTrace.getTrace();
+
 		AppJavaClassPathWrapper.wrapAppClassPath(mutationTrace.getTrace(), correctTrace.getTrace(), params.getBkClassFiles());
 		List<EmpiricalTrial> trials = Collections.emptyList();
 		try {
@@ -73,6 +78,7 @@ public class MutationEvaluator {
 			boolean foundRootCause = checkResult.foundRootCause;
 			
 			EmpiricalTrial trial = trials.get(0);
+			result.setTrial(trial);
 			String backupJFile = orgFilePath.replace(".java", "_bk.java");
 			FileUtils.copyFile(orgFilePath, backupJFile, true);
 			try {
@@ -192,11 +198,13 @@ public class MutationEvaluator {
 		}
 	}
 
-	private TraceExecutionInfo restoreTrace(String execPath, String precheckPath, String projectName, AppJavaClassPath appJavaClassPath) {
+	private TraceExecutionInfo restoreTrace(String execPath, String precheckPath, String projectName,
+			AppJavaClassPath appJavaClassPath, boolean isMutationTrace) {
 		Trace trace = execTraceReader.read(execPath);
 		PreCheckInformation precheckInfo = execTraceReader.readPrecheck(precheckPath);
 		trace.setAppJavaClassPath(appJavaClassPath);
 		InstrumentationExecutor.appendMissingInfo(trace, appJavaClassPath);
+		trace.setSourceVersion(isMutationTrace);
 		return new TraceExecutionInfo(precheckInfo, trace, execPath, precheckPath);
 	}
 

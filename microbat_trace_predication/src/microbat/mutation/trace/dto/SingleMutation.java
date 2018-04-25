@@ -73,6 +73,10 @@ public class SingleMutation {
 	public File getFile() {
 		return mutatedJFile;
 	}
+	
+	public String getMutationJavaFile() {
+		return mutatedJFile.getAbsolutePath();
+	}
 
 	public void setMutatedJFile(File mutatedJFile) {
 		this.mutatedJFile = mutatedJFile;

@@ -59,6 +59,8 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 		MutationExperimentMonitor mutationMonitor = new MutationExperimentMonitor(monitor, settings.getTargetProject(), analysisParams);
 		MutationExecutionResult result = evaluator.runSingleMutationTrial(mutationCase, mutationMonitor);
 		
+		System.out.println(result.getTrial());
+		
 		/* init path for diffMatcher */
 		String targetProject = settings.getTargetProject();
 		String orgPath = IResourceUtils.getProjectPath(targetProject);
