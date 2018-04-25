@@ -73,12 +73,15 @@ public class DataOmissionInspector extends DetailInspector {
 //			}
 			
 			if(controlPoints.contains(node.getBreakPoint())){
-				List<TraceNode> allControlDominatees = node.findAllControlDominatees();
-				if(!contains(allControlDominatees, controlDominators)){
-					if(!isExecutedPotentialSeeds(node, seeds, end.getOrder())){
-						controlDominators.add(node);						
-					}
+				if(!isExecutedPotentialSeeds(node, seeds, end.getOrder())){
+					controlDominators.add(node);						
 				}
+//				List<TraceNode> allControlDominatees = node.findAllControlDominatees();
+//				if(!contains(allControlDominatees, controlDominators)){
+//					if(!isExecutedPotentialSeeds(node, seeds, end.getOrder())){
+//						controlDominators.add(node);						
+//					}
+//				}
 			}
 		}
 		return controlDominators;
