@@ -23,7 +23,7 @@ public class TraversingDistanceCalculator {
 
 	public Traverse calculateASTTravsingDistance(BreakPoint testPoint, BreakPoint avoidPoint) {
 		if(!testPoint.getMethodSign().equals(avoidPoint.getMethodSign())) {
-			return new Traverse(-1000, -1000, -1000);
+			return new Traverse(1000, 1000, 1000);
 		}
 		
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(testPoint.getDeclaringCompilationUnitName(), appPath);
