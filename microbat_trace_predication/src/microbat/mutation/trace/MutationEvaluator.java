@@ -79,30 +79,35 @@ public class MutationEvaluator {
 			
 			EmpiricalTrial trial = trials.get(0);
 			result.setTrial(trial);
-			String backupJFile = orgFilePath.replace(".java", "_bk.java");
-			FileUtils.copyFile(orgFilePath, backupJFile, true);
-			try {
-				FileUtils.copyFile(mutationFilePath, orgFilePath, true);
-				Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
-				Settings.compilationUnitMap.remove(mutation.getMutatedClass());
-				if(!trial.getDeadEndRecordList().isEmpty()){
-					Repository.clearCache();
-					DeadEndRecord record = trial.getDeadEndRecordList().get(0);
-					String muBugId = mutation.getMutationBugId();
-					DED datas = record.getTransformedData(trial.getBuggyTrace());
+			
+			if (foundRootCause) {
+				String backupJFile = orgFilePath.replace(".java", "_bk.java");
+				FileUtils.copyFile(orgFilePath, backupJFile, true);
+				try {
+					FileUtils.copyFile(mutationFilePath, orgFilePath, true);
+					Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
+					Settings.compilationUnitMap.remove(mutation.getMutatedClass());
+					if(!trial.getDeadEndRecordList().isEmpty()){
+						Repository.clearCache();
+						DeadEndRecord record = trial.getDeadEndRecordList().get(0);
+						String muBugId = mutation.getMutationBugId();
+						DED datas = record.getTransformedData(trial.getBuggyTrace());
 //						DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
-					setTestCase(datas, trial.getTestcase());						
+						setTestCase(datas, trial.getTestcase());						
 //						new DeadEndReporter().export(datas.getAllData(), params.getProjectName(), muBugId);
-					new DeadEndCSVWriter(params.getProjectOutputFolder()).export(datas.getAllData(), params.getProjectName(), muBugId);
+						new DeadEndCSVWriter(params.getProjectOutputFolder()).export(datas.getAllData(), params.getProjectName(), muBugId);
+					}
+				} catch (Throwable e) {
+					e.printStackTrace();
+				} finally {
+					FileUtils.copyFile(backupJFile, orgFilePath, true);
+					Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
+					Settings.compilationUnitMap.remove(mutation.getMutatedClass());
+					new File(backupJFile).delete();
+					recoverOrgClassFile(params);
 				}
-			} catch (Throwable e) {
-				e.printStackTrace();
-			} finally {
-				FileUtils.copyFile(backupJFile, orgFilePath, true);
-				Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
-				Settings.compilationUnitMap.remove(mutation.getMutatedClass());
-				new File(backupJFile).delete();
-				recoverOrgClassFile(params);
+			} else {
+				System.out.println("bug Not found!");
 			}
 			
 			result.isValid = foundRootCause;
