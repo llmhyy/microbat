@@ -10,14 +10,25 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
+import microbat.model.trace.Trace;
+import microbat.mutation.trace.MuDiffMatcher;
 import microbat.mutation.trace.MutationEvaluator;
+import microbat.mutation.trace.MutationExperimentator.MutationExecutionResult;
 import microbat.mutation.trace.dto.AnalysisParams;
 import microbat.mutation.trace.dto.MutationCase;
+import microbat.mutation.trace.dto.SingleMutation;
 import microbat.mutation.trace.preference.MutationRegressionPreference;
 import microbat.mutation.trace.preference.MutationRegressionSettings;
 import microbat.mutation.trace.report.MutationExperimentMonitor;
 import microbat.util.IProjectUtils;
+import microbat.util.IResourceUtils;
 import microbat.util.JavaUtil;
+import sav.common.core.utils.ClassUtils;
+import sav.common.core.utils.FileUtils;
+import tregression.model.PairList;
+import tregression.separatesnapshots.DiffMatcher;
+import tregression.tracematch.ControlPathBasedTraceMatcher;
+import tregression.views.Visualizer;
 
 public class RunSingleMutationHandler  extends AbstractHandler {
 
@@ -46,6 +57,41 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 				settings.getMutationOutputSpace(), analysisParams, projectFolder);
 		MutationEvaluator evaluator = new MutationEvaluator();
 		MutationExperimentMonitor mutationMonitor = new MutationExperimentMonitor(monitor, settings.getTargetProject(), analysisParams);
-		evaluator.runSingleMutationTrial(mutationCase, mutationMonitor);
+		MutationExecutionResult result = evaluator.runSingleMutationTrial(mutationCase, mutationMonitor);
+		
+		/* init path for diffMatcher */
+		String targetProject = settings.getTargetProject();
+		String orgPath = IResourceUtils.getProjectPath(targetProject);
+		SingleMutation mutation = mutationCase.getMutation();
+		String srcFolder = mutation.getSourceFolder();
+		String testFolder = IResourceUtils.getRelativeSourceFolderPath(orgPath, targetProject, mutationCase.getTestcaseParams().getJunitClassName());
+		String orgJFilePath = ClassUtils.getJFilePath(FileUtils.getFilePath(orgPath, srcFolder), mutation.getMutatedClass());
+		String muJFilePath = mutation.getFile().getAbsolutePath();
+		
+		MuDiffMatcher diffMatcher = new MuDiffMatcher(srcFolder, orgJFilePath, muJFilePath);
+		diffMatcher.setBuggyPath(orgPath);
+		diffMatcher.setFixPath(orgPath);
+		diffMatcher.setTestFolderName(testFolder);
+		diffMatcher.matchCode();
+		
+		Visualizer visualizer = new Visualizer();
+		Trace buggyTrace = result.getBugTrace();
+		Trace correctTrace = result.getCorrectTrace();
+		PairList pairList = buildPairList(correctTrace, buggyTrace, diffMatcher);
+		visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
+	}
+	
+	private PairList buildPairList(Trace correctTrace, Trace buggyTrace, DiffMatcher diffMatcher) {
+		/* PairList */
+		System.out.println("start matching trace..., buggy trace length: " + buggyTrace.size()
+				+ ", correct trace length: " + correctTrace.size());
+		long time1 = System.currentTimeMillis();
+
+		ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
+		PairList pairList = traceMatcher.matchTraceNodePair(buggyTrace, correctTrace, diffMatcher);
+		long time2 = System.currentTimeMillis();
+		int matchTime = (int) (time2 - time1);
+		System.out.println("finish matching trace, taking " + matchTime + "ms");
+		return pairList;
 	}
 }
