@@ -3,12 +3,14 @@
  */
 package microbat.mutation.trace.report;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.FileUtils;
 
 import microbat.mutation.mutation.MutationType;
 import microbat.mutation.trace.dto.AnalysisParams;
@@ -19,22 +21,22 @@ import microbat.mutation.trace.dto.MutationCase.Column;
  * @author LLT
  *
  */
-public class MutationCaseChecker implements IMutationCaseChecker {
-	private Set<String> testClasses = new HashSet<>();
+public class IncludeMutationCaseChecker implements IMutationCaseChecker {
 	private Set<String> testcaseNames = new HashSet<>();
 	
 	
-	public MutationCaseChecker(String targetProject, AnalysisParams analysisParams) {
-		
+	public IncludeMutationCaseChecker(String targetProject, AnalysisParams analysisParams) {
 		try {
-			List<CSVRecord> records = MutationCase.getRecords(targetProject, analysisParams.getMutationOutputSpace());
-			for (CSVRecord record : records) {
-				String testClass = record.get(Column.JUNIT_CLASS_NAME);
-				testClasses.add(testClass);
-				testcaseNames.add(getTestcaseName(testClass, record.get(Column.TEST_METHOD)));
+			File file;
+			if (analysisParams.getMutationOutputSpace().endsWith("another")) {
+				file = new File("/Users/lylytran/Projects/math-tcs2.txt");
+			} else {
+				file = new File("/Users/lylytran/Projects/math-tcs1.txt");
 			}
-			System.out.println("checker-testClasses: " + testClasses.size());
-			System.out.println(sav.common.core.utils.StringUtils.newLineJoin(testClasses));
+			List<?> lines = FileUtils.readLines(file);
+			for (Object line : lines) {
+				testcaseNames.add((String)line);
+			}
 			System.out.println("checker-testcaseNames: " + testcaseNames.size());
 			System.out.println(sav.common.core.utils.StringUtils.newLineJoin(testcaseNames));
 			System.out.println();
@@ -45,10 +47,6 @@ public class MutationCaseChecker implements IMutationCaseChecker {
 
 	@Override
 	public boolean accept(String testClass) {
-		boolean isInList = testClasses.contains(testClass);
-		if (isInList) {
-			System.out.println(String.format("Detect_testClass: %s", testClass));
-		}
 		return true;
 	}
 
@@ -59,7 +57,7 @@ public class MutationCaseChecker implements IMutationCaseChecker {
 		if (inList) {
 			System.out.println(String.format("Detect_testcase: %s", tc));
 		}
-		return !inList;
+		return inList;
 	}
 
 	private String getTestcaseName(String testClass, String testMethod) {
