@@ -87,6 +87,12 @@
                   tooltip="Generate Mutation Trace"
                   id="microbat_mutation_trace.toolbars.sampleCommand">
             </command>
+            <command
+                  commandId="microbat_mutation_trace.commands.singleRun"
+                  icon="icons/mutation.png"
+                  id="microbat_mutation_trace.toolbars.singleRun"
+                  style="push">
+            </command>
          </toolbar>
       </menuContribution>
    </extension>
