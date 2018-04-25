@@ -192,8 +192,12 @@ public class MutationCase {
 	}
 
 	public static List<CSVRecord> getRecords(String targetProject, String mutationOutputSpace) throws IOException {
+		return getRecords(MuRegressionUtils.getMutationCaseFilePath(targetProject, mutationOutputSpace));
+	}
+	
+	public static List<CSVRecord> getRecords(String filePath) throws IOException {
 		CSVFormat format = CSVFormat.EXCEL.withHeader(Column.allColumns());
-		String csvFilePath = MuRegressionUtils.getMutationCaseFilePath(targetProject, mutationOutputSpace);
+		String csvFilePath = filePath;
 		File csvFile = new File(csvFilePath);
 		if (!csvFile.exists()) {
 			return Collections.emptyList();
