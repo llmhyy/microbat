@@ -222,6 +222,7 @@ public class MutationGenerator {
 		ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
 		PairList pairList = traceMatcher.matchTraceNodePair(killingMutatantTrace, correctTrace, diffMatcher); 
 		
+		boolean foundRootCause = false;
 		int trialLimit = 10;
 		int trialNum = 0;
 		while (trialNum < trialLimit) {
@@ -233,7 +234,7 @@ public class MutationGenerator {
 			RootCauseFinder rootcauseFinder = new RootCauseFinder();
 			rootcauseFinder.checkRootCause(simulator.getObservedFault(), killingMutatantTrace, correctTrace, pairList, diffMatcher);
 			TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, killingMutatantTrace, correctTrace);
-			
+			foundRootCause = (rootCause != null);
 			boolean includedClassChanged = false;
 			if (rootCause == null) {
 				System.out.println("[Search Lib Class] Cannot find the root cause, I am searching for library classes...");
@@ -256,9 +257,11 @@ public class MutationGenerator {
 				}
 			}
 			
+			/* foundRootCause || (!foundRootCause && includedClassChanged)*/
 			if(!includedClassChanged) {
 				break;
 			} else {
+				/* !foundRootCause */
 				killingMutatantTrace = generateMutatedTrace(params, mutation, testCaseConfig, buggyPrecheck,
 						includedClassNames, excludedClassNames);
 				correctTrace = generateCorrectTrace(params, testCaseConfig, correctPrecheck, includedClassNames,
@@ -268,6 +271,11 @@ public class MutationGenerator {
 			}
 		}
 		
+		mutationTraceInfo.setTrace(killingMutatantTrace);
+		correctTraceInfo.setTrace(correctTrace);
+		if (!foundRootCause) {
+			return;
+		}
 		//TODO
 		Simulator simulator = new Simulator(false, false, 0);
 		simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
@@ -294,8 +302,6 @@ public class MutationGenerator {
 			}
 		}
 		
-		mutationTraceInfo.setTrace(killingMutatantTrace);
-		correctTraceInfo.setTrace(correctTrace);
 	}
 	
 	private Trace generateMutatedTrace(AnalysisTestcaseParams params, SingleMutation mutation, AppJavaClassPath testcaseConfig,
