@@ -29,6 +29,7 @@ import microbat.preference.MicrobatPreference;
 import microbat.util.JavaUtil;
 import microbat.util.MinimumASTNodeFinder;
 import sav.common.core.SavException;
+import sav.common.core.utils.ClassUtils;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.vm.VMConfiguration;
 import sav.strategies.vm.VMRunner;
@@ -209,6 +210,9 @@ public class InstrumentationExecutor {
 				//check AST completeness
 				CompilationUnit cu = JavaUtil.findCompilationUnitInProject(
 						node.getDeclaringCompilationUnitName(), appPath);
+				if (cu == null) {
+					continue;
+				}
 				MinimumASTNodeFinder finder = new MinimumASTNodeFinder(
 						node.getLineNumber(), cu);
 				cu.accept(finder);
@@ -238,13 +242,19 @@ public class InstrumentationExecutor {
 	
 	public static void attachFullPathInfo(BreakPoint point, AppJavaClassPath appClassPath, 
 			Map<String, String> classNameMap, Map<String, String> pathMap){
-		String relativePath = point.getDeclaringCompilationUnitName().replace(".", File.separator) + ".java";
+//		System.out.println("llt-test");
+		String relativePath = (point.getDeclaringCompilationUnitName() == null ? point.getClassCanonicalName()
+				: point.getDeclaringCompilationUnitName()).replace(".", File.separator) + ".java";
 		List<String> candidateSourceFolders = appClassPath.getAllSourceFolders();
 		for(String candidateSourceFolder: candidateSourceFolders){
-			String filePath = candidateSourceFolder + File.separator + relativePath;
-			if(new File(filePath).exists()){
-				point.setFullJavaFilePath(filePath);
+			File file = ClassUtils.getJavaFile(candidateSourceFolder, point.getClassCanonicalName());
+			if (file != null && file.exists()) {
+				point.setFullJavaFilePath(file.getAbsolutePath());
 			}
+//			String filePath = candidateSourceFolder + File.separator + relativePath;
+//			if(new File(filePath).exists()){
+//				point.setFullJavaFilePath(filePath);
+//			}
 		}
 		
 		//indicate the declaring compilation name is not correct
