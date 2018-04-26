@@ -299,7 +299,7 @@ public class MutationGenerator {
 			for(DeadEndRecord record: t.getDeadEndRecordList()) {
 				DED datas = record.getTransformedData(t.getBuggyTrace());
 				try {
-					new DeadEndCSVWriter().export(datas.getAllData(), params.getProjectName(), mutation.getMutationBugId());
+					new DeadEndCSVWriter("", null).export(datas.getAllData(), params.getProjectName(), mutation.getMutationBugId());
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

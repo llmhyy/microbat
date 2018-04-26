@@ -50,6 +50,11 @@ public class TraceTraversingDistanceCalculator {
 	}
 
 	private CommonParentInfo findCommonParent(TraceNode testNode, TraceNode occurNode) {
+		
+		if(testNode.equals(occurNode)){
+			return new CommonParentInfo(testNode.getInvocationParent(), testNode, testNode);
+		}
+		
 		List<TraceNode> testParents = findParentsIncludeItself(testNode);
 		List<TraceNode> occurParents = findParentsIncludeItself(occurNode);
 		
