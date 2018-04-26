@@ -1,11 +1,11 @@
 package microbat.recommendation.calculator;
 
-public class Traverse {
+public class ASTTraverse {
 	private int moveUps;
 	private int moveDowns;
 	private int moveRights;
 
-	public Traverse(int ups, int downs, int rights) {
+	public ASTTraverse(int ups, int downs, int rights) {
 		this.moveUps = ups;
 		this.moveDowns = downs;
 		this.moveRights = rights;

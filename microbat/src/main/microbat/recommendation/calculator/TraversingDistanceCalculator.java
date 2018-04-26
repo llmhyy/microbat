@@ -21,16 +21,16 @@ public class TraversingDistanceCalculator {
 		this.appPath = appPath;
 	}
 
-	public Traverse calculateASTTravsingDistance(BreakPoint testPoint, BreakPoint avoidPoint) {
+	public ASTTraverse calculateASTTravsingDistance(BreakPoint testPoint, BreakPoint avoidPoint) {
 		if(!testPoint.getMethodSign().equals(avoidPoint.getMethodSign())) {
-			return new Traverse(-1, -1, -1);
+			return new ASTTraverse(-1, -1, -1);
 		}
 		
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(testPoint.getDeclaringCompilationUnitName(), appPath);
 		ASTNode testNode = findSpecificNode(cu, testPoint);
 		ASTNode avoidNode = findSpecificNode(cu, avoidPoint);
 		
-		Traverse traverse = evaluateTraverse(testNode, avoidNode);
+		ASTTraverse traverse = evaluateTraverse(testNode, avoidNode);
 		return traverse;
 	}
 	
@@ -58,12 +58,12 @@ public class TraversingDistanceCalculator {
 		}
 	}
 	
-	private Traverse evaluateTraverse(ASTNode testNode, ASTNode avoidNode) {
+	private ASTTraverse evaluateTraverse(ASTNode testNode, ASTNode avoidNode) {
 		
 		ASTNode commonParent = findCommonParent(testNode, avoidNode);
 		if(commonParent.equals(testNode)) {
 			int depth = getDepth(avoidNode, commonParent);
-			return new Traverse(0, depth, 0);
+			return new ASTTraverse(0, depth, 0);
 		}
 		else {
 			int ups = getDepth(testNode, commonParent)-1;
@@ -80,7 +80,7 @@ public class TraversingDistanceCalculator {
 			
 			int rights = li2.count-li1.count;
 			
-			Traverse traverse = new Traverse(ups, downs, rights);
+			ASTTraverse traverse = new ASTTraverse(ups, downs, rights);
 			
 			return traverse;
 		}
