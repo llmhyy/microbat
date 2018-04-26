@@ -13,17 +13,17 @@ import microbat.util.JavaUtil;
 import microbat.util.MinimumASTNodeFinder;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class TraversingDistanceCalculator {
+public class ASTTraversingDistanceCalculator {
 	private AppJavaClassPath appPath;
 	
-	public TraversingDistanceCalculator(AppJavaClassPath appPath) {
+	public ASTTraversingDistanceCalculator(AppJavaClassPath appPath) {
 		super();
 		this.appPath = appPath;
 	}
 
 	public ASTTraverse calculateASTTravsingDistance(BreakPoint testPoint, BreakPoint avoidPoint) {
 		if(!testPoint.getMethodSign().equals(avoidPoint.getMethodSign())) {
-			return new ASTTraverse(-1, -1, -1);
+			return new ASTTraverse(-1000, -1000, -1000);
 		}
 		
 		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(testPoint.getDeclaringCompilationUnitName(), appPath);

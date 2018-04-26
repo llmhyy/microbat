@@ -81,8 +81,8 @@ public class VariableSimilarityCalculator {
 		int isSameType = aVar1.getType().equals(aVar2.getType()) ? 1 : 0;
 		int isSameName = aVar1.getName().equals(aVar2.getName()) ? 1 : 0;
 		
-		
-		return new VariableSimilarity(0, 0, 0, 0, 0, 0, isSameObject, isSameType, isSameName);
+//		return new VariableSimilarity(0, 0, 0, 0, 0, 0, isSameObject, isSameType, isSameName);
+		return new VariableSimilarity(0, 0, isSameObject, isSameType, isSameType, isSameName, 0, 0, 0);
 	}
 
 	private VariableSimilarity calculateLocalVarSimilarity(LocalVar lVar1, LocalVar lVar2) {
