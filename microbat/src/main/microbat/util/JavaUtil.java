@@ -62,7 +62,6 @@ import microbat.codeanalysis.runtime.herustic.HeuristicIgnoringFieldRule;
 import microbat.codeanalysis.runtime.jpda.expr.ExpressionParser;
 import microbat.codeanalysis.runtime.jpda.expr.ParseException;
 import microbat.model.trace.TraceNode;
-import sav.common.core.utils.ClassUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 @SuppressWarnings("restriction")
@@ -366,10 +365,9 @@ public class JavaUtil {
 				else{
 					boolean isFound = false;
 					for(String sourceFolder: appPath.getAllSourceFolders()){
-						File file = ClassUtils.getJavaFile(sourceFolder, qualifiedName);
-//						String fileName = sourceFolder + File.separator + qualifiedName.replace(".", File.separator) + ".java";
-						if(file != null && file.exists()){
-							cu = findCompiltionUnitBySourcePath(file.getAbsolutePath(), qualifiedName);
+						String fileName = sourceFolder + File.separator + qualifiedName.replace(".", File.separator) + ".java";
+						if(new File(fileName).exists()){
+							cu = findCompiltionUnitBySourcePath(fileName, qualifiedName);
 							isFound = true;
 							break;
 						}

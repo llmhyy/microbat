@@ -9,7 +9,6 @@
 package sav.common.core.utils;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,7 +66,8 @@ public class ClassUtils {
 						.toString();
 	}
 	
-	public static List<File> getCompiledClassFiles(String targetPath, String className) {
+	public static List<File> getCompiledClassFiles(String targetPath,
+			String className) {
 		int lastDotIdx = className.lastIndexOf(Constants.DOT);
 		String classSimpleName = className.substring(lastDotIdx + 1)
 									.split("$")[0];
@@ -192,40 +192,4 @@ public class ClassUtils {
 		}
 	}
 
-	public static File getJavaFile(String sourceFolder, String className) {
-		String filePath = getJFilePath(sourceFolder, getCompilationUnitForSimpleCase(className));
-		File file = new File(filePath);
-		if (!file.exists()) {
-			return getJavaFileForAnotherSeparateClass(sourceFolder, className);
-		}
-		return file;
-	}
-
-	/**
-	 * handle for the case that this class is not an inner class but defined in a same java file of
-	 * another public class 
-	 */
-	private static File getJavaFileForAnotherSeparateClass(String sourceFolder, String className) {
-		String packageFolder = ClassUtils.getPackageFolderPath(sourceFolder, className);
-		File pkgFolder = new File(packageFolder);
-		if (pkgFolder == null || !pkgFolder.isDirectory()) {
-			// something wrong
-			return null;
-		}
-		File[] allFiles = pkgFolder.listFiles();
-		String classDefinitionStr = "class " + ClassUtils.getSimpleName(className);
-		for (File file : allFiles) {
-			if (!file.getName().endsWith(".java")) {
-				continue;     
-			}
-			try {
-				if (FileUtils.readFileToString(file).contains(classDefinitionStr)) {
-					return file;
-				}
-			} catch (IOException e) {
-				// ignore
-			}
-		}
-		return null;
-	}
 }
