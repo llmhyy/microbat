@@ -79,6 +79,7 @@ public class ByteCodeParser{
 			Repository.clearCache();
 			JavaClass clazz = Repository.lookupClass(className);
 			clazz.accept(new DescendingVisitor(clazz, visitor));
+			
 			visitor.setJavaClass(clazz);
 		}
 		catch(Exception e){

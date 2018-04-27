@@ -14,6 +14,7 @@ import microbat.mutation.trace.dto.MutationTrace;
 import microbat.mutation.trace.dto.SingleMutation;
 import microbat.mutation.trace.dto.TraceExecutionInfo;
 import tregression.empiricalstudy.EmpiricalTrial;
+import tregression.empiricalstudy.MutationTrialRecorder;
 import tregression.empiricalstudy.TrialRecorder;
 import tregression.io.ExcelReporter;
 import tregression.model.Trial;
@@ -57,11 +58,11 @@ public class MutationExperimentMonitor extends BasicMutationExperimentMonitor im
 	@Override
 	public void reportEmpiralTrial(String fileName, List<EmpiricalTrial> trials0, AnalysisTestcaseParams params, SingleMutation mutation)
 			throws IOException {
-		TrialRecorder recorder = null;
+		MutationTrialRecorder recorder = null;
 		if (fileName == null) {
-			recorder = new TrialRecorder();
+			recorder = new MutationTrialRecorder();
 		} else {
-			recorder = new TrialRecorder(fileName, params.getProjectOutputFolder());
+			recorder = new MutationTrialRecorder(fileName, params.getProjectOutputFolder());
 		}
 		List<EmpiricalTrial> trials = new ArrayList<>(trials0.size());
 		for (EmpiricalTrial trial : trials0) {

@@ -43,7 +43,7 @@ public class EvaluateMutationRegressionHandler extends AbstractHandler {
 					e.printStackTrace();
 				}
 				System.out.println("Complete Mutation Simulator!");
-				return Status.OK_STATUS;
+				return Status.OK_STATUS; 
 			}
 
 		};

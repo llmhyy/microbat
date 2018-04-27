@@ -74,43 +74,53 @@ public class MutationEvaluator {
 			
 			CheckResult checkResult = checkRootCause(mutation, orgFilePath, mutationFilePath, mutationTrace, correctTrace,
 					params, monitor);
-			trials = checkResult.trials;
-			boolean foundRootCause = checkResult.foundRootCause;
-			
-			EmpiricalTrial trial = trials.get(0);
-			result.setTrial(trial);
-			
-			if (foundRootCause) {
-				String backupJFile = orgFilePath.replace(".java", "_bk.java");
-				FileUtils.copyFile(orgFilePath, backupJFile, true);
-				try {
-					FileUtils.copyFile(mutationFilePath, orgFilePath, true);
-					Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
-					Settings.compilationUnitMap.remove(mutation.getMutatedClass());
-					if(!trial.getDeadEndRecordList().isEmpty()){
-						Repository.clearCache();
-						DeadEndRecord record = trial.getDeadEndRecordList().get(0);
-						String muBugId = mutation.getMutationBugId();
-						DED datas = record.getTransformedData(trial.getBuggyTrace());
-//						DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
-						setTestCase(datas, trial.getTestcase());						
-//						new DeadEndReporter().export(datas.getAllData(), params.getProjectName(), muBugId);
-						new DeadEndCSVWriter(params.getProjectOutputFolder()).export(datas.getAllData(), params.getProjectName(), muBugId);
-					}
-				} catch (Throwable e) {
-					e.printStackTrace();
-				} finally {
-					FileUtils.copyFile(backupJFile, orgFilePath, true);
-					Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
-					Settings.compilationUnitMap.remove(mutation.getMutatedClass());
-					new File(backupJFile).delete();
-					recoverOrgClassFile(params);
-				}
-			} else {
-				System.out.println("bug Not found!");
+			if(checkResult==null){
+				return null;
 			}
 			
-			result.setValid(foundRootCause);
+			trials = checkResult.trials;
+			boolean foundRootCause = checkResult.foundRootCause;
+			System.out.println("foundRootCause:" + foundRootCause);
+			if(!trials.isEmpty()){
+				EmpiricalTrial trial = trials.get(0);
+				result.setTrial(trial);	
+				
+				if (foundRootCause) {
+					String backupJFile = orgFilePath.replace(".java", "_bk.java");
+					FileUtils.copyFile(orgFilePath, backupJFile, true);
+					try {
+						FileUtils.copyFile(mutationFilePath, orgFilePath, true);
+						Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
+						Settings.compilationUnitMap.remove(mutation.getMutatedClass());
+						if(!trial.getDeadEndRecordList().isEmpty()){
+							Repository.clearCache();
+							DeadEndRecord record = trial.getDeadEndRecordList().get(0);
+							String muBugId = mutation.getMutationBugId();
+							DED datas = record.getTransformedData(trial.getBuggyTrace());
+//							DED datas = new TrainingDataTransfer().transfer(record, trial.getBuggyTrace());
+							setTestCase(datas, trial.getTestcase());						
+//							new DeadEndReporter().export(datas.getAllData(), params.getProjectName(), muBugId);
+							new DeadEndCSVWriter(params.getProjectOutputFolder()).export(datas.getAllData(), params.getProjectName(), muBugId);
+						}
+					} catch (Throwable e) {
+						e.printStackTrace();
+					} finally {
+						FileUtils.copyFile(backupJFile, orgFilePath, true);
+						Settings.iCompilationUnitMap.remove(mutation.getMutatedClass());
+						Settings.compilationUnitMap.remove(mutation.getMutatedClass());
+						new File(backupJFile).delete();
+						recoverOrgClassFile(params);
+					}
+				} else {
+					System.out.println("bug Not found!");
+				}
+				
+				result.setValid(foundRootCause);
+			}
+			
+			
+			
+			
 		} catch (Throwable e) {
 			System.err.println("test case has exception when generating trace:");
 			e.printStackTrace();
@@ -143,6 +153,11 @@ public class MutationEvaluator {
 				params.getAnalysisParams().getBreakerLimit());
 		simulator.prepare(killingMutatantTrace, correctTrace, pairList, diffMatcher);
 		RootCauseFinder rootcauseFinder = new RootCauseFinder();
+		
+		if(simulator.getObservedFault()==null){
+			return null;
+		}
+		
 		rootcauseFinder.checkRootCause(simulator.getObservedFault(), killingMutatantTrace, correctTrace, pairList, diffMatcher);
 		TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, killingMutatantTrace, correctTrace);
 			
@@ -154,33 +169,36 @@ public class MutationEvaluator {
 		simulator.setUseSliceBreaker(true);
 		simulator.setAllowCacheCriticalConditionalStep(true);
 		List<EmpiricalTrial> returnTrials = new ArrayList<>();
-		for(int i=0; i<enableRandoms.length; i++){
-			for(int j=0; j<breakLimits.length; j++){
-				simulator.setEnableRandom(enableRandoms[i]);
-				simulator.setBreakerTrialLimit(breakLimits[j]);
-				
-				String fileName = "random-" + enableRandoms[i] + "-limit-" + breakLimits[j];
-				
-				List<EmpiricalTrial> trials = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
-				
-				if(i==0 && j==0){
-					returnTrials = trials;
-				}
-				
-				for (EmpiricalTrial t : trials) {
-					t.setTraceMatchTime(matchTime);
-					t.setBuggyTrace(killingMutatantTrace);
-					t.setFixedTrace(correctTrace);
-					t.setPairList(pairList);
-					t.setDiffMatcher(diffMatcher);
+		
+		if(foundRootCause){
+			for(int i=0; i<enableRandoms.length; i++){
+				for(int j=0; j<breakLimits.length; j++){
+					simulator.setEnableRandom(enableRandoms[i]);
+					simulator.setBreakerTrialLimit(breakLimits[j]);
 					
-					PatternIdentifier identifier = new PatternIdentifier();
-					identifier.identifyPattern(t);
-				}
-				try {
-					monitor.reportEmpiralTrial(fileName, trials, params, mutation);
-				} catch (IOException e) {
-					e.printStackTrace();
+					String fileName = "random-" + enableRandoms[i] + "-limit-" + breakLimits[j];
+					
+					List<EmpiricalTrial> trials = simulator.detectMutatedBug(killingMutatantTrace, correctTrace, diffMatcher, 0);
+					
+					if(i==0 && j==0){
+						returnTrials = trials;
+					}
+					
+					for (EmpiricalTrial t : trials) {
+						t.setTraceMatchTime(matchTime);
+						t.setBuggyTrace(killingMutatantTrace);
+						t.setFixedTrace(correctTrace);
+						t.setPairList(pairList);
+						t.setDiffMatcher(diffMatcher);
+						
+						PatternIdentifier identifier = new PatternIdentifier();
+						identifier.identifyPattern(t);
+					}
+					try {
+						monitor.reportEmpiralTrial(fileName, trials, params, mutation);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
