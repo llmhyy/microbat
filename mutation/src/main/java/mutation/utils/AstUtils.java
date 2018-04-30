@@ -27,6 +27,9 @@ public class AstUtils {
 		}
 		if (stmt instanceof BlockStmt) {
 			List<Statement> subStmts = ((BlockStmt) stmt).getStmts();
+			if (CollectionUtils.isEmpty(subStmts)) {
+				return false;
+			}
 			if (subStmts.size() > 1) {
 				return false;
 			}
