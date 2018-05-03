@@ -59,8 +59,14 @@ public class ASTTraversingDistanceCalculator {
 	}
 	
 	private ASTTraverse evaluateTraverse(ASTNode testNode, ASTNode avoidNode) {
-		
 		ASTNode commonParent = findCommonParent(testNode, avoidNode);
+		if (commonParent == null) {
+			/*
+			 * for the case in which one of the two nodes is FieldDeclaration &
+			 * the other is a node inside init method
+			 */
+			return new ASTTraverse(-1000, -1000, -1000);
+		}
 		if(commonParent.equals(testNode)) {
 			int depth = getDepth(avoidNode, commonParent);
 			return new ASTTraverse(0, depth, 0);
