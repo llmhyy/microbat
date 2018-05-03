@@ -38,6 +38,7 @@ public class RunSingleMutationHandler  extends AbstractHandler {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					runSingleMutation(monitor);
+					System.out.println("Finish!");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

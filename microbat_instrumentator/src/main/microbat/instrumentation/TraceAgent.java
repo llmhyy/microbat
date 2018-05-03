@@ -76,7 +76,8 @@ public class TraceAgent implements IAgent {
 			result.setCollectedSteps(trace.getExecutionList().size());
 			result.setExpectedSteps(agentParams.getExpectedSteps());
 			result.saveToFile(agentParams.getDumpFile(), false);
-		} else if (agentParams.getTcpPort() != -1) {
+		} 
+		if (agentParams.getTcpPort() != -1) {
 			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
 			TraceOutputWriter traceWriter = tcpConnector.connect();
 			traceWriter.writeString(Agent.getProgramMsg());

@@ -12,6 +12,7 @@ import sav.strategies.dto.AppJavaClassPath;
 
 public class FilterChecker implements IFilterChecker {
 	private static final IFilterChecker checker = new FilterChecker();
+//	private static final IFilterChecker checker = new FilterCheckerMock();
 	
 	private List<String> appBinFolders;
 	private List<String> extLibs;
