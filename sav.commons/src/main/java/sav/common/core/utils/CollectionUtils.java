@@ -343,11 +343,13 @@ public class CollectionUtils {
 	 * return list of objects exist in a but not in b
 	 * */
 	public static <T> List<T> subtract(final Collection<T> a, final Collection<T> b) {
-		List<T> list = new ArrayList<T>(a);
-		for (Iterator<T> it = b.iterator(); it.hasNext();) {
-			list.remove(it.next());
+		List<T> result = new ArrayList<>();
+		for (T val : a) {
+			if (!b.contains(val)) {
+				result.add(val);
+			}
 		}
-		return list;
+		return result;
 	}
 	
 	public static <T, V> Map<V, T> revertMap(Map<T, V> map) {

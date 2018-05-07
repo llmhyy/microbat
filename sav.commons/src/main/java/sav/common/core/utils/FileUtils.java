@@ -126,6 +126,17 @@ public class FileUtils {
 		}
 	}
 	
+	public static String backupFile(String fileName) {
+		int idx = fileName.lastIndexOf(".");
+		if (idx < 0) {
+			return fileName + "_bk";
+		}
+		String newfile = new StringBuilder(fileName.substring(0, idx))
+				.append("_bk").append(fileName.substring(idx)).toString();
+		copyFile(fileName, newfile, true);
+		return newfile;
+	}
+	
 	public static void deleteFolder(File file) {
 		if (!file.exists()) {
 			return;

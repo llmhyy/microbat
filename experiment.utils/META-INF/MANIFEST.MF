@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Experiment Utils
+Bundle-SymbolicName: experiment.utils;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Require-Bundle: sav.commons;bundle-version="1.0.0",
+ org.junit
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .,
+ lib/poi-3.11-20141221.jar,
+ lib/poi-ooxml-3.11-20141221.jar,
+ lib/poi-ooxml-schemas-3.11-20141221.jar,
+ lib/xmlbeans-2.6.0.jar
+Export-Package: experiment.utils.report,
+ experiment.utils.report.excel
