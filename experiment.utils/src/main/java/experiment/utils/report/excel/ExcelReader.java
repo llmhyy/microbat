@@ -110,7 +110,7 @@ public class ExcelReader {
 		Sheet sheet = workbook.getSheet(sheetName);
 		for (int i = headerRowNum + 1; i <= sheet.getLastRowNum(); i++) {
 			Row row = sheet.getRow(i);
-			int exceesiveCols = row.getPhysicalNumberOfCells() - headerIdxMap.size() + 1;
+			int exceesiveCols = (row.getLastCellNum() - row.getFirstCellNum()) - headerIdxMap.size();
 			if (exceesiveCols < 0) {
 				exceesiveCols = 0;
 			}
