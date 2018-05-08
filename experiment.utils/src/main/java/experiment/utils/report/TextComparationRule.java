@@ -40,8 +40,6 @@ public class TextComparationRule implements IComparationRule {
 		return diff;
 	}
 	
-	
-	
 	public static enum ChangeType {
 		NONE,
 		IMPROVED, 
