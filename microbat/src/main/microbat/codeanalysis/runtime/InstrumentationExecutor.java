@@ -163,6 +163,7 @@ public class InstrumentationExecutor {
 	
 	public RunningInformation execute(PreCheckInformation info) {
 		try {
+			long start = System.currentTimeMillis();
 			prepareAgentRunner();
 			agentRunner.addAgentParam(AgentParams.OPT_EXPECTED_STEP, info.getStepNum());
 			agentRunner.runWithDumpFileOption(traceExecFilePath);
@@ -181,7 +182,7 @@ public class InstrumentationExecutor {
 			trace.setMultiThread(info.getThreadNum()!=1);
 			
 			appendMissingInfo(trace, appPath);
-			
+			trace.setConstructTime((int) (System.currentTimeMillis() - start));
 			
 			RunningInformation information = new RunningInformation(result.getProgramMsg(), result.getExpectedSteps(), 
 					result.getCollectedSteps(), result.getTrace());
