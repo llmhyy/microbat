@@ -10,11 +10,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
 
+import microbat.instrumentation.instr.SystemClassTransformer;
 import microbat.instrumentation.instr.TestRunnerTranformer;
 
 public class Premain {
 	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent_v01.jar";
 	private static final String SAV_JAR = "sav.commons.simplified.jar";
+	private static boolean testMode = true;
 
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
 		installBootstrap(inst);
@@ -29,7 +31,7 @@ public class Premain {
 		if (!agentParams.isPrecheck()) {
 			//SystemClassTransformer.transformClassLoader(inst);
 		}
-//		SystemClassTransformer.transformThread(inst);
+		SystemClassTransformer.transformThread(inst);
 		inst.addTransformer(agent.getTransformer(), true);
 		inst.addTransformer(new TestRunnerTranformer());
 		if (!agentParams.isPrecheck()) {
@@ -119,6 +121,9 @@ public class Premain {
 	}
 	
 	private static boolean checkInstrumentatorVersion(String tempFolder) {
+		if (testMode) {
+			return false;
+		}
 		File file = new File(tempFolder, INSTRUMENTATION_STANTDALONE_JAR);
 		return file.exists();
 	}

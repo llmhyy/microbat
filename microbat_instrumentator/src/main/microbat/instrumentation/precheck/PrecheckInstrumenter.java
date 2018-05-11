@@ -55,15 +55,18 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		for (Method method : methods) {
 			String classMethod = ClassGenUtils.getMethodFullName(classGen.getClassName(), method);
+			boolean changed = false;
+			MethodGen methodGen = new MethodGen(method, classFName, constPool);
 			try {
-				boolean changed = false;
-				MethodGen methodGen = new MethodGen(method, classFName, constPool);
 				changed = super.instrumentMethod(classGen, constPool, methodGen, method, true, false);
 				methodGen.getMethod().toString(); // exception if exceeding limit.
 				if (changed && doesBytecodeExceedLimit(methodGen)) {
 					exceedLimitMethods.add(classMethod);
 				}
 			} catch (Exception e) {
+				if (doesBytecodeExceedLimit(methodGen)) {
+					System.out.println("OVERLONG-METHOD!!!!!!!");
+				}
 				String message = e.getMessage();
 				if (e.getMessage() != null && e.getMessage().contains("offset too large")) {
 					message = "offset too large";
