@@ -61,5 +61,28 @@ public class ExcelUtils {
 		return sheets;
 	}
 
-	
+	public static List<String> collectKeys(String excelFile, String sheetName, List<String> keyCols,
+			String separator) {
+		ExcelReader reader = new ExcelReader(new File(excelFile), 0);
+		List<List<Object>> data = new ArrayList<>();
+		int rowNum = -1;
+		for (String col : keyCols) {
+			List<Object> colData = reader.listObjData(sheetName, col);
+			rowNum = colData.size();
+			data.add(colData);
+		}
+		List<String> keys = new ArrayList<>();
+		for (int i = 0; i < rowNum; i++) {
+			StringBuilder sb = new StringBuilder();
+			for (int j = 0; j < data.size(); j++) {
+				sb.append(data.get(j).get(i));
+				if (j != (data.size() - 1)) {
+					sb.append(separator);
+				}
+			}
+			keys.add(sb.toString());
+		}
+		return keys;
+	}
+
 }
