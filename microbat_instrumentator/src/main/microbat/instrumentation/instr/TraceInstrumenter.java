@@ -1,6 +1,8 @@
 package microbat.instrumentation.instr;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.JavaClass;
@@ -54,6 +56,7 @@ import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.ClassGenUtils;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.filter.IInstrFilter;
 import microbat.instrumentation.filter.InstrumentationFilter;
@@ -73,12 +76,16 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	private BasicTypeSupporter basicTypeSupporter = new BasicTypeSupporter();
 	private int tempVarIdx = 0;
 	private EntryPoint entryPoint;
+	private Set<String> requireSplittingMethods = Collections.emptySet();
 	
 	TraceInstrumenter() {
 	}
 	
 	public TraceInstrumenter(AgentParams params) {
 		this.entryPoint = params.getEntryPoint();
+		if (params.isRequireMethodSplit()) {
+			this.requireSplittingMethods = params.getOverlongMethods();
+		}
 	}
 
 	@Override
@@ -93,25 +100,19 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 				continue; // Only instrument methods with code in them!
 			}
 			try {
-				
-				boolean changed = false;
 				MethodGen methodGen = new MethodGen(method, classFName, constPool);
 				boolean isMainMethod = false;
 				if (entry && entryPoint.matchMethod(method.getName(), method.getSignature())) {
 					isMainMethod = true;
 				}
-				changed = instrumentMethod(classGen, constPool, methodGen, method, isAppClass, isMainMethod);
-				if (changed) {
-					if (doesBytecodeExceedLimit(methodGen)) {
-						MethodSplitter methodSplitter = new MethodSplitter(classGen, constPool);
-						ExtractedMethods methods = methodSplitter.splitMethod(methodGen);
-						for (MethodGen newMethod : methods.getExtractedMethods()) {
-							newMethod.setMaxStack();
-							newMethod.setMaxLocals();
-							classGen.addMethod(newMethod.getMethod());
-						}
-						methodGen = methods.getRootMethod();
+				GeneratedMethods generatedMethods = runMethodInstrumentation(classGen, constPool, methodGen, method, isAppClass, isMainMethod);
+				if (generatedMethods != null) {
+					for (MethodGen newMethod : generatedMethods.getExtractedMethods()) {
+						newMethod.setMaxStack();
+						newMethod.setMaxLocals();
+						classGen.addMethod(newMethod.getMethod());
 					}
+					methodGen = generatedMethods.getRootMethod();
 					// All changes made, so finish off the method:
 					InstructionList instructionList = methodGen.getInstructionList();
 					instructionList.setPositions();
@@ -134,8 +135,30 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	}
 	
 	protected boolean doesBytecodeExceedLimit(MethodGen methodGen) {
-		// TODO LLT: careful check!
-		return methodGen.getInstructionList().getByteCode().length >= (65534);
+		try {
+			return methodGen.getInstructionList().getByteCode().length >= (65534);
+		} catch (Exception e) {
+			if (e.getMessage() != null && e.getMessage().contains("offset too large")) {
+				return true;
+			} else {
+				e.printStackTrace();
+			}
+		}
+		return true;
+	}
+	
+	private GeneratedMethods runMethodInstrumentation(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
+			boolean isAppClass, boolean isMainMethod) {
+		String methodFullName = ClassGenUtils.getMethodFullName(classGen.getClassName(), method);
+		boolean changed = instrumentMethod(classGen, constPool, methodGen, method, isAppClass, isMainMethod);
+		if (requireSplittingMethods.contains(methodFullName)) {
+			MethodSplitter methodSplitter = new MethodSplitter(classGen, constPool);
+			return methodSplitter.splitMethod(methodGen);
+		}
+		if (changed) {
+			return new GeneratedMethods(methodGen);
+		}
+		return null;
 	}
 	
 	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
@@ -1003,7 +1026,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	 * TODO LLT: to replace  methodGen.getMethod().toString();
 	 */
 	private String[] getArgumentNames(MethodGen methodGen) {
-		String methodString = methodGen.getMethod().toString();
+		String methodString = methodGen.toString();
 		String args = methodString.substring(methodString.indexOf("(")+1, methodString.indexOf(")"));
 		String[] argList = args.split(",");
 		for(int i=0; i<argList.length; i++){

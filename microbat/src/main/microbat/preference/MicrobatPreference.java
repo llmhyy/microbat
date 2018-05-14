@@ -22,6 +22,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import microbat.Activator;
+import microbat.util.SWTFactory;
 import microbat.util.Settings;
 
 public class MicrobatPreference extends PreferencePage implements
@@ -52,6 +53,7 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultVariableLayer = getVariableValue();
 		this.defaultJava7HomePath = Activator.getDefault().getPreferenceStore().getString(JAVA7HOME_PATH);
 		this.defaultApplyRecodingOptimization = Activator.getDefault().getPreferenceStore().getString(RECORDING_OPTIMIZATION);
+		this.defaultEnableMethodSplitting = Activator.getDefault().getPreferenceStore().getBoolean(REQUIRE_METHOD_SPLITTING);
 	}
 
 	public static String getStepLimit() {
@@ -60,6 +62,10 @@ public class MicrobatPreference extends PreferencePage implements
 
 	public static String getVariableValue() {
 		return Activator.getDefault().getPreferenceStore().getString(VARIABLE_LAYER);
+	}
+	
+	public static String getValue(String key) {
+		return Activator.getDefault().getPreferenceStore().getString(key);
 	}
 	
 	public static final String TARGET_PORJECT = "targetProjectName";
@@ -74,6 +80,7 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String VARIABLE_LAYER = "variableLayer";
 	public static final String JAVA7HOME_PATH = "java7_path";
 	public static final String RECORDING_OPTIMIZATION = "recording_optimization";
+	public static final String REQUIRE_METHOD_SPLITTING = "enableMethodSplitting";
 	
 	private Combo projectCombo;
 	private Text lanuchClassText;
@@ -86,6 +93,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Button recordingOptimizationButton;
 	private Button advancedDetailInspectorButton;
 	private Button runTestButton;
+	private Button enableMethodSplittingButton;
 	private Text java7HomePathText;
 	
 	private String defaultTargetProject = "";
@@ -100,6 +108,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultRunTest = "false";
 	private String defaultJava7HomePath;
 	private String defaultApplyRecodingOptimization;
+	private boolean defaultEnableMethodSplitting;
 	
 	@Override
 	protected Control createContents(Composite parent) {
@@ -186,6 +195,9 @@ public class MicrobatPreference extends PreferencePage implements
 		recordingOptimizationButton.setLayoutData(recordingOptimizationButtonData);
 		boolean recordingOptimizationSelected = this.defaultApplyRecodingOptimization.equals("true");
 		recordingOptimizationButton.setSelection(recordingOptimizationSelected);
+		
+		enableMethodSplittingButton = SWTFactory.createCheckbox(settingGroup, "Enable method splitting function", 2);
+		enableMethodSplittingButton.setSelection(this.defaultEnableMethodSplitting);
 	}
 	
 	private void createSeedStatementGroup(Composite parent){
@@ -256,6 +268,7 @@ public class MicrobatPreference extends PreferencePage implements
 		preferences.put(RUN_TEST, String.valueOf(this.runTestButton.getSelection()));
 		preferences.put(JAVA7HOME_PATH, this.java7HomePathText.getText());
 		preferences.put(RECORDING_OPTIMIZATION, String.valueOf(this.recordingOptimizationButton.getSelection()));
+		preferences.putBoolean(REQUIRE_METHOD_SPLITTING, this.enableMethodSplittingButton.getSelection());
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(LANUCH_CLASS, this.lanuchClassText.getText());
@@ -269,7 +282,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Activator.getDefault().getPreferenceStore().putValue(RUN_TEST, String.valueOf(this.runTestButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(JAVA7HOME_PATH, this.java7HomePathText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(RECORDING_OPTIMIZATION, String.valueOf(this.recordingOptimizationButton.getSelection()));
-		
+		Activator.getDefault().getPreferenceStore().putValue(REQUIRE_METHOD_SPLITTING, String.valueOf(this.enableMethodSplittingButton.getSelection()));
 		confirmChanges();
 		
 		return true;

@@ -8,7 +8,6 @@ import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.Type;
 
-import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.ClassGenUtils;
 import sav.common.core.utils.CollectionUtils;
 

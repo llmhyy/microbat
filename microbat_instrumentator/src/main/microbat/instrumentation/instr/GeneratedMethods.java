@@ -6,10 +6,13 @@ import org.apache.bcel.generic.MethodGen;
 
 import sav.common.core.utils.CollectionUtils;
 
-public class ExtractedMethods {
-
+public class GeneratedMethods {
 	private MethodGen rootMethod;
 	private List<MethodGen> extractedMethods;
+	
+	public GeneratedMethods(MethodGen rootMethod) {
+		this.rootMethod = rootMethod;
+	}
 
 	public MethodGen getRootMethod() {
 		return rootMethod;

@@ -22,9 +22,9 @@ public class MethodSplitter {
 	 * some methods will throw exception when being triggered (methods which requires dumping out bytecode).
 	 * for ex: getByteCode(), getMethod()
 	 */
-	public ExtractedMethods splitMethod(MethodGen methodGen) {
-		ExtractedMethods methods = new ExtractedMethods();
+	public GeneratedMethods splitMethod(MethodGen methodGen) {
 		MethodGen modifiedMethod = methodGen;
+		GeneratedMethods methods = new GeneratedMethods(modifiedMethod);
 		
 		
 		methods.setRootMethod(modifiedMethod);

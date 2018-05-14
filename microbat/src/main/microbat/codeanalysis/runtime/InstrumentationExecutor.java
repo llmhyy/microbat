@@ -90,17 +90,14 @@ public class InstrumentationExecutor {
 		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
 		agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, MicrobatPreference.getStepLimit());
 		agentRunner.addAgentParams(AgentParams.OPT_LOG, Arrays.asList(LogType.printProgress, LogType.info));
-		return agentRunner;
-	}
-	
-	public TraceAgentRunner prepareAgentRunner() {
+		agentRunner.addAgentParam(AgentParams.OPT_REQUIRE_METHOD_SPLITTING,
+				MicrobatPreference.getValue(MicrobatPreference.REQUIRE_METHOD_SPLITTING));
 		agentRunner.setTimeout(timeout);
 		return agentRunner;
 	}
 	
 	public RunningInformation run(){
 		try {
-			prepareAgentRunner();
 			System.out.println("first precheck..");
 			agentRunner.precheck(null);
 			PrecheckInfo firstPrecheckInfo = agentRunner.getPrecheckInfo();
@@ -140,7 +137,6 @@ public class InstrumentationExecutor {
 		try {
 			/* test stepLimit */
 			agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, stepLimit);
-			prepareAgentRunner();
 			if (!agentRunner.precheck(dumpFile)) {
 				precheckInfo = new PreCheckInformation();
 				precheckInfo.setTimeout(true);
@@ -164,7 +160,6 @@ public class InstrumentationExecutor {
 	public RunningInformation execute(PreCheckInformation info) {
 		try {
 			long start = System.currentTimeMillis();
-			prepareAgentRunner();
 			agentRunner.addAgentParam(AgentParams.OPT_EXPECTED_STEP, info.getStepNum());
 			agentRunner.runWithDumpFileOption(traceExecFilePath);
 			// agentRunner.runWithSocket();

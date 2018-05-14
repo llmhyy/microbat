@@ -32,6 +32,7 @@ public class AgentParams {
 	public static final String OPT_INCLUDES_FILE = "includes_file";
 	public static final String OPT_EXCLUDES_FILE = "excludes_file";
 	public static final String OPT_OVER_LONG_METHODS = "overlong_methods";
+	public static final String OPT_REQUIRE_METHOD_SPLITTING = "require_method_split";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -51,6 +52,7 @@ public class AgentParams {
 	private int expectedSteps;
 	private List<LogType> logTypes;
 	private Set<String> overlongMethods;
+	private boolean requireMethodSplit;
 	
 	public static AgentParams parse(String agentArgs) {
 		CommandLine cmd = CommandLine.parse(agentArgs);
@@ -87,6 +89,7 @@ public class AgentParams {
 		params.expectedSteps = cmd.getInt(OPT_EXPECTED_STEP, AgentConstants.UNSPECIFIED_INT_VALUE);
 		params.logTypes = LogType.valuesOf(cmd.getStringList(OPT_LOG));
 		params.overlongMethods = cmd.getStringSet(OPT_OVER_LONG_METHODS);
+		params.requireMethodSplit = cmd.getBoolean(OPT_REQUIRE_METHOD_SPLITTING, false);
 		return params;
 	}
 
@@ -250,6 +253,10 @@ public class AgentParams {
 	
 	public Set<String> getOverlongMethods() {
 		return overlongMethods;
+	}
+	
+	public boolean isRequireMethodSplit() {
+		return requireMethodSplit;
 	}
 	
 	public AppJavaClassPath initAppClassPath() {

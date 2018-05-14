@@ -33,7 +33,9 @@ public class TraceAgent implements IAgent {
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.setStepLimit(agentParams.getStepLimit());
-		InstrumentationFilter.overLongMethods = agentParams.getOverlongMethods();
+		if (!agentParams.isRequireMethodSplit()) {
+			InstrumentationFilter.overLongMethods = agentParams.getOverlongMethods();
+		}
 		ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
 	}
 
