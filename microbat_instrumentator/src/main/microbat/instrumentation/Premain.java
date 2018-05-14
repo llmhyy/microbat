@@ -23,7 +23,7 @@ public class Premain {
 		
 		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
 		
-		AgentLogger.debug("start instrumentation...");
+		debug("start instrumentation...");
 		AgentParams agentParams = AgentParams.parse(agentArgs);
 		Agent agent = new Agent(agentParams);
 		agent.setTransformableClasses(retransformableClasses);
@@ -40,7 +40,7 @@ public class Premain {
 			}
 		}
 		
-		AgentLogger.debug("after retransform");
+		debug("after retransform");
 	}
 	
 	private static List<JarFile> getJarFilesDevMode() throws IOException {
@@ -63,9 +63,9 @@ public class Premain {
 	}
 
 	private static void installBootstrap(Instrumentation inst) throws Exception {
-		AgentLogger.debug("install jar to boostrap...");
+		debug("install jar to boostrap...");
 		File tempFolder = AgentUtils.createTempFolder("microbat");
-		AgentLogger.debug("Temp folder to extract jars: " + tempFolder.getAbsolutePath());
+		debug("Temp folder to extract jars: " + tempFolder.getAbsolutePath());
 		List<JarFile> bootJarPaths = getJarFiles("instrumentator_all.jar");
 		if (bootJarPaths.isEmpty()) {
 			bootJarPaths = getJarFiles(INSTRUMENTATION_STANTDALONE_JAR, 
@@ -77,11 +77,11 @@ public class Premain {
 										"slf4j-api-1.7.12.jar");
 		}
 		if (bootJarPaths.isEmpty()) {
-			AgentLogger.debug("Switch to dev mode");
+			debug("Switch to dev mode");
 			bootJarPaths = getJarFilesDevMode();
 		}
 		for (JarFile jarfile : bootJarPaths) {
-			AgentLogger.debug("append to boostrap classloader: " + jarfile.getName());
+			debug("append to boostrap classloader: " + jarfile.getName());
 			inst.appendToBootstrapClassLoaderSearch(jarfile);
 			if (jarfile.getName().contains("mysql-connector-java")) {
 				inst.appendToSystemClassLoaderSearch(jarfile);
@@ -101,14 +101,14 @@ public class Premain {
 					String jarResourcePath = "lib/" + jarName;
 					boolean success = extractJar(jarResourcePath, file.getAbsolutePath());
 					if (!success) {
-						AgentLogger.debug("Could not extract jar: " + jarResourcePath);
+						debug("Could not extract jar: " + jarResourcePath);
 						if (jarName.endsWith(INSTRUMENTATION_STANTDALONE_JAR)) {
 							jars.clear();
 							return jars;
 						}
 						continue;
 					}
-					AgentLogger.debug("Extracted jar: " + jarResourcePath);
+					debug("Extracted jar: " + jarResourcePath);
 				} catch (Exception ex) {
 					file.delete();
 					continue;
@@ -147,7 +147,7 @@ public class Premain {
 	}
 
 	private static Class<?>[] getRetransformableClasses(Instrumentation inst) {
-		AgentLogger.debug("Collect retransformable classes....");
+		debug("Collect retransformable classes....");
 		List<Class<?>> candidates = new ArrayList<Class<?>>();
 		Class<?>[] classes = inst.getAllLoadedClasses();
 		for (Class<?> c : classes) {
@@ -157,7 +157,13 @@ public class Premain {
 			}
 		}
 		candidates.remove(Thread.class);
-		AgentLogger.debug(candidates.size() + " transformable candidates");
+		debug(candidates.size() + " transformable candidates");
 		return candidates.toArray(new Class<?>[candidates.size()]);
+	}
+
+	private static void debug(String msg) {
+		if (testMode) {
+			System.out.println(msg);
+		}
 	}
 }
