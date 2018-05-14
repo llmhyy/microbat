@@ -12,20 +12,23 @@ public class TraceInfo {
 	List<ClassLocation> steps = new ArrayList<>();
 	int stepsTotal = 0;
 	int stepLimit;
+	ClassLocation lastStep = null;
 	
 	public TraceInfo(int stepLimit) {
 		this.stepLimit = stepLimit;
 	}
 
 	public ClassLocation getLastStep() {
-		if (steps.size() == 0) {
-			return null;
-		}
-		return steps.get(steps.size() - 1);
+		return lastStep;
+//		if (steps.size() == 0) {
+//			return null;
+//		}
+//		return steps.get(steps.size() - 1);
 	}
 	
 	public void addStep(ClassLocation loc) {
 //		steps.add(loc);
+		lastStep = loc;
 		stepsTotal++;
 		visitedLocs.add(loc);
 	}
