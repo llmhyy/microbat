@@ -19,8 +19,8 @@ public class RecordsComparator {
 	public static <T extends IComparationRule> ReportChanges compare(Records oldRecords, Records newRecords,
 			List<T> comparationRules) {
 		ReportChanges changes = new ReportChanges(oldRecords, newRecords);
-		changes.setMissingRecords(getRecordInAButNotInB(oldRecords, newRecords));
-		changes.setAddedRecords(getRecordInAButNotInB(newRecords, oldRecords));
+		changes.setMissingRecords(subtract(oldRecords, newRecords));
+		changes.setAddedRecords(subtract(newRecords, oldRecords));
 		for (String key : newRecords.getKeys()) {
 			Record newRecord = newRecords.getRecord(key);
 			Record oldRecord = oldRecords.getRecord(key);
@@ -34,7 +34,10 @@ public class RecordsComparator {
 		return changes;
 	}
 	
-	private static List<Record> getRecordInAButNotInB(Records a, Records b) {
+	/**
+	 * return list of records exist in records a but missing in records b
+	 * */
+	private static List<Record> subtract(Records a, Records b) {
 		Set<String> aKeys = a.getKeys();
 		Set<String> bKeys = b.getKeys();
 		List<String> missingKeys = CollectionUtils.subtract(aKeys, bKeys);
