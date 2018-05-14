@@ -1,14 +1,17 @@
 package microbat.instrumentation.runtime;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import microbat.instrumentation.AgentLogger;
 import sav.common.core.utils.CollectionUtils;
 
 public class HeuristicIgnoringFieldRule {
@@ -84,7 +87,6 @@ public class HeuristicIgnoringFieldRule {
 		toCheckIgnoreFieldClasses = new HashSet<>();
 		toCheckIgnoreFieldClasses.add("java.util.HashMap$KeySet");
 		toCheckIgnoreFieldClasses.add("java.util.HashMap$Values");
-		
 	}
 	
 	public static boolean isForIgnore(Class<?> type, Field field){
@@ -141,15 +143,17 @@ public class HeuristicIgnoringFieldRule {
 		Boolean isSerializable = isSerializableMap.get(typeName);
 		
 		if(isSerializable == null){
-			List<Class<?>> allSuperTypes = new ArrayList<>();
-			findAllSuperTypes(type, allSuperTypes);
-			isSerializable = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.SERIALIZABLE);
-			if(isSerializable){
-				isSerializableMap.put(typeName, true);
-			}
-			else{
-				isSerializableMap.put(typeName, false);
-			}
+			isSerializable = Serializable.class.isAssignableFrom(type);
+			isSerializableMap.put(typeName, isSerializable);
+//			List<Class<?>> allSuperTypes = new ArrayList<>();
+//			findAllSuperTypes(type, allSuperTypes);
+//			isSerializable = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.SERIALIZABLE);
+//			if(isSerializable){
+//				isSerializableMap.put(typeName, true);
+//			}
+//			else{
+//				isSerializableMap.put(typeName, false);
+//			}
 		}
 		
 		return isSerializable;
@@ -161,15 +165,17 @@ public class HeuristicIgnoringFieldRule {
 		Boolean isCollection = isCollectionMap.get(typeName);
 		
 		if(isCollection == null){
-			List<Class<?>> allSuperTypes = new ArrayList<>();
-			findAllSuperTypes(type, allSuperTypes);
-			isCollection = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.COLLECTION);
-			if(isCollection){
-				isCollectionMap.put(typeName, true);
-			}
-			else{
-				isCollectionMap.put(typeName, false);
-			}
+			isCollection = Collection.class.isAssignableFrom(type);
+			isCollectionMap.put(typeName, isCollection);
+//			List<Class<?>> allSuperTypes = new ArrayList<>();
+//			findAllSuperTypes(type, allSuperTypes);
+//			isCollection = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.COLLECTION);
+//			if(isCollection){
+//				isCollectionMap.put(typeName, true);
+//			}
+//			else{
+//				isCollectionMap.put(typeName, false);
+//			}
 		}
 		
 		return isCollection;
@@ -180,15 +186,17 @@ public class HeuristicIgnoringFieldRule {
 		Boolean isHashMap = isHashMapMap.get(typeName);
 		
 		if(isHashMap == null){
-			List<Class<?>> allSuperTypes = new ArrayList<>();
-			findAllSuperTypes(type, allSuperTypes);
-			isHashMap = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.HASHMAP);
-			if(isHashMap){
-				isHashMapMap.put(typeName, true);
-			}
-			else{
-				isHashMapMap.put(typeName, false);
-			}
+			isHashMap = HashMap.class.isAssignableFrom(type);
+			isHashMapMap.put(typeName, isHashMap);
+//			List<Class<?>> allSuperTypes = new ArrayList<>();
+//			findAllSuperTypes(type, allSuperTypes);
+//			isHashMap = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.HASHMAP);
+//			if(isHashMap){
+//				isHashMapMap.put(typeName, true);
+//			}
+//			else{
+//				isHashMapMap.put(typeName, false);
+//			}
 		}
 		
 		return isHashMap;
@@ -273,6 +281,7 @@ public class HeuristicIgnoringFieldRule {
 
 	private static final Map<String, List<String>> collectionMapElements = new HashMap<>();
 	static {
+		
 		collectionMapElements.put("java.util.ArrayList", Arrays.asList("elementData"));
 		collectionMapElements.put("java.util.HashMap", Arrays.asList("table"));
 	}
@@ -288,27 +297,19 @@ public class HeuristicIgnoringFieldRule {
 			}
 		}
 		if (isHashMapClass(objClass)) {
-			List<String> mapEleFields = collectionMapElements.get("java.util.HashMap");
-			for (Field field : objClass.getSuperclass().getDeclaredFields()) {
-				if (mapEleFields.contains(field.getName())) {
-					validFields.add(field);
-				}
+			Field field;
+			try {
+				field = HashMap.class.getDeclaredField("table");
+				validFields.add(field);
+			} catch (Exception e) {
+				AgentLogger.error(e);
 			}
-			/* hack: to make keySet & values initialized */
-//			try {
-//				objClass.getMethod("values").invoke(value);
-//				objClass.getMethod("keySet").invoke(value);
-//			} catch (Exception e) {
-//				AgentLogger.error(e);
-//			}
 		} 
 		return validFields;
 	}
 
-	private static final List<String> hashMapTableType = Arrays.asList("java.util.HashMap$Node", 
-			"java.util.HashMap$Entry");
-
 	public static boolean isHashMapTableType(String type) {
-		return hashMapTableType.contains(type);
+		return "java.util.HashMap$Node".equals(type) || 
+				"java.util.HashMap$Entry".equals(type);
 	}
 }

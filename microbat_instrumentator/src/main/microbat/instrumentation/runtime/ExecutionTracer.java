@@ -4,11 +4,12 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
@@ -144,6 +145,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				arrVal.setNull(true);
 			} else {
 				int length = Array.getLength(value);
+				arrVal.ensureChildrenSize(length);
 				for (int i = 0; i < length; i++) {
 					String parentSimpleID = Variable.truncateSimpleID(var.getVarID());
 					String arrayElementID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
@@ -282,15 +284,20 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.unLock();
 	}
 
+	private static Map<String, Integer> adjustVarMap = new HashMap<>();
 	private int adjustVariableStartScope(String fullSign, String className) {
+		Integer value = adjustVarMap.get(fullSign);
+		if (value != null) {
+			return value;
+		}
 		String shortSign = fullSign.substring(fullSign.indexOf("#")+1, fullSign.length());
 		MethodFinderBySignature finder = new MethodFinderBySignature(shortSign);
 		ByteCodeParser.parse(className, finder, appJavaClassPath);
 		Method method = finder.getMethod();
 		
 		LocalVariableTable table = method.getLocalVariableTable();
+		int start = -1;
 		if(table!=null){
-			int start = -1;
 			for(LocalVariable v: table.getLocalVariableTable()){
 				int line = method.getCode().getLineNumberTable().getSourceLine(v.getStartPC());
 				if(start==-1){
@@ -302,10 +309,10 @@ public class ExecutionTracer implements IExecutionTracer {
 					}
 				}
 			}
-			return start;
 		}
-		
-		return -1;
+		adjustVarMap.put(fullSign, start);
+		Repository.clearCache();
+		return start;
 	}
 	
 	public void exitMethod(int line, String className, String methodSignature) {
@@ -342,9 +349,7 @@ public class ExecutionTracer implements IExecutionTracer {
 					
 					if(!value.getChildren().isEmpty()){
 						VarValue parent = value.getChildren().get(0);
-						for(VarValue childValue: parent.getChildren()){
-							addRWriteValue(latestNode, childValue, false);
-						}
+						addRWriteValue(latestNode, parent.getChildren(), false);
 					}
 				}
 			}
@@ -431,9 +436,7 @@ public class ExecutionTracer implements IExecutionTracer {
 					
 					if(!value.getChildren().isEmpty()){
 						VarValue parent = value.getChildren().get(0);
-						for(VarValue childValue: parent.getChildren()){
-							addRWriteValue(latestNode, childValue, true);
-						}
+						addRWriteValue(latestNode, parent.getChildren(), true);
 					}
 				}
 			}
@@ -548,7 +551,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			}
 			
 			BreakPoint bkp = new BreakPoint(className, methodSignature, line);
-			TraceNode currentNode = new TraceNode(bkp, null, order, trace); // leave programState empty.
+			TraceNode currentNode = new TraceNode(bkp, null, order, trace); 
 			trace.addTraceNode(currentNode);
 			AgentLogger.printProgress(order, expectedSteps);
 			if(!methodCallStack.isEmpty()){
@@ -640,7 +643,22 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 		locker.unLock();
 	}
-
+	
+	private void addRWriteValue(TraceNode currentNode, List<VarValue> value, boolean isWrittenVar) {
+		ArrayList<VarValue> values;
+		if (isWrittenVar) {
+			values = (ArrayList<VarValue>) currentNode.getWrittenVariables();
+		} else {
+			values = (ArrayList<VarValue>) currentNode.getReadVariables();
+		}
+		if (value.size() > values.size()) {
+			values.ensureCapacity(values.size() + value.size());
+		}
+		for(VarValue child: value){
+			addSingleRWriteValue(currentNode, child, false);
+		}
+	}
+	
 	private void addRWriteValue(TraceNode currentNode, VarValue value, boolean isWrittenVar) {
 		if (value == null) {
 			return;
@@ -649,6 +667,10 @@ public class ExecutionTracer implements IExecutionTracer {
 		if (currentNode == null) {
 			return;
 		}
+		addSingleRWriteValue(currentNode, value, isWrittenVar);
+	}
+
+	private void addSingleRWriteValue(TraceNode currentNode, VarValue value, boolean isWrittenVar) {
 		if (isWrittenVar) {
 			currentNode.addWrittenVariable(value);
 			buildDataRelation(currentNode, value, Variable.WRITTEN);
@@ -733,12 +755,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			value.addParent(parentValue);
 			
 			addRWriteValue(trace.getLatestNode(), value, false);
-			
-			List<VarValue> children = getHeuristicVarChildren(value);
-			for(VarValue child: children){
-				trace.getLatestNode().addReadVariable(child);
-				addRWriteValue(trace.getLatestNode(), child, false);
-			}
+			addHeuristicVarChildren(trace.getLatestNode(), value, false);
 		} catch (Throwable t) {
 			handleException(t);
 		}
@@ -764,12 +781,8 @@ public class ExecutionTracer implements IExecutionTracer {
 			
 			VarValue value = appendVarValue(fieldValue, var, null);
 			addRWriteValue(trace.getLatestNode(), value, false);
+			addHeuristicVarChildren(trace.getLatestNode(), value, false);
 			
-			List<VarValue> children = getHeuristicVarChildren(value);
-			for(VarValue child: children){
-				trace.getLatestNode().addReadVariable(child);
-				addRWriteValue(trace.getLatestNode(), child, false);
-			}
 		} catch (Throwable t) {
 			handleException(t);
 		}
@@ -835,11 +848,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			VarValue value = appendVarValue(varValue, var, null);
 			addRWriteValue(trace.getLatestNode(), value, false);
 			
-			List<VarValue> children = getHeuristicVarChildren(value);
-			for(VarValue child: children){
-				trace.getLatestNode().addReadVariable(child);
-				addRWriteValue(trace.getLatestNode(), child, false);
-			}
+			addHeuristicVarChildren(trace.getLatestNode(), value, false);
 			
 //			TraceNode currentNode = trace.getLatestNode();
 //			String order = trace.findDefiningNodeOrder(Variable.READ, currentNode, var.getVarID(), var.getAliasVarID());
@@ -970,12 +979,7 @@ public class ExecutionTracer implements IExecutionTracer {
 			value.addParent(parentValue);
 			
 			addRWriteValue(trace.getLatestNode(), value, false);
-			
-			List<VarValue> children = getHeuristicVarChildren(value);
-			for(VarValue child: children){
-				trace.getLatestNode().addReadVariable(child);
-				addRWriteValue(trace.getLatestNode(), child, false);
-			}
+			addHeuristicVarChildren(trace.getLatestNode(), value, false);
 			
 		} catch (Throwable t) {
 			handleException(t);
@@ -983,35 +987,38 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.unLock();
 	}
 	
-	private List<VarValue> getHeuristicVarChildren(VarValue value) {
+	private void addHeuristicVarChildren(TraceNode latestNode, VarValue value, boolean isWritten) {
 		if (ArrayList.class.getName().equals(value.getRuntimeType())) {
 			for (VarValue child : value.getChildren()) {
 				if ("elementData".equals(child.getVarName())) {
-					return getHeuristicVarChildren(child);
+					addHeuristicVarChildren(latestNode, child, isWritten);
+					return;
 				}
 			}
 		} else if (HashMap.class.getName().equals(value.getRuntimeType())) {
 			for (VarValue child : value.getChildren()) {
 				if ("table".equals(child.getVarName())) {
-					return getHeuristicVarChildren(child);
+					addHeuristicVarChildren(latestNode, child, isWritten);
+					return;
 				}
 			}
 		} else if (value instanceof ArrayValue) {
-			List<VarValue> children = new ArrayList<>(value.getChildren().size());
+			Collection<VarValue> nodeReadVars = trace.getLatestNode().getReadVariables();
+			if (value.getChildren().size() > nodeReadVars.size()) {
+				((ArrayList<?>)nodeReadVars).ensureCapacity(nodeReadVars.size() + value.getChildren().size());
+			}
 			for (VarValue child : value.getChildren()) {
 				if (child.getVariable() instanceof ArrayElementVar) {
 					if (HeuristicIgnoringFieldRule.isHashMapTableType(child.getRuntimeType())) {
 						for (VarValue nodeAttr : child.getChildren()) {
-							children.add(nodeAttr);
+							addRWriteValue(trace.getLatestNode(), nodeAttr, false);
 						}
 					} else {
-						children.add(child);
+						addRWriteValue(trace.getLatestNode(), child, false);
 					}
 				}
 			}
-			return children;
 		} 
-		return Collections.emptyList();
 	}
 
 	/**
