@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +103,7 @@ public class TraceRecorder extends DbService {
 		}
 	}
 
-	protected String generateXmlContent(List<VarValue> varValues) {
+	protected String generateXmlContent(Collection<VarValue> varValues) {
 		if (CollectionUtils.isEmpty(varValues)) {
 			return null;
 		}

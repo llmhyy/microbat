@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -56,13 +57,13 @@ import sav.common.core.utils.StringUtils;
 		</variableValues>
  */
 public class VarValueXmlWriter {
-	private List<VarValue> varValues;
+	private Collection<VarValue> varValues;
 	
-	public VarValueXmlWriter(List<VarValue> varValues) {
+	public VarValueXmlWriter(Collection<VarValue> varValues) {
 		this.varValues = varValues;
 	}
 	
-	public static String generateXmlContent(List<VarValue> varValues) {
+	public static String generateXmlContent(Collection<VarValue> varValues) {
 		try {
 			VarValueXmlWriter writer = new VarValueXmlWriter(varValues);
 			ByteArrayOutputStream outStream = new ByteArrayOutputStream();

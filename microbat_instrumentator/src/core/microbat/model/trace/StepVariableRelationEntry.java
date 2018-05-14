@@ -3,11 +3,8 @@ package microbat.model.trace;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.model.variable.Variable;
-
 public class StepVariableRelationEntry {
 	private String varID;
-	private List<Variable> aliasVariables = new ArrayList<>();
 	
 	/**
 	 * Note that a consumer's producer will be its nearest producer on certain variable.
@@ -48,8 +45,7 @@ public class StepVariableRelationEntry {
 
 	@Override
 	public String toString() {
-		return "StepVariableRelationEntry [varID=" + varID + ", variables="
-				+ aliasVariables + "]";
+		return "StepVariableRelationEntry [varID=" + varID + "]";
 	}
 
 	public String getVarID() {
@@ -58,14 +54,6 @@ public class StepVariableRelationEntry {
 
 	public void setVarID(String varID) {
 		this.varID = varID;
-	}
-
-	public List<Variable> getAliasVariables() {
-		return aliasVariables;
-	}
-
-	public void setAliasVariables(List<Variable> aliasVariables) {
-		this.aliasVariables = aliasVariables;
 	}
 
 	public List<TraceNode> getProducers() {
@@ -101,9 +89,4 @@ public class StepVariableRelationEntry {
 		}
 	}
 	
-	public void addAliasVariable(Variable variable){
-		if(!this.aliasVariables.contains(variable)){
-			this.aliasVariables.add(variable);
-		}
-	}
 }

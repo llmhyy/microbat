@@ -10,7 +10,6 @@ package microbat.model.value;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -175,85 +174,6 @@ public abstract class VarValue implements GraphNode, Serializable {
 		this.variable.setAliasVarID(aliasVarID);
 	}
 
-	public String getVariablePath() {
-		
-		String varPath = this.variable.getName();
-		VarValue parentValue = this;
-//		while(!parentValue.isRoot()){
-//			parentValue = parentValue.getParents().get(0);
-//			varId = parentValue.getVarName() + "." + varId;
-//		}
-		
-		ArrayList<ArrayList<VarValue>> paths = new ArrayList<>();
-		ArrayList<VarValue> initialPath = new ArrayList<>();
-		findValidatePathsToRoot(parentValue, initialPath, paths);
-		
-		ArrayList<VarValue> shortestPath = findShortestPath(paths);
-		
-		for(int i=1; i<shortestPath.size(); i++){
-			VarValue node = shortestPath.get(i);
-			varPath = node.getVarName() + "." + varPath;
-		}
-		
-		parentValue = shortestPath.get(shortestPath.size()-1);
-		
-		if(parentValue.isField()){
-			varPath = "this." + varPath;
-		}
-		
-		return varPath;
-	}
-	
-	private ArrayList<VarValue> findShortestPath(ArrayList<ArrayList<VarValue>> paths){
-		int length = -1;
-		ArrayList<VarValue> shortestPath = null;
-		
-		for(ArrayList<VarValue> path: paths){
-			if(length == -1){
-				shortestPath = path;
-				length = path.size();
-			}
-			else{
-				if(length < path.size()){
-					shortestPath = path;
-					length = path.size();
-				}
-			}
-		}
-		
-		return shortestPath;
-	}
-	
-	@SuppressWarnings("unchecked")
-	private void findValidatePathsToRoot(VarValue node, ArrayList<VarValue> path, 
-			ArrayList<ArrayList<VarValue>> paths) {
-		path.add(node);
-		
-		if(node.isRoot()){
-			paths.add(path);
-		}
-		else if(!isCyclic(path)){
-			for(VarValue parent: node.getParents()){
-				ArrayList<VarValue> clonedPath = (ArrayList<VarValue>) path.clone();
-				findValidatePathsToRoot(parent, clonedPath, paths);
-			}
-		}
-	}
-	
-	private boolean isCyclic(ArrayList<VarValue> path){
-		for(int i=0; i<path.size(); i++){
-			VarValue node1 = path.get(i);
-			for(int j=i+1; j<path.size(); j++){
-				VarValue node2 = path.get(j);
-				if(node1 == node2){
-					return true;
-				}
-			}
-		}
-		
-		return false;
-	}
-
 	public void addChild(VarValue child) {
 		if (children == null) {
 			children = new ArrayList<VarValue>();
@@ -269,84 +189,6 @@ public abstract class VarValue implements GraphNode, Serializable {
 		return variable.getRuntimeType();
 	}
 	
-//	public void setType(String type){
-//		variable.setType(type);
-//	}
-	
-//	public double getDoubleVal() {
-//		return NOT_NULL_VAL;
-//	}
-	
-//	public String getChildId(String childCode) {
-//		return String.format("%s.%s", varName, childCode);
-//	}
-//	
-//	public String getChildId(int i) {
-//		return getChildId(String.valueOf(i));
-//	}
-	
-//	/**
-//	 * the value of this node will be stored in allLongsVals.get(varId)[i];
-//	 * 
-//	 * @param allLongsVals: a map of Variable and its values in all testcases.
-//	 * @param i: current index of allLongsVals.get(varId)
-//	 * @param size: size of allLongsVals
-//	 */
-//	public void retrieveValue(Map<String, double[]> allLongsVals, int i,
-//			int size) {
-//		if (needToRetrieveValue()) {
-//			if (!allLongsVals.containsKey(varName)) {
-//				allLongsVals.put(varName, new double[size]);
-//			}
-//			
-//			double[] valuesOfVarId = allLongsVals.get(varName);
-//			valuesOfVarId[i] = getDoubleVal();
-//		}
-//		if (children != null) {
-//			for (VarValue child : children) {
-//				child.retrieveValue(allLongsVals, i, size);
-//			}
-//		}
-//	}
-	
-//	public List<Double> appendVal(List<Double> values) {
-//		if (needToRetrieveValue()) {
-//			values.add(getDoubleVal());
-//		}
-//		for (VarValue child : CollectionUtils.initIfEmpty(children)) {
-//			child.appendVal(values);
-//		}
-//		return values;
-//	}
-	
-//	public List<String> appendVarId(List<String> vars) {
-//		if (needToRetrieveValue()) {
-//			vars.add(varName);
-//		}
-//		for (VarValue child : CollectionUtils.initIfEmpty(children)) {
-//			child.appendVarId(vars);
-//		}
-//		return vars;
-//	}
-	
-//	/**
-//	 * TODO: to improve, varId of a child is always 
-//	 * started with its parent's varId
-//	 */
-//	public VarValue findVariableById(String varId) {
-//		if (this.varName.equals(varId)) {
-//			return this;
-//		} else {
-//			for (VarValue child : CollectionUtils.initIfEmpty(children)) {
-//				VarValue match = child.findVariableById(varId);
-//				if (match != null) {
-//					return match;
-//				}
-//			}
-//			return null;
-//		}
-//	}
-	
 	/* only affect for the current execValue, not for its children */
 	protected boolean needToRetrieveValue() {
 		return true;
@@ -360,10 +202,6 @@ public abstract class VarValue implements GraphNode, Serializable {
 	public boolean isElementOfArray() {
 		return variable instanceof ArrayElementVar;
 	}
-
-//	public void setElementOfArray(boolean isElementOfArray) {
-//		this.isElementOfArray = isElementOfArray;
-//	}
 	
 	@Override
 	public List<VarValue> getParents() {
@@ -475,6 +313,12 @@ public abstract class VarValue implements GraphNode, Serializable {
 		value.addParent(this);
 	}
 
-	
+	public void ensureChildrenSize(int size) {
+		if (children == null) {
+			children = new ArrayList<>(size);
+		} else {
+			((ArrayList<?>) children).ensureCapacity(size);
+		}
+	}
 //	public abstract VarValue clone();
 }

@@ -1,22 +1,13 @@
 package microbat.model;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import microbat.model.variable.Variable;
 import sav.common.core.utils.ClassUtils;
 
 public class BreakPoint extends ClassLocation {
-	private List<Variable> readVariables = new ArrayList<>();
-	private List<Variable> writtenVariables = new ArrayList<>();
-	
-	private List<Variable> allVisibleVariables = new ArrayList<>();
-	
 	private boolean isReturnStatement;
-	
-	private boolean isStartOfClass = false;
 	
 	private boolean isConditional;
 	private boolean isBranch;
@@ -29,7 +20,6 @@ public class BreakPoint extends ClassLocation {
 	 */
 	private ControlScope controlScope;
 	private SourceScope loopScope;
-	private List<ClassLocation> targets = new ArrayList<>();
 	private String declaringCompilationUnitName;
 	
 	public BreakPoint(String className, String methodSinature, int linNum){
@@ -45,51 +35,11 @@ public class BreakPoint extends ClassLocation {
 	public Object clone(){
 		ClassLocation location = (ClassLocation) super.clone();
 		BreakPoint point = new BreakPoint(location.getClassCanonicalName(), declaringCompilationUnitName, lineNo);
-		point.setAllVisibleVariables(allVisibleVariables);
 		point.setControlScope(controlScope);
 		point.setConditional(isConditional);
 		point.setReturnStatement(isReturnStatement);
 		point.setLoopScope(loopScope);
-		point.setTargets(targets);
-		point.setReadVariables(readVariables);
-		point.setWrittenVariables(readVariables);
 		return point;
-	}
-	
-	public void addReadVariable(Variable var){
-		if(!this.readVariables.contains(var)){
-			this.readVariables.add(var);			
-		}
-	}
-	
-	public void addWrittenVariable(Variable var){
-		if(!this.writtenVariables.contains(var)){
-			this.writtenVariables.add(var);
-		}
-	}
-	
-	public List<Variable> getAllVisibleVariables() {
-		return allVisibleVariables;
-	}
-
-	public void setAllVisibleVariables(List<Variable> allVisibleVariables) {
-		this.allVisibleVariables = allVisibleVariables;
-	}
-
-	public List<Variable> getReadVariables() {
-		return readVariables;
-	}
-
-	public void setReadVariables(List<Variable> readVariables) {
-		this.readVariables = readVariables;
-	}
-
-	public List<Variable> getWrittenVariables() {
-		return writtenVariables;
-	}
-
-	public void setWrittenVariables(List<Variable> writtenVariables) {
-		this.writtenVariables = writtenVariables;
 	}
 	
 	@Override
@@ -182,20 +132,6 @@ public class BreakPoint extends ClassLocation {
 		this.controlScope = conditionScope;
 	}
 
-	public List<ClassLocation> getTargets() {
-		return targets;
-	}
-
-	public void setTargets(List<ClassLocation> targets) {
-		this.targets = targets;
-	}
-	
-	public void addTarget(ClassLocation target){
-		if(!this.targets.contains(target)){
-			this.targets.add(target);			
-		}
-	}
-
 	public void mergeControlScope(ControlScope locationScope) {
 		if(this.controlScope == null){
 			this.controlScope = locationScope;
@@ -234,14 +170,6 @@ public class BreakPoint extends ClassLocation {
 	public boolean isSourceVersion() {
 		String flag = File.separator + "bug" + File.separator;
 		return this.getFullJavaFilePath().contains(flag);
-	}
-
-	public boolean isStartOfClass() {
-		return isStartOfClass;
-	}
-
-	public void setStartOfClass(boolean isStartOfClass) {
-		this.isStartOfClass = isStartOfClass;
 	}
 
 	public boolean isBranch() {

@@ -1,6 +1,7 @@
 package microbat.model.trace;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -8,18 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import microbat.algorithm.graphdiff.GraphDiff;
-import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.instrumentation.runtime.InvokingDetail;
-import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
 import microbat.model.ControlScope;
 import microbat.model.Scope;
-import microbat.model.UserInterestedVariables;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
-import microbat.util.Settings;
 
 public class TraceNode{
 	
@@ -35,19 +31,12 @@ public class TraceNode{
 	public final static int WRITTEN_VARS_INCORRECT = 7;
 	public final static int WRITTEN_VARS_UNKNOWN = 8;
 	
-	private Map<AttributionVar, Double> suspicousScoreMap = new HashMap<>();
-	
-	private int checkTime = -1;
-	
 	private String invokingMethod = null;
 	private InvokingDetail invokingDetail = null;
 	
 	private BreakPoint breakPoint;
-	private BreakPointValue programState;
 	private BreakPointValue afterStepInState;
 	private BreakPointValue afterStepOverState;
-	
-	private List<GraphDiff> consequences;
 	
 	private List<VarValue> readVariables = new ArrayList<>();
 	private List<VarValue> writtenVariables = new ArrayList<>();
@@ -71,7 +60,7 @@ public class TraceNode{
 	 * this filed is used as a temporary field during the trace 
 	 * construction for passing parameter of method invocation.
 	 */
-	private List<VarValue> passParameters = new ArrayList<>();
+	private List<VarValue> passParameters = new ArrayList<>(0);
 	
 	/**
 	 * the order of this node in the whole trace, starting from 1.
@@ -100,34 +89,8 @@ public class TraceNode{
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
 		super();
 		this.breakPoint = breakPoint;
-		this.programState = programState;
 		this.order = order;
 		this.trace = trace;
-	}
-	
-	public List<VarValue> findMarkedReadVariable(){
-		List<VarValue> markedReadVars = new ArrayList<>();
-		for(VarValue readVarValue: this.readVariables){
-			String readVarID = readVarValue.getVarID();
-			if(Settings.interestedVariables.contains(readVarID)){
-				markedReadVars.add(readVarValue);
-			}
-		}		
-		
-		return markedReadVars;
-	}
-	
-	/**
-	 * @param isUICheck
-	 * whether this trace node is checked on UI for now.
-	 * 
-	 * @return
-	 */
-	public boolean isAllReadWrittenVarCorrect(boolean isUICheck){
-		boolean writtenCorrect = getWittenVarCorrectness(Settings.interestedVariables, isUICheck) == TraceNode.WRITTEN_VARS_CORRECT;
-		boolean readCorrect = getReadVarCorrectness(Settings.interestedVariables, isUICheck) == TraceNode.READ_VARS_CORRECT;
-		
-		return writtenCorrect && readCorrect;
 	}
 	
 	public String getMethodSign() {
@@ -179,62 +142,6 @@ public class TraceNode{
 		return latestProducer;
 	}
 
-	public int getReadVarCorrectness(UserInterestedVariables interestedVariables, boolean isUICheck){
-		
-		for(VarValue var: getReadVariables()){
-			String readVarID = var.getVarID();
-			if(interestedVariables.contains(readVarID)){
-				return TraceNode.READ_VARS_INCORRECT;
-			}
-			
-			List<VarValue> children = var.getAllDescedentChildren();
-			for(VarValue child: children){
-				if(interestedVariables.contains(child.getVarID())){
-					return TraceNode.READ_VARS_INCORRECT;
-				}
-			}
-		}
-		
-		/**
-		 * Distinguish between "correct" and "unknown".
-		 * 
-		 * When none of the read variables is located in {@code interestedVariables}, the node is
-		 * correct if either (1) the node has been checked or (2) it is being checked on the UI.
-		 *  
-		 */
-		if(hasChecked() || isUICheck){
-			return TraceNode.READ_VARS_CORRECT;			
-		}
-		else{
-			return TraceNode.READ_VARS_UNKNOWN;
-		}
-		
-	}
-	
-	public int getWittenVarCorrectness(UserInterestedVariables interestedVariables, boolean isUICheck){
-		
-		for(VarValue var: getWrittenVariables()){
-			String writtenVarID = var.getVarID();
-			if(interestedVariables.contains(writtenVarID)){
-				return TraceNode.WRITTEN_VARS_INCORRECT;
-			}
-			
-			List<VarValue> children = var.getAllDescedentChildren();
-			for(VarValue child: children){
-				if(interestedVariables.contains(child.getVarID())){
-					return TraceNode.READ_VARS_INCORRECT;
-				}
-			}
-		}
-		
-		if(hasChecked()|| isUICheck){
-			return TraceNode.WRITTEN_VARS_CORRECT;
-		}
-		else{
-			return TraceNode.WRITTEN_VARS_UNKNOWN;
-		}
-	}
-	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -296,14 +203,6 @@ public class TraceNode{
 
 	public void setBreakPoint(BreakPoint breakPoint) {
 		this.breakPoint = breakPoint;
-	}
-
-	public BreakPointValue getProgramState() {
-		return programState;
-	}
-
-	public void setProgramState(BreakPointValue programState) {
-		this.programState = programState;
 	}
 
 	public int getOrder() {
@@ -462,24 +361,6 @@ public class TraceNode{
 		this.afterStepOverState = afterStepOverState;
 	}
 
-	public List<GraphDiff> getConsequences() {
-		return consequences;
-	}
-
-	public void setConsequences(List<GraphDiff> consequences) {
-		this.consequences = consequences;
-	}
-
-	public void conductStateDiff() {
-		BreakPointValue nodeBefore = getProgramState();
-		BreakPointValue nodeAfter = getAfterState();
-		
-		HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
-		differ.diff(nodeBefore, nodeAfter, false);
-		List<GraphDiff> diffs = differ.getDiffs();
-		this.consequences = diffs;
-	}
-	
 	public String getMethodName() {
 		return this.getBreakPoint().getMethodName();
 	}
@@ -547,7 +428,7 @@ public class TraceNode{
 		this.isException = isException;
 	}
 
-	public List<VarValue> getReadVariables() {
+	public Collection<VarValue> getReadVariables() {
 		return readVariables;
 	}
 
@@ -565,6 +446,9 @@ public class TraceNode{
 		}
 	}
 	
+	private Map<String, VarValue> readVarsMap = new HashMap<>();
+	private Map<String, VarValue> writtenVarsMap = new HashMap<>();
+	
 	private VarValue find(List<VarValue> variables, VarValue var) {
 		for(VarValue existingVar: variables){
 			String simpleID = Variable.truncateSimpleID(existingVar.getVarID());
@@ -575,15 +459,7 @@ public class TraceNode{
 		return null;
 	}
 
-//	public void addHiddenReadVariable(VarValue var){
-//		this.hiddenReadVariables.add(var);
-//	}
-//	
-//	public void addHiddenWrittenVariable(VarValue var){
-//		this.hiddenWrittenVariables.add(var);
-//	}
-
-	public List<VarValue> getWrittenVariables() {
+	public Collection<VarValue> getWrittenVariables() {
 		return writtenVariables;
 	}
 
@@ -599,36 +475,6 @@ public class TraceNode{
 		else{
 			this.writtenVariables.add(var);			
 		}
-	}
-
-	public Double getSuspicousScore(AttributionVar var) {
-		return this.suspicousScoreMap.get(var);
-	}
-
-	public void setSuspicousScore(AttributionVar var, double suspicousScore) {
-		this.suspicousScoreMap.put(var, suspicousScore);
-	}
-	
-	public void addSuspicousScore(AttributionVar var, double score) {
-		Double ss = getSuspicousScore(var);
-		if(ss == null){
-			setSuspicousScore(var, score);
-		}
-		else{
-			setSuspicousScore(var, ss+score);
-		}
-	}
-
-	public boolean hasChecked(){
-		return checkTime != -1;
-	}
-	
-	public int getCheckTime() {
-		return checkTime;
-	}
-
-	public void setCheckTime(int markTime) {
-		this.checkTime = markTime;
 	}
 
 	public boolean isReadVariablesContains(String varID){
@@ -649,14 +495,6 @@ public class TraceNode{
 		return false;
 	}
 	
-	public Map<AttributionVar, Double> getSuspicousScoreMap() {
-		return suspicousScoreMap;
-	}
-
-	public void setSuspicousScoreMap(Map<AttributionVar, Double> suspicousScoreMap) {
-		this.suspicousScoreMap = suspicousScoreMap;
-	}
-
 	public Map<Integer, TraceNode> findAllDominators() {
 		Map<Integer, TraceNode> dominators = new HashMap<>();
 		
@@ -1045,67 +883,6 @@ public class TraceNode{
 		return allInvocationParents;
 	}
 
-	public void resetCheckTime() {
-		this.checkTime = -1;
-		
-	}
-
-	public boolean isWrongPathNode() {
-		return Settings.wrongPathNodeOrder.contains(new Integer(this.getOrder()));
-	}
-	
-	public List<VarValue> getWrongReadVars(UserInterestedVariables interestedVariables) {
-		List<VarValue> vars = new ArrayList<>();
-		for(VarValue var: getReadVariables()){
-			if(interestedVariables.contains(var.getVarID())){
-				vars.add(var);
-			}
-			
-			List<VarValue> children = var.getAllDescedentChildren();
-			for(VarValue child: children){
-				if(interestedVariables.contains(child.getVarID())){
-					if(!vars.contains(child)){
-						vars.add(child);
-					}
-				}
-			}
-		}
-		
-		return vars;
-	}
-
-	public boolean containSynonymousReadVar(VarValue readVar) {
-		for(VarValue readVariable: getReadVariables()){
-			if(readVariable.getVarName().equals(readVar.getVarName())
-					&& readVariable.getClass().equals(readVar.getClass())){
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	public TraceNode getInvocationMethodOrDominator() {
-		TraceNode controlDom = getControlDominator();
-		TraceNode invocationParent = getInvocationParent();
-		
-		if(controlDom!=null && invocationParent!=null) {
-			if(controlDom.getOrder()<invocationParent.getOrder()) {
-				return invocationParent;
-			}
-			else {
-				return controlDom;
-			}
-		}
-		else if(controlDom!=null && invocationParent==null) {
-			return controlDom;
-		}
-		else if(controlDom==null && invocationParent!=null) {
-			return invocationParent;
-		}
-		
-		return null;
-	}
-
 	public Trace getTrace() {
 		return trace;
 	}
@@ -1170,20 +947,11 @@ public class TraceNode{
 		this.invokingMatchNode = invokingMatchNode;
 	}
 
+	public Map<String, VarValue> getReadVarsMap() {
+		return readVarsMap;
+	}
 
-//	public List<VarValue> getHiddenReadVariables() {
-//		return hiddenReadVariables;
-//	}
-//
-//	public void setHiddenReadVariables(List<VarValue> hiddenReadVariables) {
-//		this.hiddenReadVariables = hiddenReadVariables;
-//	}
-//
-//	public List<VarValue> getHiddenWrittenVariables() {
-//		return hiddenWrittenVariables;
-//	}
-//
-//	public void setHiddenWrittenVariables(List<VarValue> hiddenWrittenVariables) {
-//		this.hiddenWrittenVariables = hiddenWrittenVariables;
-//	}
+	public Map<String, VarValue> getWrittenVarsMap() {
+		return writtenVarsMap;
+	}
 }
