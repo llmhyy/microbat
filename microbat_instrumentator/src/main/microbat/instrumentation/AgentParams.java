@@ -83,8 +83,8 @@ public class AgentParams {
 		params.excludesExpression = getFilterExpression(cmd, OPT_EXCLUDES_FILE, OPT_EXCLUDES);
 		params.variableLayer = cmd.getInt(OPT_VARIABLE_LAYER, 2);
 		
-		params.stepLimit = cmd.getInt(OPT_STEP_LIMIT, Integer.MAX_VALUE);
-		params.expectedSteps = cmd.getInt(OPT_EXPECTED_STEP, -1);
+		params.stepLimit = cmd.getInt(OPT_STEP_LIMIT, AgentConstants.UNSPECIFIED_INT_VALUE);
+		params.expectedSteps = cmd.getInt(OPT_EXPECTED_STEP, AgentConstants.UNSPECIFIED_INT_VALUE);
 		params.logTypes = LogType.valuesOf(cmd.getStringList(OPT_LOG));
 		params.overlongMethods = cmd.getStringSet(OPT_OVER_LONG_METHODS);
 		return params;

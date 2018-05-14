@@ -32,11 +32,9 @@ public class TraceAgent implements IAgent {
 		FilterChecker.setup(appPath, agentParams.getIncludesExpression(), agentParams.getExcludesExpression());
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
-		ExecutionTracer.stepLimit = agentParams.getStepLimit();
+		ExecutionTracer.setStepLimit(agentParams.getStepLimit());
 		InstrumentationFilter.overLongMethods = agentParams.getOverlongMethods();
-		if (agentParams.getExpectedSteps() > 0) {
-			ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
-		}
+		ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
 	}
 
 	public void shutdown() throws Exception {
@@ -77,7 +75,7 @@ public class TraceAgent implements IAgent {
 			result.setExpectedSteps(agentParams.getExpectedSteps());
 			result.saveToFile(agentParams.getDumpFile(), false);
 		} 
-		if (agentParams.getTcpPort() != -1) {
+		if (agentParams.getTcpPort() != AgentConstants.UNSPECIFIED_INT_VALUE) {
 			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
 			TraceOutputWriter traceWriter = tcpConnector.connect();
 			traceWriter.writeString(Agent.getProgramMsg());

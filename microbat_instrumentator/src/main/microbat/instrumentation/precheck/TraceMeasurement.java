@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import microbat.instrumentation.Agent;
+import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.runtime.TracingState;
 import microbat.model.ClassLocation;
@@ -76,8 +77,10 @@ public class TraceMeasurement {
 	}
 	
 	public static void setStepLimit(int stepLimit) {
-		TraceMeasurement.stepLimit = stepLimit;
-		TraceMeasurement.maxSteps = (int) (stepLimit * 1.05);
+		if (stepLimit != AgentConstants.UNSPECIFIED_INT_VALUE) {
+			TraceMeasurement.stepLimit = stepLimit;
+			TraceMeasurement.maxSteps = (int) (stepLimit * 1.05);
+		}
 	}
 
 	public static void shutdown() {

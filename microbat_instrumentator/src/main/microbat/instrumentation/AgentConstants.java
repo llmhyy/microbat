@@ -13,4 +13,5 @@ public class AgentConstants {
 	public static final String INSTRUMENT_RESULT = "$$microbat_instrumentation_result";
 	public static final String PROGRESS_HEADER = "$progress ";
 	public static final String LOG_HEADER = "Agent: ";
+	public static final int UNSPECIFIED_INT_VALUE = -1; 
 }

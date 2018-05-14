@@ -18,6 +18,7 @@ import org.apache.bcel.generic.InstructionList;
 import microbat.codeanalysis.bytecode.ByteCodeParser;
 import microbat.codeanalysis.bytecode.MethodFinderBySignature;
 import microbat.instrumentation.Agent;
+import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.model.BreakPoint;
@@ -44,7 +45,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	public static AppJavaClassPath appJavaClassPath;
 	public static int variableLayer = 2;
-	public static int stepLimit = Integer.MAX_VALUE;
+	private static int stepLimit = Integer.MAX_VALUE;
 	private static int expectedSteps = Integer.MAX_VALUE;
 	private static int tolerantExpectedSteps = expectedSteps;
 	
@@ -57,8 +58,16 @@ public class ExecutionTracer implements IExecutionTracer {
 	private Locker locker;
 	
 	public static void setExpectedSteps(int expectedSteps) {
-		ExecutionTracer.expectedSteps = expectedSteps;
-		tolerantExpectedSteps = expectedSteps * 2;
+		if (expectedSteps != AgentConstants.UNSPECIFIED_INT_VALUE) {
+			ExecutionTracer.expectedSteps = expectedSteps;
+			tolerantExpectedSteps = expectedSteps * 2;
+		}
+	}
+	
+	public static void setStepLimit(int stepLimit) {
+		if (stepLimit != AgentConstants.UNSPECIFIED_INT_VALUE) {
+			ExecutionTracer.stepLimit = stepLimit;
+		}
 	}
 
 	public ExecutionTracer(long threadId) {
