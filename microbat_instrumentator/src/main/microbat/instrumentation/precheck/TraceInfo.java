@@ -10,6 +10,7 @@ import microbat.model.ClassLocation;
 public class TraceInfo {
 	Set<ClassLocation> visitedLocs = new HashSet<>();
 	List<ClassLocation> steps = new ArrayList<>();
+	int stepsTotal = 0;
 	int stepLimit;
 	
 	public TraceInfo(int stepLimit) {
@@ -24,7 +25,8 @@ public class TraceInfo {
 	}
 	
 	public void addStep(ClassLocation loc) {
-		steps.add(loc);
+//		steps.add(loc);
+		stepsTotal++;
 		visitedLocs.add(loc);
 	}
 	
@@ -37,7 +39,8 @@ public class TraceInfo {
 	}
 	
 	public int getStepTotal() {
-		return steps.size();
+		return stepsTotal;
+//		return steps.size();
 	}
 	
 	public boolean isOverLong() {
