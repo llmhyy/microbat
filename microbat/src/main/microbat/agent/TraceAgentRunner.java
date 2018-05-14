@@ -54,9 +54,10 @@ public class TraceAgentRunner extends AgentVmRunner {
 			SingleTimer timer = SingleTimer.start("Precheck");
 			addAgentParam(AgentParams.OPT_PRECHECK, "true");
 			File dumpFile;
+			boolean toDeleteDumpFile = false;
 			if (filePath == null) {
-				 dumpFile = File.createTempFile("tracePrecheck", ".info");
-				dumpFile.deleteOnExit();
+				dumpFile = File.createTempFile("tracePrecheck", ".info");
+				toDeleteDumpFile = true;
 			} else {
 				dumpFile = FileUtils.getFileCreateIfNotExist(filePath);
 			}
@@ -73,6 +74,9 @@ public class TraceAgentRunner extends AgentVmRunner {
 			precheckInfo = PrecheckInfo.readFromFile(dumpFilePath);
 			updateTestResult(precheckInfo.getProgramMsg());
 			System.out.println(timer.getResult());
+			if (toDeleteDumpFile) {
+				dumpFile.delete();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new SavRtException(e);
@@ -88,6 +92,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 		timer.newPoint("Execution");
 		try {
 			File dumpFile;
+			boolean toDeleteDumpFile = false;
 			if (filePath == null) {
 				dumpFile = File.createTempFile("trace", ".exec");
 				dumpFile.deleteOnExit();
@@ -102,6 +107,9 @@ public class TraceAgentRunner extends AgentVmRunner {
 			timer.newPoint("Read output result");
 			runningInfo = RunningInfo.readFromFile(dumpFile);
 			updateTestResult(runningInfo.getProgramMsg());
+			if (toDeleteDumpFile) {
+				dumpFile.delete();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new SavRtException(e);
