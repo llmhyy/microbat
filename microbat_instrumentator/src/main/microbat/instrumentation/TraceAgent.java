@@ -85,10 +85,10 @@ public class TraceAgent implements IAgent {
 			traceWriter.flush();
 			Thread.sleep(10000l);
 			tcpConnector.close();
-		} else {
-			TraceRecorder traceRecorder = new TraceRecorder();
-			traceRecorder.storeTrace(trace );
-		}
+		} 
+		
+//			TraceRecorder traceRecorder = new TraceRecorder();
+//			traceRecorder.storeTrace(trace );
 		AgentLogger.debug("Trace saved.");
 	}
 	
