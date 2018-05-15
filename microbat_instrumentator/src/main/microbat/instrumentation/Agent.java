@@ -9,7 +9,7 @@ import microbat.instrumentation.filter.FilterChecker;
  *  the Agent proxy
  * (Real agent would be TraceAgent & PrecheckAgent)
  */
-public class Agent implements IAgent {
+public class Agent {
 	private static IAgent agent;
 	private static String programMsg = "";
 	private volatile static boolean shutdowned = false;
@@ -82,25 +82,7 @@ public class Agent implements IAgent {
 	public static String extractJarPath() {
 		return null;
 	}
-	
-	@Override
-	public void startTest(String junitClass, String junitMethod) {
-		try {
-			agent.startTest(junitClass, junitMethod);
-		} catch (Throwable e) {
-			AgentLogger.error(e);
-		}
-	}
 
-	@Override
-	public void finishTest(String junitClass, String junitMethod) {
-		try {
-			agent.finishTest(junitClass, junitMethod);
-		} catch (Throwable e) {
-			AgentLogger.error(e);
-		}
-	}
-	
 	public static void _onStartThread() {
 		if (!shutdowned) {
 //			boolean isCalledFromApp = false;
@@ -126,12 +108,10 @@ public class Agent implements IAgent {
 		return numberOfThread;
 	}
 
-	@Override
 	public ClassFileTransformer getTransformer() {
 		return agent.getTransformer();
 	}
 
-	@Override
 	public void setTransformableClasses(Class<?>[] retransformableClasses) {
 		agent.setTransformableClasses(retransformableClasses);
 	}
