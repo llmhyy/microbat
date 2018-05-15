@@ -52,6 +52,7 @@ public class MethodCallStack extends Stack<TraceNode> {
 				popLayer++;
 				if(caller.getMethodSign().equals(methodSignature)){
 					needPop = true;
+					break;
 				}
 			}
 			
