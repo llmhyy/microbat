@@ -83,7 +83,7 @@ public class TraceOutputReader extends DataInputStream {
 
 	private List<TraceNode> readSteps(Trace trace, List<BreakPoint> locationList) throws IOException {
 		int size = readVarInt();
-		List<TraceNode> allSteps = new ArrayList<>();
+		List<TraceNode> allSteps = new ArrayList<>(size);
 		for (int i = 0; i < size; i++) {
 			TraceNode node = new TraceNode(null, null, i + 1, trace);
 			allSteps.add(node);
@@ -129,6 +129,20 @@ public class TraceOutputReader extends DataInputStream {
 	}
 
 	protected List<VarValue> readVarValue() throws IOException {
+//		int size = readVarInt();
+//		if (size == 0) {
+//			return new ArrayList<>(0);
+//		}
+//		List<VarValue> varValues = new ArrayList<>(size);
+//		try {
+//			for (int i = 0; i < size; i++) {
+//				varValues.add((VarValue)ByteConverter.convertFromBytes(readByteArray()));
+//			}
+//		} catch (ClassNotFoundException e) {
+//			e.printStackTrace();
+//			throw new IOException(e);
+//		}
+//		return varValues;
 		return readSerializableList();
 	}
 	
@@ -142,14 +156,14 @@ public class TraceOutputReader extends DataInputStream {
 		if (bytes == null || bytes.length == 0) {
 			return new ArrayList<>(0);
 		}
-		List<T> varValues;
+		List<T> list;
 		try {
-			varValues = (List<T>) ByteConverter.convertFromBytes(bytes);
+			list = (List<T>) ByteConverter.convertFromBytes(bytes);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 			throw new IOException(e);
 		}
-		return varValues;
+		return list;
 	}
 
 	private TraceNode readNode(List<TraceNode> allSteps) throws IOException {

@@ -20,8 +20,12 @@ public class ByteConverter {
 			out.writeObject(object);
 			bytes = bos.toByteArray();
 		} finally {
-			bos.close();
-			out.close();
+			if (bos != null) {
+				bos.close();
+			}
+			if (out != null) {
+				out.close();
+			}
 		}
 		return bytes;
 	}
@@ -35,9 +39,13 @@ public class ByteConverter {
 			bis = new ByteArrayInputStream(bytes);
 	        in = new ObjectInputStream(bis);
 	        object = in.readObject();
-		}finally{
-			bis.close();
-			in.close();
+		} finally{
+			if (bis != null) {
+				bis.close();
+			}
+			if (in != null) {
+				in.close();
+			}
 		}
         return object;
 	}

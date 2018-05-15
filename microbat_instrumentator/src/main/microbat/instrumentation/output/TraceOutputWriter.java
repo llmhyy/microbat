@@ -4,7 +4,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -168,15 +167,24 @@ public class TraceOutputWriter extends DataOutputStream {
 	}
 
 	private void writeVarValues(Collection<VarValue> varValues) throws IOException {
+//		if (varValues == null || varValues.isEmpty()) {
+//			writeVarInt(0);
+//		} else {
+//			writeVarInt(varValues.size());
+//			for (VarValue var : varValues) {
+//				byte[] bytes = ByteConverter.convertToBytes(var);
+//				writeByteArr(bytes);
+//			}
+//		}
 		writeSerializableList(varValues);
 	}
 	
-	private <T extends Serializable> void writeSerializableList(Collection<T> varValues) throws IOException {
-		if (varValues == null || varValues.isEmpty()) {
+	private <T extends Serializable> void writeSerializableList(Collection<T> list) throws IOException {
+		if (list == null || list.isEmpty()) {
 			writeVarInt(0);
 		} else {
-			writeVarInt(varValues.size());
-			byte[] bytes = ByteConverter.convertToBytes(varValues);
+			writeVarInt(list.size());
+			byte[] bytes = ByteConverter.convertToBytes(list);
 			writeByteArr(bytes);
 		}
 	}
