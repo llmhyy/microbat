@@ -1,8 +1,11 @@
 package microbat.codeanalysis.bytecode;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.CodeException;
@@ -15,8 +18,6 @@ import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.JsrInstruction;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Select;
-
-import microbat.instrumentation.AgentLogger;
 
 /**
  * Construct CFG based on bytecode of a method.
@@ -143,122 +144,76 @@ public class CFGConstructor {
 	}
 
 	public void constructPostDomination(CFG cfg){
+		Map<CFGNode, Set<CFGNode>> postDominanceMap = new HashMap<>();
+		
 		/** connect basic post domination relation */
 		for(CFGNode node: cfg.getNodeList()){
-			node.addPostDominatee(node);
-			for(CFGNode parent: node.getParents()){
-				if(!parent.isBranch()){
-					node.addPostDominatee(parent);
-					for(CFGNode postDominatee: parent.getPostDominatee()){
-						node.addPostDominatee(postDominatee);
-					}
-				}
-			}
+			Set<CFGNode> set = new HashSet<>();
+			set.add(node);
+			postDominanceMap.put(node, set);
 		}
 		
 		/** extend */
-		extendPostDominatee(cfg);
-	}
-
-	@SuppressWarnings("unchecked")
-	private void extendPostDominatee0(CFG cfg) {
-		boolean isClose = false;
-		while(!isClose){
-			isClose = true;
-			
-			for(CFGNode node: cfg.getNodeList()){
-				HashSet<CFGNode> originalSet = (HashSet<CFGNode>) node.getPostDominatee().clone();
-				int originalSize = originalSet.size();
+		boolean isChange = true;
+		int iteration = 0;
+		while(isChange){
+			isChange = false;
+			iteration++;
+			for(int i=cfg.getNodeList().size()-1; i>=0; i--){
+				CFGNode node = cfg.getNodeList().get(i);
+				Set<CFGNode> intersetion = findIntersetedPostDominator(node.getChildren(), postDominanceMap);
+				Set<CFGNode> postDominatorSet = postDominanceMap.get(node);
 				
-				long t5 = System.currentTimeMillis();
-				for(CFGNode postDominatee: node.getPostDominatee()){
-					originalSet.addAll(postDominatee.getPostDominatee());
-					int newSize = node.getPostDominatee().size();
-					
-					boolean isAppendNew =  originalSize != newSize;
-					isClose = isClose && !isAppendNew;
-				}
-				long t6 = System.currentTimeMillis();
-				AgentLogger.debug("time for travese post dominatee: " + (t6-t5));
-				
-				node.setPostDominatee(originalSet);
-			}
-			
-			
-			for(CFGNode nodei: cfg.getNodeList()){
-				if(nodei.isBranch()){
-					for(CFGNode nodej: cfg.getNodeList()){
-						if(!nodei.equals(nodej)){
-							boolean isExpend = checkBranchDomination0(nodei, nodej);
-							isClose = isClose && !isExpend;
-						}
+				for(CFGNode newNode: intersetion){
+					if(!postDominatorSet.contains(newNode)){
+						postDominatorSet.add(newNode);
+						isChange = true;
 					}
-					
 				}
+				postDominanceMap.put(node, postDominatorSet);
+			}
+		}
+		
+		/** construct post dominatee relation*/
+		for(CFGNode node: cfg.getNodeList()){
+			Set<CFGNode> postDominators = postDominanceMap.get(node);
+			for(CFGNode postDominator: postDominators){
+				postDominator.addPostDominatee(node);
+			}
+		}
+		
+		System.currentTimeMillis();
+	}
+
+	private Set<CFGNode> findIntersetedPostDominator(List<CFGNode> children,
+			Map<CFGNode, Set<CFGNode>> postDominanceMap) {
+		if(children.isEmpty()){
+			return new HashSet<>();
+		}
+		else if(children.size()==1){
+			CFGNode child = children.get(0);
+			return postDominanceMap.get(child);
+		}
+		else{
+			CFGNode child = children.get(0);
+			Set<CFGNode> set = (Set<CFGNode>) ((HashSet<CFGNode>)postDominanceMap.get(child)).clone();
+			
+			for(int i=1; i<children.size(); i++){
+				CFGNode otherChild = children.get(i);
+				Set<CFGNode> candidateSet = postDominanceMap.get(otherChild);
 				
-			}
-		}
-	}
-	
-
-	private boolean checkBranchDomination0(CFGNode branchNode, CFGNode postDominator) {
-		boolean isExpend = false;
-		if(allBranchTargetsIncludedInDominatees(branchNode, postDominator)){
-			if(!postDominator.getPostDominatee().contains(branchNode)){
-				isExpend = true;
-				postDominator.getPostDominatee().add(branchNode);
-			}
-		}
-		return isExpend;
-	}
-
-	private boolean allBranchTargetsIncludedInDominatees(CFGNode branchNode, CFGNode postDominator) {
-		for(CFGNode target: branchNode.getChildren()){
-			if(!postDominator.getPostDominatee().contains(target)){
-				return false;
-			}
-		}
-		
-		return true;
-	}
-	
-	private void extendPostDominatee(CFG cfg) {
-		boolean isClose = false;
-		
-		while(!isClose){
-			isClose = true;
-			for(CFGNode nodei: cfg.getNodeList()){
-				if(nodei.isBranch()){
-					for(CFGNode nodej: cfg.getNodeList()){
-						if(!nodei.equals(nodej)){
-							boolean isAppend = checkBranchDomination(nodei, nodej);
-							isClose = isClose && !isAppend;
-						}
+				Iterator<CFGNode> setIter = set.iterator();
+				while(setIter.hasNext()){
+					CFGNode postDominator = setIter.next();
+					if(!candidateSet.contains(postDominator)){
+						setIter.remove();
 					}
 				}
 			}
-		}
-	}
-	
-	private boolean checkBranchDomination(CFGNode branchNode, CFGNode postDominator) {
-		boolean isExpend = false;
-		if(allBranchTargetsReachedByDominatees(branchNode, postDominator)){
-			if(!postDominator.getPostDominatee().contains(branchNode)){
-				isExpend = true;
-				postDominator.getPostDominatee().add(branchNode);
-			}
-		}
-		return isExpend;
-	}
-	
-	private boolean allBranchTargetsReachedByDominatees(CFGNode branchNode, CFGNode postDominator) {
-		for(CFGNode target: branchNode.getChildren()){
-			if(!postDominator.canReachDominatee(target)){
-				return false;
-			}
+			
+			return set;
 		}
 		
-		return true;
 	}
 	
 	/**
@@ -278,7 +233,7 @@ public class CFGConstructor {
 
 	private void computeControlDependentees(CFGNode branchNode, List<CFGNode> list) {
 		for(CFGNode child: list){
-			if(!child.canReachDominatee(branchNode) && !branchNode.getControlDependentees().contains(child)){
+			if(!child.canReachPostDominatee(branchNode) && !branchNode.getControlDependentees().contains(child)){
 				branchNode.addControlDominatee(child);
 				computeControlDependentees(branchNode, child.getChildren());
 			}
