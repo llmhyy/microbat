@@ -155,10 +155,8 @@ public class CFGConstructor {
 		
 		/** extend */
 		boolean isChange = true;
-		int iteration = 0;
 		while(isChange){
 			isChange = false;
-			iteration++;
 			for(int i=cfg.getNodeList().size()-1; i>=0; i--){
 				CFGNode node = cfg.getNodeList().get(i);
 				Set<CFGNode> intersetion = findIntersetedPostDominator(node.getChildren(), postDominanceMap);
