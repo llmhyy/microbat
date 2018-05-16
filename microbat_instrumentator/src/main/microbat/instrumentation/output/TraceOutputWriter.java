@@ -4,6 +4,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -152,6 +153,8 @@ public class TraceOutputWriter extends DataOutputStream {
 	
 	private void writeSteps(List<TraceNode> exectionList, Map<String, Integer> locIdIdxMap) throws IOException {
 		writeVarInt(exectionList.size());
+		List<Collection<VarValue>> allReadVars = new ArrayList<>(exectionList.size());
+		List<Collection<VarValue>> allWrittenVars = new ArrayList<>(exectionList.size());
 		for (int i = 0; i < exectionList.size(); i++) {
 			TraceNode node = exectionList.get(i);
 			writeVarInt(locIdIdxMap.get(node.getBreakPoint().getId()));
@@ -160,23 +163,30 @@ public class TraceOutputWriter extends DataOutputStream {
 			writeNodeOrder(node.getStepOverNext());
 			writeNodeOrder(node.getInvocationParent());
 			writeNodeOrder(node.getLoopParent());
-			writeVarValues(node.getReadVariables());
-			writeVarValues(node.getWrittenVariables());
+			allReadVars.add(node.getReadVariables());
+			allWrittenVars.add(node.getWrittenVariables());
 			writeBoolean(node.isException());
 		}
+		writeVarValues(allReadVars);
+		writeVarValues(allWrittenVars);
 	}
-
-	private void writeVarValues(Collection<VarValue> varValues) throws IOException {
-//		if (varValues == null || varValues.isEmpty()) {
-//			writeVarInt(0);
-//		} else {
-//			writeVarInt(varValues.size());
-//			for (VarValue var : varValues) {
-//				byte[] bytes = ByteConverter.convertToBytes(var);
-//				writeByteArr(bytes);
-//			}
-//		}
-		writeSerializableList(varValues);
+	
+	private <T extends Serializable> void writeVarValues(List<Collection<T>> list) throws IOException {
+		int idx = 0;
+		while (idx < list.size()) {
+			List<Collection<T>> subList = new ArrayList<>();
+			while (subList.size() < 4000 && (idx < list.size())) {
+				Collection<T> vars = list.get(idx++);
+				subList.add(vars);
+			}
+			if (subList == null || subList.isEmpty()) {
+				writeVarInt(0);
+			} else {
+				writeVarInt(subList.size());
+				byte[] bytes = ByteConverter.convertToBytes(subList);
+				writeByteArr(bytes);
+			}
+		}
 	}
 	
 	private <T extends Serializable> void writeSerializableList(Collection<T> list) throws IOException {

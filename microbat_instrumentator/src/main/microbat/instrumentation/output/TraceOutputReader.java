@@ -88,7 +88,6 @@ public class TraceOutputReader extends DataInputStream {
 			TraceNode node = new TraceNode(null, null, i + 1, trace);
 			allSteps.add(node);
 		}
-
 		for (int i = 0; i < size; i++) {
 			TraceNode step = allSteps.get(i);
 			step.setBreakPoint(locationList.get(readVarInt()));
@@ -121,31 +120,31 @@ public class TraceOutputReader extends DataInputStream {
 			if (loopParent != null) {
 				loopParent.addLoopChild(step);
 			}
-			step.setReadVariables(readVarValue());
-			step.setWrittenVariables(readVarValue());
 			step.setException(readBoolean());
 		}
+		readRWVarValues(allSteps, false);
+		readRWVarValues(allSteps, true);
 		return allSteps;
 	}
-
+	
 	protected List<VarValue> readVarValue() throws IOException {
-//		int size = readVarInt();
-//		if (size == 0) {
-//			return new ArrayList<>(0);
-//		}
-//		List<VarValue> varValues = new ArrayList<>(size);
-//		try {
-//			for (int i = 0; i < size; i++) {
-//				varValues.add((VarValue)ByteConverter.convertFromBytes(readByteArray()));
-//			}
-//		} catch (ClassNotFoundException e) {
-//			e.printStackTrace();
-//			throw new IOException(e);
-//		}
-//		return varValues;
 		return readSerializableList();
 	}
-	
+
+	private void readRWVarValues(List<TraceNode> allSteps, boolean isWrittenVar) throws IOException {
+		int i = 0;
+		while (i < allSteps.size()) {
+			List<List<VarValue>> varsCol = readSerializableList();
+			for (List<VarValue> vars : varsCol) {
+				if (isWrittenVar) {
+					allSteps.get(i++).setWrittenVariables(vars);
+				} else {
+					allSteps.get(i++).setReadVariables(vars);
+				}
+			}
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	protected <T>List<T> readSerializableList() throws IOException {
 		int size = readVarInt();
@@ -168,7 +167,7 @@ public class TraceOutputReader extends DataInputStream {
 
 	private TraceNode readNode(List<TraceNode> allSteps) throws IOException {
 		int nodeOrder = readVarInt();
-		if (nodeOrder == -1) {
+		if (nodeOrder <= 0) {
 			return null;
 		}
 		return allSteps.get(nodeOrder - 1);
