@@ -55,6 +55,9 @@ import org.eclipse.ui.texteditor.ITextEditor;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;
+import microbat.codeanalysis.bytecode.ByteCodeParser;
+import microbat.codeanalysis.bytecode.ByteCodeVisitor;
+import microbat.codeanalysis.bytecode.MethodFinderBySignature;
 import microbat.model.BreakPoint;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
@@ -63,6 +66,7 @@ import microbat.model.value.VarValue;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
+import sav.strategies.dto.AppJavaClassPath;
 
 public class TraceView extends ViewPart {
 
@@ -346,6 +350,11 @@ public class TraceView extends ViewPart {
 					if (obj instanceof TraceNode) {
 						TraceNode node = (TraceNode) obj;
 
+//						String simpleSig = node.getMethodSign().substring(node.getMethodSign().indexOf("#")+1, node.getMethodSign().length());
+//						MethodFinderBySignature finder = new MethodFinderBySignature(simpleSig);
+//						ByteCodeParser.parse(node.getClassCanonicalName(), finder, node.getTrace().getAppJavaClassPath());
+//						System.currentTimeMillis();
+						
 //						 showDebuggingInfo(node);
 
 						if (!programmingSelection) {
