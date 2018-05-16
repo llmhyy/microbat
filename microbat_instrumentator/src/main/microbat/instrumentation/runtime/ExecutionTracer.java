@@ -26,6 +26,7 @@ import microbat.model.BreakPoint;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.model.trace.VariableDefinitions;
 import microbat.model.value.ArrayValue;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
@@ -83,12 +84,16 @@ public class ExecutionTracer implements IExecutionTracer {
 			return;
 		}
 		
-		String order = trace.findDefiningNodeOrder(rw, currentNode, var);
+		String order = trace.findDefiningNodeOrder(rw, currentNode, var, VariableDefinitions.USE_LAST);
 		
 		if(order.equals("0")){
 			if(var instanceof FieldVar || var instanceof ArrayElementVar){
 				if(!value.getParents().isEmpty()){
-					order = trace.findDefiningNodeOrder(rw, currentNode, value.getParents().get(0).getVariable());					
+					/**
+					 * use the first defining step of the parent.
+					 */
+					order = trace.findDefiningNodeOrder(rw, currentNode, 
+							value.getParents().get(0).getVariable(), VariableDefinitions.USE_FIRST);
 				}
 				
 			}
@@ -493,7 +498,8 @@ public class ExecutionTracer implements IExecutionTracer {
 			if (returnVal != null) {
 				TraceNode latestNode = trace.getLatestNode();
 				if(latestNode!=null){
-					String definingOrder = trace.findDefiningNodeOrder(Variable.WRITTEN, latestNode, returnVar);
+					String definingOrder = trace.findDefiningNodeOrder(Variable.WRITTEN, latestNode, 
+							returnVar, VariableDefinitions.USE_LAST);
 					returnVar.setVarID(returnVar.getVarID()+":"+definingOrder);
 					returnVar.setAliasVarID(returnVar.getAliasVarID()+":"+definingOrder);
 					

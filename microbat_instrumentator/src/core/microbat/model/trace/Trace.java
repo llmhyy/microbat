@@ -259,8 +259,7 @@ public class Trace {
 		return null;
 	}
 	
-	private Map<String, TraceNode> latestNodeDefiningVariableMap = new HashMap<>();
-	
+	private VariableDefinitions variableDefs = new VariableDefinitions();
 	/**
 	 * if we are finding defining step of a read variable, v, the defining step is the latest
 	 * step defining v.
@@ -271,6 +270,9 @@ public class Trace {
 	 * (2-1) s1 if the variable id of sv is never defined before 
 	 * (2-2) s2, s2 is the latest step defining sv.
 	 * 
+	 * firstOrLast indicates that, when there are multiple defining steps for a variable, whether we use 
+	 * the first one or the last one. The default is using last one.
+	 * 
 	 * @param accessType
 	 * @param currentNode
 	 * @param isSubValue
@@ -279,7 +281,7 @@ public class Trace {
 	 * @return
 	 */
 	public String findDefiningNodeOrder(String accessType, TraceNode currentNode,
-			Variable var) {
+			Variable var, int defStepSelection) {
 		String varID = var.getVarID(); 
 		String aliasVarID = var.getAliasVarID();
 		varID = Variable.truncateSimpleID(varID);
@@ -287,14 +289,14 @@ public class Trace {
 		String definingOrder = "0";
 		if(accessType.equals(Variable.WRITTEN)){
 			definingOrder = String.valueOf(currentNode.getOrder());
-			latestNodeDefiningVariableMap.put(varID, currentNode);
+			variableDefs.put(varID, currentNode);
 			if(aliasVarID!=null){
-				latestNodeDefiningVariableMap.put(aliasVarID, currentNode);				
+				variableDefs.put(aliasVarID, currentNode);				
 			}
 		}
 		else if(accessType.equals(Variable.READ)){
-			TraceNode node1 = latestNodeDefiningVariableMap.get(varID);
-			TraceNode node2 = latestNodeDefiningVariableMap.get(aliasVarID);
+			TraceNode node1 = variableDefs.get(varID, currentNode, defStepSelection);
+			TraceNode node2 = variableDefs.get(aliasVarID, currentNode, defStepSelection);
 			
 			int order = 0;
 			if(var instanceof LocalVar){
