@@ -123,8 +123,13 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 				newJC = classGen.getJavaClass();
 				newJC.setConstantPool(constPool.getFinalConstantPool());
 			} catch (Exception e) {
-				System.err.println(String.format("Error when running instrumentation: %s.%s", classFName, method.getName()));
-				e.printStackTrace();
+				String message = e.getMessage();
+				if (e.getMessage() != null && e.getMessage().contains("offset too large")) {
+					message = "offset too large";
+				}
+				AgentLogger.info(String.format("Warning: %s [%s]",
+						ClassGenUtils.getMethodFullName(classGen.getClassName(), method), message));
+				AgentLogger.error(e);
 			}
 		}
 		if (newJC != null) {
