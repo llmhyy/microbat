@@ -107,7 +107,7 @@ public class CFGNode {
 		
 	}
 
-	public boolean canReachDominatee(CFGNode target) {
+	public boolean canReachPostDominatee(CFGNode target) {
 		HashSet<CFGNode> visitedNodes = new HashSet<>();
 		return canReachDominatee(target, visitedNodes);
 	}
