@@ -4,11 +4,14 @@ import org.junit.Test;
 
 import microbat.Activator;
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
 import microbat.util.IResourceUtils;
 import sav.common.core.SavException;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.ClassUtils;
+import sav.common.core.utils.SingleTimer;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.vm.VMConfiguration;
 
@@ -68,5 +71,28 @@ public class TraceConstructor {
 			throw new SavRtException("Cannot build trace");
 		}
 		return trace;
+	}
+	
+	@Test
+	public void loadTrace() {
+		SingleTimer timer = SingleTimer.start("loadTrace");
+		RunningInfo runningInfo = RunningInfo
+				.readFromFile("E:/lyly/eclipse-java-mars-clean/eclipse/trace/Math/32/bug.exec");
+		System.out.println(timer.getResult());
+//		int maxR = -1;
+//		int maxW = -1;
+//		for (TraceNode node : runningInfo.getTrace().getExecutionList()) {
+//			System.out.print(node.getOrder() + ": ");
+//			System.out.println("R= " + node.getReadVariables().size() + ", W= " + node.getWrittenVariables().size());
+//			if (maxR < node.getReadVariables().size()) {
+//				maxR = node.getReadVariables().size();
+//			}
+//			if (maxW < node.getWrittenVariables().size()) {
+//				maxW = node.getWrittenVariables().size();
+//			}
+//		}
+//		System.out.println("maxR=" + maxR + ", maxW=" + maxW);
+		System.out.println(runningInfo);
+		System.out.println(timer.getResult());
 	}
 }
