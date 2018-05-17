@@ -16,6 +16,7 @@ import microbat.model.ControlScope;
 import microbat.model.Scope;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
+import sav.common.core.utils.CollectionUtils;
 
 public class TraceNode{
 	
@@ -38,8 +39,8 @@ public class TraceNode{
 	private BreakPointValue afterStepInState;
 	private BreakPointValue afterStepOverState;
 	
-	private List<VarValue> readVariables = new ArrayList<>();
-	private List<VarValue> writtenVariables = new ArrayList<>();
+	private List<VarValue> readVariables;
+	private List<VarValue> writtenVariables;
 	
 //	private List<VarValue> hiddenReadVariables = new ArrayList<>();
 //	private List<VarValue> hiddenWrittenVariables = new ArrayList<>();
@@ -54,13 +55,13 @@ public class TraceNode{
 	 * this filed is used as a temporary field during the trace 
 	 * construction for returning value.
 	 */
-	private List<VarValue> returnedVariables = new ArrayList<>();
+	private List<VarValue> returnedVariables;
 	
 	/**
 	 * this filed is used as a temporary field during the trace 
 	 * construction for passing parameter of method invocation.
 	 */
-	private List<VarValue> passParameters = new ArrayList<>(0);
+	private List<VarValue> passParameters = null;
 	
 	/**
 	 * the order of this node in the whole trace, starting from 1.
@@ -76,7 +77,7 @@ public class TraceNode{
 	private List<TraceNode> invocationChildren = new ArrayList<>();
 	private TraceNode invocationParent;
 	
-	private List<TraceNode> loopChildren = new ArrayList<>();
+	private List<TraceNode> loopChildren;
 	private TraceNode loopParent;
 	
 	private boolean isException;
@@ -87,10 +88,25 @@ public class TraceNode{
 	private Trace trace;
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
-		super();
+		this(breakPoint, programState, order, trace, -1, -1);
+	}
+	
+	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace,
+			int initReadVarsSize, int initWrittenVarsSize) {
 		this.breakPoint = breakPoint;
 		this.order = order;
 		this.trace = trace;
+		if (initReadVarsSize >= 0) {
+			readVariables = new ArrayList<>(initReadVarsSize);
+		} else {
+			readVariables = new ArrayList<>();
+		}
+		
+		if (initWrittenVarsSize >= 0) {
+			writtenVariables = new ArrayList<>(initWrittenVarsSize);
+		} else {
+			writtenVariables = new ArrayList<>();
+		}
 	}
 	
 	public String getMethodSign() {
@@ -102,6 +118,9 @@ public class TraceNode{
 	}
 	
 	public void addReturnVariable(VarValue var){
+		if (returnedVariables == null) {
+			returnedVariables = new ArrayList<>(5);
+		}
 		this.returnedVariables.add(var);
 	}
 	
@@ -446,9 +465,6 @@ public class TraceNode{
 		}
 	}
 	
-	private Map<String, VarValue> readVarsMap = new HashMap<>();
-	private Map<String, VarValue> writtenVarsMap = new HashMap<>();
-	
 	private VarValue find(List<VarValue> variables, VarValue var) {
 		for(VarValue existingVar: variables){
 			String simpleID = Variable.truncateSimpleID(existingVar.getVarID());
@@ -789,7 +805,7 @@ public class TraceNode{
 		
 		abstractChildren.addAll(this.invocationChildren);
 		clearLoopParentsInMethodParent(abstractChildren);
-		for(TraceNode loopChild: this.loopChildren){
+		for(TraceNode loopChild: getLoopChildren()){
 			if(!abstractChildren.contains(loopChild)){
 				abstractChildren.add(loopChild);
 			}
@@ -844,11 +860,7 @@ public class TraceNode{
 	}
 
 	public List<TraceNode> getLoopChildren() {
-		return loopChildren;
-	}
-
-	public void setLoopChildren(List<TraceNode> loopChildren) {
-		this.loopChildren = loopChildren;
+		return CollectionUtils.nullToEmpty(loopChildren);
 	}
 
 	public TraceNode getLoopParent() {
@@ -860,6 +872,7 @@ public class TraceNode{
 	}
 	
 	public void addLoopChild(TraceNode loopChild){
+		loopChildren = CollectionUtils.initIfEmpty(loopChildren);
 		this.loopChildren.add(loopChild);
 	}
 
@@ -892,11 +905,7 @@ public class TraceNode{
 	}
 
 	public List<VarValue> getReturnedVariables() {
-		return returnedVariables;
-	}
-
-	public void setReturnedVariables(List<VarValue> returnedVariables) {
-		this.returnedVariables = returnedVariables;
+		return CollectionUtils.nullToEmpty(returnedVariables);
 	}
 
 	public long getRuntimePC() {
@@ -924,7 +933,7 @@ public class TraceNode{
 	}
 
 	public List<VarValue> getPassParameters() {
-		return passParameters;
+		return CollectionUtils.nullToEmpty(passParameters);
 	}
 
 	public void setPassParameters(List<VarValue> passParameters) {
@@ -947,11 +956,4 @@ public class TraceNode{
 		this.invokingMatchNode = invokingMatchNode;
 	}
 
-	public Map<String, VarValue> getReadVarsMap() {
-		return readVarsMap;
-	}
-
-	public Map<String, VarValue> getWrittenVarsMap() {
-		return writtenVarsMap;
-	}
 }

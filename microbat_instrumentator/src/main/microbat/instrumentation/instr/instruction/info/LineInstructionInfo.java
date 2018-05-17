@@ -317,4 +317,14 @@ public class LineInstructionInfo {
 		}
 		return targets;
 	}
+
+	public int getReadWriteInsnTotal(boolean isWritten) {
+		int total = 0;
+		for (RWInstructionInfo info : rwInsructionInfo) {
+			if (info.isStoreInstruction() == isWritten) {
+				total++;
+			}
+		}
+		return total;
+	}
 }

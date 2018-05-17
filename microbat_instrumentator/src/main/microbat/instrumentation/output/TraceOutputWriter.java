@@ -151,7 +151,8 @@ public class TraceOutputWriter extends DataOutputStream {
 		return locationMap;
 	}
 	
-	private void writeSteps(List<TraceNode> exectionList, Map<String, Integer> locIdIdxMap) throws IOException {
+	private void writeSteps(List<TraceNode> exectionList, Map<String, Integer> locIdIdxMap)
+			throws IOException {
 		writeVarInt(exectionList.size());
 		List<Collection<VarValue>> allReadVars = new ArrayList<>(exectionList.size());
 		List<Collection<VarValue>> allWrittenVars = new ArrayList<>(exectionList.size());
@@ -171,13 +172,17 @@ public class TraceOutputWriter extends DataOutputStream {
 		writeVarValues(allWrittenVars);
 	}
 	
-	private <T extends Serializable> void writeVarValues(List<Collection<T>> list) throws IOException {
+	private void writeVarValues(List<Collection<VarValue>> list) throws IOException {
 		int idx = 0;
 		while (idx < list.size()) {
-			List<Collection<T>> subList = new ArrayList<>();
-			while (subList.size() < 4000 && (idx < list.size())) {
-				Collection<T> vars = list.get(idx++);
+			int varSize = 0;
+			List<Collection<VarValue>> subList = new ArrayList<>();
+			while (varSize < 4000 && (idx < list.size())) {
+				Collection<VarValue> vars = list.get(idx++);
 				subList.add(vars);
+				for (VarValue var : vars) {
+					varSize += var.size();
+				}
 			}
 			if (subList == null || subList.isEmpty()) {
 				writeVarInt(0);

@@ -7,7 +7,7 @@ public class ClassLoaderHandler extends EmptyExecutionTracer {
 	private boolean tracerLockPreserve;
 
 	@Override
-	public void _hitLine(int line, String className, String methodSignature) {
+	public void _hitLine(int line, String className, String methodSignature, int numOfReadVars, int numOfWrittenVars) {
 		if (line == ClassLoaderInstrumenter.ENTER_MARKER) {
 			System.out.println("gLock: " + className);
 //			tracerLockPreserve = ExecutionTracer.glock();

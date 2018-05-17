@@ -145,15 +145,6 @@ public class HeuristicIgnoringFieldRule {
 		if(isSerializable == null){
 			isSerializable = Serializable.class.isAssignableFrom(type);
 			isSerializableMap.put(typeName, isSerializable);
-//			List<Class<?>> allSuperTypes = new ArrayList<>();
-//			findAllSuperTypes(type, allSuperTypes);
-//			isSerializable = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.SERIALIZABLE);
-//			if(isSerializable){
-//				isSerializableMap.put(typeName, true);
-//			}
-//			else{
-//				isSerializableMap.put(typeName, false);
-//			}
 		}
 		
 		return isSerializable;
@@ -167,15 +158,6 @@ public class HeuristicIgnoringFieldRule {
 		if(isCollection == null){
 			isCollection = Collection.class.isAssignableFrom(type);
 			isCollectionMap.put(typeName, isCollection);
-//			List<Class<?>> allSuperTypes = new ArrayList<>();
-//			findAllSuperTypes(type, allSuperTypes);
-//			isCollection = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.COLLECTION);
-//			if(isCollection){
-//				isCollectionMap.put(typeName, true);
-//			}
-//			else{
-//				isCollectionMap.put(typeName, false);
-//			}
 		}
 		
 		return isCollection;
@@ -188,15 +170,6 @@ public class HeuristicIgnoringFieldRule {
 		if(isHashMap == null){
 			isHashMap = HashMap.class.isAssignableFrom(type);
 			isHashMapMap.put(typeName, isHashMap);
-//			List<Class<?>> allSuperTypes = new ArrayList<>();
-//			findAllSuperTypes(type, allSuperTypes);
-//			isHashMap = allSuperTypes.toString().contains(HeuristicIgnoringFieldRule.HASHMAP);
-//			if(isHashMap){
-//				isHashMapMap.put(typeName, true);
-//			}
-//			else{
-//				isHashMapMap.put(typeName, false);
-//			}
 		}
 		
 		return isHashMap;
@@ -244,32 +217,6 @@ public class HeuristicIgnoringFieldRule {
 		return isNeed;
 	}
 	
-	private static void findAllSuperTypes(Class<?> type, List<Class<?>> allSuperType) {
-		if (type == null) {
-			return;
-		}
-		if (!type.isInterface() && !type.isEnum()) {
-			Class<?> classType = (Class<?>)type;
-			if(!allSuperType.contains(classType)){
-				allSuperType.add(classType);				
-			}
-			Class<?> superClass = classType.getSuperclass();
-			findAllSuperTypes(superClass, allSuperType);
-			
-			for(Class<?> interfaceType: classType.getInterfaces()){
-				findAllSuperTypes(interfaceType, allSuperType);
-			}
-		} else if (type.isInterface()) {
-			if (!allSuperType.contains(type)) {
-				allSuperType.add(type);
-			}
-			for (Class<?> superInterface : type.getInterfaces()) {
-				findAllSuperTypes(superInterface, allSuperType);
-			}
-		}
-		
-	}
-
 	private static boolean containPrefix(String name, List<String> prefixList){
 		for(String prefix: prefixList){
 			if(name.startsWith(prefix)){
@@ -311,5 +258,20 @@ public class HeuristicIgnoringFieldRule {
 	public static boolean isHashMapTableType(String type) {
 		return "java.util.HashMap$Node".equals(type) || 
 				"java.util.HashMap$Entry".equals(type);
+	}
+	
+	public static String getInfo() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("isCollectionMap: ").append(isCollectionMap.size())
+			.append("isHashMapMap: ").append(isHashMapMap.size())
+			.append("isSerializableMap: ").append(isSerializableMap.size())
+			.append("parsingTypeMap: ").append(parsingTypeMap.size());
+		return sb.toString();
+	}
+
+	public static void clearCache() {
+		isCollectionMap = null;
+		isHashMapMap = null;
+		parsingTypeMap = null;
 	}
 }

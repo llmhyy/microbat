@@ -47,7 +47,7 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 	}
 
 	@Override
-	public void _hitLine(int line, String className, String methodSignature) {
+	public void _hitLine(int line, String className, String methodSignature, int numOfReadVars, int numOfWrittenVars) {
 
 	}
 

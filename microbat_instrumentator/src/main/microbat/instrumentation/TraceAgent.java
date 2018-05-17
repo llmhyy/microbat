@@ -12,7 +12,6 @@ import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.sql.TraceRecorder;
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -50,7 +49,7 @@ public class TraceAgent implements IAgent {
 		FilterChecker.addFilterInfo(trace);
 		
 		StepMismatchChecker.logNormalSteps(trace);
-		
+		ExecutionTracer.dispose(); // clear cache
 		long t1 = System.currentTimeMillis();
 		createVirtualDataRelation(trace);
 		long t2 = System.currentTimeMillis();
@@ -76,8 +75,7 @@ public class TraceAgent implements IAgent {
 			result.setCollectedSteps(trace.getExecutionList().size());
 			result.setExpectedSteps(agentParams.getExpectedSteps());
 			result.saveToFile(agentParams.getDumpFile(), false);
-		} 
-		if (agentParams.getTcpPort() != AgentConstants.UNSPECIFIED_INT_VALUE) {
+		} else if (agentParams.getTcpPort() != AgentConstants.UNSPECIFIED_INT_VALUE) {
 			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
 			TraceOutputWriter traceWriter = tcpConnector.connect();
 			traceWriter.writeString(Agent.getProgramMsg());

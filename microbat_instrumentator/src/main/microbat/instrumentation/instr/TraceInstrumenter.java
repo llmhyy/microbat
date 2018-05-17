@@ -206,8 +206,9 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 			/* instrument RW instructions */
 			List<RWInstructionInfo> rwInsns = lineInfo.getRWInstructions();
 //			if (lineInfo.hasNoInstrumentation()) {
-				injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getLine(),
-						lineInfo.getLineNumberInsn(), classNameVar, methodSigVar, lineInfo.hasExceptionTarget());
+			injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getLine(), lineInfo.getLineNumberInsn(),
+					classNameVar, methodSigVar, lineInfo.hasExceptionTarget(), lineInfo.getReadWriteInsnTotal(false),
+					lineInfo.getReadWriteInsnTotal(true));
 //			}
 			for (RWInstructionInfo rwInsnInfo : rwInsns) {
 				InstructionList newInsns = null;
@@ -933,13 +934,17 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 
 	protected void injectCodeTracerHitLine(InstructionList insnList, ConstantPoolGen constPool,
 			LocalVariableGen tracerVar, int line, InstructionHandle lineNumberInsn, LocalVariableGen classNameVar,
-			LocalVariableGen methodSigVar, boolean isExceptionTarget) {
+			LocalVariableGen methodSigVar, boolean isExceptionTarget, int readVars, int writtenVars) {
 		TracerMethods tracerMethod = isExceptionTarget ? TracerMethods.HIT_EXEPTION_TARGET : TracerMethods.HIT_LINE;
 		InstructionList newInsns = new InstructionList();
 		newInsns.append(new ALOAD(tracerVar.getIndex()));
 		newInsns.append(new PUSH(constPool, line));
 		newInsns.append(new ALOAD(classNameVar.getIndex()));
 		newInsns.append(new ALOAD(methodSigVar.getIndex()));
+		if (!isExceptionTarget) {
+			newInsns.append(new PUSH(constPool, readVars));
+			newInsns.append(new PUSH(constPool, writtenVars));
+		}
 		appendTracerMethodInvoke(newInsns, tracerMethod, constPool);
 		insertInsnHandler(insnList, newInsns, lineNumberInsn);
 		newInsns.dispose();

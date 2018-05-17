@@ -321,4 +321,8 @@ public abstract class VarValue implements GraphNode, Serializable {
 		}
 	}
 //	public abstract VarValue clone();
+
+	public int size() {
+		return getChildren().size() + 1;
+	}
 }
