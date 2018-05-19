@@ -175,14 +175,12 @@ public class TraceOutputWriter extends DataOutputStream {
 	private void writeVarValues(List<Collection<VarValue>> list) throws IOException {
 		int idx = 0;
 		while (idx < list.size()) {
-			int varSize = 0;
+			int limitSize = 0;
 			List<Collection<VarValue>> subList = new ArrayList<>();
-			while (varSize < 4000 && (idx < list.size())) {
+			while (limitSize < 4000 && (idx < list.size())) {
 				Collection<VarValue> vars = list.get(idx++);
 				subList.add(vars);
-				for (VarValue var : vars) {
-					varSize += var.size();
-				}
+				limitSize = subList.size();
 			}
 			if (subList == null || subList.isEmpty()) {
 				writeVarInt(0);
