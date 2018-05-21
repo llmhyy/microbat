@@ -105,15 +105,9 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 				injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getSourceLine(), insn, classNameVar,
 						methodSigVar);
 				if (insn.getInstruction() instanceof InvokeInstruction) {
-//					Type returnType = ((InvokeInstruction) insn.getInstruction()).getReturnType(constPool);
-//					boolean revisit = !Type.VOID.equals(returnType);
-//							&& ((insn.getNext() == null)
-//							|| !(insn.getNext().getInstruction() instanceof POP));
-//					if (revisit) {
-						InstructionList newInsns = getHitLineCode(constPool, tracerVar, lineInfo.getSourceLine(), classNameVar, methodSigVar);
-						appendInstruction(insnList, newInsns, insn);
-						newInsns.dispose();
-//					}
+					InstructionList newInsns = getHitLineCode(constPool, tracerVar, lineInfo.getSourceLine(), classNameVar, methodSigVar);
+					appendInstruction(insnList, newInsns, insn);
+					newInsns.dispose();
 				}
 			}
 			if (lineInfo.getSourceLine() < startLine) {

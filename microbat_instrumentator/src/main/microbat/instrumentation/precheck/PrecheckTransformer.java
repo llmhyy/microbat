@@ -36,7 +36,6 @@ public class PrecheckTransformer extends AbstractTransformer implements ClassFil
 				String path = srcLocation.getFile();
 				if (FilterChecker.isTransformable(classFName, path, false) && FilterChecker.isAppClass(classFName)) {
 					byte[] data = instrumenter.instrument(classFName, classfileBuffer);
-					AbstractTransformer.log(classfileBuffer, data, classFName, false);
 					return data;
 				}
 			}

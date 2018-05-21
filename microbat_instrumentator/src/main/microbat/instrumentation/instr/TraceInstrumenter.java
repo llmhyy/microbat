@@ -107,18 +107,23 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 				}
 				GeneratedMethods generatedMethods = runMethodInstrumentation(classGen, constPool, methodGen, method, isAppClass, isMainMethod);
 				if (generatedMethods != null) {
-					for (MethodGen newMethod : generatedMethods.getExtractedMethods()) {
-						newMethod.setMaxStack();
-						newMethod.setMaxLocals();
-						classGen.addMethod(newMethod.getMethod());
+					if (doesBytecodeExceedLimit(generatedMethods)) {
+						AgentLogger.info(String.format("Warning: %s exceeds bytecode limit!",
+								ClassGenUtils.getMethodFullName(classGen.getClassName(), method)));
+					} else {
+						for (MethodGen newMethod : generatedMethods.getExtractedMethods()) {
+							newMethod.setMaxStack();
+							newMethod.setMaxLocals();
+							classGen.addMethod(newMethod.getMethod());
+						}
+						methodGen = generatedMethods.getRootMethod();
+						// All changes made, so finish off the method:
+						InstructionList instructionList = methodGen.getInstructionList();
+						instructionList.setPositions();
+						methodGen.setMaxStack();
+						methodGen.setMaxLocals();
+						classGen.replaceMethod(method, methodGen.getMethod());
 					}
-					methodGen = generatedMethods.getRootMethod();
-					// All changes made, so finish off the method:
-					InstructionList instructionList = methodGen.getInstructionList();
-					instructionList.setPositions();
-					methodGen.setMaxStack();
-					methodGen.setMaxLocals();
-					classGen.replaceMethod(method, methodGen.getMethod());
 				}
 				newJC = classGen.getJavaClass();
 				newJC.setConstantPool(constPool.getFinalConstantPool());
@@ -139,9 +144,17 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		return null;
 	}
 	
+	private boolean doesBytecodeExceedLimit(GeneratedMethods generatedMethods) {
+		boolean excessive = doesBytecodeExceedLimit(generatedMethods.getRootMethod());
+		for (MethodGen addedMethod : generatedMethods.getExtractedMethods()) {
+			excessive |= doesBytecodeExceedLimit(addedMethod);
+		}
+		return excessive;
+	}
+
 	protected boolean doesBytecodeExceedLimit(MethodGen methodGen) {
 		try {
-			return methodGen.getInstructionList().getByteCode().length >= (65534);
+			return methodGen.getInstructionList().getByteCode().length >= 65534;			
 		} catch (Exception e) {
 			if (e.getMessage() != null && e.getMessage().contains("offset too large")) {
 				return true;
