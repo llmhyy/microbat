@@ -8,6 +8,7 @@ import java.util.Set;
 
 import experiment.utils.report.Records.Record;
 import experiment.utils.report.excel.RecordDiff;
+import experiment.utils.report.rules.IComparisonRule;
 import sav.common.core.utils.CollectionUtils;
 
 /**
@@ -16,7 +17,7 @@ import sav.common.core.utils.CollectionUtils;
  */
 public class RecordsComparator {
 	
-	public static <T extends IComparationRule> ReportChanges compare(Records oldRecords, Records newRecords,
+	public static <T extends IComparisonRule> ReportChanges compare(Records oldRecords, Records newRecords,
 			List<T> comparationRules) {
 		ReportChanges changes = new ReportChanges(oldRecords, newRecords);
 		changes.setMissingRecords(subtract(oldRecords, newRecords));
@@ -25,7 +26,7 @@ public class RecordsComparator {
 			Record newRecord = newRecords.getRecord(key);
 			Record oldRecord = oldRecords.getRecord(key);
 			if (oldRecord != null) {
-				for (IComparationRule rule : comparationRules) {
+				for (IComparisonRule rule : comparationRules) {
 					RecordDiff recordDiff = rule.getRecordDiff(oldRecord, newRecord);
 					changes.addChange(oldRecord, newRecord, rule, recordDiff);
 				}

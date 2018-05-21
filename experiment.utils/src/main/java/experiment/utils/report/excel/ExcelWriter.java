@@ -26,6 +26,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import sav.common.core.SavRtException;
+import sav.common.core.utils.CollectionUtils;
 
 /**
  * @author LLT
@@ -160,7 +161,7 @@ public class ExcelWriter {
 			} else if (value instanceof Number) {
 				cell.setCellValue(Double.valueOf(value.toString()));
 			}
-			if (highlightCols.contains(i)) {
+			if (highlightCols == null || highlightCols.contains(i)) {
 				cell.setCellStyle(cellStyle);
 			}
 		}
@@ -207,6 +208,9 @@ public class ExcelWriter {
 	
 	public void writeRecordDiffs(String sheetName, String[] mergedHeaders, List<RecordDiff> records, IndexedColors backgroundColor,
 			IndexedColors highlightColor) throws IOException {
+		if (CollectionUtils.isEmpty(records)) {
+			return;
+		}
 		CellStyle oldRecordCellStyle = workbook.createCellStyle();
 		if (backgroundColor != null) {
 			oldRecordCellStyle.setFillBackgroundColor(backgroundColor.index);
@@ -224,6 +228,26 @@ public class ExcelWriter {
 		for (RecordDiff record : records) {
 			rowNum = fillRowData(oldRecordCellStyle, sheet, rowNum, record.getOldRecord().getCellValues());
 			rowNum = fillRowData(newRecordCellStyle, sheet, rowNum, record.getNewRecord().getCellValues(), record.getDiffCols());
+		}
+
+		writeWorkbook();
+	}
+	
+	public void writeNewRecord(String sheetName, String[] mergedHeaders, List<RecordDiff> records,
+			IndexedColors textColor) throws IOException {
+		if (CollectionUtils.isEmpty(records)) {
+			return;
+		}
+		CellStyle newRecordCellStyle = workbook.createCellStyle();
+		if (textColor != null) {
+			Font font = workbook.createFont();
+			font.setColor(textColor.getIndex());
+			newRecordCellStyle.setFont(font);
+		}
+		Sheet sheet = getSheet(sheetName);
+		int rowNum = sheet.getLastRowNum() + 1;
+		for (RecordDiff record : records) {
+			rowNum = fillRowData(newRecordCellStyle, sheet, rowNum, record.getNewRecord().getCellValues(), null);
 		}
 
 		writeWorkbook();

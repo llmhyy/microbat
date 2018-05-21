@@ -16,6 +16,7 @@ import experiment.utils.report.Records.Record;
 import experiment.utils.report.excel.ExcelReader;
 import experiment.utils.report.excel.ExcelUtils;
 import experiment.utils.report.excel.ExcelWriter;
+import experiment.utils.report.rules.IComparisonRule;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.FileUtils;
@@ -24,10 +25,10 @@ import sav.common.core.utils.FileUtils;
  * @author LLT
  *
  */
-public class ExperimentRegressionTest {
+public class ExperimentReportComparisonReporter {
 	private static final int HEADER_ROW_IDX = ExcelUtils.HEADER_ROW_NUM;
 	
-	public static <T extends IComparationRule> void reportChange(String resultFile, String oldReport, String newReport,
+	public static <T extends IComparisonRule> void reportChange(String resultFile, String oldReport, String newReport,
 			List<T> rules, Map<String, List<String>> keyCols) {
 		try {
 			File file = new File(resultFile);
@@ -43,7 +44,8 @@ public class ExperimentRegressionTest {
 				Records oldRecords = listRecords(oldExcelReader, sheetName, keyCols, mergedHeaders);
 				Records newRecords = listRecords(newExcelReader, sheetName, keyCols, mergedHeaders);
 				ReportChanges reportChanges = RecordsComparator.compare(oldRecords, newRecords, rules);
-				writeChanges(reportChanges, excelWriter, sheetName, mergedHeaders.toArray(new String[mergedHeaders.size()]));
+				writeChanges(reportChanges, excelWriter, sheetName,
+						mergedHeaders.toArray(new String[mergedHeaders.size()]));
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -70,8 +72,23 @@ public class ExperimentRegressionTest {
 		excelWriter.writeSheet(sheetName, missingData, null, IndexedColors.RED);
 		List<List<Object>> newData = toRowData(reportChanges.getAddedRecords());
 		excelWriter.writeSheet(sheetName, newData, null, IndexedColors.GREEN);
-		for (IComparationRule rule : reportChanges.getChanges().keySet()) {
-			excelWriter.writeRecordDiffs(sheetName, mergedHeaders,
+		for (IComparisonRule rule : reportChanges.getAllRules()) {
+			String comparisonSheetName = sheetName + "_" + rule.getName();
+			excelWriter.createSheet(comparisonSheetName, mergedHeaders, HEADER_ROW_IDX);
+			excelWriter.writeNewRecord(comparisonSheetName, mergedHeaders, reportChanges.getImproves().get(rule),
+					IndexedColors.GREEN);
+			excelWriter.writeNewRecord(comparisonSheetName, mergedHeaders, reportChanges.getDeclines().get(rule),
+					IndexedColors.ORANGE);
+			excelWriter.writeNewRecord(comparisonSheetName, mergedHeaders, reportChanges.getChanges().get(rule),
+					IndexedColors.BLUE);
+			
+			comparisonSheetName = comparisonSheetName + "_diff";
+			excelWriter.createSheet(comparisonSheetName, mergedHeaders, HEADER_ROW_IDX);
+			excelWriter.writeRecordDiffs(comparisonSheetName, mergedHeaders, 
+					reportChanges.getImproves().get(rule), IndexedColors.LIGHT_GREEN, IndexedColors.RED);
+			excelWriter.writeRecordDiffs(comparisonSheetName, mergedHeaders, 
+					reportChanges.getDeclines().get(rule), IndexedColors.LIGHT_YELLOW, IndexedColors.RED);
+			excelWriter.writeRecordDiffs(comparisonSheetName, mergedHeaders,
 					reportChanges.getChanges().get(rule), IndexedColors.GREY_25_PERCENT, IndexedColors.RED);
 		}
 	}

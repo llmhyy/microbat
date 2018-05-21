@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import experiment.utils.report.Records.Record;
-import experiment.utils.report.TextComparationRule.ChangeType;
+import experiment.utils.report.rules.ChangeType;
 
 /**
  * @author LLT
@@ -24,7 +24,11 @@ public class RecordDiff {
 		this.newRecord = newRecord;
 		diffCols = new ArrayList<Integer>();
 	}
-
+	
+	public void setDiffCols(List<Integer> diffCols) {
+		this.diffCols = diffCols;
+	}
+	
 	public void addDiffColIdx(int colIdx) {
 		diffCols.add(colIdx);
 	}
