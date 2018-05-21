@@ -144,65 +144,92 @@ public class CFGConstructor {
 	}
 
 	public void constructPostDomination(CFG cfg){
-		Map<CFGNode, Set<CFGNode>> postDominanceMap = new HashMap<>();
+		
+		BlockGraph bGraph = BlockGraph.createBlockGraph(cfg);
+		
+		Map<BlockNode, Set<BlockNode>> postDominanceMap = new HashMap<>();
 		
 		/** connect basic post domination relation */
-		for(CFGNode node: cfg.getNodeList()){
-			Set<CFGNode> set = new HashSet<>();
+		for(BlockNode node: bGraph.getList()){
+			Set<BlockNode> set = new HashSet<>();
 			set.add(node);
 			postDominanceMap.put(node, set);
 		}
 		
 		/** extend */
-		boolean isChange = true;
+		Boolean isChange = true;
+		int iteration = 0;
 		while(isChange){
 			isChange = false;
-			for(int i=cfg.getNodeList().size()-1; i>=0; i--){
-				CFGNode node = cfg.getNodeList().get(i);
-				Set<CFGNode> intersetion = findIntersetedPostDominator(node.getChildren(), postDominanceMap);
-				Set<CFGNode> postDominatorSet = postDominanceMap.get(node);
-				
-				for(CFGNode newNode: intersetion){
-					if(!postDominatorSet.contains(newNode)){
-						postDominatorSet.add(newNode);
-						isChange = true;
-					}
-				}
-				postDominanceMap.put(node, postDominatorSet);
+			iteration++;
+			Set<BlockNode> visitedBlocks = new HashSet<>();
+			for(BlockNode exitNode: bGraph.getExitNodeList()){
+				propagatePostDominator(postDominanceMap, exitNode, isChange, visitedBlocks);
+			}
+		}
+		
+		/** map relation back to CFG node*/
+		for(BlockNode block: bGraph.getList()){
+			for(CFGNode cfgNode: block.getContents()){
+				cfgNode.getPostDominatee().addAll(block.getContents());
 			}
 		}
 		
 		/** construct post dominatee relation*/
-		for(CFGNode node: cfg.getNodeList()){
-			Set<CFGNode> postDominators = postDominanceMap.get(node);
-			for(CFGNode postDominator: postDominators){
-				postDominator.addPostDominatee(node);
+		for(BlockNode block: bGraph.getList()){
+			Set<BlockNode> postDominators = postDominanceMap.get(block);
+			for(BlockNode postDominator: postDominators){
+				for(CFGNode cfgNode: postDominator.getContents()){
+					cfgNode.getPostDominatee().addAll(block.getContents());
+				}
 			}
 		}
 		
 		System.currentTimeMillis();
 	}
 
-	private Set<CFGNode> findIntersetedPostDominator(List<CFGNode> children,
-			Map<CFGNode, Set<CFGNode>> postDominanceMap) {
+	private void propagatePostDominator(Map<BlockNode, Set<BlockNode>> postDominanceMap, BlockNode node, 
+			Boolean isChange, Set<BlockNode> visitedBlocks) {
+		visitedBlocks.add(node);
+		
+		Set<BlockNode> intersetion = findIntersetedPostDominator(node.getChildren(), postDominanceMap);
+		Set<BlockNode> postDominatorSet = postDominanceMap.get(node);
+		
+		for(BlockNode newNode: intersetion){
+			if(!postDominatorSet.contains(newNode)){
+				postDominatorSet.add(newNode);
+				isChange = true;
+			}
+		}
+		postDominanceMap.put(node, postDominatorSet);
+		
+		for(BlockNode parent: node.getParents()){
+			if(!visitedBlocks.contains(parent)){
+				propagatePostDominator(postDominanceMap, parent, isChange, visitedBlocks);				
+			}
+		}
+	}
+
+	private Set<BlockNode> findIntersetedPostDominator(List<BlockNode> children,
+			Map<BlockNode, Set<BlockNode>> postDominanceMap) {
 		if(children.isEmpty()){
 			return new HashSet<>();
 		}
 		else if(children.size()==1){
-			CFGNode child = children.get(0);
+			BlockNode child = children.get(0);
 			return postDominanceMap.get(child);
 		}
 		else{
-			CFGNode child = children.get(0);
-			Set<CFGNode> set = (Set<CFGNode>) ((HashSet<CFGNode>)postDominanceMap.get(child)).clone();
+			BlockNode child = children.get(0);
+			Set<BlockNode> set = (Set<BlockNode>) ((HashSet<BlockNode>)postDominanceMap.get(child)).clone();
 			
 			for(int i=1; i<children.size(); i++){
-				CFGNode otherChild = children.get(i);
-				Set<CFGNode> candidateSet = postDominanceMap.get(otherChild);
+				BlockNode otherChild = children.get(i);
+				Set<BlockNode> candidateSet = postDominanceMap.get(otherChild);
 				
-				Iterator<CFGNode> setIter = set.iterator();
+				Iterator<BlockNode> setIter = set.iterator();
 				while(setIter.hasNext()){
-					CFGNode postDominator = setIter.next();
+					BlockNode postDominator = setIter.next();
 					if(!candidateSet.contains(postDominator)){
 						setIter.remove();
 					}
