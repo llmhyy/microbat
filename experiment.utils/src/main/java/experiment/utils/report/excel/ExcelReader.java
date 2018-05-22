@@ -77,8 +77,11 @@ public class ExcelReader {
 	
 	public List<Object> listObjData(String sheetName, String columnHeader) {
 		Sheet sheet = workbook.getSheet(sheetName);
-		int col = getColumnIndex(sheet.getRow(sheet.getFirstRowNum()), columnHeader);
 		List<Object> data = new ArrayList<Object>();
+		if ((sheet == null) || (sheet.getPhysicalNumberOfRows() <= 0)) {
+			return data;
+		}
+		int col = getColumnIndex(sheet.getRow(sheet.getFirstRowNum()), columnHeader);
 		if (col >= 0) {
 			for (int i = sheet.getFirstRowNum() + 1; i <= sheet.getLastRowNum(); i++) {
 				data.add(getCellValue(sheet.getRow(i).getCell(col)));
@@ -114,7 +117,11 @@ public class ExcelReader {
 			if (exceesiveCols < 0) {
 				exceesiveCols = 0;
 			}
-			Object[] rowData = new Object[newHeaders.size() + exceesiveCols];
+			int rowSize = newHeaders.size() + exceesiveCols;
+			if (rowSize < row.getLastCellNum()) {
+				rowSize = row.getLastCellNum();
+			}
+			Object[] rowData = new Object[rowSize];
 			int extIdx = newHeaders.size();
 			for (int j = row.getFirstCellNum(); j < row.getLastCellNum(); j++) {
 				Cell cell = row.getCell(j);
@@ -183,7 +190,10 @@ public class ExcelReader {
 		Row row = sheet.getRow(headerRowNum);
 		List<String> headers = new ArrayList<String>(row.getLastCellNum() - row.getFirstCellNum());
 		for (int i = row.getFirstCellNum(); i < row.getLastCellNum(); i++) {
-			headers.add(row.getCell(i).getStringCellValue());
+			Cell cell = row.getCell(i);
+			if (cell != null) {
+				headers.add(cell.getStringCellValue());
+			}
 		}
 		return headers;
 	}
