@@ -51,15 +51,16 @@ public class TraceAgent implements IAgent {
 		StepMismatchChecker.logNormalSteps(trace);
 		ExecutionTracer.dispose(); // clear cache
 		long t1 = System.currentTimeMillis();
+		AgentLogger.debug("create VirtualDataRelation....");
 		createVirtualDataRelation(trace);
 		long t2 = System.currentTimeMillis();
 		AgentLogger.debug("time for createVirtualDataRelation: "  + (t2-t1)/1000);
 		
 		t1 = System.currentTimeMillis();
+		AgentLogger.debug("construct ControlDomianceRelation....");
 		trace.constructControlDomianceRelation();
 		t2 = System.currentTimeMillis();
 		AgentLogger.debug("time for constructControlDomianceRelation: "  + (t2-t1)/1000);
-		
 //		trace.constructLoopParentRelation();
 		timer.newPoint("Saving trace");
 		writeOutput(trace);
@@ -75,6 +76,7 @@ public class TraceAgent implements IAgent {
 			result.setCollectedSteps(trace.getExecutionList().size());
 			result.setExpectedSteps(agentParams.getExpectedSteps());
 			result.saveToFile(agentParams.getDumpFile(), false);
+			AgentLogger.debug(result.toString());
 		} else if (agentParams.getTcpPort() != AgentConstants.UNSPECIFIED_INT_VALUE) {
 			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
 			TraceOutputWriter traceWriter = tcpConnector.connect();
