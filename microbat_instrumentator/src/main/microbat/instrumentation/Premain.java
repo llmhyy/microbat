@@ -14,7 +14,7 @@ import microbat.instrumentation.instr.SystemClassTransformer;
 import microbat.instrumentation.instr.TestRunnerTranformer;
 
 public class Premain {
-	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent_v01.jar";
+	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent_v02.jar";
 	private static final String SAV_JAR = "sav.commons.simplified.jar";
 	private static boolean testMode = true;
 
