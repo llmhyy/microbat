@@ -2,12 +2,8 @@ package microbat.instrumentation;
 
 import java.lang.instrument.ClassFileTransformer;
 
-import microbat.instrumentation.filter.FilterChecker;
-
 /**
  * @author LLT
- *  the Agent proxy
- * (Real agent would be TraceAgent & PrecheckAgent)
  */
 public class Agent {
 	private static IAgent agent;
@@ -52,14 +48,7 @@ public class Agent {
 			shutdowned = true;
 		} catch (Throwable e) {
 			AgentLogger.error(e);
-		}
-	}
-	
-	public void shutdown() throws Exception {
-		try {
-			agent.shutdown();
-		} catch (Throwable e) {
-			AgentLogger.error(e);
+			shutdowned = true;
 		}
 	}
 	
