@@ -456,13 +456,15 @@ public class TraceNode{
 	}
 	
 	public void addReadVariable(VarValue var){
-		VarValue readVar = find(this.readVariables, var);
-		if(readVar != null){
-			readVar.setStringValue(var.getStringValue());
-		}
-		else{
-			this.readVariables.add(var);			
-		}
+//		VarValue readVar = find(this.readVariables, var);
+//		if(readVar != null){
+//			readVar.setStringValue(var.getStringValue());
+//		}
+//		else{
+//			this.readVariables.add(var);			
+//		}
+		
+		this.readVariables.add(var);	
 	}
 	
 	private VarValue find(List<VarValue> variables, VarValue var) {
@@ -484,13 +486,15 @@ public class TraceNode{
 	}
 	
 	public void addWrittenVariable(VarValue var){
-		VarValue writtenVar = find(this.writtenVariables, var);
-		if(writtenVar != null){
-			writtenVar.setStringValue(var.getStringValue());
-		}
-		else{
-			this.writtenVariables.add(var);			
-		}
+//		VarValue writtenVar = find(this.writtenVariables, var);
+//		if(writtenVar != null){
+//			writtenVar.setStringValue(var.getStringValue());
+//		}
+//		else{
+//			this.writtenVariables.add(var);			
+//		}
+		
+		this.writtenVariables.add(var);		
 	}
 
 	public boolean isReadVariablesContains(String varID){
