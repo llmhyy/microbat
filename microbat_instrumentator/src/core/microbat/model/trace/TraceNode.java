@@ -451,10 +451,18 @@ public class TraceNode{
 	}
 
 	public Collection<VarValue> getReadVariables() {
-		if(this.readVariables==null || this.readVariables.isEmpty()){
+		if(this.readVariables==null || this.readVariables.size() < this.readVariableMap.size()){
 			this.readVariables = new ArrayList<>(this.readVariableMap.values());
 		}
 		return this.readVariables;
+	}
+	
+	public Collection<VarValue> getWrittenVariables() {
+		if(this.writtenVariables==null || this.writtenVariables.size() < this.writtenVariableMap.size()){
+			this.writtenVariables = new ArrayList<>(writtenVariableMap.values());			
+		}
+		
+		return this.writtenVariables;
 	}
 
 	public void setReadVariables(List<VarValue> readVariables) {
@@ -495,13 +503,7 @@ public class TraceNode{
 		return null;
 	}
 
-	public Collection<VarValue> getWrittenVariables() {
-		if(this.writtenVariables==null || this.writtenVariables.isEmpty()){
-			this.writtenVariables = new ArrayList<>(writtenVariableMap.values());			
-		}
-		
-		return this.writtenVariables;
-	}
+	
 
 	public void setWrittenVariables(List<VarValue> writtenVariables) {
 		this.writtenVariables = writtenVariables;
