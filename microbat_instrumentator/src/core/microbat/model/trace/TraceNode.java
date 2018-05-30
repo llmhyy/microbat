@@ -473,6 +473,18 @@ public class TraceNode{
 		this.readVariableMap.put(var.getVarID(), var);
 	}
 	
+	public void addWrittenVariable(VarValue var){
+//		VarValue writtenVar = find(this.writtenVariables, var);
+//		if(writtenVar != null){
+//			writtenVar.setStringValue(var.getStringValue());
+//		}
+//		else{
+//			this.writtenVariables.add(var);			
+//		}
+		
+		this.writtenVariableMap.put(var.getVarID(), var);
+	}
+	
 	private VarValue find(List<VarValue> variables, VarValue var) {
 		for(VarValue existingVar: variables){
 			String simpleID = Variable.truncateSimpleID(existingVar.getVarID());
@@ -495,17 +507,7 @@ public class TraceNode{
 		this.writtenVariables = writtenVariables;
 	}
 	
-	public void addWrittenVariable(VarValue var){
-//		VarValue writtenVar = find(this.writtenVariables, var);
-//		if(writtenVar != null){
-//			writtenVar.setStringValue(var.getStringValue());
-//		}
-//		else{
-//			this.writtenVariables.add(var);			
-//		}
-		
-		this.writtenVariableMap.put(var.getVarID(), var);
-	}
+	
 
 	public boolean isReadVariablesContains(String varID){
 		for(VarValue readVar: this.getReadVariables()){

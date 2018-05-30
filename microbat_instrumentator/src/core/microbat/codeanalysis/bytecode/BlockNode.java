@@ -9,6 +9,14 @@ public class BlockNode {
 	
 	private List<CFGNode> contents = new ArrayList<>();
 
+	public String toString(){
+		if(!contents.isEmpty()){
+			return contents.get(0).toString();
+		}
+		
+		return "";
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -37,6 +45,7 @@ public class BlockNode {
 	public void addContent(CFGNode cNode) {
 		if(!getContents().contains(cNode)){
 			getContents().add(cNode);
+			cNode.setBlockNode(this);
 		}
 	}
 	
