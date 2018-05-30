@@ -42,6 +42,9 @@ public class TraceNode{
 	private List<VarValue> readVariables;
 	private List<VarValue> writtenVariables;
 	
+	private transient Map<String, VarValue> readVariableMap = new HashMap<>();
+	private transient Map<String, VarValue> writtenVariableMap = new HashMap<>();
+	
 //	private List<VarValue> hiddenReadVariables = new ArrayList<>();
 //	private List<VarValue> hiddenWrittenVariables = new ArrayList<>();
 	
@@ -448,7 +451,10 @@ public class TraceNode{
 	}
 
 	public Collection<VarValue> getReadVariables() {
-		return readVariables;
+		if(this.readVariables==null || this.readVariables.isEmpty()){
+			this.readVariables = new ArrayList<>(this.readVariableMap.values());
+		}
+		return this.readVariables;
 	}
 
 	public void setReadVariables(List<VarValue> readVariables) {
@@ -464,7 +470,7 @@ public class TraceNode{
 //			this.readVariables.add(var);			
 //		}
 		
-		this.readVariables.add(var);	
+		this.readVariableMap.put(var.getVarID(), var);
 	}
 	
 	private VarValue find(List<VarValue> variables, VarValue var) {
@@ -478,7 +484,11 @@ public class TraceNode{
 	}
 
 	public Collection<VarValue> getWrittenVariables() {
-		return writtenVariables;
+		if(this.writtenVariables==null || this.writtenVariables.isEmpty()){
+			this.writtenVariables = new ArrayList<>(writtenVariableMap.values());			
+		}
+		
+		return this.writtenVariables;
 	}
 
 	public void setWrittenVariables(List<VarValue> writtenVariables) {
@@ -494,7 +504,7 @@ public class TraceNode{
 //			this.writtenVariables.add(var);			
 //		}
 		
-		this.writtenVariables.add(var);		
+		this.writtenVariableMap.put(var.getVarID(), var);
 	}
 
 	public boolean isReadVariablesContains(String varID){
