@@ -10,9 +10,8 @@ import microbat.model.trace.Trace;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class FilterChecker implements IFilterChecker {
-	private static final IFilterChecker checker = new FilterChecker();
-//	private static final IFilterChecker checker = new FilterCheckerMock();
+public class FilterChecker {
+	private static final FilterChecker checker = new FilterChecker();
 	
 	private List<String> appBinFolders;
 	private List<String> extLibs;
@@ -24,7 +23,10 @@ public class FilterChecker implements IFilterChecker {
 	private List<String> includedLibraryClasses = new ArrayList<>();
 	private List<String> excludedLibraryClasses = new ArrayList<>();
 	
-	@Override
+	public static FilterChecker getInstance() {
+		return checker;
+	}
+	
 	public void startup(AppJavaClassPath appClasspath, String includeExpression, String excludeExpression) {
 		extLibs = new ArrayList<>();
 		appBinFolders = new ArrayList<>();
@@ -73,7 +75,7 @@ public class FilterChecker implements IFilterChecker {
 			bootstrapIncludes.add(className.replace(".", "/"));
 		}
 	}
-	@Override
+
 	public boolean checkTransformable(String classFName, String path, boolean isBootstrap) {
 		if (!JdkFilter.filter(getClassName(classFName))) {
 			logIncludeExtLib(classFName, true, false);
@@ -145,12 +147,10 @@ public class FilterChecker implements IFilterChecker {
 		return classFName.replace("/", ".");
 	}
 
-	@Override
 	public boolean checkAppClass(String classFName) {
 		return includes.contains(classFName);
 	}
 	
-	@Override
 	public boolean checkExclusive(String className, String methodName) {
 		String classFName = className.replace(".", "/");
 		return !includes.contains(classFName) /* && !bootstrapIncludes.contains(classFName) */;
@@ -182,5 +182,9 @@ public class FilterChecker implements IFilterChecker {
 			trace.setExcludedLibraryClasses(filterChecker.excludedLibraryClasses);
 			trace.setIncludedLibraryClasses(filterChecker.includedLibraryClasses);
 		}
+	}
+	
+	public List<String> getBootstrapIncludes() {
+		return bootstrapIncludes;
 	}
 }

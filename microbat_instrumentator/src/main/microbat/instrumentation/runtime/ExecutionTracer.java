@@ -670,11 +670,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 	
 	private void addRWriteValue(TraceNode currentNode, VarValue value, boolean isWrittenVar) {
-		if (value == null) {
-			return;
-		}
-		
-		if (currentNode == null) {
+		if (value == null || currentNode == null) {
 			return;
 		}
 		addSingleRWriteValue(currentNode, value, isWrittenVar);
@@ -801,6 +797,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	/**
 	 * Instrument for: Application Classes only.
+	 * the filter is in LineInstructionInfo.extractRWInstructions()
 	 */
 	@Override
 	public void _writeLocalVar(Object varValue, String varName, String varType, int line, int bcLocalVarIdx,

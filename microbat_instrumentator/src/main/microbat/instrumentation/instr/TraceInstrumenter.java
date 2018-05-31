@@ -1045,9 +1045,6 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		return tracerVar;
 	}
 
-	/**
-	 * TODO LLT: to replace  methodGen.getMethod().toString();
-	 */
 	private String[] getArgumentNames(MethodGen methodGen) {
 		String methodString = methodGen.toString();
 		String args = methodString.substring(methodString.indexOf("(")+1, methodString.indexOf(")"));

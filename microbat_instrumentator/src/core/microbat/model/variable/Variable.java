@@ -74,7 +74,7 @@ public abstract class Variable implements Serializable {
 	}
 
 	/**
-	 * Note that if the user want to concanate a variable ID, such as local variable ID, field ID, etc. He
+	 * Note that if the user want to concatenate a variable ID, such as local variable ID, field ID, etc. He
 	 * or she should use the following three static method: <br>
 	 * 
 	 * <code>Variable.concanateFieldVarID()</code><br>

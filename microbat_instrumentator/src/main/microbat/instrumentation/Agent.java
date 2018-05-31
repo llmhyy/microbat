@@ -1,6 +1,9 @@
 package microbat.instrumentation;
 
+import java.io.ObjectStreamClass;
 import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Method;
 
 /**
  * @author LLT
@@ -8,15 +11,17 @@ import java.lang.instrument.ClassFileTransformer;
 public class Agent {
 	private static IAgent agent;
 	private static String programMsg = "";
-	private volatile static boolean shutdowned = false;
+	private volatile static Boolean shutdowned = false;
 	private static int numberOfThread = 1;
+	private static Instrumentation instrumentation;
 	
-	public Agent(AgentParams agentParams) {
+	public Agent(AgentParams agentParams, Instrumentation inst) {
 		if (agentParams.isPrecheck()) {
 			agent = new PrecheckAgent(agentParams);
 		} else {
 			agent = new TraceAgent(agentParams);
 		}
+		instrumentation = inst;
 		AgentLogger.setup(agentParams.getLogTypes());
 	}
 
@@ -41,17 +46,23 @@ public class Agent {
 	}
 	
 	public static synchronized void stop() {
-		try {
-			if (!shutdowned) {
-				agent.shutdown();
+		synchronized (shutdowned) {
+			try {
+				if (!shutdowned) {
+					instrumentation.removeTransformer(agent.getTransformer());
+					/* LLT: We might need a more general solution to collect classes need to be reset */
+					instrumentation.retransformClasses(Method.class);
+					instrumentation.retransformClasses(ObjectStreamClass.class);
+					agent.shutdown();
+				}
+				shutdowned = true;
+			} catch (Throwable e) {
+				AgentLogger.error(e);
+				shutdowned = true;
 			}
-			shutdowned = true;
-		} catch (Throwable e) {
-			AgentLogger.error(e);
-			shutdowned = true;
 		}
 	}
-	
+
 	public static void _startTest(String junitClass, String junitMethod) {
 		try {
 			agent.startTest(junitClass, junitMethod);

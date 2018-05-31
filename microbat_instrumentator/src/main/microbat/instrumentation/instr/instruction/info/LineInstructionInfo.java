@@ -91,10 +91,11 @@ public class LineInstructionInfo {
 		List<RWInstructionInfo> rwInsns = new ArrayList<>();
 		for (InstructionHandle insnHandler : lineInsns) {
 			Instruction insn = insnHandler.getInstruction();
-			/* filter instrumentation
+			/* 
+			 * filter instrumentation
 			 * For external libraries, only store for the case of 
 			 * Written Fields or ArrayElement.
-			 *  */
+			 * */
 			if (!(isAppClass || (insn instanceof FieldInstruction)
 								|| ((insn instanceof ArrayInstruction)))) {
 				continue;
