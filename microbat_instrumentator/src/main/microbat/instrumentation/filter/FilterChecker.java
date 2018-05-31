@@ -187,4 +187,8 @@ public class FilterChecker {
 	public List<String> getBootstrapIncludes() {
 		return bootstrapIncludes;
 	}
+	
+	public List<String> getIncludedLibraryClasses() {
+		return includedLibraryClasses;
+	}
 }

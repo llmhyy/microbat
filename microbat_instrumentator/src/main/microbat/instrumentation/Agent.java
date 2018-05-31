@@ -1,9 +1,11 @@
 package microbat.instrumentation;
 
-import java.io.ObjectStreamClass;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
+import microbat.instrumentation.filter.FilterChecker;
 
 /**
  * @author LLT
@@ -50,9 +52,10 @@ public class Agent {
 			try {
 				if (!shutdowned) {
 					instrumentation.removeTransformer(agent.getTransformer());
-					/* LLT: We might need a more general solution to collect classes need to be reset */
-					instrumentation.retransformClasses(Method.class);
-					instrumentation.retransformClasses(ObjectStreamClass.class);
+					Class<?>[] retransformableClasses = getRetransformableClasses(instrumentation);
+					if (retransformableClasses != null) {
+						instrumentation.retransformClasses(retransformableClasses);
+					}
 					agent.shutdown();
 				}
 				shutdowned = true;
@@ -61,6 +64,26 @@ public class Agent {
 				shutdowned = true;
 			}
 		}
+	}
+	
+	private static Class<?>[] getRetransformableClasses(Instrumentation inst) {
+		AgentLogger.debug("Collect classes to reset instrumentation....");
+		List<Class<?>> candidates = new ArrayList<Class<?>>();
+		Class<?>[] classes = inst.getAllLoadedClasses();
+		for (Class<?> c : classes) {
+			if (FilterChecker.getInstance().getBootstrapIncludes().contains(c.getName().replace(".", "/"))
+					|| FilterChecker.getInstance().getIncludedLibraryClasses().contains(c.getName())) {
+				if (inst.isModifiableClass(c) && inst.isRetransformClassesSupported() && !ClassLoader.class.equals(c)) {
+					candidates.add(c);
+				}
+			}
+		}
+		candidates.remove(Thread.class);
+		AgentLogger.debug(candidates.size() + " retransformable candidates");
+		if (candidates.isEmpty()) {
+			return null;
+		}
+		return candidates.toArray(new Class<?>[candidates.size()]);
 	}
 
 	public static void _startTest(String junitClass, String junitMethod) {
