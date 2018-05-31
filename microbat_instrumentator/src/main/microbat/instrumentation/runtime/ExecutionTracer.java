@@ -3,6 +3,7 @@ package microbat.instrumentation.runtime;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -233,10 +234,26 @@ public class ExecutionTracer implements IExecutionTracer {
 				}
 			}
 			
+			if (isProxyClass(obj.getClass())) {
+				return obj.getClass().getName();
+			}
+			
 			return String.valueOf(obj);//obj.toString();
 		} catch (Throwable t) {
 			return null;
 		}
+	}
+
+	private boolean isProxyClass(Class<? extends Object> clazz) {
+		if (Proxy.isProxyClass(clazz)) {
+			return true;
+		}
+		/* to detect proxy enhancered by CGLIB */
+		int enhancerTagIdx = clazz.getName().indexOf("$$");
+		if (enhancerTagIdx > 0 && clazz.getName().lastIndexOf("$$", enhancerTagIdx + 1) > 0) {
+			return true;
+		}
+		return false;
 	}
 
 	/* 
