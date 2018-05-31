@@ -78,7 +78,6 @@ public class Agent {
 				}
 			}
 		}
-		candidates.remove(Thread.class);
 		AgentLogger.debug(candidates.size() + " retransformable candidates");
 		if (candidates.isEmpty()) {
 			return null;
