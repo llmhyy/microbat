@@ -51,6 +51,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	private static int stepLimit = Integer.MAX_VALUE;
 	private static int expectedSteps = Integer.MAX_VALUE;
 	private static int tolerantExpectedSteps = expectedSteps;
+	public static boolean avoidProxyToString = false;
 	
 	static {
 		rtStores = new HashMap<>();
@@ -234,7 +235,20 @@ public class ExecutionTracer implements IExecutionTracer {
 				}
 			}
 			
-			if (isProxyClass(obj.getClass())) {
+//			if (FilterChecker.isCustomizedToStringClass(obj.getClass().getName())) {
+//			java.lang.reflect.Method toStringMethod = null;
+//			for (java.lang.reflect.Method method : obj.getClass().getDeclaredMethods()) {
+//				if (method.getName().equals(TraceInstrumenter.NEW_TO_STRING_METHOD)) {
+//					toStringMethod = method;
+//					break;
+//				}
+//			}
+//			if (toStringMethod != null) {
+//				return (String) toStringMethod.invoke(obj);
+//			}
+//		}
+			
+			if (avoidProxyToString && isProxyClass(obj.getClass())) {
 				return obj.getClass().getName();
 			}
 			

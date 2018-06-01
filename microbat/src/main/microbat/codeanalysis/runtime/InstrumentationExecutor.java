@@ -93,6 +93,7 @@ public class InstrumentationExecutor {
 				LogType.debug, LogType.error));
 		agentRunner.addAgentParam(AgentParams.OPT_REQUIRE_METHOD_SPLITTING,
 				MicrobatPreference.getValue(MicrobatPreference.REQUIRE_METHOD_SPLITTING));
+		agentRunner.addAgentParam(AgentParams.OPT_AVOID_TO_STRING_OF_PROXY_OBJ, true);
 		agentRunner.setTimeout(timeout);
 		return agentRunner;
 	}

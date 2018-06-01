@@ -69,10 +69,15 @@ public class Agent {
 	private static Class<?>[] getRetransformableClasses(Instrumentation inst) {
 		AgentLogger.debug("Collect classes to reset instrumentation....");
 		List<Class<?>> candidates = new ArrayList<Class<?>>();
+		List<String> bootstrapIncludes = FilterChecker.getInstance().getBootstrapIncludes();
+		List<String> includedLibraryClasses = FilterChecker.getInstance().getIncludedLibraryClasses();
+		if (bootstrapIncludes.isEmpty() && includedLibraryClasses.isEmpty()) {
+			return null;
+		}
 		Class<?>[] classes = inst.getAllLoadedClasses();
 		for (Class<?> c : classes) {
-			if (FilterChecker.getInstance().getBootstrapIncludes().contains(c.getName().replace(".", "/"))
-					|| FilterChecker.getInstance().getIncludedLibraryClasses().contains(c.getName())) {
+			if (bootstrapIncludes.contains(c.getName().replace(".", "/"))
+					|| includedLibraryClasses.contains(c.getName())) {
 				if (inst.isModifiableClass(c) && inst.isRetransformClassesSupported() && !ClassLoader.class.equals(c)) {
 					candidates.add(c);
 				}

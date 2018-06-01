@@ -36,6 +36,7 @@ public class TraceAgent implements IAgent {
 			InstrumentationFilter.overLongMethods = agentParams.getOverlongMethods();
 		}
 		ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
+		ExecutionTracer.avoidProxyToString = agentParams.isAvoidProxyToString();
 	}
 
 	public void shutdown() throws Exception {
