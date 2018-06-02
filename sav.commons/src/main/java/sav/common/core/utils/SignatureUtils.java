@@ -37,8 +37,8 @@ public class SignatureUtils {
 			return true;
 		}
 		else{
-			if((signature.startsWith("L") || signature.startsWith("["))
-					&& signature.endsWith(";")){
+			if((signature.startsWith("L") && signature.endsWith(";")) ||
+					signature.startsWith("[")){
 				return true;
 			}
 		}
