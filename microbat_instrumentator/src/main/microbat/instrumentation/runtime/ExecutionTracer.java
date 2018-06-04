@@ -300,8 +300,14 @@ public class ExecutionTracer implements IExecutionTracer {
 				
 				Variable var = new LocalVar(varName, parameterType, className, methodStartLine);
 				
-				String varID = Variable.concanateLocalVarID(className, varName, varScopeStart, varScopeEnd, caller.getInvocationLevel()+1);
+				String varID = Variable.concanateLocalVarID(className, varName, varScopeStart, 
+						varScopeEnd, caller.getInvocationLevel()+1);
 				var.setVarID(varID);
+				if(!PrimitiveUtils.isPrimitive(pType)){
+					String aliasID = TraceUtils.getObjectVarId(params[i], pType);
+					var.setAliasVarID(aliasID);				
+				}
+				
 				VarValue value = appendVarValue(params[i], var, null);
 				addRWriteValue(caller, value, true);
 			}
