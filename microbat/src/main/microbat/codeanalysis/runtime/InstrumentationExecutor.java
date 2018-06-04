@@ -100,24 +100,25 @@ public class InstrumentationExecutor {
 	
 	public RunningInformation run(){
 		try {
-			System.out.println("first precheck..");
-			agentRunner.precheck(null);
-			PrecheckInfo firstPrecheckInfo = agentRunner.getPrecheckInfo();
-			System.out.println(firstPrecheckInfo);
-			System.out.println("second precheck..");
+//			System.out.println("first precheck..");
+//			agentRunner.precheck(null);
+//			PrecheckInfo firstPrecheckInfo = agentRunner.getPrecheckInfo();
+//			System.out.println(firstPrecheckInfo);
+//			System.out.println("second precheck..");
+			System.out.println("precheck..");
 			agentRunner.precheck(null);
 			PrecheckInfo info = agentRunner.getPrecheckInfo();
 			System.out.println(info);
 			PreCheckInformation precheckInfomation = new PreCheckInformation(info.getThreadNum(), info.getStepTotal(),
 					info.isOverLong(), new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods(), info.getLoadedClasses());
 			precheckInfomation.setPassTest(agentRunner.isTestSuccessful());
-			precheckInfomation.setUndeterministic(checkIfUndeterministicTestCase(firstPrecheckInfo, info));
+//			precheckInfomation.setUndeterministic(firstPrecheckInfo.getStepTotal() != precheckInfomation.getStepTotal());
 			this.setPrecheckInfo(precheckInfomation);
 			System.out.println("the trace length is: " + precheckInfomation.getStepNum());
 			if (precheckInfomation.isUndeterministic()) {
 				System.out.println("undeterministic!!");
 			} 
-			if (!info.isOverLong() && !precheckInfomation.isUndeterministic()) {
+			if (!info.isOverLong() /*&& !precheckInfomation.isUndeterministic() */) {
 				if (!info.getExceedingLimitMethods().isEmpty()) {
 					agentRunner.addAgentParams(AgentParams.OPT_OVER_LONG_METHODS, info.getExceedingLimitMethods());
 				}
@@ -131,10 +132,6 @@ public class InstrumentationExecutor {
 		return new RunningInformation("", -1, -1, null);
 	}
 	
-	private boolean checkIfUndeterministicTestCase(PrecheckInfo firstPrecheck, PrecheckInfo secondPrecheck) {
-		return firstPrecheck.getStepTotal() != secondPrecheck.getStepTotal();
-	}
-
 	public PreCheckInformation runPrecheck(String dumpFile, int stepLimit) {
 		try {
 			/* test stepLimit */
