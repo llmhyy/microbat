@@ -89,8 +89,11 @@ public class InstrumentationExecutor {
 		agentRunner.addExcludesParam(this.excludeLibs);
 		agentRunner.addAgentParam(AgentParams.OPT_VARIABLE_LAYER, MicrobatPreference.getVariableValue());
 		agentRunner.addAgentParam(AgentParams.OPT_STEP_LIMIT, MicrobatPreference.getStepLimit());
-		agentRunner.addAgentParams(AgentParams.OPT_LOG, Arrays.asList(LogType.printProgress, LogType.info,
-				LogType.debug, LogType.error));
+		agentRunner.addAgentParams(AgentParams.OPT_LOG, Arrays.asList(
+				LogType.printProgress, 
+//				LogType.info,
+//				LogType.debug, 
+				LogType.error));
 		agentRunner.addAgentParam(AgentParams.OPT_REQUIRE_METHOD_SPLITTING,
 				MicrobatPreference.getValue(MicrobatPreference.REQUIRE_METHOD_SPLITTING));
 		agentRunner.addAgentParam(AgentParams.OPT_AVOID_TO_STRING_OF_PROXY_OBJ, true);
