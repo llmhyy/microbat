@@ -5,26 +5,29 @@ import java.util.Stack;
 import microbat.model.trace.TraceNode;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class MethodCallStack extends Stack<TraceNode> {
-	private static final long serialVersionUID = 1L;
-
+public class MethodCallStack {
+	Stack<TraceNode> stack = new Stack<>();
+	
 	public TraceNode safePop() {
-		if (size() != 0) {
-			return pop();
+		if (stack.size() != 0) {
+			return stack.pop();
 		}
 		return null;
 	}
 
 	public TraceNode push(TraceNode node) {
-		return super.push(node);
+		return stack.push(node);
 	}
 	
-	@Override
 	public synchronized TraceNode peek() {
-		if (isEmpty()) {
+		if (stack.isEmpty()) {
 			return null;
 		}
-		return super.peek();
+		return stack.peek();
+	}
+	
+	public boolean isEmpty(){
+		return stack.isEmpty();
 	}
 
 	/**
@@ -33,12 +36,12 @@ public class MethodCallStack extends Stack<TraceNode> {
 	 * @return
 	 */
 	public boolean popForException(String methodSignature, AppJavaClassPath appPath) {
-		if(!this.isEmpty()){
+		if(!stack.isEmpty()){
 			int popLayer = 0;
 			boolean needPop = false;
 			
-			if(!this.isEmpty()){
-				TraceNode caller = this.peek();
+			if(!stack.isEmpty()){
+				TraceNode caller = stack.peek();
 				String m = caller.getInvokingMethod();
 				
 				if(m == null || m.equals(methodSignature)){
@@ -47,8 +50,8 @@ public class MethodCallStack extends Stack<TraceNode> {
 				System.currentTimeMillis();
 			}
 			
-			for(int i=this.size()-1; i>=0; i--){
-				TraceNode caller = this.get(i);
+			for(int i=stack.size()-1; i>=0; i--){
+				TraceNode caller = stack.get(i);
 				popLayer++;
 				if(caller.getMethodSign().equals(methodSignature)){
 					needPop = true;
@@ -63,7 +66,7 @@ public class MethodCallStack extends Stack<TraceNode> {
 			
 			if(needPop){
 				for(int i=0; i<popLayer; i++){
-					this.pop();
+					stack.pop();
 				}
 				
 				return true;
