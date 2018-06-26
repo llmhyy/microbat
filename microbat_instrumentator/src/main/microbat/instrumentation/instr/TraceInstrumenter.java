@@ -1040,7 +1040,9 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		appendTracerMethodInvoke(newInsns, TracerMethods.GET_TRACER, constPool);
 		InstructionHandle tracerStartPos = newInsns.append(new ASTORE(tracerVar.getIndex()));
 		tracerVar.setStart(tracerStartPos);
-		insertInsnHandler(insnList, newInsns, startInsn);
+		
+		//insertInsnHandler(insnList, newInsns, startInsn);
+		insnList.insert(startInsn, newInsns);
 		newInsns.dispose();
 		return tracerVar;
 	}
