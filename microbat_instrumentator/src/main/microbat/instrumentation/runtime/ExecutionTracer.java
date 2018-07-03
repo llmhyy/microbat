@@ -43,8 +43,7 @@ import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class ExecutionTracer implements IExecutionTracer {
-	private static Map<Long, ExecutionTracer> rtStores;
-	private static long mainThreadId = -1;
+	private static TracerStore rtStore = new TracerStore();
 	
 	public static AppJavaClassPath appJavaClassPath;
 	public static int variableLayer = 2;
@@ -52,10 +51,8 @@ public class ExecutionTracer implements IExecutionTracer {
 	private static int expectedSteps = Integer.MAX_VALUE;
 	private static int tolerantExpectedSteps = expectedSteps;
 	public static boolean avoidProxyToString = false;
+	private long threadId;
 	
-	static {
-		rtStores = new HashMap<>();
-	}
 	private Trace trace;
 
 	private MethodCallStack methodCallStack;
@@ -75,6 +72,7 @@ public class ExecutionTracer implements IExecutionTracer {
 	}
 
 	public ExecutionTracer(long threadId) {
+		this.threadId = threadId;
 		locker = new Locker(threadId);
 		methodCallStack = new MethodCallStack();
 		trace = new Trace(appJavaClassPath);
@@ -1122,81 +1120,45 @@ public class ExecutionTracer implements IExecutionTracer {
 		return value;
 	}
 	
-	private static volatile LockedThreads lockedThreads = new LockedThreads();
-	private static final Locker gLocker = new Locker();
-	
+	/**
+	 * BE VERY CAREFUL WHEN MODIFYING THIS FUNCTION!
+	 * TO AVOID CREATING A LOOP, DO KEEP THIS ATMOST SIMPLE, AVOID INVOKE ANY EXTERNAL LIBRARY FUNCTION,
+	 * EVEN JDK INSIDE THIS BLOCK OF CODE AND ITS INVOKED METHODS.! (ONLY Thread.currentThread().getId() is exceptional used)
+	 * IF NEED TO USE A LIST,MAP -> USE AN ARRAY INSTEAD!
+	 */
 	public synchronized static IExecutionTracer _getTracer(boolean isAppClass, String className, String methodSig,
 			int methodStartLine, int methodEndLine, String paramNamesCode, String paramTypeSignsCode, Object[] params) {
-		if (gLocker.isLock()) {
-			if (state == TracingState.TEST_STARTED && isAppClass) {
-				state = TracingState.RECORDING;
-				// entry point
-				gLocker.unLock();
-			} else {
-				return EmptyExecutionTracer.getInstance();
-			}
+		if (state == TracingState.TEST_STARTED && isAppClass) {
+			state = TracingState.RECORDING;
+			rtStore.setMainThreadId(Thread.currentThread().getId());
 		}
-		gLocker.lock();
-		if (ClassLoader.class.getName().equals(className)) {
-			gLocker.unLock();
-			return ClassLoaderHandler.getInstance();
+		if (state != TracingState.RECORDING) {
+			return EmptyExecutionTracer.getInstance();
 		}
 		long threadId = Thread.currentThread().getId();
-		if (lockedThreads.contains(threadId) || ((mainThreadId >= 0 && mainThreadId != threadId))) {
-			gLocker.unLock();
+		if (lockedThreads.contains(threadId)) {
 			return EmptyExecutionTracer.getInstance();
 		}
-		if (mainThreadId < 0) {
-			mainThreadId = threadId;
-		}
-		if (threadId != mainThreadId) {
-			// ignore other thread.
-			gLocker.unLock();
+		lockedThreads.add(threadId);
+		ExecutionTracer tracer = rtStore.get(threadId);
+		if (tracer == null) {
 			return EmptyExecutionTracer.getInstance();
 		}
-		ExecutionTracer tracer = getTracer(threadId);
-		if (tracer.locker.isLock()) {
-			gLocker.unLock();
-			return EmptyExecutionTracer.getInstance();
-		}
+		lockedThreads.remove(threadId);
 		tracer.enterMethod(className, methodSig, methodStartLine, methodEndLine, paramTypeSignsCode, paramNamesCode, params);
-		gLocker.unLock();
 		return tracer;
 	}
 	
-	private static ExecutionTracer getTracer(long threadId) {
-		boolean locked = gLocker.isLock();
-		gLocker.lock();
-		ExecutionTracer store = rtStores.get(threadId);
-		if (store == null) {
-			store = new ExecutionTracer(threadId);
-			rtStores.put(threadId, store);
-		}
-		if (!locked) {
-			gLocker.unLock();
-		}
-		return store;
-	}
-	
-	public static Map<Long, ExecutionTracer> getRtStores() {
-		return rtStores;
-	}
-	
 	public static IExecutionTracer getMainThreadStore() {
-		return getTracer(mainThreadId);
+		return rtStore.getMainThreadTracer();
 	}
 	
 	public static synchronized IExecutionTracer getCurrentThreadStore() {
-		synchronized (gLocker) {
-			boolean locked = gLocker.isLock();
-			gLocker.lock();
+		synchronized (rtStore) {
 			long threadId = Thread.currentThread().getId();
-			IExecutionTracer store = rtStores.get(threadId);
+			IExecutionTracer store = rtStore.get(threadId);
 			if (store == null) {
 				store = EmptyExecutionTracer.getInstance();
-			}
-			if (!locked) {
-				gLocker.unLock();
 			}
 			return store;
 		}
@@ -1204,12 +1166,10 @@ public class ExecutionTracer implements IExecutionTracer {
 	
 	private static TracingState state = TracingState.INIT;
 	public static void shutdown() {
-		gLocker.lock();
 		state = TracingState.SHUTDOWN;
 	}
 	
 	public static void dispose() {
-		rtStores = null;
 		adjustVarMap = null;
 		lockedThreads = null;
 		HeuristicIgnoringFieldRule.clearCache();
@@ -1227,15 +1187,10 @@ public class ExecutionTracer implements IExecutionTracer {
 		return trace;
 	}
 	
-	private static class Locker {
+	private static volatile LockedThreads lockedThreads = new LockedThreads();
+	static class Locker {
 		boolean tracing;
 		long threadId;
-		
-		public Locker() {
-			// global locker
-			this.threadId = -1;
-			lock();
-		}
 		
 		public Locker(long threadId) {
 			this.threadId = threadId;
@@ -1270,10 +1225,18 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.lock();
 		return isLock;
 	}
+	
+	public boolean isLock() {
+		return locker.isLock();
+	}
 
 	@Override
 	public void unLock() {
 		locker.unLock();
+	}
+
+	public long getThreadId() {
+		return threadId;
 	}
 	
 }
