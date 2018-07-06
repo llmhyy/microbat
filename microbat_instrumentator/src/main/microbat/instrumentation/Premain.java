@@ -25,7 +25,7 @@ public class Premain {
 		
 		debug("start instrumentation...");
 		AgentParams agentParams = AgentParams.parse(agentArgs);
-		Agent agent = new Agent(agentParams);
+		Agent agent = new Agent(agentParams, inst);
 		agent.setTransformableClasses(retransformableClasses);
 		agent.startup();
 		if (!agentParams.isPrecheck()) {

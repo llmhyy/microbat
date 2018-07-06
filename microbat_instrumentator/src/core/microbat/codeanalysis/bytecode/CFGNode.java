@@ -17,6 +17,8 @@ public class CFGNode {
 	private HashSet<CFGNode> postDominatee = new HashSet<>();
 	
 	private List<CFGNode> controlDependentees = new ArrayList<>();
+	
+	private BlockNode blockNode;
 
 	public CFGNode(InstructionHandle insHandle) {
 		super();
@@ -131,5 +133,13 @@ public class CFGNode {
 		}
 		
 		return false;
+	}
+
+	public BlockNode getBlockNode() {
+		return blockNode;
+	}
+
+	public void setBlockNode(BlockNode blockNode) {
+		this.blockNode = blockNode;
 	}
 }

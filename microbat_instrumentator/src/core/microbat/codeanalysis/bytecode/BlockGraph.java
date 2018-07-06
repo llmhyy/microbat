@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class BlockGraph {
 	private List<BlockNode> list = new ArrayList<>();
+	
+	private Map<BlockNode, Set<BlockNode>> postDominanceMap;
 	
 	private BlockNode startNode;
 	private List<BlockNode> exitNodeList = new ArrayList<>();
@@ -144,5 +147,13 @@ public class BlockGraph {
 
 	public void setList(List<BlockNode> list) {
 		this.list = list;
+	}
+
+	public Map<BlockNode, Set<BlockNode>> getPostDominanceMap() {
+		return postDominanceMap;
+	}
+
+	public void setPostDominanceMap(Map<BlockNode, Set<BlockNode>> postDominanceMap) {
+		this.postDominanceMap = postDominanceMap;
 	}
 }

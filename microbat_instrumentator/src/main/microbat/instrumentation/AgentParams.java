@@ -33,6 +33,7 @@ public class AgentParams {
 	public static final String OPT_EXCLUDES_FILE = "excludes_file";
 	public static final String OPT_OVER_LONG_METHODS = "overlong_methods";
 	public static final String OPT_REQUIRE_METHOD_SPLITTING = "require_method_split";
+	public static final String OPT_AVOID_TO_STRING_OF_PROXY_OBJ = "avoid_proxy_tostring";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -53,6 +54,7 @@ public class AgentParams {
 	private List<LogType> logTypes;
 	private Set<String> overlongMethods;
 	private boolean requireMethodSplit;
+	private boolean avoidProxyToString;
 	
 	public static AgentParams parse(String agentArgs) {
 		CommandLine cmd = CommandLine.parse(agentArgs);
@@ -90,6 +92,7 @@ public class AgentParams {
 		params.logTypes = LogType.valuesOf(cmd.getStringList(OPT_LOG));
 		params.overlongMethods = cmd.getStringSet(OPT_OVER_LONG_METHODS);
 		params.requireMethodSplit = cmd.getBoolean(OPT_REQUIRE_METHOD_SPLITTING, false);
+		params.avoidProxyToString = cmd.getBoolean(OPT_AVOID_TO_STRING_OF_PROXY_OBJ, false);
 		return params;
 	}
 
@@ -257,6 +260,10 @@ public class AgentParams {
 	
 	public boolean isRequireMethodSplit() {
 		return requireMethodSplit;
+	}
+	
+	public boolean isAvoidProxyToString() {
+		return avoidProxyToString;
 	}
 	
 	public AppJavaClassPath initAppClassPath() {

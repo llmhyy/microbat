@@ -924,10 +924,6 @@ public class TraceNode{
 		
 //		Collections.sort(abstractChildren, new TraceNodeOrderComparator());
 		
-		if(this.getOrder()==5){
-			System.currentTimeMillis();
-		}
-		
 		abstractChildren.addAll(this.invocationChildren);
 		clearLoopParentsInMethodParent(abstractChildren);
 		for(TraceNode loopChild: this.loopChildren){

@@ -20,6 +20,12 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 			return null;
 		}
 		IExecutionTracer tracer = ExecutionTracer.getCurrentThreadStore();
+		/*
+		 * The reason we need to lock and unlock the tracer:
+		 * when a method which is being traced invoke a another method which class is required to be loaded,
+		 * we only want to trace inside that invoked method not in class transformer, that's why we lock to 
+		 * prevent tracing here.
+		 * */
 		boolean needToReleaseLock = !tracer.lock();
 		if (classFName == null) {
 			AgentLogger.debug("AbstractTransformation-Warning: ClassFName is null");
