@@ -152,19 +152,6 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		return excessive;
 	}
 
-	protected boolean doesBytecodeExceedLimit(MethodGen methodGen) {
-		try {
-			return methodGen.getInstructionList().getByteCode().length >= 65534;			
-		} catch (Exception e) {
-			if (e.getMessage() != null && e.getMessage().contains("offset too large")) {
-				return true;
-			} else {
-				e.printStackTrace();
-			}
-		}
-		return true;
-	}
-	
 	private GeneratedMethods runMethodInstrumentation(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
 			boolean isAppClass, boolean isMainMethod) {
 		String methodFullName = ClassGenUtils.getMethodFullName(classGen.getClassName(), method);

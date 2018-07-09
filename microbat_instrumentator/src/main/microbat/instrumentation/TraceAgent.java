@@ -1,5 +1,7 @@
 package microbat.instrumentation;
 
+import java.lang.instrument.Instrumentation;
+
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.filter.InstrumentationFilter;
 import microbat.instrumentation.instr.TraceTransformer;
@@ -19,8 +21,8 @@ public class TraceAgent implements IAgent {
 	private AgentParams agentParams;
 	private StopTimer timer;
 	
-	public TraceAgent(AgentParams agentParams) {
-		this.agentParams = agentParams;
+	public TraceAgent(CommandLine cmd) {
+		this.agentParams = AgentParams.initFrom(cmd);
 	}
 
 	public void startup() {
@@ -183,8 +185,8 @@ public class TraceAgent implements IAgent {
 	}
 
 	@Override
-	public void setTransformableClasses(Class<?>[] retransformableClasses) {
-		// do nothing
+	public void retransformBootstrapClasses(Instrumentation instrumentation, Class<?>[] retransformableClasses)
+			throws Exception {
+		instrumentation.retransformClasses(retransformableClasses);
 	}
-
 }

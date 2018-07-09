@@ -1,5 +1,6 @@
 package microbat.instrumentation;
 
+import java.lang.instrument.Instrumentation;
 import java.util.List;
 
 import microbat.instrumentation.filter.FilterChecker;
@@ -11,8 +12,8 @@ public class PrecheckAgent implements IAgent {
 	private AgentParams agentParams;
 	private PrecheckTransformer precheckTransformer;
 
-	public PrecheckAgent(AgentParams agentParams) {
-		this.agentParams = agentParams; 
+	public PrecheckAgent(CommandLine cmd) {
+		this.agentParams = AgentParams.initFrom(cmd); 
 		this.precheckTransformer = new PrecheckTransformer(agentParams);
 	}
 	
@@ -49,7 +50,8 @@ public class PrecheckAgent implements IAgent {
 	}
 
 	@Override
-	public void setTransformableClasses(Class<?>[] retransformableClasses) {
+	public void retransformBootstrapClasses(Instrumentation instrumentation, Class<?>[] retransformableClasses)
+			throws Exception {
 		List<String> loadedClasses = precheckTransformer.getLoadedClasses();
 		for (Class<?> clazz : retransformableClasses) {
 			loadedClasses.add(clazz.getName());

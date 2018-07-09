@@ -1,19 +1,21 @@
 package microbat.instrumentation;
 
 import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.Instrumentation;
 
 public interface IAgent {
-	
+
 	public void startup();
-	
+
 	public void shutdown() throws Exception;
-	
+
 	public void startTest(String junitClass, String junitMethod);
-	
+
 	public void finishTest(String junitClass, String junitMethod);
-	
+
 	public ClassFileTransformer getTransformer();
 
-	public void setTransformableClasses(Class<?>[] retransformableClasses);
-	
+	public void retransformBootstrapClasses(Instrumentation instrumentation, Class<?>[] retransformableClasses)
+			throws Exception;
+
 }

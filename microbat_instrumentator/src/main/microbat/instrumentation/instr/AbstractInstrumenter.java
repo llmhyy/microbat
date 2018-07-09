@@ -88,4 +88,17 @@ public abstract class AbstractInstrumenter {
 		}
 	}
 	
+	protected boolean doesBytecodeExceedLimit(MethodGen methodGen) {
+		try {
+			return methodGen.getInstructionList().getByteCode().length >= 65534;			
+		} catch (Exception e) {
+			if (e.getMessage() != null && e.getMessage().contains("offset too large")) {
+				return true;
+			} else {
+				e.printStackTrace();
+			}
+		}
+		return true;
+	}
+	
 }

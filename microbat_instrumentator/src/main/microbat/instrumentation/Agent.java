@@ -5,6 +5,9 @@ import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.List;
 
+import microbat.instrumentation.AgentParams.LogType;
+import microbat.instrumentation.cfgcoverage.CoverageAgent;
+import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
 import microbat.instrumentation.filter.FilterChecker;
 
 /**
@@ -17,14 +20,17 @@ public class Agent {
 	private static int numberOfThread = 1;
 	private static Instrumentation instrumentation;
 	
-	public Agent(AgentParams agentParams, Instrumentation inst) {
-		if (agentParams.isPrecheck()) {
-			agent = new PrecheckAgent(agentParams);
+	public Agent(CommandLine cmd, Instrumentation inst) {
+		if (cmd.getBoolean(CoverageAgentParams.OPT_IS_COUNT_COVERAGE, false)) {
+			agent = new CoverageAgent(cmd);
+		}
+		if (cmd.getBoolean(AgentParams.OPT_PRECHECK, false)) {
+			agent = new PrecheckAgent(cmd);
 		} else {
-			agent = new TraceAgent(agentParams);
+			agent = new TraceAgent(cmd);
 		}
 		instrumentation = inst;
-		AgentLogger.setup(agentParams.getLogTypes());
+		AgentLogger.setup(LogType.valuesOf(cmd.getStringList(AgentParams.OPT_LOG)));
 	}
 
 	public void startup() {
@@ -139,7 +145,7 @@ public class Agent {
 		return agent.getTransformer();
 	}
 
-	public void setTransformableClasses(Class<?>[] retransformableClasses) {
-		agent.setTransformableClasses(retransformableClasses);
+	public void retransformClasses(Class<?>[] retransformableClasses) throws Exception {
+		agent.retransformBootstrapClasses(instrumentation, retransformableClasses);
 	}
 }

@@ -24,21 +24,13 @@ public class Premain {
 		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
 		
 		debug("start instrumentation...");
-		AgentParams agentParams = AgentParams.parse(agentArgs);
-		Agent agent = new Agent(agentParams, inst);
-		agent.setTransformableClasses(retransformableClasses);
+		CommandLine cmd = CommandLine.parse(agentArgs);
+		Agent agent = new Agent(cmd, inst);
 		agent.startup();
-		if (!agentParams.isPrecheck()) {
-			//SystemClassTransformer.transformClassLoader(inst);
-		}
 		SystemClassTransformer.transformThread(inst);
 		inst.addTransformer(agent.getTransformer(), true);
 		inst.addTransformer(new TestRunnerTranformer());
-		if (!agentParams.isPrecheck()) {
-			if (retransformableClasses.length > 0) {
-				inst.retransformClasses(retransformableClasses);
-			}
-		}
+		agent.retransformClasses(retransformableClasses);
 		
 		debug("after retransform");
 	}
