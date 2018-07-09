@@ -105,6 +105,10 @@ public class CFGConstructor {
 		
 		setExitNodes(cfg);
 		
+		int idx = 0;
+		for (InstructionHandle insnHandler : list) {
+			cfg.findNode(insnHandler).setIdx(idx++);
+		}
 		return cfg;
 	}
 

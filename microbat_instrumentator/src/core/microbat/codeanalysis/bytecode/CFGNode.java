@@ -10,6 +10,7 @@ import org.apache.bcel.generic.Select;
 
 public class CFGNode {
 
+	private int idx; // index of instruction in instructionList
 	private InstructionHandle instructionHandle;
 	private List<CFGNode> parents = new ArrayList<>();
 	private List<CFGNode> children = new ArrayList<>();
@@ -107,6 +108,14 @@ public class CFGNode {
 	public void setPostDominatee(HashSet<CFGNode> originalSet) {
 		this.postDominatee = originalSet;
 		
+	}
+	
+	public int getIdx() {
+		return idx;
+	}
+
+	public void setIdx(int idx) {
+		this.idx = idx;
 	}
 
 	public boolean canReachPostDominatee(CFGNode target) {
