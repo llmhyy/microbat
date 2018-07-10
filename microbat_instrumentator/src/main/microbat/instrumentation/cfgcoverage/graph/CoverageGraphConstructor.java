@@ -13,7 +13,7 @@ import org.apache.bcel.generic.RETURN;
 
 import microbat.codeanalysis.bytecode.CFG;
 import microbat.codeanalysis.bytecode.CFGNode;
-import microbat.instrumentation.cfgcoverage.CoverageAgentUtils;
+import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
 import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode.Type;
 import microbat.model.ClassLocation;
@@ -153,7 +153,7 @@ public class CoverageGraphConstructor {
 					ConstantPoolGen cpg = new ConstantPoolGen(cfg.getCfg().getMethod().getConstantPool());
 					InvokeInstruction methodInsn = (InvokeInstruction) node.getInstructionHandle().getInstruction();
 					String invkClassName = methodInsn.getClassName(cpg);
-					String invkMethodName = CoverageAgentUtils.getMethodWithSignature(methodInsn.getMethodName(cpg),
+					String invkMethodName = InstrumentationUtils.getMethodWithSignature(methodInsn.getMethodName(cpg),
 							methodInsn.getSignature(cpg));
 					ClassLocation invokeMethod = new ClassLocation(invkClassName, invkMethodName, -1);
 					CFGInstance subCfg = buildProgramFlowGraph(appClasspath, invokeMethod, layer + 1, maxLayer);

@@ -16,34 +16,33 @@ import microbat.codeanalysis.bytecode.CFG;
 import microbat.codeanalysis.bytecode.CFGConstructor;
 import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.codeanalysis.bytecode.MethodFinderByLine;
-import microbat.instrumentation.cfgcoverage.CoverageAgentUtils;
+import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
 import microbat.model.ClassLocation;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class CFGRepository {
-	private Map<String, List<CFGNode>> nodeListMap = new HashMap<String, List<CFGNode>>();
-	private Map<String, CFG> cachedCFGs = new HashMap<>();
+	private Map<String, CFGInstance> cachedCFGs = new HashMap<>();
 	
 	public CFGInstance createCfgInstance(ClassLocation methodLocation, AppJavaClassPath appJavaClassPath) {
-		CFG cfg = findCfg(methodLocation, appJavaClassPath);
+		CFGInstance cfgInstance = findCfg(methodLocation, appJavaClassPath);
+		CFG cfg = cfgInstance.getCfg();
 		CFG cloneCfg = new CFG();
 		cloneCfg.setStartNode(cfg.getStartNode());
 		cloneCfg.setMethod(cfg.getMethod());
 		for (CFGNode exitNode : cfg.getExitList()) {
 			cloneCfg.addExitNode(exitNode);
 		}
-		List<CFGNode> nodeList = nodeListMap.get(methodLocation.getId());
-		for (CFGNode node : nodeList) {
+		for (CFGNode node : cfg.getNodeList()) {
 			cloneCfg.addNode(node);
 		}
-		return new CFGInstance(cloneCfg, methodLocation.getId(), nodeList);
+		return new CFGInstance(cloneCfg, cfgInstance.getNodeList(), cfgInstance.getUnitCfgNodeIds());
 	}
 
-	public CFG findCfg(ClassLocation methodLocation, AppJavaClassPath appJavaClassPath) {
-		String methodId = CoverageAgentUtils.getMethodId(methodLocation.getClassCanonicalName(), methodLocation.getMethodSign(), methodLocation.getLineNumber());
-		CFG cfg = cachedCFGs.get(methodId);
-		if (cfg != null) {
-			return cfg;
+	public CFGInstance findCfg(ClassLocation methodLocation, AppJavaClassPath appJavaClassPath) {
+		String methodId = InstrumentationUtils.getMethodId(methodLocation.getClassCanonicalName(), methodLocation.getMethodSign());
+		CFGInstance cfgInstance = cachedCFGs.get(methodId);
+		if (cfgInstance != null) {
+			return cfgInstance;
 		}
 		ByteCodeMethodFinder finder;
 		if (methodLocation.getLineNumber() >= 0) {
@@ -54,7 +53,7 @@ public class CFGRepository {
 		ByteCodeParser.parse(methodLocation.getClassCanonicalName(), finder, appJavaClassPath);
 		Method method = finder.getMethod();
 		CFGConstructor cfgConstructor = new CFGConstructor();
-		cfg = cfgConstructor.constructCFG(method.getCode());
+		CFG cfg = cfgConstructor.constructCFG(method.getCode());
 		cfg.setMethod(method);
 		List<CFGNode> nodeList = new ArrayList<CFGNode>(cfg.getNodeList());
 		Collections.sort(nodeList, new Comparator<CFGNode>() {
@@ -65,14 +64,14 @@ public class CFGRepository {
 			}
 			
 		});
-		nodeListMap.put(methodId, nodeList);
-		
-		return cfg;
+		methodId = InstrumentationUtils.getMethodId(methodLocation.getClassCanonicalName(), method);
+		cfgInstance = new CFGInstance(cfg, methodId, nodeList);
+		cachedCFGs.put(methodId, cfgInstance);		
+		return cfgInstance;
 	}
 	
 	public void clearCache() {
 		cachedCFGs.clear();
-		nodeListMap.clear();
 		Repository.clearCache();
 	}
 	
@@ -80,11 +79,11 @@ public class CFGRepository {
 		private ClassLocation loc;
 
 		public MethodFinderByMethodSignature(ClassLocation loc) {
-			
+			this.loc = loc;
 		}
 
 		public void visitMethod(Method method) {
-			if (loc.getMethodSign().equals(CoverageAgentUtils.getMethodWithSignature(method.getName(), method.getSignature()))) {
+			if (loc.getMethodSign().equals(InstrumentationUtils.getMethodWithSignature(method.getName(), method.getSignature()))) {
 				setMethod(method);
 			}
 		}

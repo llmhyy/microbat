@@ -1,5 +1,7 @@
 package microbat.instrumentation.cfgcoverage.instr;
 
+import java.util.List;
+
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ClassGen;
@@ -74,7 +76,8 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 			// empty method
 			return false;
 		}
-//		ProbeInstructionInfos probeInfo = ProbeInstructionInfos.buildProbeInstructions(insnList);
+		List<InstructionInfo> instrmList = InstmInstructions.getInstrumentationList(insnList, method,
+				classGen.getClassName());
 		
 		return false;
 	}

@@ -11,6 +11,7 @@ public class CoverageSFNode {
 	private int endIdx;
 	private UniqueNodeId startNodeId;
 	private UniqueNodeId endNodeId;
+	private UniqueNodeId probeNodeId;
 	private List<CoverageSFNode> branches;
 	private List<Integer> content; // for a block node.
 	private Type type;
@@ -21,6 +22,13 @@ public class CoverageSFNode {
 		this.type = type;
 		startIdx = startNode.getIdx();
 		startNodeId = cfg.getUnitCfgNodeId(startNode);
+	}
+	
+	public CoverageSFNode getCorrespondingBranch(String methodId) {
+		for (CoverageSFNode branch : branches) {
+//			if (branch.end)
+		}
+		return null; //TODO
 	}
 
 	public List<Integer> getCoveredTestcases() {

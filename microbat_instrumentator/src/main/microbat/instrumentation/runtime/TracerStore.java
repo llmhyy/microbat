@@ -6,32 +6,32 @@ package microbat.instrumentation.runtime;
  * only Array is allowed.
  * [TO AVOID RECURSIVE LOOP IN GET_TRACER!!]
  */
-public class TracerStore {
-	private ExecutionTracer[] rtStore = new ExecutionTracer[10];
-	private long mainThreadId = -1;
-	private int lastUsedIdx = -1;
+public abstract class TracerStore<T extends ITracer> {
+	protected ITracer[] rtStore = new ITracer[10];
+	protected long mainThreadId = -1;
+	protected int lastUsedIdx = -1;
 	
 	/* threadId must be valid */
-	public synchronized ExecutionTracer get(long threadId) {
+	@SuppressWarnings("unchecked")
+	public synchronized T get(long threadId) {
 		if (threadId != mainThreadId) {
 			return null; // for now, only recording trace for main thread.
 		}
 		for (int i = 0; i < lastUsedIdx; i++) {
-			ExecutionTracer tracer = rtStore[i];
+			ITracer tracer = rtStore[i];
 			if (tracer.getThreadId() == threadId) {
-				return tracer;
+				return (T) tracer;
 			}
 		}
-		ExecutionTracer tracer = new ExecutionTracer(threadId);
+		T tracer = initTracer(threadId);
 		rtStore[++lastUsedIdx] = tracer;
 		return tracer;
 	}
 	
-	public IExecutionTracer getMainThreadTracer() {
-		return get(mainThreadId);
-	}
-	
+	protected abstract T initTracer(long threadId);
+
 	public void setMainThreadId(long mainThreadId) {
 		this.mainThreadId = mainThreadId;
 	}
+
 }

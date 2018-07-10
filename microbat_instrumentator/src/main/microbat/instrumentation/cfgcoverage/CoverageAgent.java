@@ -7,6 +7,8 @@ import microbat.instrumentation.CommandLine;
 import microbat.instrumentation.IAgent;
 import microbat.instrumentation.cfgcoverage.graph.CoverageGraphConstructor;
 import microbat.instrumentation.cfgcoverage.instr.CoverageTransformer;
+import microbat.instrumentation.cfgcoverage.instr.InstmInstructions;
+import microbat.instrumentation.cfgcoverage.runtime.CoverageTracer;
 
 public class CoverageAgent implements IAgent {
 	private CoverageAgentParams agentParams;
@@ -18,7 +20,9 @@ public class CoverageAgent implements IAgent {
 	@Override
 	public void startup() {
 		CoverageGraphConstructor constructor = new CoverageGraphConstructor();
-		constructor.buildCoverageGraph(agentParams.initAppClasspath(), agentParams.getTargetMethod(), agentParams.getCdgLayer());
+		CoverageTracer.coverageFlowGraph = constructor.buildCoverageGraph(agentParams.initAppClasspath(),
+				agentParams.getTargetMethod(), agentParams.getCdgLayer());
+		InstmInstructions.initInstrInstructions(CoverageTracer.coverageFlowGraph);
 	}
 
 	@Override

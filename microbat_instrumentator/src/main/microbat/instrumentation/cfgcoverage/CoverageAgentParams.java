@@ -20,7 +20,7 @@ public class CoverageAgentParams {
 
 	public static CoverageAgentParams initFrom(CommandLine cmd) {
 		CoverageAgentParams params = new CoverageAgentParams();
-		params.targetMethodLoc = CoverageAgentUtils.getMethodId(cmd.getString(OPT_TARGET_METHOD));
+		params.targetMethodLoc = InstrumentationUtils.getMethodId(cmd.getString(OPT_TARGET_METHOD));
 		params.classPaths = cmd.getStringList(OPT_CLASS_PATH);
 		params.cdgLayer = cmd.getInt(OPT_CDG_LAYER, 1);
 		return params;

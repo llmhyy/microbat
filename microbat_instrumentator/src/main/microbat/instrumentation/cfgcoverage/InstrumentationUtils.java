@@ -1,14 +1,17 @@
 package microbat.instrumentation.cfgcoverage;
 
+import org.apache.bcel.classfile.Method;
+
 import microbat.model.ClassLocation;
 
-public class CoverageAgentUtils {
+public class InstrumentationUtils {
 
-	public static String getMethodId(String className, String methodName, int startline) {
-		if (startline < 0) {
-			return String.format("%s.%s", className, methodName);
-		}
-		return String.format("%s.%s.%d", className, methodName, startline);
+	public static String getMethodId(String className, String methodNameWthSignature) {
+		return String.format("%s.%s", className, methodNameWthSignature);
+	}
+	
+	public static String getMethodId(String className, Method method) {
+		return String.format("%s.%s", className, getMethodWithSignature(method.getName(), method.getSignature()));
 	}
 
 	public static ClassLocation getMethodId(String targetMethod) {

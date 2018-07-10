@@ -42,8 +42,8 @@ import microbat.util.PrimitiveUtils;
 import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class ExecutionTracer implements IExecutionTracer {
-	private static TracerStore rtStore = new TracerStore();
+public class ExecutionTracer implements IExecutionTracer, ITracer {
+	private static ExecutionTracerStore rtStore = new ExecutionTracerStore();
 	
 	public static AppJavaClassPath appJavaClassPath;
 	public static int variableLayer = 2;
