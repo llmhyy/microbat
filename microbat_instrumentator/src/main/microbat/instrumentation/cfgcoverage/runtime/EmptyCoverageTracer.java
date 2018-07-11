@@ -6,4 +6,22 @@ public class EmptyCoverageTracer implements ICoverageTracer {
 	public static EmptyCoverageTracer getInstance() {
 		return INSTANCE;
 	}
+
+	@Override
+	public void _reachNode(String methodId, int nodeIdx) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void _enterMethod(String methodId, String paramTypeSignsCode, Object[] params) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void _exitMethod(String methodId) {
+		// TODO Auto-generated method stub
+		
+	}
 }

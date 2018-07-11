@@ -32,7 +32,7 @@ public class CoverageGraphConstructor {
 			int cdgLayer) {
 		CFGInstance cfg = buildProgramFlowGraph(appClasspath, targetMethod, 1, cdgLayer);
 		breakCircle(cfg);
-		CoverageSFlowGraph coverageGraph = new CoverageSFlowGraph(cfg);
+		CoverageSFlowGraph coverageGraph = new CoverageSFlowGraph(cfg, cdgLayer);
 		Stack<CFGNode> stack = new Stack<>();
 		stack.push(cfg.getCfg().getStartNode());
 		Map<Integer, CoverageSFNode> nodeMap = new HashMap<>();

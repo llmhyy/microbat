@@ -6,12 +6,15 @@ import java.lang.instrument.Instrumentation;
 import microbat.instrumentation.CommandLine;
 import microbat.instrumentation.IAgent;
 import microbat.instrumentation.cfgcoverage.graph.CoverageGraphConstructor;
+import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
+import microbat.instrumentation.cfgcoverage.instr.CoverageInstrumenter;
 import microbat.instrumentation.cfgcoverage.instr.CoverageTransformer;
-import microbat.instrumentation.cfgcoverage.instr.InstmInstructions;
+import microbat.instrumentation.cfgcoverage.instr.MethodInstructionsInfo;
 import microbat.instrumentation.cfgcoverage.runtime.CoverageTracer;
 
 public class CoverageAgent implements IAgent {
 	private CoverageAgentParams agentParams;
+	private CoverageInstrumenter instrumenter;
 	
 	public CoverageAgent(CommandLine cmd) {
 		this.agentParams = CoverageAgentParams.initFrom(cmd);
@@ -20,9 +23,11 @@ public class CoverageAgent implements IAgent {
 	@Override
 	public void startup() {
 		CoverageGraphConstructor constructor = new CoverageGraphConstructor();
-		CoverageTracer.coverageFlowGraph = constructor.buildCoverageGraph(agentParams.initAppClasspath(),
+		CoverageSFlowGraph coverageFlowGraph = constructor.buildCoverageGraph(agentParams.initAppClasspath(),
 				agentParams.getTargetMethod(), agentParams.getCdgLayer());
-		InstmInstructions.initInstrInstructions(CoverageTracer.coverageFlowGraph);
+		CoverageTracer.coverageFlowGraph = coverageFlowGraph;
+		MethodInstructionsInfo.initInstrInstructions(coverageFlowGraph);
+		instrumenter.setEntryPoint(coverageFlowGraph.getStartNode().getStartNodeId().getMethodId());
 	}
 
 	@Override
@@ -45,7 +50,9 @@ public class CoverageAgent implements IAgent {
 
 	@Override
 	public ClassFileTransformer getTransformer() {
-		return new CoverageTransformer(agentParams);
+		CoverageTransformer coverageTransformer = new CoverageTransformer(agentParams);
+		instrumenter = coverageTransformer.getInstrumenter();
+		return coverageTransformer;
 	}
 
 	@Override

@@ -6,9 +6,13 @@ import java.util.List;
 public class CoverageSFlowGraph {
 	private CoverageSFNode startNode;
 	private List<CoverageSFNode> nodeList;
+	private List<Integer> coveredTestcases = new ArrayList<>();
+	private int cdgLayer;
 	
-	public CoverageSFlowGraph(CFGInstance cfg) {
+	
+	public CoverageSFlowGraph(CFGInstance cfg, int cdgLayer) {
 		nodeList = new ArrayList<>(cfg.getNodeList().size() / 2);
+		this.cdgLayer = cdgLayer;
 	}
 	
 	public void addNode(CoverageSFNode node) {
@@ -25,5 +29,13 @@ public class CoverageSFlowGraph {
 	
 	public List<CoverageSFNode> getNodeList() {
 		return nodeList;
+	}
+
+	public void addCoveredTestcase(String testcase, int testcaseIdx) {
+		coveredTestcases.add(testcaseIdx);
+	}
+	
+	public int getCdgLayer() {
+		return cdgLayer;
 	}
 }

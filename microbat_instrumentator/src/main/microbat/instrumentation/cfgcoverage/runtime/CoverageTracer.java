@@ -3,57 +3,88 @@ package microbat.instrumentation.cfgcoverage.runtime;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.runtime.ITracer;
-import microbat.instrumentation.runtime.MethodCallStack;
 import microbat.instrumentation.runtime.TracingState;
 
 public class CoverageTracer implements ICoverageTracer, ITracer {
 	private static CoverageTracerStore rtStore = new CoverageTracerStore();
 	public static CoverageSFlowGraph coverageFlowGraph;
+	private static int currentTestCaseIdx;
 	private long threadId;
 	private TracingState state = TracingState.INIT;
+	private NoProbeTracer noProbeTracer = new NoProbeTracer(this);
+	private int methodInvokeLevel = 0;
 
 	private CoverageSFNode currentNode;
-	private MethodCallStack methodCallStack = new MethodCallStack();
+	MethodCallStack methodCallStack = new MethodCallStack();
 	
 	public CoverageTracer(long threadId) {
 		this.threadId = threadId;
 	}
 	
+	@Override
 	public void _reachNode(String methodId, int nodeIdx) {
-		
+		if (currentNode == null) {
+			coverageFlowGraph.getStartNode();
+		} else {
+			CoverageSFNode branch = currentNode.getCorrespondingBranch(methodId, nodeIdx);
+			// currentNode should not be null here.
+			branch.addCoveredTestcase(currentTestCaseIdx);
+			currentNode.markCoveredBranch(branch, currentTestCaseIdx);
+			currentNode = branch;
+		}
 	}
 	
-	public void _enterMethod() {
-		
+	@Override
+	public void _enterMethod(String methodId, String paramTypeSignsCode, Object[] params) {
+		// TODO-LLT: extract input variable values for learning to replace TestcaseExecutor component.
+		methodInvokeLevel++;
+		methodCallStack.push(methodId);
 	}
 	
-	public void _exitMethod() {
-		
+	@Override
+	public void _exitMethod(String methodId) {
+		methodInvokeLevel--;
+		methodCallStack.safePop();
 	}
 	
 	private boolean doesNotNeedToRecord(String methodId) {
-		currentNode.getCorrespondingBranch(methodId);
+		if (methodInvokeLevel >= coverageFlowGraph.getCdgLayer() 
+				|| methodCallStack.size() > methodInvokeLevel) {
+			return true;
+		}
+		CoverageSFNode correspondingNode = currentNode.getCorrespondingBranch(methodId);
+		if (correspondingNode == null) {
+			return true;
+		}
 		return false;
 	}
 	
-	public synchronized static ICoverageTracer _getTracer(String methodId, boolean isEntryPoint) {
+	public synchronized static ICoverageTracer _getTracer(String methodId, boolean isEntryPoint, String paramNamesCode,
+			String paramTypeSignsCode, Object[] params) {
 		long threadId = Thread.currentThread().getId();
-		CoverageTracer tracer = rtStore.get(threadId);
-		if (tracer.state != TracingState.RECORDING) {
+		CoverageTracer coverageTracer = rtStore.get(threadId);
+		if (coverageTracer.state != TracingState.RECORDING) {
 			if (isEntryPoint) {
-				tracer.state = TracingState.RECORDING;
+				coverageTracer.state = TracingState.RECORDING;
 			} else {
 				return EmptyCoverageTracer.getInstance();
 			}
 		}
-		if (!isEntryPoint & tracer.doesNotNeedToRecord(methodId)) {
-			return EmptyCoverageTracer.getInstance();
+		ICoverageTracer tracer = coverageTracer;
+		if (!isEntryPoint & coverageTracer.doesNotNeedToRecord(methodId)) {
+			tracer = coverageTracer.noProbeTracer;
 		}
+		tracer._enterMethod(methodId, paramTypeSignsCode, params);
 		return tracer;
 	}
 
 	@Override
 	public long getThreadId() {
 		return threadId;
+	}
+	
+	public static void startTestcase(String testcase, int testcaseIdx) {
+		coverageFlowGraph.addCoveredTestcase(testcase, testcaseIdx);
+		CoverageTracer.currentTestCaseIdx = testcaseIdx;
 	}
 }

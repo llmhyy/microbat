@@ -20,4 +20,7 @@ public class CoverageTransformer implements ClassFileTransformer {
 		return null;
 	}
 
+	public CoverageInstrumenter getInstrumenter() {
+		return instrumenter;
+	}
 }

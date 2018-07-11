@@ -1,7 +1,9 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
@@ -16,7 +18,8 @@ public class CoverageSFNode {
 	private List<Integer> content; // for a block node.
 	private Type type;
 
-	private List<Integer> coveredTestcases;
+	private List<Integer> coveredTestcases = new ArrayList<>();
+	private Map<CoverageSFNode, List<Integer>> coveredTestcasesOnBranches = new HashMap<CoverageSFNode, List<Integer>>();
 
 	public CoverageSFNode(Type type, CFGNode startNode, CFGInstance cfg) {
 		this.type = type;
@@ -26,9 +29,21 @@ public class CoverageSFNode {
 	
 	public CoverageSFNode getCorrespondingBranch(String methodId) {
 		for (CoverageSFNode branch : branches) {
-//			if (branch.end)
+			if (branch.startNodeId.getMethodId().equals(methodId)) {
+				return branch;
+			}
 		}
-		return null; //TODO
+		return null; 
+	}
+	
+	public CoverageSFNode getCorrespondingBranch(String methodId, int nodeLocalIdx) {
+		for (CoverageSFNode branch : branches) {
+			UniqueNodeId probeId = branch.probeNodeId;
+			if (probeId.getMethodId().equals(methodId) && probeId.localNodeIdx == nodeLocalIdx) {
+				return branch;
+			}
+		}
+		return null; 
 	}
 
 	public List<Integer> getCoveredTestcases() {
@@ -80,6 +95,7 @@ public class CoverageSFNode {
 	public void setEndIdx(int endIdx, UniqueNodeId uniqueNodeId) {
 		this.endIdx = endIdx;
 		this.endNodeId = uniqueNodeId;
+		this.probeNodeId = endNodeId;
 	}
 
 	public UniqueNodeId getStartNodeId() {
@@ -92,6 +108,10 @@ public class CoverageSFNode {
 
 	public UniqueNodeId getEndNodeId() {
 		return endNodeId;
+	}
+	
+	public UniqueNodeId getProbeNodeId() {
+		return probeNodeId;
 	}
 
 	public void setEndNodeId(UniqueNodeId endNodeId) {
@@ -112,6 +132,19 @@ public class CoverageSFNode {
 
 	public enum Type {
 		CONDITION_NODE, BLOCK_NODE, INVOKE_NODE, ALIAS_NODE
+	}
+
+	public void addCoveredTestcase(int testcaseIdx) {
+		coveredTestcases.add(testcaseIdx);
+	}
+
+	public void markCoveredBranch(CoverageSFNode branch, int testcaseIdx) {
+		List<Integer> tcs = coveredTestcasesOnBranches.get(branch);
+		if (tcs == null) {
+			tcs = new ArrayList<>();
+			coveredTestcasesOnBranches.put(branch, tcs);
+		}
+		tcs.add(testcaseIdx);
 	}
 
 	

@@ -1,23 +1,34 @@
 package microbat.instrumentation.cfgcoverage.instr;
 
-import java.util.List;
-
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.ALOAD;
+import org.apache.bcel.generic.ASTORE;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.INVOKEINTERFACE;
+import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
+import org.apache.bcel.generic.PUSH;
 
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.ClassGenUtils;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
+import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.instr.AbstractInstrumenter;
+import microbat.instrumentation.runtime.TraceUtils;
 
 public class CoverageInstrumenter extends AbstractInstrumenter {
+	private static final String TRACER_VAR_NAME = "$tracer";
+	private static final String METHOD_ID_VAR_NAME = "$methodId";
+	private static final String TEMP_VAR_NAME = "$tempVar"; // local var
+	private int tempVarIdx = 0;
 	private CoverageAgentParams agentParams;
+	private String entryPoint; // methodId
 
 	public CoverageInstrumenter(CoverageAgentParams agentParams) {
 		this.agentParams = agentParams;
@@ -76,10 +87,96 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 			// empty method
 			return false;
 		}
-		List<InstructionInfo> instrmList = InstmInstructions.getInstrumentationList(insnList, method,
+		MethodInstructionsInfo instmInsns = MethodInstructionsInfo.getInstrumentationInstructions(insnList, method,
 				classGen.getClassName());
-		
-		return false;
+		if (insnList.isEmpty()) {
+			return false;
+		}
+		tempVarIdx = 0;
+		String methodId = InstrumentationUtils.getMethodId(classGen.getClassName(), method);
+		LocalVariableGen methodIdVar = createLocalVariable(METHOD_ID_VAR_NAME, methodGen, constPool);
+		LocalVariableGen tracerVar = createLocalVariable(TRACER_VAR_NAME, methodGen, constPool);
+		for (InstructionInfo instnInfo : instmInsns.getNodeInsns()) {
+			injectCodeTracerReachNode(methodIdVar, instnInfo, tracerVar, constPool, insnList);
+		}
+		for (InstructionHandle exitInsn : instmInsns.getExitInsns()) {
+			injectCodeTracerExitMethod(methodIdVar, tracerVar, constPool, insnList, exitInsn);
+		}
+		injectCodeInitTracer(methodGen, constPool, tracerVar, methodIdVar, methodId);
+		return true;
+	}
+	
+	private void injectCodeTracerReachNode(LocalVariableGen methodIdVar, InstructionInfo instnInfo, LocalVariableGen tracerVar,
+			ConstantPoolGen constPool, InstructionList insnList) {
+		CoverageTracerMethods method = CoverageTracerMethods.REACH_NODE;
+		InstructionList newInsns = new InstructionList();
+		newInsns.append(new ALOAD(tracerVar.getIndex()));
+		newInsns.append(new ALOAD(methodIdVar.getIndex()));
+		newInsns.append(new PUSH(constPool, instnInfo.getInsnIdx()));
+		appendTracerMethodInvoke(newInsns, method, constPool);
+		insertInsnHandler(insnList, newInsns, instnInfo.getInsnHandler());
+		newInsns.dispose();
 	}
 
+	private LocalVariableGen injectCodeInitTracer(MethodGen methodGen, ConstantPoolGen constPool,
+			LocalVariableGen tracerVar, LocalVariableGen methodIdVar, String methodId) {
+		InstructionList insnList = new InstructionList();
+		InstructionHandle startInsn = insnList.getStart();
+		if (startInsn == null) {
+			return null;
+		}
+		boolean isEntryPoint = this.entryPoint.equals(methodId);
+		InstructionList newInsns = new InstructionList();
+		/* store methodId */
+		newInsns.append(new PUSH(constPool, methodId));
+		newInsns.append(new ASTORE(methodIdVar.getIndex()));
+		
+		/* invoke _getTracer */
+		newInsns.append(new ALOAD(methodIdVar.getIndex()));// methodId
+		newInsns.append(new PUSH(constPool, isEntryPoint)); // isEntryPoint
+		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgNames(getArgumentNames(methodGen)))); // paramNamesCode
+		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgTypes(methodGen.getArgumentTypes()))); // paramTypeSignsCode
+		
+		LocalVariableGen argObjsVar = createMethodParamTypesObjectArrayVar(methodGen, constPool, startInsn, newInsns, nextTempVarName()); 
+		newInsns.append(new ALOAD(argObjsVar.getIndex())); // params
+		
+		appendTracerMethodInvoke(newInsns, CoverageTracerMethods.GET_TRACER, constPool);
+		InstructionHandle tracerStartPos = newInsns.append(new ASTORE(tracerVar.getIndex()));
+		tracerVar.setStart(tracerStartPos);
+		
+		insnList.insert(startInsn, newInsns);
+		newInsns.dispose();
+		return tracerVar;
+	}
+	
+	private void injectCodeTracerExitMethod(LocalVariableGen methodIdVar, LocalVariableGen tracerVar,
+			ConstantPoolGen constPool, InstructionList insnList, InstructionHandle exitInsn) {
+		InstructionList newInsns = new InstructionList();
+		newInsns.append(new ALOAD(tracerVar.getIndex()));
+		newInsns.append(new ALOAD(methodIdVar.getIndex()));
+		appendTracerMethodInvoke(newInsns, CoverageTracerMethods.EXIT_METHOD, constPool);
+		
+		insertInsnHandler(insnList, newInsns, exitInsn);
+		newInsns.dispose();
+	}
+	
+	protected void appendTracerMethodInvoke(InstructionList newInsns, CoverageTracerMethods method, ConstantPoolGen constPool) {
+		if (method.isInterfaceMethod()) {
+			int index = constPool.addInterfaceMethodref(method.getDeclareClass(), method.getMethodName(),
+					method.getMethodSign());
+			newInsns.append(new INVOKEINTERFACE(index, method.getArgNo()));
+		} else {
+			int index = constPool.addMethodref(method.getDeclareClass(), method.getMethodName(),
+					method.getMethodSign());
+			newInsns.append(new INVOKESTATIC(index));
+		}
+	}
+
+	private String nextTempVarName() {
+		return TEMP_VAR_NAME + (++tempVarIdx);
+	}
+	
+	public void setEntryPoint(String entryPoint) {
+		this.entryPoint = entryPoint;
+	}
 }

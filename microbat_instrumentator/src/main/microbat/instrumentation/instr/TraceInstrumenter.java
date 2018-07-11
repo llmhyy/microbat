@@ -73,7 +73,6 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	protected static final String TRACER_VAR_NAME = "$tracer"; // local var
 	private static final String TEMP_VAR_NAME = "$tempVar"; // local var
 	
-	private BasicTypeSupporter basicTypeSupporter = new BasicTypeSupporter();
 	private int tempVarIdx = 0;
 	private EntryPoint entryPoint;
 	private Set<String> requireSplittingMethods = Collections.emptySet();
@@ -929,7 +928,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	}
 
 	private LocalVariableGen addTempVar(MethodGen methodGen, Type type, InstructionHandle insnHandler) {
-		return methodGen.addLocalVariable(TEMP_VAR_NAME + (++tempVarIdx), type, insnHandler, insnHandler.getNext());
+		return methodGen.addLocalVariable(nextTempVarName(), type, insnHandler, insnHandler.getNext());
 	}
 
 	protected void injectCodeTracerHitLine(InstructionList insnList, ConstantPoolGen constPool,
@@ -988,39 +987,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgTypes(methodGen.getArgumentTypes())));
 		// startTracing, className, String methodSig, int methodStartLine, argTypes
 		
-		/* init Object[] */
-		LocalVariableGen argObjsVar = addTempVar(methodGen, new ArrayType(Type.OBJECT, 1), startInsn);
-		newInsns.append(new PUSH(constPool, methodGen.getArgumentTypes().length));
-		newInsns.append(new ANEWARRAY(constPool.addClass(Object.class.getName())));
-		argObjsVar.setStart(newInsns.append(new ASTORE(argObjsVar.getIndex())));
-		/* assign method argument values to Object[] */
-		LocalVariableTable localVariableTable = methodGen.getLocalVariableTable(constPool);
-		if (localVariableTable != null) {
-			int varIdx = (Const.ACC_STATIC & methodGen.getAccessFlags()) != 0 ? 0 : 1;
-			for (int i = 0; i < methodGen.getArgumentTypes().length; i++) {
-				LocalVariable localVariable = localVariableTable.getLocalVariable(varIdx, 0);
-				if (localVariable == null) {
-					AgentLogger.debug("Warning: localVariable is empty, varIdx=" + varIdx);
-					break;
-				}
-				newInsns.append(new ALOAD(argObjsVar.getIndex()));
-				newInsns.append(new PUSH(constPool, i));
-				Type argType = methodGen.getArgumentType(i);
-				newInsns.append(InstructionFactory.createLoad(argType, localVariable.getIndex()));
-				if (argType instanceof BasicType) {
-					newInsns.append(
-							new INVOKESTATIC(basicTypeSupporter.getValueOfMethodIdx((BasicType) argType, constPool)));
-				}
-				newInsns.append(new AASTORE());
-				if (Type.DOUBLE.equals(argType) || Type.LONG.equals(argType)) {
-					varIdx += 2;
-				} else {
-					varIdx ++;
-				}
-			}
-		} else {
-			AgentLogger.debug("Warning: localVariableTable is empty!");
-		}
+		LocalVariableGen argObjsVar = createMethodParamTypesObjectArrayVar(methodGen, constPool, startInsn, newInsns, nextTempVarName());
 		newInsns.append(new ALOAD(argObjsVar.getIndex()));
 		// className, String methodSig, int methodStartLine, methodEndLine, argNames, argTypes, argObjs
 		
@@ -1034,15 +1001,9 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		return tracerVar;
 	}
 
-	private String[] getArgumentNames(MethodGen methodGen) {
-		String methodString = methodGen.toString();
-		String args = methodString.substring(methodString.indexOf("(")+1, methodString.indexOf(")"));
-		String[] argList = args.split(",");
-		for(int i=0; i<argList.length; i++){
-			argList[i] = argList[i].trim();
-			argList[i] = argList[i].substring(argList[i].indexOf(" ")+1, argList[i].length());
-		}
-		return argList;
+	private String nextTempVarName() {
+		return TEMP_VAR_NAME + (++tempVarIdx);
 	}
 
+	
 }

@@ -19,7 +19,7 @@ import microbat.instrumentation.AgentLogger;
  * @author LLT
  *
  */
-public class ThreadInstrumenter extends AbstractInstrumenter{
+public class ThreadInstrumenter extends AbstractInstrumenter {
 	
 	
 	@Override
