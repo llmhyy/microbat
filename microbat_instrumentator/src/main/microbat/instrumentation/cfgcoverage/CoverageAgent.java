@@ -10,6 +10,7 @@ import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.cfgcoverage.instr.CoverageInstrumenter;
 import microbat.instrumentation.cfgcoverage.instr.CoverageTransformer;
 import microbat.instrumentation.cfgcoverage.instr.MethodInstructionsInfo;
+import microbat.instrumentation.cfgcoverage.output.CoverageOutputWriter;
 import microbat.instrumentation.cfgcoverage.runtime.CoverageTracer;
 
 public class CoverageAgent implements IAgent {
@@ -32,8 +33,8 @@ public class CoverageAgent implements IAgent {
 
 	@Override
 	public void shutdown() throws Exception {
-		// TODO Auto-generated method stub
-		
+		CoverageSFlowGraph coverageGraph = CoverageTracer.coverageFlowGraph;
+//		CoverageOutputWriter outputWriter = new CoverageOutputWriter(out)
 	}
 
 	@Override

@@ -32,6 +32,9 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 			currentNode.markCoveredBranch(branch, currentTestCaseIdx);
 			currentNode = branch;
 		}
+		if (currentNode.getAliasId() != null) {
+			//
+		}
 	}
 	
 	@Override
@@ -66,6 +69,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		if (coverageTracer.state != TracingState.RECORDING) {
 			if (isEntryPoint) {
 				coverageTracer.state = TracingState.RECORDING;
+				rtStore.setMainThreadId(Thread.currentThread().getId());
 			} else {
 				return EmptyCoverageTracer.getInstance();
 			}
@@ -86,5 +90,9 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	public static void startTestcase(String testcase, int testcaseIdx) {
 		coverageFlowGraph.addCoveredTestcase(testcase, testcaseIdx);
 		CoverageTracer.currentTestCaseIdx = testcaseIdx;
+	}
+	
+	public static CoverageTracer getMainThreadStore() {
+		return rtStore.getMainThreadTracer();
 	}
 }

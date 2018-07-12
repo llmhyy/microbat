@@ -9,18 +9,25 @@ import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
 
 public class CoverageSFNode {
+	private int cvgIdx;
 	private int startIdx;
 	private int endIdx;
 	private UniqueNodeId startNodeId;
-	private UniqueNodeId endNodeId;
-	private UniqueNodeId probeNodeId;
-	private List<CoverageSFNode> branches;
-	private List<Integer> content; // for a block node.
+	private UniqueNodeId endNodeId; // probeNode
 	private Type type;
-
 	private List<Integer> coveredTestcases = new ArrayList<>();
-	private Map<CoverageSFNode, List<Integer>> coveredTestcasesOnBranches = new HashMap<CoverageSFNode, List<Integer>>();
+	/* for alias node */
+	private AliasNodeId aliasId;
+	/* for block node */
+	private List<Integer> content; // for a block node which contain all nodes in block from start to end.
+	/* for conditional node */
+	private List<CoverageSFNode> branches;
+	private Map<Branch, List<Integer>> coveredTestcasesOnBranches = new HashMap<Branch, List<Integer>>();
 
+	public CoverageSFNode(int cvgIdx) {
+		this.cvgIdx = cvgIdx;
+	}
+	
 	public CoverageSFNode(Type type, CFGNode startNode, CFGInstance cfg) {
 		this.type = type;
 		startIdx = startNode.getIdx();
@@ -38,7 +45,7 @@ public class CoverageSFNode {
 	
 	public CoverageSFNode getCorrespondingBranch(String methodId, int nodeLocalIdx) {
 		for (CoverageSFNode branch : branches) {
-			UniqueNodeId probeId = branch.probeNodeId;
+			UniqueNodeId probeId = branch.getProbeNodeId();
 			if (probeId.getMethodId().equals(methodId) && probeId.localNodeIdx == nodeLocalIdx) {
 				return branch;
 			}
@@ -77,6 +84,15 @@ public class CoverageSFNode {
 		this.startIdx = startIdx;
 	}
 	
+	public void setStartEndIdx() {
+		if (content == null) {
+			endIdx = startIdx;
+		} else {
+			startIdx = content.get(0);
+			endIdx = content.get(content.size() - 1);
+		}
+	}
+	
 	public void addContentNode(int nodeIdx) {
 		if (content == null) {
 			content = new ArrayList<>();
@@ -95,7 +111,6 @@ public class CoverageSFNode {
 	public void setEndIdx(int endIdx, UniqueNodeId uniqueNodeId) {
 		this.endIdx = endIdx;
 		this.endNodeId = uniqueNodeId;
-		this.probeNodeId = endNodeId;
 	}
 
 	public UniqueNodeId getStartNodeId() {
@@ -111,7 +126,7 @@ public class CoverageSFNode {
 	}
 	
 	public UniqueNodeId getProbeNodeId() {
-		return probeNodeId;
+		return endNodeId;
 	}
 
 	public void setEndNodeId(UniqueNodeId endNodeId) {
@@ -139,13 +154,45 @@ public class CoverageSFNode {
 	}
 
 	public void markCoveredBranch(CoverageSFNode branch, int testcaseIdx) {
-		List<Integer> tcs = coveredTestcasesOnBranches.get(branch);
+		Branch condBranch = new Branch(this.endIdx, branch.getStartIdx());
+		List<Integer> tcs = coveredTestcasesOnBranches.get(condBranch);
 		if (tcs == null) {
 			tcs = new ArrayList<>();
-			coveredTestcasesOnBranches.put(branch, tcs);
+			coveredTestcasesOnBranches.put(condBranch, tcs);
 		}
 		tcs.add(testcaseIdx);
 	}
+	
+	public Map<Branch, List<Integer>> getCoveredTestcasesOnBranches() {
+		return coveredTestcasesOnBranches;
+	}
 
+	public void setEndIdx(int endIdx) {
+		this.endIdx = endIdx;
+	}
+
+	public void setCoveredTestcasesOnBranches(Map<Branch, List<Integer>> coveredTestcasesOnBranches) {
+		this.coveredTestcasesOnBranches = coveredTestcasesOnBranches;
+	}
+
+	public AliasNodeId getAliasId() {
+		return aliasId;
+	}
+	
+	public boolean isAliasNode() {
+		return aliasId != null;
+	}
+
+	public void setAliasId(AliasNodeId aliasId) {
+		this.aliasId = aliasId;
+	}
+
+	public int getCvgIdx() {
+		return cvgIdx;
+	}
+
+	public void setCvgIdx(int cvgIdx) {
+		this.cvgIdx = cvgIdx;
+	}
 	
 }

@@ -4,6 +4,7 @@ import microbat.codeanalysis.bytecode.CFGNode;
 
 public class CfgAliasNode extends CFGNode {
 	private CFGNode orgNode;
+	private AliasNodeId aliasNodeId;
 
 	public CfgAliasNode(CFGNode orgNode) {
 		super(orgNode.getInstructionHandle());
@@ -24,4 +25,7 @@ public class CfgAliasNode extends CFGNode {
 		return orgNode;
 	}
 
+	public AliasNodeId getAliasNodeId() {
+		return aliasNodeId;
+	}
 }

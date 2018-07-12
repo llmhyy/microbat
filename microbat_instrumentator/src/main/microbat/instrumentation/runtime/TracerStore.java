@@ -34,4 +34,7 @@ public abstract class TracerStore<T extends ITracer> {
 		this.mainThreadId = mainThreadId;
 	}
 
+	public T getMainThreadTracer() {
+		return get(mainThreadId);
+	}
 }

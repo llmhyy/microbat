@@ -1,9 +1,7 @@
 package microbat.instrumentation.output;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,7 +22,7 @@ import microbat.util.BreakpointUtils;
 import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
 
-public class TraceOutputWriter extends DataOutputStream {
+public class TraceOutputWriter extends OutputWriter {
 	public static final int READ = 1;
 	public static final int WRITE = 2;
 	private String traceExecFolder;
@@ -44,37 +42,6 @@ public class TraceOutputWriter extends DataOutputStream {
 		int traceNum = (trace == null ? 0 : 1);
 		writeVarInt(traceNum);
 		writeTrace(trace, null, null, null, null);
-	}
-	
-	public final void writeString(String str) throws IOException {
-		if (str == null) {
-			writeVarInt(-1);
-		} else if ( str.isEmpty()) {
-			writeVarInt(0);
-		} else {
-			writeVarInt(str.length());
-			writeBytes(str);
-		}
-	}
-	
-	public final void writeByteArr(byte[] bytes) throws IOException {
-		if (bytes == null) {
-			writeVarInt(-1);
-		} else if (bytes.length == 0) {
-			writeVarInt(0);
-		} else {
-			writeVarInt(bytes.length);
-			write(bytes, 0, bytes.length);
-		}
-	}
-	
-	public void writeVarInt(final int value) throws IOException {
-		if ((value & 0xFFFFFF80) == 0) {
-			writeByte(value);
-		} else {
-			writeByte(0x80 | (value & 0x7F));
-			writeVarInt(value >>> 7);
-		}
 	}
 	
 	public void writeTrace(Trace trace, String projectName, String projectVersion, String launchClass,
@@ -192,16 +159,6 @@ public class TraceOutputWriter extends DataOutputStream {
 		}
 	}
 	
-	private <T extends Serializable> void writeSerializableList(Collection<T> list) throws IOException {
-		if (list == null || list.isEmpty()) {
-			writeVarInt(0);
-		} else {
-			writeVarInt(list.size());
-			byte[] bytes = ByteConverter.convertToBytes(list);
-			writeByteArr(bytes);
-		}
-	}
-
 	private void writeNodeOrder(TraceNode node) throws IOException {
 		if (node != null) {
 			writeVarInt(node.getOrder());

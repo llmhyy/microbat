@@ -1,6 +1,5 @@
 package microbat.instrumentation.output;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -18,7 +17,7 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import sav.common.core.utils.FileUtils;
 
-public class TraceOutputReader extends DataInputStream {
+public class TraceOutputReader extends OutputReader {
 	private String traceExecFolder;
 	
 	public TraceOutputReader(InputStream in) {
@@ -235,37 +234,5 @@ public class TraceOutputReader extends DataInputStream {
 		}
 	}
 
-	public String readString() throws IOException {
-		int len = readVarInt();
-		if (len == -1) {
-			return null;
-		} else if (len == 0) {
-			return "";
-		} else {
-			byte[] bytes = new byte[len];
-			readFully(bytes);
-			return new String(bytes);
-		}
-	}
 	
-	public byte[] readByteArray() throws IOException {
-		int len = readVarInt();
-		if (len == -1) {
-			return null;
-		} else if (len == 0) {
-			return new byte[0];
-		} else {
-			byte[] bytes = new byte[len];
-			readFully(bytes);
-			return bytes;
-		}
-	}
-	
-	public int readVarInt() throws IOException {
-		final int value = 0xFF & readByte();
-		if ((value & 0x80) == 0) {
-			return value;
-		}
-		return (value & 0x7F) | (readVarInt() << 7);
-	}
 }

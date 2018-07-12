@@ -58,12 +58,12 @@ public class CoverageGraphConstructor {
 			coverageGraph.addNode(blockNode);
 			switch (type) {
 			case BLOCK_NODE:
+				blockNode.addContentNode(node.getIdx());
 				CFGNode curNode = CollectionUtils.getLast(node.getChildren());
 				if (curNode == null) {
 					continue;
 				}
-				boolean inBlock = true;
-				while (inBlock && curNode != null) {
+				while (curNode != null) {
 					if ((CollectionUtils.getSize(curNode.getChildren()) != 1)
 							|| (CollectionUtils.getSize(curNode.getParents()) != 1)
 							|| (curNode.getInstructionHandle().getInstruction() instanceof InvokeInstruction)
@@ -81,6 +81,9 @@ public class CoverageGraphConstructor {
 				for (CFGNode branch : node.getChildren()) {
 					stack.push(branch);
 				}
+				break;
+			case ALIAS_NODE:
+				blockNode.setAliasId(((CfgAliasNode) node).getAliasNodeId());
 				break;
 			default:
 				break;
