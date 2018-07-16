@@ -55,7 +55,6 @@ public class CoverageGraphConstructor {
 			if (coverageGraph.getStartNode() == null) {
 				coverageGraph.setStartNode(blockNode);
 			}
-			coverageGraph.addNode(blockNode);
 			switch (type) {
 			case BLOCK_NODE:
 				blockNode.addContentNode(node.getIdx());
@@ -88,6 +87,7 @@ public class CoverageGraphConstructor {
 			default:
 				break;
 			}
+			coverageGraph.addNode(blockNode);
 		}
 		/* create graph edges */
 		for (CoverageSFNode node : coverageGraph.getNodeList()) {

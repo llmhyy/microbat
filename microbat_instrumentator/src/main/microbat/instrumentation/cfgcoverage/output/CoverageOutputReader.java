@@ -20,7 +20,8 @@ public class CoverageOutputReader extends OutputReader{
 	}
 	
 	public CoverageSFlowGraph readCfgCoverage() throws IOException {
-		CoverageSFlowGraph coverageGraph = new CoverageSFlowGraph();
+		int cfgSize = readVarInt();
+		CoverageSFlowGraph coverageGraph = new CoverageSFlowGraph(cfgSize);
 		coverageGraph.setCdgLayer(readVarInt());
 		coverageGraph.setCoveredTestcases(readListString());
 		coverageGraph.setCoveredTestcaseIdexies(readListInt());

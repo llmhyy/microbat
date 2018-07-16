@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
+import microbat.instrumentation.utils.FileUtils;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
@@ -97,7 +98,7 @@ public class AgentParams {
 	private static String getFilterExpression(CommandLine cmd, String fileOpt, String opt) {
 		String filePath = cmd.getString(fileOpt);
 		String expression = null;
-		Collection<?> vals = AgentUtils.readLines(filePath);
+		Collection<?> vals = FileUtils.readLines(filePath);
 		if (vals != null) {
 			for (Iterator<?> it = vals.iterator(); it.hasNext();) {
 				String line = (String) it.next();

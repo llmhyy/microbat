@@ -1,4 +1,4 @@
-package microbat.instrumentation;
+package microbat.instrumentation.utils;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -12,10 +12,10 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import microbat.instrumentation.AgentLogger;
 import sav.common.core.SavRtException;
 
-public class AgentUtils {
-	
+public class FileUtils {
 	public static List<String> readLines(String filePath) {
 		if (filePath == null) {
 			return null;
@@ -111,12 +111,15 @@ public class AgentUtils {
 		return (int) count;
 	}
 	
-	public static <T> boolean existIn(T val, T... valList) {
-		for (T valInList : valList) {
-			if (val.equals(valInList)) {
-				return true;
+	public static void closeStreams(Closeable... closables) {
+		for (Closeable closable : closables) {
+			if (closable != null) {
+				try {
+					closable.close();
+				} catch (IOException e) {
+					// ignore
+				}
 			}
 		}
-		return false;
 	}
 }

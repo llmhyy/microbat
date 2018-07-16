@@ -18,4 +18,6 @@ public interface IAgent {
 	public void retransformBootstrapClasses(Instrumentation instrumentation, Class<?>[] retransformableClasses)
 			throws Exception;
 
+	public void exitTest(String testResultMsg, String junitClass, String junitMethod);
+
 }

@@ -14,11 +14,24 @@ public class InstrumentationUtils {
 		return String.format("%s.%s", className, getMethodWithSignature(method.getName(), method.getSignature()));
 	}
 
-	public static ClassLocation getMethodId(String targetMethod) {
+	public static ClassLocation fromTargetMethodId(String targetMethod) {
 		String[] frags = targetMethod.split(".");
-		return new ClassLocation(frags[0], frags[1], Integer.valueOf(frags[2]));
+		if (frags.length == 2) {
+			return new ClassLocation(frags[0], frags[1], -1);
+		} else {
+			return new ClassLocation(frags[0], frags[1], Integer.valueOf(frags[2]));
+		}
 	}
 
+	public static String toTargetMethodId(ClassLocation targetMethod) {
+		if (targetMethod.getLineNumber() >= 0) {
+			return String.format("%s.%s.%d", targetMethod.getClassCanonicalName(), targetMethod.getMethodSign(), 
+					targetMethod.getLineNumber());
+		} else {
+			return String.format("%s.%s", targetMethod.getClassCanonicalName(), targetMethod.getMethodSign());
+		}
+	}
+	
 	public static String getMethodWithSignature(String methodName, String signature) {
 		return String.format("%s%s", methodName, signature);
 	}

@@ -1,12 +1,14 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
+import sav.common.core.utils.CollectionUtils;
 
 public class CoverageSFNode {
 	private int cvgIdx;
@@ -195,4 +197,10 @@ public class CoverageSFNode {
 		this.cvgIdx = cvgIdx;
 	}
 	
+	public List<Integer> getCorrespondingCfgNodeIdxies() {
+		if (CollectionUtils.isEmpty(content)) {
+			return Arrays.asList(startIdx);
+		}
+		return content;
+	}
 }

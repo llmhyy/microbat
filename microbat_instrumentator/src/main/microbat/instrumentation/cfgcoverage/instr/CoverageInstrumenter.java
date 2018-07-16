@@ -15,12 +15,12 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.PUSH;
 
 import microbat.instrumentation.AgentLogger;
-import microbat.instrumentation.ClassGenUtils;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
 import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.instr.AbstractInstrumenter;
 import microbat.instrumentation.runtime.TraceUtils;
+import microbat.instrumentation.utils.MicrobatUtils;
 
 public class CoverageInstrumenter extends AbstractInstrumenter {
 	private static final String TRACER_VAR_NAME = "$tracer";
@@ -50,7 +50,7 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 				if (change) {
 					if (doesBytecodeExceedLimit(methodGen)) {
 						AgentLogger.info(String.format("Warning: %s exceeds bytecode limit!",
-								ClassGenUtils.getMethodFullName(classGen.getClassName(), method)));
+								MicrobatUtils.getMicrobatMethodFullName(classGen.getClassName(), method)));
 					} else {
 						// All changes made, so finish off the method:
 						InstructionList instructionList = methodGen.getInstructionList();
@@ -68,7 +68,7 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 					message = "offset too large";
 				}
 				AgentLogger.info(String.format("Warning: %s [%s]",
-						ClassGenUtils.getMethodFullName(classGen.getClassName(), method), message));
+						MicrobatUtils.getMicrobatMethodFullName(classGen.getClassName(), method), message));
 				AgentLogger.error(e);
 			}
 		}

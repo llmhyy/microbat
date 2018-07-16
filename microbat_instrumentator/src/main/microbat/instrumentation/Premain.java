@@ -12,6 +12,8 @@ import java.util.jar.JarFile;
 
 import microbat.instrumentation.instr.SystemClassTransformer;
 import microbat.instrumentation.instr.TestRunnerTranformer;
+import microbat.instrumentation.utils.CollectionUtils;
+import microbat.instrumentation.utils.FileUtils;
 
 public class Premain {
 	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent_v02.jar";
@@ -56,7 +58,7 @@ public class Premain {
 
 	private static void installBootstrap(Instrumentation inst) throws Exception {
 		debug("install jar to boostrap...");
-		File tempFolder = AgentUtils.createTempFolder("microbat");
+		File tempFolder = FileUtils.createTempFolder("microbat");
 		debug("Temp folder to extract jars: " + tempFolder.getAbsolutePath());
 		List<JarFile> bootJarPaths = getJarFiles("instrumentator_all.jar");
 		if (bootJarPaths.isEmpty()) {
@@ -82,13 +84,13 @@ public class Premain {
 	}
 
 	private static List<JarFile> getJarFiles(String... jarNames) throws Exception {
-		File tempFolder = AgentUtils.createTempFolder("microbat");
+		File tempFolder = FileUtils.createTempFolder("microbat");
 		List<JarFile> jars = new ArrayList<>();
 		
 		boolean isUptodate = checkInstrumentatorVersion(tempFolder.getAbsolutePath());
 		for (String jarName : jarNames) {
 			File file = new File(tempFolder.getAbsolutePath(), jarName);
-			if ((!isUptodate && AgentUtils.existIn(file.getName(), INSTRUMENTATION_STANTDALONE_JAR, SAV_JAR)) || !file.exists()) {
+			if ((!isUptodate && CollectionUtils.existIn(file.getName(), INSTRUMENTATION_STANTDALONE_JAR, SAV_JAR)) || !file.exists()) {
 				try {
 					String jarResourcePath = "lib/" + jarName;
 					boolean success = extractJar(jarResourcePath, file.getAbsolutePath());
@@ -129,7 +131,7 @@ public class Premain {
 		try {
 			outStream = new FileOutputStream(filePath);
 			outStream.getChannel().force(true);
-			AgentUtils.copy(inputJarStream, outStream);
+			FileUtils.copy(inputJarStream, outStream);
 		} finally {
 			if (outStream != null) {
 				outStream.close();

@@ -57,4 +57,9 @@ public class PrecheckAgent implements IAgent {
 			loadedClasses.add(clazz.getName());
 		}
 	}
+
+	@Override
+	public void exitTest(String testResultMsg, String junitClass, String junitMethod) {
+		// do nothing, not used.
+	}
 }

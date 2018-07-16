@@ -4,10 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.bcel.Const;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.LocalVariable;
-import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.AALOAD;
 import org.apache.bcel.generic.AASTORE;
@@ -56,7 +53,6 @@ import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
-import microbat.instrumentation.ClassGenUtils;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.filter.IInstrFilter;
 import microbat.instrumentation.filter.InstrumentationFilter;
@@ -68,6 +64,7 @@ import microbat.instrumentation.instr.instruction.info.LocalVarInstructionInfo;
 import microbat.instrumentation.instr.instruction.info.RWInstructionInfo;
 import microbat.instrumentation.runtime.IExecutionTracer;
 import microbat.instrumentation.runtime.TraceUtils;
+import microbat.instrumentation.utils.MicrobatUtils;
 
 public class TraceInstrumenter extends AbstractInstrumenter {
 	protected static final String TRACER_VAR_NAME = "$tracer"; // local var
@@ -108,7 +105,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 				if (generatedMethods != null) {
 					if (doesBytecodeExceedLimit(generatedMethods)) {
 						AgentLogger.info(String.format("Warning: %s exceeds bytecode limit!",
-								ClassGenUtils.getMethodFullName(classGen.getClassName(), method)));
+								MicrobatUtils.getMicrobatMethodFullName(classGen.getClassName(), method)));
 					} else {
 						for (MethodGen newMethod : generatedMethods.getExtractedMethods()) {
 							newMethod.setMaxStack();
@@ -132,7 +129,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 					message = "offset too large";
 				}
 				AgentLogger.info(String.format("Warning: %s [%s]",
-						ClassGenUtils.getMethodFullName(classGen.getClassName(), method), message));
+						MicrobatUtils.getMicrobatMethodFullName(classGen.getClassName(), method), message));
 				AgentLogger.error(e);
 			}
 		}
@@ -153,7 +150,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 
 	private GeneratedMethods runMethodInstrumentation(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
 			boolean isAppClass, boolean isMainMethod) {
-		String methodFullName = ClassGenUtils.getMethodFullName(classGen.getClassName(), method);
+		String methodFullName = MicrobatUtils.getMicrobatMethodFullName(classGen.getClassName(), method);
 		boolean changed = instrumentMethod(classGen, constPool, methodGen, method, isAppClass, isMainMethod);
 		if (requireSplittingMethods.contains(methodFullName)) {
 			MethodSplitter methodSplitter = new MethodSplitter(classGen, constPool);

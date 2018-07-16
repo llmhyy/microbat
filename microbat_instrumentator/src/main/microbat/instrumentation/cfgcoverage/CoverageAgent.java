@@ -2,6 +2,8 @@ package microbat.instrumentation.cfgcoverage;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
+import java.util.ArrayList;
+import java.util.List;
 
 import microbat.instrumentation.CommandLine;
 import microbat.instrumentation.IAgent;
@@ -10,12 +12,13 @@ import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.cfgcoverage.instr.CoverageInstrumenter;
 import microbat.instrumentation.cfgcoverage.instr.CoverageTransformer;
 import microbat.instrumentation.cfgcoverage.instr.MethodInstructionsInfo;
-import microbat.instrumentation.cfgcoverage.output.CoverageOutputWriter;
 import microbat.instrumentation.cfgcoverage.runtime.CoverageTracer;
+import sav.common.core.utils.ClassUtils;
 
 public class CoverageAgent implements IAgent {
 	private CoverageAgentParams agentParams;
 	private CoverageInstrumenter instrumenter;
+	private List<String> testcases = new ArrayList<String>();
 	
 	public CoverageAgent(CommandLine cmd) {
 		this.agentParams = CoverageAgentParams.initFrom(cmd);
@@ -34,19 +37,27 @@ public class CoverageAgent implements IAgent {
 	@Override
 	public void shutdown() throws Exception {
 		CoverageSFlowGraph coverageGraph = CoverageTracer.coverageFlowGraph;
-//		CoverageOutputWriter outputWriter = new CoverageOutputWriter(out)
+		CoverageOutput coverageOutput = new CoverageOutput(coverageGraph);
+		coverageOutput.saveToFile(agentParams.getDumpFile());
 	}
 
 	@Override
 	public void startTest(String junitClass, String junitMethod) {
+		int testIdx = testcases.size();
+		String testcase = ClassUtils.toClassMethodStr(junitClass, junitMethod);
+		testcases.add(testcase);
+		CoverageTracer.startTestcase(testcase, testIdx);
+	}
+	
+	@Override
+	public void exitTest(String testResultMsg, String junitClass, String junitMethod) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void finishTest(String junitClass, String junitMethod) {
-		// TODO Auto-generated method stub
-		
+		// do nothing for now.
 	}
 
 	@Override

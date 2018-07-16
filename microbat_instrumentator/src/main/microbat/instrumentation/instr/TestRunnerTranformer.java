@@ -33,7 +33,8 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 		if (ExecutionTracer.isShutdown()) {
 			return null;
 		}
-		if ("microbat/evaluation/junit/MicroBatTestRunner".equals(classFName)) {
+		if ("microbat/evaluation/junit/MicroBatTestRunner".equals(classFName)
+				|| "sav/junit/SavJunitRunner".equals(classFName)) {
 			try {
 				byte[] data = instrument(classFName, classfileBuffer);
 				return data;
@@ -52,61 +53,53 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 		JavaClass newJC = null;
 		for (Method method : jc.getMethods()) {
 			int agentMethodIdx = -1;
+			int paramSize = -1;
 			if ("$exitProgram".equals(method.getName())) {
-				MethodGen methodGen = new MethodGen(method, classFName, constPool);
-				InstructionList newInsns = new InstructionList();
-				int varIdx = 1;
-				LocalVariableTable localVariableTable = methodGen.getLocalVariableTable(constPool);
-				LocalVariable localVariable = localVariableTable.getLocalVariable(varIdx, 0);
-				Type argType = methodGen.getArgumentType(0);
-				int index = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_exitProgram",
+				agentMethodIdx = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_exitProgram",
 						"(Ljava/lang/String;)V");
-				
-				newInsns.append(InstructionFactory.createLoad(argType, localVariable.getIndex()));
-				newInsns.append(new INVOKESTATIC(index));
-				InstructionList instructionList = methodGen.getInstructionList();
-				InstructionHandle startInsn = instructionList.getStart();
-				InstructionHandle pos = instructionList.insert(startInsn, newInsns);
-				updateTargeters(startInsn, pos);
-				instructionList.setPositions();
-				methodGen.setMaxStack();
-				methodGen.setMaxLocals();
-				classGen.replaceMethod(method, methodGen.getMethod());
+				paramSize = 1;
 			} else if ("$testStarted".equals(method.getName())) {
 				agentMethodIdx = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_startTest",
 						"(Ljava/lang/String;Ljava/lang/String;)V");
+				paramSize = 2;
 			} else if ("$testFinished".equals(method.getName())) {
 				agentMethodIdx = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_finishTest",
 						"(Ljava/lang/String;Ljava/lang/String;)V");
+				paramSize = 2;
+			} else if ("$exitTest".equals(method.getName())) {
+				agentMethodIdx = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_exitTest",
+						"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+				paramSize = 3;
 			}
-			if (agentMethodIdx >= 0) {
-				MethodGen methodGen = new MethodGen(method, classFName, constPool);
-				InstructionList newInsns = new InstructionList();
-				int varIdx = 1;
-				LocalVariableTable localVariableTable = methodGen.getLocalVariableTable(constPool);
-				LocalVariable junitClassVar = localVariableTable.getLocalVariable(varIdx, 0);
-				Type junitClassVarType = methodGen.getArgumentType(0);
-				varIdx++;
-				LocalVariable junitMethodVar = localVariableTable.getLocalVariable(varIdx, 0);
-				Type junitMethodVarType = methodGen.getArgumentType(0);
-				
-				newInsns.append(InstructionFactory.createLoad(junitClassVarType, junitClassVar.getIndex()));
-				newInsns.append(InstructionFactory.createLoad(junitMethodVarType, junitMethodVar.getIndex()));
-				newInsns.append(new INVOKESTATIC(agentMethodIdx));
-				InstructionList instructionList = methodGen.getInstructionList();
-				InstructionHandle startInsn = instructionList.getStart();
-				InstructionHandle pos = instructionList.insert(startInsn, newInsns);
-				updateTargeters(startInsn, pos);
-				instructionList.setPositions();
-				methodGen.setMaxStack();
-				methodGen.setMaxLocals();
-				classGen.replaceMethod(method, methodGen.getMethod());
+ 			if (agentMethodIdx >= 0) {
+ 				instrumentDelegateMethod(method, classFName, constPool, agentMethodIdx, classGen, paramSize);
 			}
 			
 		}
 		newJC = classGen.getJavaClass();
 		newJC.setConstantPool(constPool.getFinalConstantPool());
 		return newJC.getBytes();
+	}
+	
+	private void instrumentDelegateMethod(Method method, String classFName, ConstantPoolGen constPool,
+			int agentMethodIdx, ClassGen classGen, int paramSize) {
+		MethodGen methodGen = new MethodGen(method, classFName, constPool);
+		InstructionList newInsns = new InstructionList();
+		LocalVariableTable localVariableTable = methodGen.getLocalVariableTable(constPool);
+		for (int paramIdx = 1; paramIdx <= paramSize; paramIdx++) {
+			LocalVariable localVar = localVariableTable.getLocalVariable( paramIdx, 0);
+			Type varType = methodGen.getArgumentType(paramIdx);
+			newInsns.append(InstructionFactory.createLoad(varType, localVar.getIndex()));
+		}
+		newInsns.append(new INVOKESTATIC(agentMethodIdx));
+		InstructionList instructionList = methodGen.getInstructionList();
+		InstructionHandle startInsn = instructionList.getStart();
+		InstructionHandle pos = instructionList.insert(startInsn, newInsns);
+		updateTargeters(startInsn, pos);
+		instructionList.setPositions();
+		methodGen.setMaxStack();
+		methodGen.setMaxLocals();
+		classGen.replaceMethod(method, methodGen.getMethod());
 	}
 	
 	private void updateTargeters(InstructionHandle oldPos, InstructionHandle newPos) {

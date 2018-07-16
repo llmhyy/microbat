@@ -17,13 +17,9 @@ public class JarPackageTool {
 	public static final String BASE_DIR = getBaseDir();
 	public static final String MAVEN_FOLDER = BASE_DIR + "build/maven";
 	public static final String LIB_DIR = BASE_DIR + "lib/";
-//	public static final String DEPLOY_DIR = "E:/linyun/software/eclipse-java-mars/eclipse-java-mars-clean/eclipse/dropins/junit_lib/";
-//	public static final String DEPLOY_DIR = "E:/lyly/eclipse-java-mars-clean/eclipse/dropins/junit_lib/";
-	public static final String DEPLOY_DIR = "/Users/lylytran/Projects/TOOLS/Eclipse/sdk-4.6.2/Eclipse.app/Contents/Eclipse/dropins/junit_lib/";
-//	public static final String DEPLOY_DIR = "/Users/lylytran/Projects/TOOLS/Eclipse/eclipse-mars-test-cli/Eclipse.app/Contents/Eclipse/dropins/junit_lib/";
-	
-	//	public static final String DEPLOY_DIR = BASE_DIR;
-	public static final String DEPLOY_JAR_PATH = DEPLOY_DIR + "instrumentator.jar";
+	public static String DEPLOY_DIR = "E:/linyun/software/eclipse-java-mars/eclipse-java-mars-clean/eclipse/dropins/junit_lib/";
+
+	public static String DEPLOY_JAR_PATH = DEPLOY_DIR + "instrumentator.jar";
 	public static final String appLibs = MAVEN_FOLDER + "/libs";
 	
 	public static void main(String[] args) throws Exception {

@@ -189,4 +189,9 @@ public class TraceAgent implements IAgent {
 			throws Exception {
 		instrumentation.retransformClasses(retransformableClasses);
 	}
+
+	@Override
+	public void exitTest(String testResultMsg, String junitClass, String junitMethod) {
+		// do nothing, not used.
+	}
 }

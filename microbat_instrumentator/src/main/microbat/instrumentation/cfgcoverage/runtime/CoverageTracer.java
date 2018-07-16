@@ -9,11 +9,12 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	private static CoverageTracerStore rtStore = new CoverageTracerStore();
 	public static CoverageSFlowGraph coverageFlowGraph;
 	private static int currentTestCaseIdx;
+	
 	private long threadId;
 	private TracingState state = TracingState.INIT;
 	private NoProbeTracer noProbeTracer = new NoProbeTracer(this);
 	private int methodInvokeLevel = 0;
-
+	private int testIdx;
 	private CoverageSFNode currentNode;
 	MethodCallStack methodCallStack = new MethodCallStack();
 	
@@ -24,16 +25,17 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	@Override
 	public void _reachNode(String methodId, int nodeIdx) {
 		if (currentNode == null) {
-			coverageFlowGraph.getStartNode();
+			currentNode = coverageFlowGraph.getStartNode();
+			testIdx = currentTestCaseIdx;
 		} else {
 			CoverageSFNode branch = currentNode.getCorrespondingBranch(methodId, nodeIdx);
 			// currentNode should not be null here.
-			branch.addCoveredTestcase(currentTestCaseIdx);
-			currentNode.markCoveredBranch(branch, currentTestCaseIdx);
+			branch.addCoveredTestcase(testIdx);
+			currentNode.markCoveredBranch(branch, testIdx);
 			currentNode = branch;
 		}
 		if (currentNode.getAliasId() != null) {
-			//
+			currentNode = coverageFlowGraph.getCoverageNode(currentNode.getAliasId().getOrgNodeIdx());
 		}
 	}
 	
@@ -90,6 +92,12 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	public static void startTestcase(String testcase, int testcaseIdx) {
 		coverageFlowGraph.addCoveredTestcase(testcase, testcaseIdx);
 		CoverageTracer.currentTestCaseIdx = testcaseIdx;
+	}
+	
+	public static void endTestcase(String testcase) {
+		long threadId = Thread.currentThread().getId();
+		CoverageTracer coverageTracer = rtStore.get(threadId);
+		coverageTracer.state = TracingState.SHUTDOWN;
 	}
 	
 	public static CoverageTracer getMainThreadStore() {

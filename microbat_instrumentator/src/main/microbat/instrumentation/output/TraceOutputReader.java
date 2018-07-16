@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import microbat.instrumentation.AgentUtils;
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
 import microbat.model.ControlScope;
@@ -56,7 +55,7 @@ public class TraceOutputReader extends OutputReader {
 			}
 			String fileName = readString();
 			String filePath = FileUtils.getFilePath(traceExecFolder, fileName);
-			return AgentUtils.readLines(filePath);
+			return microbat.instrumentation.utils.FileUtils.readLines(filePath);
 		} else {
 			return readSerializableList();
 		}

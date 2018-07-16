@@ -24,9 +24,9 @@ import org.apache.bcel.generic.Type;
 
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
-import microbat.instrumentation.ClassGenUtils;
 import microbat.instrumentation.instr.TraceInstrumenter;
 import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
+import microbat.instrumentation.utils.MicrobatUtils;
 
 public class PrecheckInstrumenter extends TraceInstrumenter {
 	private static final String MEASUREMENT_VAR_NAME = "$traceMs";
@@ -53,7 +53,7 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		for (Method method : methods) {
-			String classMethod = ClassGenUtils.getMethodFullName(classGen.getClassName(), method);
+			String classMethod = MicrobatUtils.getMicrobatMethodFullName(classGen.getClassName(), method);
 			boolean changed = false;
 			MethodGen methodGen = new MethodGen(method, classFName, constPool);
 			try {
