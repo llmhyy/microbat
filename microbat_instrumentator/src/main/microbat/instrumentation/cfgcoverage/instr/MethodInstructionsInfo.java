@@ -47,14 +47,16 @@ public class MethodInstructionsInfo {
 					InstructionInfo insnInfo = new InstructionInfo(insnHandler, idx);
 					nodeInsns.add(insnInfo);
 				}
+				idx++;
 			}
 		}
 		instmInsns.nodeInsns = nodeInsns;
 		CFGConstructor cfgConstructor = new CFGConstructor();
 		CFG cfg = cfgConstructor.constructCFG(method.getCode());
 		List<InstructionHandle> exitInsns = new ArrayList<>();
+		InstructionHandle[] insnHandlers = insnList.getInstructionHandles();
 		for(CFGNode node: cfg.getExitList()){
-			exitInsns.add(node.getInstructionHandle());
+			exitInsns.add(insnHandlers[node.getIdx()]);
 		}
 		instmInsns.exitInsns = exitInsns;
 		return instmInsns;

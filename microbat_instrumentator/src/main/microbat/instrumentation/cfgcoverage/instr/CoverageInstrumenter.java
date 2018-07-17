@@ -59,9 +59,9 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 						methodGen.setMaxLocals();
 						classGen.replaceMethod(method, methodGen.getMethod());
 					}
-					newJC = classGen.getJavaClass();
-					newJC.setConstantPool(constPool.getFinalConstantPool());
 				}
+				newJC = classGen.getJavaClass();
+				newJC.setConstantPool(constPool.getFinalConstantPool());
 			} catch (Exception e) {
 				String message = e.getMessage();
 				if (e.getMessage() != null && e.getMessage().contains("offset too large")) {
@@ -89,9 +89,6 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 		}
 		MethodInstructionsInfo instmInsns = MethodInstructionsInfo.getInstrumentationInstructions(insnList, method,
 				classGen.getClassName());
-		if (insnList.isEmpty()) {
-			return false;
-		}
 		tempVarIdx = 0;
 		String methodId = InstrumentationUtils.getMethodId(classGen.getClassName(), method);
 		LocalVariableGen methodIdVar = createLocalVariable(METHOD_ID_VAR_NAME, methodGen, constPool);
@@ -120,7 +117,7 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 
 	private LocalVariableGen injectCodeInitTracer(MethodGen methodGen, ConstantPoolGen constPool,
 			LocalVariableGen tracerVar, LocalVariableGen methodIdVar, String methodId) {
-		InstructionList insnList = new InstructionList();
+		InstructionList insnList = methodGen.getInstructionList();
 		InstructionHandle startInsn = insnList.getStart();
 		if (startInsn == null) {
 			return null;
@@ -157,6 +154,7 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 		appendTracerMethodInvoke(newInsns, CoverageTracerMethods.EXIT_METHOD, constPool);
 		
 		insertInsnHandler(insnList, newInsns, exitInsn);
+		insnList.toString();
 		newInsns.dispose();
 	}
 	

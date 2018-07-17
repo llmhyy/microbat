@@ -14,7 +14,7 @@ public abstract class TracerStore<T extends ITracer> {
 	/* threadId must be valid */
 	@SuppressWarnings("unchecked")
 	public synchronized T get(long threadId) {
-		if (threadId != mainThreadId) {
+		if (mainThreadId != -1 && threadId != mainThreadId) {
 			return null; // for now, only recording trace for main thread.
 		}
 		for (int i = 0; i < lastUsedIdx; i++) {
