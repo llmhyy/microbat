@@ -15,11 +15,19 @@ public class InstrumentationUtils {
 	}
 
 	public static ClassLocation fromTargetMethodId(String targetMethod) {
-		String[] frags = targetMethod.split(".");
-		if (frags.length == 2) {
-			return new ClassLocation(frags[0], frags[1], -1);
+		int idx = targetMethod.lastIndexOf(".");
+		if (idx < 0) {
+			throw new IllegalArgumentException(
+					"Cannot extract method from string, expect [classname].[method], get "
+							+ targetMethod);
+		}
+		String lastFrag = targetMethod.substring(idx + 1);
+		if (lastFrag.contains("(")) {
+			return new ClassLocation(targetMethod.substring(0, idx),  lastFrag, -1);
 		} else {
-			return new ClassLocation(frags[0], frags[1], Integer.valueOf(frags[2]));
+			int lineNo = Integer.valueOf(lastFrag);
+			int methodNameIdx = targetMethod.substring(0, idx).lastIndexOf(".");
+			return new ClassLocation(targetMethod.substring(0, methodNameIdx), targetMethod.substring(methodNameIdx + 1, idx), lineNo);
 		}
 	}
 

@@ -23,8 +23,7 @@ public class Agent {
 	public Agent(CommandLine cmd, Instrumentation inst) {
 		if (cmd.getBoolean(CoverageAgentParams.OPT_IS_COUNT_COVERAGE, false)) {
 			agent = new CoverageAgent(cmd);
-		}
-		if (cmd.getBoolean(AgentParams.OPT_PRECHECK, false)) {
+		} else if (cmd.getBoolean(AgentParams.OPT_PRECHECK, false)) {
 			agent = new PrecheckAgent(cmd);
 		} else {
 			agent = new TraceAgent(cmd);
@@ -151,5 +150,9 @@ public class Agent {
 
 	public void retransformClasses(Class<?>[] retransformableClasses) throws Exception {
 		agent.retransformBootstrapClasses(instrumentation, retransformableClasses);
+	}
+
+	public static boolean isInstrumentationActive() {
+		return agent.isInstrumentationActive();
 	}
 }

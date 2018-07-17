@@ -29,8 +29,8 @@ public class CoverageGraphConstructor {
 	private CFGRepository cfgRepository = new CFGRepository();
 	
 	public CoverageSFlowGraph buildCoverageGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod,
-			int cdgLayer) {
-		CFGInstance cfg = buildProgramFlowGraph(appClasspath, targetMethod, 1, cdgLayer);
+			int cdgLayer, List<String> inclusiveMethodIds) {
+		CFGInstance cfg = buildProgramFlowGraph(appClasspath, targetMethod, 1, cdgLayer, inclusiveMethodIds);
 		breakCircle(cfg);
 		CoverageSFlowGraph coverageGraph = new CoverageSFlowGraph(cfg, cdgLayer);
 		Stack<CFGNode> stack = new Stack<>();
@@ -89,11 +89,11 @@ public class CoverageGraphConstructor {
 			}
 			coverageGraph.addNode(blockNode);
 		}
+		coverageGraph.setBlockScope();
 		/* create graph edges */
 		for (CoverageSFNode node : coverageGraph.getNodeList()) {
-			Integer endIdx = node.getContent().get(node.getContent().size() - 1);
 			CFGNode endCfgNode = cfg.getNodeList().get(node.getEndIdx());
-			node.setEndIdx(endIdx, cfg.getUnitCfgNodeId(endCfgNode));
+			node.setEndNodeId(cfg.getUnitCfgNodeId(endCfgNode));
 			for (CFGNode branch : endCfgNode.getChildren()) {
 				CoverageSFNode blockNode = nodeMap.get(branch.getIdx());
 				if (blockNode == null) {
@@ -148,7 +148,7 @@ public class CoverageGraphConstructor {
 		}
 	}
 
-	private CFGInstance buildProgramFlowGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod, int layer, int maxLayer) {
+	private CFGInstance buildProgramFlowGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod, int layer, int maxLayer, List<String> inclusiveMethodIds) {
 		CFGInstance cfg = cfgRepository.createCfgInstance(targetMethod, appClasspath);
 		if (layer != maxLayer) {
 			for (CFGNode node : cfg.getNodeList()) {
@@ -158,15 +158,18 @@ public class CoverageGraphConstructor {
 					String invkClassName = methodInsn.getClassName(cpg);
 					String invkMethodName = InstrumentationUtils.getMethodWithSignature(methodInsn.getMethodName(cpg),
 							methodInsn.getSignature(cpg));
-					ClassLocation invokeMethod = new ClassLocation(invkClassName, invkMethodName, -1);
-					CFGInstance subCfg = buildProgramFlowGraph(appClasspath, invokeMethod, layer + 1, maxLayer);
-					glueCfg(cfg, node, subCfg);
+					String methodId = InstrumentationUtils.getMethodId(invkClassName, invkMethodName);
+					if (inclusiveMethodIds.contains(methodId)) {
+						ClassLocation invokeMethod = new ClassLocation(invkClassName, invkMethodName, -1);
+						CFGInstance subCfg = buildProgramFlowGraph(appClasspath, invokeMethod, layer + 1, maxLayer, inclusiveMethodIds);
+						glueCfg(cfg, node, subCfg);
+					}
 				}
 			}
 		}
 		return cfg;
 	}
-
+	
 	private void glueCfg(CFGInstance cfgInstance, CFGNode node, CFGInstance subCfgInstance) {
 		CFG cfg = cfgInstance.getCfg();
 		CFG subCfg = subCfgInstance.getCfg();

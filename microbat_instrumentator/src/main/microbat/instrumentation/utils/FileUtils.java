@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import microbat.instrumentation.AgentLogger;
-import sav.common.core.SavRtException;
 
 public class FileUtils {
 	public static List<String> readLines(String filePath) {
@@ -73,7 +72,7 @@ public class FileUtils {
 			try {
 				file.createNewFile();
 			} catch (IOException e) {
-				throw new SavRtException(e);
+				throw new RuntimeException(e);
 			}
 		}
 		return file;

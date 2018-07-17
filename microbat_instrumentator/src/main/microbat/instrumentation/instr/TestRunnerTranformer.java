@@ -23,14 +23,13 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.Type;
 
 import microbat.instrumentation.Agent;
-import microbat.instrumentation.runtime.ExecutionTracer;
 
 public class TestRunnerTranformer extends AbstractTransformer implements ClassFileTransformer {
 
 	@Override
 	protected byte[] doTransform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-		if (ExecutionTracer.isShutdown()) {
+		if (!Agent.isInstrumentationActive()) {
 			return null;
 		}
 		if ("microbat/evaluation/junit/MicroBatTestRunner".equals(classFName)
@@ -38,7 +37,7 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 			try {
 				byte[] data = instrument(classFName, classfileBuffer);
 				return data;
-			} catch (ClassFormatException | IOException e) {
+			} catch (Throwable e) {
 				e.printStackTrace();
 			}
 		}
@@ -55,19 +54,19 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 			int agentMethodIdx = -1;
 			int paramSize = -1;
 			if ("$exitProgram".equals(method.getName())) {
-				agentMethodIdx = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_exitProgram",
+				agentMethodIdx = constPool.addMethodref(Agent.class.getName().replace(".", "/"), "_exitProgram",
 						"(Ljava/lang/String;)V");
 				paramSize = 1;
 			} else if ("$testStarted".equals(method.getName())) {
-				agentMethodIdx = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_startTest",
+				agentMethodIdx = constPool.addMethodref(Agent.class.getName().replace(".", "/"), "_startTest",
 						"(Ljava/lang/String;Ljava/lang/String;)V");
 				paramSize = 2;
 			} else if ("$testFinished".equals(method.getName())) {
-				agentMethodIdx = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_finishTest",
+				agentMethodIdx = constPool.addMethodref(Agent.class.getName().replace(".", "/"), "_finishTest",
 						"(Ljava/lang/String;Ljava/lang/String;)V");
 				paramSize = 2;
 			} else if ("$exitTest".equals(method.getName())) {
-				agentMethodIdx = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_exitTest",
+				agentMethodIdx = constPool.addMethodref(Agent.class.getName().replace(".", "/"), "_exitTest",
 						"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 				paramSize = 3;
 			}
@@ -86,8 +85,9 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 		MethodGen methodGen = new MethodGen(method, classFName, constPool);
 		InstructionList newInsns = new InstructionList();
 		LocalVariableTable localVariableTable = methodGen.getLocalVariableTable(constPool);
-		for (int paramIdx = 1; paramIdx <= paramSize; paramIdx++) {
-			LocalVariable localVar = localVariableTable.getLocalVariable( paramIdx, 0);
+		for (int paramIdx = 0; paramIdx < paramSize; paramIdx++) {
+			// the first one is the class object, and parameter would be from the next one.
+			LocalVariable localVar = localVariableTable.getLocalVariable(paramIdx + 1, 0); 
 			Type varType = methodGen.getArgumentType(paramIdx);
 			newInsns.append(InstructionFactory.createLoad(varType, localVar.getIndex()));
 		}

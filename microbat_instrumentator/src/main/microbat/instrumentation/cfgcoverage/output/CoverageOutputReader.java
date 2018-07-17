@@ -49,19 +49,19 @@ public class CoverageOutputReader extends OutputReader{
 		case BLOCK_NODE:
 			// content
 			node.setContent(readListInt());
-			node.setStartEndIdx();
+			node.setBlockScope();
 			break;
 		case ALIAS_NODE:
 			// startIdx, endIdx
 			node.setStartIdx(readVarInt());
-			node.setStartEndIdx();
+			node.setBlockScope();
 			// aliasId
 			int aliasOrgNodeIdx = readVarInt();
 			node.setAliasId(new AliasNodeId(node.getStartIdx(), aliasOrgNodeIdx));
 			break;
 		case CONDITION_NODE:
 			node.setStartIdx(readVarInt());
-			node.setStartEndIdx();
+			node.setBlockScope();
 			/* branches */
 			int size = readVarInt();
 			for (int i = 0; i < size; i++) {
@@ -81,7 +81,7 @@ public class CoverageOutputReader extends OutputReader{
 			break;
 		case INVOKE_NODE:
 			node.setStartIdx(readVarInt());
-			node.setStartEndIdx();
+			node.setBlockScope();
 			break;
 		}
 		

@@ -62,4 +62,9 @@ public class PrecheckAgent implements IAgent {
 	public void exitTest(String testResultMsg, String junitClass, String junitMethod) {
 		// do nothing, not used.
 	}
+
+	@Override
+	public boolean isInstrumentationActive() {
+		return true;
+	}
 }

@@ -20,4 +20,6 @@ public interface IAgent {
 
 	public void exitTest(String testResultMsg, String junitClass, String junitMethod);
 
+	public boolean isInstrumentationActive();
+
 }

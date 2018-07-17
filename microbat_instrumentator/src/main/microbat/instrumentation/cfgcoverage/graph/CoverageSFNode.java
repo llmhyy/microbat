@@ -11,9 +11,10 @@ import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
 import sav.common.core.utils.CollectionUtils;
 
 public class CoverageSFNode {
+	private static final int INVALID_IDX = -1;
 	private int cvgIdx;
-	private int startIdx;
-	private int endIdx;
+	private int startIdx = INVALID_IDX;
+	private int endIdx = INVALID_IDX;
 	private UniqueNodeId startNodeId;
 	private UniqueNodeId endNodeId; // probeNode
 	private Type type;
@@ -86,15 +87,6 @@ public class CoverageSFNode {
 		this.startIdx = startIdx;
 	}
 	
-	public void setStartEndIdx() {
-		if (content == null) {
-			endIdx = startIdx;
-		} else {
-			startIdx = content.get(0);
-			endIdx = content.get(content.size() - 1);
-		}
-	}
-	
 	public void addContentNode(int nodeIdx) {
 		if (content == null) {
 			content = new ArrayList<>();
@@ -108,11 +100,6 @@ public class CoverageSFNode {
 	
 	public int getEndIdx() {
 		return endIdx;
-	}
-
-	public void setEndIdx(int endIdx, UniqueNodeId uniqueNodeId) {
-		this.endIdx = endIdx;
-		this.endNodeId = uniqueNodeId;
 	}
 
 	public UniqueNodeId getStartNodeId() {
@@ -202,5 +189,20 @@ public class CoverageSFNode {
 			return Arrays.asList(startIdx);
 		}
 		return content;
+	}
+
+	public void setBlockScope() {
+		if (content == null) {
+			endIdx = startIdx;
+		} else {
+			if (startIdx == INVALID_IDX) {
+				startIdx = content.get(0);
+			} else {
+				if (!content.contains(startIdx)) {
+					content.add(0, startIdx);
+				}
+			}
+			endIdx = content.get(content.size() - 1);
+		}
 	}
 }

@@ -40,16 +40,16 @@ public class MethodInstructionsInfo {
 		MethodInstructionsInfo instmInsns = new MethodInstructionsInfo();
 		List<InstructionInfo> nodeInsns = Collections.emptyList();
 		if (instmInstructionIdexies != null) {
-			List<InstructionInfo> instmInstructions = new ArrayList<InstructionInfo>(instmInstructionIdexies.size());
+			nodeInsns = new ArrayList<InstructionInfo>(instmInstructionIdexies.size());
 			int idx = 0;
 			for (InstructionHandle insnHandler : insnList) {
 				if (instmInstructionIdexies.contains(idx)) {
 					InstructionInfo insnInfo = new InstructionInfo(insnHandler, idx);
-					instmInstructions.add(insnInfo);
+					nodeInsns.add(insnInfo);
 				}
 			}
-			instmInsns.nodeInsns = nodeInsns;
 		}
+		instmInsns.nodeInsns = nodeInsns;
 		CFGConstructor cfgConstructor = new CFGConstructor();
 		CFG cfg = cfgConstructor.constructCFG(method.getCode());
 		List<InstructionHandle> exitInsns = new ArrayList<>();

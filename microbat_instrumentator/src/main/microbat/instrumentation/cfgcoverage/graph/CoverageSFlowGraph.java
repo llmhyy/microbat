@@ -93,4 +93,11 @@ public class CoverageSFlowGraph {
 		Integer coverageNodeIdx = referenceCvgGraphIdx.get(cfgNodeIdx);
 		return nodeList.get(coverageNodeIdx);
 	}
+
+	public void setBlockScope() {
+		for (CoverageSFNode node : nodeList) {
+			node.setBlockScope();
+		}
+		
+	}
 }

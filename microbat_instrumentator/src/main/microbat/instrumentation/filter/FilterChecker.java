@@ -92,12 +92,6 @@ public class FilterChecker {
 			File file = new File(path);
 			if (file.isFile()) {
 				/* exclude extLib by default */
-//				for (String extLib : extLibs) {
-//					if (path.startsWith(extLib)) {
-//						match = true;
-//						break;
-//					}
-//				}
 			} else {
 				for (String binFolder : appBinFolders) {
 					if (binFolder.equals(getDir(path))) {
