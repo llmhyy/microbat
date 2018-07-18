@@ -288,20 +288,24 @@ public class Trace {
 	}
 	
 	public List<TraceNode> findNextReadingTraceNodes(VarValue value, int startOrder){
-		String varID = value.getVarID();
-//		varID = Variable.truncateSimpleID(varID);
+		String varID = value.getAliasVarID();
+		varID = Variable.truncateSimpleID(varID);
 		
 		List<TraceNode> list = new ArrayList<>();
 		for(int i=startOrder; i<this.exectionList.size(); i++){
 			TraceNode node = this.exectionList.get(i);
 			for(VarValue readVar: node.getReadVariables()){
-				if(readVar.getVarID().equals(varID)){
-					list.add(node);
+				if(readVar.getAliasVarID()!=null){
+					String readVarID = Variable.truncateSimpleID(readVar.getAliasVarID());
+					if(readVarID.equals(varID)){
+						list.add(node);						
+					}
 				}
 				
 			}
 		}
 		
+		System.currentTimeMillis();
 		return list;
 	}
 	
