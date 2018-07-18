@@ -413,12 +413,57 @@ public class ExecutionTracer implements IExecutionTracer {
 		}
 	}
 	
+	public void buildReadRelationForArrayCopy(Object array, int startPosition, int length, int line){
+		Variable sourceParentVariable = new FieldVar(false, "unknown", array.getClass().getName(), "unknown");
+		String sourceParentVarId = TraceUtils.getObjectVarId(array, array.getClass().getName());
+		sourceParentVariable.setVarID(sourceParentVarId);
+		ReferenceValue sourceParentValue = new ReferenceValue(false, false, sourceParentVariable);
+		for(int i=0; i<length; i++){
+			int k = startPosition + i;
+			Object elementValue = Array.get(array, k);
+			VarValue value = addArrayElementVarValue(array, k, elementValue, 
+					elementValue.getClass().getName(), line);
+			value.addParent(sourceParentValue);
+			addRWriteValue(trace.getLatestNode(), value, false);
+		}
+	}
+	
+	public void buildWriteRelationForArrayCopy(Object targetArray, int startPosition, 
+			Object sourceArray, int srcStartPos, int length, int line){
+		Variable targetParentVariable = new FieldVar(false, "unknown", targetArray.getClass().getName(), "unknown");
+		String targetParentVarId = TraceUtils.getObjectVarId(targetArray, targetArray.getClass().getName());
+		targetParentVariable.setVarID(targetParentVarId);
+		ReferenceValue targetParentValue = new ReferenceValue(false, false, targetParentVariable);
+		for(int i=0; i<length; i++){
+			int k = srcStartPos + i;
+			Object elementValue = Array.get(sourceArray, k);
+			
+			int index = startPosition + i;
+			VarValue value = addArrayElementVarValue(targetArray, index, elementValue, 
+					elementValue.getClass().getName(), line);
+			value.addParent(targetParentValue);
+			addRWriteValue(trace.getLatestNode(), value, true);
+		}
+	}
+	
 	@Override
 	public void _hitInvokeStatic(String invokeTypeSign, String methodSig, Object[] params,
 			String paramTypeSignsCode, String returnTypeSign, int line, String className, String residingMethodSignature) {
 		locker.lock();
 		try {
 			hitLine(line, className, residingMethodSignature);
+			
+			if(methodSig.equals("java.lang.System#arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V")){
+				Object sourceArray = params[0];
+				int sourcePosition = (Integer)params[1];
+				Object targetArray = params[2];
+				int targetPosition = (Integer)params[3];
+				int length = (Integer)params[4];
+				
+				buildReadRelationForArrayCopy(sourceArray, sourcePosition, length, line);
+				buildWriteRelationForArrayCopy(targetArray, targetPosition, sourceArray, sourcePosition, length, line);
+			}
+			
 			TraceNode latestNode = trace.getLatestNode();
 			if (latestNode != null) {
 				latestNode.setInvokingMethod(methodSig);
@@ -1012,7 +1057,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				}
 			}
 			hitLine(line, className, methodSignature);
-			VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, false);
+			VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line);
 			
 			Variable parentVariable = new FieldVar(false, "unknown", arrayRef.getClass().getName(), "unknown");
 			String parentVarId = TraceUtils.getObjectVarId(arrayRef, arrayRef.getClass().getName());
@@ -1089,7 +1134,7 @@ public class ExecutionTracer implements IExecutionTracer {
 				}
 			}
 			hitLine(line, className, methodSignature);
-			VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line, true);
+			VarValue value = addArrayElementVarValue(arrayRef, index, eleValue, elementType, line);
 			
 			Variable parentVariable = new FieldVar(false, "unknown", arrayRef.getClass().getName(), "unknown");
 			String parentVarId = TraceUtils.getObjectVarId(arrayRef, arrayRef.getClass().getName());
@@ -1104,8 +1149,7 @@ public class ExecutionTracer implements IExecutionTracer {
 		locker.unLock();
 	}
 	
-	private VarValue addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType, int line,
-			boolean write) {
+	private VarValue addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType, int line) {
 		String id = new StringBuilder(TraceUtils.getObjectVarId(arrayRef, elementType+"[]")).append("[").append(index).append("]").toString();
 		String name = id;
 		Variable var = new ArrayElementVar(name, elementType, id);
