@@ -28,6 +28,10 @@ public class MethodCallStack {
 	public boolean isEmpty(){
 		return stack.isEmpty();
 	}
+	
+	public void clear() {
+		stack.clear();
+	}
 
 	/**
 	 * return whether we need to change the invocation layer structure by exception

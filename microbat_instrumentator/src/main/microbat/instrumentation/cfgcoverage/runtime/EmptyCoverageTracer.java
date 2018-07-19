@@ -14,7 +14,7 @@ public class EmptyCoverageTracer implements ICoverageTracer {
 	}
 
 	@Override
-	public void _enterMethod(String methodId, String paramTypeSignsCode, Object[] params) {
+	public void enterMethod(String methodId, String paramTypeSignsCode, Object[] params) {
 		// TODO Auto-generated method stub
 		
 	}

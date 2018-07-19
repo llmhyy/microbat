@@ -7,14 +7,15 @@ package microbat.instrumentation.runtime;
  * [TO AVOID RECURSIVE LOOP IN GET_TRACER!!]
  */
 public abstract class TracerStore<T extends ITracer> {
+	public static final int INVALID_THREAD_ID = -1;
 	protected ITracer[] rtStore = new ITracer[10];
-	protected long mainThreadId = -1;
-	protected int lastUsedIdx = -1;
+	protected long mainThreadId = INVALID_THREAD_ID;
+	protected int lastUsedIdx = INVALID_THREAD_ID;
 	
 	/* threadId must be valid */
 	@SuppressWarnings("unchecked")
 	public synchronized T get(long threadId) {
-		if (mainThreadId != -1 && threadId != mainThreadId) {
+		if (threadId != mainThreadId) {
 			return null; // for now, only recording trace for main thread.
 		}
 		for (int i = 0; i < lastUsedIdx; i++) {
@@ -36,5 +37,9 @@ public abstract class TracerStore<T extends ITracer> {
 
 	public T getMainThreadTracer() {
 		return get(mainThreadId);
+	}
+	
+	public long getMainThreadId() {
+		return mainThreadId;
 	}
 }

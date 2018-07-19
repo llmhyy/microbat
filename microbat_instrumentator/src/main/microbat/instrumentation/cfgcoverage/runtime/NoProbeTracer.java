@@ -8,7 +8,7 @@ public class NoProbeTracer extends EmptyCoverageTracer implements ICoverageTrace
 	}
 
 	@Override
-	public void _enterMethod(String methodId, String paramTypeSignsCode, Object[] params) {
+	public void enterMethod(String methodId, String paramTypeSignsCode, Object[] params) {
 		ownerTracer.methodCallStack.push(methodId);
 	}
 
