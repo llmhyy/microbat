@@ -56,21 +56,18 @@ public class CoverageOutputReader extends OutputReader{
 			node.setStartIdx(readVarInt());
 			node.setBlockScope();
 			// aliasId
+			int aliasPrevNodeIdx = readVarInt();
 			int aliasOrgNodeIdx = readVarInt();
-			node.setAliasId(new AliasNodeId(node.getStartIdx(), aliasOrgNodeIdx));
+			node.setAliasId(new AliasNodeId(aliasPrevNodeIdx, aliasOrgNodeIdx));
+			Branch outLoopBranch = new Branch(readVarInt(), readVarInt());
+			node.getAliasId().setOutLoopBranch(outLoopBranch);
 			break;
 		case CONDITION_NODE:
 			node.setStartIdx(readVarInt());
 			node.setBlockScope();
-			/* branches */
-			int size = readVarInt();
-			for (int i = 0; i < size; i++) {
-				int branchCvgNodeIdx = readVarInt();
-				node.addBranch(nodeList.get(branchCvgNodeIdx));
-			}
 			/* covered testcases on branches */
 			Map<Branch, List<Integer>> coveredTcsOnBranches = node.getCoveredTestcasesOnBranches();
-			size = readVarInt();
+			int size = readVarInt();
 			for (int i = 0; i < size; i++) {
 				int toNodeIdx = readVarInt();
 				Branch branch = new Branch(node.getEndIdx(), toNodeIdx);
@@ -84,7 +81,12 @@ public class CoverageOutputReader extends OutputReader{
 			node.setBlockScope();
 			break;
 		}
-		
+		/* branches */
+		int size = readVarInt();
+		for (int i = 0; i < size; i++) {
+			int branchCvgNodeIdx = readVarInt();
+			node.addBranch(nodeList.get(branchCvgNodeIdx));
+		}
 		/* covered testcases on node */
 		node.setCoveredTestcases(readListInt());
 		return node;

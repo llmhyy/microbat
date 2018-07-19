@@ -28,6 +28,9 @@ public class MethodInstructionsInfo {
 	public static void initInstrInstructions(CoverageSFlowGraph coverageFlowGraph) {
 		instmInstructionMap = new HashMap<>();
 		for (CoverageSFNode node : coverageFlowGraph.getNodeList()) {
+			if (node.isAliasNode()) {
+				continue;
+			}
 			UniqueNodeId probeNodeId = node.getEndNodeId();
 			CollectionUtils.getSetInitIfEmpty(instmInstructionMap, probeNodeId.getMethodId())
 					.add(probeNodeId.getLocalNodeIdx());

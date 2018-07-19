@@ -1,8 +1,9 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
 public class AliasNodeId {
-	protected int prevNodeIdx;
-	protected int orgNodeIdx;
+	protected int prevNodeIdx; // start node of the edge to orgNode
+	protected int orgNodeIdx; // original node of this alias
+	private Branch outLoopBranch; // this branch is from loop's conditionNode that direct out of the loop. 
 	
 	public AliasNodeId(int prevNodeIdx, int orgNodeIdx) {
 		this.prevNodeIdx = prevNodeIdx;
@@ -46,4 +47,17 @@ public class AliasNodeId {
 		return orgNodeIdx;
 	}
 	
+	public Branch getOutLoopBranch() {
+		return outLoopBranch;
+	}
+	
+	public void setOutLoopBranch(Branch outLoopBranch) {
+		this.outLoopBranch = outLoopBranch;
+	}
+
+	@Override
+	public String toString() {
+		return "AliasNodeId [prevNodeIdx=" + prevNodeIdx + ", orgNodeIdx=" + orgNodeIdx + ", outLoopBranch="
+				+ outLoopBranch + "]";
+	}
 }

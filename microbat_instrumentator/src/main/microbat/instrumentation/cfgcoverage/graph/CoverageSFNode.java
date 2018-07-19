@@ -35,7 +35,9 @@ public class CoverageSFNode {
 	public CoverageSFNode(Type type, CFGNode startNode, CFGInstance cfg) {
 		this.type = type;
 		startIdx = startNode.getIdx();
-		startNodeId = cfg.getUnitCfgNodeId(startNode);
+		if (type != Type.ALIAS_NODE) {
+			startNodeId = cfg.getUnitCfgNodeId(startNode);
+		}
 	}
 	
 	public CoverageSFNode getCorrespondingBranch(String methodId) {
@@ -186,6 +188,9 @@ public class CoverageSFNode {
 	}
 	
 	public List<Integer> getCorrespondingCfgNodeIdxies() {
+		if (type == Type.ALIAS_NODE) {
+			return Collections.emptyList();
+		}
 		if (CollectionUtils.isEmpty(content)) {
 			return Arrays.asList(startIdx);
 		}

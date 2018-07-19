@@ -31,14 +31,16 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 			testIdx = currentTestCaseIdx;
 		} else {
 			CoverageSFNode branch = currentNode.getCorrespondingBranch(methodId, nodeIdx);
+			if (branch == null && !currentNode.isAliasNode()) {
+				AgentLogger.debug(String.format("cannnot find branch %s:%d of node %d", methodId, nodeIdx,
+						currentNode.getEndIdx()));
+				return;
+			}
 			// currentNode should not be null here.
 			currentNode.markCoveredBranch(branch, testIdx);
 			currentNode = branch;
 		}
 		currentNode.addCoveredTestcase(testIdx);
-		if (currentNode.getAliasId() != null) {
-			currentNode = coverageFlowGraph.getCoverageNode(currentNode.getAliasId().getOrgNodeIdx());
-		}
 	}
 	
 	@Override

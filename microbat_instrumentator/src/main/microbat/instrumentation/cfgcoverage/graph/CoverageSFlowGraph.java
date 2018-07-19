@@ -3,6 +3,11 @@ package microbat.instrumentation.cfgcoverage.graph;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 
+ * @author lyly
+ * Shortened Flow Graph for coverage recording.
+ */
 public class CoverageSFlowGraph {
 	private CoverageSFNode startNode;
 	private List<CoverageSFNode> nodeList;

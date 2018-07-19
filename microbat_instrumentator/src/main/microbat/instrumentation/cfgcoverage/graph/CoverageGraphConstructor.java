@@ -43,7 +43,7 @@ public class CoverageGraphConstructor {
 				continue;
 			}
 			Type type = Type.BLOCK_NODE;
-			if (node instanceof CfgAliasNode) {
+			if (node instanceof CFGAliasNode) {
 				type = Type.ALIAS_NODE;
 			} else if (node.getInstructionHandle().getInstruction() instanceof InvokeInstruction) {
 				type = Type.INVOKE_NODE;
@@ -67,7 +67,7 @@ public class CoverageGraphConstructor {
 							|| (CollectionUtils.getSize(curNode.getParents()) != 1)
 							|| (curNode.getInstructionHandle().getInstruction() instanceof InvokeInstruction)
 							|| (curNode.isBranch())
-							|| curNode instanceof CfgAliasNode) {
+							|| curNode instanceof CFGAliasNode) {
 						stack.push(curNode);
 						break;
 					}
@@ -82,7 +82,7 @@ public class CoverageGraphConstructor {
 				}
 				break;
 			case ALIAS_NODE:
-				blockNode.setAliasId(((CfgAliasNode) node).getAliasNodeId());
+				blockNode.setAliasId(((CFGAliasNode) node).getAliasNodeId());
 				break;
 			default:
 				break;
@@ -90,8 +90,16 @@ public class CoverageGraphConstructor {
 			coverageGraph.addNode(blockNode);
 		}
 		coverageGraph.setBlockScope();
+		
 		/* create graph edges */
 		for (CoverageSFNode node : coverageGraph.getNodeList()) {
+			if (node.getType() == Type.ALIAS_NODE) {
+				Branch outLoopBranch = node.getAliasId().getOutLoopBranch();
+				if (outLoopBranch != null) {
+					node.addBranch(nodeMap.get(outLoopBranch.getToNodeIdx()));
+				}
+				continue;
+			}
 			CFGNode endCfgNode = cfg.getNodeList().get(node.getEndIdx());
 			node.setEndNodeId(cfg.getUnitCfgNodeId(endCfgNode));
 			for (CFGNode branch : endCfgNode.getChildren()) {
@@ -107,7 +115,7 @@ public class CoverageGraphConstructor {
 
 	/**
 	 * List stack: to trace back nodes when traversing the graph.
-	 * int[] visited: position of node store on stack, if node has not been visited, the value is -1.
+	 * int[] visited: the order of visited node (also its index on stack), if node has not been visited, the value is -1.
 	 * this array is used to keep the path from entry node to current node.
 	 * using DFS to traverse the graph, 
 	 */
@@ -121,27 +129,43 @@ public class CoverageGraphConstructor {
 		stack.add(cfg.getStartNode());
 		while (!stack.isEmpty()) {
 			CFGNode curNode = stack.get(stack.size() - 1);
-			int visitedIdx = curNode.getIdx();
-			int stackPos = visited[visitedIdx];
+			int nodeIdx = curNode.getIdx();
+			int stackPos = visited[nodeIdx];
 			/* this means after visit all branches of a node, we are traversing back to the previous one (curNode) */
 			if (stackPos == stack.size() - 1) {
 				stack.remove(stack.size() - 1);
-				visited[visitedIdx] = -1;
+				visited[nodeIdx] = -1;
 				continue;
 			}
 			/* visited --> backward edge, curNode is the loopHeader */
 			if (stackPos >= 0) {
 				CFGNode backwardEdgeStartNode = stack.get(stack.size() - 2);	
-				CfgAliasNode aliasNode = new CfgAliasNode(curNode);
+				CFGAliasNode aliasNode = new CFGAliasNode(backwardEdgeStartNode, curNode);
 				aliasNode.addParent(backwardEdgeStartNode);
 				backwardEdgeStartNode.getChildren().remove(curNode);
-				backwardEdgeStartNode.addChild(backwardEdgeStartNode);
-				
+				backwardEdgeStartNode.addChild(aliasNode); 
+				/* find outloop edge */
+				Branch outloopEdge = null;
+				boolean stop = false;
+				for (int i = stackPos; i < stack.size() && !stop; i++) {
+					CFGNode node = stack.get(i);
+					if (node.isConditional()) {
+						for (CFGNode branch : node.getChildren()) {
+							if (!stack.get(i + 1).equals(branch)) {
+								outloopEdge = new Branch(node.getIdx(), branch.getIdx());
+								stop = true;
+								break;
+							}
+						}
+					}
+				}
+				aliasNode.getAliasNodeId().setOutLoopBranch(outloopEdge);
+				/* get back one step and discover another path from there */
 				stack.remove(stack.size() - 1);
 				continue;
 			}
 			/* not visited --> visit */
-			visited[visitedIdx] = stack.size() - 1;
+			visited[nodeIdx] = stack.size() - 1;
 			for (CFGNode branch : curNode.getChildren()) {
 				stack.add(branch);
 			}

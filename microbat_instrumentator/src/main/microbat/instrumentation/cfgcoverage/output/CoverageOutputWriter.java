@@ -8,6 +8,7 @@ import microbat.instrumentation.cfgcoverage.graph.Branch;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.output.OutputWriter;
+import sav.common.core.utils.CollectionUtils;
 
 public class CoverageOutputWriter extends OutputWriter {
 
@@ -44,15 +45,13 @@ public class CoverageOutputWriter extends OutputWriter {
 			break;
 		case ALIAS_NODE:
 			writeVarInt(node.getStartIdx()); // startIdx = endIdx
+			writeVarInt(node.getAliasId().getPrevNodeIdx());
 			writeVarInt(node.getAliasId().getOrgNodeIdx()); // aliasId
+			writeVarInt(node.getAliasId().getOutLoopBranch().getFromNodeIdx());
+			writeVarInt(node.getAliasId().getOutLoopBranch().getToNodeIdx());
 			break;
 		case CONDITION_NODE:
 			writeVarInt(node.getStartIdx()); // startIdx = endIdx
-			/* branches */
-			writeVarInt(node.getBranches().size());
-			for (CoverageSFNode branch : node.getBranches()) {
-				writeVarInt(branch.getCvgIdx());
-			}
 			/* covered testcases on branches */
 			writeVarInt(node.getCoveredTestcasesOnBranches().keySet().size());
 			for (Branch branch : node.getCoveredTestcasesOnBranches().keySet()) {
@@ -65,7 +64,11 @@ public class CoverageOutputWriter extends OutputWriter {
 			writeVarInt(node.getStartIdx()); // startIdx = endIdx
 			break;
 		}
-		
+		/* branches */
+		writeVarInt(CollectionUtils.getSize(node.getBranches()));
+		for (CoverageSFNode branch : CollectionUtils.nullToEmpty(node.getBranches())) {
+			writeVarInt(branch.getCvgIdx());
+		}
 		/* covered testcases on node */
 		writeListInt(node.getCoveredTestcases());
 	}

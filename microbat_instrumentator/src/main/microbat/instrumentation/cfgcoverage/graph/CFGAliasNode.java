@@ -2,13 +2,14 @@ package microbat.instrumentation.cfgcoverage.graph;
 
 import microbat.codeanalysis.bytecode.CFGNode;
 
-public class CfgAliasNode extends CFGNode {
+public class CFGAliasNode extends CFGNode {
 	private CFGNode orgNode;
 	private AliasNodeId aliasNodeId;
 
-	public CfgAliasNode(CFGNode orgNode) {
+	public CFGAliasNode(CFGNode prevNode, CFGNode orgNode) {
 		super(orgNode.getInstructionHandle());
 		this.orgNode = orgNode;
+		this.aliasNodeId = new AliasNodeId(prevNode.getIdx(), orgNode.getIdx());
 	}
 
 	@Override
@@ -28,4 +29,14 @@ public class CfgAliasNode extends CFGNode {
 	public AliasNodeId getAliasNodeId() {
 		return aliasNodeId;
 	}
+	
+	public void setAliasNodeId(AliasNodeId aliasNodeId) {
+		this.aliasNodeId = aliasNodeId;
+	}
+
+	@Override
+	public String toString() {
+		return "CFGAliasNode [orgNode=" + orgNode + ", aliasNodeId=" + aliasNodeId + "]";
+	}
+	
 }
