@@ -9,7 +9,6 @@ import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.runtime.ITracer;
-import microbat.instrumentation.runtime.TracerStore;
 import microbat.instrumentation.runtime.TracingState;
 
 public class CoverageTracer implements ICoverageTracer, ITracer {
@@ -84,23 +83,28 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	
 	public synchronized static ICoverageTracer _getTracer(String methodId, boolean isEntryPoint, String paramNamesCode,
 			String paramTypeSignsCode, Object[] params) {
-		long threadId = Thread.currentThread().getId();
-		CoverageTracer coverageTracer = rtStore.get(threadId);
-		if ((rtStore.getMainThreadId() == TracerStore.INVALID_THREAD_ID) || (coverageTracer.state != TracingState.RECORDING)) {
-			if (isEntryPoint) {
-				rtStore.setMainThreadId(Thread.currentThread().getId());
-				coverageTracer = rtStore.get(threadId);
-				coverageTracer.state = TracingState.RECORDING;
-			} else {
-				return EmptyCoverageTracer.getInstance();
+		try {
+			long threadId = Thread.currentThread().getId();
+			CoverageTracer coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
+			if ((coverageTracer == null) || (coverageTracer.state != TracingState.RECORDING)) {
+				if (isEntryPoint) {
+					rtStore.setMainThreadId(Thread.currentThread().getId());
+					coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
+					coverageTracer.state = TracingState.RECORDING;
+				} else {
+					return EmptyCoverageTracer.getInstance();
+				}
 			}
+			ICoverageTracer tracer = coverageTracer;
+			if (!isEntryPoint && coverageTracer.doesNotNeedToRecord(methodId)) {
+				tracer = coverageTracer.noProbeTracer;
+			}
+			tracer.enterMethod(methodId, paramTypeSignsCode, params);
+			return tracer;
+		} catch(Throwable t) {
+			AgentLogger.error(t);
+			return EmptyCoverageTracer.getInstance();
 		}
-		ICoverageTracer tracer = coverageTracer;
-		if (!isEntryPoint && coverageTracer.doesNotNeedToRecord(methodId)) {
-			tracer = coverageTracer.noProbeTracer;
-		}
-		tracer.enterMethod(methodId, paramTypeSignsCode, params);
-		return tracer;
 	}
 
 	@Override
@@ -115,7 +119,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	
 	public static void endTestcase(String testcase) {
 		long threadId = Thread.currentThread().getId();
-		CoverageTracer coverageTracer = rtStore.get(threadId);
+		CoverageTracer coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
 		coverageTracer.state = TracingState.SHUTDOWN;
 		coverageTracer.currentNode = null;
 		coverageTracer.methodInvokeLevel = 0;
@@ -123,7 +127,4 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		coverageTracer.execPath = null;
 	}
 	
-	public static CoverageTracer getMainThreadStore() {
-		return rtStore.getMainThreadTracer();
-	}
 }
