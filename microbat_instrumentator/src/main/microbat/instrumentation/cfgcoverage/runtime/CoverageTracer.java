@@ -1,5 +1,10 @@
 package microbat.instrumentation.cfgcoverage.runtime;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
@@ -9,7 +14,8 @@ import microbat.instrumentation.runtime.TracingState;
 
 public class CoverageTracer implements ICoverageTracer, ITracer {
 	private static CoverageTracerStore rtStore = new CoverageTracerStore();
-	public static CoverageSFlowGraph coverageFlowGraph;
+	public static volatile CoverageSFlowGraph coverageFlowGraph;
+	public static volatile Map<Integer, List<Integer>> testcaseGraphExecPaths = new HashMap<>();
 	private static int currentTestCaseIdx;
 	
 	private long threadId;
@@ -18,8 +24,8 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	private int methodInvokeLevel = 0;
 	private int testIdx;
 	private CoverageSFNode currentNode;
+	private List<Integer> execPath;
 	MethodCallStack methodCallStack = new MethodCallStack();
-	
 	public CoverageTracer(long threadId) {
 		this.threadId = threadId;
 	}
@@ -29,6 +35,8 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		if (currentNode == null) {
 			currentNode = coverageFlowGraph.getStartNode();
 			testIdx = currentTestCaseIdx;
+			execPath = new ArrayList<>();
+			testcaseGraphExecPaths.put(testIdx, execPath);
 		} else {
 			CoverageSFNode branch = currentNode.getCorrespondingBranch(methodId, nodeIdx);
 			if (branch == null && !currentNode.isAliasNode()) {
@@ -40,6 +48,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 			currentNode.markCoveredBranch(branch, testIdx);
 			currentNode = branch;
 		}
+		execPath.add(currentNode.getCvgIdx());
 		currentNode.addCoveredTestcase(testIdx);
 	}
 	
@@ -111,6 +120,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		coverageTracer.currentNode = null;
 		coverageTracer.methodInvokeLevel = 0;
 		coverageTracer.methodCallStack.clear();
+		coverageTracer.execPath = null;
 	}
 	
 	public static CoverageTracer getMainThreadStore() {

@@ -17,6 +17,7 @@ public class CoverageSFlowGraph {
 	/* referenceCvgGraphIdx[cfgIdx] = CoverageSFlowGraph.nodeList.idx */
 	private List<Integer> referenceCvgGraphIdx;
 	private int cfgSize;
+	private List<CoveragePath> coveragePaths;
 
 	public CoverageSFlowGraph(int cfgSize) {
 		this.cfgSize = cfgSize;
@@ -103,6 +104,13 @@ public class CoverageSFlowGraph {
 		for (CoverageSFNode node : nodeList) {
 			node.setBlockScope();
 		}
-		
+	}
+	
+	public List<CoveragePath> getCoveragePaths() {
+		return coveragePaths;
+	}
+
+	public void setCoveragePaths(List<CoveragePath> coveragePaths) {
+		this.coveragePaths = coveragePaths;
 	}
 }

@@ -3,18 +3,22 @@ package microbat.instrumentation.cfgcoverage;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import microbat.instrumentation.CommandLine;
 import microbat.instrumentation.IAgent;
 import microbat.instrumentation.cfgcoverage.graph.CoverageGraphConstructor;
+import microbat.instrumentation.cfgcoverage.graph.CoveragePath;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.cfgcoverage.instr.CoverageInstrumenter;
 import microbat.instrumentation.cfgcoverage.instr.CoverageTransformer;
 import microbat.instrumentation.cfgcoverage.instr.MethodInstructionsInfo;
 import microbat.instrumentation.cfgcoverage.runtime.CoverageTracer;
 import microbat.instrumentation.filter.FilterChecker;
-import sav.common.core.utils.ClassUtils;
+import sav.common.core.utils.CollectionUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class CoverageAgent implements IAgent {
@@ -44,6 +48,23 @@ public class CoverageAgent implements IAgent {
 	@Override
 	public void shutdown() throws Exception {
 		CoverageSFlowGraph coverageGraph = CoverageTracer.coverageFlowGraph;
+		Map<List<Integer>, List<Integer>> pathMap = new HashMap<>(); // path to tcs
+		for (Entry<Integer, List<Integer>> tcPath : CoverageTracer.testcaseGraphExecPaths.entrySet()) {
+			CollectionUtils.getListInitIfEmpty(pathMap, tcPath.getValue()).add(tcPath.getKey());
+		}
+		List<CoveragePath> coveredPaths = new ArrayList<>(pathMap.size());
+		for (Entry<List<Integer>, List<Integer>> entry : pathMap.entrySet()) {
+			CoveragePath path = new CoveragePath();
+			path.setCoveredTcs(entry.getValue());
+//			List<CoverageSFNode> nodeList = new ArrayList<>(entry.getKey().size());
+//			for (Integer idx : entry.getKey()) {
+//				nodeList.add(coverageGraph.getNodeList().get(idx));
+//			}
+//			path.setPath(nodeList);
+			path.setPath(entry.getKey());
+			coveredPaths.add(path);
+		}
+		coverageGraph.setCoveragePaths(coveredPaths);
 		CoverageOutput coverageOutput = new CoverageOutput(coverageGraph);
 		coverageOutput.saveToFile(agentParams.getDumpFile());
 	}
@@ -51,15 +72,14 @@ public class CoverageAgent implements IAgent {
 	@Override
 	public void startTest(String junitClass, String junitMethod) {
 		int testIdx = testcases.size();
-		String testcase = ClassUtils.toClassMethodStr(junitClass, junitMethod);
+		String testcase = InstrumentationUtils.getMethodId(junitClass, junitMethod);
 		testcases.add(testcase);
 		CoverageTracer.startTestcase(testcase, testIdx);
 	}
 	
 	@Override
 	public void exitTest(String testResultMsg, String junitClass, String junitMethod) {
-		// TODO Auto-generated method stub
-		
+		CoverageTracer.endTestcase(InstrumentationUtils.getMethodId(junitClass, junitMethod));
 	}
 
 	@Override

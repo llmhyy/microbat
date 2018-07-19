@@ -8,6 +8,7 @@ import java.util.Map;
 
 import microbat.instrumentation.cfgcoverage.graph.AliasNodeId;
 import microbat.instrumentation.cfgcoverage.graph.Branch;
+import microbat.instrumentation.cfgcoverage.graph.CoveragePath;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode.Type;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
@@ -20,12 +21,18 @@ public class CoverageOutputReader extends OutputReader{
 	}
 	
 	public CoverageSFlowGraph readCfgCoverage() throws IOException {
+		/* cdgSize and cdgLayer */
 		int cfgSize = readVarInt();
 		CoverageSFlowGraph coverageGraph = new CoverageSFlowGraph(cfgSize);
 		coverageGraph.setCdgLayer(readVarInt());
+		
+		/* covered testcases */
 		coverageGraph.setCoveredTestcases(readListString());
+		
+		/* covered testcase indexies */
 		coverageGraph.setCoveredTestcaseIdexies(readListInt());
 		
+		/* nodeCoverage list */
 		int nodeListSize = readVarInt();
 		List<CoverageSFNode> nodeList = new ArrayList<CoverageSFNode>(nodeListSize);
 		for (int i = 0; i < nodeListSize; i++) {
@@ -36,9 +43,25 @@ public class CoverageOutputReader extends OutputReader{
 		}
 		coverageGraph.setNodeList(nodeList);
 		coverageGraph.setStartNode(nodeList.get(0));
+		
+		/* covered path */
+		List<CoveragePath> coveragePaths = readCoveragePaths(nodeList);
+		coverageGraph.setCoveragePaths(coveragePaths);
 		return coverageGraph;
 	}
 
+	private List<CoveragePath> readCoveragePaths(List<CoverageSFNode> nodeList) throws IOException {
+		int size = readVarInt();
+		List<CoveragePath> coveragePaths = new ArrayList<>(size);
+		for (int i = 0; i < size; i++) {
+			CoveragePath path = new CoveragePath();
+			path.setCoveredTcs(readListInt());
+			path.setPath(readListInt());
+			coveragePaths.add(path);
+		}
+		return coveragePaths;
+	}
+	
 	private CoverageSFNode readCoverageNode(List<CoverageSFNode> nodeList, CoverageSFNode node) throws IOException {
 		/* type */
 		Type type = Type.valueOf(readString());

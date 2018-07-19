@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import microbat.instrumentation.cfgcoverage.graph.Branch;
+import microbat.instrumentation.cfgcoverage.graph.CoveragePath;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.output.OutputWriter;
@@ -30,6 +31,30 @@ public class CoverageOutputWriter extends OutputWriter {
 		writeVarInt(coverageGraph.getNodeList().size());
 		for (CoverageSFNode node : coverageGraph.getNodeList()) {
 			writeNodeCoverage(node);
+		}
+		
+		/* covered path */
+		writeCoveragePaths(coverageGraph.getCoveragePaths());
+	}
+
+	private void writeCoveragePaths(List<CoveragePath> coveragePaths) throws IOException {
+		writeVarInt(coveragePaths.size());
+		for (CoveragePath coveredPath : coveragePaths) {
+			writeListInt(coveredPath.getCoveredTcs());
+			writeListInt(coveredPath.getPath());
+		}
+	}
+	
+	private void writeListCoverageNode(List<CoverageSFNode> list) throws IOException {
+		if (list == null) {
+			writeVarInt(-1);
+		} else if (list.isEmpty()) {
+			writeVarInt(0);
+		} else {
+			writeVarInt(list.size());
+		}
+		for (CoverageSFNode value : list) {
+			writeVarInt(value.getCvgIdx());
 		}
 	}
 
