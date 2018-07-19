@@ -2,6 +2,7 @@ package microbat.instrumentation.cfgcoverage.graph;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -205,4 +206,19 @@ public class CoverageSFNode {
 			endIdx = content.get(content.size() - 1);
 		}
 	}
+
+	@Override
+	public String toString() {
+		List<String> branchIdxies = Collections.emptyList();
+		if (branches != null) {
+			branchIdxies = new ArrayList<>();
+			for (CoverageSFNode branch : branches) {
+				branchIdxies.add(String.format("{%d, %d}", branch.getStartIdx(), branch.getEndIdx()));
+			}
+		}
+		return "CoverageSFNode [startIdx=" + startIdx + ", endIdx=" + endIdx + ", startNodeId=" + startNodeId
+				+ ", endNodeId=" + endNodeId + ", type=" + type + ", aliasId=" + aliasId + ", content=" + content
+				+ ", branches=" + branchIdxies + "]";
+	}
+	
 }

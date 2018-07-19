@@ -42,6 +42,11 @@ public class CFGInstance {
 		return unitCfgNodeIds;
 	}
 	
+	@Override
+	public String toString() {
+		return "CFGInstance [cfg=" + cfg + ", nodeList=" + nodeList + "]";
+	}
+
 	public static class UniqueNodeId {
 		String methodId;
 		int localNodeIdx;
@@ -57,6 +62,11 @@ public class CFGInstance {
 
 		public int getLocalNodeIdx() {
 			return localNodeIdx;
+		}
+
+		@Override
+		public String toString() {
+			return "UniqueNodeId [methodId=" + methodId + ", localNodeIdx=" + localNodeIdx + "]";
 		}
 	}
 

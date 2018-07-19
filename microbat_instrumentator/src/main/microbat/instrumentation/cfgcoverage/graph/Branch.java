@@ -41,4 +41,9 @@ public class Branch {
 	public int getToNodeIdx() {
 		return toNodeIdx;
 	}
+
+	@Override
+	public String toString() {
+		return "Branch [fromNodeIdx=" + fromNodeIdx + ", toNodeIdx=" + toNodeIdx + "]";
+	}
 }
