@@ -112,7 +112,7 @@ public class TraceAgent implements IAgent {
 			TraceNode previousStepOver = currentNode.getStepOverPrevious();
 			if(previousStepOver!=null && previousStepOver.getBreakPoint().equals(currentNode.getBreakPoint())){
 				for(VarValue readVar: previousStepOver.getReadVariables()){
-					if(!currentNode.getReadVariables().contains(readVar)){
+					if(!currentNode.containReadVariable(readVar)){
 						currentNode.addReadVariable(readVar);
 					}
 				}

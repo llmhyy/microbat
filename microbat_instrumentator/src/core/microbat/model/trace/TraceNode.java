@@ -449,6 +449,15 @@ public class TraceNode{
 	public void setException(boolean isException) {
 		this.isException = isException;
 	}
+	
+	public boolean containReadVariable(VarValue readVar){
+		if(!readVariableMap.isEmpty()){
+			return this.readVariableMap.containsKey(readVar.getVarID());			
+		}
+		else{
+			return this.readVariables.contains(readVar);
+		}
+	}
 
 	public Collection<VarValue> getReadVariables() {
 		if(this.readVariables==null || this.readVariables.size() < this.readVariableMap.size()){
