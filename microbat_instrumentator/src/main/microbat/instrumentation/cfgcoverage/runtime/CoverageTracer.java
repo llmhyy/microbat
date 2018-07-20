@@ -38,14 +38,16 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 			testcaseGraphExecPaths.put(testIdx, execPath);
 		} else {
 			CoverageSFNode branch = currentNode.getCorrespondingBranch(methodId, nodeIdx);
-			if (branch == null && !currentNode.isAliasNode()) {
-				AgentLogger.debug(String.format("cannnot find branch %s:%d of node %d", methodId, nodeIdx,
-						currentNode.getEndIdx()));
+			if (branch != null) {
+				currentNode.markCoveredBranch(branch, testIdx);
+				currentNode = branch;
+			} else {
+				if (!currentNode.isAliasNode()) {
+					AgentLogger.debug(String.format("cannnot find branch %s:%d of node %d", methodId, nodeIdx,
+							currentNode.getEndIdx()));
+				}
 				return;
 			}
-			// currentNode should not be null here.
-			currentNode.markCoveredBranch(branch, testIdx);
-			currentNode = branch;
 		}
 		execPath.add(currentNode.getCvgIdx());
 		currentNode.addCoveredTestcase(testIdx);

@@ -51,10 +51,6 @@ public class CoverageGraphConstructor {
 				type = Type.CONDITION_NODE;
 			}
 			CoverageSFNode blockNode = new CoverageSFNode(type, node, cfg);
-			nodeMap.put(node.getIdx(), blockNode);
-			if (coverageGraph.getStartNode() == null) {
-				coverageGraph.setStartNode(blockNode);
-			}
 			switch (type) {
 			case BLOCK_NODE:
 				blockNode.addContentNode(node.getIdx());
@@ -63,7 +59,7 @@ public class CoverageGraphConstructor {
 					continue;
 				}
 				while (curNode != null) {
-					if ((CollectionUtils.getSize(curNode.getChildren()) != 1)
+					if ((CollectionUtils.getSize(curNode.getChildren()) > 1)
 							|| (CollectionUtils.getSize(curNode.getParents()) != 1)
 							|| (curNode.getInstructionHandle().getInstruction() instanceof InvokeInstruction)
 							|| (curNode.isBranch())
@@ -87,9 +83,25 @@ public class CoverageGraphConstructor {
 			default:
 				break;
 			}
+			blockNode.setBlockScope();
 			coverageGraph.addNode(blockNode);
+			nodeMap.put(node.getIdx(), blockNode);
+			if (coverageGraph.getStartNode() == null) {
+				coverageGraph.setStartNode(blockNode);
+			}
 		}
-		coverageGraph.setBlockScope();
+		
+		/* set endNodeId */
+		for (CoverageSFNode node : coverageGraph.getNodeList()) {
+			if (node.getType() == Type.ALIAS_NODE) {
+				CoverageSFNode orgCoverageNode = nodeMap.get(node.getStartIdx());
+				node.setEndIdx(orgCoverageNode.getEndIdx());
+				node.setEndNodeId(orgCoverageNode.getEndNodeId());
+			} else {
+				CFGNode endCfgNode = cfg.getNodeList().get(node.getEndIdx());
+				node.setEndNodeId(cfg.getUnitCfgNodeId(endCfgNode));
+			}
+		}
 		
 		/* create graph edges */
 		for (CoverageSFNode node : coverageGraph.getNodeList()) {
@@ -101,7 +113,6 @@ public class CoverageGraphConstructor {
 				continue;
 			}
 			CFGNode endCfgNode = cfg.getNodeList().get(node.getEndIdx());
-			node.setEndNodeId(cfg.getUnitCfgNodeId(endCfgNode));
 			for (CFGNode branch : endCfgNode.getChildren()) {
 				CoverageSFNode blockNode = nodeMap.get(branch.getIdx());
 				if (blockNode == null) {

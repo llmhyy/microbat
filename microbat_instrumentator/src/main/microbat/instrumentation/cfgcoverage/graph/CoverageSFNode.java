@@ -9,8 +9,11 @@ import java.util.Map;
 
 import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
-import sav.common.core.utils.CollectionUtils;
 
+/**
+ * @author lyly
+ *
+ */
 public class CoverageSFNode {
 	private static final int INVALID_IDX = -1;
 	private int cvgIdx;
@@ -34,8 +37,12 @@ public class CoverageSFNode {
 	
 	public CoverageSFNode(Type type, CFGNode startNode, CFGInstance cfg) {
 		this.type = type;
-		startIdx = startNode.getIdx();
-		if (type != Type.ALIAS_NODE) {
+		if (type == Type.ALIAS_NODE) {
+			CFGNode orgNode = ((CFGAliasNode) startNode).getOrgNode();
+			startIdx = orgNode.getIdx();
+			startNodeId = cfg.getUnitCfgNodeId(orgNode);
+		} else {
+			startIdx = startNode.getIdx();
 			startNodeId = cfg.getUnitCfgNodeId(startNode);
 		}
 	}
@@ -142,7 +149,9 @@ public class CoverageSFNode {
 	}
 
 	public void addCoveredTestcase(int testcaseIdx) {
-		coveredTestcases.add(testcaseIdx);
+		if (!coveredTestcases.contains(testcaseIdx)) {
+			coveredTestcases.add(testcaseIdx);
+		}
 	}
 
 	public void markCoveredBranch(CoverageSFNode branch, int testcaseIdx) {
@@ -152,7 +161,9 @@ public class CoverageSFNode {
 			tcs = new ArrayList<>();
 			coveredTestcasesOnBranches.put(condBranch, tcs);
 		}
-		tcs.add(testcaseIdx);
+		if (!tcs.contains(testcaseIdx)) {
+			tcs.add(testcaseIdx);
+		}
 	}
 	
 	public Map<Branch, List<Integer>> getCoveredTestcasesOnBranches() {
@@ -191,15 +202,13 @@ public class CoverageSFNode {
 		if (type == Type.ALIAS_NODE) {
 			return Collections.emptyList();
 		}
-		if (CollectionUtils.isEmpty(content)) {
-			return Arrays.asList(startIdx);
-		}
 		return content;
 	}
 
 	public void setBlockScope() {
 		if (content == null) {
 			endIdx = startIdx;
+			content = Arrays.asList(startIdx);
 		} else {
 			if (startIdx == INVALID_IDX) {
 				startIdx = content.get(0);
@@ -221,9 +230,8 @@ public class CoverageSFNode {
 				branchIdxies.add(String.format("{%d, %d}", branch.getStartIdx(), branch.getEndIdx()));
 			}
 		}
-		return "CoverageSFNode [startIdx=" + startIdx + ", endIdx=" + endIdx + ", startNodeId=" + startNodeId
-				+ ", endNodeId=" + endNodeId + ", type=" + type + ", aliasId=" + aliasId + ", content=" + content
-				+ ", branches=" + branchIdxies + "]";
+		return "CoverageSFNode [type=" + type + ", startIdx=" + startIdx + ", endIdx=" + endIdx + ", branches="
+				+ branchIdxies + ", aliasId=" + aliasId + ", endNodeId=" + endNodeId + ", cvgIdx=" + cvgIdx + "]";
 	}
 	
 }
