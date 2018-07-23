@@ -19,7 +19,7 @@ public class CoverageOutputWriter extends OutputWriter {
 
 	public void writeCfgCoverage(CoverageSFlowGraph coverageGraph) throws IOException {
 		writeVarInt(coverageGraph.getCfgSize());
-		writeVarInt(coverageGraph.getCdgLayer());
+		writeVarInt(coverageGraph.getExtensionLayer());
 		
 		/* covered testcases */
 		writeListString(coverageGraph.getCoveredTestcases());

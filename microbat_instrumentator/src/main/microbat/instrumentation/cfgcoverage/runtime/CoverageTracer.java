@@ -68,7 +68,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	
 	private boolean doesNotNeedToRecord(String methodId) {
 		try {
-			if (methodInvokeLevel >= coverageFlowGraph.getCdgLayer() 
+			if (methodInvokeLevel >= coverageFlowGraph.getExtensionLayer() 
 					|| methodCallStack.size() > methodInvokeLevel) {
 				return true;
 			}

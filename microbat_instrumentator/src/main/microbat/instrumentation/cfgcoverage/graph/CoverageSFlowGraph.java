@@ -13,7 +13,7 @@ public class CoverageSFlowGraph {
 	private List<CoverageSFNode> nodeList;
 	private List<Integer> coveredTestcaseIdexies = new ArrayList<>();
 	private List<String> coveredTestcases = new ArrayList<>();
-	private int cdgLayer;
+	private int extensionLayer;
 	/* referenceCvgGraphIdx[cfgIdx] = CoverageSFlowGraph.nodeList.idx */
 	private List<Integer> referenceCvgGraphIdx;
 	private int cfgSize;
@@ -30,7 +30,7 @@ public class CoverageSFlowGraph {
 	public CoverageSFlowGraph(CFGInstance cfg, int cdgLayer) {
 		this(cfg.getCfg().size());
 		nodeList = new ArrayList<>(cfg.getNodeList().size() / 2);
-		this.cdgLayer = cdgLayer;
+		this.extensionLayer = cdgLayer;
 	}
 
 	public void addNode(CoverageSFNode node) {
@@ -58,8 +58,8 @@ public class CoverageSFlowGraph {
 		coveredTestcaseIdexies.add(testcaseIdx);
 	}
 
-	public int getCdgLayer() {
-		return cdgLayer;
+	public int getExtensionLayer() {
+		return extensionLayer;
 	}
 
 	public List<Integer> getCoveredTestcaseIdexies() {
@@ -88,7 +88,7 @@ public class CoverageSFlowGraph {
 	}
 
 	public void setCdgLayer(int cdgLayer) {
-		this.cdgLayer = cdgLayer;
+		this.extensionLayer = cdgLayer;
 	}
 
 	public int getCfgSize() {
