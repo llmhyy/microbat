@@ -20,7 +20,9 @@ import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
 import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
+import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
+import microbat.model.variable.Variable;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 

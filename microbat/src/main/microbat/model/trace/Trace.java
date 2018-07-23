@@ -699,7 +699,13 @@ public class Trace {
 	public TraceNode findLastestNodeDefiningVariable(String varID, int limitOrder){
 		for(int i=limitOrder-2; i>=0; i--){
 			TraceNode node = exectionList.get(i);
+			int count = 0;
 			for(VarValue var: node.getWrittenVariables()){
+				count++;
+				if(count>100){
+					break;
+				}
+				
 				String writtenVarID = var.getVarID();
 				String simpleVarID = Variable.truncateSimpleID(writtenVarID);
 				String simpleAliasID = Variable.truncateSimpleID(var.getAliasVarID());
