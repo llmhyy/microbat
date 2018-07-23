@@ -56,7 +56,7 @@ public class CoverageGraphConstructor {
 				blockNode.addContentNode(node.getIdx());
 				CFGNode curNode = CollectionUtils.getLast(node.getChildren());
 				if (curNode == null) {
-					continue;
+					break;
 				}
 				while (curNode != null) {
 					if ((CollectionUtils.getSize(curNode.getChildren()) > 1)
