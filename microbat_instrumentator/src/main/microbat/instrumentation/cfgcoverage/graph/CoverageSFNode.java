@@ -14,7 +14,7 @@ import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
  * @author lyly
  *
  */
-public class CoverageSFNode {
+public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	private static final int INVALID_IDX = -1;
 	private int cvgIdx;
 	private int startIdx = INVALID_IDX;
@@ -22,13 +22,16 @@ public class CoverageSFNode {
 	private UniqueNodeId startNodeId;
 	private UniqueNodeId endNodeId; // probeNode
 	private Type type;
+
+	private List<CoverageSFNode> branches = new ArrayList<>(2);
+	private List<CoverageSFNode> parents = new ArrayList<>(2);
+	
 	private List<Integer> coveredTestcases = new ArrayList<>();
 	/* for alias node */
 	private AliasNodeId aliasId;
 	/* for block node */
 	private List<Integer> content; // for a block node which contain all nodes in block from start to end.
 	/* for conditional node */
-	private List<CoverageSFNode> branches;
 	private Map<Branch, List<Integer>> coveredTestcasesOnBranches = new HashMap<Branch, List<Integer>>();
 
 	public CoverageSFNode(int cvgIdx) {
@@ -79,12 +82,14 @@ public class CoverageSFNode {
 	}
 	
 	public void addBranch(CoverageSFNode branchNode) {
-		if (branches == null) {
-			branches = new ArrayList<>(2);
-		}
 		branches.add(branchNode);
+		branchNode.addParent(this);
 	}
-
+	
+	private void addParent(CoverageSFNode parent) {
+		parents.add(parent);
+	}
+	
 	public void setBranches(List<CoverageSFNode> branches) {
 		this.branches = branches;
 	}
@@ -232,6 +237,16 @@ public class CoverageSFNode {
 		}
 		return "CoverageSFNode [type=" + type + ", startIdx=" + startIdx + ", endIdx=" + endIdx + ", branches="
 				+ branchIdxies + ", aliasId=" + aliasId + ", endNodeId=" + endNodeId + ", cvgIdx=" + cvgIdx + "]";
+	}
+
+	@Override
+	public List<CoverageSFNode> getChildren() {
+		return branches;
+	}
+
+	@Override
+	public List<CoverageSFNode> getParents() {
+		return parents;
 	}
 	
 }

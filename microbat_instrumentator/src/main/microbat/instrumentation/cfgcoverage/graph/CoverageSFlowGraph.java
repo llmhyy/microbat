@@ -8,9 +8,10 @@ import java.util.List;
  * @author lyly
  * Shortened Flow Graph for coverage recording.
  */
-public class CoverageSFlowGraph {
+public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 	private CoverageSFNode startNode;
 	private List<CoverageSFNode> nodeList;
+	private List<CoverageSFNode> exitList = new ArrayList<>();
 	private List<Integer> coveredTestcaseIdexies = new ArrayList<>();
 	private List<String> coveredTestcases = new ArrayList<>();
 	private int extensionLayer;
@@ -112,5 +113,18 @@ public class CoverageSFlowGraph {
 
 	public void setCoveragePaths(List<CoveragePath> coveragePaths) {
 		this.coveragePaths = coveragePaths;
+	}
+
+	@Override
+	public List<CoverageSFNode> getExitList() {
+		return exitList;
+	}
+
+	public int size() {
+		return nodeList.size();
+	}
+
+	public void addExitNode(CoverageSFNode node) {
+		exitList.add(node);
 	}
 }
