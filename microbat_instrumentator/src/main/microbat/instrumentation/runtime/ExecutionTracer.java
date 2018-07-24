@@ -1172,25 +1172,31 @@ public class ExecutionTracer implements IExecutionTracer {
 	 */
 	public synchronized static IExecutionTracer _getTracer(boolean isAppClass, String className, String methodSig,
 			int methodStartLine, int methodEndLine, String paramNamesCode, String paramTypeSignsCode, Object[] params) {
-		if (state == TracingState.TEST_STARTED && isAppClass) {
-			state = TracingState.RECORDING;
-			rtStore.setMainThreadId(Thread.currentThread().getId());
+		try {
+			if (state == TracingState.TEST_STARTED && isAppClass) {
+				state = TracingState.RECORDING;
+				rtStore.setMainThreadId(Thread.currentThread().getId());
+			}
+			if (state != TracingState.RECORDING) {
+				return EmptyExecutionTracer.getInstance();
+			}
+			long threadId = Thread.currentThread().getId();
+			if (lockedThreads.contains(threadId)) {
+				return EmptyExecutionTracer.getInstance();
+			}
+			lockedThreads.add(threadId);
+			ExecutionTracer tracer = rtStore.get(threadId);
+			if (tracer == null) {
+				lockedThreads.remove(threadId);
+				return EmptyExecutionTracer.getInstance();
+			}
+			tracer.enterMethod(className, methodSig, methodStartLine, methodEndLine, paramTypeSignsCode, paramNamesCode, params);
+			lockedThreads.remove(threadId);
+			return tracer;
+		} catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
 		}
-		if (state != TracingState.RECORDING) {
-			return EmptyExecutionTracer.getInstance();
-		}
-		long threadId = Thread.currentThread().getId();
-		if (lockedThreads.contains(threadId)) {
-			return EmptyExecutionTracer.getInstance();
-		}
-		lockedThreads.add(threadId);
-		ExecutionTracer tracer = rtStore.get(threadId);
-		if (tracer == null) {
-			return EmptyExecutionTracer.getInstance();
-		}
-		lockedThreads.remove(threadId);
-		tracer.enterMethod(className, methodSig, methodStartLine, methodEndLine, paramTypeSignsCode, paramNamesCode, params);
-		return tracer;
 	}
 	
 	public static IExecutionTracer getMainThreadStore() {
@@ -1200,6 +1206,9 @@ public class ExecutionTracer implements IExecutionTracer {
 	public static synchronized IExecutionTracer getCurrentThreadStore() {
 		synchronized (rtStore) {
 			long threadId = Thread.currentThread().getId();
+			if (lockedThreads.contains(threadId)) {
+				return EmptyExecutionTracer.getInstance();
+			}
 			IExecutionTracer store = rtStore.get(threadId);
 			if (store == null) {
 				store = EmptyExecutionTracer.getInstance();
@@ -1266,7 +1275,9 @@ public class ExecutionTracer implements IExecutionTracer {
 	@Override
 	public boolean lock() {
 		boolean isLock = locker.isLock();
-		locker.lock();
+		if (!isLock) {
+			locker.lock();
+		}
 		return isLock;
 	}
 	
