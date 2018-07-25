@@ -1,5 +1,6 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -137,7 +138,9 @@ public class CFGUtility {
 			/* not visited --> visit */
 			visited[nodeIdx] = stack.size() - 1;
 			for (CFGNode branch : curNode.getChildren()) {
-				stack.add(branch);
+				if (!(branch instanceof CFGAliasNode)) {
+					stack.add(branch);
+				}
 			}
 		}
 	}
