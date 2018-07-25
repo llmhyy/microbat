@@ -3,18 +3,24 @@ package microbat.instrumentation.cfgcoverage.output;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 
 import microbat.instrumentation.cfgcoverage.graph.Branch;
 import microbat.instrumentation.cfgcoverage.graph.CoveragePath;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.output.OutputWriter;
+import microbat.model.BreakPointValue;
 import sav.common.core.utils.CollectionUtils;
 
 public class CoverageOutputWriter extends OutputWriter {
 
 	public CoverageOutputWriter(OutputStream out) {
 		super(out);
+	}
+	
+	public void writeInputData(Map<Integer, BreakPointValue> inputData) throws IOException {
+		writeSerializableMap(inputData);
 	}
 
 	public void writeCfgCoverage(CoverageSFlowGraph coverageGraph) throws IOException {
@@ -97,6 +103,6 @@ public class CoverageOutputWriter extends OutputWriter {
 		/* covered testcases on node */
 		writeListInt(node.getCoveredTestcases());
 	}
-	
+
 	
 }

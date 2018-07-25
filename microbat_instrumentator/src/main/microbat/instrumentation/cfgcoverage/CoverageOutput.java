@@ -7,14 +7,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map;
 
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.cfgcoverage.output.CoverageOutputReader;
 import microbat.instrumentation.cfgcoverage.output.CoverageOutputWriter;
 import microbat.instrumentation.utils.FileUtils;
+import microbat.model.BreakPointValue;
 
 public class CoverageOutput {
 	private CoverageSFlowGraph coverageGraph;
+	private Map<Integer, BreakPointValue> inputData;
 	
 	public CoverageOutput() {
 		
@@ -33,6 +36,7 @@ public class CoverageOutput {
 			reader = new CoverageOutputReader(new BufferedInputStream(stream));
 			CoverageSFlowGraph coverageGraph = reader.readCfgCoverage();
 			output.coverageGraph = coverageGraph;
+			output.inputData = reader.readInputData();
 			return output;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -60,10 +64,10 @@ public class CoverageOutput {
 		try {
 			outputWriter = new CoverageOutputWriter(bufferedStream);
 			outputWriter.writeCfgCoverage(coverageGraph);
+			outputWriter.writeInputData(inputData);
 		} finally {
 			FileUtils.closeStreams(outputWriter);
 		}
-		
 	}
 
 	public CoverageSFlowGraph getCoverageGraph() {
@@ -73,6 +77,12 @@ public class CoverageOutput {
 	public void setCoverageGraph(CoverageSFlowGraph coverageGraph) {
 		this.coverageGraph = coverageGraph;
 	}
-	
-	
+
+	public Map<Integer, BreakPointValue> getInputData() {
+		return inputData;
+	}
+
+	public void setInputData(Map<Integer, BreakPointValue> inputData) {
+		this.inputData = inputData;
+	}
 }

@@ -6,15 +6,20 @@ import java.util.List;
 import java.util.Map;
 
 import microbat.instrumentation.AgentLogger;
+import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
+import microbat.instrumentation.cfgcoverage.runtime.value.ValueExtractor;
 import microbat.instrumentation.runtime.ITracer;
 import microbat.instrumentation.runtime.TracingState;
+import microbat.model.BreakPointValue;
+import microbat.model.ClassLocation;
 
 public class CoverageTracer implements ICoverageTracer, ITracer {
 	private static CoverageTracerStore rtStore = new CoverageTracerStore();
 	public static volatile CoverageSFlowGraph coverageFlowGraph;
 	public static volatile Map<Integer, List<Integer>> testcaseGraphExecPaths = new HashMap<>();
+	public static volatile Map<Integer, BreakPointValue> testInputData = new HashMap<>(); 
 	private static int currentTestCaseIdx;
 	
 	private long threadId;
@@ -25,6 +30,8 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	private CoverageSFNode currentNode;
 	private List<Integer> execPath;
 	MethodCallStack methodCallStack = new MethodCallStack();
+	private ValueExtractor valueExtractor = new ValueExtractor();
+	
 	public CoverageTracer(long threadId) {
 		this.threadId = threadId;
 	}
@@ -33,7 +40,6 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	public void _reachNode(String methodId, int nodeIdx) {
 		if (currentNode == null) {
 			currentNode = coverageFlowGraph.getStartNode();
-			testIdx = currentTestCaseIdx;
 			execPath = new ArrayList<>();
 			testcaseGraphExecPaths.put(testIdx, execPath);
 		} else {
@@ -54,8 +60,17 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	}
 	
 	@Override
-	public void enterMethod(String methodId, String paramTypeSignsCode, Object[] params) {
-		// TODO-LLT: extract input variable values for learning to replace TestcaseExecutor component.
+	public void enterMethod(String methodId, String paramTypeSignsCode, String paramNamesCode, Object[] params,
+			boolean isEntryPoint) {
+		if (isEntryPoint) {
+			BreakPointValue inputData = testInputData.get(testIdx);
+			if (inputData == null) {
+				ClassLocation loc = InstrumentationUtils.getClassLocation(methodId);
+				inputData = valueExtractor.extractInputValue(String.valueOf(testIdx), 
+						loc.getClassCanonicalName(), loc.getMethodSign(), paramTypeSignsCode, paramNamesCode, params);
+				testInputData.put(testIdx, inputData);
+			}
+		}
 		methodInvokeLevel++;
 		methodCallStack.push(methodId);
 	}
@@ -93,6 +108,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 					rtStore.setMainThreadId(Thread.currentThread().getId());
 					coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
 					coverageTracer.state = TracingState.RECORDING;
+					coverageTracer.testIdx = currentTestCaseIdx;
 				} else {
 					return EmptyCoverageTracer.getInstance();
 				}
@@ -101,7 +117,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 			if (!isEntryPoint && coverageTracer.doesNotNeedToRecord(methodId)) {
 				tracer = coverageTracer.noProbeTracer;
 			}
-			tracer.enterMethod(methodId, paramTypeSignsCode, params);
+			tracer.enterMethod(methodId, paramTypeSignsCode, paramNamesCode, params, isEntryPoint);
 			return tracer;
 		} catch(Throwable t) {
 			AgentLogger.error(t);

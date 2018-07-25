@@ -143,26 +143,6 @@ public class TraceOutputReader extends OutputReader {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	protected <T>List<T> readSerializableList() throws IOException {
-		int size = readVarInt();
-		if (size == 0) {
-			return new ArrayList<>(0);
-		}
-		byte[] bytes = readByteArray();
-		if (bytes == null || bytes.length == 0) {
-			return new ArrayList<>(0);
-		}
-		List<T> list;
-		try {
-			list = (List<T>) ByteConverter.convertFromBytes(bytes);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-			throw new IOException(e);
-		}
-		return list;
-	}
-
 	private TraceNode readNode(List<TraceNode> allSteps) throws IOException {
 		int nodeOrder = readVarInt();
 		if (nodeOrder <= 0) {

@@ -14,16 +14,23 @@ import microbat.codeanalysis.bytecode.CFG;
 import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
 import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
-import microbat.instrumentation.cfgcoverage.graph.CoverageGraphConstructor.CFGInclusiveMethodChecker;
+import microbat.instrumentation.utils.ApplicationUtility;
 import microbat.model.ClassLocation;
+import sav.common.core.utils.ClassUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class CFGUtility {
-	private CFGRepository cfgRepository = new CFGRepository();
+	private CFGRepository cfgRepository = CFGRepository.getInstance();
+	
+	public CFGInstance buildProgramFlowGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod,
+			int cfgExtensionLayer) {
+		return buildProgramFlowGraph(appClasspath, targetMethod, 1, cfgExtensionLayer);
+	}
 
-	public CFGInstance buildProgramFlowGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod, int layer,
-			int maxLayer, CFGInclusiveMethodChecker checker) {
+	private CFGInstance buildProgramFlowGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod, int layer,
+			int maxLayer) {
 		CFGInstance cfg = cfgRepository.createCfgInstance(targetMethod, appClasspath);
+		List<String> appBinFolders = ApplicationUtility.lookupAppBinaryFolders(appClasspath);
 		if (layer != maxLayer) {
 			for (CFGNode node : cfg.getNodeList()) {
 				if (node.getInstructionHandle().getInstruction() instanceof InvokeInstruction) {
@@ -32,16 +39,26 @@ public class CFGUtility {
 					String invkClassName = methodInsn.getClassName(cpg);
 					String invkMethodName = InstrumentationUtils.getMethodWithSignature(methodInsn.getMethodName(cpg),
 							methodInsn.getSignature(cpg));
-					String methodId = InstrumentationUtils.getMethodId(invkClassName, invkMethodName);
-					if (checker.accept(methodId)) {
+					if (isApplicationClass(appBinFolders, invkClassName)) {
 						ClassLocation invokeMethod = new ClassLocation(invkClassName, invkMethodName, -1);
-						CFGInstance subCfg = buildProgramFlowGraph(appClasspath, invokeMethod, layer + 1, maxLayer, checker);
+						CFGInstance subCfg = buildProgramFlowGraph(appClasspath, invokeMethod, layer + 1, maxLayer);
 						glueCfg(cfg, node, subCfg);
 					}
 				}
 			}
 		}
 		return cfg;
+	}
+	
+	private boolean isApplicationClass(List<String> appBinFolders, String className) {
+		for (String appBinFolder : appBinFolders) {
+			String classFilePath = ClassUtils.getClassFilePath(appBinFolder, className);
+			File classFile = new File(classFilePath);
+			if (classFile.exists()) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private void glueCfg(CFGInstance cfgInstance, CFGNode node, CFGInstance subCfgInstance) {

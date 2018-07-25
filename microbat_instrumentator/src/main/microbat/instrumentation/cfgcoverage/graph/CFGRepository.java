@@ -21,6 +21,7 @@ import microbat.model.ClassLocation;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class CFGRepository {
+	public static final CFGRepository INSTANCE = new CFGRepository();
 	private Map<String, CFGInstance> cachedCFGs = new HashMap<>();
 	
 	public CFGInstance createCfgInstance(ClassLocation methodLocation, AppJavaClassPath appJavaClassPath) {
@@ -87,5 +88,9 @@ public class CFGRepository {
 				setMethod(method);
 			}
 		}
+	}
+	
+	public static CFGRepository getInstance() {
+		return INSTANCE;
 	}
 }

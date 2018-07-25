@@ -1,7 +1,6 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -22,21 +21,14 @@ public class CoverageGraphConstructor {
 	private CFGUtility cfgUtility = new CFGUtility();
 	
 	public CoverageSFlowGraph buildCoverageGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod,
-			int cdgLayer, final List<String> inclusiveMethodIds) {
-		return buildCoverageGraph(appClasspath, targetMethod, cdgLayer, new CFGInclusiveMethodChecker() {
-			
-			@Override
-			public boolean accept(String methodId) {
-				return inclusiveMethodIds.contains(methodId);
-			}
-		});
+			int cdgLayer) {
+		CFGInstance cfg = cfgUtility.buildProgramFlowGraph(appClasspath, targetMethod, cdgLayer);
+		cfgUtility.breakCircle(cfg);
+		return buildCoverageGraph(cfg);
 	}
 	
-	public CoverageSFlowGraph buildCoverageGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod,
-			int cdgLayer, CFGInclusiveMethodChecker checker) {
-		CFGInstance cfg = cfgUtility.buildProgramFlowGraph(appClasspath, targetMethod, 1, cdgLayer, checker);
-		cfgUtility.breakCircle(cfg);
-		CoverageSFlowGraph coverageGraph = new CoverageSFlowGraph(cfg, cdgLayer);
+	public CoverageSFlowGraph buildCoverageGraph(CFGInstance cfg) {
+		CoverageSFlowGraph coverageGraph = new CoverageSFlowGraph(cfg, cfg.getCfgExtensionLayer());
 		Stack<CFGNode> stack = new Stack<>();
 		stack.push(cfg.getCfg().getStartNode());
 		Map<Integer, CoverageSFNode> nodeMap = new HashMap<>();
@@ -133,9 +125,4 @@ public class CoverageGraphConstructor {
 		return coverageGraph;
 	}
 	
-	public static interface CFGInclusiveMethodChecker {
-
-		boolean accept(String methodId);
-		
-	}
 }

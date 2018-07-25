@@ -17,6 +17,7 @@ import microbat.instrumentation.cfgcoverage.instr.CoverageInstrumenter;
 import microbat.instrumentation.cfgcoverage.instr.CoverageTransformer;
 import microbat.instrumentation.cfgcoverage.instr.MethodInstructionsInfo;
 import microbat.instrumentation.cfgcoverage.runtime.CoverageTracer;
+import microbat.instrumentation.cfgcoverage.runtime.value.ValueExtractor;
 import microbat.instrumentation.filter.FilterChecker;
 import sav.common.core.utils.CollectionUtils;
 import sav.strategies.dto.AppJavaClassPath;
@@ -37,9 +38,10 @@ public class CoverageAgent implements IAgent {
 	public void startup() {
 		AppJavaClassPath appClasspath = agentParams.initAppClasspath();
 		FilterChecker.setup(appClasspath, null, null);
+		ValueExtractor.variableLayer = agentParams.getVarLayer();
 		CoverageGraphConstructor constructor = new CoverageGraphConstructor();
 		CoverageSFlowGraph coverageFlowGraph = constructor.buildCoverageGraph(appClasspath,
-				agentParams.getTargetMethod(), agentParams.getCdgLayer(), agentParams.getInclusiveMethodIds());
+				agentParams.getTargetMethod(), agentParams.getCdgLayer());
 		CoverageTracer.coverageFlowGraph = coverageFlowGraph;
 		MethodInstructionsInfo.initInstrInstructions(coverageFlowGraph);
 		instrumenter.setEntryPoint(coverageFlowGraph.getStartNode().getStartNodeId().getMethodId());
@@ -56,16 +58,12 @@ public class CoverageAgent implements IAgent {
 		for (Entry<List<Integer>, List<Integer>> entry : pathMap.entrySet()) {
 			CoveragePath path = new CoveragePath();
 			path.setCoveredTcs(entry.getValue());
-//			List<CoverageSFNode> nodeList = new ArrayList<>(entry.getKey().size());
-//			for (Integer idx : entry.getKey()) {
-//				nodeList.add(coverageGraph.getNodeList().get(idx));
-//			}
-//			path.setPath(nodeList);
 			path.setPath(entry.getKey());
 			coveredPaths.add(path);
 		}
 		coverageGraph.setCoveragePaths(coveredPaths);
 		CoverageOutput coverageOutput = new CoverageOutput(coverageGraph);
+		coverageOutput.setInputData(CoverageTracer.testInputData);
 		coverageOutput.saveToFile(agentParams.getDumpFile());
 	}
 
