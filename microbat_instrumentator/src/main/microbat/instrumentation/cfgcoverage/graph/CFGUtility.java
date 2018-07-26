@@ -20,7 +20,7 @@ import sav.common.core.utils.ClassUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class CFGUtility {
-	private CFGRepository cfgRepository = CFGRepository.getInstance();
+	private CFGRepository cfgCreator = new CFGRepository();
 	
 	public CFGInstance buildProgramFlowGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod,
 			int cfgExtensionLayer) {
@@ -29,21 +29,25 @@ public class CFGUtility {
 
 	private CFGInstance buildProgramFlowGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod, int layer,
 			int maxLayer) {
-		CFGInstance cfg = cfgRepository.createCfgInstance(targetMethod, appClasspath);
+		CFGInstance cfg = cfgCreator.createCfgInstance(targetMethod, appClasspath);
 		List<String> appBinFolders = ApplicationUtility.lookupAppBinaryFolders(appClasspath);
 		if (layer != maxLayer) {
+			List<CFGNode> invokeNodes = new ArrayList<>();
 			for (CFGNode node : cfg.getNodeList()) {
 				if (node.getInstructionHandle().getInstruction() instanceof InvokeInstruction) {
-					ConstantPoolGen cpg = new ConstantPoolGen(cfg.getCfg().getMethod().getConstantPool());
-					InvokeInstruction methodInsn = (InvokeInstruction) node.getInstructionHandle().getInstruction();
-					String invkClassName = methodInsn.getClassName(cpg);
-					String invkMethodName = InstrumentationUtils.getMethodWithSignature(methodInsn.getMethodName(cpg),
-							methodInsn.getSignature(cpg));
-					if (isApplicationClass(appBinFolders, invkClassName)) {
-						ClassLocation invokeMethod = new ClassLocation(invkClassName, invkMethodName, -1);
-						CFGInstance subCfg = buildProgramFlowGraph(appClasspath, invokeMethod, layer + 1, maxLayer);
-						glueCfg(cfg, node, subCfg);
-					}
+					invokeNodes.add(node);
+				}
+			}
+			for (CFGNode node : invokeNodes) {
+				ConstantPoolGen cpg = new ConstantPoolGen(cfg.getCfg().getMethod().getConstantPool());
+				InvokeInstruction methodInsn = (InvokeInstruction) node.getInstructionHandle().getInstruction();
+				String invkClassName = methodInsn.getClassName(cpg);
+				String invkMethodName = InstrumentationUtils.getMethodWithSignature(methodInsn.getMethodName(cpg),
+						methodInsn.getSignature(cpg));
+				if (isApplicationClass(appBinFolders, invkClassName)) {
+					ClassLocation invokeMethod = new ClassLocation(invkClassName, invkMethodName, -1);
+					CFGInstance subCfg = buildProgramFlowGraph(appClasspath, invokeMethod, layer + 1, maxLayer);
+					glueCfg(cfg, node, subCfg);
 				}
 			}
 		}

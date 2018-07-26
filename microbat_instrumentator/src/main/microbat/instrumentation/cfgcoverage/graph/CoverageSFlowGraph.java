@@ -9,6 +9,7 @@ import java.util.List;
  * Shortened Flow Graph for coverage recording.
  */
 public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
+	private CFGInstance cfg; // for debugging
 	private CoverageSFNode startNode;
 	private List<CoverageSFNode> nodeList;
 	private List<CoverageSFNode> exitList = new ArrayList<>();
@@ -29,9 +30,10 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 	}
 
 	public CoverageSFlowGraph(CFGInstance cfg, int cdgLayer) {
-		this(cfg.getCfg().size());
-		nodeList = new ArrayList<>(cfg.getNodeList().size() / 2);
+		this(cfg.size());
+		nodeList = new ArrayList<>(cfg.size() / 2);
 		this.extensionLayer = cdgLayer;
+		this.cfg = cfg;
 	}
 
 	public void addNode(CoverageSFNode node) {
