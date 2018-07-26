@@ -13,8 +13,12 @@ public class InstrumentationUtils {
 	public static String getMethodId(String className, Method method) {
 		return String.format("%s.%s", className, getMethodWithSignature(method.getName(), method.getSignature()));
 	}
+	
+	public static ClassLocation getClassLocation(String className, String methodNameWthSignature) {
+		return new ClassLocation(className, methodNameWthSignature, -1);
+	}
 
-	public static ClassLocation fromTargetMethodId(String targetMethod) {
+	public static ClassLocation getClassLocation(String targetMethod) {
 		int idx = targetMethod.lastIndexOf(".");
 		if (idx < 0) {
 			throw new IllegalArgumentException(

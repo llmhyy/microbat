@@ -8,7 +8,9 @@ import java.util.Map;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.InstructionHandle;
 
-public class CFG {
+import microbat.instrumentation.cfgcoverage.graph.IGraph;
+
+public class CFG implements IGraph<CFGNode>{
 	private Method method;
 	
 	private Map<Integer, CFGNode> nodeList = new HashMap<>();
@@ -84,4 +86,5 @@ public class CFG {
 	public void setMethod(Method method) {
 		this.method = method;
 	}
+
 }

@@ -18,12 +18,14 @@ public class CoverageAgentParams extends CommonParams {
 	public static final String OPT_CDG_LAYER = "cdg_layer";
 	public static final String OPT_DUMP_FILE = "dumpe_file";
 	public static final String OPT_INCLUSIVE_METHOD_IDS = "inclusive_method_ids";
+	public static final String OPT_VARIABLE_LAYER = "varLayer";
 	
 	private ClassLocation targetMethodLoc;
 	private List<String> classPaths;
 	private int cdgLayer;
 	private String dumpFile;
 	private List<String> inclusiveMethodIds;
+	private int varLayer;
 	
 	public CoverageAgentParams() {
 		
@@ -31,11 +33,12 @@ public class CoverageAgentParams extends CommonParams {
 	
 	public CoverageAgentParams(CommandLine cmd) {
 		super(cmd);
-		targetMethodLoc = InstrumentationUtils.fromTargetMethodId(cmd.getString(OPT_TARGET_METHOD));
+		targetMethodLoc = InstrumentationUtils.getClassLocation(cmd.getString(OPT_TARGET_METHOD));
 		classPaths = cmd.getStringList(OPT_CLASS_PATH);
 		cdgLayer = cmd.getInt(OPT_CDG_LAYER, 1);
 		dumpFile = cmd.getString(OPT_DUMP_FILE);
 		inclusiveMethodIds = cmd.getStringList(OPT_INCLUSIVE_METHOD_IDS);
+		varLayer = cmd.getInt(OPT_VARIABLE_LAYER, 2);
 	}
 	
 	public ClassLocation getTargetMethod() {
@@ -88,5 +91,13 @@ public class CoverageAgentParams extends CommonParams {
 	
 	public void setInclusiveMethodIds(List<String> inclusiveMethodIds) {
 		this.inclusiveMethodIds = inclusiveMethodIds;
+	}
+
+	public int getVarLayer() {
+		return varLayer;
+	}
+
+	public void setVarLayer(int varLayer) {
+		this.varLayer = varLayer;
 	}
 }

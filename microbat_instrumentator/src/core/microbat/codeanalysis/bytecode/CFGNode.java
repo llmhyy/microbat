@@ -8,7 +8,9 @@ import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.Select;
 
-public class CFGNode {
+import microbat.instrumentation.cfgcoverage.graph.IGraphNode;
+
+public class CFGNode implements IGraphNode<CFGNode>{
 
 	private int idx; // index of instruction in instructionList
 	private InstructionHandle instructionHandle;

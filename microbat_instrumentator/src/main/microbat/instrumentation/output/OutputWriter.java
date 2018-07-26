@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class OutputWriter extends DataOutputStream {
 
@@ -33,7 +34,18 @@ public class OutputWriter extends DataOutputStream {
 		}
 	}
 	
-	protected <T extends Serializable> void writeSerializableList(Collection<T> list) throws IOException {
+	public <K extends Serializable, V extends Serializable> void writeSerializableMap(Map<K, V> map)
+			throws IOException {
+		if (map == null || map.isEmpty()) {
+			writeVarInt(0);
+		} else {
+			writeVarInt(map.size());
+			byte[] bytes = ByteConverter.convertToBytes(map);
+			writeByteArr(bytes);
+		}
+	}
+	
+	public <T extends Serializable> void writeSerializableList(Collection<T> list) throws IOException {
 		if (list == null || list.isEmpty()) {
 			writeVarInt(0);
 		} else {

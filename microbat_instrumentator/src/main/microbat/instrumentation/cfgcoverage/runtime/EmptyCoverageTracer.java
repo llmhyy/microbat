@@ -12,9 +12,10 @@ public class EmptyCoverageTracer implements ICoverageTracer {
 		// TODO Auto-generated method stub
 		
 	}
-
+	
 	@Override
-	public void enterMethod(String methodId, String paramTypeSignsCode, Object[] params) {
+	public void enterMethod(String methodId, String paramTypeSignsCode, String paramNamesCode, Object[] params,
+			boolean isEntryPoint) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -24,4 +25,5 @@ public class EmptyCoverageTracer implements ICoverageTracer {
 		// TODO Auto-generated method stub
 		
 	}
+
 }

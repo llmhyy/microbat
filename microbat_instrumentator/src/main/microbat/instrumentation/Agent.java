@@ -48,8 +48,8 @@ public class Agent {
 		Runtime.getRuntime().exit(1); // force program to exit to avoid getting stuck by background running threads.
 	}
 	
-	public static void _exitTest(String testResultMsg, String junitClass, String junitMethod) {
-		agent.exitTest(testResultMsg, junitClass, junitMethod);
+	public static void _exitTest(String testResultMsg, String junitClass, String junitMethod, Long threadId) {
+		agent.exitTest(testResultMsg, junitClass, junitMethod, threadId);
 	}
 	
 	public static String getProgramMsg() {

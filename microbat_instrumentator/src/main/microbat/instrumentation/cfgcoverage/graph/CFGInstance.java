@@ -10,6 +10,7 @@ public class CFGInstance {
 	private CFG cfg;
 	private List<CFGNode> nodeList; // same order as in InstrucionList.
 	private List<UniqueNodeId> unitCfgNodeIds;
+	private int cfgExtensionLayer;
 
 	public CFGInstance(CFG unitCfg, String methodId, List<CFGNode> nodeList) {
 		this.cfg = unitCfg;
@@ -45,6 +46,14 @@ public class CFGInstance {
 	@Override
 	public String toString() {
 		return "CFGInstance [cfg=" + cfg + ", nodeList=" + nodeList + "]";
+	}
+	
+	public int getCfgExtensionLayer() {
+		return cfgExtensionLayer;
+	}
+	
+	public int size() {
+		return nodeList.size();
 	}
 
 	public static class UniqueNodeId {

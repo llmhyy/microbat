@@ -4,7 +4,9 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class OutputReader extends DataInputStream {
 
@@ -68,5 +70,45 @@ public class OutputReader extends DataInputStream {
 			list.add(readString());
 		}
 		return list;
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected <T>List<T> readSerializableList() throws IOException {
+		int size = readVarInt();
+		if (size == 0) {
+			return new ArrayList<>(0);
+		}
+		byte[] bytes = readByteArray();
+		if (bytes == null || bytes.length == 0) {
+			return new ArrayList<>(0);
+		}
+		List<T> list;
+		try {
+			list = (List<T>) ByteConverter.convertFromBytes(bytes);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			throw new IOException(e);
+		}
+		return list;
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected <K, V>Map<K, V> readSerializableMap() throws IOException {
+		int size = readVarInt();
+		if (size == 0) {
+			return new HashMap<>();
+		}
+		byte[] bytes = readByteArray();
+		if (bytes == null || bytes.length == 0) {
+			return new HashMap<>();
+		}
+		Map<K, V> map;
+		try {
+			map = (Map<K, V>) ByteConverter.convertFromBytes(bytes);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			throw new IOException(e);
+		}
+		return map;
 	}
 }

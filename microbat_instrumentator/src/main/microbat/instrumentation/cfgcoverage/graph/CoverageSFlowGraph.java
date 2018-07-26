@@ -8,12 +8,14 @@ import java.util.List;
  * @author lyly
  * Shortened Flow Graph for coverage recording.
  */
-public class CoverageSFlowGraph {
+public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
+	private CFGInstance cfg; // for debugging
 	private CoverageSFNode startNode;
 	private List<CoverageSFNode> nodeList;
+	private List<CoverageSFNode> exitList = new ArrayList<>();
 	private List<Integer> coveredTestcaseIdexies = new ArrayList<>();
 	private List<String> coveredTestcases = new ArrayList<>();
-	private int cdgLayer;
+	private int extensionLayer;
 	/* referenceCvgGraphIdx[cfgIdx] = CoverageSFlowGraph.nodeList.idx */
 	private List<Integer> referenceCvgGraphIdx;
 	private int cfgSize;
@@ -28,9 +30,10 @@ public class CoverageSFlowGraph {
 	}
 
 	public CoverageSFlowGraph(CFGInstance cfg, int cdgLayer) {
-		this(cfg.getCfg().size());
-		nodeList = new ArrayList<>(cfg.getNodeList().size() / 2);
-		this.cdgLayer = cdgLayer;
+		this(cfg.size());
+		nodeList = new ArrayList<>(cfg.size() / 2);
+		this.extensionLayer = cdgLayer;
+		this.cfg = cfg;
 	}
 
 	public void addNode(CoverageSFNode node) {
@@ -58,8 +61,8 @@ public class CoverageSFlowGraph {
 		coveredTestcaseIdexies.add(testcaseIdx);
 	}
 
-	public int getCdgLayer() {
-		return cdgLayer;
+	public int getExtensionLayer() {
+		return extensionLayer;
 	}
 
 	public List<Integer> getCoveredTestcaseIdexies() {
@@ -88,7 +91,7 @@ public class CoverageSFlowGraph {
 	}
 
 	public void setCdgLayer(int cdgLayer) {
-		this.cdgLayer = cdgLayer;
+		this.extensionLayer = cdgLayer;
 	}
 
 	public int getCfgSize() {
@@ -112,5 +115,18 @@ public class CoverageSFlowGraph {
 
 	public void setCoveragePaths(List<CoveragePath> coveragePaths) {
 		this.coveragePaths = coveragePaths;
+	}
+
+	@Override
+	public List<CoverageSFNode> getExitList() {
+		return exitList;
+	}
+
+	public int size() {
+		return nodeList.size();
+	}
+
+	public void addExitNode(CoverageSFNode node) {
+		exitList.add(node);
 	}
 }
