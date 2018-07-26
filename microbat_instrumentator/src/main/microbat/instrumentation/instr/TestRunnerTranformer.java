@@ -67,8 +67,8 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 				paramSize = 2;
 			} else if ("$exitTest".equals(method.getName())) {
 				agentMethodIdx = constPool.addMethodref(Agent.class.getName().replace(".", "/"), "_exitTest",
-						"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-				paramSize = 3;
+						"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V");
+				paramSize = 4;
 			}
  			if (agentMethodIdx >= 0) {
  				instrumentDelegateMethod(method, classFName, constPool, agentMethodIdx, classGen, paramSize);

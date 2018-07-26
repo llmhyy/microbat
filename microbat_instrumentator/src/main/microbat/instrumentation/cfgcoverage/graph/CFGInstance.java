@@ -51,6 +51,10 @@ public class CFGInstance {
 	public int getCfgExtensionLayer() {
 		return cfgExtensionLayer;
 	}
+	
+	public int size() {
+		return nodeList.size();
+	}
 
 	public static class UniqueNodeId {
 		String methodId;

@@ -76,8 +76,8 @@ public class CoverageAgent implements IAgent {
 	}
 	
 	@Override
-	public void exitTest(String testResultMsg, String junitClass, String junitMethod) {
-		CoverageTracer.endTestcase(InstrumentationUtils.getMethodId(junitClass, junitMethod));
+	public void exitTest(String testResultMsg, String junitClass, String junitMethod, long threadId) {
+		CoverageTracer.endTestcase(InstrumentationUtils.getMethodId(junitClass, junitMethod), threadId);
 	}
 
 	@Override

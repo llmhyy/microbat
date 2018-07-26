@@ -191,7 +191,7 @@ public class TraceAgent implements IAgent {
 	}
 
 	@Override
-	public void exitTest(String testResultMsg, String junitClass, String junitMethod) {
+	public void exitTest(String testResultMsg, String junitClass, String junitMethod, long threadId) {
 		// do nothing, not used.
 	}
 

@@ -49,8 +49,8 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 				currentNode = branch;
 			} else {
 				if (!currentNode.isAliasNode()) {
-					AgentLogger.debug(String.format("cannnot find branch %s:%d of node %d", methodId, nodeIdx,
-							currentNode.getEndIdx()));
+					AgentLogger.debug(String.format("cannnot find branch %s:%d of node %d [testix=%d]", methodId, nodeIdx,
+							currentNode.getEndIdx(), testIdx));
 				}
 				return;
 			}
@@ -131,18 +131,21 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	}
 	
 	public static void startTestcase(String testcase, int testcaseIdx) {
+		AgentLogger.debug(String.format("Start testcase %s, testIdx=%s", testcase, testcaseIdx));
 		coverageFlowGraph.addCoveredTestcase(testcase, testcaseIdx);
 		CoverageTracer.currentTestCaseIdx = testcaseIdx;
 	}
 	
-	public static void endTestcase(String testcase) {
-		long threadId = Thread.currentThread().getId();
-		CoverageTracer coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
-		coverageTracer.state = TracingState.SHUTDOWN;
-		coverageTracer.currentNode = null;
-		coverageTracer.methodInvokeLevel = 0;
-		coverageTracer.methodCallStack.clear();
-		coverageTracer.execPath = null;
+	public static void endTestcase(String testcase, long threadId) {
+		AgentLogger.debug(String.format("End testcase %s, testIdx=%s, thread=%s", testcase, currentTestCaseIdx, threadId));
+//		CoverageTracer coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
+//		if (coverageTracer != null) {
+//			coverageTracer.state = TracingState.SHUTDOWN;
+//			coverageTracer.currentNode = null;
+//			coverageTracer.methodInvokeLevel = 0;
+//			coverageTracer.methodCallStack.clear();
+//			coverageTracer.execPath = null;
+//		}
 	}
 	
 }
