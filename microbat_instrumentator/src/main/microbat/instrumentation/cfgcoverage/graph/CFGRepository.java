@@ -14,6 +14,7 @@ import microbat.codeanalysis.bytecode.CFG;
 import microbat.codeanalysis.bytecode.CFGConstructor;
 import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.codeanalysis.bytecode.MethodFinderByLine;
+import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
 import microbat.model.ClassLocation;
 import sav.strategies.dto.AppJavaClassPath;
@@ -46,6 +47,10 @@ public class CFGRepository {
 		}
 		ByteCodeParser.parse(methodLocation.getClassCanonicalName(), finder, appJavaClassPath);
 		Method method = finder.getMethod();
+		if (method == null || method.isAbstract() || (method.getCode() == null)) {
+			AgentLogger.debug(String.format("Cannot find method: %s", methodId));
+			return new CFGInstance(null, methodId, Collections.<CFGNode>emptyList());
+		}
 		CFGConstructor cfgConstructor = new CFGConstructor();
 		CFG cfg = cfgConstructor.constructCFG(method.getCode());
 		cfg.setMethod(method);
