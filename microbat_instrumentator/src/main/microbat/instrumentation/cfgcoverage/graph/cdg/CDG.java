@@ -3,13 +3,15 @@ package microbat.instrumentation.cfgcoverage.graph.cdg;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
-
 public class CDG {
 	private List<CDGNode> nodeList = new ArrayList<>();
 	private List<CDGNode> startNodes = new ArrayList<>();
 	private List<CDGNode> endNodes = new ArrayList<>();
-	private List<CoverageSFNode> inconditionalDependentNodes = new ArrayList<>();
+	
+	public void addNode(CDGNode node) {
+		node.setId(nodeList.size());
+		nodeList.add(node);
+	}
 
 	public List<CDGNode> getNodeList() {
 		return nodeList;
@@ -35,15 +37,16 @@ public class CDG {
 		this.endNodes = endNodes;
 	}
 	
-	public void addContent(CoverageSFNode node) {
-		inconditionalDependentNodes.add(node);
-	}
-
 	public void addStartNode(CDGNode cdgNode) {
 		startNodes.add(cdgNode);
 	}
 
 	public void addExitNode(CDGNode cdgNode) {
 		endNodes.add(cdgNode);
+	}
+
+	@Override
+	public String toString() {
+		return "CDG [nodeList=" + nodeList + ", startNodes=" + startNodes + ", endNodes=" + endNodes + "]";
 	}
 }

@@ -6,27 +6,18 @@ import java.util.List;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 
 public class CDGNode {
-	private boolean controlNode;
-	private CoverageSFNode conditionalNode;
-	private List<CoverageSFNode> inconditionalDependentNodes = new ArrayList<>();
+	private int id;
+	private CoverageSFNode cfgNode;
 	private List<CDGNode> children = new ArrayList<>(2);
 	private List<CDGNode> parent = new ArrayList<>(1);
 	
-	public CDGNode(CoverageSFNode conditionalNode) {
-		this.conditionalNode = conditionalNode;
+	public CDGNode(CoverageSFNode cfgNode) {
+		this.cfgNode = cfgNode;
 	}
 	
 	public void setChild(CDGNode dependenteeCdgNode) {
 		children.add(dependenteeCdgNode);
 		dependenteeCdgNode.parent.add(this);
-	}
-
-	public boolean isControlNode() {
-		return controlNode;
-	}
-
-	public void setControlNode(boolean controlNode) {
-		this.controlNode = controlNode;
 	}
 
 	public List<CDGNode> getChildren() {
@@ -45,17 +36,24 @@ public class CDGNode {
 		this.parent = parent;
 	}
 
-	public CoverageSFNode getConditionalNode() {
-		return conditionalNode;
+	public CoverageSFNode getCfgNode() {
+		return cfgNode;
 	}
 
-	public void setConditionalNode(CoverageSFNode conditionalNode) {
-		this.conditionalNode = conditionalNode;
+	public void setCfgNode(CoverageSFNode cfgNode) {
+		this.cfgNode = cfgNode;
 	}
 
-	public void addContent(CoverageSFNode dependentee) {
-		inconditionalDependentNodes.add(dependentee);
+	public int getId() {
+		return id;
 	}
 
-	
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	@Override
+	public String toString() {
+		return "CDGNode [id=" + id + ", cfgNode=" + cfgNode.getId() + "]";
+	}
 }

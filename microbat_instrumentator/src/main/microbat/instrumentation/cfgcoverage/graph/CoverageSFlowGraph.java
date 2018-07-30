@@ -40,7 +40,7 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 		node.setCvgIdx(nodeList.size());
 		nodeList.add(node);
 		for (Integer idx : node.getCorrespondingCfgNodeIdxies()) {
-			referenceCvgGraphIdx.set(idx, node.getCvgIdx());
+			referenceCvgGraphIdx.set(idx, node.getId());
 		}
 	}
 
@@ -77,7 +77,7 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 		this.nodeList = nodeList;
 		for (CoverageSFNode node : nodeList) {
 			for (Integer idx : node.getCorrespondingCfgNodeIdxies()) {
-				referenceCvgGraphIdx.set(idx, node.getCvgIdx());
+				referenceCvgGraphIdx.set(idx, node.getId());
 			}
 		}
 	}

@@ -83,7 +83,9 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	
 	public void addBranch(CoverageSFNode branchNode) {
 		branches.add(branchNode);
-		branchNode.addParent(this);
+		if (!branchNode.parents.contains(this)) {
+			branchNode.addParent(this);
+		}
 	}
 	
 	private void addParent(CoverageSFNode parent) {
@@ -194,6 +196,10 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	public void setAliasId(AliasNodeId aliasId) {
 		this.aliasId = aliasId;
 	}
+	
+	public int getId() {
+		return cvgIdx;
+	}
 
 	public int getCvgIdx() {
 		return cvgIdx;
@@ -235,7 +241,7 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 				branchIdxies.add(String.format("{%d, %d}", branch.getStartIdx(), branch.getEndIdx()));
 			}
 		}
-		return "CoverageSFNode [type=" + type + ", startIdx=" + startIdx + ", endIdx=" + endIdx + ", branches="
+		return "CoverageSFNode [id=" + cvgIdx +", type=" + type + ", startIdx=" + startIdx + ", endIdx=" + endIdx + ", branches="
 				+ branchIdxies + ", aliasId=" + aliasId + ", endNodeId=" + endNodeId + ", cvgIdx=" + cvgIdx + "]";
 	}
 
@@ -247,6 +253,10 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	@Override
 	public List<CoverageSFNode> getParents() {
 		return parents;
+	}
+
+	public boolean isConditionalNode() {
+		return type == Type.CONDITION_NODE;
 	}
 	
 }

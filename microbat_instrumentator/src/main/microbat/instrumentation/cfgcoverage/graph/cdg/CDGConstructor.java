@@ -1,8 +1,11 @@
 package microbat.instrumentation.cfgcoverage.graph.cdg;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
@@ -17,62 +20,91 @@ public class CDGConstructor {
 		Map<CoverageSFNode, List<CoverageSFNode>> controlDependencyMap = controlDependencyCalcul
 															.buildControlDependencyMap(graph);
 		CDG cdg = new CDG();
-		Map<Integer, CDGNode> cdgNodes = new HashMap<>();
-		for (CoverageSFNode node : graph.getNodeList()) {
-			if (CollectionUtils.getSize(node.getChildren()) > 1) {
-				CDGNode cdgNode = new CDGNode(node);
-				cdgNodes.put(node.getCvgIdx(), cdgNode);
-			}
-		}
-		boolean[] visited = new boolean[graph.size()];
-		boolean[] parentAssigned = new boolean[graph.size()];
-		/* DFS */
-		Stack<CoverageSFNode> stack = new Stack<>();
-		stack.add(graph.getStartNode());
-		while (!stack.isEmpty()) {
-			CoverageSFNode curNode = stack.peek(); 
-			
-			if (visited[curNode.getCvgIdx()]) { // all branch visited.
-				List<CoverageSFNode> dependentees = controlDependencyMap.get(curNode);
-				if (!CollectionUtils.isEmpty(dependentees)) { // is conditional Node
-					CDGNode cdgNode = cdgNodes.get(curNode.getCvgIdx());
-					for (CoverageSFNode dependentee : dependentees) {
-						if (!parentAssigned[dependentee.getCvgIdx()]) {
-							CDGNode dependenteeCdgNode = cdgNodes.get(dependentee.getCvgIdx());
-							if (dependenteeCdgNode == null) {
-								cdgNode.addContent(dependentee);
-							} else{
-								cdgNode.setChild(dependenteeCdgNode);
-							}
-							parentAssigned[dependentee.getCvgIdx()] = true;
-						}
-					}
+		Map<Integer, CDGNode> cdgNodeMap = new HashMap<>();
+		Set<Integer> visited = new HashSet<>();
+		Stack<CDGNodeHolder> condNodeStack = new Stack<>();
+		Stack<CoverageSFNode> visitStack = new Stack<>();
+		visitStack.push(graph.getStartNode());
+		CDGNodeHolder curDominatorNode = new CDGNodeHolder(cdgNodeMap);
+		while (!visitStack.empty()) {
+			CoverageSFNode visitingNode = visitStack.peek();
+			if (!visited.contains(visitingNode.getId())) {
+				if (curDominatorNode.controlDominate(visitingNode)) {
+					curDominatorNode.addBranch(visitingNode);
 				}
-				stack.pop();
-				continue;
+				if (visitingNode.isConditionalNode()) {
+					curDominatorNode = new CDGNodeHolder(cdgNodeMap, visitingNode, controlDependencyMap);
+					condNodeStack.push(curDominatorNode);
+					visited.add(visitingNode.getId());
+				} else {
+					visitStack.pop();
+				}
+				for (CoverageSFNode child : CollectionUtils.nullToEmpty(visitingNode.getChildren())) {
+					visitStack.push(child);
+				}
+			} else {
+				if (!condNodeStack.isEmpty() && condNodeStack.peek().dominator.getCfgNode() == visitingNode) {
+					condNodeStack.pop();
+				}
+				if (condNodeStack.isEmpty()) {
+					curDominatorNode = new CDGNodeHolder(cdgNodeMap);
+				} else {
+					curDominatorNode = condNodeStack.peek();
+				}
+				visitStack.pop();
 			}
-			/* visit */
-			for (CoverageSFNode child : CollectionUtils.nullToEmpty(curNode.getChildren())) {
-				stack.push(child);
-			}
-			visited[curNode.getCvgIdx()] = true;
 		}
 		
 		for (CoverageSFNode node : graph.getNodeList()) {
-			CDGNode cdgNode = cdgNodes.get(node.getCvgIdx());
-			if (!parentAssigned[node.getCvgIdx()]) {
-				if (cdgNode == null) {
-					cdg.addContent(node);
-				} else{
-					cdg.addStartNode(cdgNode);
-				}
-			} else if (cdgNode != null){
-				if (cdgNode.getChildren().isEmpty()) {
-					cdg.addExitNode(cdgNode);
-				}
+			CDGNode cdgNode = cdgNodeMap.get(node.getId());
+			if (cdgNode == null) {
+				cdgNode = new CDGNode(node);
+				cdgNodeMap.put(node.getId(), cdgNode);
+			}
+			cdg.addNode(cdgNode);
+			if (cdgNode.getChildren().isEmpty()) {
+				cdg.addExitNode(cdgNode);
+			}
+			if (cdgNode.getParent().isEmpty()) {
+				cdg.addStartNode(cdgNode);
 			}
 		}
 		return cdg;
 	}
 	
+	private static class CDGNodeHolder {
+		Map<Integer, CDGNode> cdgNodeMap;
+		List<CoverageSFNode> dominatorDependencies = Collections.emptyList();
+		CDGNode dominator;
+		
+		CDGNodeHolder(Map<Integer, CDGNode> cdgNodeMap) {
+			this.cdgNodeMap = cdgNodeMap;
+		}
+		
+		CDGNodeHolder(Map<Integer, CDGNode> cdgNodeMap, CoverageSFNode dominatorNode,
+				Map<CoverageSFNode, List<CoverageSFNode>> controlDependencyMap) {
+			this(cdgNodeMap);
+			this.dominator = getCorrespondingCDGNode(dominatorNode);
+			this.dominatorDependencies = controlDependencyMap.get(dominatorNode);
+		}
+
+		public void addBranch(CoverageSFNode controlDependentNode) {
+			CDGNode correspondingCdgNode = getCorrespondingCDGNode(controlDependentNode);
+			dominator.setChild(correspondingCdgNode);
+		}
+
+		private CDGNode getCorrespondingCDGNode(CoverageSFNode cfgNode) {
+			CDGNode correspondingCdgNode = cdgNodeMap.get(cfgNode.getId());
+			if (correspondingCdgNode == null) {
+				correspondingCdgNode = new CDGNode(cfgNode);
+				cdgNodeMap.put(cfgNode.getId(), correspondingCdgNode);
+			}
+			return correspondingCdgNode;
+		}
+
+		public boolean controlDominate(CoverageSFNode visitingNode) {
+			return dominatorDependencies.contains(visitingNode);
+		}
+		
+	}
 }

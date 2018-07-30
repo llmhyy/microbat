@@ -60,7 +60,7 @@ public class CoverageOutputWriter extends OutputWriter {
 			writeVarInt(list.size());
 		}
 		for (CoverageSFNode value : list) {
-			writeVarInt(value.getCvgIdx());
+			writeVarInt(value.getId());
 		}
 	}
 
@@ -98,7 +98,7 @@ public class CoverageOutputWriter extends OutputWriter {
 		/* branches */
 		writeVarInt(CollectionUtils.getSize(node.getBranches()));
 		for (CoverageSFNode branch : CollectionUtils.nullToEmpty(node.getBranches())) {
-			writeVarInt(branch.getCvgIdx());
+			writeVarInt(branch.getId());
 		}
 		/* covered testcases on node */
 		writeListInt(node.getCoveredTestcases());

@@ -55,7 +55,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 				return;
 			}
 		}
-		execPath.add(currentNode.getCvgIdx());
+		execPath.add(currentNode.getId());
 		currentNode.addCoveredTestcase(testIdx);
 	}
 	
