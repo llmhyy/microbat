@@ -23,17 +23,18 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	private static int currentTestCaseIdx;
 	
 	private long threadId;
+	private int testIdx;
 	private TracingState state = TracingState.INIT;
 	private NoProbeTracer noProbeTracer = new NoProbeTracer(this);
 	private int methodInvokeLevel = 0;
-	private int testIdx;
 	private CoverageSFNode currentNode;
 	private List<Integer> execPath;
 	MethodCallStack methodCallStack = new MethodCallStack();
 	private ValueExtractor valueExtractor = new ValueExtractor();
 	
-	public CoverageTracer(long threadId) {
+	public CoverageTracer(long threadId, int testIdx) {
 		this.threadId = threadId;
+		this.testIdx = testIdx;
 	}
 	
 	@Override
@@ -103,15 +104,12 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		try {
 			long threadId = Thread.currentThread().getId();
 			CoverageTracer coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
-			if ((coverageTracer == null) || (coverageTracer.state != TracingState.RECORDING)) {
-				if (isEntryPoint) {
-					rtStore.setMainThreadId(Thread.currentThread().getId());
-					coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
-					coverageTracer.state = TracingState.RECORDING;
-					coverageTracer.testIdx = currentTestCaseIdx;
-				} else {
-					return EmptyCoverageTracer.getInstance();
-				}
+			if (coverageTracer == null && isEntryPoint) {
+				coverageTracer = rtStore.create(threadId, currentTestCaseIdx);
+				coverageTracer.state = TracingState.RECORDING;
+			}
+			if (coverageTracer == null || coverageTracer.state != TracingState.RECORDING) {
+				return EmptyCoverageTracer.getInstance();
 			}
 			ICoverageTracer tracer = coverageTracer;
 			if (!isEntryPoint && coverageTracer.doesNotNeedToRecord(methodId)) {
@@ -134,6 +132,10 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		AgentLogger.debug(String.format("Start testcase %s, testIdx=%s", testcase, testcaseIdx));
 		coverageFlowGraph.addCoveredTestcase(testcase, testcaseIdx);
 		CoverageTracer.currentTestCaseIdx = testcaseIdx;
+	}
+	
+	public int getTestIdx() {
+		return testIdx;
 	}
 	
 	public static void endTestcase(String testcase, long threadId) {
