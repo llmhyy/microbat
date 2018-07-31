@@ -1,6 +1,7 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -17,6 +18,8 @@ import microbat.codeanalysis.bytecode.MethodFinderByLine;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
 import microbat.model.ClassLocation;
+import sav.common.core.utils.ClassUtils;
+import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class CFGRepository {
@@ -72,14 +75,21 @@ public class CFGRepository {
 	}
 	
 	private static class MethodFinderByMethodSignature extends ByteCodeMethodFinder {
-		private ClassLocation loc;
+		private List<String> methodNames;
+		private String methodSign;
 
 		public MethodFinderByMethodSignature(ClassLocation loc) {
-			this.loc = loc;
+			String methodName = SignatureUtils.extractMethodName(loc.getMethodSign());
+			if (methodName.equals(ClassUtils.getSimpleName(loc.getClassCanonicalName()))) {
+				this.methodNames = Arrays.asList("<init>", "<clinit>");
+			} else {
+				this.methodNames = Arrays.asList(methodName);
+			}
+			this.methodSign = SignatureUtils.extractSignature(loc.getMethodSign());
 		}
 
 		public void visitMethod(Method method) {
-			if (loc.getMethodSign().equals(InstrumentationUtils.getMethodWithSignature(method.getName(), method.getSignature()))) {
+			if (this.methodNames.contains(method.getName()) && this.methodSign.equals(method.getSignature())) {
 				setMethod(method);
 			}
 		}
