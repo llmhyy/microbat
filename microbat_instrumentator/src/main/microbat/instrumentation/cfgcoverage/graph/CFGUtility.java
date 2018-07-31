@@ -135,16 +135,22 @@ public class CFGUtility {
 				CFGAliasNode aliasNode = new CFGAliasNode(backwardEdgeStartNode, curNode);
 				aliasNode.addParent(backwardEdgeStartNode);
 				backwardEdgeStartNode.getChildren().remove(curNode);
+				curNode.getParents().remove(backwardEdgeStartNode);
 				backwardEdgeStartNode.addChild(aliasNode); 
+				
+				cfgInstance.addAliasNode(aliasNode);
+				
 				/* find outloop edge */
 				Branch outloopEdge = null;
 				boolean stop = false;
+				CFGNode outloopNode = null;
 				for (int i = stackPos; i < stack.size() && !stop; i++) {
 					CFGNode node = stack.get(i);
 					if (node.isConditional()) {
 						for (CFGNode branch : node.getChildren()) {
 							if (!stack.get(i + 1).equals(branch)) {
 								outloopEdge = new Branch(node.getIdx(), branch.getIdx());
+								outloopNode = branch;
 								stop = true;
 								break;
 							}
@@ -152,6 +158,8 @@ public class CFGUtility {
 					}
 				}
 				aliasNode.getAliasNodeId().setOutLoopBranch(outloopEdge);
+				aliasNode.addChild(outloopNode);
+				outloopNode.addParent(aliasNode);
 				/* get back one step and discover another path from there */
 				stack.remove(stack.size() - 1);
 				continue;

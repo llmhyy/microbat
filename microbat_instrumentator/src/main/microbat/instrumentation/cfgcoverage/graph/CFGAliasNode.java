@@ -10,18 +10,6 @@ public class CFGAliasNode extends CFGNode {
 		super(orgNode.getInstructionHandle());
 		this.orgNode = orgNode;
 		this.aliasNodeId = new AliasNodeId(prevNode.getIdx(), orgNode.getIdx());
-		// TODO LLT: check whether the node is cloned properly. 
-		// [should be treated as a new normal node in the graph?]
-	}
-
-	@Override
-	public void setIdx(int idx) {
-		// do nothing
-	}
-	
-	@Override
-	public int getIdx() {
-		return -1;
 	}
 
 	public CFGNode getOrgNode() {

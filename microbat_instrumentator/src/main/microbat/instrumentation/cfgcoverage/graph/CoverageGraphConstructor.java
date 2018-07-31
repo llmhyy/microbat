@@ -56,9 +56,10 @@ public class CoverageGraphConstructor {
 				}
 				while (curNode != null) {
 					if ((CollectionUtils.getSize(curNode.getChildren()) > 1)
-							|| (CollectionUtils.getSize(curNode.getParents()) != 1)
+							|| (CollectionUtils.getSize(curNode.getParents()) > 1)
 							|| (curNode.getInstructionHandle().getInstruction() instanceof InvokeInstruction)
 							|| (curNode.isBranch())
+							|| (cfg.hasAlias(curNode))
 							|| curNode instanceof CFGAliasNode) {
 						stack.push(curNode);
 						break;

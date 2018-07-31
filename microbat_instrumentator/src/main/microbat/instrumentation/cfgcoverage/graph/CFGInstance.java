@@ -1,7 +1,9 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import microbat.codeanalysis.bytecode.CFG;
 import microbat.codeanalysis.bytecode.CFGNode;
@@ -11,6 +13,7 @@ public class CFGInstance {
 	private List<CFGNode> nodeList; // same order as in InstrucionList.
 	private List<UniqueNodeId> unitCfgNodeIds;
 	private int cfgExtensionLayer;
+	private Set<CFGNode> hasAliasNodes = new HashSet<>();
 
 	public CFGInstance(CFG unitCfg, String methodId, List<CFGNode> nodeList) {
 		this.cfg = unitCfg;
@@ -25,6 +28,17 @@ public class CFGInstance {
 		this.cfg = unitCfg;
 		this.nodeList = nodeList;
 		this.unitCfgNodeIds = unitCfgNodeIds;
+	}
+	
+	public void addAliasNode(CFGAliasNode aliasNode) {
+		aliasNode.setIdx(nodeList.size());
+		nodeList.add(aliasNode);
+		unitCfgNodeIds.add(getUnitCfgNodeId(aliasNode.getOrgNode()));
+		hasAliasNodes.add(aliasNode.getOrgNode());
+	}
+	
+	public boolean hasAlias(CFGNode curNode) {
+		return hasAliasNodes.contains(curNode);
 	}
 
 	public CFG getCfg() {
@@ -82,4 +96,5 @@ public class CFGInstance {
 	public UniqueNodeId getUnitCfgNodeId(CFGNode node) {
 		return unitCfgNodeIds.get(node.getIdx());
 	}
+
 }
