@@ -50,8 +50,8 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 				currentNode = branch;
 			} else {
 				if (!currentNode.isAliasNode()) {
-					AgentLogger.debug(String.format("cannnot find branch %s:%d of node %d [testix=%d]", methodId, nodeIdx,
-							currentNode.getEndIdx(), testIdx));
+					AgentLogger.debug(String.format("cannot find branch %s:%d of node %d [testidx=%d]", methodId, nodeIdx,
+							currentNode.getId(), testIdx));
 				}
 				return;
 			}
@@ -64,13 +64,14 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	public void enterMethod(String methodId, String paramTypeSignsCode, String paramNamesCode, Object[] params,
 			boolean isEntryPoint) {
 		if (isEntryPoint) {
-			BreakPointValue inputData = testInputData.get(testIdx);
-			if (inputData == null) {
-				ClassLocation loc = InstrumentationUtils.getClassLocation(methodId);
-				inputData = valueExtractor.extractInputValue(String.valueOf(testIdx), 
-						loc.getClassCanonicalName(), loc.getMethodSign(), paramTypeSignsCode, paramNamesCode, params);
-				testInputData.put(testIdx, inputData);
-			}
+			// keep the last one
+			currentNode = null;
+			ClassLocation loc = InstrumentationUtils.getClassLocation(methodId);
+			BreakPointValue inputData = valueExtractor.extractInputValue(String.valueOf(testIdx), 
+					loc.getClassCanonicalName(), loc.getMethodSign(), paramTypeSignsCode, paramNamesCode, params);
+			testInputData.put(testIdx, inputData);
+			methodInvokeLevel = 0;
+			methodCallStack.clear();
 		}
 		methodInvokeLevel++;
 		methodCallStack.push(methodId);
@@ -140,14 +141,6 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	
 	public static void endTestcase(String testcase, long threadId) {
 		AgentLogger.debug(String.format("End testcase %s, testIdx=%s, thread=%s", testcase, currentTestCaseIdx, threadId));
-//		CoverageTracer coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
-//		if (coverageTracer != null) {
-//			coverageTracer.state = TracingState.SHUTDOWN;
-//			coverageTracer.currentNode = null;
-//			coverageTracer.methodInvokeLevel = 0;
-//			coverageTracer.methodCallStack.clear();
-//			coverageTracer.execPath = null;
-//		}
 	}
 	
 }
