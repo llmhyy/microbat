@@ -12,8 +12,8 @@ import microbat.instrumentation.cfgcoverage.graph.CoveragePath;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode.Type;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
+import microbat.instrumentation.cfgcoverage.runtime.TestInputData;
 import microbat.instrumentation.output.OutputReader;
-import microbat.model.BreakPointValue;
 
 public class CoverageOutputReader extends OutputReader{
 
@@ -116,7 +116,7 @@ public class CoverageOutputReader extends OutputReader{
 		return node;
 	}
 
-	public Map<Integer, BreakPointValue> readInputData() throws IOException {
+	public Map<Integer, TestInputData> readInputData() throws IOException {
 		return readSerializableMap();
 	}
 

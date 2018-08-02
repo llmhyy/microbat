@@ -19,6 +19,7 @@ public class CoverageAgentParams extends CommonParams {
 	public static final String OPT_DUMP_FILE = "dumpe_file";
 	public static final String OPT_INCLUSIVE_METHOD_IDS = "inclusive_method_ids";
 	public static final String OPT_VARIABLE_LAYER = "varLayer";
+	public static final String OPT_COLLECT_CONDITION_VARIATION = "collect_cond_variation";
 	
 	private ClassLocation targetMethodLoc;
 	private List<String> classPaths;
@@ -26,6 +27,7 @@ public class CoverageAgentParams extends CommonParams {
 	private String dumpFile;
 	private List<String> inclusiveMethodIds;
 	private int varLayer;
+	private boolean collectConditionVariation;
 	
 	public CoverageAgentParams() {
 		
@@ -39,6 +41,7 @@ public class CoverageAgentParams extends CommonParams {
 		dumpFile = cmd.getString(OPT_DUMP_FILE);
 		inclusiveMethodIds = cmd.getStringList(OPT_INCLUSIVE_METHOD_IDS);
 		varLayer = cmd.getInt(OPT_VARIABLE_LAYER, 2);
+		collectConditionVariation = cmd.getBoolean(OPT_COLLECT_CONDITION_VARIATION, false);
 	}
 	
 	public ClassLocation getTargetMethod() {
@@ -99,5 +102,13 @@ public class CoverageAgentParams extends CommonParams {
 
 	public void setVarLayer(int varLayer) {
 		this.varLayer = varLayer;
+	}
+	
+	public boolean collectConditionVariation() {
+		return collectConditionVariation;
+	}
+	
+	public void setCollectConditionVariation(boolean collectConditionVariation) {
+		this.collectConditionVariation = collectConditionVariation;
 	}
 }

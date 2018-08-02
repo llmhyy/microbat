@@ -9,8 +9,8 @@ import microbat.instrumentation.cfgcoverage.graph.Branch;
 import microbat.instrumentation.cfgcoverage.graph.CoveragePath;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
+import microbat.instrumentation.cfgcoverage.runtime.TestInputData;
 import microbat.instrumentation.output.OutputWriter;
-import microbat.model.BreakPointValue;
 import sav.common.core.utils.CollectionUtils;
 
 public class CoverageOutputWriter extends OutputWriter {
@@ -19,7 +19,7 @@ public class CoverageOutputWriter extends OutputWriter {
 		super(out);
 	}
 	
-	public void writeInputData(Map<Integer, BreakPointValue> inputData) throws IOException {
+	public void writeInputData(Map<Integer, TestInputData> inputData) throws IOException {
 		writeSerializableMap(inputData);
 	}
 

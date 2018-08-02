@@ -19,7 +19,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	private static CoverageTracerStore rtStore = new CoverageTracerStore();
 	public static volatile CoverageSFlowGraph coverageFlowGraph;
 	public static volatile Map<Integer, List<Integer>> testcaseGraphExecPaths = new HashMap<>();
-	public static volatile Map<Integer, BreakPointValue> testInputData = new HashMap<>(); 
+	public static volatile Map<Integer, TestInputData> testInputData = new HashMap<>(); 
 	private static int currentTestCaseIdx;
 	
 	private long threadId;
@@ -31,6 +31,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	private List<Integer> execPath;
 	MethodCallStack methodCallStack = new MethodCallStack();
 	private ValueExtractor valueExtractor = new ValueExtractor();
+	private TestInputData inputData;
 	
 	public CoverageTracer(long threadId, int testIdx) {
 		this.threadId = threadId;
@@ -60,6 +61,39 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		currentNode.addCoveredTestcase(testIdx);
 	}
 	
+	private void onIf(String methodId, int nodeIdx, double condVariation) {
+		if (nodeRecording(methodId, nodeIdx)) {
+			inputData.getConditionVariationMap().put(currentNode.getId(), condVariation);
+		}
+	}
+
+	private boolean nodeRecording(String methodId, int nodeLocalIdx) {
+		if (currentNode == null) {
+			return false;
+		}
+		return currentNode.getProbeNodeId().match(methodId, nodeLocalIdx);
+	}
+	
+	@Override
+	public void _onIfACmp(Object value1, Object value2, String methodId, int nodeIdx) {
+		onIf(methodId, nodeIdx, value1 == value2 ? 0 : 1);
+	}
+
+	@Override
+	public void _onIfICmp(int value1, int value2, String methodId, int nodeIdx) {
+		onIf(methodId, nodeIdx, value2 - value1);
+	}
+
+	@Override
+	public void _onIf(int value, String methodId, int nodeIdx) {
+		onIf(methodId, nodeIdx, value);
+	}
+
+	@Override
+	public void _onIfNull(Object value, String methodId, int nodeIdx) {
+		onIf(methodId, nodeIdx, value == null ? 0 : 1);
+	}
+	
 	@Override
 	public void enterMethod(String methodId, String paramTypeSignsCode, String paramNamesCode, Object[] params,
 			boolean isEntryPoint) {
@@ -67,8 +101,10 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 			// keep the last one
 			currentNode = null;
 			ClassLocation loc = InstrumentationUtils.getClassLocation(methodId);
-			BreakPointValue inputData = valueExtractor.extractInputValue(String.valueOf(testIdx), 
+			this.inputData = new TestInputData();
+			BreakPointValue methodInput = valueExtractor.extractInputValue(String.valueOf(testIdx), 
 					loc.getClassCanonicalName(), loc.getMethodSign(), paramTypeSignsCode, paramNamesCode, params);
+			inputData.setMethodInputValue(methodInput);
 			testInputData.put(testIdx, inputData);
 			methodInvokeLevel = 0;
 			methodCallStack.clear();

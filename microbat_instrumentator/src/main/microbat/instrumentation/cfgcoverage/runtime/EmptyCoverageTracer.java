@@ -26,4 +26,28 @@ public class EmptyCoverageTracer implements ICoverageTracer {
 		
 	}
 
+	@Override
+	public void _onIfACmp(Object value1, Object value2, String methodId, int nodeIdx) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void _onIfICmp(int value1, int value2, String methodId, int nodeIdx) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void _onIf(int value, String methodId, int nodeIdx) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void _onIfNull(Object value, String methodId, int nodeIdx) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

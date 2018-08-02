@@ -12,12 +12,12 @@ import java.util.Map;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.cfgcoverage.output.CoverageOutputReader;
 import microbat.instrumentation.cfgcoverage.output.CoverageOutputWriter;
+import microbat.instrumentation.cfgcoverage.runtime.TestInputData;
 import microbat.instrumentation.utils.FileUtils;
-import microbat.model.BreakPointValue;
 
 public class CoverageOutput {
 	private CoverageSFlowGraph coverageGraph;
-	private Map<Integer, BreakPointValue> inputData;
+	private Map<Integer, TestInputData> inputData;
 	
 	public CoverageOutput() {
 		
@@ -78,11 +78,11 @@ public class CoverageOutput {
 		this.coverageGraph = coverageGraph;
 	}
 
-	public Map<Integer, BreakPointValue> getInputData() {
+	public Map<Integer, TestInputData> getInputData() {
 		return inputData;
 	}
 
-	public void setInputData(Map<Integer, BreakPointValue> inputData) {
+	public void setInputData(Map<Integer, TestInputData> inputData) {
 		this.inputData = inputData;
 	}
 }

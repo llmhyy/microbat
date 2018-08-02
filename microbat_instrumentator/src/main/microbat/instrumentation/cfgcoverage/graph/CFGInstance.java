@@ -86,6 +86,10 @@ public class CFGInstance {
 		public int getLocalNodeIdx() {
 			return localNodeIdx;
 		}
+		
+		public boolean match(String methodId, int nodeLocalIdx) {
+			return this.methodId.equals(methodId) && this.localNodeIdx == nodeLocalIdx;
+		}
 
 		@Override
 		public String toString() {

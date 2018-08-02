@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
 
@@ -24,6 +25,7 @@ public class MethodInstructionsInfo {
 	private static Map<String, Set<Integer>> instmInstructionMap;
 	private List<InstructionInfo> nodeInsns;
 	private List<InstructionHandle> exitInsns;
+	private List<InstructionInfo> conditionInsns;
 	
 	public static void initInstrInstructions(CoverageSFlowGraph coverageFlowGraph) {
 		instmInstructionMap = new HashMap<>();
@@ -37,23 +39,30 @@ public class MethodInstructionsInfo {
 		}
 	}
 
-	public static MethodInstructionsInfo getInstrumentationInstructions(InstructionList insnList, Method method, String className) {
+	public static MethodInstructionsInfo getInstrumentationInstructions(InstructionList insnList, Method method,
+			String className) {
 		String methodId = InstrumentationUtils.getMethodId(className, method);
-		Set<Integer> instmInstructionIdexies = instmInstructionMap.get(methodId);
+		Set<Integer> methodInstrmInsnIdexies = instmInstructionMap.get(methodId);
 		MethodInstructionsInfo instmInsns = new MethodInstructionsInfo();
 		List<InstructionInfo> nodeInsns = Collections.emptyList();
-		if (instmInstructionIdexies != null) {
-			nodeInsns = new ArrayList<InstructionInfo>(instmInstructionIdexies.size());
+		List<InstructionInfo> conditionInsns = Collections.emptyList();
+		if (methodInstrmInsnIdexies != null) {
+			nodeInsns = new ArrayList<InstructionInfo>(methodInstrmInsnIdexies.size());
+			conditionInsns = new ArrayList<>();
 			int idx = 0;
 			for (InstructionHandle insnHandler : insnList) {
-				if (instmInstructionIdexies.contains(idx)) {
+				if (methodInstrmInsnIdexies.contains(idx)) {
 					InstructionInfo insnInfo = new InstructionInfo(insnHandler, idx);
 					nodeInsns.add(insnInfo);
+					if (insnHandler.getInstruction() instanceof IfInstruction) {
+						conditionInsns.add(insnInfo);
+					}
 				}
 				idx++;
 			}
 		}
 		instmInsns.nodeInsns = nodeInsns;
+		instmInsns.conditionInsns = conditionInsns;
 		CFGConstructor cfgConstructor = new CFGConstructor();
 		CFG cfg = cfgConstructor.constructCFG(method.getCode());
 		List<InstructionHandle> exitInsns = new ArrayList<>();
@@ -73,4 +82,7 @@ public class MethodInstructionsInfo {
 		return exitInsns;
 	}
 
+	public List<InstructionInfo> getConditionInsns() {
+		return conditionInsns;
+	}
 }

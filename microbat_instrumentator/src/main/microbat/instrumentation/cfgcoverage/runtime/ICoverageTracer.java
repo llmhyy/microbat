@@ -8,4 +8,12 @@ public interface ICoverageTracer {
 
 	void _exitMethod(String methodId);
 
+	void _onIfACmp(Object value1, Object value2, String methodId, int nodeIdx);
+
+	void _onIfICmp(int value1, int value2, String methodId, int nodeIdx);
+
+	void _onIf(int value, String methodId, int nodeIdx);
+
+	void _onIfNull(Object value, String methodId, int nodeIdx);
+
 }

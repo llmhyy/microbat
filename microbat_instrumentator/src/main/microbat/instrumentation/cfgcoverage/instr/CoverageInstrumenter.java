@@ -1,17 +1,23 @@
 package microbat.instrumentation.cfgcoverage.instr;
 
+import org.apache.bcel.Const;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ASTORE;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.DUP;
+import org.apache.bcel.generic.DUP2;
+import org.apache.bcel.generic.DUP_X1;
+import org.apache.bcel.generic.DUP_X2;
 import org.apache.bcel.generic.INVOKEINTERFACE;
 import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
+import org.apache.bcel.generic.POP;
 import org.apache.bcel.generic.PUSH;
 
 import microbat.instrumentation.AgentLogger;
@@ -21,6 +27,7 @@ import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.instr.AbstractInstrumenter;
 import microbat.instrumentation.runtime.TraceUtils;
 import microbat.instrumentation.utils.MicrobatUtils;
+import sav.common.core.SavRtException;
 
 public class CoverageInstrumenter extends AbstractInstrumenter {
 	private static final String TRACER_VAR_NAME = "$tracer";
@@ -96,6 +103,11 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 		for (InstructionInfo instnInfo : instmInsns.getNodeInsns()) {
 			injectCodeTracerReachNode(methodIdVar, instnInfo, tracerVar, constPool, insnList);
 		}
+		if (agentParams.collectConditionVariation()) {
+			for (InstructionInfo condInsnInfo : instmInsns.getConditionInsns()) {
+				injectCodeTracerOnIf(methodIdVar, tracerVar, condInsnInfo, constPool, insnList);
+			}
+		}
 		for (InstructionHandle exitInsn : instmInsns.getExitInsns()) {
 			injectCodeTracerExitMethod(methodIdVar, tracerVar, constPool, insnList, exitInsn);
 		}
@@ -103,6 +115,69 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 		return true;
 	}
 	
+	private void injectCodeTracerOnIf(LocalVariableGen methodIdVar, LocalVariableGen tracerVar, InstructionInfo instnInfo,
+			ConstantPoolGen constPool, InstructionList insnList) {
+		InstructionList newInsns = new InstructionList();
+		CoverageTracerMethods tracerMethod = null;
+		short opcode = instnInfo.getInsnHandler().getInstruction().getOpcode();
+		switch (opcode) {
+		case Const.IF_ACMPEQ:
+		case Const.IF_ACMPNE:
+			tracerMethod = CoverageTracerMethods.ON_IF_A_CMP;
+			/* value1, value2 */
+			newInsns.append(new DUP2());
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // value1, value2, $tracer
+			newInsns.append(new DUP_X2()); // $tracer, value1, value2, $tracer
+			newInsns.append(new POP()); // $tracer, value1, value2
+			/**/
+			break;
+		case Const.IF_ICMPEQ:
+		case Const.IF_ICMPGE:
+		case Const.IF_ICMPGT:
+		case Const.IF_ICMPLE:
+		case Const.IF_ICMPLT:
+		case Const.IF_ICMPNE:
+			tracerMethod = CoverageTracerMethods.ON_IF_I_CMP;
+			/* value1, value2 */
+			newInsns.append(new DUP2());
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // value1, value2, $tracer
+			newInsns.append(new DUP_X2()); // $tracer, value1, value2, $tracer
+			newInsns.append(new POP()); // $tracer, value1, value2
+			/**/
+			break;
+		case Const.IFEQ:
+		case Const.IFGE:
+		case Const.IFLE:
+		case Const.IFLT:
+		case Const.IFNE:
+			tracerMethod = CoverageTracerMethods.ON_IF;
+			/* value */
+			newInsns.append(new DUP());
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // value, $tracer
+			newInsns.append(new DUP_X1()); // $tracer, value, $tracer
+			newInsns.append(new POP()); // $tracer, value
+			/**/
+			break;
+		case Const.IFNONNULL:
+		case Const.IFNULL:
+			tracerMethod = CoverageTracerMethods.ON_IF_NULL;
+			/* value */
+			newInsns.append(new DUP());
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // value, $tracer
+			newInsns.append(new DUP_X1()); // $tracer, value, $tracer
+			newInsns.append(new POP()); // $tracer, value
+			/**/
+			break;
+		default:
+			throw new SavRtException("Missing the case: " + opcode);
+		}
+		newInsns.append(new ALOAD(methodIdVar.getIndex())); // $tracer, [value..], methodId
+		newInsns.append(new PUSH(constPool, instnInfo.getInsnIdx())); // $tracer, [value..], methodId, nodeIdx
+		appendTracerMethodInvoke(newInsns, tracerMethod, constPool);
+		insertInsnHandler(insnList, newInsns, instnInfo.getInsnHandler());
+		newInsns.dispose();
+	}
+
 	private void injectCodeTracerReachNode(LocalVariableGen methodIdVar, InstructionInfo instnInfo, LocalVariableGen tracerVar,
 			ConstantPoolGen constPool, InstructionList insnList) {
 		CoverageTracerMethods method = CoverageTracerMethods.REACH_NODE;

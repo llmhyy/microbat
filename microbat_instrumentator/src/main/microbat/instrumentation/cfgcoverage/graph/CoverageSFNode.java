@@ -62,7 +62,7 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	public CoverageSFNode getCorrespondingBranch(String methodId, int nodeLocalIdx) {
 		for (CoverageSFNode branch : branches) {
 			UniqueNodeId probeId = branch.getProbeNodeId();
-			if (probeId.getMethodId().equals(methodId) && probeId.localNodeIdx == nodeLocalIdx) {
+			if (probeId.match(methodId, nodeLocalIdx)) {
 				return branch;
 			}
 		}
