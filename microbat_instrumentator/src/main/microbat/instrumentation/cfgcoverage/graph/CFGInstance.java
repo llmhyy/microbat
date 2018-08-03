@@ -66,6 +66,10 @@ public class CFGInstance {
 		return cfgExtensionLayer;
 	}
 	
+	public void setCfgExtensionLayer(int cfgExtensionLayer) {
+		this.cfgExtensionLayer = cfgExtensionLayer;
+	}
+	
 	public int size() {
 		return nodeList.size();
 	}

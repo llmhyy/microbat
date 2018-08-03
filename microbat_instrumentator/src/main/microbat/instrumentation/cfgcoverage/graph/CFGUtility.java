@@ -24,7 +24,9 @@ public class CFGUtility {
 	
 	public CFGInstance buildProgramFlowGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod,
 			int cfgExtensionLayer) {
-		return buildProgramFlowGraph(appClasspath, targetMethod, 1, cfgExtensionLayer);
+		CFGInstance cfg = buildProgramFlowGraph(appClasspath, targetMethod, 1, cfgExtensionLayer);
+		cfg.setCfgExtensionLayer(cfgExtensionLayer);
+		return cfg;
 	}
 
 	private CFGInstance buildProgramFlowGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod, int layer,
@@ -86,13 +88,15 @@ public class CFGUtility {
 		 * turn invokeNode --> nextNode
 		 * to: invokeNode --> startNode of subCFG -- --> returnNodes of subCfg --> nextNode
 		 * */
-		List<CFGNode> nextNodes = node.getChildren();
+		List<CFGNode> nextNodes = new ArrayList<>(node.getChildren());
 		node.getChildren().clear();
 		node.addChild(subCfg.getStartNode());
 		for (CFGNode exitNode : subCfg.getExitList()) {
 			if (exitNode.getInstructionHandle().getInstruction() instanceof RETURN) {
 				for (CFGNode nextNode : nextNodes) {
 					exitNode.addChild(nextNode);
+					nextNode.getParents().remove(node);
+					nextNode.addParent(exitNode);
 				}
 			}
 		}

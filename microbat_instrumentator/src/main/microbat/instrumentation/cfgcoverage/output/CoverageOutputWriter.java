@@ -36,7 +36,7 @@ public class CoverageOutputWriter extends OutputWriter {
 		/* nodeCoverage list */
 		writeVarInt(coverageGraph.getNodeList().size());
 		for (CoverageSFNode node : coverageGraph.getNodeList()) {
-			writeNodeCoverage(node);
+			writeCoverageNode(node);
 		}
 		
 		/* covered path */
@@ -64,7 +64,7 @@ public class CoverageOutputWriter extends OutputWriter {
 		}
 	}
 
-	private void writeNodeCoverage(CoverageSFNode node) throws IOException {
+	private void writeCoverageNode(CoverageSFNode node) throws IOException {
 		// type
 		writeString(node.getType().name());
 		

@@ -33,7 +33,8 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 			return null;
 		}
 		if ("microbat/evaluation/junit/MicroBatTestRunner".equals(classFName)
-				|| "sav/junit/SavJunitRunner".equals(classFName)) {
+				|| "sav/junit/SavJunitRunner".equals(classFName)
+				|| "sav/junit/SavSimpleRunner".equals(classFName)) {
 			try {
 				byte[] data = instrument(classFName, classfileBuffer);
 				return data;
