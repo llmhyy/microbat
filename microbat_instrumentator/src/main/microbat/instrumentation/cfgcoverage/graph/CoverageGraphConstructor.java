@@ -1,6 +1,7 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -21,7 +22,8 @@ public class CoverageGraphConstructor {
 	private CFGUtility cfgUtility = new CFGUtility();
 	
 	public CoverageSFlowGraph buildCoverageGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod,
-			int cdgLayer) {
+			int cdgLayer, List<String> inclusiveMethodIds) {
+		cfgUtility.setInclusiveMethodIds(inclusiveMethodIds);
 		CFGInstance cfg = cfgUtility.buildProgramFlowGraph(appClasspath, targetMethod, cdgLayer);
 		cfgUtility.breakCircle(cfg);
 		return buildCoverageGraph(cfg);

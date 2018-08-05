@@ -32,7 +32,7 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	/* for block node */
 	private List<Integer> content; // for a block node which contain all nodes in block from start to end.
 	/* for conditional node */
-	private Map<Branch, List<Integer>> coveredTestcasesOnBranches = new HashMap<Branch, List<Integer>>();
+	private Map<CoverageSFNode, List<Integer>> coveredTestcasesOnBranches = new HashMap<CoverageSFNode, List<Integer>>();
 
 	public CoverageSFNode(int cvgIdx) {
 		this.cvgIdx = cvgIdx;
@@ -162,26 +162,25 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	}
 
 	public void markCoveredBranch(CoverageSFNode branch, int testcaseIdx) {
-		Branch condBranch = new Branch(this.endIdx, branch.getStartIdx());
-		List<Integer> tcs = coveredTestcasesOnBranches.get(condBranch);
+		List<Integer> tcs = coveredTestcasesOnBranches.get(branch);
 		if (tcs == null) {
 			tcs = new ArrayList<>();
-			coveredTestcasesOnBranches.put(condBranch, tcs);
+			coveredTestcasesOnBranches.put(branch, tcs);
 		}
 		if (!tcs.contains(testcaseIdx)) {
 			tcs.add(testcaseIdx);
 		}
 	}
 	
-	public Map<Branch, List<Integer>> getCoveredTestcasesOnBranches() {
-		return coveredTestcasesOnBranches;
-	}
-
 	public void setEndIdx(int endIdx) {
 		this.endIdx = endIdx;
 	}
 
-	public void setCoveredTestcasesOnBranches(Map<Branch, List<Integer>> coveredTestcasesOnBranches) {
+	public Map<CoverageSFNode, List<Integer>> getCoveredTestcasesOnBranches() {
+		return coveredTestcasesOnBranches;
+	}
+
+	public void setCoveredTestcasesOnBranches(Map<CoverageSFNode, List<Integer>> coveredTestcasesOnBranches) {
 		this.coveredTestcasesOnBranches = coveredTestcasesOnBranches;
 	}
 

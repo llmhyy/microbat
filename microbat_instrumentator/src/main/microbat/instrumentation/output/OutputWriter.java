@@ -34,7 +34,7 @@ public class OutputWriter extends DataOutputStream {
 		}
 	}
 	
-	public <K extends Serializable, V extends Serializable> void writeSerializableMap(Map<K, V> map)
+	public <K extends Serializable, V> void writeSerializableMap(Map<K, V> map)
 			throws IOException {
 		if (map == null || map.isEmpty()) {
 			writeVarInt(0);

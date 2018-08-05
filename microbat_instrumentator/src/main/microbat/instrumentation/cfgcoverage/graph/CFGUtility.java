@@ -2,6 +2,7 @@ package microbat.instrumentation.cfgcoverage.graph;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -15,12 +16,14 @@ import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
 import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
 import microbat.instrumentation.utils.ApplicationUtility;
+import microbat.instrumentation.utils.CollectionUtils;
 import microbat.model.ClassLocation;
 import sav.common.core.utils.ClassUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class CFGUtility {
 	private CFGRepository cfgCreator = new CFGRepository();
+	private List<String> inclusiveMethodIds;
 	
 	public CFGInstance buildProgramFlowGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod,
 			int cfgExtensionLayer) {
@@ -31,9 +34,14 @@ public class CFGUtility {
 
 	private CFGInstance buildProgramFlowGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod, int layer,
 			int maxLayer) {
+		String methodId = InstrumentationUtils.getMethodId(targetMethod.getClassCanonicalName(), targetMethod.getMethodSign());
+		if (!CollectionUtils.isEmpty(inclusiveMethodIds) && !inclusiveMethodIds.contains(methodId)) {
+			return new CFGInstance(null, methodId, Collections.<CFGNode>emptyList());
+		}
+		
 		CFGInstance cfg = cfgCreator.createCfgInstance(targetMethod, appClasspath);
 		List<String> appBinFolders = ApplicationUtility.lookupAppBinaryFolders(appClasspath);
-		if (layer != maxLayer) {
+		if (layer < maxLayer) {
 			List<CFGNode> invokeNodes = new ArrayList<>();
 			for (CFGNode node : cfg.getNodeList()) {
 				if (node.getInstructionHandle().getInstruction() instanceof InvokeInstruction) {
@@ -183,4 +191,7 @@ public class CFGUtility {
 		return controlDependencyCalcul.buildControlDependencyMap(cfg);
 	}
 	
+	public void setInclusiveMethodIds(List<String> inclusiveMethodIds) {
+		this.inclusiveMethodIds = inclusiveMethodIds;
+	}
 }

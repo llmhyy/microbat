@@ -1,6 +1,9 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
-public class Branch {
+import java.io.Serializable;
+
+public class Branch implements Serializable {
+	private static final long serialVersionUID = -1054499814399081119L;
 	protected int fromNodeIdx;
 	protected int toNodeIdx;
 	

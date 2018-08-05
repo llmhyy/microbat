@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.bcel.Const;
 import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.Select;
@@ -13,6 +14,7 @@ import microbat.instrumentation.cfgcoverage.graph.IGraphNode;
 public class CFGNode implements IGraphNode<CFGNode>{
 
 	private int idx; // index of instruction in instructionList
+	private int lineNo; // optional
 	private InstructionHandle instructionHandle;
 	private List<CFGNode> parents = new ArrayList<>();
 	private List<CFGNode> children = new ArrayList<>();
@@ -72,7 +74,26 @@ public class CFGNode implements IGraphNode<CFGNode>{
 
 	@Override
 	public String toString() {
-		return "CFGNode [insHandle=" + instructionHandle + "]";
+		return getDisplayString();
+//		return "CFGNode [insHandle=" + instructionHandle + "]";
+	}
+	
+	public String getDisplayString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(String.format("node[%d,%s,line %d]", idx, Const.getOpcodeName(instructionHandle.getInstruction().getOpcode()), lineNo));
+		if (!children.isEmpty()) {
+			sb.append(", branches={");
+			for (int i = 0; i < children.size();) {
+				CFGNode child = children.get(i++);
+				sb.append(String.format("node[%d,%s,line %d]", child.idx,
+						Const.getOpcodeName(child.instructionHandle.getInstruction().getOpcode()), child.lineNo));
+				if (i < children.size()) {
+					sb.append(",");
+				}
+			}
+			sb.append("}");
+		}
+		return sb.toString();
 	}
 
 	@Override
@@ -157,4 +178,13 @@ public class CFGNode implements IGraphNode<CFGNode>{
 	public void setBlockNode(BlockNode blockNode) {
 		this.blockNode = blockNode;
 	}
+
+	public int getLineNo() {
+		return lineNo;
+	}
+
+	public void setLineNo(int lineNo) {
+		this.lineNo = lineNo;
+	}
+	
 }

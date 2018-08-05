@@ -20,7 +20,7 @@ public class CFGInstance {
 		this.nodeList = nodeList;
 		unitCfgNodeIds = new ArrayList<UniqueNodeId>(nodeList.size());
 		for (CFGNode node : nodeList) {
-			unitCfgNodeIds.add(new UniqueNodeId(methodId, node.getIdx()));
+			unitCfgNodeIds.add(new UniqueNodeId(methodId, node.getIdx(), node.getLineNo()));
 		}
 	}
 	
@@ -77,10 +77,12 @@ public class CFGInstance {
 	public static class UniqueNodeId {
 		String methodId;
 		int localNodeIdx;
+		int line;
 
-		public UniqueNodeId(String methodId, int idx) {
+		public UniqueNodeId(String methodId, int idx, int line) {
 			this.methodId = methodId;
 			this.localNodeIdx = idx;
+			this.line = line;
 		}
 
 		public String getMethodId() {
@@ -97,7 +99,11 @@ public class CFGInstance {
 
 		@Override
 		public String toString() {
-			return "UniqueNodeId [methodId=" + methodId + ", localNodeIdx=" + localNodeIdx + "]";
+			return String.format("UniqueNodeId [%s, idx=%s, line=%s", methodId, localNodeIdx, line);
+		}
+		
+		public int getLine() {
+			return line;
 		}
 	}
 

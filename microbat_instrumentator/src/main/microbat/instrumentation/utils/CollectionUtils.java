@@ -1,5 +1,7 @@
 package microbat.instrumentation.utils;
 
+import java.util.List;
+
 /**
  * @author LLT
  *
@@ -12,5 +14,9 @@ public class CollectionUtils {
 			}
 		}
 		return false;
+	}
+
+	public static boolean isEmpty(List<String> list) {
+		return list == null || list.isEmpty();
 	}
 }

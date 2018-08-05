@@ -12,6 +12,7 @@ import microbat.instrumentation.CommandLine;
 import microbat.instrumentation.IAgent;
 import microbat.instrumentation.cfgcoverage.graph.CoverageGraphConstructor;
 import microbat.instrumentation.cfgcoverage.graph.CoveragePath;
+import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.cfgcoverage.instr.CoverageInstrumenter;
 import microbat.instrumentation.cfgcoverage.instr.CoverageTransformer;
@@ -41,7 +42,7 @@ public class CoverageAgent implements IAgent {
 		ValueExtractor.variableLayer = agentParams.getVarLayer();
 		CoverageGraphConstructor constructor = new CoverageGraphConstructor();
 		CoverageSFlowGraph coverageFlowGraph = constructor.buildCoverageGraph(appClasspath,
-				agentParams.getTargetMethod(), agentParams.getCdgLayer());
+				agentParams.getTargetMethod(), agentParams.getCdgLayer(), agentParams.getInclusiveMethodIds());
 		CoverageTracer.coverageFlowGraph = coverageFlowGraph;
 		MethodInstructionsInfo.initInstrInstructions(coverageFlowGraph);
 		instrumenter.setEntryPoint(coverageFlowGraph.getStartNode().getStartNodeId().getMethodId());
@@ -58,7 +59,11 @@ public class CoverageAgent implements IAgent {
 		for (Entry<List<Integer>, List<Integer>> entry : pathMap.entrySet()) {
 			CoveragePath path = new CoveragePath();
 			path.setCoveredTcs(entry.getValue());
-			path.setPath(entry.getKey());
+			List<CoverageSFNode> nodes = new ArrayList<>();
+			for (int nodeId : entry.getKey()) {
+				nodes.add(coverageGraph.getNodeList().get(nodeId));
+			}
+			path.setPath(nodes);
 			coveredPaths.add(path);
 		}
 		coverageGraph.setCoveragePaths(coveredPaths);

@@ -129,4 +129,5 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 	public void addExitNode(CoverageSFNode node) {
 		exitList.add(node);
 	}
+	
 }

@@ -5,7 +5,6 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
-import microbat.instrumentation.cfgcoverage.graph.Branch;
 import microbat.instrumentation.cfgcoverage.graph.CoveragePath;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
@@ -47,7 +46,7 @@ public class CoverageOutputWriter extends OutputWriter {
 		writeVarInt(coveragePaths.size());
 		for (CoveragePath coveredPath : coveragePaths) {
 			writeListInt(coveredPath.getCoveredTcs());
-			writeListInt(coveredPath.getPath());
+			writeListCoverageNode(coveredPath.getPath());
 		}
 	}
 	
@@ -83,13 +82,6 @@ public class CoverageOutputWriter extends OutputWriter {
 			break;
 		case CONDITION_NODE:
 			writeVarInt(node.getStartIdx()); // startIdx = endIdx
-			/* covered testcases on branches */
-			writeVarInt(node.getCoveredTestcasesOnBranches().keySet().size());
-			for (Branch branch : node.getCoveredTestcasesOnBranches().keySet()) {
-				writeVarInt(branch.getToNodeIdx());
-				List<Integer> coveredTcs = node.getCoveredTestcasesOnBranches().get(branch);
-				writeListInt(coveredTcs);
-			}
 			break;
 		case INVOKE_NODE:
 			writeVarInt(node.getStartIdx()); // startIdx = endIdx
@@ -102,7 +94,13 @@ public class CoverageOutputWriter extends OutputWriter {
 		}
 		/* covered testcases on node */
 		writeListInt(node.getCoveredTestcases());
+		/* covered testcases on branch */
+		/* covered testcases on branches */
+		writeVarInt(node.getCoveredTestcasesOnBranches().keySet().size());
+		for (CoverageSFNode branch : node.getCoveredTestcasesOnBranches().keySet()) {
+			writeVarInt(branch.getCvgIdx());
+			List<Integer> coveredTcs = node.getCoveredTestcasesOnBranches().get(branch);
+			writeListInt(coveredTcs);
+		}
 	}
-
-	
 }

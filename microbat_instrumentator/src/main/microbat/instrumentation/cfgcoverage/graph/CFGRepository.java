@@ -66,7 +66,13 @@ public class CFGRepository {
 			}
 			
 		});
+		/* fill up line number info */
+		for (CFGNode node : nodeList) {
+			node.setLineNo(method.getLineNumberTable().getSourceLine(node.getInstructionHandle().getPosition()));
+		}
+		
 		methodId = InstrumentationUtils.getMethodId(methodLocation.getClassCanonicalName(), method);
+		
 		return new CFGInstance(cfg, methodId, nodeList);
 	}
 	
