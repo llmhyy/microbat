@@ -9,6 +9,7 @@ import java.util.Map;
 
 import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
+import microbat.instrumentation.utils.CollectionUtils;
 
 /**
  * @author lyly
@@ -67,6 +68,14 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 			}
 		}
 		return null; 
+	}
+	
+	public boolean isCovered() {
+		return !CollectionUtils.isEmpty(coveredTestcases);
+	}
+	
+	public List<CoverageSFNode> getCoveredBranches() {
+		return new ArrayList<>(coveredTestcasesOnBranches.keySet());
 	}
 
 	public List<Integer> getCoveredTestcases() {

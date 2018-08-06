@@ -3,6 +3,9 @@ package microbat.instrumentation.cfgcoverage.graph;
 import java.util.ArrayList;
 import java.util.List;
 
+import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode.Type;
+import microbat.instrumentation.utils.CollectionUtils;
+
 /**
  * 
  * @author lyly
@@ -64,7 +67,7 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 	public int getExtensionLayer() {
 		return extensionLayer;
 	}
-
+	
 	public List<Integer> getCoveredTestcaseIdexies() {
 		return coveredTestcaseIdexies;
 	}
@@ -130,4 +133,17 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 		exitList.add(node);
 	}
 	
+	private List<CoverageSFNode> cacheDecisionNodes;
+
+	public List<CoverageSFNode> getDecisionNodes() {
+		if (cacheDecisionNodes == null) {
+			cacheDecisionNodes = new ArrayList<>();
+			for (CoverageSFNode node : nodeList) {
+				if (node.getType() == Type.CONDITION_NODE) {
+					cacheDecisionNodes.add(node);
+				}
+			}
+		}
+		return cacheDecisionNodes;
+	}
 }

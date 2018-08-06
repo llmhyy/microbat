@@ -16,7 +16,7 @@ public class CollectionUtils {
 		return false;
 	}
 
-	public static boolean isEmpty(List<String> list) {
+	public static boolean isEmpty(List<?> list) {
 		return list == null || list.isEmpty();
 	}
 }
