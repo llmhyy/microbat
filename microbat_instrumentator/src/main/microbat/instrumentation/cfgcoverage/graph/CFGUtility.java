@@ -159,8 +159,17 @@ public class CFGUtility {
 				for (int i = stackPos; i < stack.size() && !stop; i++) {
 					CFGNode node = stack.get(i);
 					if (node.isConditional()) {
+						/* find next visited node on stack */
+						CFGNode firstNodeOfCurrentBranch = null;
+						for (int j = i + 1; j < stack.size() ;j++) {
+							CFGNode sNode = stack.get(j);
+							if (visited[sNode.getIdx()] >= 0) {
+								firstNodeOfCurrentBranch = sNode;
+								break;
+							}
+						}
 						for (CFGNode branch : node.getChildren()) {
-							if (!stack.get(i + 1).equals(branch)) {
+							if (!firstNodeOfCurrentBranch.equals(branch)) {
 								outloopEdge = new Branch(node.getIdx(), branch.getIdx());
 								outloopNode = branch;
 								stop = true;
