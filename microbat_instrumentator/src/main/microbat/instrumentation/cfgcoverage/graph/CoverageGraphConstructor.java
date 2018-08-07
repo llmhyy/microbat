@@ -77,7 +77,6 @@ public class CoverageGraphConstructor {
 				}
 				break;
 			case ALIAS_NODE:
-				blockNode.setAliasId(((CFGAliasNode) node).getAliasNodeId());
 				break;
 			default:
 				break;
@@ -92,25 +91,12 @@ public class CoverageGraphConstructor {
 		
 		/* set endNodeId */
 		for (CoverageSFNode node : coverageGraph.getNodeList()) {
-			if (node.getType() == Type.ALIAS_NODE) {
-				CoverageSFNode orgCoverageNode = nodeMap.get(node.getStartIdx());
-				node.setEndIdx(orgCoverageNode.getEndIdx());
-				node.setEndNodeId(orgCoverageNode.getEndNodeId());
-			} else {
-				CFGNode endCfgNode = cfg.getNodeList().get(node.getEndIdx());
-				node.setEndNodeId(cfg.getUnitCfgNodeId(endCfgNode));
-			}
+			CFGNode endCfgNode = cfg.getNodeList().get(node.getEndIdx());
+			node.setEndNodeId(cfg.getUnitCfgNodeId(endCfgNode));
 		}
 		
 		/* create graph edges */
 		for (CoverageSFNode node : coverageGraph.getNodeList()) {
-			if (node.getType() == Type.ALIAS_NODE) {
-				Branch outLoopBranch = node.getAliasId().getOutLoopBranch();
-				if (outLoopBranch != null) {
-					node.addBranch(nodeMap.get(outLoopBranch.getToNodeIdx()));
-				}
-				continue;
-			}
 			CFGNode endCfgNode = cfg.getNodeList().get(node.getEndIdx());
 			for (CFGNode branch : endCfgNode.getChildren()) {
 				CoverageSFNode blockNode = nodeMap.get(branch.getIdx());

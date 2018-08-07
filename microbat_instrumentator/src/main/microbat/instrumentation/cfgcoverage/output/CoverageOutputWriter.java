@@ -75,10 +75,6 @@ public class CoverageOutputWriter extends OutputWriter {
 			break;
 		case ALIAS_NODE:
 			writeVarInt(node.getStartIdx()); // startIdx = endIdx
-			writeVarInt(node.getAliasId().getPrevNodeIdx());
-			writeVarInt(node.getAliasId().getOrgNodeIdx()); // aliasId
-			writeVarInt(node.getAliasId().getOutLoopBranch().getFromNodeIdx());
-			writeVarInt(node.getAliasId().getOutLoopBranch().getToNodeIdx());
 			break;
 		case CONDITION_NODE:
 			writeVarInt(node.getStartIdx()); // startIdx = endIdx
