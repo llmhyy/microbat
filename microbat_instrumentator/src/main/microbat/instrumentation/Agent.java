@@ -32,8 +32,8 @@ public class Agent {
 		AgentLogger.setup(LogType.valuesOf(cmd.getStringList(AgentParams.OPT_LOG)));
 	}
 
-	public void startup() {
-		agent.startup();
+	public void startup(long vmStartupTime, long agentPreStartup) {
+		agent.startup(vmStartupTime, agentPreStartup);
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {

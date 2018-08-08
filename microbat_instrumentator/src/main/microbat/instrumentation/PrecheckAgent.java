@@ -17,7 +17,7 @@ public class PrecheckAgent implements IAgent {
 		this.precheckTransformer = new PrecheckTransformer(agentParams);
 	}
 	
-	public void startup() {
+	public void startup(long vmStartupTime, long agentPreStartup) {
 		FilterChecker.setup(agentParams.initAppClassPath(), agentParams.getIncludesExpression(),
 				agentParams.getExcludesExpression());
 		TraceMeasurement.setStepLimit(agentParams.getStepLimit());

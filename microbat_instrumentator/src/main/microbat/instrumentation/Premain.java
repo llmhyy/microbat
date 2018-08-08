@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,14 +22,18 @@ public class Premain {
 	private static boolean testMode = true;
 
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
+		long vmStartupTime = System.currentTimeMillis() - ManagementFactory.getRuntimeMXBean().getStartTime();
+		long agentPreStartup = System.currentTimeMillis();
 		installBootstrap(inst);
-		
 		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
 		
 		debug("start instrumentation...");
 		CommandLine cmd = CommandLine.parse(agentArgs);
+		agentPreStartup = System.currentTimeMillis() - agentPreStartup;
+		System.out.println("Vm start up time: " + vmStartupTime);
+		System.out.println("Agent start up time: " + agentPreStartup);
 		Agent agent = new Agent(cmd, inst);
-		agent.startup();
+		agent.startup(vmStartupTime, agentPreStartup);
 		SystemClassTransformer.transformThread(inst);
 		inst.addTransformer(agent.getTransformer(), true);
 		inst.addTransformer(new TestRunnerTranformer());

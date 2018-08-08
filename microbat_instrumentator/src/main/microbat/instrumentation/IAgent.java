@@ -5,7 +5,7 @@ import java.lang.instrument.Instrumentation;
 
 public interface IAgent {
 
-	public void startup();
+	public void startup(long vmStartupTime, long agentPreStartup);
 
 	public void shutdown() throws Exception;
 

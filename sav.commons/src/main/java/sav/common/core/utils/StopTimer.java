@@ -53,7 +53,7 @@ public class StopTimer {
 		stop = true;
 	}
 
-	private synchronized List<String> getResults() {
+	public synchronized List<String> getResults() {
 		LinkedHashMap<String, Long> timeResults = getTimeResults();
 		List<String> lines = new ArrayList<String>();
 		long overall = 0;

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.CommandLine;
 import microbat.instrumentation.IAgent;
 import microbat.instrumentation.cfgcoverage.graph.CoverageGraphConstructor;
@@ -21,6 +22,7 @@ import microbat.instrumentation.cfgcoverage.runtime.CoverageTracer;
 import microbat.instrumentation.cfgcoverage.runtime.value.ValueExtractor;
 import microbat.instrumentation.filter.FilterChecker;
 import sav.common.core.utils.CollectionUtils;
+import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class CoverageAgent implements IAgent {
@@ -28,6 +30,7 @@ public class CoverageAgent implements IAgent {
 	private CoverageInstrumenter instrumenter;
 	private List<String> testcases = new ArrayList<String>();
 	private CoverageTransformer coverageTransformer;
+	private StopTimer timer;
 	
 	public CoverageAgent(CommandLine cmd) {
 		this.agentParams = new CoverageAgentParams(cmd);
@@ -36,7 +39,9 @@ public class CoverageAgent implements IAgent {
 	}
 
 	@Override
-	public void startup() {
+	public void startup(long vmStartupTime, long agentPreStartup) {
+		timer = new AgentStopTimer("Tracing program for coverage", vmStartupTime, agentPreStartup);
+		timer.newPoint("Execution");
 		AppJavaClassPath appClasspath = agentParams.initAppClasspath();
 		FilterChecker.setup(appClasspath, null, null);
 		ValueExtractor.variableLayer = agentParams.getVarLayer();
@@ -50,6 +55,8 @@ public class CoverageAgent implements IAgent {
 
 	@Override
 	public void shutdown() throws Exception {
+		timer.newPoint("Saving coverage");
+		AgentLogger.debug("Saving coverage...");
 		CoverageSFlowGraph coverageGraph = CoverageTracer.coverageFlowGraph;
 		Map<List<Integer>, List<Integer>> pathMap = new HashMap<>(); // path to tcs
 		for (Entry<Integer, List<Integer>> tcPath : CoverageTracer.testcaseGraphExecPaths.entrySet()) {
@@ -70,6 +77,7 @@ public class CoverageAgent implements IAgent {
 		CoverageOutput coverageOutput = new CoverageOutput(coverageGraph);
 		coverageOutput.setInputData(CoverageTracer.testInputData);
 		coverageOutput.saveToFile(agentParams.getDumpFile());
+		AgentLogger.debug(timer.getResultString());
 	}
 
 	@Override

@@ -25,7 +25,7 @@ public class TraceAgent implements IAgent {
 		this.agentParams = AgentParams.initFrom(cmd);
 	}
 
-	public void startup() {
+	public void startup(long vmStartupTime, long agentPreStartup) {
 		timer = new StopTimer("Trace Construction");
 		timer.newPoint("Execution");
 		/* init filter */
