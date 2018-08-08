@@ -4,7 +4,7 @@
 	<classpathentry kind="src" path="src/core"/>
 	<classpathentry kind="lib" path="lib/commons-lang-2.6.jar"/>
 	<classpathentry kind="lib" path="lib/javassist.jar"/>
-	<classpathentry kind="lib" path="lib/sav.commons.jar" sourcepath="/sav.commons"/>
+	<classpathentry kind="lib" path="lib/sav.commons.simplified.jar" sourcepath="/sav.commons"/>
 	<classpathentry kind="lib" path="lib/commons-io-1.3.2.jar"/>
 	<classpathentry kind="lib" path="lib/mysql-connector-java-5.1.44-bin.jar" sourcepath="lib/mysql-connector-java-5.1.44.zip"/>
 	<classpathentry kind="lib" path="lib/slf4j-api-1.7.12.jar"/>
