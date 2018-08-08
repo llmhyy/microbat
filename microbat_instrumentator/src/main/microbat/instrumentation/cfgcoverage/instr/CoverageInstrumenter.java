@@ -43,10 +43,15 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 
 	@Override
 	protected byte[] instrument(String classFName, String className, JavaClass jc) {
+		if (!MethodInstructionsInfo.hasClassInInstrumentationList(className)) {
+			return null;
+		}
+		
+		boolean isAppClass = FilterChecker.isAppClass(classFName);
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		JavaClass newJC = null;
-		boolean isAppClass = FilterChecker.isAppClass(classFName);
+		
 		for (Method method : jc.getMethods()) {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
@@ -96,6 +101,11 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 		}
 		MethodInstructionsInfo instmInsns = MethodInstructionsInfo.getInstrumentationInstructions(insnList, method,
 				classGen.getClassName());
+		
+		if (instmInsns == null) {
+			return false;
+		}
+		
 		tempVarIdx = 0;
 		String methodId = InstrumentationUtils.getMethodId(classGen.getClassName(), method);
 		LocalVariableGen methodIdVar = createLocalVariable(METHOD_ID_VAR_NAME, methodGen, constPool);
