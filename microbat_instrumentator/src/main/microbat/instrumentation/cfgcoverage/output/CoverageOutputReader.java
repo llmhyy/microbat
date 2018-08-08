@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import microbat.instrumentation.cfgcoverage.graph.AliasNodeId;
 import microbat.instrumentation.cfgcoverage.graph.Branch;
 import microbat.instrumentation.cfgcoverage.graph.CoveragePath;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
@@ -93,12 +92,6 @@ public class CoverageOutputReader extends OutputReader{
 			// startIdx, endIdx
 			node.setStartIdx(readVarInt());
 			node.setBlockScope();
-			// aliasId
-			int aliasPrevNodeIdx = readVarInt();
-			int aliasOrgNodeIdx = readVarInt();
-			node.setAliasId(new AliasNodeId(aliasPrevNodeIdx, aliasOrgNodeIdx));
-			Branch outLoopBranch = new Branch(readVarInt(), readVarInt());
-			node.getAliasId().setOutLoopBranch(outLoopBranch);
 			break;
 		case CONDITION_NODE:
 			node.setStartIdx(readVarInt());

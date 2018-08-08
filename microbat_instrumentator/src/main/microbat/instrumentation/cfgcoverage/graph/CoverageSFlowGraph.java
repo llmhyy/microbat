@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode.Type;
-import microbat.instrumentation.utils.CollectionUtils;
 
 /**
  * 

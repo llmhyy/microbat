@@ -28,8 +28,6 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	private List<CoverageSFNode> parents = new ArrayList<>(2);
 	
 	private List<Integer> coveredTestcases = new ArrayList<>();
-	/* for alias node */
-	private AliasNodeId aliasId;
 	/* for block node */
 	private List<Integer> content; // for a block node which contain all nodes in block from start to end.
 	/* for conditional node */
@@ -41,14 +39,8 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	
 	public CoverageSFNode(Type type, CFGNode startNode, CFGInstance cfg) {
 		this.type = type;
-		if (type == Type.ALIAS_NODE) {
-			CFGNode orgNode = ((CFGAliasNode) startNode).getOrgNode();
-			startIdx = orgNode.getIdx();
-			startNodeId = cfg.getUnitCfgNodeId(orgNode);
-		} else {
-			startIdx = startNode.getIdx();
-			startNodeId = cfg.getUnitCfgNodeId(startNode);
-		}
+		startIdx = startNode.getIdx();
+		startNodeId = cfg.getUnitCfgNodeId(startNode);
 	}
 	
 	public CoverageSFNode getCorrespondingBranch(String methodId) {
@@ -193,18 +185,10 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		this.coveredTestcasesOnBranches = coveredTestcasesOnBranches;
 	}
 
-	public AliasNodeId getAliasId() {
-		return aliasId;
-	}
-	
 	public boolean isAliasNode() {
-		return aliasId != null;
+		return getType() == Type.ALIAS_NODE;
 	}
 
-	public void setAliasId(AliasNodeId aliasId) {
-		this.aliasId = aliasId;
-	}
-	
 	public int getId() {
 		return cvgIdx;
 	}
@@ -218,9 +202,6 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	}
 	
 	public List<Integer> getCorrespondingCfgNodeIdxies() {
-		if (type == Type.ALIAS_NODE) {
-			return Collections.emptyList();
-		}
 		return content;
 	}
 
@@ -250,7 +231,7 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 			}
 		}
 		return "CoverageSFNode [id=" + cvgIdx +", type=" + type + ", startIdx=" + startIdx + ", endIdx=" + endIdx + ", branches="
-				+ branchIdxies + ", aliasId=" + aliasId + ", endNodeId=" + endNodeId + ", cvgIdx=" + cvgIdx + "]";
+				+ branchIdxies + ", endNodeId=" + endNodeId + ", cvgIdx=" + cvgIdx + "]";
 	}
 
 	@Override
