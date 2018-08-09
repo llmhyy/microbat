@@ -19,6 +19,7 @@ import microbat.instrumentation.cfgcoverage.instr.CoverageInstrumenter;
 import microbat.instrumentation.cfgcoverage.instr.CoverageTransformer;
 import microbat.instrumentation.cfgcoverage.instr.MethodInstructionsInfo;
 import microbat.instrumentation.cfgcoverage.runtime.CoverageTracer;
+import microbat.instrumentation.cfgcoverage.runtime.MethodExecutionData;
 import microbat.instrumentation.cfgcoverage.runtime.value.ValueExtractor;
 import microbat.instrumentation.filter.FilterChecker;
 import sav.common.core.utils.CollectionUtils;
@@ -59,8 +60,10 @@ public class CoverageAgent implements IAgent {
 		AgentLogger.debug("Saving coverage...");
 		CoverageSFlowGraph coverageGraph = CoverageTracer.coverageFlowGraph;
 		Map<List<Integer>, List<Integer>> pathMap = new HashMap<>(); // path to tcs
-		for (Entry<Integer, List<Integer>> tcPath : CoverageTracer.testcaseGraphExecPaths.entrySet()) {
-			CollectionUtils.getListInitIfEmpty(pathMap, tcPath.getValue()).add(tcPath.getKey());
+		for (Entry<Integer, List<MethodExecutionData>> entry : CoverageTracer.methodExecsOnASingleTcMap.entrySet()) {
+			for (MethodExecutionData methodExecData : entry.getValue()) {
+				CollectionUtils.getListInitIfEmpty(pathMap, methodExecData.getExecPathId()).add(entry.getKey());
+			}
 		}
 		List<CoveragePath> coveredPaths = new ArrayList<>(pathMap.size());
 		for (Entry<List<Integer>, List<Integer>> entry : pathMap.entrySet()) {
@@ -75,7 +78,7 @@ public class CoverageAgent implements IAgent {
 		}
 		coverageGraph.setCoveragePaths(coveredPaths);
 		CoverageOutput coverageOutput = new CoverageOutput(coverageGraph);
-		coverageOutput.setInputData(CoverageTracer.testInputData);
+		coverageOutput.setInputData(CoverageTracer.methodExecsOnASingleTcMap);
 		coverageOutput.saveToFile(agentParams.getDumpFile());
 		AgentLogger.debug(timer.getResultString());
 	}

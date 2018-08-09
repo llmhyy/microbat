@@ -1,7 +1,7 @@
 package microbat.instrumentation.cfgcoverage.instr;
 
 public enum CoverageTracerMethods {
-	EXIT_METHOD(true, "microbat/instrumentation/cfgcoverage/runtime/ICoverageTracer", "_exitMethod", "(Ljava/lang/String;)V", 2),
+	EXIT_METHOD(true, "microbat/instrumentation/cfgcoverage/runtime/ICoverageTracer", "_exitMethod", "(Ljava/lang/String;Z)V", 3),
 	GET_TRACER(false, "microbat/instrumentation/cfgcoverage/runtime/CoverageTracer", "_getTracer", "(Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)Lmicrobat/instrumentation/cfgcoverage/runtime/ICoverageTracer;", 6),
 	ON_IF(true, "microbat/instrumentation/cfgcoverage/runtime/ICoverageTracer", "_onIf", "(ILjava/lang/String;I)V", 4),
 	ON_IF_A_CMP(true, "microbat/instrumentation/cfgcoverage/runtime/ICoverageTracer", "_onIfACmp", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;I)V", 5),

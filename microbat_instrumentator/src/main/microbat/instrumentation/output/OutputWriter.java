@@ -55,6 +55,11 @@ public class OutputWriter extends DataOutputStream {
 		}
 	}
 	
+	public <T> void writeSerializableObj(T obj) throws IOException {
+		byte[] bytes = ByteConverter.convertToBytes(obj);
+		writeByteArr(bytes);
+	}
+	
 	public final void writeString(String str) throws IOException {
 		if (str == null) {
 			writeVarInt(-1);

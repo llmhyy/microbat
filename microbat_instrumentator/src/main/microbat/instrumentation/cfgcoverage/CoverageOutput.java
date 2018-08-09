@@ -7,17 +7,18 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Map;
 
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.cfgcoverage.output.CoverageOutputReader;
 import microbat.instrumentation.cfgcoverage.output.CoverageOutputWriter;
-import microbat.instrumentation.cfgcoverage.runtime.TestInputData;
+import microbat.instrumentation.cfgcoverage.runtime.MethodExecutionData;
 import microbat.instrumentation.utils.FileUtils;
 
 public class CoverageOutput {
 	private CoverageSFlowGraph coverageGraph;
-	private Map<Integer, TestInputData> inputData;
+	private Map<Integer, List<MethodExecutionData>> inputData;
 	
 	public CoverageOutput() {
 		
@@ -78,11 +79,11 @@ public class CoverageOutput {
 		this.coverageGraph = coverageGraph;
 	}
 
-	public Map<Integer, TestInputData> getInputData() {
+	public Map<Integer, List<MethodExecutionData>> getInputData() {
 		return inputData;
 	}
 
-	public void setInputData(Map<Integer, TestInputData> inputData) {
+	public void setInputData(Map<Integer, List<MethodExecutionData>> inputData) {
 		this.inputData = inputData;
 	}
 }

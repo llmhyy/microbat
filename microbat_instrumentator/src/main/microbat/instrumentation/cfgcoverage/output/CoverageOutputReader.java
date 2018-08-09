@@ -12,7 +12,7 @@ import microbat.instrumentation.cfgcoverage.graph.CoveragePath;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode.Type;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
-import microbat.instrumentation.cfgcoverage.runtime.TestInputData;
+import microbat.instrumentation.cfgcoverage.runtime.MethodExecutionData;
 import microbat.instrumentation.output.ByteConverter;
 import microbat.instrumentation.output.OutputReader;
 
@@ -143,8 +143,8 @@ public class CoverageOutputReader extends OutputReader{
 		return map;
 	}
 
-	public Map<Integer, TestInputData> readInputData() throws IOException {
-		return readSerializableMap();
+	public Map<Integer, List<MethodExecutionData>> readInputData() throws IOException {
+		return readSerializableObj();
 	}
 
 }

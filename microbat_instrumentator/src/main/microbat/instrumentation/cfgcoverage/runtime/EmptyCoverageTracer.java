@@ -21,9 +21,8 @@ public class EmptyCoverageTracer implements ICoverageTracer {
 	}
 
 	@Override
-	public void _exitMethod(String methodId) {
+	public void _exitMethod(String methodId, boolean isEntryPoint) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override

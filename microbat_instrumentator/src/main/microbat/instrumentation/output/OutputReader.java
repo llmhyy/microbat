@@ -73,6 +73,20 @@ public class OutputReader extends DataInputStream {
 	}
 	
 	@SuppressWarnings("unchecked")
+	protected <T> T readSerializableObj() throws IOException {
+		byte[] bytes = readByteArray();
+		if (bytes == null || bytes.length == 0) {
+			return null;
+		}
+		try {
+			return (T) ByteConverter.convertFromBytes(bytes);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
 	protected <T>List<T> readSerializableList() throws IOException {
 		int size = readVarInt();
 		if (size == 0) {

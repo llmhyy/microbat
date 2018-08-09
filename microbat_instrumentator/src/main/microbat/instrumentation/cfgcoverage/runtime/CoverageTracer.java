@@ -21,18 +21,16 @@ import sav.common.core.SavRtException;
 public class CoverageTracer implements ICoverageTracer, ITracer {
 	private static CoverageTracerStore rtStore = new CoverageTracerStore();
 	public static volatile CoverageSFlowGraph coverageFlowGraph;
-	public static volatile Map<Integer, List<Integer>> testcaseGraphExecPaths = new HashMap<>();
-	public static volatile Map<Integer, TestInputData> testInputData = new HashMap<>(); 
+	public static volatile Map<Integer, List<MethodExecutionData>> methodExecsOnASingleTcMap = new HashMap<>();
 	
 	private static int currentTestCaseIdx;
 	protected long threadId;
 	protected int testIdx;
 	private TracingState state = TracingState.INIT;
-	private CoverageSFNode currentNode;
-	private List<Integer> execPath;
 	private ValueExtractor valueExtractor = new ValueExtractor();
-	private TestInputData inputData;
 	private int methodHierachyLevel = 0;
+	private CoverageSFNode currentNode;
+	private MethodExecutionData methodExecData;
 	
 	public CoverageTracer(long threadId, int testIdx) {
 		this.threadId = threadId;
@@ -43,8 +41,6 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	public void _reachNode(String methodId, int nodeIdx) {
 		if (currentNode == null) {
 			currentNode = coverageFlowGraph.getStartNode();
-			execPath = new ArrayList<>();
-			testcaseGraphExecPaths.put(testIdx, execPath);
 		} else {
 			CoverageSFNode branch = currentNode.getCorrespondingBranch(methodId, nodeIdx);
 			if (branch != null) {
@@ -58,13 +54,61 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 				return;
 			}
 		}
-		execPath.add(currentNode.getId());
+		methodExecData.appendExecPath(currentNode);
 		currentNode.addCoveredTestcase(testIdx);
+	}
+	
+	
+	@Override
+	public void enterMethod(String methodId, String paramTypeSignsCode, String paramNamesCode, Object[] params,
+			boolean isEntryPoint) {
+		if (isEntryPoint && methodHierachyLevel == 0) {
+			/* record a new coverage execution path on target method */
+			currentNode = null;
+			ClassLocation loc = InstrumentationUtils.getClassLocation(methodId);
+			methodExecData = new MethodExecutionData(testIdx);
+			List<MethodExecutionData> list = methodExecsOnASingleTcMap.get(testIdx);
+			if (list == null) {
+				list = new ArrayList<>(1);
+				methodExecsOnASingleTcMap.put(testIdx, list);
+			}
+			list.add(methodExecData);
+			BreakPointValue methodInput = valueExtractor.extractInputValue(String.valueOf(testIdx), 
+					loc.getClassCanonicalName(), loc.getMethodSign(), paramTypeSignsCode, paramNamesCode, params);
+			methodExecData.setMethodInputValue(methodInput);
+		}
+		methodHierachyLevel++;
+	}
+	
+	@Override
+	public void _exitMethod(String methodId, boolean isEntryPoint) {
+		methodHierachyLevel--;
+	}
+	
+	private boolean doesNotNeedToRecord(String methodId) {
+		try {
+			if (methodHierachyLevel >= coverageFlowGraph.getExtensionLayer()) {
+				return true;
+			}
+			if (currentNode.getType() != Type.INVOKE_NODE) {
+				throw new SavRtException(String.format("Expect INVOKE_NODE node, get %s (%s)", currentNode.getType(), currentNode));
+			}
+			for (CoverageSFNode branch : currentNode.getBranches()) {
+				UniqueNodeId nodeId = branch.getStartNodeId();
+				if (nodeId.getMethodId().equals(methodId) && nodeId.getLocalNodeIdx() == 0) {
+					return false;
+				}
+			}
+			return true;
+		} catch(Throwable t) {
+			AgentLogger.error(t);
+			return true;
+		}
 	}
 	
 	private void onIf(String methodId, int nodeIdx, double condVariation) {
 		if (nodeRecording(methodId, nodeIdx)) {
-			inputData.getConditionVariationMap().put(currentNode.getId(), condVariation);
+			methodExecData.addConditionVariation(currentNode.getId(), condVariation);
 		}
 	}
 
@@ -93,49 +137,6 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	@Override
 	public void _onIfNull(Object value, String methodId, int nodeIdx) {
 		onIf(methodId, nodeIdx, value == null ? 0 : 1);
-	}
-	
-	@Override
-	public void enterMethod(String methodId, String paramTypeSignsCode, String paramNamesCode, Object[] params,
-			boolean isEntryPoint) {
-		if (isEntryPoint) {
-			// keep the last one
-			currentNode = null;
-			ClassLocation loc = InstrumentationUtils.getClassLocation(methodId);
-			this.inputData = new TestInputData();
-			BreakPointValue methodInput = valueExtractor.extractInputValue(String.valueOf(testIdx), 
-					loc.getClassCanonicalName(), loc.getMethodSign(), paramTypeSignsCode, paramNamesCode, params);
-			inputData.setMethodInputValue(methodInput);
-			testInputData.put(testIdx, inputData);
-			methodHierachyLevel = 0;
-		}
-		methodHierachyLevel++;
-	}
-	
-	@Override
-	public void _exitMethod(String methodId) {
-		methodHierachyLevel--;
-	}
-	
-	private boolean doesNotNeedToRecord(String methodId) {
-		try {
-			if (methodHierachyLevel >= coverageFlowGraph.getExtensionLayer()) {
-				return true;
-			}
-			if (currentNode.getType() != Type.INVOKE_NODE) {
-				throw new SavRtException(String.format("Expect INVOKE_NODE node, get %s (%s)", currentNode.getType(), currentNode));
-			}
-			for (CoverageSFNode branch : currentNode.getBranches()) {
-				UniqueNodeId nodeId = branch.getStartNodeId();
-				if (nodeId.getMethodId().equals(methodId) && nodeId.getLocalNodeIdx() == 0) {
-					return false;
-				}
-			}
-			return true;
-		} catch(Throwable t) {
-			AgentLogger.error(t);
-			return true;
-		}
 	}
 	
 	public synchronized static ICoverageTracer _getTracer(String methodId, boolean isEntryPoint, String paramNamesCode,

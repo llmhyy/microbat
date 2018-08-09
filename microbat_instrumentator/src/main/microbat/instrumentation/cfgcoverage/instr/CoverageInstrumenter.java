@@ -119,7 +119,7 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 			}
 		}
 		for (InstructionHandle exitInsn : instmInsns.getExitInsns()) {
-			injectCodeTracerExitMethod(methodIdVar, tracerVar, constPool, insnList, exitInsn);
+			injectCodeTracerExitMethod(methodIdVar, tracerVar, constPool, insnList, exitInsn, methodId);
 		}
 		injectCodeInitTracer(methodGen, constPool, tracerVar, methodIdVar, methodId);
 		return true;
@@ -232,10 +232,12 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 	}
 	
 	private void injectCodeTracerExitMethod(LocalVariableGen methodIdVar, LocalVariableGen tracerVar,
-			ConstantPoolGen constPool, InstructionList insnList, InstructionHandle exitInsn) {
+			ConstantPoolGen constPool, InstructionList insnList, InstructionHandle exitInsn, String methodId) {
+		boolean isEntryPoint = this.entryPoint.equals(methodId);
 		InstructionList newInsns = new InstructionList();
 		newInsns.append(new ALOAD(tracerVar.getIndex()));
 		newInsns.append(new ALOAD(methodIdVar.getIndex()));
+		newInsns.append(new PUSH(constPool, isEntryPoint));
 		appendTracerMethodInvoke(newInsns, CoverageTracerMethods.EXIT_METHOD, constPool);
 		
 		insertInsnHandler(insnList, newInsns, exitInsn);

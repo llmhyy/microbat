@@ -8,7 +8,7 @@ import java.util.Map;
 import microbat.instrumentation.cfgcoverage.graph.CoveragePath;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
-import microbat.instrumentation.cfgcoverage.runtime.TestInputData;
+import microbat.instrumentation.cfgcoverage.runtime.MethodExecutionData;
 import microbat.instrumentation.output.OutputWriter;
 import sav.common.core.utils.CollectionUtils;
 
@@ -18,8 +18,8 @@ public class CoverageOutputWriter extends OutputWriter {
 		super(out);
 	}
 	
-	public void writeInputData(Map<Integer, TestInputData> inputData) throws IOException {
-		writeSerializableMap(inputData);
+	public void writeInputData(Map<Integer, List<MethodExecutionData>> inputData) throws IOException {
+		writeSerializableObj(inputData);
 	}
 
 	public void writeCfgCoverage(CoverageSFlowGraph coverageGraph) throws IOException {
