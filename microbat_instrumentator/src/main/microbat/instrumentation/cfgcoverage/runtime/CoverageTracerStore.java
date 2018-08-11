@@ -28,4 +28,11 @@ public class CoverageTracerStore {
 		rtStore[++lastUsedIdx] = tracer;
 		return tracer;
 	}
+	
+	public void clear() {
+		for (int i = 0; i <= lastUsedIdx; i++) {
+			rtStore[i] = null;
+		}
+		lastUsedIdx = INVALID_THREAD_ID;
+	}
 }

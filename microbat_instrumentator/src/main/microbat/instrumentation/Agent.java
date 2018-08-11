@@ -24,7 +24,7 @@ public class Agent {
 		if (cmd.getBoolean(CoverageAgentParams.OPT_IS_COUNT_COVERAGE, false)) {
 			agent = new CoverageAgent(cmd);
 		} else if (cmd.getBoolean(AgentParams.OPT_PRECHECK, false)) {
-			agent = new PrecheckAgent(cmd);
+			agent = new PrecheckAgent(cmd, instrumentation);
 		} else {
 			agent = new TraceAgent(cmd);
 		}
@@ -154,5 +154,9 @@ public class Agent {
 
 	public static boolean isInstrumentationActive() {
 		return agent.isInstrumentationActive();
+	}
+	
+	public static IAgent getAgent() {
+		return agent;
 	}
 }

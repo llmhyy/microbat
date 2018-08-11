@@ -4,6 +4,7 @@ import java.lang.instrument.Instrumentation;
 import java.util.List;
 
 import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.instr.SystemClassTransformer;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.instrumentation.precheck.PrecheckTransformer;
 import microbat.instrumentation.precheck.TraceMeasurement;
@@ -11,16 +12,19 @@ import microbat.instrumentation.precheck.TraceMeasurement;
 public class PrecheckAgent implements IAgent {
 	private AgentParams agentParams;
 	private PrecheckTransformer precheckTransformer;
+	private Instrumentation instrumentation;
 
-	public PrecheckAgent(CommandLine cmd) {
+	public PrecheckAgent(CommandLine cmd, Instrumentation instrumentation) {
 		this.agentParams = AgentParams.initFrom(cmd); 
 		this.precheckTransformer = new PrecheckTransformer(agentParams);
+		this.instrumentation = instrumentation;
 	}
 	
 	public void startup(long vmStartupTime, long agentPreStartup) {
 		FilterChecker.setup(agentParams.initAppClassPath(), agentParams.getIncludesExpression(),
 				agentParams.getExcludesExpression());
 		TraceMeasurement.setStepLimit(agentParams.getStepLimit());
+		SystemClassTransformer.transformThread(instrumentation);
 	}
 
 	public void shutdown() {

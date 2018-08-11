@@ -43,26 +43,20 @@ public class CoverageOutputWriter extends OutputWriter {
 	}
 
 	private void writeCoveragePaths(List<CoveragePath> coveragePaths) throws IOException {
-		writeVarInt(coveragePaths.size());
-		for (CoveragePath coveredPath : coveragePaths) {
+		writeSize(coveragePaths);
+		for (CoveragePath coveredPath : CollectionUtils.nullToEmpty(coveragePaths)) {
 			writeListInt(coveredPath.getCoveredTcs());
 			writeListCoverageNode(coveredPath.getPath());
 		}
 	}
 	
 	private void writeListCoverageNode(List<CoverageSFNode> list) throws IOException {
-		if (list == null) {
-			writeVarInt(-1);
-		} else if (list.isEmpty()) {
-			writeVarInt(0);
-		} else {
-			writeVarInt(list.size());
-		}
-		for (CoverageSFNode value : list) {
+		writeSize(list);
+		for (CoverageSFNode value : CollectionUtils.nullToEmpty(list)) {
 			writeVarInt(value.getId());
 		}
 	}
-
+	
 	private void writeCoverageNode(CoverageSFNode node) throws IOException {
 		// type
 		writeString(node.getType().name());

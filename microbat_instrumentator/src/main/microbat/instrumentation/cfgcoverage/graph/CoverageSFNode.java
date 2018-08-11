@@ -247,5 +247,10 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	public boolean isConditionalNode() {
 		return type == Type.CONDITION_NODE;
 	}
+
+	public void clearCoverageInfo() {
+		coveredTestcases.clear();
+		coveredTestcasesOnBranches.clear();
+	}
 	
 }

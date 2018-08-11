@@ -22,10 +22,12 @@ public class CoverageGraphConstructor {
 	private CFGUtility cfgUtility = new CFGUtility();
 	
 	public CoverageSFlowGraph buildCoverageGraph(AppJavaClassPath appClasspath, ClassLocation targetMethod,
-			int cdgLayer, List<String> inclusiveMethodIds) {
+			int cdgLayer, List<String> inclusiveMethodIds, boolean breakCircle) {
 		cfgUtility.setInclusiveMethodIds(inclusiveMethodIds);
 		CFGInstance cfg = cfgUtility.buildProgramFlowGraph(appClasspath, targetMethod, cdgLayer);
-		cfgUtility.breakCircle(cfg);
+		if (breakCircle) {
+			cfgUtility.breakCircle(cfg);
+		}
 		return buildCoverageGraph(cfg);
 	}
 	

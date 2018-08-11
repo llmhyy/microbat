@@ -22,6 +22,7 @@ import org.apache.bcel.generic.PUSH;
 
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
+import microbat.instrumentation.cfgcoverage.CoverageAgentParams.CoverageCollectionType;
 import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.instr.AbstractInstrumenter;
@@ -40,7 +41,7 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 	public CoverageInstrumenter(CoverageAgentParams agentParams) {
 		this.agentParams = agentParams;
 	}
-
+	
 	@Override
 	protected byte[] instrument(String classFName, String className, JavaClass jc) {
 		if (!MethodInstructionsInfo.hasClassInInstrumentationList(className)) {
@@ -213,16 +214,21 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 		newInsns.append(new PUSH(constPool, methodId));
 		newInsns.append(new ASTORE(methodIdVar.getIndex()));
 		
-		/* invoke _getTracer */
-		newInsns.append(new ALOAD(methodIdVar.getIndex()));// methodId
-		newInsns.append(new PUSH(constPool, isEntryPoint)); // isEntryPoint
-		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgNames(getArgumentNames(methodGen)))); // paramNamesCode
-		newInsns.append(new PUSH(constPool, TraceUtils.encodeArgTypes(methodGen.getArgumentTypes()))); // paramTypeSignsCode
-		
-		LocalVariableGen argObjsVar = createMethodParamTypesObjectArrayVar(methodGen, constPool, startInsn, newInsns, nextTempVarName()); 
-		newInsns.append(new ALOAD(argObjsVar.getIndex())); // params
-		
-		appendTracerMethodInvoke(newInsns, CoverageTracerMethods.GET_TRACER, constPool);
+		if (agentParams.getCoverageType() == CoverageCollectionType.BRANCH_COVERAGE) {
+			newInsns.append(new ALOAD(methodIdVar.getIndex()));// methodId
+			appendTracerMethodInvoke(newInsns, CoverageTracerMethods.BRANCH_COVERAGE_GET_TRACER, constPool);
+		} else {
+			/* invoke _getTracer */
+			newInsns.append(new ALOAD(methodIdVar.getIndex()));// methodId
+			newInsns.append(new PUSH(constPool, isEntryPoint)); // isEntryPoint
+			newInsns.append(new PUSH(constPool, TraceUtils.encodeArgNames(getArgumentNames(methodGen)))); // paramNamesCode
+			newInsns.append(new PUSH(constPool, TraceUtils.encodeArgTypes(methodGen.getArgumentTypes()))); // paramTypeSignsCode
+			
+			LocalVariableGen argObjsVar = createMethodParamTypesObjectArrayVar(methodGen, constPool, startInsn, newInsns, nextTempVarName()); 
+			newInsns.append(new ALOAD(argObjsVar.getIndex())); // params
+			
+			appendTracerMethodInvoke(newInsns, CoverageTracerMethods.GET_TRACER, constPool);
+		}
 		InstructionHandle tracerStartPos = newInsns.append(new ASTORE(tracerVar.getIndex()));
 		tracerVar.setStart(tracerStartPos);
 		

@@ -145,4 +145,12 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 		}
 		return cacheDecisionNodes;
 	}
+
+	public void clearData() {
+		coveredTestcaseIdexies.clear();
+		coveredTestcases.clear();
+		for (CoverageSFNode node : nodeList) {
+			node.clearCoverageInfo();
+		}
+	}
 }

@@ -10,7 +10,6 @@ import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
 import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode.Type;
-import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.instrumentation.cfgcoverage.runtime.value.ValueExtractor;
 import microbat.instrumentation.runtime.ITracer;
 import microbat.instrumentation.runtime.TracingState;
@@ -19,11 +18,9 @@ import microbat.model.ClassLocation;
 import sav.common.core.SavRtException;
 
 public class CoverageTracer implements ICoverageTracer, ITracer {
-	private static CoverageTracerStore rtStore = new CoverageTracerStore();
-	public static volatile CoverageSFlowGraph coverageFlowGraph;
+	public static CoverageTracerStore rtStore = new CoverageTracerStore();
 	public static volatile Map<Integer, List<MethodExecutionData>> methodExecsOnASingleTcMap = new HashMap<>();
-	
-	private static int currentTestCaseIdx;
+
 	protected long threadId;
 	protected int testIdx;
 	private TracingState state = TracingState.INIT;
@@ -40,7 +37,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	@Override
 	public void _reachNode(String methodId, int nodeIdx) {
 		if (currentNode == null) {
-			currentNode = coverageFlowGraph.getStartNode();
+			currentNode = AgentRuntimeData.coverageFlowGraph.getStartNode();
 		} else {
 			CoverageSFNode branch = currentNode.getCorrespondingBranch(methodId, nodeIdx);
 			if (branch != null) {
@@ -85,9 +82,9 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		methodHierachyLevel--;
 	}
 	
-	private boolean doesNotNeedToRecord(String methodId) {
+	public boolean doesNotNeedToRecord(String methodId) {
 		try {
-			if (methodHierachyLevel >= coverageFlowGraph.getExtensionLayer()) {
+			if (methodHierachyLevel >= AgentRuntimeData.coverageFlowGraph.getExtensionLayer()) {
 				return true;
 			}
 			if (currentNode.getType() != Type.INVOKE_NODE) {
@@ -143,12 +140,13 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 			String paramTypeSignsCode, Object[] params) {
 		try {
 			long threadId = Thread.currentThread().getId();
-			CoverageTracer coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
+			Integer currentTestCaseIdx = AgentRuntimeData.currentTestIdxMap.get(threadId);
+			ICoverageTracer coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
 			if (coverageTracer == null && isEntryPoint) {
 				coverageTracer = rtStore.create(threadId, currentTestCaseIdx);
-				coverageTracer.state = TracingState.RECORDING;
+				coverageTracer.setState(TracingState.RECORDING);
 			}
-			if (coverageTracer == null || coverageTracer.state != TracingState.RECORDING) {
+			if (coverageTracer == null || coverageTracer.getState() != TracingState.RECORDING) {
 				return EmptyCoverageTracer.getInstance();
 			}
 			ICoverageTracer tracer = coverageTracer;
@@ -168,18 +166,16 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		return threadId;
 	}
 	
-	public static void startTestcase(String testcase, int testcaseIdx) {
-		AgentLogger.debug(String.format("Start testcase %s, testIdx=%s", testcase, testcaseIdx));
-		coverageFlowGraph.addCoveredTestcase(testcase, testcaseIdx);
-		CoverageTracer.currentTestCaseIdx = testcaseIdx;
-	}
-	
 	public int getTestIdx() {
 		return testIdx;
 	}
 	
-	public static void endTestcase(String testcase, long threadId) {
-		AgentLogger.debug(String.format("End testcase %s, testIdx=%s, thread=%s", testcase, currentTestCaseIdx, threadId));
+	public TracingState getState() {
+		return state;
+	}
+
+	public void setState(TracingState state) {
+		this.state = state;
 	}
 	
 }

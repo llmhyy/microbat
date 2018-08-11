@@ -23,6 +23,7 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.Type;
 
 import microbat.instrumentation.Agent;
+import microbat.instrumentation.cfgcoverage.CoverageAgent;
 
 public class TestRunnerTranformer extends AbstractTransformer implements ClassFileTransformer {
 
@@ -34,7 +35,8 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 		}
 		if ("microbat/evaluation/junit/MicroBatTestRunner".equals(classFName)
 				|| "sav/junit/SavJunitRunner".equals(classFName)
-				|| "sav/junit/SavSimpleRunner".equals(classFName)) {
+				|| "sav/junit/SavSimpleRunner".equals(classFName)
+				|| "sav/junit/SavSocketTestRunner".equals(classFName)) {
 			try {
 				byte[] data = instrument(classFName, classfileBuffer);
 				return data;
@@ -70,6 +72,10 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 				agentMethodIdx = constPool.addMethodref(Agent.class.getName().replace(".", "/"), "_exitTest",
 						"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V");
 				paramSize = 4;
+			} else if ("$storeCoverage".equals(method.getName())) {
+				agentMethodIdx = constPool.addMethodref(CoverageAgent.class.getName().replace(".", "/"), "_storeCoverage",
+						"(Ljava/io/OutputStream;Ljava/lang/Boolean;)V");
+				paramSize = 2;
 			}
  			if (agentMethodIdx >= 0) {
  				instrumentDelegateMethod(method, classFName, constPool, agentMethodIdx, classGen, paramSize);

@@ -1,5 +1,7 @@
 package microbat.instrumentation.cfgcoverage.runtime;
 
+import microbat.instrumentation.runtime.TracingState;
+
 public interface ICoverageTracer {
 
 	void _reachNode(String methodId, int nodeIdx);
@@ -15,6 +17,12 @@ public interface ICoverageTracer {
 	void _onIf(int value, String methodId, int nodeIdx);
 
 	void _onIfNull(Object value, String methodId, int nodeIdx);
+
+	void setState(TracingState recording);
+
+	TracingState getState();
+
+	boolean doesNotNeedToRecord(String methodId);
 
 
 }

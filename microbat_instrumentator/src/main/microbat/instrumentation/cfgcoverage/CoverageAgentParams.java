@@ -13,6 +13,7 @@ public class CoverageAgentParams extends CommonParams {
 	public static final String OPT_LOG_TYPE = CommonParams.OPT_LOG;
 	public static final String OPT_WORKING_DIR = CommonParams.OPT_WORKING_DIR;
 	public static final String OPT_IS_COUNT_COVERAGE = "countCoverage";
+	public static final String OPT_COVERAGE_COLLECTION_TYPE = "coverageType";
 	/* format of targetmethod (CoverageAgentUtil.getMethodId()): className.methodName.startLine */
 	public static final String OPT_TARGET_METHOD = "targetMethod";
 	public static final String OPT_CDG_LAYER = "cdg_layer";
@@ -28,6 +29,7 @@ public class CoverageAgentParams extends CommonParams {
 	private List<String> inclusiveMethodIds;
 	private int varLayer;
 	private boolean collectConditionVariation;
+	private CoverageCollectionType coverageType;
 	
 	public CoverageAgentParams() {
 		
@@ -42,6 +44,8 @@ public class CoverageAgentParams extends CommonParams {
 		inclusiveMethodIds = cmd.getStringList(OPT_INCLUSIVE_METHOD_IDS);
 		varLayer = cmd.getInt(OPT_VARIABLE_LAYER, 2);
 		collectConditionVariation = cmd.getBoolean(OPT_COLLECT_CONDITION_VARIATION, false);
+		coverageType = CoverageCollectionType.valueOf(cmd.getString(OPT_COVERAGE_COLLECTION_TYPE),
+				CoverageCollectionType.BRANCH_COVERAGE);
 	}
 	
 	public ClassLocation getTargetMethod() {
@@ -110,5 +114,25 @@ public class CoverageAgentParams extends CommonParams {
 	
 	public void setCollectConditionVariation(boolean collectConditionVariation) {
 		this.collectConditionVariation = collectConditionVariation;
+	}
+	
+	public CoverageCollectionType getCoverageType() {
+		return coverageType;
+	}
+
+	public void setCoverageType(CoverageCollectionType coverageType) {
+		this.coverageType = coverageType;
+	}
+
+	public static enum CoverageCollectionType {
+		BRANCH_COVERAGE,
+		UNCIRCLE_CFG_COVERAGE;
+
+		public static CoverageCollectionType valueOf(String strValue, CoverageCollectionType defaultValue) {
+			if (strValue == null || strValue.isEmpty()) {
+				return defaultValue;
+			}
+			return valueOf(strValue);
+		}
 	}
 }

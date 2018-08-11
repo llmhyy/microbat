@@ -54,6 +54,9 @@ public class CoverageOutputReader extends OutputReader{
 
 	private List<CoveragePath> readCoveragePaths(List<CoverageSFNode> nodeList) throws IOException {
 		int size = readVarInt();
+		if (size < 0) {
+			size = 0;
+		}
 		List<CoveragePath> coveragePaths = new ArrayList<>(size);
 		for (int i = 0; i < size; i++) {
 			CoveragePath path = new CoveragePath();

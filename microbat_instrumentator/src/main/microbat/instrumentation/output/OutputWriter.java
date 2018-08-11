@@ -96,4 +96,14 @@ public class OutputWriter extends DataOutputStream {
 			writeString(value);
 		}
 	}
+	
+	public void writeSize(Collection<?> col) throws IOException {
+		if (col == null) {
+			writeVarInt(-1);
+		} else if (col.isEmpty()) {
+			writeVarInt(0);
+		} else {
+			writeVarInt(col.size());
+		}
+	}
 }

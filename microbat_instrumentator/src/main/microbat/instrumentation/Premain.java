@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
 
-import microbat.instrumentation.instr.SystemClassTransformer;
 import microbat.instrumentation.instr.TestRunnerTranformer;
 import microbat.instrumentation.utils.CollectionUtils;
 import microbat.instrumentation.utils.FileUtils;
@@ -25,16 +24,15 @@ public class Premain {
 		long vmStartupTime = System.currentTimeMillis() - ManagementFactory.getRuntimeMXBean().getStartTime();
 		long agentPreStartup = System.currentTimeMillis();
 		installBootstrap(inst);
+		CommandLine cmd = CommandLine.parse(agentArgs);
 		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
 		
 		debug("start instrumentation...");
-		CommandLine cmd = CommandLine.parse(agentArgs);
 		agentPreStartup = System.currentTimeMillis() - agentPreStartup;
 		System.out.println("Vm start up time: " + vmStartupTime);
 		System.out.println("Agent start up time: " + agentPreStartup);
 		Agent agent = new Agent(cmd, inst);
 		agent.startup(vmStartupTime, agentPreStartup);
-		SystemClassTransformer.transformThread(inst);
 		inst.addTransformer(agent.getTransformer(), true);
 		inst.addTransformer(new TestRunnerTranformer());
 		agent.retransformClasses(retransformableClasses);
@@ -71,9 +69,10 @@ public class Premain {
 										"bcel-6.0.jar",
 										"javassist.jar",
 										SAV_JAR,
-										"commons-io-1.3.2.jar",
-										"mysql-connector-java-5.1.44-bin.jar",
-										"slf4j-api-1.7.12.jar");
+										"commons-io-1.3.2.jar"
+//										"mysql-connector-java-5.1.44-bin.jar",
+//										"slf4j-api-1.7.12.jar"
+										);
 		}
 		if (bootJarPaths.isEmpty()) {
 			debug("Switch to dev mode");
