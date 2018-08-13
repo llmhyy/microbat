@@ -16,5 +16,7 @@ public class BranchCoverageTracerHandler implements ICoverageTracerHandler {
 	@Override
 	public void reset() {
 		AgentRuntimeData.coverageFlowGraph.clearData();
+		AgentRuntimeData.currentTestIdxMap.clear();
 	}
+
 }

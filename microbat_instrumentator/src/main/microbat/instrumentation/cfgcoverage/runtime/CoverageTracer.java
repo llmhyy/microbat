@@ -36,6 +36,9 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	
 	@Override
 	public void _reachNode(String methodId, int nodeIdx) {
+		if (state == TracingState.SHUTDOWN) {
+			return;
+		}
 		if (currentNode == null) {
 			currentNode = AgentRuntimeData.coverageFlowGraph.getStartNode();
 		} else {
@@ -141,10 +144,11 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		try {
 			long threadId = Thread.currentThread().getId();
 			Integer currentTestCaseIdx = AgentRuntimeData.currentTestIdxMap.get(threadId);
-			ICoverageTracer coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
+			CoverageTracer coverageTracer = rtStore.get(threadId, currentTestCaseIdx);
 			if (coverageTracer == null && isEntryPoint) {
 				coverageTracer = rtStore.create(threadId, currentTestCaseIdx);
 				coverageTracer.setState(TracingState.RECORDING);
+				AgentRuntimeData.register(coverageTracer, threadId, currentTestCaseIdx);
 			}
 			if (coverageTracer == null || coverageTracer.getState() != TracingState.RECORDING) {
 				return EmptyCoverageTracer.getInstance();
@@ -178,4 +182,8 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		this.state = state;
 	}
 	
+	@Override
+	public void shutDown() {
+		this.state = TracingState.SHUTDOWN;
+	}
 }

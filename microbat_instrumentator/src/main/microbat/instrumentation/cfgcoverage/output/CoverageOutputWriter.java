@@ -84,7 +84,6 @@ public class CoverageOutputWriter extends OutputWriter {
 		}
 		/* covered testcases on node */
 		writeListInt(node.getCoveredTestcases());
-		/* covered testcases on branch */
 		/* covered testcases on branches */
 		writeVarInt(node.getCoveredTestcasesOnBranches().keySet().size());
 		for (CoverageSFNode branch : node.getCoveredTestcasesOnBranches().keySet()) {

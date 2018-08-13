@@ -65,39 +65,35 @@ public class CoverageAgent implements IAgent {
 
 	@Override
 	public void shutdown() throws Exception {
-		timer.newPoint("Saving coverage");
-		AgentLogger.debug("Saving coverage...");
-		CoverageOutput coverageOutput = tracerHandler.getCoverageOutput();
 		if (agentParams.getDumpFile() != null) {
+			timer.newPoint("Saving coverage");
+			AgentLogger.debug("Saving coverage...");
+			CoverageOutput coverageOutput = tracerHandler.getCoverageOutput();
 			coverageOutput.saveToFile(agentParams.getDumpFile());
+			AgentLogger.debug(timer.getResultString());
 		}
-		AgentLogger.debug(timer.getResultString());
 	}
 	
 	public static void _storeCoverage(OutputStream outStream, Boolean reset) {
-		AgentLogger.debug("Saving coverage...");
-		CoverageAgent coverageAgent = (CoverageAgent) Agent.getAgent();
-		CoverageOutput coverageOutput = coverageAgent.tracerHandler.getCoverageOutput();
-		CoverageOutputWriter coverageOutputWriter = new CoverageOutputWriter(outStream);
 		try {
+			AgentLogger.debug("Saving coverage...");
+			CoverageAgent coverageAgent = (CoverageAgent) Agent.getAgent();
+			CoverageOutput coverageOutput = coverageAgent.tracerHandler.getCoverageOutput();
+			@SuppressWarnings("resource")
+			CoverageOutputWriter coverageOutputWriter = new CoverageOutputWriter(outStream);
 			synchronized (coverageOutput.getCoverageGraph()) {
 				coverageOutputWriter.writeCfgCoverage(coverageOutput.getCoverageGraph());
 				coverageOutputWriter.writeInputData(coverageOutput.getInputData());
 				coverageOutputWriter.flush();
 			}
+			if (reset) {
+				coverageAgent.tracerHandler.reset();
+			}
 		} catch (IOException e) {
 			AgentLogger.error(e);
 			e.printStackTrace();
-		} finally {
-			try {
-//				coverageOutputWriter.close();
-			} catch(Exception e) {
-				// do nothing
-			}
-		}
-		if (reset) {
-			coverageAgent.tracerHandler.reset();
-		}
+		} 
+		AgentLogger.debug("Finish saving coverage...");
 	}
 
 	@Override
@@ -112,9 +108,11 @@ public class CoverageAgent implements IAgent {
 	
 	@Override
 	public void exitTest(String testResultMsg, String junitClass, String junitMethod, long threadId) {
+		Integer testIdx = AgentRuntimeData.currentTestIdxMap.get(threadId);
 		AgentLogger.debug(String.format("End testcase %s, testIdx=%s, thread=%s",
 				InstrumentationUtils.getMethodId(junitClass, junitMethod),
-				AgentRuntimeData.currentTestIdxMap.get(threadId), threadId));
+				testIdx, threadId));
+		AgentRuntimeData.unregister(threadId, testIdx);
 	}
 
 	@Override

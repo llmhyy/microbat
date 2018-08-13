@@ -6,6 +6,7 @@ import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 public class BranchCoverageTracer extends EmptyCoverageTracer implements ICoverageTracer {
 	private int testIdx;
 	private CoverageSFNode currentNode;
+	private boolean canceled = false;
 	
 	public BranchCoverageTracer(int currentTcIdx) {
 		this.testIdx = currentTcIdx;
@@ -13,6 +14,9 @@ public class BranchCoverageTracer extends EmptyCoverageTracer implements ICovera
 	
 	@Override
 	public void _reachNode(String methodId, int nodeIdx) {
+		if (canceled) {
+			return;
+		}
 		if (currentNode == null) {
 			currentNode = AgentRuntimeData.coverageFlowGraph.getStartNode();
 		} else {
@@ -32,11 +36,21 @@ public class BranchCoverageTracer extends EmptyCoverageTracer implements ICovera
 	public synchronized static ICoverageTracer _getTracer(String methodId) {
 		try {
 			long threadId = Thread.currentThread().getId();
-			int currentTcIdx = AgentRuntimeData.currentTestIdxMap.get(threadId);
-			return new BranchCoverageTracer(currentTcIdx);
+			Integer currentTcIdx = AgentRuntimeData.currentTestIdxMap.get(threadId);
+			if (currentTcIdx == null) {
+				return EmptyCoverageTracer.getInstance();
+			}
+			BranchCoverageTracer tracer = new BranchCoverageTracer(currentTcIdx);
+			AgentRuntimeData.register(tracer, threadId, currentTcIdx);
+			return tracer;
 		} catch (Throwable t) {
 			AgentLogger.error(t);
 			return EmptyCoverageTracer.getInstance();
 		}
+	}
+	
+	@Override
+	public void shutDown() {
+		this.canceled = true;
 	}
 }

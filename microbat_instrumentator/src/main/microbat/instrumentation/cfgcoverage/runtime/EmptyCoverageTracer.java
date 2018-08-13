@@ -1,7 +1,5 @@
 package microbat.instrumentation.cfgcoverage.runtime;
 
-import microbat.instrumentation.runtime.TracingState;
-
 public class EmptyCoverageTracer implements ICoverageTracer {
 	private static final EmptyCoverageTracer INSTANCE = new EmptyCoverageTracer();
 	
@@ -48,25 +46,12 @@ public class EmptyCoverageTracer implements ICoverageTracer {
 	@Override
 	public void _onIfNull(Object value, String methodId, int nodeIdx) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
-	public void setState(TracingState recording) {
+	public void shutDown() {
 		// TODO Auto-generated method stub
 		
-	}
-
-	@Override
-	public TracingState getState() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean doesNotNeedToRecord(String methodId) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 }
