@@ -126,9 +126,9 @@ public class CFGConstructor {
 			
 			for(int i=start; i<=end; i++){
 				CFGNode sourceNode = cfg.findNode(i);
-				if(sourceNode!=null){
+				if (sourceNode != null && sourceNode != targetNode) {
 					sourceNode.addChild(targetNode);
-					targetNode.addParent(sourceNode);					
+					targetNode.addParent(sourceNode);
 				}
 			}
 		}
