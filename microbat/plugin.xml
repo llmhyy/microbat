@@ -38,7 +38,7 @@
       <view
             category="microbat.evalCategory"
             class="microbat.evaluation.views.BeforeTraceView"
-            icon="icons/before.ico"
+            icon="icons/before.png"
             id="microbat.evalView.beforeTraceView"
             name="Before Trace"
             restorable="true">

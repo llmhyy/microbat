@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Set;
 
 import microbat.instrumentation.AgentLogger;
-import microbat.instrumentation.AgentUtils;
 import microbat.instrumentation.StepMismatchChecker;
 import microbat.instrumentation.output.TraceOutputReader;
 import microbat.instrumentation.output.TraceOutputWriter;
+import microbat.instrumentation.utils.FileUtils;
 import microbat.model.ClassLocation;
 import sav.common.core.SavRtException;
 
@@ -111,7 +111,7 @@ public class PrecheckInfo {
 		FileOutputStream fileStream = null;
 		
 		try {
-			File file = AgentUtils.getFileCreateIfNotExist(filePath);
+			File file = FileUtils.getFileCreateIfNotExist(filePath);
 			fileStream = new FileOutputStream(file, append);
 			try {
 				// Avoid concurrent writes from other processes:

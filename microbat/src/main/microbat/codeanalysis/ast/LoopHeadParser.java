@@ -125,7 +125,7 @@ public class LoopHeadParser extends ASTVisitor{
 		int startLine = cu.getLineNumber(this.conditionASTStatement.getStartPosition());
 		int endLine = cu.getLineNumber(this.conditionASTStatement.getStartPosition()+this.conditionASTStatement.getLength());
 		
-		SourceScope ss = new SourceScope(className, startLine, endLine, true);
+		SourceScope ss = new SourceScope(className, startLine, endLine, this.isLoop);
 		
 		return ss;
 	}

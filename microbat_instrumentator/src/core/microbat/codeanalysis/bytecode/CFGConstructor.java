@@ -36,8 +36,8 @@ public class CFGConstructor {
 		
 		CFG cfg = constructCFG(code);
 		
-		constructPostDomination(cfg);
-		constructControlDependency(cfg);
+		BlockGraph bGraph = constructPostDomination(cfg);
+		constructControlDependency(cfg, bGraph);
 		
 		return cfg;
 	}
@@ -105,6 +105,10 @@ public class CFGConstructor {
 		
 		setExitNodes(cfg);
 		
+		int idx = 0;
+		for (InstructionHandle insnHandler : list) {
+			cfg.findNode(insnHandler).setIdx(idx++);
+		}
 		return cfg;
 	}
 
@@ -122,9 +126,9 @@ public class CFGConstructor {
 			
 			for(int i=start; i<=end; i++){
 				CFGNode sourceNode = cfg.findNode(i);
-				if(sourceNode!=null){
+				if (sourceNode != null && sourceNode != targetNode) {
 					sourceNode.addChild(targetNode);
-					targetNode.addParent(sourceNode);					
+					targetNode.addParent(sourceNode);
 				}
 			}
 		}
@@ -143,7 +147,7 @@ public class CFGConstructor {
 		}
 	}
 
-	public void constructPostDomination(CFG cfg){
+	public BlockGraph constructPostDomination(CFG cfg){
 		
 		BlockGraph bGraph = BlockGraph.createBlockGraph(cfg);
 		
@@ -168,24 +172,27 @@ public class CFGConstructor {
 			}
 		}
 		
-		/** map relation back to CFG node*/
-		for(BlockNode block: bGraph.getList()){
-			for(CFGNode cfgNode: block.getContents()){
-				cfgNode.getPostDominatee().addAll(block.getContents());
-			}
-		}
+		bGraph.setPostDominanceMap(postDominanceMap);
+		return bGraph;
 		
-		/** construct post dominatee relation*/
-		for(BlockNode block: bGraph.getList()){
-			Set<BlockNode> postDominators = postDominanceMap.get(block);
-			for(BlockNode postDominator: postDominators){
-				for(CFGNode cfgNode: postDominator.getContents()){
-					cfgNode.getPostDominatee().addAll(block.getContents());
-				}
-			}
-		}
+//		/** map relation back to CFG node*/
+//		for(BlockNode block: bGraph.getList()){
+//			for(CFGNode cfgNode: block.getContents()){
+//				cfgNode.getPostDominatee().addAll(block.getContents());
+//			}
+//		}
+//		
+//		/** construct post dominatee relation*/
+//		for(BlockNode block: bGraph.getList()){
+//			Set<BlockNode> postDominators = postDominanceMap.get(block);
+//			for(BlockNode postDominator: postDominators){
+//				for(CFGNode cfgNode: postDominator.getContents()){
+//					cfgNode.getPostDominatee().addAll(block.getContents());
+//				}
+//			}
+//		}
 		
-		System.currentTimeMillis();
+//		System.currentTimeMillis();
 	}
 
 	private void propagatePostDominator(Map<BlockNode, Set<BlockNode>> postDominanceMap, BlockNode node, 
@@ -247,22 +254,36 @@ public class CFGConstructor {
 	 * its control dependentees.
 	 * 
 	 * @param cfg
+	 * @param bGraph 
 	 */
-	public void constructControlDependency(CFG cfg){
+	public void constructControlDependency(CFG cfg, BlockGraph bGraph){
 		for(CFGNode branchNode: cfg.getNodeList()){
 			if(branchNode.isBranch()){
-				computeControlDependentees(branchNode, branchNode.getChildren());
+				computeControlDependentees(branchNode, branchNode.getChildren(), bGraph);
 			}
 		}
 	}
 
-	private void computeControlDependentees(CFGNode branchNode, List<CFGNode> list) {
+	private void computeControlDependentees(CFGNode branchNode, List<CFGNode> list, BlockGraph bGraph) {
 		for(CFGNode child: list){
-			if(!child.canReachPostDominatee(branchNode) && !branchNode.getControlDependentees().contains(child)){
-				branchNode.addControlDominatee(child);
-				computeControlDependentees(branchNode, child.getChildren());
+			if(!branchNode.getControlDependentees().contains(child)){
+				
+				boolean isChildPostDominateBranchNode = isChildPostDominateBranchNode(child, branchNode, bGraph);
+				if(!isChildPostDominateBranchNode){
+					branchNode.addControlDominatee(child);
+					computeControlDependentees(branchNode, child.getChildren(), bGraph);					
+				}
 			}
 		}
 		
+	}
+
+	private boolean isChildPostDominateBranchNode(CFGNode child, CFGNode branchNode, BlockGraph bGraph) {
+		BlockNode childBlock = child.getBlockNode();
+		BlockNode branchBlock = branchNode.getBlockNode();
+		
+		Set<BlockNode> postDominators = bGraph.getPostDominanceMap().get(childBlock);
+		
+		return postDominators.contains(branchBlock);
 	}
 }

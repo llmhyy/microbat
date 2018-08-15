@@ -1,8 +1,10 @@
 package microbat.instrumentation;
 
+import java.lang.instrument.Instrumentation;
 import java.util.List;
 
 import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.instr.SystemClassTransformer;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.instrumentation.precheck.PrecheckTransformer;
 import microbat.instrumentation.precheck.TraceMeasurement;
@@ -10,16 +12,19 @@ import microbat.instrumentation.precheck.TraceMeasurement;
 public class PrecheckAgent implements IAgent {
 	private AgentParams agentParams;
 	private PrecheckTransformer precheckTransformer;
+	private Instrumentation instrumentation;
 
-	public PrecheckAgent(AgentParams agentParams) {
-		this.agentParams = agentParams; 
+	public PrecheckAgent(CommandLine cmd, Instrumentation instrumentation) {
+		this.agentParams = AgentParams.initFrom(cmd); 
 		this.precheckTransformer = new PrecheckTransformer(agentParams);
+		this.instrumentation = instrumentation;
 	}
 	
-	public void startup() {
+	public void startup(long vmStartupTime, long agentPreStartup) {
 		FilterChecker.setup(agentParams.initAppClassPath(), agentParams.getIncludesExpression(),
 				agentParams.getExcludesExpression());
 		TraceMeasurement.setStepLimit(agentParams.getStepLimit());
+		SystemClassTransformer.transformThread(instrumentation);
 	}
 
 	public void shutdown() {
@@ -49,10 +54,21 @@ public class PrecheckAgent implements IAgent {
 	}
 
 	@Override
-	public void setTransformableClasses(Class<?>[] retransformableClasses) {
+	public void retransformBootstrapClasses(Instrumentation instrumentation, Class<?>[] retransformableClasses)
+			throws Exception {
 		List<String> loadedClasses = precheckTransformer.getLoadedClasses();
 		for (Class<?> clazz : retransformableClasses) {
 			loadedClasses.add(clazz.getName());
 		}
+	}
+
+	@Override
+	public void exitTest(String testResultMsg, String junitClass, String junitMethod, long threadId) {
+		// do nothing, not used.
+	}
+
+	@Override
+	public boolean isInstrumentationActive() {
+		return true;
 	}
 }

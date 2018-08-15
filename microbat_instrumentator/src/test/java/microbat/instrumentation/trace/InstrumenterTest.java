@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import org.junit.Test;
 
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.CommandLine;
 import microbat.instrumentation.instr.TraceInstrumenter;
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
 import microbat.instrumentation.trace.testdata.Sample3;
@@ -52,7 +53,7 @@ public class InstrumenterTest {
 	}
 
 	private byte[] instrument(byte[] data, String className) throws Exception {
-		AgentParams params = new AgentParams();
+		AgentParams params = new AgentParams(new CommandLine());
 		params.setEntryPoint(new EntryPoint("", ""));
 		TraceInstrumenter transformer = new TraceInstrumenter(params);
 		return transformer.instrument(className, data);

@@ -8,7 +8,7 @@ import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.Type;
 
-import microbat.instrumentation.ClassGenUtils;
+import microbat.instrumentation.utils.MicrobatUtils;
 import sav.common.core.utils.CollectionUtils;
 
 public class InstrumentationFilter {
@@ -28,7 +28,7 @@ public class InstrumentationFilter {
 				}
 			};
 		}
-		String methodFullName = ClassGenUtils.getMethodFullName(className, method);
+		String methodFullName = MicrobatUtils.getMicrobatMethodFullName(className, method);
 		if (overLongMethods.contains(methodFullName)) {
 //			AgentLogger.info("Apply overlongFilter: " + methodFullName);
 			return new OverLongFilter();

@@ -1,5 +1,7 @@
 package microbat.instrumentation;
 
+import java.lang.instrument.Instrumentation;
+
 import microbat.instrumentation.filter.FilterChecker;
 import microbat.instrumentation.filter.InstrumentationFilter;
 import microbat.instrumentation.instr.TraceTransformer;
@@ -19,11 +21,11 @@ public class TraceAgent implements IAgent {
 	private AgentParams agentParams;
 	private StopTimer timer;
 	
-	public TraceAgent(AgentParams agentParams) {
-		this.agentParams = agentParams;
+	public TraceAgent(CommandLine cmd) {
+		this.agentParams = AgentParams.initFrom(cmd);
 	}
 
-	public void startup() {
+	public void startup(long vmStartupTime, long agentPreStartup) {
 		timer = new StopTimer("Trace Construction");
 		timer.newPoint("Execution");
 		/* init filter */
@@ -36,6 +38,7 @@ public class TraceAgent implements IAgent {
 			InstrumentationFilter.overLongMethods = agentParams.getOverlongMethods();
 		}
 		ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
+		ExecutionTracer.avoidProxyToString = agentParams.isAvoidProxyToString();
 	}
 
 	public void shutdown() throws Exception {
@@ -51,15 +54,16 @@ public class TraceAgent implements IAgent {
 		StepMismatchChecker.logNormalSteps(trace);
 		ExecutionTracer.dispose(); // clear cache
 		long t1 = System.currentTimeMillis();
+		AgentLogger.debug("create VirtualDataRelation....");
 		createVirtualDataRelation(trace);
 		long t2 = System.currentTimeMillis();
 		AgentLogger.debug("time for createVirtualDataRelation: "  + (t2-t1)/1000);
 		
 		t1 = System.currentTimeMillis();
+		AgentLogger.debug("construct ControlDomianceRelation....");
 		trace.constructControlDomianceRelation();
 		t2 = System.currentTimeMillis();
 		AgentLogger.debug("time for constructControlDomianceRelation: "  + (t2-t1)/1000);
-		
 //		trace.constructLoopParentRelation();
 		timer.newPoint("Saving trace");
 		writeOutput(trace);
@@ -75,6 +79,7 @@ public class TraceAgent implements IAgent {
 			result.setCollectedSteps(trace.getExecutionList().size());
 			result.setExpectedSteps(agentParams.getExpectedSteps());
 			result.saveToFile(agentParams.getDumpFile(), false);
+			AgentLogger.debug(result.toString());
 		} else if (agentParams.getTcpPort() != AgentConstants.UNSPECIFIED_INT_VALUE) {
 			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
 			TraceOutputWriter traceWriter = tcpConnector.connect();
@@ -144,8 +149,6 @@ public class TraceAgent implements IAgent {
 						currentNode.addWrittenVariable(value);
 						returnStep.addReadVariable(value);
 						String varID = value.getVarID();
-//						String definingOrder = trace.findDefiningNodeOrder(Variable.WRITTEN, currentNode, value.getVariable());
-//						varID = varID+":"+definingOrder;
 						value.setVarID(varID);
 						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
 						if(entry==null){
@@ -182,8 +185,18 @@ public class TraceAgent implements IAgent {
 	}
 
 	@Override
-	public void setTransformableClasses(Class<?>[] retransformableClasses) {
-		// do nothing
+	public void retransformBootstrapClasses(Instrumentation instrumentation, Class<?>[] retransformableClasses)
+			throws Exception {
+		instrumentation.retransformClasses(retransformableClasses);
 	}
 
+	@Override
+	public void exitTest(String testResultMsg, String junitClass, String junitMethod, long threadId) {
+		// do nothing, not used.
+	}
+
+	@Override
+	public boolean isInstrumentationActive() {
+		return !ExecutionTracer.isShutdown();
+	}
 }

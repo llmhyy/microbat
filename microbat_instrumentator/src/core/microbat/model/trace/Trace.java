@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.InstructionHandle;
 
@@ -95,32 +97,8 @@ public class Trace {
 		}
 	}
 	
-	private Map<BreakPoint, ControlScope> controlScopeMap = new HashMap<>();
-	private Map<String, CFG> methodCFGMap = new HashMap<>();
-	
-	private ControlScope parseControlScope(BreakPoint breakPoint) {
-		
-		ControlScope scope = controlScopeMap.get(breakPoint);
-		if(scope!=null){
-			breakPoint.setConditional(scope.isCondition());
-			breakPoint.setBranch(scope.isBranch());
-			return scope;
-		}
-		
-		List<ClassLocation> ranges = new ArrayList<>();
-		
-		CFG cfg = methodCFGMap.get(breakPoint.getMethodSign());
-		if(cfg==null){
-			MethodFinderByLine finder = new MethodFinderByLine(breakPoint);
-			ByteCodeParser.parse(breakPoint.getClassCanonicalName(), finder, appJavaClassPath);
-			Method method = finder.getMethod();
-			CFGConstructor cfgConstructor = new CFGConstructor();
-			cfg = cfgConstructor.buildCFGWithControlDomiance(method.getCode());
-			cfg.setMethod(method);
-			methodCFGMap.put(breakPoint.getMethodSign(), cfg);
-		}
-		
-		
+	private ControlScope parseControlScope(BreakPoint breakPoint, CFG cfg) {
+		List<ClassLocation> ranges = new ArrayList<>(1);
 		List<InstructionHandle> correspondingList = findCorrepondingIns(breakPoint, cfg, cfg.getMethod());
 		
 		for(InstructionHandle ins: correspondingList){
@@ -142,15 +120,13 @@ public class Trace {
 			ranges.add(own);
 		}
 		
-		scope = new ControlScope();
+		ControlScope scope = new ControlScope();
 		scope.setRangeList(ranges);
 		scope.setCondition(breakPoint.isConditional());
 		scope.setBranch(breakPoint.isBranch());
-		controlScopeMap.put(breakPoint, scope);
-		
 		return scope;
 	}
-	
+
 	private List<InstructionHandle> findCorrepondingIns(BreakPoint breakPoint, CFG cfg, Method method) {
 		List<InstructionHandle> list = new ArrayList<>();
 		for(CFGNode node: cfg.getNodeList()){
@@ -178,11 +154,8 @@ public class Trace {
 
 	public void constructControlDomianceRelation() {
 		TraceNode controlDominator = null;
+		fillInControlScope();
 		for(TraceNode node: this.exectionList){
-			ControlScope scope = parseControlScope(node.getBreakPoint());		
-			System.currentTimeMillis();
-			node.setControlScope(scope);
-			
 			if(controlDominator != null){
 				
 				if(isContainedInScope(node, controlDominator.getControlScope())){
@@ -206,6 +179,39 @@ public class Trace {
 		}
 	}
 
+	private void fillInControlScope() {
+		Map<BreakPoint, List<TraceNode>> breakpointMap = new HashMap<>();
+		for (TraceNode node : exectionList) {
+			CollectionUtils.getListInitIfEmpty(breakpointMap, node.getBreakPoint()).add(node);
+		}
+		Map<String, Set<String>> classMethodMap = new HashMap<>();
+		Map<String, List<BreakPoint>> methodSignMap = new HashMap<>();
+		for (BreakPoint bkp : breakpointMap.keySet()) {
+			CollectionUtils.getListInitIfEmpty(methodSignMap, bkp.getMethodSign()).add(bkp);
+			CollectionUtils.getSetInitIfEmpty(classMethodMap, bkp.getClassCanonicalName()).add(bkp.getMethodSign());
+		}
+		for (String classCanonicalName : classMethodMap.keySet()) {
+			for (String methodSig : classMethodMap.get(classCanonicalName)) {
+				List<BreakPoint> bkpList = methodSignMap.get(methodSig);
+				BreakPoint breakPoint = bkpList.get(0);
+				MethodFinderByLine finder = new MethodFinderByLine(breakPoint);
+				ByteCodeParser.parse(breakPoint.getClassCanonicalName(), finder, appJavaClassPath);
+				Method method = finder.getMethod();
+				CFGConstructor cfgConstructor = new CFGConstructor();
+				CFG cfg = cfgConstructor.buildCFGWithControlDomiance(method.getCode());
+				cfg.setMethod(method);
+				for (BreakPoint bkp : bkpList) {
+					ControlScope scope = parseControlScope(bkp, cfg);		
+					for (TraceNode node : breakpointMap.get(bkp)) {
+						node.getBreakPoint().setConditional(scope.isCondition());
+						node.getBreakPoint().setBranch(scope.isBranch());
+						node.setControlScope(scope);
+					}
+				}
+			}
+			Repository.clearCache();
+		}
+	}
 
 	private TraceNode findContainingControlDominator(TraceNode node, TraceNode controlDominator) {
 		TraceNode superControlDominator = controlDominator.getControlDominator();

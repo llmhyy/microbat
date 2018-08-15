@@ -347,7 +347,8 @@ public class Trace {
 			 */
 			if(!loopParentStack.isEmpty()){
 				TraceNode loopParent = loopParentStack.peek();
-				if(loopParent.getLoopScope().containsNodeScope(node) && loopParentHaveNotLoopChildOfSomeInvocationParentOfNode(loopParent, node)){
+				if(loopParent.getLoopScope().containsNodeScope(node) 
+						&& loopParentHaveNotLoopChildOfSomeInvocationParentOfNode(loopParent, node)){
 					loopParent.addLoopChild(node);
 					node.setLoopParent(loopParent);					
 				}

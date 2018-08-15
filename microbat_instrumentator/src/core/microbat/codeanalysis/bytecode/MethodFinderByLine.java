@@ -3,20 +3,20 @@ package microbat.codeanalysis.bytecode;
 import org.apache.bcel.classfile.LineNumber;
 import org.apache.bcel.classfile.Method;
 
-import microbat.model.BreakPoint;
+import microbat.model.ClassLocation;
 
 public class MethodFinderByLine extends ByteCodeMethodFinder {
-	private BreakPoint point;
+	private ClassLocation point;
 	
-	public BreakPoint getPoint() {
+	public ClassLocation getPoint() {
 		return point;
 	}
 
-	public void setPoint(BreakPoint point) {
+	public void setPoint(ClassLocation point) {
 		this.point = point;
 	}
 	
-	public MethodFinderByLine(BreakPoint point){
+	public MethodFinderByLine(ClassLocation point){
 		this.setPoint(point);
 	}
 	

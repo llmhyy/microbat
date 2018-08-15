@@ -2,44 +2,41 @@ package microbat.instrumentation;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
+import microbat.instrumentation.utils.FileUtils;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class AgentParams {
+public class AgentParams extends CommonParams {
+	public static final String OPT_CLASS_PATH = CommonParams.OPT_CLASS_PATH;
+	public static final String OPT_WORKING_DIR = CommonParams.OPT_WORKING_DIR;
+	public static final String OPT_LOG = CommonParams.OPT_LOG;
+	
 	public static final String OPT_PRECHECK = "precheck";
 	public static final String OPT_ENTRY_POINT = "entry_point";
 	public static final String OPT_LAUNCH_CLASS = "launch_class";
 	public static final String OPT_JAVA_HOME = "java_home";
-	public static final String OPT_CLASS_PATH = "class_path";
-	public static final String OPT_WORKING_DIR = "working_dir";
-	public static final String OPT_TCP_PORT = "tcp_port";
 	public static final String OPT_DUMP_FILE = "dump_file_path";
+	public static final String OPT_TCP_PORT = "tcp_port";
 	public static final String OPT_INCLUDES = "includes";
 	public static final String OPT_EXCLUDES = "excludes";
 	public static final String OPT_VARIABLE_LAYER = "varLayer";
 	public static final String OPT_STEP_LIMIT = "stepLimit";
 	public static final String OPT_EXPECTED_STEP = "expectedSteps";
-	public static final String OPT_LOG = "log";
 	public static final String OPT_INCLUDES_FILE = "includes_file";
 	public static final String OPT_EXCLUDES_FILE = "excludes_file";
 	public static final String OPT_OVER_LONG_METHODS = "overlong_methods";
 	public static final String OPT_REQUIRE_METHOD_SPLITTING = "require_method_split";
+	public static final String OPT_AVOID_TO_STRING_OF_PROXY_OBJ = "avoid_proxy_tostring";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
 	
-	private List<String> classPaths = new ArrayList<>();
-	private List<String> bootstrapPaths = new ArrayList<>();
-	private String workingDirectory;
 	private String javaHome;
 	private String launchClass;
 	private int tcpPort = -1;
@@ -50,15 +47,13 @@ public class AgentParams {
 	private String excludesExpression;
 	private int stepLimit;
 	private int expectedSteps;
-	private List<LogType> logTypes;
 	private Set<String> overlongMethods;
 	private boolean requireMethodSplit;
+	private boolean avoidProxyToString;
 	
-	public static AgentParams parse(String agentArgs) {
-		CommandLine cmd = CommandLine.parse(agentArgs);
-		AgentParams params = new AgentParams();
-		
-		params.precheck = cmd.getBoolean(OPT_PRECHECK, false);
+	public AgentParams(CommandLine cmd) {
+		super(cmd);
+		precheck = cmd.getBoolean(OPT_PRECHECK, false);
 		String entryPointStr = cmd.getString(OPT_ENTRY_POINT);
 		if (entryPointStr != null) {
 			int idx = entryPointStr.lastIndexOf(".");
@@ -66,37 +61,39 @@ public class AgentParams {
 			String mainMethod = entryPointStr.substring(idx + 1);
 			
 			EntryPoint entryPoint = new EntryPoint(mainClass, mainMethod);
-			params.entryPoint = entryPoint;
+			this.entryPoint = entryPoint;
 		}
 		
-		params.setJavaHome(cmd.getString(OPT_JAVA_HOME));
-		params.setWorkingDirectory(cmd.getString(OPT_WORKING_DIR));
+		setJavaHome(cmd.getString(OPT_JAVA_HOME));
+		setWorkingDirectory(cmd.getString(OPT_WORKING_DIR));
 
 		String launchClass = cmd.getString(OPT_LAUNCH_CLASS);
-		if (launchClass == null && params.entryPoint != null) {
-			launchClass = params.entryPoint.getClassName();
+		if (launchClass == null && entryPoint != null) {
+			launchClass = entryPoint.getClassName();
 		}
-		params.setLaunchClass(launchClass);
+		setLaunchClass(launchClass);
 		
-		params.classPaths = cmd.getStringList(OPT_CLASS_PATH);
-		params.tcpPort = cmd.getInt(OPT_TCP_PORT, -1);
-		params.dumpFile = cmd.getString(OPT_DUMP_FILE);
-		params.includesExpression = getFilterExpression(cmd, OPT_INCLUDES_FILE, OPT_INCLUDES);
-		params.excludesExpression = getFilterExpression(cmd, OPT_EXCLUDES_FILE, OPT_EXCLUDES);
-		params.variableLayer = cmd.getInt(OPT_VARIABLE_LAYER, 2);
+		tcpPort = cmd.getInt(OPT_TCP_PORT, -1);
+		dumpFile = cmd.getString(OPT_DUMP_FILE);
+		includesExpression = getFilterExpression(cmd, OPT_INCLUDES_FILE, OPT_INCLUDES);
+		excludesExpression = getFilterExpression(cmd, OPT_EXCLUDES_FILE, OPT_EXCLUDES);
+		variableLayer = cmd.getInt(OPT_VARIABLE_LAYER, 2);
 		
-		params.stepLimit = cmd.getInt(OPT_STEP_LIMIT, AgentConstants.UNSPECIFIED_INT_VALUE);
-		params.expectedSteps = cmd.getInt(OPT_EXPECTED_STEP, AgentConstants.UNSPECIFIED_INT_VALUE);
-		params.logTypes = LogType.valuesOf(cmd.getStringList(OPT_LOG));
-		params.overlongMethods = cmd.getStringSet(OPT_OVER_LONG_METHODS);
-		params.requireMethodSplit = cmd.getBoolean(OPT_REQUIRE_METHOD_SPLITTING, false);
-		return params;
+		stepLimit = cmd.getInt(OPT_STEP_LIMIT, AgentConstants.UNSPECIFIED_INT_VALUE);
+		expectedSteps = cmd.getInt(OPT_EXPECTED_STEP, AgentConstants.UNSPECIFIED_INT_VALUE);
+		overlongMethods = cmd.getStringSet(OPT_OVER_LONG_METHODS);
+		requireMethodSplit = cmd.getBoolean(OPT_REQUIRE_METHOD_SPLITTING, false);
+		avoidProxyToString = cmd.getBoolean(OPT_AVOID_TO_STRING_OF_PROXY_OBJ, false);
+	}
+
+	public static AgentParams initFrom(CommandLine cmd) {
+		return new AgentParams(cmd);
 	}
 
 	private static String getFilterExpression(CommandLine cmd, String fileOpt, String opt) {
 		String filePath = cmd.getString(fileOpt);
 		String expression = null;
-		Collection<?> vals = AgentUtils.readLines(filePath);
+		Collection<?> vals = FileUtils.readLines(filePath);
 		if (vals != null) {
 			for (Iterator<?> it = vals.iterator(); it.hasNext();) {
 				String line = (String) it.next();
@@ -115,88 +112,12 @@ public class AgentParams {
 		return expression;
 	}
 	
-	private static class CommandLine {
-		private Map<String, String> argMap = new HashMap<>();
-		
-		public static CommandLine parse(String agentArgs) {
-			CommandLine cmd = new CommandLine();
-			String[] args = agentArgs.split(AgentConstants.AGENT_PARAMS_SEPARATOR);
-			for (String arg : args) {
-				String[] keyValue = arg.split(AgentConstants.AGENT_OPTION_SEPARATOR);
-				cmd.argMap.put(keyValue[0], keyValue[1]);
-			}
-			return cmd;
-		}
-
-		public boolean getBoolean(String option, boolean defaultValue) {
-			String strVal = getString(option);
-			if (strVal != null) {
-				return Boolean.valueOf(strVal);
-			}
-			return defaultValue;
-		}
-
-		public int getInt(String option, int defaultValue) {
-			String strVal = getString(option);
-			if (strVal != null) {
-				return Integer.valueOf(strVal);
-			}
-			return defaultValue;
-		}
-
-		public List<String> getStringList(String option) {
-			String value = getString(option);
-			if (value == null || value.isEmpty()) {
-				return new ArrayList<>(0);
-			}
-
-			return CollectionUtils.toArrayList(value.split(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR));
-		}
-		
-		public Set<String> getStringSet(String option) {
-			String value = getString(option);
-			if (value == null || value.isEmpty()) {
-				return new HashSet<>(0);
-			}
-
-			return CollectionUtils.toHashSet(value.split(AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR));
-		}
-
-		public String getString(String option) {
-			return argMap.get(option);
-		}
-	}
-
 	public EntryPoint getEntryPoint() {
 		return entryPoint;
 	}
 
 	public void setEntryPoint(EntryPoint entryPoint) {
 		this.entryPoint = entryPoint;
-	}
-
-	public List<String> getBootstrpPaths() {
-		return bootstrapPaths;
-	}
-
-	public void setBootstrpPaths(List<String> bootstrpPaths) {
-		this.bootstrapPaths = bootstrpPaths;
-	}
-
-	public List<String> getClassPaths() {
-		return classPaths;
-	}
-
-	public void setClassPaths(List<String> classPaths) {
-		this.classPaths = classPaths;
-	}
-
-	public String getWorkingDirectory() {
-		return workingDirectory;
-	}
-
-	public void setWorkingDirectory(String workingDirectory) {
-		this.workingDirectory = workingDirectory;
 	}
 
 	public String getJavaHome() {
@@ -247,10 +168,6 @@ public class AgentParams {
 		return expectedSteps;
 	}
 	
-	public List<LogType> getLogTypes() {
-		return logTypes;
-	}
-	
 	public Set<String> getOverlongMethods() {
 		return overlongMethods;
 	}
@@ -259,14 +176,22 @@ public class AgentParams {
 		return requireMethodSplit;
 	}
 	
+	public boolean isAvoidProxyToString() {
+		return avoidProxyToString;
+	}
+	
 	public AppJavaClassPath initAppClassPath() {
+		return initAppClassPath(getLaunchClass(), getJavaHome(), getClassPaths(), getWorkingDirectory());
+	}
+	
+	public static AppJavaClassPath initAppClassPath(String launchClass, String javaHome, List<String> classPaths, String workingDir) {
 		AppJavaClassPath appPath = new AppJavaClassPath();
-		appPath.setLaunchClass(getLaunchClass());
-		appPath.setJavaHome(getJavaHome());
-		for(String cp: getClassPaths()){
+		appPath.setLaunchClass(launchClass);
+		appPath.setJavaHome(javaHome);
+		for(String cp: classPaths){
 			appPath.addClasspath(cp);
 		}
-		appPath.setWorkingDirectory(getWorkingDirectory());
+		appPath.setWorkingDirectory(workingDir);
 //		appPath.setOptionalTestMethod(entryPoint.getMethodSignature());
 		return appPath;
 	}

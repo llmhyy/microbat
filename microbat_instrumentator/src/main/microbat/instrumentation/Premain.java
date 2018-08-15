@@ -5,40 +5,37 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
 
-import microbat.instrumentation.instr.SystemClassTransformer;
 import microbat.instrumentation.instr.TestRunnerTranformer;
+import microbat.instrumentation.utils.CollectionUtils;
+import microbat.instrumentation.utils.FileUtils;
 
 public class Premain {
-	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent_v01.jar";
+	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent_v02.jar";
 	private static final String SAV_JAR = "sav.commons.simplified.jar";
 	private static boolean testMode = true;
 
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
+		long vmStartupTime = System.currentTimeMillis() - ManagementFactory.getRuntimeMXBean().getStartTime();
+		long agentPreStartup = System.currentTimeMillis();
 		installBootstrap(inst);
-		
+		CommandLine cmd = CommandLine.parse(agentArgs);
 		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
 		
 		debug("start instrumentation...");
-		AgentParams agentParams = AgentParams.parse(agentArgs);
-		Agent agent = new Agent(agentParams);
-		agent.setTransformableClasses(retransformableClasses);
-		agent.startup();
-		if (!agentParams.isPrecheck()) {
-			//SystemClassTransformer.transformClassLoader(inst);
-		}
-		SystemClassTransformer.transformThread(inst);
+		agentPreStartup = System.currentTimeMillis() - agentPreStartup;
+		System.out.println("Vm start up time: " + vmStartupTime);
+		System.out.println("Agent start up time: " + agentPreStartup);
+		Agent agent = new Agent(cmd, inst);
+		agent.startup(vmStartupTime, agentPreStartup);
 		inst.addTransformer(agent.getTransformer(), true);
 		inst.addTransformer(new TestRunnerTranformer());
-		if (!agentParams.isPrecheck()) {
-			if (retransformableClasses.length > 0) {
-				inst.retransformClasses(retransformableClasses);
-			}
-		}
+		agent.retransformClasses(retransformableClasses);
 		
 		debug("after retransform");
 	}
@@ -64,7 +61,7 @@ public class Premain {
 
 	private static void installBootstrap(Instrumentation inst) throws Exception {
 		debug("install jar to boostrap...");
-		File tempFolder = AgentUtils.createTempFolder("microbat");
+		File tempFolder = FileUtils.createTempFolder("microbat");
 		debug("Temp folder to extract jars: " + tempFolder.getAbsolutePath());
 		List<JarFile> bootJarPaths = getJarFiles("instrumentator_all.jar");
 		if (bootJarPaths.isEmpty()) {
@@ -72,9 +69,10 @@ public class Premain {
 										"bcel-6.0.jar",
 										"javassist.jar",
 										SAV_JAR,
-										"commons-io-1.3.2.jar",
-										"mysql-connector-java-5.1.44-bin.jar",
-										"slf4j-api-1.7.12.jar");
+										"commons-io-1.3.2.jar"
+//										"mysql-connector-java-5.1.44-bin.jar",
+//										"slf4j-api-1.7.12.jar"
+										);
 		}
 		if (bootJarPaths.isEmpty()) {
 			debug("Switch to dev mode");
@@ -90,13 +88,13 @@ public class Premain {
 	}
 
 	private static List<JarFile> getJarFiles(String... jarNames) throws Exception {
-		File tempFolder = AgentUtils.createTempFolder("microbat");
+		File tempFolder = FileUtils.createTempFolder("microbat");
 		List<JarFile> jars = new ArrayList<>();
 		
 		boolean isUptodate = checkInstrumentatorVersion(tempFolder.getAbsolutePath());
 		for (String jarName : jarNames) {
 			File file = new File(tempFolder.getAbsolutePath(), jarName);
-			if ((!isUptodate && AgentUtils.existIn(file.getName(), INSTRUMENTATION_STANTDALONE_JAR, SAV_JAR)) || !file.exists()) {
+			if ((!isUptodate && CollectionUtils.existIn(file.getName(), INSTRUMENTATION_STANTDALONE_JAR, SAV_JAR)) || !file.exists()) {
 				try {
 					String jarResourcePath = "lib/" + jarName;
 					boolean success = extractJar(jarResourcePath, file.getAbsolutePath());
@@ -137,7 +135,7 @@ public class Premain {
 		try {
 			outStream = new FileOutputStream(filePath);
 			outStream.getChannel().force(true);
-			AgentUtils.copy(inputJarStream, outStream);
+			FileUtils.copy(inputJarStream, outStream);
 		} finally {
 			if (outStream != null) {
 				outStream.close();

@@ -1,13 +1,11 @@
 package microbat.instrumentation.output;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import microbat.instrumentation.AgentUtils;
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
 import microbat.model.ControlScope;
@@ -18,7 +16,7 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import sav.common.core.utils.FileUtils;
 
-public class TraceOutputReader extends DataInputStream {
+public class TraceOutputReader extends OutputReader {
 	private String traceExecFolder;
 	
 	public TraceOutputReader(InputStream in) {
@@ -57,7 +55,7 @@ public class TraceOutputReader extends DataInputStream {
 			}
 			String fileName = readString();
 			String filePath = FileUtils.getFilePath(traceExecFolder, fileName);
-			return AgentUtils.readLines(filePath);
+			return microbat.instrumentation.utils.FileUtils.readLines(filePath);
 		} else {
 			return readSerializableList();
 		}
@@ -145,26 +143,6 @@ public class TraceOutputReader extends DataInputStream {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	protected <T>List<T> readSerializableList() throws IOException {
-		int size = readVarInt();
-		if (size == 0) {
-			return new ArrayList<>(0);
-		}
-		byte[] bytes = readByteArray();
-		if (bytes == null || bytes.length == 0) {
-			return new ArrayList<>(0);
-		}
-		List<T> list;
-		try {
-			list = (List<T>) ByteConverter.convertFromBytes(bytes);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-			throw new IOException(e);
-		}
-		return list;
-	}
-
 	private TraceNode readNode(List<TraceNode> allSteps) throws IOException {
 		int nodeOrder = readVarInt();
 		if (nodeOrder <= 0) {
@@ -235,37 +213,5 @@ public class TraceOutputReader extends DataInputStream {
 		}
 	}
 
-	public String readString() throws IOException {
-		int len = readVarInt();
-		if (len == -1) {
-			return null;
-		} else if (len == 0) {
-			return "";
-		} else {
-			byte[] bytes = new byte[len];
-			readFully(bytes);
-			return new String(bytes);
-		}
-	}
 	
-	public byte[] readByteArray() throws IOException {
-		int len = readVarInt();
-		if (len == -1) {
-			return null;
-		} else if (len == 0) {
-			return new byte[0];
-		} else {
-			byte[] bytes = new byte[len];
-			readFully(bytes);
-			return bytes;
-		}
-	}
-	
-	public int readVarInt() throws IOException {
-		final int value = 0xFF & readByte();
-		if ((value & 0x80) == 0) {
-			return value;
-		}
-		return (value & 0x7F) | (readVarInt() << 7);
-	}
 }
