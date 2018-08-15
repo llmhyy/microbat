@@ -6,7 +6,7 @@ import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 public class BranchCoverageTracer extends EmptyCoverageTracer implements ICoverageTracer {
 	private int testIdx;
 	private CoverageSFNode currentNode;
-	private boolean canceled = false;
+	private volatile boolean canceled = false;
 	
 	public BranchCoverageTracer(int currentTcIdx) {
 		this.testIdx = currentTcIdx;

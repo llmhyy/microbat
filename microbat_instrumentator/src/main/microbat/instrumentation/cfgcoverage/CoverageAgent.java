@@ -85,9 +85,9 @@ public class CoverageAgent implements IAgent {
 				coverageOutputWriter.writeCfgCoverage(coverageOutput.getCoverageGraph());
 				coverageOutputWriter.writeInputData(coverageOutput.getInputData());
 				coverageOutputWriter.flush();
-			}
-			if (reset) {
-				coverageAgent.tracerHandler.reset();
+				if (reset) {
+					coverageAgent.tracerHandler.reset();
+				}
 			}
 		} catch (IOException e) {
 			AgentLogger.error(e);
@@ -97,7 +97,7 @@ public class CoverageAgent implements IAgent {
 	}
 
 	@Override
-	public synchronized void startTest(String junitClass, String junitMethod) {
+	public void startTest(String junitClass, String junitMethod) {
 		int testIdx = testcases.size();
 		String testcase = InstrumentationUtils.getMethodId(junitClass, junitMethod);
 		AgentLogger.debug(String.format("Start testcase %s, testIdx=%s", testcase, testIdx));
@@ -109,7 +109,7 @@ public class CoverageAgent implements IAgent {
 	@Override
 	public void exitTest(String testResultMsg, String junitClass, String junitMethod, long threadId) {
 		Integer testIdx = AgentRuntimeData.currentTestIdxMap.get(threadId);
-		AgentLogger.debug(String.format("End testcase %s, testIdx=%s, thread=%s",
+		AgentLogger.debug(String.format("Exit testcase %s, testIdx=%s, thread=%s",
 				InstrumentationUtils.getMethodId(junitClass, junitMethod),
 				testIdx, threadId));
 		AgentRuntimeData.unregister(threadId, testIdx);

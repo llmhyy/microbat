@@ -27,11 +27,11 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	private List<CoverageSFNode> branches = new ArrayList<>(2);
 	private List<CoverageSFNode> parents = new ArrayList<>(2);
 	
-	private List<Integer> coveredTestcases = new ArrayList<>();
+	private volatile List<Integer> coveredTestcases = new ArrayList<>();
 	/* for block node */
 	private List<Integer> content; // for a block node which contain all nodes in block from start to end.
 	/* for conditional node */
-	private Map<CoverageSFNode, List<Integer>> coveredTestcasesOnBranches = new HashMap<CoverageSFNode, List<Integer>>();
+	private volatile Map<CoverageSFNode, List<Integer>> coveredTestcasesOnBranches = new HashMap<CoverageSFNode, List<Integer>>();
 
 	public CoverageSFNode(int cvgIdx) {
 		this.cvgIdx = cvgIdx;
