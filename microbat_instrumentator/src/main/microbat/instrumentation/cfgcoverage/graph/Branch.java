@@ -11,6 +11,10 @@ public class Branch implements Serializable {
 		this.fromNodeIdx = fromNodeIdx;
 		this.toNodeIdx = toNodeIdx;
 	}
+	
+	public String getBranchID(){
+		return this.fromNodeIdx + "-" + this.toNodeIdx;
+	}
 
 	@Override
 	public int hashCode() {
