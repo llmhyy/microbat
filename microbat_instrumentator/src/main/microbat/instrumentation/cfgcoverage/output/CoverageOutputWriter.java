@@ -28,9 +28,6 @@ public class CoverageOutputWriter extends OutputWriter {
 		
 		/* covered testcases */
 		writeListString(coverageGraph.getCoveredTestcases());
-
-		/* covered testcase indexies */
-		writeListInt(coverageGraph.getCoveredTestcaseIdexies());
 		
 		/* nodeCoverage list */
 		writeVarInt(coverageGraph.getNodeList().size());
@@ -83,6 +80,16 @@ public class CoverageOutputWriter extends OutputWriter {
 			writeVarInt(branch.getId());
 		}
 		/* covered testcases on node */
+		boolean hasNull = false;
+		for (Integer id : node.getCoveredTestcases()) {
+			if (id == null) {
+				hasNull = true;
+			}
+		}
+		if (hasNull) {
+			System.out.println(String.format("WARNING-hasNull: [%s] [%s] [%s]", node.getCoveredTestcases(),
+					node, node.getCoveredTestcasesOnBranches()));
+		}
 		writeListInt(node.getCoveredTestcases());
 		/* covered testcases on branches */
 		writeVarInt(node.getCoveredTestcasesOnBranches().keySet().size());

@@ -61,9 +61,7 @@ public class OutputWriter extends DataOutputStream {
 	}
 	
 	public final void writeString(String str) throws IOException {
-		if (str == null) {
-			writeVarInt(-1);
-		} else if ( str.isEmpty()) {
+		if (str == null || str.isEmpty()) {
 			writeVarInt(0);
 		} else {
 			writeVarInt(str.length());
@@ -71,16 +69,17 @@ public class OutputWriter extends DataOutputStream {
 		}
 	}
 	
-	public void writeListInt(List<Integer> list) throws IOException {
-		if (list == null) {
-			writeVarInt(-1);
-		} else if (list.isEmpty()) {
+	public synchronized void writeListInt(List<Integer> list) throws IOException {
+		if (list == null || list.isEmpty()) {
 			writeVarInt(0);
 		} else {
 			writeVarInt(list.size());
-		}
-		for (Integer value : list) {
-			writeVarInt(value);
+			for (Integer value : list) {
+				if (value == null) {
+					System.out.println(list);
+				}
+				writeVarInt(value);
+			}
 		}
 	}
 	
@@ -91,9 +90,9 @@ public class OutputWriter extends DataOutputStream {
 			writeVarInt(0);
 		} else {
 			writeVarInt(list.size());
-		}
-		for (String value : list) {
-			writeString(value);
+			for (String value : list) {
+				writeString(value);
+			}
 		}
 	}
 	

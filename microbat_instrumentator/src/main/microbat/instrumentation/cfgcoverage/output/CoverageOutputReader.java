@@ -31,9 +31,6 @@ public class CoverageOutputReader extends OutputReader{
 		/* covered testcases */
 		coverageGraph.setCoveredTestcases(readListString());
 		
-		/* covered testcase indexies */
-		coverageGraph.setCoveredTestcaseIdexies(readListInt());
-		
 		/* nodeCoverage list */
 		int nodeListSize = readVarInt();
 		List<CoverageSFNode> nodeList = new ArrayList<CoverageSFNode>(nodeListSize);

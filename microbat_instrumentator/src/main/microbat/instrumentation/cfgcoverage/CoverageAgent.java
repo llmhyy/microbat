@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.util.ArrayList;
-import java.util.List;
 
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentLogger;
@@ -27,7 +25,6 @@ import sav.strategies.dto.AppJavaClassPath;
 public class CoverageAgent implements IAgent {
 	private CoverageAgentParams agentParams;
 	private CoverageInstrumenter instrumenter;
-	private List<String> testcases = new ArrayList<String>();
 	private CoverageTransformer coverageTransformer;
 	private StopTimer timer;
 	private ICoverageTracerHandler tracerHandler;
@@ -98,12 +95,10 @@ public class CoverageAgent implements IAgent {
 
 	@Override
 	public void startTest(String junitClass, String junitMethod) {
-		int testIdx = testcases.size();
 		String testcase = InstrumentationUtils.getMethodId(junitClass, junitMethod);
-		AgentLogger.debug(String.format("Start testcase %s, testIdx=%s", testcase, testIdx));
-		testcases.add(testcase);
+		int testIdx = AgentRuntimeData.coverageFlowGraph.addCoveredTestcase(testcase);
 		AgentRuntimeData.currentTestIdxMap.put(Thread.currentThread().getId(), testIdx);
-		AgentRuntimeData.coverageFlowGraph.addCoveredTestcase(testcase, testIdx);
+		AgentLogger.debug(String.format("Start testcase %s, testIdx=%s", testcase, testIdx));
 	}
 	
 	@Override

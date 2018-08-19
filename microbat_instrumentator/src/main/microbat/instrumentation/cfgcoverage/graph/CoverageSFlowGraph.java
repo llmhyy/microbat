@@ -1,7 +1,10 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode.Type;
 
@@ -15,7 +18,6 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 	private CoverageSFNode startNode;
 	private List<CoverageSFNode> nodeList;
 	private List<CoverageSFNode> exitList = new ArrayList<>();
-	private List<Integer> coveredTestcaseIdexies = new ArrayList<>();
 	private List<String> coveredTestcases = new ArrayList<>();
 	private int extensionLayer;
 	/* referenceCvgGraphIdx[cfgIdx] = CoverageSFlowGraph.nodeList.idx */
@@ -58,19 +60,15 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 		return nodeList;
 	}
 
-	public void addCoveredTestcase(String testcase, int testcaseIdx) {
+	public int addCoveredTestcase(String testcase) {
 		coveredTestcases.add(testcase);
-		coveredTestcaseIdexies.add(testcaseIdx);
+		return coveredTestcases.size() - 1;
 	}
 
 	public int getExtensionLayer() {
 		return extensionLayer;
 	}
 	
-	public List<Integer> getCoveredTestcaseIdexies() {
-		return coveredTestcaseIdexies;
-	}
-
 	public List<String> getCoveredTestcases() {
 		return coveredTestcases;
 	}
@@ -82,10 +80,6 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 				referenceCvgGraphIdx.set(idx, node.getId());
 			}
 		}
-	}
-
-	public void setCoveredTestcaseIdexies(List<Integer> coveredTestcaseIdexies) {
-		this.coveredTestcaseIdexies = coveredTestcaseIdexies;
 	}
 
 	public void setCoveredTestcases(List<String> coveredTestcases) {
@@ -147,10 +141,32 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 	}
 
 	public void clearData() {
-		coveredTestcaseIdexies.clear();
 		coveredTestcases.clear();
 		for (CoverageSFNode node : nodeList) {
 			node.clearCoverageInfo();
+		}
+	}
+	
+	public void addCoverageInfo(CoverageSFlowGraph otherCoverage) {
+		Map<Integer, Integer> newTestIdxMap = new HashMap<>();
+		List<String> otherTcs = otherCoverage.coveredTestcases;
+		for (int i = 0; i < otherTcs.size(); i++) {
+			int newIdx = this.coveredTestcases.size();
+			newTestIdxMap.put(i, newIdx);
+			this.coveredTestcases.add(otherTcs.get(i));
+		}
+		for (CoverageSFNode nodeCoverage : this.nodeList) {
+			CoverageSFNode otherNodeCoverage = otherCoverage.nodeList.get(nodeCoverage.getCvgIdx());
+			for (int testIdx : otherNodeCoverage.getCoveredTestcases()) {
+				nodeCoverage.addCoveredTestcase(newTestIdxMap.get(testIdx));
+			}
+			for (Entry<CoverageSFNode, List<Integer>> entry : otherNodeCoverage.getCoveredTestcasesOnBranches()
+					.entrySet()) {
+				for (int testIdx : entry.getValue()) {
+					nodeCoverage.markCoveredBranch(nodeList.get(entry.getKey().getCvgIdx()),
+							newTestIdxMap.get(testIdx));
+				}
+			}
 		}
 	}
 }
