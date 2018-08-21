@@ -81,7 +81,7 @@ public class CoverageOutputWriter extends OutputWriter {
 		}
 		/* covered testcases on node */
 		boolean hasNull = false;
-		for (Integer id : node.getCoveredTestcases()) {
+		for (String id : node.getCoveredTestcases()) {
 			if (id == null) {
 				hasNull = true;
 			}
@@ -90,13 +90,13 @@ public class CoverageOutputWriter extends OutputWriter {
 			System.out.println(String.format("WARNING-hasNull: [%s] [%s] [%s]", node.getCoveredTestcases(),
 					node, node.getCoveredTestcasesOnBranches()));
 		}
-		writeListInt(node.getCoveredTestcases());
+		writeListString(node.getCoveredTestcases());
 		/* covered testcases on branches */
 		writeVarInt(node.getCoveredTestcasesOnBranches().keySet().size());
 		for (CoverageSFNode branch : node.getCoveredTestcasesOnBranches().keySet()) {
 			writeVarInt(branch.getCvgIdx());
-			List<Integer> coveredTcs = node.getCoveredTestcasesOnBranches().get(branch);
-			writeListInt(coveredTcs);
+			List<String> coveredTcs = node.getCoveredTestcasesOnBranches().get(branch);
+			writeListString(coveredTcs);
 		}
 	}
 }

@@ -109,14 +109,14 @@ public class CoverageOutputReader extends OutputReader{
 			node.addBranch(nodeList.get(branchCvgNodeIdx));
 		}
 		/* covered testcases on node */
-		node.setCoveredTestcases(readListInt());
+		node.setCoveredTestcases(readListString());
 		/* read covered testcases on branch */
 		/* covered testcases on branches */
-		Map<CoverageSFNode, List<Integer>> coveredTcsOnBranches = node.getCoveredTestcasesOnBranches();
+		Map<CoverageSFNode, List<String>> coveredTcsOnBranches = node.getCoveredTestcasesOnBranches();
 		size = readVarInt();
 		for (int i = 0; i < size; i++) {
 			int toNodeIdx = readVarInt();
-			List<Integer> coveredTcs = readListInt();
+			List<String> coveredTcs = readListString();
 			coveredTcsOnBranches.put(nodeList.get(toNodeIdx), coveredTcs);
 		}
 		node.setCoveredTestcasesOnBranches(coveredTcsOnBranches);

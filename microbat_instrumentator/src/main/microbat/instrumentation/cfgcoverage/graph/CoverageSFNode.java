@@ -27,11 +27,11 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	private List<CoverageSFNode> branches = new ArrayList<>(2);
 	private List<CoverageSFNode> parents = new ArrayList<>(2);
 	
-	private volatile List<Integer> coveredTestcases = new ArrayList<>();
+	private volatile List<String> coveredTestcases = new ArrayList<>();
 	/* for block node */
 	private List<Integer> content; // for a block node which contain all nodes in block from start to end.
 	/* for conditional node */
-	private volatile Map<CoverageSFNode, List<Integer>> coveredTestcasesOnBranches = new HashMap<CoverageSFNode, List<Integer>>();
+	private volatile Map<CoverageSFNode, List<String>> coveredTestcasesOnBranches = new HashMap<CoverageSFNode, List<String>>();
 
 	public CoverageSFNode(int cvgIdx) {
 		this.cvgIdx = cvgIdx;
@@ -70,11 +70,11 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		return new ArrayList<>(coveredTestcasesOnBranches.keySet());
 	}
 
-	public List<Integer> getCoveredTestcases() {
+	public List<String> getCoveredTestcases() {
 		return coveredTestcases;
 	}
 
-	public void setCoveredTestcases(List<Integer> coveredTestcases) {
+	public void setCoveredTestcases(List<String> coveredTestcases) {
 		this.coveredTestcases = coveredTestcases;
 	}
 
@@ -156,20 +156,20 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		CONDITION_NODE, BLOCK_NODE, INVOKE_NODE, ALIAS_NODE
 	}
 
-	public void addCoveredTestcase(int testcaseIdx) {
-		if (!coveredTestcases.contains(testcaseIdx)) {
-			coveredTestcases.add(testcaseIdx);
+	public void addCoveredTestcase(String testcase) {
+		if (!coveredTestcases.contains(testcase)) {
+			coveredTestcases.add(testcase);
 		}
 	}
 
-	public void markCoveredBranch(CoverageSFNode branch, int testcaseIdx) {
-		List<Integer> tcs = coveredTestcasesOnBranches.get(branch);
+	public void markCoveredBranch(CoverageSFNode branch, String testcase) {
+		List<String> tcs = coveredTestcasesOnBranches.get(branch);
 		if (tcs == null) {
 			tcs = new ArrayList<>();
 			coveredTestcasesOnBranches.put(branch, tcs);
 		}
-		if (!tcs.contains(testcaseIdx)) {
-			tcs.add(testcaseIdx);
+		if (!tcs.contains(testcase)) {
+			tcs.add(testcase);
 		}
 	}
 	
@@ -177,11 +177,11 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		this.endIdx = endIdx;
 	}
 
-	public Map<CoverageSFNode, List<Integer>> getCoveredTestcasesOnBranches() {
+	public Map<CoverageSFNode, List<String>> getCoveredTestcasesOnBranches() {
 		return coveredTestcasesOnBranches;
 	}
 
-	public void setCoveredTestcasesOnBranches(Map<CoverageSFNode, List<Integer>> coveredTestcasesOnBranches) {
+	public void setCoveredTestcasesOnBranches(Map<CoverageSFNode, List<String>> coveredTestcasesOnBranches) {
 		this.coveredTestcasesOnBranches = coveredTestcasesOnBranches;
 	}
 

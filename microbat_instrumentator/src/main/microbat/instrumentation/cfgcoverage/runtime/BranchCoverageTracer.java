@@ -4,12 +4,12 @@ import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 
 public class BranchCoverageTracer extends EmptyCoverageTracer implements ICoverageTracer {
-	private int testIdx;
+	private String testcase;
 	private CoverageSFNode currentNode;
 	private volatile boolean canceled = false;
 	
 	public BranchCoverageTracer(int currentTcIdx) {
-		this.testIdx = currentTcIdx;
+		this.testcase = AgentRuntimeData.coverageFlowGraph.getCoveredTestcases().get(currentTcIdx);
 	}
 	
 	@Override
@@ -22,15 +22,15 @@ public class BranchCoverageTracer extends EmptyCoverageTracer implements ICovera
 		} else {
 			CoverageSFNode branch = currentNode.getCorrespondingBranch(methodId, nodeIdx);
 			if (branch != null) {
-				currentNode.markCoveredBranch(branch, testIdx);
+				currentNode.markCoveredBranch(branch, testcase);
 				currentNode = branch;
 			} else {
-				AgentLogger.debug(String.format("cannot find branch %s:%d of node %d [testidx=%d]", methodId, nodeIdx,
-						currentNode.getId(), testIdx));
+				AgentLogger.debug(String.format("cannot find branch %s:%d of node %d [testcase=%s]", methodId, nodeIdx,
+						currentNode.getId(), testcase));
 				return;
 			}
 		}
-		currentNode.addCoveredTestcase(testIdx);
+		currentNode.addCoveredTestcase(testcase);
 	}
 
 	public synchronized static ICoverageTracer _getTracer(String methodId) {

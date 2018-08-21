@@ -148,23 +148,16 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 	}
 	
 	public void addCoverageInfo(CoverageSFlowGraph otherCoverage) {
-		Map<Integer, Integer> newTestIdxMap = new HashMap<>();
-		List<String> otherTcs = otherCoverage.coveredTestcases;
-		for (int i = 0; i < otherTcs.size(); i++) {
-			int newIdx = this.coveredTestcases.size();
-			newTestIdxMap.put(i, newIdx);
-			this.coveredTestcases.add(otherTcs.get(i));
-		}
+		this.coveredTestcases.addAll(otherCoverage.coveredTestcases);
 		for (CoverageSFNode nodeCoverage : this.nodeList) {
 			CoverageSFNode otherNodeCoverage = otherCoverage.nodeList.get(nodeCoverage.getCvgIdx());
-			for (int testIdx : otherNodeCoverage.getCoveredTestcases()) {
-				nodeCoverage.addCoveredTestcase(newTestIdxMap.get(testIdx));
+			for (String testcase : otherNodeCoverage.getCoveredTestcases()) {
+				nodeCoverage.addCoveredTestcase(testcase);
 			}
-			for (Entry<CoverageSFNode, List<Integer>> entry : otherNodeCoverage.getCoveredTestcasesOnBranches()
+			for (Entry<CoverageSFNode, List<String>> entry : otherNodeCoverage.getCoveredTestcasesOnBranches()
 					.entrySet()) {
-				for (int testIdx : entry.getValue()) {
-					nodeCoverage.markCoveredBranch(nodeList.get(entry.getKey().getCvgIdx()),
-							newTestIdxMap.get(testIdx));
+				for (String testcase : entry.getValue()) {
+					nodeCoverage.markCoveredBranch(nodeList.get(entry.getKey().getCvgIdx()), testcase);
 				}
 			}
 		}

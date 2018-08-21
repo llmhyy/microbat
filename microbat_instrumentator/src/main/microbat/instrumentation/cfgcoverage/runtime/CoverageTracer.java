@@ -22,7 +22,8 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	public static volatile Map<Integer, List<MethodExecutionData>> methodExecsOnASingleTcMap = new HashMap<>();
 
 	protected long threadId;
-	protected int testIdx;
+	private String testcase;
+	private int testIdx;
 	private TracingState state = TracingState.INIT;
 	private ValueExtractor valueExtractor = new ValueExtractor();
 	private int methodHierachyLevel = 0;
@@ -32,6 +33,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	public CoverageTracer(long threadId, int testIdx) {
 		this.threadId = threadId;
 		this.testIdx = testIdx;
+		this.testcase = AgentRuntimeData.coverageFlowGraph.getCoveredTestcases().get(testIdx);
 	}
 	
 	@Override
@@ -44,18 +46,18 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		} else {
 			CoverageSFNode branch = currentNode.getCorrespondingBranch(methodId, nodeIdx);
 			if (branch != null) {
-				currentNode.markCoveredBranch(branch, testIdx);
+				currentNode.markCoveredBranch(branch, testcase);
 				currentNode = branch;
 			} else {
 				if (!currentNode.isAliasNode()) {
-					AgentLogger.debug(String.format("cannot find branch %s:%d of node %d [testidx=%d]", methodId, nodeIdx,
-							currentNode.getId(), testIdx));
+					AgentLogger.debug(String.format("cannot find branch %s:%d of node %d [testcase=%s]", methodId, nodeIdx,
+							currentNode.getId(), testcase));
 				}
 				return;
 			}
 		}
 		methodExecData.appendExecPath(currentNode);
-		currentNode.addCoveredTestcase(testIdx);
+		currentNode.addCoveredTestcase(testcase);
 	}
 	
 	
