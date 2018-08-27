@@ -107,7 +107,9 @@ public class CoverageAgent implements IAgent {
 		AgentLogger.debug(String.format("Exit testcase %s, testIdx=%s, thread=%s",
 				InstrumentationUtils.getMethodId(junitClass, junitMethod),
 				testIdx, threadId));
-		AgentRuntimeData.unregister(threadId, testIdx);
+		if (testIdx != null) {
+			AgentRuntimeData.unregister(threadId, testIdx);
+		}
 	}
 
 	@Override
