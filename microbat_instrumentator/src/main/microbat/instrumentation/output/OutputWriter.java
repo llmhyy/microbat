@@ -4,6 +4,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +91,8 @@ public class OutputWriter extends DataOutputStream {
 			writeVarInt(0);
 		} else {
 			writeVarInt(list.size());
-			for (String value : list) {
+			List<String> values = new ArrayList<>(list);
+			for (String value : values) {
 				writeString(value);
 			}
 		}

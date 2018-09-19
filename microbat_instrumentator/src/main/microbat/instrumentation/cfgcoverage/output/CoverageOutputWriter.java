@@ -79,24 +79,26 @@ public class CoverageOutputWriter extends OutputWriter {
 		for (CoverageSFNode branch : CollectionUtils.nullToEmpty(node.getBranches())) {
 			writeVarInt(branch.getId());
 		}
-		/* covered testcases on node */
-		boolean hasNull = false;
-		for (String id : node.getCoveredTestcases()) {
-			if (id == null) {
-				hasNull = true;
+		synchronized (node.getCoveredTestcases()) {
+			/* covered testcases on node */
+			boolean hasNull = false;
+			for (String id : node.getCoveredTestcases()) {
+				if (id == null) {
+					hasNull = true;
+				}
 			}
-		}
-		if (hasNull) {
-			System.out.println(String.format("WARNING-hasNull: [%s] [%s] [%s]", node.getCoveredTestcases(),
-					node, node.getCoveredTestcasesOnBranches()));
-		}
-		writeListString(node.getCoveredTestcases());
-		/* covered testcases on branches */
-		writeVarInt(node.getCoveredTestcasesOnBranches().keySet().size());
-		for (CoverageSFNode branch : node.getCoveredTestcasesOnBranches().keySet()) {
-			writeVarInt(branch.getCvgIdx());
-			List<String> coveredTcs = node.getCoveredTestcasesOnBranches().get(branch);
-			writeListString(coveredTcs);
+			if (hasNull) {
+				System.out.println(String.format("WARNING-hasNull: [%s] [%s] [%s]", node.getCoveredTestcases(),
+						node, node.getCoveredTestcasesOnBranches()));
+			}
+			writeListString(node.getCoveredTestcases());
+			/* covered testcases on branches */
+			writeVarInt(node.getCoveredTestcasesOnBranches().keySet().size());
+			for (CoverageSFNode branch : node.getCoveredTestcasesOnBranches().keySet()) {
+				writeVarInt(branch.getCvgIdx());
+				List<String> coveredTcs = node.getCoveredTestcasesOnBranches().get(branch);
+				writeListString(coveredTcs);
+			}
 		}
 	}
 }

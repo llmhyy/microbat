@@ -24,7 +24,7 @@ public class AgentRuntimeData {
 		tracers.add(tracer);
 	}
 	
-	public static synchronized void unregister(long threadId, int testIdx) {
+	public static synchronized void unregister(long threadId, Integer testIdx) {
 		TracerKey tracerKey = TracerKey.of(threadId, testIdx);
 		List<ICoverageTracer> tracers = tracerMap.remove(tracerKey);
 		if (tracers != null) {
