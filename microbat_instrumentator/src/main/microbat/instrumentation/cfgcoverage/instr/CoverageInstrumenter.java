@@ -143,11 +143,11 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 			/**/
 			break;
 		case Const.IF_ICMPEQ:
+		case Const.IF_ICMPNE:
+		case Const.IF_ICMPLT:
 		case Const.IF_ICMPGE:
 		case Const.IF_ICMPGT:
 		case Const.IF_ICMPLE:
-		case Const.IF_ICMPLT:
-		case Const.IF_ICMPNE:
 			tracerMethod = CoverageTracerMethods.ON_IF_I_CMP;
 			/* value1, value2 */
 			newInsns.append(new DUP2());
@@ -157,10 +157,11 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 			/**/
 			break;
 		case Const.IFEQ:
-		case Const.IFGE:
-		case Const.IFLE:
-		case Const.IFLT:
 		case Const.IFNE:
+		case Const.IFLT:
+		case Const.IFGE:
+		case Const.IFGT:
+		case Const.IFLE:
 			tracerMethod = CoverageTracerMethods.ON_IF;
 			/* value */
 			newInsns.append(new DUP());
