@@ -3,11 +3,18 @@ package microbat.instrumentation.cfgcoverage.graph.cdg;
 import java.util.ArrayList;
 import java.util.List;
 
+import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
+
 public class CDG {
+	private CoverageSFlowGraph coverageGraph;
 	private List<CDGNode> nodeList = new ArrayList<>();
 	private List<CDGNode> startNodes = new ArrayList<>();
 	private List<CDGNode> endNodes = new ArrayList<>();
 	
+	public CDG(CoverageSFlowGraph coverageGraph) {
+		this.coverageGraph = coverageGraph;
+	}
+
 	public void addNode(CDGNode node) {
 		node.setId(nodeList.size());
 		nodeList.add(node);
@@ -43,6 +50,10 @@ public class CDG {
 
 	public void addExitNode(CDGNode cdgNode) {
 		endNodes.add(cdgNode);
+	}
+	
+	public void updateCoverage(CoverageSFlowGraph newCoverage) {
+		this.coverageGraph.addCoverageInfo(newCoverage);
 	}
 
 	@Override

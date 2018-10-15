@@ -19,7 +19,7 @@ public class CDGConstructor {
 	public CDG construct(CoverageSFlowGraph graph) {
 		Map<CoverageSFNode, List<CoverageSFNode>> controlDependencyMap = controlDependencyCalcul
 															.buildControlDependencyMap(graph);
-		CDG cdg = new CDG();
+		CDG cdg = new CDG(graph);
 		Map<Integer, CDGNode> cdgNodeMap = new HashMap<>();
 		Set<Integer> visited = new HashSet<>();
 		Stack<CDGNodeHolder> condNodeStack = new Stack<>();

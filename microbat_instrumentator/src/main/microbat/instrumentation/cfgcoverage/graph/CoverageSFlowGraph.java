@@ -35,7 +35,7 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 		this(cfg.size());
 		nodeList = new ArrayList<>(cfg.size() / 2);
 		this.extensionLayer = cdgLayer;
-		setCfg(cfg);
+		this.cfg = cfg;
 	}
 
 	public void addNode(CoverageSFNode node) {
@@ -163,6 +163,9 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 	
 	public void setCfg(CFGInstance cfg) {
 		this.cfg = cfg;
+		for (CoverageSFNode node : nodeList) {
+			node.setCfg(cfg);
+		}
 	}
 	
 	public CFGInstance getCfg() {

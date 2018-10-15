@@ -48,6 +48,14 @@ public class Branch implements Serializable {
 	public int getToNodeIdx() {
 		return toNode.getCvgIdx();
 	}
+	
+	public CoverageSFNode getFromNode() {
+		return fromNode;
+	}
+	
+	public CoverageSFNode getToNode() {
+		return toNode;
+	}
 
 	@Override
 	public String toString() {
