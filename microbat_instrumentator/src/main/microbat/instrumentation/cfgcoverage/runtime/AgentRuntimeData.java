@@ -38,7 +38,7 @@ public class AgentRuntimeData {
 		long threadId;
 		int testIdx;
 		
-		public static TracerKey of(long threadId, int testIdx) {
+		public static TracerKey of(long threadId, Integer testIdx) {
 			TracerKey key = new TracerKey();
 			key.threadId = threadId;
 			key.testIdx = testIdx;

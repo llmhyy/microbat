@@ -1,9 +1,7 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode.Type;
@@ -37,7 +35,7 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 		this(cfg.size());
 		nodeList = new ArrayList<>(cfg.size() / 2);
 		this.extensionLayer = cdgLayer;
-		this.cfg = cfg;
+		setCfg(cfg);
 	}
 
 	public void addNode(CoverageSFNode node) {
@@ -161,5 +159,13 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 				}
 			}
 		}
+	}
+	
+	public void setCfg(CFGInstance cfg) {
+		this.cfg = cfg;
+	}
+	
+	public CFGInstance getCfg() {
+		return cfg;
 	}
 }

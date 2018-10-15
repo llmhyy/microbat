@@ -4,24 +4,24 @@ import java.io.Serializable;
 
 public class Branch implements Serializable {
 	private static final long serialVersionUID = -1054499814399081119L;
-	protected int fromNodeIdx;
-	protected int toNodeIdx;
+	protected CoverageSFNode fromNode;
+	protected CoverageSFNode toNode;
 	
-	public Branch(int fromNodeIdx, int toNodeIdx) {
-		this.fromNodeIdx = fromNodeIdx;
-		this.toNodeIdx = toNodeIdx;
+	public Branch(CoverageSFNode fromNode, CoverageSFNode toNode) {
+		this.fromNode = fromNode;
+		this.toNode = toNode;
 	}
 	
 	public String getBranchID(){
-		return this.fromNodeIdx + "-" + this.toNodeIdx;
+		return fromNode.getCvgIdx() + "-" + toNode.getCvgIdx();
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + fromNodeIdx;
-		result = prime * result + toNodeIdx;
+		result = prime * result + fromNode.getId();
+		result = prime * result + toNode.getId();
 		return result;
 	}
 
@@ -34,23 +34,23 @@ public class Branch implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		Branch other = (Branch) obj;
-		if (fromNodeIdx != other.fromNodeIdx)
+		if (fromNode.getCvgIdx() != other.fromNode.getCvgIdx())
 			return false;
-		if (toNodeIdx != other.toNodeIdx)
+		if (toNode.getCvgIdx() != other.toNode.getCvgIdx())
 			return false;
 		return true;
 	}
 
 	public int getFromNodeIdx() {
-		return fromNodeIdx;
+		return fromNode.getCvgIdx();
 	}
 
 	public int getToNodeIdx() {
-		return toNodeIdx;
+		return toNode.getCvgIdx();
 	}
 
 	@Override
 	public String toString() {
-		return "Branch [fromNodeIdx=" + fromNodeIdx + ", toNodeIdx=" + toNodeIdx + "]";
+		return "Branch [from=" + fromNode + ", to=" + toNode + "]";
 	}
 }

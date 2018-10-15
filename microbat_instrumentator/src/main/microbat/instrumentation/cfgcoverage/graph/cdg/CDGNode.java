@@ -54,6 +54,6 @@ public class CDGNode {
 
 	@Override
 	public String toString() {
-		return "CDGNode [id=" + id + ", cfgNode=" + cfgNode.getId() + "]";
+		return "CDGNode [id=" + id + ", cfgNode=" + cfgNode + "]";
 	}
 }

@@ -16,6 +16,7 @@ import microbat.instrumentation.utils.CollectionUtils;
  *
  */
 public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
+	private CFGInstance cfg; // for debug
 	private static final int INVALID_IDX = -1;
 	private int cvgIdx;
 	private int startIdx = INVALID_IDX;
@@ -41,6 +42,7 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		this.type = type;
 		startIdx = startNode.getIdx();
 		startNodeId = cfg.getUnitCfgNodeId(startNode);
+		setCfg(cfg);
 	}
 	
 	public CoverageSFNode getCorrespondingBranch(String methodId) {
@@ -223,15 +225,48 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 
 	@Override
 	public String toString() {
-		List<String> branchIdxies = Collections.emptyList();
-		if (branches != null) {
-			branchIdxies = new ArrayList<>();
-			for (CoverageSFNode branch : branches) {
-				branchIdxies.add(String.format("{%d, %d}", branch.getStartIdx(), branch.getEndIdx()));
+		return "CoverageSFNode [id=" + cvgIdx + ", type=" + type + ", startCfgNode=" + getNodeString(startIdx)
+				+ ", endCfgNode" + getNodeString(endIdx) + ", branches=" + getBranchesString() + ", endNodeId=" + endNodeId
+				+ ", cvgIdx=" + cvgIdx + "]";
+	}
+
+	private String getBranchesString() {
+		if (cfg == null) {
+			List<String> branchIdxies = Collections.emptyList();
+			if (branches != null) {
+				branchIdxies = new ArrayList<>();
+				for (CoverageSFNode branch : branches) {
+					branchIdxies.add(String.format("{%d, %d}", branch.getStartIdx(), branch.getEndIdx()));
+				}
+			}
+			return branchIdxies.toString();
+		} else {
+			StringBuilder sb = new StringBuilder();
+			int i = 0;
+			for (CoverageSFNode branch : sav.common.core.utils.CollectionUtils.nullToEmpty(branches)) {
+				sb.append(getNodeString(branch.startIdx));
+				if (i != (branches.size() - 1)) {
+					sb.append(", ");
+				}
+			}
+			return sb.toString();
+		}
+	}
+	
+	
+	
+	private String getNodeString(int... idxies) {
+		if (cfg == null) {
+			return Arrays.toString(idxies);
+		}
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < idxies.length; i++) {
+			sb.append(cfg.getNodeList().get(idxies[i]));
+			if (i != (idxies.length - 1)) {
+				sb.append(", ");
 			}
 		}
-		return "CoverageSFNode [id=" + cvgIdx +", type=" + type + ", startIdx=" + startIdx + ", endIdx=" + endIdx + ", branches="
-				+ branchIdxies + ", endNodeId=" + endNodeId + ", cvgIdx=" + cvgIdx + "]";
+		return sb.toString();
 	}
 
 	@Override
@@ -252,5 +287,8 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		coveredTestcases.clear();
 		coveredTestcasesOnBranches.clear();
 	}
-	
+
+	public void setCfg(CFGInstance cfg) {
+		this.cfg = cfg;
+	}
 }
