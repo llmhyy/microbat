@@ -24,6 +24,10 @@ public class Branch implements Serializable {
 		result = prime * result + toNode.getId();
 		return result;
 	}
+	
+	public boolean isCovered(){
+		return this.getFromNode().getCoveredBranches().contains(this.getToNode());
+	}
 
 	@Override
 	public boolean equals(Object obj) {
