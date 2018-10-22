@@ -38,7 +38,7 @@ public class EmptyCoverageTracer implements ICoverageTracer {
 	}
 
 	@Override
-	public void _onIf(int value, String methodId, int nodeIdx) {
+	public void _onIf(int value, boolean isNotIntCmpIf, String methodId, int nodeIdx) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -50,6 +50,24 @@ public class EmptyCoverageTracer implements ICoverageTracer {
 
 	@Override
 	public void shutDown() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void _onDcmp(double value1, double value2) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void _onFcmp(float value1, float value2) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void _onLcmp(long value1, long value2) {
 		// TODO Auto-generated method stub
 		
 	}

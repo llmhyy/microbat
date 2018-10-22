@@ -108,6 +108,38 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 		}
 	}
 	
+	/* collect condition variation value part */
+	private double notIntCmpVariation;
+	
+	@Override
+	public void _onDcmp(double value1, double value2) {
+		// value2 - value1
+		if (value1 < 0) {
+			/* check overflow */
+			if (Double.MAX_VALUE + value1 < value2) {
+				notIntCmpVariation = Double.MAX_VALUE;
+			} else {
+				notIntCmpVariation = value2 - value1;
+			}
+		} else {
+			if (Double.MIN_VALUE + value1 > value2) {
+				notIntCmpVariation = Double.MIN_VALUE;
+			} else {
+				notIntCmpVariation = value2 - value1;
+			}
+		}
+	}
+	
+	@Override
+	public void _onFcmp(float value1, float value2) {
+		_onDcmp(value1, value2);
+	}
+	
+	@Override
+	public void _onLcmp(long value1, long value2) {
+		_onDcmp(value1, value2);
+	}
+	
 	private void onIf(String methodId, int nodeIdx, double condVariation) {
 		if (nodeRecording(methodId, nodeIdx)) {
 			methodExecData.addConditionVariation(currentNode.getId(), condVariation);
@@ -132,14 +164,20 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	}
 
 	@Override
-	public void _onIf(int value, String methodId, int nodeIdx) {
-		onIf(methodId, nodeIdx, value);
+	public void _onIf(int value, boolean isNotIntCmpIf, String methodId, int nodeIdx) {
+		if (isNotIntCmpIf) {
+			onIf(methodId, nodeIdx, notIntCmpVariation);
+		} else {
+			onIf(methodId, nodeIdx, value);
+		}
 	}
 
 	@Override
 	public void _onIfNull(Object value, String methodId, int nodeIdx) {
 		onIf(methodId, nodeIdx, value == null ? 0 : 1);
 	}
+	
+	/* end of collect condition variation value part */
 	
 	public synchronized static ICoverageTracer _getTracer(String methodId, boolean isEntryPoint, String paramNamesCode,
 			String paramTypeSignsCode, Object[] params) {

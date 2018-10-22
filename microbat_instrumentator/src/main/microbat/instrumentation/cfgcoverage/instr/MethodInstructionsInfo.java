@@ -1,13 +1,13 @@
 package microbat.instrumentation.cfgcoverage.instr;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.InstructionHandle;
@@ -28,6 +28,7 @@ public class MethodInstructionsInfo {
 	private static Set<String> needToInstrumentClasses;
 	private List<InstructionInfo> nodeInsns;
 	private List<InstructionHandle> exitInsns;
+	private List<InstructionInfo> notIntCmpInIfInsns;
 	private List<InstructionInfo> conditionInsns;
 	
 	public static void initInstrInstructions(CoverageSFlowGraph coverageFlowGraph) {
@@ -56,10 +57,9 @@ public class MethodInstructionsInfo {
 			return null;
 		}
 		MethodInstructionsInfo instmInsns = new MethodInstructionsInfo();
-		List<InstructionInfo> nodeInsns = Collections.emptyList();
-		List<InstructionInfo> conditionInsns = Collections.emptyList();
-		nodeInsns = new ArrayList<InstructionInfo>(methodInstrmInsnIdexies.size());
-		conditionInsns = new ArrayList<>();
+		List<InstructionInfo> nodeInsns = new ArrayList<InstructionInfo>(methodInstrmInsnIdexies.size());
+		List<InstructionInfo> conditionInsns = new ArrayList<>();
+		List<InstructionInfo> notIntCmpInIfInsns = new ArrayList<>();
 		int idx = 0;
 		for (InstructionHandle insnHandler : insnList) {
 			if (methodInstrmInsnIdexies.contains(idx)) {
@@ -67,12 +67,18 @@ public class MethodInstructionsInfo {
 				nodeInsns.add(insnInfo);
 				if (insnHandler.getInstruction() instanceof IfInstruction) {
 					conditionInsns.add(insnInfo);
+					if (CollectionUtils.existIn(insnHandler.getPrev().getInstruction().getOpcode(),
+							Const.DCMPG, Const.DCMPL, Const.FCMPG, Const.FCMPL, Const.LCMP)) {
+						insnInfo.setNotIntCmpIf(true);
+						notIntCmpInIfInsns.add(new InstructionInfo(insnHandler.getPrev(), idx - 1));
+					}
 				}
 			}
 			idx++;
 		}
 		instmInsns.nodeInsns = nodeInsns;
 		instmInsns.conditionInsns = conditionInsns;
+		instmInsns.notIntCmpInIfInsns = notIntCmpInIfInsns;
 		CFGConstructor cfgConstructor = new CFGConstructor();
 		CFG cfg = cfgConstructor.constructCFG(method.getCode());
 		List<InstructionHandle> exitInsns = new ArrayList<>();
@@ -94,5 +100,9 @@ public class MethodInstructionsInfo {
 
 	public List<InstructionInfo> getConditionInsns() {
 		return conditionInsns;
+	}
+	
+	public List<InstructionInfo> getNotIntCmpInIfInsns() {
+		return notIntCmpInIfInsns;
 	}
 }

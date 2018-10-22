@@ -5,8 +5,11 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ASTORE;
+import org.apache.bcel.generic.ArrayType;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.DLOAD;
+import org.apache.bcel.generic.DSTORE;
 import org.apache.bcel.generic.DUP;
 import org.apache.bcel.generic.DUP2;
 import org.apache.bcel.generic.DUP_X1;
@@ -15,10 +18,13 @@ import org.apache.bcel.generic.INVOKEINTERFACE;
 import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.LLOAD;
+import org.apache.bcel.generic.LSTORE;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.POP;
 import org.apache.bcel.generic.PUSH;
+import org.apache.bcel.generic.Type;
 
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
@@ -115,6 +121,9 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 			injectCodeTracerReachNode(methodIdVar, instnInfo, tracerVar, constPool, insnList);
 		}
 		if (agentParams.collectConditionVariation()) {
+			for (InstructionInfo cmpInsnInfo : instmInsns.getNotIntCmpInIfInsns()) {
+				injectCodeTracerOnNotIntCmp(methodIdVar, tracerVar, cmpInsnInfo, constPool, insnList, methodGen);
+			}
 			for (InstructionInfo condInsnInfo : instmInsns.getConditionInsns()) {
 				injectCodeTracerOnIf(methodIdVar, tracerVar, condInsnInfo, constPool, insnList);
 			}
@@ -126,8 +135,60 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 		return true;
 	}
 	
-	private void injectCodeTracerOnIf(LocalVariableGen methodIdVar, LocalVariableGen tracerVar, InstructionInfo instnInfo,
-			ConstantPoolGen constPool, InstructionList insnList) {
+	private void injectCodeTracerOnNotIntCmp(LocalVariableGen methodIdVar, LocalVariableGen tracerVar, InstructionInfo instnInfo,
+			ConstantPoolGen constPool, InstructionList insnList, MethodGen methodGen) {
+		InstructionList newInsns = new InstructionList();
+		short opcode = instnInfo.getInsnHandler().getInstruction().getOpcode();
+		switch (opcode) {
+		case Const.DCMPG:
+		case Const.DCMPL:
+			LocalVariableGen d1Var = methodGen.addLocalVariable(nextTempVarName(), new ArrayType(Type.DOUBLE, 1),
+					instnInfo.getInsnHandler().getPrev(), instnInfo.getInsnHandler().getNext());
+			LocalVariableGen d2Var = methodGen.addLocalVariable(nextTempVarName(), new ArrayType(Type.DOUBLE, 1),
+					instnInfo.getInsnHandler().getPrev(), instnInfo.getInsnHandler().getNext());
+			newInsns.append(new DSTORE(d2Var.getIndex()));
+			newInsns.append(new DSTORE(d1Var.getIndex()));
+			newInsns.append(new ALOAD(tracerVar.getIndex()));
+			newInsns.append(new DLOAD(d1Var.getIndex()));
+			newInsns.append(new DLOAD(d2Var.getIndex()));
+			appendTracerMethodInvoke(newInsns, CoverageTracerMethods.ON_DCMP, constPool);
+			newInsns.append(new DLOAD(d1Var.getIndex()));
+			newInsns.append(new DLOAD(d2Var.getIndex()));
+			insertInsnHandler(insnList, newInsns, instnInfo.getInsnHandler());
+			newInsns.dispose();
+			break;
+		case Const.LCMP:
+			LocalVariableGen l1Var = methodGen.addLocalVariable(nextTempVarName(), new ArrayType(Type.LONG, 1),
+					instnInfo.getInsnHandler().getPrev(), instnInfo.getInsnHandler().getNext());
+			LocalVariableGen l2Var = methodGen.addLocalVariable(nextTempVarName(), new ArrayType(Type.LONG, 1),
+					instnInfo.getInsnHandler().getPrev(), instnInfo.getInsnHandler().getNext());
+			newInsns.append(new LSTORE(l2Var.getIndex()));
+			newInsns.append(new LSTORE(l1Var.getIndex()));
+			newInsns.append(new ALOAD(tracerVar.getIndex()));
+			newInsns.append(new LLOAD(l1Var.getIndex()));
+			newInsns.append(new LLOAD(l2Var.getIndex()));
+			appendTracerMethodInvoke(newInsns, CoverageTracerMethods.ON_LCMP, constPool);
+			newInsns.append(new LLOAD(l1Var.getIndex()));
+			newInsns.append(new LLOAD(l2Var.getIndex()));
+			insertInsnHandler(insnList, newInsns, instnInfo.getInsnHandler());
+			newInsns.dispose();
+			break;
+		case Const.FCMPG:
+		case Const.FCMPL:
+			/* duplicate */
+			newInsns.append(new DUP2()); // value1, value2, value1, value2
+			newInsns.append(new ALOAD(tracerVar.getIndex())); // value1, value2, value1, value2, $tracer
+			newInsns.append(new DUP_X2()); // value1, value2, $tracer, value1, value2, $tracer
+			newInsns.append(new POP()); // value1, value2, $tracer, value1, value2
+			appendTracerMethodInvoke(newInsns, CoverageTracerMethods.ON_FCMP, constPool); // value1, value2
+			insertInsnHandler(insnList, newInsns, instnInfo.getInsnHandler());
+			newInsns.dispose();
+			break;
+		}
+	}
+	
+	private void injectCodeTracerOnIf(LocalVariableGen methodIdVar, LocalVariableGen tracerVar,
+			InstructionInfo instnInfo, ConstantPoolGen constPool, InstructionList insnList) {
 		InstructionList newInsns = new InstructionList();
 		CoverageTracerMethods tracerMethod = null;
 		short opcode = instnInfo.getInsnHandler().getInstruction().getOpcode();
@@ -168,6 +229,7 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 			newInsns.append(new ALOAD(tracerVar.getIndex())); // value, $tracer
 			newInsns.append(new DUP_X1()); // $tracer, value, $tracer
 			newInsns.append(new POP()); // $tracer, value
+			newInsns.append(new PUSH(constPool, instnInfo.isNotIntCmpIf()));
 			/**/
 			break;
 		case Const.IFNONNULL:

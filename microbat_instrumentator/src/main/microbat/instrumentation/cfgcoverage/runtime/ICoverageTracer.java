@@ -12,10 +12,16 @@ public interface ICoverageTracer {
 
 	void _onIfICmp(int value1, int value2, String methodId, int nodeIdx);
 
-	void _onIf(int value, String methodId, int nodeIdx);
+	void _onIf(int value, boolean isNotIntCmpIf, String methodId, int nodeIdx);
 
 	void _onIfNull(Object value, String methodId, int nodeIdx);
 
 	void shutDown();
+
+	void _onDcmp(double value1, double value2);
+
+	void _onFcmp(float value1, float value2);
+
+	void _onLcmp(long value1, long value2);
 
 }
