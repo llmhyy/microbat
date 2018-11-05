@@ -1,8 +1,12 @@
 package microbat.instrumentation.cfgcoverage.graph.cdg;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import microbat.codeanalysis.bytecode.CFGNode;
+import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 
 public class CDG {
@@ -10,6 +14,7 @@ public class CDG {
 	private List<CDGNode> nodeList = new ArrayList<>();
 	private List<CDGNode> startNodes = new ArrayList<>();
 	private List<CDGNode> endNodes = new ArrayList<>();
+	private Map<Integer, CDGNode> coverageSFNodeToCDGNodeMap = new HashMap<>();
 	
 	public CDG(CoverageSFlowGraph coverageGraph) {
 		this.coverageGraph = coverageGraph;
@@ -54,6 +59,18 @@ public class CDG {
 	
 	public void updateCoverage(CoverageSFlowGraph newCoverage) {
 		this.coverageGraph.addCoverageInfo(newCoverage);
+	}
+	
+	public Map<Integer, CDGNode> getCoverageSFNodeToCDGNodeMap() {
+		return coverageSFNodeToCDGNodeMap;
+	}
+
+	public void setCoverageSFNodeToCDGNodeMap(Map<Integer, CDGNode> coverageSFNodeToCDGNodeMap) {
+		this.coverageSFNodeToCDGNodeMap = coverageSFNodeToCDGNodeMap;
+	}
+
+	public CDGNode findCDGNode(CoverageSFNode node) {
+		return coverageSFNodeToCDGNodeMap.get(node.getCvgIdx());
 	}
 
 	@Override

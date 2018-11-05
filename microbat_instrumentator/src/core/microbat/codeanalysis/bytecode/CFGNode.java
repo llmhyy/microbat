@@ -140,10 +140,6 @@ public class CFGNode implements IGraphNode<CFGNode>{
 	public void setIdx(int idx) {
 		this.idx = idx;
 	}
-	
-	public int getId() {
-		return idx;
-	}
 
 	public boolean canReachPostDominatee(CFGNode target) {
 		HashSet<CFGNode> visitedNodes = new HashSet<>();

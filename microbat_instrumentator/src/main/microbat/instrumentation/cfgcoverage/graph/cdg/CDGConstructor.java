@@ -69,6 +69,7 @@ public class CDGConstructor {
 				cdg.addStartNode(cdgNode);
 			}
 		}
+		cdg.setCoverageSFNodeToCDGNodeMap(cdgNodeMap);
 		return cdg;
 	}
 	
