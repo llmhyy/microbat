@@ -28,14 +28,14 @@ public class CDGConstructor {
 		CDGNodeHolder curDominatorNode = new CDGNodeHolder(cdgNodeMap);
 		while (!visitStack.empty()) {
 			CoverageSFNode visitingNode = visitStack.peek();
-			if (!visited.contains(visitingNode.getId())) {
+			if (!visited.contains(visitingNode.getCvgIdx())) {
 				if (curDominatorNode.controlDominate(visitingNode)) {
 					curDominatorNode.addBranch(visitingNode);
 				}
 				if (visitingNode.isConditionalNode()) {
 					curDominatorNode = new CDGNodeHolder(cdgNodeMap, visitingNode, controlDependencyMap);
 					condNodeStack.push(curDominatorNode);
-					visited.add(visitingNode.getId());
+					visited.add(visitingNode.getCvgIdx());
 				} else {
 					visitStack.pop();
 				}
@@ -56,10 +56,10 @@ public class CDGConstructor {
 		}
 		
 		for (CoverageSFNode node : graph.getNodeList()) {
-			CDGNode cdgNode = cdgNodeMap.get(node.getId());
+			CDGNode cdgNode = cdgNodeMap.get(node.getCvgIdx());
 			if (cdgNode == null) {
 				cdgNode = new CDGNode(node);
-				cdgNodeMap.put(node.getId(), cdgNode);
+				cdgNodeMap.put(node.getCvgIdx(), cdgNode);
 			}
 			cdg.addNode(cdgNode);
 			if (cdgNode.getChildren().isEmpty()) {
@@ -94,10 +94,10 @@ public class CDGConstructor {
 		}
 
 		private CDGNode getCorrespondingCDGNode(CoverageSFNode cfgNode) {
-			CDGNode correspondingCdgNode = cdgNodeMap.get(cfgNode.getId());
+			CDGNode correspondingCdgNode = cdgNodeMap.get(cfgNode.getCvgIdx());
 			if (correspondingCdgNode == null) {
 				correspondingCdgNode = new CDGNode(cfgNode);
-				cdgNodeMap.put(cfgNode.getId(), correspondingCdgNode);
+				cdgNodeMap.put(cfgNode.getCvgIdx(), correspondingCdgNode);
 			}
 			return correspondingCdgNode;
 		}

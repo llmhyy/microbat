@@ -57,7 +57,7 @@ public class MethodExecutionData implements Serializable {
 	public List<Integer> getExecPathId() {
 		List<Integer> ids = new ArrayList<>(execPath.size());
 		for (CoverageSFNode node : execPath) {
-			ids.add(node.getId());
+			ids.add(node.getCvgIdx());
 		}
 		return ids;
 	}

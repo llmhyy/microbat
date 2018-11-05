@@ -51,7 +51,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 			} else {
 				if (!currentNode.isAliasNode()) {
 					AgentLogger.debug(String.format("cannot find branch %s:%d of node %d [testcase=%s]", methodId, nodeIdx,
-							currentNode.getId(), testcase));
+							currentNode.getCvgIdx(), testcase));
 				}
 				return;
 			}
@@ -142,7 +142,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	
 	private void onIf(String methodId, int nodeIdx, double condVariation) {
 		if (nodeRecording(methodId, nodeIdx)) {
-			methodExecData.addConditionVariation(currentNode.getId(), condVariation);
+			methodExecData.addConditionVariation(currentNode.getCvgIdx(), condVariation);
 		}
 	}
 

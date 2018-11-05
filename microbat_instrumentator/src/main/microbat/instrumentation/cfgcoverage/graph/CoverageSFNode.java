@@ -191,10 +191,6 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		return getType() == Type.ALIAS_NODE;
 	}
 
-	public int getId() {
-		return cvgIdx;
-	}
-
 	public int getCvgIdx() {
 		return cvgIdx;
 	}

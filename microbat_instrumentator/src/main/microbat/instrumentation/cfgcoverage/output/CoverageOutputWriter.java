@@ -50,7 +50,7 @@ public class CoverageOutputWriter extends OutputWriter {
 	private void writeListCoverageNode(List<CoverageSFNode> list) throws IOException {
 		writeSize(list);
 		for (CoverageSFNode value : CollectionUtils.nullToEmpty(list)) {
-			writeVarInt(value.getId());
+			writeVarInt(value.getCvgIdx());
 		}
 	}
 	
@@ -77,7 +77,7 @@ public class CoverageOutputWriter extends OutputWriter {
 		/* branches */
 		writeVarInt(CollectionUtils.getSize(node.getBranches()));
 		for (CoverageSFNode branch : CollectionUtils.nullToEmpty(node.getBranches())) {
-			writeVarInt(branch.getId());
+			writeVarInt(branch.getCvgIdx());
 		}
 		synchronized (node.getCoveredTestcases()) {
 			/* covered testcases on node */

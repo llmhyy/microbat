@@ -26,7 +26,7 @@ public class BranchCoverageTracer extends EmptyCoverageTracer implements ICovera
 				currentNode = branch;
 			} else {
 				AgentLogger.debug(String.format("cannot find branch %s:%d of node %d [testcase=%s]", methodId, nodeIdx,
-						currentNode.getId(), testcase));
+						currentNode.getCvgIdx(), testcase));
 				return;
 			}
 		}
