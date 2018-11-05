@@ -63,6 +63,6 @@ public class Branch implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Branch [from=" + fromNode + ", to=" + toNode + "]";
+		return "Branch [from=" + fromNode.getCvgIdx() + ", to=" + toNode.getCvgIdx() + "]";
 	}
 }
