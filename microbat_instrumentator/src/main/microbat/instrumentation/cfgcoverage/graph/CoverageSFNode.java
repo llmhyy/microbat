@@ -16,7 +16,7 @@ import microbat.instrumentation.utils.CollectionUtils;
  *
  */
 public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
-	private CFGInstance cfg; // for debug
+	private CoverageSFlowGraph graph; // for debug
 	private static final int INVALID_IDX = -1;
 	private int cvgIdx;
 	private int startIdx = INVALID_IDX;
@@ -38,11 +38,11 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		this.cvgIdx = cvgIdx;
 	}
 	
-	public CoverageSFNode(Type type, CFGNode startNode, CFGInstance cfg) {
+	public CoverageSFNode(Type type, CFGNode startNode, CoverageSFlowGraph graph) {
 		this.type = type;
 		startIdx = startNode.getIdx();
-		startNodeId = cfg.getUnitCfgNodeId(startNode);
-		setCfg(cfg);
+		startNodeId = graph.getCfg().getUnitCfgNodeId(startNode);
+		setGraph(graph);
 	}
 	
 	public CoverageSFNode getCorrespondingBranch(String methodId) {
@@ -227,7 +227,7 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	}
 
 	private String getBranchesString() {
-		if (cfg == null) {
+		if (graph == null) {
 			List<String> branchIdxies = Collections.emptyList();
 			if (branches != null) {
 				branchIdxies = new ArrayList<>();
@@ -252,12 +252,12 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	
 	
 	private String getNodeString(int... idxies) {
-		if (cfg == null) {
+		if (graph == null) {
 			return Arrays.toString(idxies);
 		}
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < idxies.length; i++) {
-			sb.append(cfg.getNodeList().get(idxies[i]));
+			sb.append(graph.getNodeList().get(idxies[i]));
 			if (i != (idxies.length - 1)) {
 				sb.append(", ");
 			}
@@ -284,7 +284,23 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		coveredTestcasesOnBranches.clear();
 	}
 
-	public void setCfg(CFGInstance cfg) {
-		this.cfg = cfg;
+	public void setGraph(CoverageSFlowGraph graph) {
+		this.graph = graph;
+	}
+	
+	public List<CFGNode> getCorrespondingCFGNodes() {
+		List<CFGNode> cfgNodes = new ArrayList<>(getContent().size());
+		for (Integer idx : getContent()) {
+			cfgNodes.add(graph.getCfg().getNodeList().get(idx));
+		}
+		return cfgNodes;
+	}
+	
+	public CFGNode getLastCFGNode() {
+		return graph.getCfg().getNodeList().get(endIdx);
+	}
+	
+	public CFGNode getFirstCFGNode() {
+		return graph.getCfg().getNodeList().get(startIdx);
 	}
 }

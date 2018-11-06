@@ -2,10 +2,16 @@ package microbat.instrumentation.cfgcoverage.graph;
 
 import java.io.Serializable;
 
+import org.apache.bcel.generic.BranchInstruction;
+import org.apache.bcel.generic.InstructionHandle;
+
+import microbat.codeanalysis.bytecode.CFGNode;
+
 public class Branch implements Serializable {
 	private static final long serialVersionUID = -1054499814399081119L;
 	protected CoverageSFNode fromNode;
 	protected CoverageSFNode toNode;
+	private BranchType branchType;
 	
 	public Branch(CoverageSFNode fromNode, CoverageSFNode toNode) {
 		this.fromNode = fromNode;
@@ -23,6 +29,28 @@ public class Branch implements Serializable {
 		result = prime * result + fromNode.getCvgIdx();
 		result = prime * result + toNode.getCvgIdx();
 		return result;
+	}
+	
+	public BranchType getBranchType() {
+		if (branchType == null) {
+			if (!fromNode.isConditionalNode()) {
+				branchType = BranchType.TRUE;
+			} else {
+				CFGNode cfgNode = fromNode.getLastCFGNode();
+				if (cfgNode .getInstructionHandle().getInstruction() instanceof BranchInstruction) {
+					BranchInstruction branchInsn = (BranchInstruction) cfgNode.getInstructionHandle().getInstruction();
+					InstructionHandle branchTarget = branchInsn.getTarget();
+					if (toNode.getFirstCFGNode().getInstructionHandle().equals(branchTarget)) {
+						branchType = BranchType.TRUE;
+					} else {
+						branchType = BranchType.FALSE;
+					}
+				} else {
+					branchType = BranchType.TRUE;
+				}
+			}
+		}
+		return branchType;
 	}
 	
 	public boolean isCovered(){
@@ -63,6 +91,6 @@ public class Branch implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Branch [from=" + fromNode.getCvgIdx() + ", to=" + toNode.getCvgIdx() + "]";
+		return "Branch [" + fromNode.getLastCFGNode() + "  -->  " + toNode.getFirstCFGNode() + "]";
 	}
 }

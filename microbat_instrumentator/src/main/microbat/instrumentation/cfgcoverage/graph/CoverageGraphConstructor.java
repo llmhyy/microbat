@@ -50,7 +50,7 @@ public class CoverageGraphConstructor {
 			} else if (node.isBranch()) {
 				type = Type.CONDITION_NODE;
 			}
-			CoverageSFNode blockNode = new CoverageSFNode(type, node, cfg);
+			CoverageSFNode blockNode = new CoverageSFNode(type, node, coverageGraph);
 			switch (type) {
 			case BLOCK_NODE:
 				blockNode.addContentNode(node.getIdx());

@@ -164,7 +164,7 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 	public void setCfg(CFGInstance cfg) {
 		this.cfg = cfg;
 		for (CoverageSFNode node : nodeList) {
-			node.setCfg(cfg);
+			node.setGraph(this);
 		}
 	}
 	
