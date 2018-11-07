@@ -194,7 +194,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 				return EmptyCoverageTracer.getInstance();
 			}
 			ICoverageTracer tracer = coverageTracer;
-			if (!isEntryPoint && coverageTracer.doesNotNeedToRecord(methodId)) {
+			if ((!isEntryPoint || coverageTracer.methodHierachyLevel > 0) && coverageTracer.doesNotNeedToRecord(methodId)) {
 				tracer = EmptyCoverageTracer.getInstance();
 			}
 			tracer.enterMethod(methodId, paramTypeSignsCode, paramNamesCode, params, isEntryPoint);
