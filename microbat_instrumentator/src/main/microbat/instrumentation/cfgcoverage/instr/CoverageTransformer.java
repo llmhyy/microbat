@@ -33,7 +33,7 @@ public class CoverageTransformer implements ClassFileTransformer {
 			if (FilterChecker.isTransformable(classFName, path, false) && FilterChecker.isAppClass(classFName)) {
 				try {
 					byte[] data = instrumenter.instrument(classFName, classfileBuffer);
-					AbstractTransformer.log(classfileBuffer, data, classFName, true);
+					AbstractTransformer.log(classfileBuffer, data, classFName, false);
 					return data;
 				} catch(Exception e) {
 					e.printStackTrace();
