@@ -221,8 +221,8 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 
 	@Override
 	public String toString() {
-		return "CoverageSFNode [id=" + cvgIdx + ", type=" + type + ", startCfgNode=" + getNodeString(startIdx)
-				+ ", endCfgNode" + getNodeString(endIdx) + ", branches=" + getBranchesString() + ", endNodeId=" + endNodeId
+		return "CoverageSFNode [id=" + cvgIdx + ", type=" + type + ", startCfgNode={" + getNodeString(startIdx)
+				+ "}, endCfgNode{" + getNodeString(endIdx) + "}, branches=" + getBranchesString() + ", endNodeId=" + endNodeId
 				+ ", cvgIdx=" + cvgIdx + "]";
 	}
 
@@ -252,12 +252,12 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	
 	
 	private String getNodeString(int... idxies) {
-		if (graph == null) {
+		if (graph == null || graph.getCfg() == null) {
 			return Arrays.toString(idxies);
 		}
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < idxies.length; i++) {
-			sb.append(graph.getNodeList().get(idxies[i]));
+			sb.append(graph.getCfg().getNodeList().get(idxies[i]));
 			if (i != (idxies.length - 1)) {
 				sb.append(", ");
 			}
