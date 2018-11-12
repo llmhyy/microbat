@@ -109,7 +109,7 @@ public class CoverageGraphConstructor {
 			}
 		}
 		for (CoverageSFNode node : coverageGraph.getNodeList()) {
-			if (CollectionUtils.isEmpty(node.getBranches())) {
+			if (CollectionUtils.isEmpty(node.getBranchTargets())) {
 				coverageGraph.addExitNode(node);
 			}
 		}

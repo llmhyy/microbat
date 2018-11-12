@@ -5,16 +5,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import microbat.instrumentation.cfgcoverage.graph.Branch;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
+import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
 import microbat.model.BreakPointValue;
 
 public class MethodExecutionData implements Serializable {
 	private static final long serialVersionUID = 2224373310288325990L;
 	private int testIdx;
 	private BreakPointValue methodInputValue;
-	private Map<Integer, Double> conditionVariationMap;
 	private transient List<CoverageSFNode> execPath;
+	private transient Map<Integer, Double> conditionVariationMap; // variation is always (b - a)
+	private Map<String, Double> branchFitnessMap;
 
 	public MethodExecutionData(int testIdx) {
 		this.testIdx = testIdx;
@@ -65,5 +69,35 @@ public class MethodExecutionData implements Serializable {
 	public List<CoverageSFNode> getExecPath() {
 		return execPath;
 	}
-
+	
+	public void calculateBranchFitnessMap(CoverageSFlowGraph graph) {
+		branchFitnessMap = new HashMap<>();
+		for (Entry<Integer, Double> entry : conditionVariationMap.entrySet()) {
+			CoverageSFNode condNode = graph.getNodeList().get(entry.getKey());
+			double fitness = 0.0;
+			for (Branch branch : condNode.getBranches()) {
+				switch (branch.getBranchCondition()) {
+				case EQ:
+					fitness = Math.abs(entry.getValue());
+					break;
+				case GT_GE:
+					fitness = entry.getValue();
+					break;
+				case LT_LE:
+					fitness = -entry.getValue();
+					break;
+				case NEQ:
+					fitness = 1/(Math.abs(entry.getValue()) + 1);
+					break;
+				default:
+					break;
+				}
+				branchFitnessMap.put(branch.getBranchID(), fitness);
+			}
+		}
+	}
+	
+	public void setBranchFitnessMap(Map<String, Double> branchFitnessMap) {
+		this.branchFitnessMap = branchFitnessMap;
+	}
 }

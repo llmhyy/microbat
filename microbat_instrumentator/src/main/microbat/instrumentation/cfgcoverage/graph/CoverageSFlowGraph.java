@@ -1,8 +1,12 @@
 package microbat.instrumentation.cfgcoverage.graph;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode.Type;
 
@@ -22,6 +26,7 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 	private List<Integer> referenceCvgGraphIdx;
 	private int cfgSize;
 	private List<CoveragePath> coveragePaths;
+	private Map<String, Branch> cachedBranches = new HashMap<>();
 
 	public CoverageSFlowGraph(int cfgSize) {
 		this.cfgSize = cfgSize;
@@ -170,5 +175,22 @@ public class CoverageSFlowGraph implements IGraph<CoverageSFNode> {
 	
 	public CFGInstance getCfg() {
 		return cfg;
+	}
+
+	public Branch getBranch(CoverageSFNode fromNode, CoverageSFNode toNode) {
+		Branch branch = cachedBranches.get(Branch.getBranchId(fromNode, toNode));
+		if (branch == null) {
+			branch = new Branch(fromNode, toNode);
+			cachedBranches.put(branch.getBranchID(), branch);
+		}
+		return branch;
+	}
+	
+	public Set<Branch> getAllBranches() {
+		Set<Branch> branches = new HashSet<>();
+		for (CoverageSFNode decisionNode : getDecisionNodes()) {
+			branches.addAll(decisionNode.getBranches());
+		}
+		return branches;
 	}
 }

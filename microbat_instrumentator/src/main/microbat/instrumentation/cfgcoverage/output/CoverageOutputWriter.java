@@ -75,8 +75,8 @@ public class CoverageOutputWriter extends OutputWriter {
 			break;
 		}
 		/* branches */
-		writeVarInt(CollectionUtils.getSize(node.getBranches()));
-		for (CoverageSFNode branch : CollectionUtils.nullToEmpty(node.getBranches())) {
+		writeVarInt(CollectionUtils.getSize(node.getBranchTargets()));
+		for (CoverageSFNode branch : CollectionUtils.nullToEmpty(node.getBranchTargets())) {
 			writeVarInt(branch.getCvgIdx());
 		}
 		synchronized (node.getCoveredTestcases()) {

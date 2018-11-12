@@ -95,7 +95,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 			if (currentNode.getType() != Type.INVOKE_NODE) {
 				throw new SavRtException(String.format("Expect INVOKE_NODE node, get %s (%s)", currentNode.getType(), currentNode));
 			}
-			for (CoverageSFNode branch : currentNode.getBranches()) {
+			for (CoverageSFNode branch : currentNode.getBranchTargets()) {
 				UniqueNodeId nodeId = branch.getStartNodeId();
 				if (nodeId.getMethodId().equals(methodId) && nodeId.getLocalNodeIdx() == 0) {
 					return false;

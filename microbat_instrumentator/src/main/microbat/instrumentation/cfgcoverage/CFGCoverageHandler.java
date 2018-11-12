@@ -24,6 +24,7 @@ public class CFGCoverageHandler implements ICoverageTracerHandler {
 		for (Entry<Integer, List<MethodExecutionData>> entry : CoverageTracer.methodExecsOnASingleTcMap.entrySet()) {
 			for (MethodExecutionData methodExecData : entry.getValue()) {
 				CollectionUtils.getListInitIfEmpty(pathMap, methodExecData.getExecPathId()).add(entry.getKey());
+				methodExecData.calculateBranchFitnessMap(coverageGraph);
 			}
 		}
 		List<CoveragePath> coveredPaths = new ArrayList<>(pathMap.size());

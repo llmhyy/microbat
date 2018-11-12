@@ -2,24 +2,32 @@ package microbat.instrumentation.cfgcoverage.graph;
 
 import java.io.Serializable;
 
+import org.apache.bcel.Const;
 import org.apache.bcel.generic.BranchInstruction;
+import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.InstructionHandle;
 
 import microbat.codeanalysis.bytecode.CFGNode;
+import sav.common.core.utils.CollectionUtils;
 
 public class Branch implements Serializable {
 	private static final long serialVersionUID = -1054499814399081119L;
 	protected CoverageSFNode fromNode;
 	protected CoverageSFNode toNode;
 	private BranchType branchType;
+	private BranchCondition branchCond;
 	
-	public Branch(CoverageSFNode fromNode, CoverageSFNode toNode) {
+	Branch(CoverageSFNode fromNode, CoverageSFNode toNode) {
 		this.fromNode = fromNode;
 		this.toNode = toNode;
 	}
 	
 	public String getBranchID(){
-		return fromNode.getCvgIdx() + "-" + toNode.getCvgIdx();
+		return getBranchId(fromNode, toNode);
+	}
+	
+	public static String getBranchId(CoverageSFNode from, CoverageSFNode to) {
+		return from.getCvgIdx() + "-" + to.getCvgIdx();
 	}
 
 	@Override
@@ -51,6 +59,28 @@ public class Branch implements Serializable {
 			}
 		}
 		return branchType;
+	}
+	
+	public BranchCondition getBranchCondition() {
+		if (branchCond != null || !fromNode.isConditionalNode()) {
+			return branchCond;
+		}
+		CFGNode cfgNode = fromNode.getLastCFGNode();
+		if (cfgNode.getInstructionHandle().getInstruction() instanceof IfInstruction) {
+			if (CollectionUtils.existIn(cfgNode.getInstructionHandle().getPrev().getInstruction().getOpcode(),
+					Const.DCMPG, Const.DCMPL, Const.FCMPG, Const.FCMPL, Const.LCMP)) {
+				branchCond = BranchCondition.valueOf(cfgNode.getInstructionHandle().getPrev().getInstruction().getOpcode(),
+						cfgNode.getInstructionHandle().getInstruction().getOpcode());
+			} else {
+				branchCond = BranchCondition.valueOf(cfgNode.getInstructionHandle().getInstruction().getOpcode());
+			}
+		} else {
+			branchCond = BranchCondition.EQ;
+		}
+		if (getBranchType() == BranchType.FALSE) {
+			branchCond = BranchCondition.negate(branchCond);
+		}
+		return branchCond;
 	}
 	
 	public boolean isCovered(){
@@ -92,5 +122,9 @@ public class Branch implements Serializable {
 	@Override
 	public String toString() {
 		return "Branch [" + fromNode.getLastCFGNode() + "  -->  " + toNode.getFirstCFGNode() + "]";
+	}
+
+	public static Branch of(CoverageSFNode fromNode, CoverageSFNode toNode) {
+		return fromNode.getGraph().getBranch(fromNode, toNode);
 	}
 }

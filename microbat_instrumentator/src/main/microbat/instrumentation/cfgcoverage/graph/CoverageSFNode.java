@@ -25,7 +25,7 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	private UniqueNodeId endNodeId; // probeNode
 	private Type type;
 
-	private List<CoverageSFNode> branches = new ArrayList<>(2);
+	private List<CoverageSFNode> branchTargets = new ArrayList<>(2);
 	private List<CoverageSFNode> parents = new ArrayList<>(2);
 	
 	private volatile List<String> coveredTestcases = new ArrayList<>();
@@ -34,7 +34,8 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	/* for conditional node */
 	private volatile Map<CoverageSFNode, List<String>> coveredTestcasesOnBranches = new HashMap<CoverageSFNode, List<String>>();
 
-	public CoverageSFNode(int cvgIdx) {
+	public CoverageSFNode(int cvgIdx, CoverageSFlowGraph graph) {
+		this.graph = graph;
 		this.cvgIdx = cvgIdx;
 	}
 	
@@ -46,7 +47,7 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	}
 	
 	public CoverageSFNode getCorrespondingBranch(String methodId) {
-		for (CoverageSFNode branch : branches) {
+		for (CoverageSFNode branch : branchTargets) {
 			if (branch.startNodeId.getMethodId().equals(methodId)) {
 				return branch;
 			}
@@ -55,7 +56,7 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	}
 	
 	public CoverageSFNode getCorrespondingBranch(String methodId, int nodeLocalIdx) {
-		for (CoverageSFNode branch : branches) {
+		for (CoverageSFNode branch : branchTargets) {
 			UniqueNodeId probeId = branch.getProbeNodeId();
 			if (probeId.match(methodId, nodeLocalIdx)) {
 				return branch;
@@ -80,12 +81,20 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		this.coveredTestcases = coveredTestcases;
 	}
 
-	public List<CoverageSFNode> getBranches() {
+	public List<CoverageSFNode> getBranchTargets() {
+		return branchTargets;
+	}
+	
+	public List<Branch> getBranches() {
+		List<Branch> branches = new ArrayList<>();
+		for (CoverageSFNode branchTarget : getBranchTargets()) {
+			branches.add(Branch.of(this, branchTarget));
+		}
 		return branches;
 	}
 	
 	public void addBranch(CoverageSFNode branchNode) {
-		branches.add(branchNode);
+		branchTargets.add(branchNode);
 		if (!branchNode.parents.contains(this)) {
 			branchNode.addParent(this);
 		}
@@ -96,7 +105,7 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	}
 	
 	public void setBranches(List<CoverageSFNode> branches) {
-		this.branches = branches;
+		this.branchTargets = branches;
 	}
 
 	public int getStartIdx() {
@@ -229,9 +238,9 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	private String getBranchesString() {
 		if (graph == null) {
 			List<String> branchIdxies = Collections.emptyList();
-			if (branches != null) {
+			if (branchTargets != null) {
 				branchIdxies = new ArrayList<>();
-				for (CoverageSFNode branch : branches) {
+				for (CoverageSFNode branch : branchTargets) {
 					branchIdxies.add(String.format("{%d, %d}", branch.getStartIdx(), branch.getEndIdx()));
 				}
 			}
@@ -239,9 +248,9 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		} else {
 			StringBuilder sb = new StringBuilder();
 			int i = 0;
-			for (CoverageSFNode branch : sav.common.core.utils.CollectionUtils.nullToEmpty(branches)) {
+			for (CoverageSFNode branch : sav.common.core.utils.CollectionUtils.nullToEmpty(branchTargets)) {
 				sb.append(getNodeString(branch.startIdx));
-				if (i != (branches.size() - 1)) {
+				if (i != (branchTargets.size() - 1)) {
 					sb.append(", ");
 				}
 			}
@@ -267,7 +276,7 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 
 	@Override
 	public List<CoverageSFNode> getChildren() {
-		return branches;
+		return branchTargets;
 	}
 
 	@Override
@@ -302,5 +311,9 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	
 	public CFGNode getFirstCFGNode() {
 		return graph.getCfg().getNodeList().get(startIdx);
+	}
+	
+	public CoverageSFlowGraph getGraph() {
+		return graph;
 	}
 }

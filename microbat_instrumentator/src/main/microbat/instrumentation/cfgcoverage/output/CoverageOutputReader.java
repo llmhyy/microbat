@@ -35,7 +35,7 @@ public class CoverageOutputReader extends OutputReader{
 		int nodeListSize = readVarInt();
 		List<CoverageSFNode> nodeList = new ArrayList<CoverageSFNode>(nodeListSize);
 		for (int i = 0; i < nodeListSize; i++) {
-			nodeList.add(new CoverageSFNode(i));
+			nodeList.add(new CoverageSFNode(i, coverageGraph));
 		}
 		for (int i = 0; i < nodeListSize; i++) {
 			readCoverageNode(nodeList, nodeList.get(i));
