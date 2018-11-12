@@ -122,8 +122,8 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 				notIntCmpVariation = value2 - value1;
 			}
 		} else {
-			if (Double.MIN_VALUE + value1 > value2) {
-				notIntCmpVariation = Double.MIN_VALUE;
+			if (-Double.MAX_VALUE + value1 > value2) {
+				notIntCmpVariation = -Double.MAX_VALUE;
 			} else {
 				notIntCmpVariation = value2 - value1;
 			}
