@@ -16,7 +16,7 @@ public class MethodExecutionData implements Serializable {
 	private static final long serialVersionUID = 2224373310288325990L;
 	private int testIdx;
 	private BreakPointValue methodInputValue;
-	private transient List<CoverageSFNode> execPath;
+	private List<Integer> execPath; // coverageSFNode.idx
 	private transient Map<Integer, Double> conditionVariationMap; // variation is always (b - a)
 	private Map<String, Double> branchFitnessMap;
 
@@ -27,7 +27,7 @@ public class MethodExecutionData implements Serializable {
 	}
 	
 	public void appendExecPath(CoverageSFNode node) {
-		execPath.add(node);
+		execPath.add(node.getCvgIdx());
 	}
 	
 	public void addConditionVariation(int coverageSFNodeId, double condVariation) {
@@ -59,14 +59,6 @@ public class MethodExecutionData implements Serializable {
 	}
 	
 	public List<Integer> getExecPathId() {
-		List<Integer> ids = new ArrayList<>(execPath.size());
-		for (CoverageSFNode node : execPath) {
-			ids.add(node.getCvgIdx());
-		}
-		return ids;
-	}
-	
-	public List<CoverageSFNode> getExecPath() {
 		return execPath;
 	}
 	
@@ -99,5 +91,17 @@ public class MethodExecutionData implements Serializable {
 	
 	public void setBranchFitnessMap(Map<String, Double> branchFitnessMap) {
 		this.branchFitnessMap = branchFitnessMap;
+	}
+	
+	public Map<String, Double> getBranchFitnessMap() {
+		return branchFitnessMap;
+	}
+	
+	public Map<Branch, Double> getBranchFitnessMap(CoverageSFlowGraph graph) {
+		Map<Branch, Double> map = new HashMap<>();
+		for (Entry<String, Double> entry : branchFitnessMap.entrySet()) {
+			map.put(Branch.getBrach(entry.getKey(), graph), entry.getValue());
+		}
+		return map;
 	}
 }
