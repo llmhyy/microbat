@@ -29,6 +29,11 @@ public class Branch implements Serializable {
 	public static String getBranchId(CoverageSFNode from, CoverageSFNode to) {
 		return from.getCvgIdx() + "-" + to.getCvgIdx();
 	}
+	
+	public static Branch getBrach(String branchId, CoverageSFlowGraph graph) {
+		String[] fromTo = branchId.split("-");
+		return of(graph.getNodeList().get(Integer.valueOf(fromTo[0])), graph.getNodeList().get(Integer.valueOf(fromTo[1])));
+	}
 
 	@Override
 	public int hashCode() {
@@ -121,7 +126,7 @@ public class Branch implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Branch [" + fromNode.getLastCFGNode() + "  -->  " + toNode.getFirstCFGNode() + "]";
+		return "Branch [" + fromNode + "  -->  " + toNode + "]";
 	}
 
 	public static Branch of(CoverageSFNode fromNode, CoverageSFNode toNode) {
