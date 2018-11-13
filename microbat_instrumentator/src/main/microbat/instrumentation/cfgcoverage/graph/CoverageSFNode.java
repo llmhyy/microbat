@@ -55,6 +55,21 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 		return null; 
 	}
 	
+	public boolean canReach(CoverageSFNode toNode) {
+		if (this.getCvgIdx() == toNode.getCvgIdx()) {
+			return true;
+		}
+
+		for (CoverageSFNode child : this.getBranchTargets()) {
+			boolean canReach = child.canReach(toNode);
+			if (canReach) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+	
 	public CoverageSFNode getCorrespondingBranch(String methodId, int nodeLocalIdx) {
 		for (CoverageSFNode branch : branchTargets) {
 			UniqueNodeId probeId = branch.getProbeNodeId();

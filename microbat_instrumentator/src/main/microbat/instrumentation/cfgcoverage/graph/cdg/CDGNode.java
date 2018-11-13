@@ -3,6 +3,7 @@ package microbat.instrumentation.cfgcoverage.graph.cdg;
 import java.util.ArrayList;
 import java.util.List;
 
+import microbat.instrumentation.cfgcoverage.graph.Branch;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFNode;
 
 public class CDGNode {
@@ -56,4 +57,21 @@ public class CDGNode {
 	public String toString() {
 		return "CDGNode [id=" + id + ", cfgNode=" + cfgNode + "]";
 	}
+	
+	public List<Branch> findDirectParentBranches() {
+		CoverageSFNode thisCFGNode = this.getCfgNode();
+		List<Branch> list = new ArrayList<>();
+		for (CDGNode parent : this.getParent()) {
+			CoverageSFNode parentCFGNode = parent.getCfgNode();
+			for (CoverageSFNode childCFGNode : parentCFGNode.getBranchTargets()) {
+				if (childCFGNode.canReach(thisCFGNode)) {
+					Branch branch = Branch.of(parentCFGNode, childCFGNode);
+					list.add(branch);
+				}
+			}
+		}
+
+		return list;
+	}
+
 }
