@@ -63,7 +63,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	
 	@Override
 	public void enterMethod(String methodId, String paramTypeSignsCode, String paramNamesCode, Object[] params,
-			boolean isEntryPoint) {
+			boolean isEntryPoint, Object receiver) {
 		if (isEntryPoint && methodHierachyLevel == 0) {
 			/* record a new coverage execution path on target method */
 			currentNode = null;
@@ -76,7 +76,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 			}
 			list.add(methodExecData);
 			BreakPointValue methodInput = valueExtractor.extractInputValue(String.valueOf(testIdx), 
-					loc.getClassCanonicalName(), loc.getMethodSign(), paramTypeSignsCode, paramNamesCode, params);
+					loc.getClassCanonicalName(), loc.getMethodSign(), paramTypeSignsCode, paramNamesCode, params, receiver);
 			methodExecData.setMethodInputValue(methodInput);
 		}
 		methodHierachyLevel++;
@@ -180,7 +180,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 	/* end of collect condition variation value part */
 	
 	public synchronized static ICoverageTracer _getTracer(String methodId, boolean isEntryPoint, String paramNamesCode,
-			String paramTypeSignsCode, Object[] params) {
+			String paramTypeSignsCode, Object[] params, Object receiver) {
 		try {
 			long threadId = Thread.currentThread().getId();
 			Integer currentTestCaseIdx = AgentRuntimeData.currentTestIdxMap.get(threadId);
@@ -197,7 +197,7 @@ public class CoverageTracer implements ICoverageTracer, ITracer {
 			if ((!isEntryPoint || coverageTracer.methodHierachyLevel > 0) && coverageTracer.doesNotNeedToRecord(methodId)) {
 				tracer = EmptyCoverageTracer.getInstance();
 			}
-			tracer.enterMethod(methodId, paramTypeSignsCode, paramNamesCode, params, isEntryPoint);
+			tracer.enterMethod(methodId, paramTypeSignsCode, paramNamesCode, params, isEntryPoint, receiver);
 			return tracer;
 		} catch(Throwable t) {
 			AgentLogger.error(t);

@@ -16,6 +16,7 @@ import microbat.model.value.ReferenceValue;
 import microbat.model.value.StringValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.ArrayElementVar;
+import microbat.model.variable.ConstantVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
@@ -31,10 +32,14 @@ public class ValueExtractor {
 	public static int variableLayer = 1;
 
 	public BreakPointValue extractInputValue(String valueId, String className,
-			Object methodSignature, String paramTypeSignsCode, String paramNamesCode, Object[] params) {
+			Object methodSignature, String paramTypeSignsCode, String paramNamesCode, Object[] params, Object receiver) {
 		String[] parameterTypes = TraceUtils.parseArgTypesOrNames(paramTypeSignsCode);
 		String[] parameterNames = TraceUtils.parseArgTypesOrNames(paramNamesCode);
 		BreakPointValue bkpValue = new BreakPointValue(valueId);
+		Variable receiverVar = new ConstantVar("this", receiver.getClass().getName());
+		receiverVar.setVarID("this");
+		VarValue receiverValue = appendVarValue(receiver, receiverVar, null);
+		bkpValue.addChild(receiverValue);
 		for(int i=0; i<parameterTypes.length; i++){
 			String pType = parameterTypes[i];
 			String parameterType = TypeSignatureConverter.convertToClassName(pType);

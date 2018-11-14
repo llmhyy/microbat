@@ -289,7 +289,7 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 			
 			LocalVariableGen argObjsVar = createMethodParamTypesObjectArrayVar(methodGen, constPool, startInsn, newInsns, nextTempVarName()); 
 			newInsns.append(new ALOAD(argObjsVar.getIndex())); // params
-			
+			newInsns.append(new ALOAD(0));
 			appendTracerMethodInvoke(newInsns, CoverageTracerMethods.GET_TRACER, constPool);
 		}
 		InstructionHandle tracerStartPos = newInsns.append(new ASTORE(tracerVar.getIndex()));
