@@ -21,7 +21,6 @@ import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.util.PrimitiveUtils;
-import sav.common.core.utils.SignatureUtils;
 
 /**
  * 
@@ -29,7 +28,7 @@ import sav.common.core.utils.SignatureUtils;
  * 
  */
 public class ValueExtractor {
-	public static int variableLayer = 1;
+	public static int variableLayer = 1; //just default
 
 	public BreakPointValue extractInputValue(String valueId, String className,
 			Object methodSignature, String paramTypeSignsCode, String paramNamesCode, Object[] params, Object receiver) {
@@ -38,7 +37,7 @@ public class ValueExtractor {
 		BreakPointValue bkpValue = new BreakPointValue(valueId);
 		Variable receiverVar = new ConstantVar("this", receiver.getClass().getName());
 		receiverVar.setVarID("this");
-		VarValue receiverValue = appendVarValue(receiver, receiverVar, null);
+		VarValue receiverValue = appendVarValue(receiver, receiverVar, null, variableLayer + 1);
 		bkpValue.addChild(receiverValue);
 		for(int i=0; i<parameterTypes.length; i++){
 			String pType = parameterTypes[i];
@@ -50,22 +49,20 @@ public class ValueExtractor {
 				String aliasID = TraceUtils.getObjectVarId(params[i], pType);
 				var.setAliasVarID(aliasID);				
 			}
-			VarValue value = appendVarValue(params[i], var, null);
+			VarValue value = appendVarValue(params[i], var, null, variableLayer);
 			bkpValue.addChild(value);
 		}
 		return bkpValue;
 	}
 	
-	private VarValue appendVarValue(Object value, Variable var, VarValue parent) {
-		return appendVarValue(value, var, parent, variableLayer); 
+	private VarValue appendVarValue(Object value, Variable var, VarValue parent, int varLayerLimit) {
+		return doAppendVarValue(value, var, parent, varLayerLimit); 
 	}
 
-	public VarValue appendVarValue(Object value, Variable var, VarValue parent, int retrieveLayer) {
+	public VarValue doAppendVarValue(Object value, Variable var, VarValue parent, int retrieveLayer) {
 		if (retrieveLayer <= 0) {
 			return null;
 		}
-		retrieveLayer--;
-		
 		boolean isRoot = (parent == null);
 		VarValue varValue = null;
 		if (PrimitiveUtils.isString(var.getType())) {
@@ -83,11 +80,14 @@ public class ValueExtractor {
 				} else {
 					int length = Array.getLength(value);
 					arrVal.ensureChildrenSize(length);
+					if (!PrimitiveUtils.isPrimitive(arrVal.getComponentType())) {
+						retrieveLayer--;
+					}
 					for (int i = 0; i < length; i++) {
 						String arrayElementID = ExecVarHelper.getArrayElementID(var.getVarID(), i);
 						ArrayElementVar varElement = new ArrayElementVar(arrayElementID, arrVal.getComponentType(), arrayElementID);
 						Object elementValue = Array.get(value, i);
-						appendVarValue(elementValue, varElement, arrVal, retrieveLayer);
+						doAppendVarValue(elementValue, varElement, arrVal, retrieveLayer);
 //						if (HeuristicIgnoringFieldRule.isHashMapTableType(arrVal.getComponentType())) {
 //							appendVarValue(elementValue, varElement, arrVal, retrieveLayer + 1);
 //						} else {
@@ -115,9 +115,9 @@ public class ValueExtractor {
 							Object fieldValue = field.get(value);
 							Class<?> fieldType = field.getType();
 							String fieldTypeStr = fieldType.getName();
-							if (fieldType.isArray()) {
-								fieldTypeStr = SignatureUtils.signatureToName(fieldTypeStr);
-							}
+//							if (fieldType.isArray()) {
+//								fieldTypeStr = SignatureUtils.signatureToName(fieldTypeStr);
+//							}
 							if(fieldType.isEnum()){
 								if(fieldTypeStr.equals(var.getType())){
 									continue;
@@ -129,9 +129,9 @@ public class ValueExtractor {
 								fieldVar.setVarID(ExecVarHelper.getFieldId(var.getVarID(), field.getName()));
 								if (isCollectionOrHashMap && HeuristicIgnoringFieldRule
 										.isCollectionOrMapElement(var.getRuntimeType(), field.getName())) {
-									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer + 1);
+									doAppendVarValue(fieldValue, fieldVar, refVal, retrieveLayer);
 								} else {
-									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer);
+									doAppendVarValue(fieldValue, fieldVar, refVal, retrieveLayer - 1);
 								}
 							}
 						} catch (Exception e) {
