@@ -126,7 +126,8 @@ public class Branch implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Branch [" + fromNode + "  -->  " + toNode + "]";
+		return "Branch [" + fromNode.getCvgIdx() + "(line " + fromNode.getFirstCFGNode().getLineNo() + ")" + "  -->  " 
+				+ toNode.getCvgIdx() + "(line " + toNode.getFirstCFGNode().getLineNo() + ")" + "]";
 	}
 
 	public static Branch of(CoverageSFNode fromNode, CoverageSFNode toNode) {

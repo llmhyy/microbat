@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.cfgcoverage.graph.CFGInstance.UniqueNodeId;
@@ -56,15 +58,24 @@ public class CoverageSFNode implements IGraphNode<CoverageSFNode> {
 	}
 	
 	public boolean canReach(CoverageSFNode toNode) {
+		Set<CoverageSFNode> set = new HashSet<>();
+		return canReach(toNode, set);
+	}
+	
+	private boolean canReach(CoverageSFNode toNode, Set<CoverageSFNode> set){
 		if (this.getCvgIdx() == toNode.getCvgIdx()) {
 			return true;
 		}
 
+		set.add(this);
 		for (CoverageSFNode child : this.getBranchTargets()) {
-			boolean canReach = child.canReach(toNode);
-			if (canReach) {
-				return true;
+			if(!set.contains(child)){
+				boolean canReach = child.canReach(toNode);
+				if (canReach) {
+					return true;
+				}
 			}
+			
 		}
 
 		return false;
