@@ -67,9 +67,11 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 				if (e.getMessage() != null && e.getMessage().contains("offset too large")) {
 					message = "offset too large";
 					exceedLimitMethods.add(classMethod);
+					AgentLogger.info(String.format("Warning: %s [%s] - instrumentated bytecode exceeds limit", classMethod, message));
+				} else {
+					AgentLogger.info(String.format("Warning: %s [%s]", classMethod, message));
+					AgentLogger.error(e);
 				}
-				AgentLogger.info(String.format("Warning: %s [%s]", classMethod, message));
-				AgentLogger.error(e);
 			}
 		}
 	}
