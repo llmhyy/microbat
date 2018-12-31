@@ -21,6 +21,7 @@ public class Agent {
 	private static Instrumentation instrumentation;
 	
 	public Agent(CommandLine cmd, Instrumentation inst) {
+		instrumentation = inst;
 		if (cmd.getBoolean(CoverageAgentParams.OPT_IS_COUNT_COVERAGE, false)) {
 			agent = new CoverageAgent(cmd);
 		} else if (cmd.getBoolean(AgentParams.OPT_PRECHECK, false)) {
@@ -28,7 +29,6 @@ public class Agent {
 		} else {
 			agent = new TraceAgent(cmd);
 		}
-		instrumentation = inst;
 		AgentLogger.setup(LogType.valuesOf(cmd.getStringList(AgentParams.OPT_LOG)));
 	}
 
