@@ -76,7 +76,7 @@ public class ByteCodeParser{
 			
 			ClassPath0 classPath = new ClassPath0(s);
 			Repository.setRepository(SyntheticRepository.getInstance(classPath));
-			Repository.clearCache();
+//			Repository.clearCache();
 			JavaClass clazz = Repository.lookupClass(className);
 			clazz.accept(new DescendingVisitor(clazz, visitor));
 			

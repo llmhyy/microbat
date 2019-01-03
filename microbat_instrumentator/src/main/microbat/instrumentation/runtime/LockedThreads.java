@@ -55,7 +55,6 @@ public class LockedThreads {
 		for (int i = 0; i < lockedThreadIds.length; i++) {
 			if (lockedThreadIds[i] == threadId) {
 				lockedThreadIds[i] = -1l;
-				return;
 			}
 		}
 	}
