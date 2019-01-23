@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
 
@@ -39,25 +38,6 @@ public class Premain {
 		
 		debug("after retransform");
 	}
-	
-	private static List<JarFile> getJarFilesDevMode() throws IOException {
-		List<String> jarPaths = Arrays.asList(
-				"E:/lyly/Projects/microbat/master/microbat_instrumentator/instrumentator.jar",
-				"E:/lyly/Projects/microbat/master/microbat_instrumentator/lib/bcel-6.0.jar",
-				"E:/lyly/Projects/microbat/master/microbat_instrumentator/lib/javassist.jar",
-				"E:/lyly/Projects/microbat/master/microbat_instrumentator/lib/commons-lang-2.6.jar",
-				"E:/lyly/Projects/microbat/master/microbat_instrumentator/lib/sav.commons.jar",
-				"E:/lyly/Projects/microbat/master/microbat_instrumentator/lib/commons-io-1.3.2.jar",
-				"E:/lyly/Projects/microbat/master/microbat_instrumentator/lib/mysql-connector-java-5.1.44-bin.jar",
-				"E:/lyly/Projects/microbat/master/microbat_instrumentator/lib/slf4j-api-1.7.12.jar"
-				);
-		List<JarFile> jars = new ArrayList<>(jarPaths.size());
-		for (String jarPath : jarPaths) {
-			JarFile jarFile = new JarFile(jarPath);
-			jars.add(jarFile);
-		}
-		return jars;
-	}
 
 	private static void installBootstrap(Instrumentation inst) throws Exception {
 		debug("install jar to boostrap...");
@@ -73,10 +53,6 @@ public class Premain {
 //										"mysql-connector-java-5.1.44-bin.jar",
 //										"slf4j-api-1.7.12.jar"
 										);
-		}
-		if (bootJarPaths.isEmpty()) {
-			debug("Switch to dev mode");
-			bootJarPaths = getJarFilesDevMode();
 		}
 		for (JarFile jarfile : bootJarPaths) {
 			debug("append to boostrap classloader: " + jarfile.getName());
