@@ -6,6 +6,7 @@ package experiment.utils.report;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -50,11 +51,7 @@ public class ComparedReportGenerator {
 				writeComparation(allRecords, excelWriter, sheetName,
 						mergedHeaders.toArray(new String[mergedHeaders.size()]));
 			}
-		} catch (
-
-		Exception e)
-
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw new SavRtException(e.getMessage());
 		}
@@ -79,13 +76,25 @@ public class ComparedReportGenerator {
 	private static void writeComparation(List<Records> allRecordsList, ExcelWriter excelWriter, String sheetName,
 			String[] mergedHeaders) throws IOException {
 		excelWriter.createSheet(sheetName, mergedHeaders, HEADER_ROW_IDX);
-		for (String key : allRecordsList.get(0).getKeys()) {
-			List<Record> recordGroup = new ArrayList<>();
-			for (Records records : allRecordsList) {
-				recordGroup.add(records.getRecord(key));
+		List<IndexedColors> fontColors = new ArrayList<>();
+		int s = 3;
+		for (int i = 0; i < allRecordsList.size(); i++) {
+			int ord = i + s;
+			while (ord > IndexedColors.values().length) {
+				ord -= IndexedColors.values().length; 
 			}
-			List<List<Object>> rows = toRowData(recordGroup);
-			excelWriter.writeSheet(sheetName, rows, null, IndexedColors.BLACK);
+			fontColors.add(IndexedColors.values()[ord]);
+		}
+		for (String key : allRecordsList.get(0).getKeys()) {
+			int i = 0;
+			for (Records records : allRecordsList) {
+				Record record = records.getRecord(key);
+				if (record != null) {
+					List<List<Object>> rows = toRowData(Arrays.asList(record));
+					excelWriter.writeSheet(sheetName, rows, null, fontColors.get(i));
+				}
+				i++;
+			}
 		}
 	}
 

@@ -110,6 +110,14 @@ public class Records {
 			}
 			return StringUtils.join("_", keyVals);
 		}
+		
+		public String[] getKeyStringArr() {
+			String[] keyVals = new String[keyCols.length];
+			for (int i = 0; i < keyCols.length; i++) {
+				keyVals[i] = String.valueOf(cellValues.get(keyCols[i]));
+			}
+			return keyVals;
+		}
 
 		public String getStringValue(String col) {
 			return StringUtils.toStringNullToEmpty(cellValues.get(columnHeaderMap.get(col)));

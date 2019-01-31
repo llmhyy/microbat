@@ -1,6 +1,7 @@
 package experiment.utils.report.rules;
 
 import java.util.Arrays;
+import java.util.List;
 
 import experiment.utils.report.Records.Record;
 import experiment.utils.report.excel.RecordDiff;
@@ -71,6 +72,12 @@ public class SimulatorComparisonRule implements IComparisonRule {
 	@Override
 	public String getName() {
 		return "simulator";
+	}
+
+	@Override
+	public List<String> getComparisonColumns() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -3,7 +3,8 @@
  */
 package experiment.utils.report.rules;
 
-import experiment.utils.report.Records;
+import java.util.List;
+
 import experiment.utils.report.Records.Record;
 import experiment.utils.report.excel.RecordDiff;
 
@@ -17,4 +18,5 @@ public interface IComparisonRule {
 	
 	public String getName();
 
+	public List<String> getComparisonColumns();
 }

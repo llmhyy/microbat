@@ -46,4 +46,9 @@ public class TextComparisonRule implements IComparisonRule {
 	public String getName() {
 		return "text";
 	}
+
+	@Override
+	public List<String> getComparisonColumns() {
+		return toCompareColumns;
+	}
 }
