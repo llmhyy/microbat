@@ -12,6 +12,15 @@ import microbat.instrumentation.filter.FilterChecker;
 
 /**
  * @author LLT
+ * 
+ * Agent
+ *  
+ * * Record the testcases running process:
+ * 	 _startTest: 
+ * 	 _finishTest:
+ *   _exitProgram: 
+ *   
+ *   
  */
 public class Agent {
 	private static IAgent agent;

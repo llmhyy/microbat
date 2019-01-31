@@ -17,7 +17,9 @@ import microbat.instrumentation.AgentLogger;
 
 /**
  * @author LLT
- *
+ * This instrumenter is to instrument Thread class
+ * Thread.start() is to be instrumented to call Agent._onStartThread to determine whether the 
+ * application is multi-thread or not.
  */
 public class ThreadInstrumenter extends AbstractInstrumenter {
 	

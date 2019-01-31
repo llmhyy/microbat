@@ -14,6 +14,13 @@ import microbat.instrumentation.instr.TestRunnerTranformer;
 import microbat.instrumentation.utils.CollectionUtils;
 import microbat.instrumentation.utils.FileUtils;
 
+/**
+ * 
+ * @author LLT
+ * An agent jar 
+ * Para
+ * 
+ */
 public class Premain {
 	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent_v02.jar";
 	private static final String SAV_JAR = "sav.commons.simplified.jar";
@@ -50,6 +57,12 @@ public class Premain {
 										"javassist.jar",
 										SAV_JAR,
 										"commons-io-1.3.2.jar"
+				/* 
+				 * LLT: mysql-connector-java-5.1.44-bin.jar & slf4j-api-1.7.12.jar
+				 * used to be added to bootstrap classloader to avoid ClassNotFoundException when the trace is
+				 * being stored into sql database using TraceRecorder, but later, we don't use that approach to
+				 * record trace anymore, so these two lines are commented to avoid any unnecessary cause.
+				 *  */
 //										"mysql-connector-java-5.1.44-bin.jar",
 //										"slf4j-api-1.7.12.jar"
 										);

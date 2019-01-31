@@ -25,6 +25,24 @@ import org.apache.bcel.generic.Type;
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.cfgcoverage.CoverageAgent;
 
+/**
+ * 
+ * @author LLT
+ *	
+ * With the approach of using a TestRunner to execute the testcase, 
+ * in order to trace the flow of the process of executing a testcase, we instrument the TestRunner to call 
+ * our Agent at particular and provide some information for logging.
+ * 
+ * Methods for instrumentation in TestRunner must 
+ * + start with a "$" and
+ * + not be an abstract and have empty body
+ *  
+ * And Methods to be invoked in Agent must start with a "_"
+ * 
+ * SavJunitRunner/SavSimpleRunner/SavSocketTestRunner can be found at:
+ * https://github.com/sunjun-group/Ziyuan/tree/learntest-nn/app/sav.junit.runner
+ * 
+ */
 public class TestRunnerTranformer extends AbstractTransformer implements ClassFileTransformer {
 
 	@Override

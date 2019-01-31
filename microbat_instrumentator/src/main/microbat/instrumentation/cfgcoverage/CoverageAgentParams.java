@@ -124,6 +124,11 @@ public class CoverageAgentParams extends CommonParams {
 		this.coverageType = coverageType;
 	}
 
+	/**
+	 * There are two modes to run code coverage.
+	 * BRANCH_COVERAGE: 
+	 * UNCIRCLE_CFG_COVERAGE: 
+	 * */
 	public static enum CoverageCollectionType {
 		BRANCH_COVERAGE,
 		UNCIRCLE_CFG_COVERAGE;
