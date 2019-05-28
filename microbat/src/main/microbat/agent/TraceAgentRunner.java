@@ -39,7 +39,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 	
 	public TraceAgentRunner(String agentJar, VMConfiguration vmConfig) {
 		super(agentJar, AgentConstants.AGENT_OPTION_SEPARATOR, AgentConstants.AGENT_PARAMS_SEPARATOR);
-		this.config = vmConfig;
+		this.setConfig(vmConfig);
 	}
 	
 	@Override
@@ -67,7 +67,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 			String dumpFilePath = dumpFile.getPath();
 			System.out.println("Precheck dumpfile: " + dumpFilePath);
 			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFilePath));
-			super.startAndWaitUntilStop(config);
+			super.startAndWaitUntilStop(getConfig());
 			if (this.isProcessTimeout()) {
 				return false;
 			}
@@ -103,7 +103,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 			}
 			System.out.println("Trace dumpfile: " + dumpFile.getPath());
 			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFile.getPath()));
-			super.startAndWaitUntilStop(config);
+			super.startAndWaitUntilStop(getConfig());
 			System.out.println("|");
 //			System.out.println(super.getCommandLinesString(config));
 			timer.newPoint("Read output result");
@@ -130,7 +130,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 			e.printStackTrace();
 			throw new SavRtException(e);
 		}
-		super.startVm(config);
+		super.startVm(getConfig());
 //		System.out.println(super.getCommandLinesString(config));
 		TraceOutputReader reader = null;
 		try {
@@ -231,7 +231,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 	}
 	
 	public void setVmConfig(VMConfiguration config) {
-		this.config = config;
+		this.setConfig(config);
 	}
 	
 	public boolean isUnknownTestResult() {
@@ -265,5 +265,13 @@ public class TraceAgentRunner extends AgentVmRunner {
 		} else {
 			addAgentParams(opt, filterLibs);
 		}
+	}
+
+	public VMConfiguration getConfig() {
+		return config;
+	}
+
+	public void setConfig(VMConfiguration config) {
+		this.config = config;
 	}
 }

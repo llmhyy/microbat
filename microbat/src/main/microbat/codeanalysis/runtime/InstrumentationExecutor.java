@@ -162,6 +162,8 @@ public class InstrumentationExecutor {
 	public RunningInformation execute(PreCheckInformation info) {
 		try {
 			long start = System.currentTimeMillis();
+//			agentRunner.getConfig().setDebug(true);
+//			agentRunner.getConfig().setPort(8888);
 			agentRunner.addAgentParam(AgentParams.OPT_EXPECTED_STEP, info.getStepNum());
 			agentRunner.runWithDumpFileOption(traceExecFilePath);
 			// agentRunner.runWithSocket();

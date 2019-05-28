@@ -114,7 +114,7 @@ public class TraceAgent implements IAgent {
 			TraceNode previousStepOver = currentNode.getStepOverPrevious();
 			if(previousStepOver!=null && 
 					previousStepOver.getClassCanonicalName().equals(currentNode.getClassCanonicalName()) &&
-					Math.abs(previousStepOver.getLineNumber()-currentNode.getLineNumber())<=2){
+					Math.abs(previousStepOver.getLineNumber()-currentNode.getLineNumber())<=0){
 				for(VarValue readVar: previousStepOver.getReadVariables()){
 					if(!currentNode.containReadVariable(readVar)){
 						currentNode.addReadVariable(readVar);
