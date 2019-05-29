@@ -80,6 +80,16 @@ public class MicroBatUtil {
 					appClassPath.addExternalLibPath(path);
 				}
 			}
+			else if(classpathEntry.getEntryKind()==IClasspathEntry.CPE_SOURCE) {
+//			    String newPath = path.substring(path.indexOf(File.separator, 1));
+			    String path = classpathEntry.getOutputLocation().toOSString();
+			    String newPath = path.substring(path.indexOf(File.separator, 1));
+			    newPath = projectPath + newPath;
+			    if(!appClassPath.getClasspaths().contains(newPath)) {
+			     appClassPath.addClasspath(newPath);     
+			    }
+			    System.currentTimeMillis();
+			}
 		}
 		
 		setSystemJars(appClassPath);
