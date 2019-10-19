@@ -82,7 +82,16 @@ public class MicroBatUtil {
 			}
 			else if(classpathEntry.getEntryKind()==IClasspathEntry.CPE_SOURCE) {
 //			    String newPath = path.substring(path.indexOf(File.separator, 1));
-			    String path = classpathEntry.getOutputLocation().toOSString();
+				/**
+				 * means that it is a default output folder
+				 */
+				String path = null;
+				if(classpathEntry.getOutputLocation() == null) {
+					IPath iPath = classpathEntry.getPath();
+					path = iPath.toOSString();
+				}
+				path = classpathEntry.getOutputLocation().toOSString();
+				
 			    String newPath = path.substring(path.indexOf(File.separator, 1));
 			    newPath = projectPath + newPath;
 			    if(!appClassPath.getClasspaths().contains(newPath)) {
