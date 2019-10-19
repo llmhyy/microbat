@@ -86,7 +86,7 @@ public class MicroBatUtil {
 				 * means that it is a default output folder
 				 */
 				String path = null;
-				if(classpathEntry.getOutputLocation() != null) {
+				if(classpathEntry.getOutputLocation() == null) {
 					IPath iPath = classpathEntry.getPath();
 					path = iPath.toOSString();
 				}
