@@ -10,7 +10,7 @@ public abstract class TracerStore<T extends ITracer> {
 	public static final int INVALID_THREAD_ID = -1;
 	protected ITracer[] rtStore = new ITracer[10];
 	protected long mainThreadId = INVALID_THREAD_ID;
-	protected int lastUsedIdx = INVALID_THREAD_ID;
+	protected transient int lastUsedIdx = INVALID_THREAD_ID;
 	
 	/* threadId must be valid */
 	@SuppressWarnings("unchecked")
@@ -18,11 +18,14 @@ public abstract class TracerStore<T extends ITracer> {
 		if (threadId != mainThreadId) {
 			return null; // for now, only recording trace for main thread.
 		}
-		for (int i = 0; i < lastUsedIdx; i++) {
+		
+		int i = 0;
+		while(i <= lastUsedIdx) {
 			ITracer tracer = rtStore[i];
 			if (tracer.getThreadId() == threadId) {
 				return (T) tracer;
 			}
+			i++;
 		}
 		T tracer = initTracer(threadId);
 		rtStore[++lastUsedIdx] = tracer;
