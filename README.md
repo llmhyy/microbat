@@ -24,12 +24,15 @@ Our debugger can be divided into two parts: trace collector and the bug inferenc
 </p>
 
 - Given our trace collector is implemented through Java instrumentation technique, the user need to run microbat.tools.JarPackageTool. Please modify the DEPLOY_DIR by your eclipse_root_folder\dropins\junit_lib\. After running the code, you will generate an instrumentator.jar under the DEPLOY_DIR folder.
-- Remeber to replace the instrumentaor.jar in the lib folder under microbat project.
+- Remember to replace the instrumentaor.jar in the lib folder under microbat project.
 <p align="center">
   <img src="/microbat/image/f2.png" width="300" align="center">
 </p>
 - You may run the code as an Eclipse Application then.
 - In the running Eclipse Application, specify the configuration in Perspective>>Microbat Debugging. Here, you need to specify (1) which eclipse project you are going to debug; (2) where is the JDK library for running your Java program; (3) Step Limit (e.g., 10000); (4) Variable Layer (e.g., 2); and (5) Lanuch Class. Lanuch class is supposed to be the class containing main() method. Alternatively, you can also speicify a Junit test case.
+<p align="center">
+  <img src="/microbat/image/f3.png" width="500" align="center">
+</p>
 - Then, you can click the Microbat (in Eclipse Menu) >> Start Debug. The hierarhical trace will be generated and you can provide the feedback for debuggng then.
 
 
