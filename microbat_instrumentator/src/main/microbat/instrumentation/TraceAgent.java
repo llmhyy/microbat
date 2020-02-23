@@ -37,7 +37,7 @@ public class TraceAgent implements IAgent {
 		if (!agentParams.isRequireMethodSplit()) {
 			InstrumentationFilter.overLongMethods = agentParams.getOverlongMethods();
 		}
-		// TODO Xuezhi LinYun: TO INIT CodeRangeUserFilter
+		// FIXME Xuezhi LinYun: TO INIT CodeRangeUserFilter
 		ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
 		ExecutionTracer.avoidProxyToString = agentParams.isAvoidProxyToString();
 	}
