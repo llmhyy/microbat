@@ -30,8 +30,8 @@ import sav.common.core.utils.StringUtils;
 
 /**
  * 
- * @author Song Xuezhi 22/2 2020 Create a page under Microbat Debugging, with
- *         name of "Execution Range". 
+ * @author Song Xuezhi 22/2 2020 
+ * 
  */
 public class ExecutionRangePreference extends PreferencePage implements IWorkbenchPreferencePage {
 	private static final String ID = "microbat.preference.executionrange";
