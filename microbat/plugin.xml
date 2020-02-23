@@ -287,6 +287,12 @@
             id="microbat.preference.analysisScope"
             name="Analysis Scope">
       </page>
+      <page
+            category="microbat.preference"
+            class="microbat.preference.ExecutionRangePreference"
+            id="microbat.preference.executionRange"
+            name="Execution Range">
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.editors.annotationTypes">
