@@ -120,7 +120,6 @@ public class SimulatedUser {
 	
 	
 	private List<VarValue> getPriorOption(List<List<VarValue>> options) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

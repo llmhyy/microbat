@@ -92,7 +92,6 @@ public class DiffUtil {
 		for (int i = 1; i < nodeList1.length + 1; i++){
 			for (int j = 1; j < nodeList2.length + 1; j++) {
 				if (nodeList1[i - 1].hasSameLocation(nodeList2[j - 1])){
-					//TODO
 					if(nodeList1[i - 1].getOrder() == 103 && nodeList2[j-1].getOrder()== 95){
 						System.currentTimeMillis();
 					}

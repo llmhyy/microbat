@@ -159,12 +159,10 @@ public class ClassDescriptor {
 	}
 
 	public List<VariableDescriptor> getVisibleVars(int lineNum) {
-		// TODO Auto-generated method stub
 		return new ArrayList<VariableDescriptor>();
 	}
 
 	public VariableDescriptor getOneVisibleVar(int lineNum) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }

@@ -76,7 +76,6 @@ public class SimulatorComparisonRule implements IComparisonRule {
 
 	@Override
 	public List<String> getComparisonColumns() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
