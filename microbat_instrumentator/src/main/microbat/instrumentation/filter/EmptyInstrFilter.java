@@ -1,11 +1,8 @@
 package microbat.instrumentation.filter;
 
-import org.apache.bcel.generic.ArrayInstruction;
-import org.apache.bcel.generic.ConstantPoolGen;
-import org.apache.bcel.generic.FieldInstruction;
-import org.apache.bcel.generic.InvokeInstruction;
+import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
 
-public class EmptyInstrFilter implements IInstrFilter {
+public class EmptyInstrFilter implements IMethodInstrFilter {
 	private static final EmptyInstrFilter instance = new EmptyInstrFilter();
 	
 	EmptyInstrFilter() {
@@ -14,17 +11,10 @@ public class EmptyInstrFilter implements IInstrFilter {
 	public static EmptyInstrFilter getInstance() {
 		return instance;
 	}
+	@Override
+	public void filter(LineInstructionInfo info) {
+		// do nothing
+	}
 
-	@Override
-	public boolean isValid(InvokeInstruction instruction, ConstantPoolGen constPool) {
-		return true;
-	}
-	@Override
-	public boolean isValid(FieldInstruction instruction) {
-		return true;
-	}
-	@Override
-	public boolean isValid(ArrayInstruction instruction) {
-		return true;
-	}
+	
 }

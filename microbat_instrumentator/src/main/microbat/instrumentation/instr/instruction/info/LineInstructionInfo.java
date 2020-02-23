@@ -86,6 +86,10 @@ public class LineInstructionInfo {
 	public List<RWInstructionInfo> getRWInstructions() {
 		return rwInsructionInfo;
 	}
+	
+	public ConstantPoolGen getConstPool() {
+		return constPool;
+	}
 
 	protected List<RWInstructionInfo> extractRWInstructions(String locId, boolean isAppClass) {
 		List<RWInstructionInfo> rwInsns = new ArrayList<>();

@@ -54,7 +54,7 @@ import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.filter.FilterChecker;
-import microbat.instrumentation.filter.IInstrFilter;
+import microbat.instrumentation.filter.IMethodInstrFilter;
 import microbat.instrumentation.filter.InstrumentationFilter;
 import microbat.instrumentation.instr.instruction.info.ArrayInstructionInfo;
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
@@ -164,7 +164,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	
 	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
 			boolean isAppClass, boolean isMainMethod) {
-		IInstrFilter instrFilter = InstrumentationFilter.getFilter(classGen.getClassName(), method, constPool);
+		IMethodInstrFilter instrFilter = InstrumentationFilter.getFilter(classGen.getClassName(), method, constPool);
 		
 		tempVarIdx = 0;
 		InstructionList insnList = methodGen.getInstructionList();
@@ -199,6 +199,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 				insnList.getStart(), insnList.getEnd());
 
 		for (LineInstructionInfo lineInfo : lineInsnInfos) {
+			instrFilter.filter(lineInfo);
 			/* instrument RW instructions */
 			List<RWInstructionInfo> rwInsns = lineInfo.getRWInstructions();
 //			if (lineInfo.hasNoInstrumentation()) {
@@ -209,14 +210,10 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 			for (RWInstructionInfo rwInsnInfo : rwInsns) {
 				InstructionList newInsns = null;
 				if (rwInsnInfo instanceof FieldInstructionInfo) {
-					if (instrFilter.isValid((FieldInstruction) rwInsnInfo.getInstruction())) {
-						newInsns = getInjectCodeTracerRWriteField(constPool, tracerVar, (FieldInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
-					}
+					newInsns = getInjectCodeTracerRWriteField(constPool, tracerVar, (FieldInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
 				} else if (rwInsnInfo instanceof ArrayInstructionInfo) {
-					if (instrFilter.isValid((ArrayInstruction) rwInsnInfo.getInstruction())) {
-						newInsns = getInjectCodeTracerRWriteArray(methodGen, constPool, tracerVar,
-								(ArrayInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
-					}
+					newInsns = getInjectCodeTracerRWriteArray(methodGen, constPool, tracerVar,
+							(ArrayInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
 				} else if (rwInsnInfo instanceof LocalVarInstructionInfo) {
 					if (rwInsnInfo.getInstruction() instanceof IINC) {
 						newInsns = getInjectCodeTracerIINC(constPool, tracerVar,
@@ -247,10 +244,8 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 			/* instrument Invocation instructions */
 			InstructionFactory instructionFactory = new InstructionFactory(classGen, constPool);
 			for (InstructionHandle insn : lineInfo.getInvokeInstructions()) {
-				if (instrFilter.isValid((InvokeInstruction) insn.getInstruction(), constPool)) {
-					injectCodeTracerInvokeMethod(methodGen, insnList, constPool, instructionFactory, tracerVar, insn, line,
-							classNameVar, methodSigVar, isAppClass);
-				}
+				injectCodeTracerInvokeMethod(methodGen, insnList, constPool, instructionFactory, tracerVar, insn, line,
+						classNameVar, methodSigVar, isAppClass);
 			}
 			/* instrument Return instructions */
 			for (InstructionHandle insn : lineInfo.getReturnInsns()) {
