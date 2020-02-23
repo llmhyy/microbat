@@ -291,7 +291,7 @@ public class CommandInterpreter {
             out.println(sbOut.toString());
         }
         for (ThreadGroupReference tg0 : tg.threadGroups()) {
-            if (!tg.equals(tg0)) {  // TODO ref mgt
+            if (!tg.equals(tg0)) {  
                 iThread += printThreadGroup(out, tg0, iThread + tlist.size());
             }
         }
@@ -462,7 +462,6 @@ public class CommandInterpreter {
             //### Behavior here agrees with 'jdb', however.
             ThreadIterator ti = currentThreadGroupThreads();
             while (ti.hasNext()) {
-                // TODO - don't suspend debugger threads
                 ti.nextThread().suspend();
             }
             env.notice("All (non-system) threads suspended.");
@@ -486,7 +485,6 @@ public class CommandInterpreter {
             //### Behavior here agrees with 'jdb', however.
             ThreadIterator ti = currentThreadGroupThreads();
             while (ti.hasNext()) {
-                // TODO - don't suspend debugger threads
                 ti.nextThread().resume();
             }
             env.notice("All threads resumed.");
@@ -611,9 +609,7 @@ public class CommandInterpreter {
 
 
     /*************
-    // TODO
     private void commandCatchException(StringTokenizer t) throws NoSessionException {}
-    // TODO
     private void commandIgnoreException(StringTokenizer t) throws NoSessionException {}
     *************/
 

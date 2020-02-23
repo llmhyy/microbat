@@ -99,7 +99,6 @@ public class ExpressionParser implements ExpressionParserConstants {
 			InvalidTypeException, ClassNotLoadedException,
 			IncompatibleThreadStateException {
 		
-		// TODO 
 		// StringBufferInputStream is deprecated. The stackframe will be invalid to 
 		// access variable value when two objects are visited in the same line
 		java.io.InputStream in = new java.io.StringBufferInputStream(expr);
