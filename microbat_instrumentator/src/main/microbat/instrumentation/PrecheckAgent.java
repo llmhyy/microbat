@@ -3,7 +3,7 @@ package microbat.instrumentation;
 import java.lang.instrument.Instrumentation;
 import java.util.List;
 
-import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.instrumentation.instr.SystemClassTransformer;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.instrumentation.precheck.PrecheckTransformer;
@@ -21,7 +21,7 @@ public class PrecheckAgent implements IAgent {
 	}
 	
 	public void startup(long vmStartupTime, long agentPreStartup) {
-		FilterChecker.setup(agentParams.initAppClassPath(), agentParams.getIncludesExpression(),
+		GlobalFilterChecker.setup(agentParams.initAppClassPath(), agentParams.getIncludesExpression(),
 				agentParams.getExcludesExpression());
 		TraceMeasurement.setStepLimit(agentParams.getStepLimit());
 		SystemClassTransformer.transformThread(instrumentation);

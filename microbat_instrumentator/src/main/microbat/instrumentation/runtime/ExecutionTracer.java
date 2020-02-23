@@ -22,7 +22,7 @@ import microbat.codeanalysis.bytecode.MethodFinderBySignature;
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
-import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.model.BreakPoint;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
@@ -311,7 +311,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			}
 		}
 		
-		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+		boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 		if (!exclusive) {
 			if(caller!=null){
 				methodCallStack.push(caller);
@@ -357,7 +357,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	
 	public void exitMethod(int line, String className, String methodSignature) {
 		locker.lock();
-		boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+		boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 		if(!exclusive){
 			methodCallStack.safePop();			
 		}
@@ -402,7 +402,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 
 	private void initInvokingDetail(Object invokeObj, String invokeTypeSign, String methodSig, Object[] params,
 			String paramTypeSignsCode, String residingClassName, TraceNode latestNode) {
-		boolean exclusive = FilterChecker.isExclusive(invokeTypeSign, methodSig);
+		boolean exclusive = GlobalFilterChecker.isExclusive(invokeTypeSign, methodSig);
 		if (exclusive && latestNode.getBreakPoint().getClassCanonicalName().equals(residingClassName)) {
 			InvokingDetail invokeDetail = latestNode.getInvokingDetail();
 			if (invokeDetail == null) {
@@ -495,7 +495,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			String residingMethodSignature, boolean needRevisiting) {
 		locker.lock();
 		try {
-			boolean exclusive = FilterChecker.isExclusive(residingClassName, residingMethodSignature);
+			boolean exclusive = GlobalFilterChecker.isExclusive(residingClassName, residingMethodSignature);
 			if (!exclusive) {
 				hitLine(line, residingClassName, residingMethodSignature);
 				TraceNode latestNode = trace.getLatestNode();
@@ -618,7 +618,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		boolean isLocked = locker.isLock();
 		locker.lock();
 		try {
-			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
 				locker.unLock(isLocked);
 				return;
@@ -696,7 +696,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		locker.lock();
 		try {
 			hitLine(line, className, methodSignature); 
-			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 			TraceNode latestNode = trace.getLatestNode();
 			if (exclusive) {
 				if (latestNode != null && latestNode.getInvokingDetail() != null) {
@@ -808,7 +808,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			String className, String methodSignature) {
 		locker.lock();
 		try {
-			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
 				TraceNode latestNode = trace.getLatestNode();
 				boolean relevant = false;
@@ -1043,7 +1043,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	public void _readArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line, String className, String methodSignature) {
 		locker.lock();
 		try {
-			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
 				TraceNode latestNode = trace.getLatestNode();
 				boolean relevant = false;
@@ -1120,7 +1120,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	public void _writeArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line, String className, String methodSignature) {
 		locker.lock();
 		try {
-			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
 				TraceNode latestNode = trace.getLatestNode();
 				boolean relevant = false;

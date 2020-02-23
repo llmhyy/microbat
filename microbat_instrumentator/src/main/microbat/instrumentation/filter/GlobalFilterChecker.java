@@ -10,8 +10,8 @@ import microbat.model.trace.Trace;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class FilterChecker {
-	private static final FilterChecker checker = new FilterChecker();
+public class GlobalFilterChecker {
+	private static final GlobalFilterChecker checker = new GlobalFilterChecker();
 	
 	private List<String> appBinFolders;
 	private List<String> extLibs;
@@ -23,7 +23,7 @@ public class FilterChecker {
 	private List<String> includedLibraryClasses = new ArrayList<>();
 	private List<String> excludedLibraryClasses = new ArrayList<>();
 	
-	public static FilterChecker getInstance() {
+	public static GlobalFilterChecker getInstance() {
 		return checker;
 	}
 	
@@ -171,8 +171,8 @@ public class FilterChecker {
 	}
 
 	public static void addFilterInfo(Trace trace) {
-		if (checker instanceof FilterChecker) {
-			FilterChecker filterChecker = (FilterChecker) checker;
+		if (checker instanceof GlobalFilterChecker) {
+			GlobalFilterChecker filterChecker = (GlobalFilterChecker) checker;
 			trace.setExcludedLibraryClasses(filterChecker.excludedLibraryClasses);
 			trace.setIncludedLibraryClasses(filterChecker.includedLibraryClasses);
 		}

@@ -53,7 +53,7 @@ import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
-import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.instrumentation.filter.IMethodInstrFilter;
 import microbat.instrumentation.filter.InstrumentationFilter;
 import microbat.instrumentation.instr.instruction.info.ArrayInstructionInfo;
@@ -90,7 +90,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		JavaClass newJC = null;
 		boolean entry = entryPoint == null ? false : className.equals(entryPoint.getClassName());
-		boolean isAppClass = FilterChecker.isAppClass(classFName) || entry;
+		boolean isAppClass = GlobalFilterChecker.isAppClass(classFName) || entry;
 		for (Method method : jc.getMethods()) {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
@@ -164,7 +164,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	
 	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
 			boolean isAppClass, boolean isMainMethod) {
-		IMethodInstrFilter instrFilter = InstrumentationFilter.getFilter(classGen.getClassName(), method, constPool);
+		IMethodInstrFilter instrFilter = InstrumentationFilter.getMethodFilter(classGen.getClassName(), method, constPool);
 		
 		tempVarIdx = 0;
 		InstructionList insnList = methodGen.getInstructionList();

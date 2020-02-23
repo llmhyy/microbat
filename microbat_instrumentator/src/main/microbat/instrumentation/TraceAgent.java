@@ -2,7 +2,7 @@ package microbat.instrumentation;
 
 import java.lang.instrument.Instrumentation;
 
-import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.instrumentation.filter.InstrumentationFilter;
 import microbat.instrumentation.instr.TraceTransformer;
 import microbat.instrumentation.output.RunningInfo;
@@ -30,13 +30,14 @@ public class TraceAgent implements IAgent {
 		timer.newPoint("Execution");
 		/* init filter */
 		AppJavaClassPath appPath = agentParams.initAppClassPath();
-		FilterChecker.setup(appPath, agentParams.getIncludesExpression(), agentParams.getExcludesExpression());
+		GlobalFilterChecker.setup(appPath, agentParams.getIncludesExpression(), agentParams.getExcludesExpression());
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.setStepLimit(agentParams.getStepLimit());
 		if (!agentParams.isRequireMethodSplit()) {
 			InstrumentationFilter.overLongMethods = agentParams.getOverlongMethods();
 		}
+		// TODO Xuezhi LinYun: TO INIT CodeRangeUserFilter
 		ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
 		ExecutionTracer.avoidProxyToString = agentParams.isAvoidProxyToString();
 	}
@@ -49,7 +50,7 @@ public class TraceAgent implements IAgent {
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 	
 		Trace trace = ((ExecutionTracer) tracer).getTrace();
-		FilterChecker.addFilterInfo(trace);
+		GlobalFilterChecker.addFilterInfo(trace);
 		
 		StepMismatchChecker.logNormalSteps(trace);
 		ExecutionTracer.dispose(); // clear cache

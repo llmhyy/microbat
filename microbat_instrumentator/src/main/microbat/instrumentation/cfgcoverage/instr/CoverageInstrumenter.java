@@ -30,7 +30,7 @@ import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams.CoverageCollectionType;
 import microbat.instrumentation.cfgcoverage.InstrumentationUtils;
-import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.instrumentation.instr.AbstractInstrumenter;
 import microbat.instrumentation.runtime.TraceUtils;
 import microbat.instrumentation.utils.MicrobatUtils;
@@ -54,7 +54,7 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 			return null;
 		}
 		
-		boolean isAppClass = FilterChecker.isAppClass(classFName);
+		boolean isAppClass = GlobalFilterChecker.isAppClass(classFName);
 		ClassGen classGen = new ClassGen(jc);
 		ConstantPoolGen constPool = classGen.getConstantPool();
 		JavaClass newJC = null;

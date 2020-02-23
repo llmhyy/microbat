@@ -5,7 +5,8 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
 import microbat.instrumentation.AgentParams;
-import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.filter.GlobalFilterChecker;
+import microbat.instrumentation.filter.UserFilterChecker;
 
 /**
  * 
@@ -24,15 +25,19 @@ public class TraceTransformer extends AbstractTransformer implements ClassFileTr
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
 		/* bootstrap classes */
 		if ((loader == null) || (protectionDomain == null)) {
-			if (!FilterChecker.isTransformable(classFName, null, true)) {
+			if (!GlobalFilterChecker.isTransformable(classFName, null, true)) {
 				return null;
 			}
 		} 
 		if (protectionDomain != null) {
 			String path = protectionDomain.getCodeSource().getLocation().getFile();
-			if (!FilterChecker.isTransformable(classFName, path, false)) {
+			if (!GlobalFilterChecker.isTransformable(classFName, path, false)) {
 				return null;
 			}
+		}
+		
+		if (!UserFilterChecker.isInstrumentable(classFName)) {
+			return null;
 		}
 		
 		/* do instrumentation */

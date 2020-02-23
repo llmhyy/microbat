@@ -8,7 +8,7 @@ import java.util.List;
 import microbat.instrumentation.AgentParams.LogType;
 import microbat.instrumentation.cfgcoverage.CoverageAgent;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
-import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.filter.GlobalFilterChecker;
 
 /**
  * @author LLT
@@ -87,8 +87,8 @@ public class Agent {
 	private static Class<?>[] getRetransformableClasses(Instrumentation inst) {
 		AgentLogger.debug("Collect classes to reset instrumentation....");
 		List<Class<?>> candidates = new ArrayList<Class<?>>();
-		List<String> bootstrapIncludes = FilterChecker.getInstance().getBootstrapIncludes();
-		List<String> includedLibraryClasses = FilterChecker.getInstance().getIncludedLibraryClasses();
+		List<String> bootstrapIncludes = GlobalFilterChecker.getInstance().getBootstrapIncludes();
+		List<String> includedLibraryClasses = GlobalFilterChecker.getInstance().getIncludedLibraryClasses();
 		if (bootstrapIncludes.isEmpty() && includedLibraryClasses.isEmpty()) {
 			return null;
 		}

@@ -18,7 +18,7 @@ import microbat.instrumentation.cfgcoverage.instr.MethodInstructionsInfo;
 import microbat.instrumentation.cfgcoverage.output.CoverageOutputWriter;
 import microbat.instrumentation.cfgcoverage.runtime.AgentRuntimeData;
 import microbat.instrumentation.cfgcoverage.runtime.value.ValueExtractor;
-import microbat.instrumentation.filter.FilterChecker;
+import microbat.instrumentation.filter.GlobalFilterChecker;
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -48,7 +48,7 @@ public class CoverageAgent implements IAgent {
 		timer = new AgentStopTimer("Tracing program for coverage", vmStartupTime, agentPreStartup);
 		timer.newPoint("initGraph");
 		AppJavaClassPath appClasspath = agentParams.initAppClasspath();
-		FilterChecker.setup(appClasspath, null, null);
+		GlobalFilterChecker.setup(appClasspath, null, null);
 		ValueExtractor.variableLayer = agentParams.getVarLayer();
 		CoverageGraphConstructor constructor = new CoverageGraphConstructor();
 		CoverageSFlowGraph coverageFlowGraph = constructor.buildCoverageGraph(appClasspath,
