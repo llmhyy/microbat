@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import microbat.instrumentation.filter.CodeRangeEntry;
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
 import microbat.instrumentation.utils.FileUtils;
 import sav.common.core.utils.CollectionUtils;
@@ -206,5 +207,14 @@ public class AgentParams extends CommonParams {
 			}
 			return result;
 		}
+	}
+
+	/**
+	 * FIXME xuezhi
+	 * @return
+	 */
+	public List<CodeRangeEntry> getCodeRanges() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

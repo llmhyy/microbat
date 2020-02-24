@@ -1,12 +1,14 @@
 package microbat.instrumentation.filter;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.Type;
 
+import microbat.instrumentation.filter.UserFilterChecker.IUserFilter;
 import microbat.instrumentation.utils.MicrobatUtils;
 
 public class InstrumentationFilter {
@@ -25,7 +27,17 @@ public class InstrumentationFilter {
 	}
 	
 	private static IMethodInstrFilter getFilterIfCodeRangeDefined(String className, Method method) {
-		// FIXME Xuezhi LinYun
+		// FIXME Xuezhi 
+		
+		IUserFilter checker = UserFilterChecker.userFilter;
+		if(checker instanceof CodeRangeUserFilter) {
+			CodeRangeUserFilter cruFilter = (CodeRangeUserFilter)checker;
+			List<CodeRangeEntry> list = cruFilter.getCodeRanges();
+			
+			IMethodInstrFilter filter = new CodeRangeMethodInstrFilter(list);
+			return filter;
+		}
+		
 		return null;
 	}
 

@@ -2,8 +2,10 @@ package microbat.instrumentation;
 
 import java.lang.instrument.Instrumentation;
 
+import microbat.instrumentation.filter.CodeRangeUserFilter;
 import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.instrumentation.filter.InstrumentationFilter;
+import microbat.instrumentation.filter.UserFilterChecker;
 import microbat.instrumentation.instr.TraceTransformer;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.output.TraceOutputWriter;
@@ -37,7 +39,10 @@ public class TraceAgent implements IAgent {
 		if (!agentParams.isRequireMethodSplit()) {
 			InstrumentationFilter.overLongMethods = agentParams.getOverlongMethods();
 		}
-		// FIXME Xuezhi LinYun: TO INIT CodeRangeUserFilter
+		
+		// FIXME Xuezhi: TO INIT CodeRangeUserFilter
+		UserFilterChecker.userFilter = new CodeRangeUserFilter(this.agentParams.getCodeRanges());
+		
 		ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
 		ExecutionTracer.avoidProxyToString = agentParams.isAvoidProxyToString();
 	}
