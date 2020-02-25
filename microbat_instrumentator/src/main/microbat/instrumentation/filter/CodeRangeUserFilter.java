@@ -25,13 +25,13 @@ public class CodeRangeUserFilter extends AbstractUserFilter {
 	
 	@Override
 	public boolean isInstrumentableClass(String className) {
-		// FIXME XUEZHI
+		// FIXME XUEZHI [3]
 		return super.isInstrumentableClass(className);
 	}
 	
 	@Override
 	public boolean isInstrumentableMethod(String className, Method method, LineNumberGen[] lineNumbers) {
-		// FIXME XUEZHI
+		// FIXME XUEZHI [4]
 		return super.isInstrumentableMethod(className, method, lineNumbers);
 	}
 
@@ -49,7 +49,7 @@ public class CodeRangeUserFilter extends AbstractUserFilter {
 	}
 
 	private boolean isLineInRange(LineInstructionInfo info, String className, Method method) {
-		// FIXME XUEZHI
+		// FIXME XUEZHI [5]
 		return false;
 	}
 
