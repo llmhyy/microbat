@@ -32,13 +32,15 @@ public class MyInstrumentatorDeployer {
 	}
 	
 	@Test
-	public void lylysMac_deployToActiveLearnTest() throws Exception {
-		String learntestFolder = "/Users/lylytran/Projects/Ziyuan-branches/learntest-eclipse/app/active-learntest";
-		JarPackageTool.DEPLOY_DIR = learntestFolder + "/src/main/resources/";
-		JarPackageTool.DEPLOY_JAR_PATH = JarPackageTool.DEPLOY_DIR + "microbat_instrumentator.jar";
+	public void deployTo() throws Exception {
+		JarPackageTool.DEPLOY_DIR = "D:/_1_Projects/microbat/microbat/microbat/lib";
+		JarPackageTool.DEPLOY_JAR_PATH = JarPackageTool.DEPLOY_DIR + "/instrumentator.jar";
 		JarPackageTool.main(new String[]{});
-		
-		JarPackageTool.DEPLOY_DIR = learntestFolder + "/libs/";
+	}
+	
+	@Test
+	public void deploy() throws Exception {
+		JarPackageTool.DEPLOY_DIR = "D:/_1_Projects/microbat/microbat/microbat_examples/resources/";
 		JarPackageTool.DEPLOY_JAR_PATH = JarPackageTool.DEPLOY_DIR + "microbat_instrumentator.jar";
 		JarPackageTool.main(new String[]{});
 	}

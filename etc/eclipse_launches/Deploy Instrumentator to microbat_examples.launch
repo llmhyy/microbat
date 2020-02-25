@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/microbat_instrumentator/src/test/java/microbat/tools/JarPackageTool.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<mapAttribute key="org.eclipse.debug.core.environmentVariables">
+<mapEntry key="relative_deploy_dir" value="microbat_examples/resources"/>
+</mapAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="microbat.tools.JarPackageTool"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="microbat_instrumentator"/>
+</launchConfiguration>

@@ -14,6 +14,8 @@ import sav.commons.TestConfiguration;
 import sav.strategies.vm.VMRunner;
 
 public class RelocateJarPackageTool extends JarPackageTool {
+	public static final String MAVEN_FOLDER = BASE_DIR + "build/maven";
+	public static final String appLibs = MAVEN_FOLDER + "/libs";
 	
 	public static void main(String[] args) throws Exception {
 		CollectionBuilder<String, List<String>> cmd = new CollectionBuilder<String, List<String>>(new ArrayList<String>());

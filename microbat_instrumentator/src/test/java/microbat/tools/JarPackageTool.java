@@ -15,17 +15,30 @@ import sav.strategies.vm.VMRunner;
 
 public class JarPackageTool {
 	public static final String BASE_DIR = getBaseDir();
-	public static final String MAVEN_FOLDER = BASE_DIR + "build/maven";
 	public static final String LIB_DIR = BASE_DIR + "lib/";
-	public static String DEPLOY_DIR = "E:/linyun/software/eclipse-java-mars/eclipse-java-mars-clean/eclipse/dropins/junit_lib/";
 
-	public static String DEPLOY_JAR_PATH = DEPLOY_DIR + "instrumentator.jar";
-	public static final String appLibs = MAVEN_FOLDER + "/libs";
+	public static String DEPLOY_DIR;
+	public static String DEPLOY_JAR_PATH;
+	static {
+		DEPLOY_DIR = System.getenv("deploy_dir");
+		if (DEPLOY_DIR == null) {
+			String prjRelativeDir = System.getenv("relative_deploy_dir");
+			if (prjRelativeDir != null) {
+				DEPLOY_DIR = BASE_DIR.replace("microbat_instrumentator", prjRelativeDir);
+			} else {
+				DEPLOY_DIR = BASE_DIR.replace("microbat_instrumentator", "microbat");
+			}
+		}
+		DEPLOY_JAR_PATH = DEPLOY_DIR + "instrumentator.jar";
+	}
 	
 	public static void main(String[] args) throws Exception {
 		CollectionBuilder<String, List<String>> cmd = new CollectionBuilder<String, List<String>>(new ArrayList<String>());
 		VMRunner vmRunner = new VMRunner();
 		FileUtils.createFolder(DEPLOY_DIR);
+		/* !! DONOT REMOVE THIS COMMENT BLOCK !!!!
+		 * UNCOMMENT WHEN YOU UPDATE microbat_junit_test project
+		 * */
 		/* export & copy to microbat/lib */
 		/* export Microbat junit runner */
 //		cmd.append(TestConfiguration.getJavaHome() + "/bin/jar")
@@ -35,8 +48,8 @@ public class JarPackageTool {
 //			.append(getBaseDir("microbat_junit_test") + "bin")
 //			.append("microbat");
 //		vmRunner.startAndWaitUntilStop(cmd.toCollection());	
-		cmd.clear();
-		System.out.println("Deploy testrunner.jar to " + DEPLOY_JAR_PATH);
+//		cmd.clear();
+//		System.out.println("Deploy testrunner.jar to " + DEPLOY_JAR_PATH);
 		
 		/* export instrumentator_agent.jar */
 		String agentJar = Premain.INSTRUMENTATION_STANTDALONE_JAR;
@@ -79,6 +92,7 @@ public class JarPackageTool {
 		
 		System.out.println("Deploy instrumentator.jar to " + DEPLOY_JAR_PATH);
 		System.out.println("Done!");
+		System.exit(0);
 	}
 	
 	public static String getBaseDir() {
