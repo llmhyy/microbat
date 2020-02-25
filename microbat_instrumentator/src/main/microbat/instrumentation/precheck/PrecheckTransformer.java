@@ -11,7 +11,6 @@ import java.util.List;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.filter.GlobalFilterChecker;
-import microbat.instrumentation.filter.UserFilterChecker;
 import microbat.instrumentation.instr.AbstractTransformer;
 
 public class PrecheckTransformer extends AbstractTransformer implements ClassFileTransformer {
@@ -36,9 +35,6 @@ public class PrecheckTransformer extends AbstractTransformer implements ClassFil
 				URL srcLocation = codeSource.getLocation();
 				String path = srcLocation.getFile();
 				if (!GlobalFilterChecker.isTransformable(classFName, path, false) || !GlobalFilterChecker.isAppClass(classFName)) {
-					return null;
-				}
-				if (!UserFilterChecker.isInstrumentable(classFName)) {
 					return null;
 				}
 				byte[] data = instrumenter.instrument(classFName, classfileBuffer);

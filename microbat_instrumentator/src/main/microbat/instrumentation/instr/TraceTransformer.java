@@ -6,7 +6,6 @@ import java.security.ProtectionDomain;
 
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.filter.GlobalFilterChecker;
-import microbat.instrumentation.filter.UserFilterChecker;
 
 /**
  * 
@@ -34,10 +33,6 @@ public class TraceTransformer extends AbstractTransformer implements ClassFileTr
 			if (!GlobalFilterChecker.isTransformable(classFName, path, false)) {
 				return null;
 			}
-		}
-		
-		if (!UserFilterChecker.isInstrumentable(classFName)) {
-			return null;
 		}
 		
 		/* do instrumentation */

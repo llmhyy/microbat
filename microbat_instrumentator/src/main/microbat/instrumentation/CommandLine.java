@@ -9,6 +9,11 @@ import java.util.Set;
 
 import sav.common.core.utils.CollectionUtils;
 
+/**
+ * 
+ * @author lyly
+ *
+ */
 public class CommandLine {
 	private Map<String, String> argMap = new HashMap<>();
 	

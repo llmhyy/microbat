@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import microbat.agent.TraceAgentRunner;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.AgentParams.LogType;
+import microbat.instrumentation.filter.CodeRangeEntry;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.BreakPoint;
@@ -98,6 +99,9 @@ public class InstrumentationExecutor {
 				MicrobatPreference.getValue(MicrobatPreference.REQUIRE_METHOD_SPLITTING));
 		agentRunner.addAgentParam(AgentParams.OPT_AVOID_TO_STRING_OF_PROXY_OBJ, true);
 		agentRunner.setTimeout(timeout);
+		// FIXME Xuezhi
+		List<CodeRangeEntry> entries = null;
+		agentRunner.addAgentParams(AgentParams.OPT_CODE_RANGE, entries); 
 		return agentRunner;
 	}
 	

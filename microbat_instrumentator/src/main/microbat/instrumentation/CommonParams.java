@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import microbat.instrumentation.AgentParams.LogType;
+import microbat.instrumentation.filter.UserFilters;
 
 /**
  * @author LLT
@@ -17,6 +18,7 @@ public class CommonParams {
 	private List<String> classPaths = new ArrayList<>();
 	private String workingDirectory;
 	private List<LogType> logTypes;
+	private UserFilters userFilters = new UserFilters();
 	
 	public CommonParams() {
 		
@@ -46,5 +48,9 @@ public class CommonParams {
 	
 	public List<LogType> getLogTypes() {
 		return logTypes;
+	}
+
+	public UserFilters getUserFilters() {
+		return userFilters;
 	}
 }

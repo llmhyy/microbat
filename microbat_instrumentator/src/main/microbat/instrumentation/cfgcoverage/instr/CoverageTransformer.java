@@ -9,7 +9,6 @@ import java.security.ProtectionDomain;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
 import microbat.instrumentation.filter.GlobalFilterChecker;
-import microbat.instrumentation.filter.UserFilterChecker;
 import microbat.instrumentation.instr.AbstractTransformer;
 
 public class CoverageTransformer implements ClassFileTransformer {
@@ -32,9 +31,6 @@ public class CoverageTransformer implements ClassFileTransformer {
 			URL srcLocation = codeSource.getLocation();
 			String path = srcLocation.getFile();
 			if (!GlobalFilterChecker.isTransformable(classFName, path, false) || !GlobalFilterChecker.isAppClass(classFName)) {
-				return null;
-			}
-			if (!UserFilterChecker.isInstrumentable(classFName)) {
 				return null;
 			}
 			try {

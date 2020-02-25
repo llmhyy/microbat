@@ -13,6 +13,11 @@ import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
+/**
+ * 
+ * @author lyly
+ *
+ */
 public class AgentParams extends CommonParams {
 	public static final String OPT_CLASS_PATH = CommonParams.OPT_CLASS_PATH;
 	public static final String OPT_WORKING_DIR = CommonParams.OPT_WORKING_DIR;
@@ -34,6 +39,7 @@ public class AgentParams extends CommonParams {
 	public static final String OPT_OVER_LONG_METHODS = "overlong_methods";
 	public static final String OPT_REQUIRE_METHOD_SPLITTING = "require_method_split";
 	public static final String OPT_AVOID_TO_STRING_OF_PROXY_OBJ = "avoid_proxy_tostring";
+	public static final String OPT_CODE_RANGE = "code_range";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -51,6 +57,7 @@ public class AgentParams extends CommonParams {
 	private Set<String> overlongMethods;
 	private boolean requireMethodSplit;
 	private boolean avoidProxyToString;
+	private List<CodeRangeEntry> codeRanges;
 	
 	public AgentParams(CommandLine cmd) {
 		super(cmd);
@@ -85,6 +92,7 @@ public class AgentParams extends CommonParams {
 		overlongMethods = cmd.getStringSet(OPT_OVER_LONG_METHODS);
 		requireMethodSplit = cmd.getBoolean(OPT_REQUIRE_METHOD_SPLITTING, false);
 		avoidProxyToString = cmd.getBoolean(OPT_AVOID_TO_STRING_OF_PROXY_OBJ, false);
+		codeRanges = CodeRangeEntry.parse(cmd.getStringList(OPT_CODE_RANGE));
 	}
 
 	public static AgentParams initFrom(CommandLine cmd) {
@@ -209,12 +217,7 @@ public class AgentParams extends CommonParams {
 		}
 	}
 
-	/**
-	 * FIXME xuezhi
-	 * @return
-	 */
 	public List<CodeRangeEntry> getCodeRanges() {
-		// TODO Auto-generated method stub
-		return null;
+		return codeRanges;
 	}
 }

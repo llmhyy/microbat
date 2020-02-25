@@ -4,8 +4,7 @@ import java.lang.instrument.Instrumentation;
 
 import microbat.instrumentation.filter.CodeRangeUserFilter;
 import microbat.instrumentation.filter.GlobalFilterChecker;
-import microbat.instrumentation.filter.InstrumentationFilter;
-import microbat.instrumentation.filter.UserFilterChecker;
+import microbat.instrumentation.filter.OverLongMethodFilter;
 import microbat.instrumentation.instr.TraceTransformer;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.output.TraceOutputWriter;
@@ -37,11 +36,12 @@ public class TraceAgent implements IAgent {
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.setStepLimit(agentParams.getStepLimit());
 		if (!agentParams.isRequireMethodSplit()) {
-			InstrumentationFilter.overLongMethods = agentParams.getOverlongMethods();
+			agentParams.getUserFilters().register(new OverLongMethodFilter(agentParams.getOverlongMethods()));
 		}
 		
-		// FIXME Xuezhi: TO INIT CodeRangeUserFilter
-		UserFilterChecker.userFilter = new CodeRangeUserFilter(this.agentParams.getCodeRanges());
+		if (!agentParams.getCodeRanges().isEmpty()) {
+			agentParams.getUserFilters().register(new CodeRangeUserFilter(agentParams.getCodeRanges()));
+		}
 		
 		ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
 		ExecutionTracer.avoidProxyToString = agentParams.isAvoidProxyToString();

@@ -54,8 +54,7 @@ import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.filter.GlobalFilterChecker;
-import microbat.instrumentation.filter.IMethodInstrFilter;
-import microbat.instrumentation.filter.InstrumentationFilter;
+import microbat.instrumentation.filter.UserFilters;
 import microbat.instrumentation.instr.instruction.info.ArrayInstructionInfo;
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
 import microbat.instrumentation.instr.instruction.info.FieldInstructionInfo;
@@ -73,6 +72,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	private int tempVarIdx = 0;
 	private EntryPoint entryPoint;
 	private Set<String> requireSplittingMethods = Collections.emptySet();
+	private UserFilters userFilters;
 	
 	TraceInstrumenter() {
 	}
@@ -82,6 +82,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		if (params.isRequireMethodSplit()) {
 			this.requireSplittingMethods = params.getOverlongMethods();
 		}
+		this.userFilters = params.getUserFilters();
 	}
 
 	@Override
@@ -91,6 +92,9 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		JavaClass newJC = null;
 		boolean entry = entryPoint == null ? false : className.equals(entryPoint.getClassName());
 		boolean isAppClass = GlobalFilterChecker.isAppClass(classFName) || entry;
+		if (!userFilters.isInstrumentable(className)) {
+			return null;
+		}
 		for (Method method : jc.getMethods()) {
 			if (method.isNative() || method.isAbstract() || method.getCode() == null) {
 				continue; // Only instrument methods with code in them!
@@ -162,10 +166,14 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		return null;
 	}
 	
+	/**
+	 * @return whether method is changed
+	 */
 	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
 			boolean isAppClass, boolean isMainMethod) {
-		IMethodInstrFilter instrFilter = InstrumentationFilter.getMethodFilter(classGen.getClassName(), method, constPool);
-		
+		if (!userFilters.isInstrumentable(classGen.getClassName(), method, methodGen.getLineNumbers())) {
+			return false;
+		}
 		tempVarIdx = 0;
 		InstructionList insnList = methodGen.getInstructionList();
 		InstructionHandle startInsn = insnList.getStart();
@@ -197,9 +205,9 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		LocalVariableGen methodSigVar = createLocalVariable(METHOD_SIGNATURE, methodGen, constPool);
 		LocalVariableGen tracerVar = methodGen.addLocalVariable(TRACER_VAR_NAME, Type.getType(IExecutionTracer.class),
 				insnList.getStart(), insnList.getEnd());
-
+		
+		userFilters.filter(lineInsnInfos, classGen.getClassName(), method);
 		for (LineInstructionInfo lineInfo : lineInsnInfos) {
-			instrFilter.filter(lineInfo);
 			/* instrument RW instructions */
 			List<RWInstructionInfo> rwInsns = lineInfo.getRWInstructions();
 //			if (lineInfo.hasNoInstrumentation()) {
