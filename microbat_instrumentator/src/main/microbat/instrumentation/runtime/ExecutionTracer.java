@@ -1185,6 +1185,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				return EmptyExecutionTracer.getInstance();
 			}
 			lockedThreads.add(threadId);
+			// FIXME -mutithread LINYUN [1] 
+			/* LLT: the corresponding tracer for a thread will be load by threadId,
+			 * currently we always return null if not main thread.
+			 */
 			ExecutionTracer tracer = rtStore.get(threadId);
 			if (tracer == null) {
 				lockedThreads.remove(threadId);

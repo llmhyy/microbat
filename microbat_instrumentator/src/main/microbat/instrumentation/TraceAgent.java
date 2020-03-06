@@ -52,6 +52,8 @@ public class TraceAgent implements IAgent {
 		/* collect trace & store */
 		AgentLogger.debug("Building trace dependencies ...");
 		timer.newPoint("Building trace dependencies");
+		// FIXME -mutithread LINYUN [3]
+		// LLT: only trace of main thread is recorded.
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 	
 		Trace trace = ((ExecutionTracer) tracer).getTrace();

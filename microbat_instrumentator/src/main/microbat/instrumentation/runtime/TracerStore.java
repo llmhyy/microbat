@@ -15,6 +15,8 @@ public abstract class TracerStore<T extends ITracer> {
 	/* threadId must be valid */
 	@SuppressWarnings("unchecked")
 	public synchronized T get(long threadId) {
+		// FIXME -mutithread LINYUN [2]
+		// LLT: this is where we disable recording other threads not the main one
 		if (threadId != mainThreadId) {
 			return null; // for now, only recording trace for main thread.
 		}
