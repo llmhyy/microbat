@@ -113,7 +113,6 @@ public class StartDebugHandler extends AbstractHandler {
 							
 						});
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					finally{

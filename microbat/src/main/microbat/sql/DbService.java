@@ -57,7 +57,6 @@ public class DbService {
 			});
 			return tables;
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return new ArrayList<>();

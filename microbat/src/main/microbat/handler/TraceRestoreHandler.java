@@ -50,7 +50,6 @@ public class TraceRestoreHandler extends AbstractHandler{
 
 					});
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				return Status.OK_STATUS;

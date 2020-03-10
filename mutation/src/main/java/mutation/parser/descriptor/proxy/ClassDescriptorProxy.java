@@ -20,7 +20,6 @@ public class ClassDescriptorProxy implements IClassDescriptor {
 
 	@Override
 	public String getQuantifiedName() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 	

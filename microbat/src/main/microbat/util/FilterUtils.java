@@ -221,7 +221,6 @@ public class FilterUtils {
 				}
 			}
 		} catch (JavaModelException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		return true;
