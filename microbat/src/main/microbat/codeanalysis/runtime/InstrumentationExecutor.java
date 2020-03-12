@@ -26,6 +26,7 @@ import microbat.model.ClassLocation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.preference.ExecutionRangePreference;
 import microbat.preference.MicrobatPreference;
 import microbat.util.JavaUtil;
 import microbat.util.MinimumASTNodeFinder;
@@ -100,7 +101,7 @@ public class InstrumentationExecutor {
 		agentRunner.addAgentParam(AgentParams.OPT_AVOID_TO_STRING_OF_PROXY_OBJ, true);
 		agentRunner.setTimeout(timeout);
 		// FIXME Xuezhi [2]
-		List<CodeRangeEntry> entries = null;
+		List<CodeRangeEntry> entries = ExecutionRangePreference.getCodeRangeEntrys();
 		agentRunner.addAgentParams(AgentParams.OPT_CODE_RANGE, entries); 
 		return agentRunner;
 	}

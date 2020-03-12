@@ -21,25 +21,32 @@ public class CodeRangeEntry {
 	public CodeRangeEntry() {
 		// FIXME Xuezhi [1]
 	}
-
+    public CodeRangeEntry(String className,String methodName,int startLine,int endLine) {
+    	this.className=className;
+    	this.methodName=methodName;
+    	this.startLine=startLine;
+    	this.endLine=endLine;
+    }
 	public static List<CodeRangeEntry> parse(List<String> codeRanges) {
 		List<CodeRangeEntry> entries = new ArrayList<>(codeRanges.size());
 		for (String codeRange : codeRanges) {
 			CodeRangeEntry entry = new CodeRangeEntry();
+			//e.g. s.xz().12.9
 			int sIdx = codeRange.lastIndexOf(".");
-			entry.endLine = Integer.parseInt(codeRange.substring(sIdx));
+			entry.endLine = Integer.parseInt(codeRange.substring(sIdx+1));// get '9'
+			
 			int eIdx = sIdx;
-			sIdx = codeRange.substring(0, eIdx).lastIndexOf(".");
-			entry.startLine = Integer.parseInt(codeRange.substring(sIdx, eIdx));
+			sIdx = codeRange.substring(0, eIdx).lastIndexOf(".");//last'.' index in "s.xz().12"
+			entry.startLine = Integer.parseInt(codeRange.substring(sIdx+1, eIdx));//get '12'
 			eIdx = sIdx;
-			sIdx = codeRange.substring(0, eIdx).lastIndexOf(".");
-			String methodWithSign = codeRange.substring(sIdx, eIdx);
+			sIdx = codeRange.substring(0, eIdx).lastIndexOf(".");//last '.' index in "s.xz()"
+			String methodWithSign = codeRange.substring(sIdx+1, eIdx);//get "xz()"
 			entry.methodName = SignatureUtils.extractMethodName(methodWithSign);
 			int endNameIdx = methodWithSign.indexOf("(");
 			if (endNameIdx > 1) {
-				entry.methodSig = methodWithSign.substring(endNameIdx);
+				entry.methodSig = methodWithSign.substring(endNameIdx);//get '()'
 			}
-			entry.className = codeRange.substring(0, sIdx);
+			entry.className = codeRange.substring(0, sIdx);//get "s"
 			entries.add(entry);
 		}
 

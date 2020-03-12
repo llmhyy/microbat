@@ -19,6 +19,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.osgi.service.prefs.BackingStoreException;
 
 import microbat.Activator;
+import microbat.instrumentation.filter.CodeRangeEntry;
 import microbat.model.Entry;
 import microbat.util.MessageDialogs;
 import microbat.util.SWTFactory;
@@ -26,7 +27,7 @@ import sav.common.core.utils.StringUtils;
 
 /**
  * 
- * @author Song Xuezhi 22/2 2020 
+ * @author Song Xuezhi 22/2 2020
  * 
  */
 public class ExecutionRangePreference extends PreferencePage implements IWorkbenchPreferencePage {
@@ -67,7 +68,7 @@ public class ExecutionRangePreference extends PreferencePage implements IWorkben
 		enablePartialRecordingButton.setSelection(pref.getBoolean(PARTIAL_RECORDING));
 	}
 
-	public List<Entry> getEntrys() {
+	public static List<Entry> getEntrys() {
 		List<Entry> result = new ArrayList<>();
 		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
 		String entrys = pref.getString(ENTRYS);
@@ -75,7 +76,7 @@ public class ExecutionRangePreference extends PreferencePage implements IWorkben
 			String[] filters = entrys.split(LIBS_SEPARATOR);
 			for (int i = 0; i < filters.length; i++) {
 				String[] cloumns = filters[i].split(Entry.COLUMN_SEPARATOR);
-				if (cloumns.length==3) {
+				if (cloumns.length == 3) {
 					Entry entry = new Entry();
 					entry.setClassName(cloumns[0]);
 					entry.setStartLine(Integer.valueOf(cloumns[1]));
@@ -85,6 +86,27 @@ public class ExecutionRangePreference extends PreferencePage implements IWorkben
 			}
 		}
 		return result;
+	}
+
+	public static boolean isEnablePartialRecording() {
+		boolean result = false;
+		result = Activator.getDefault().getPreferenceStore().getBoolean(PARTIAL_RECORDING);
+		return result;
+	}
+
+	public static List<CodeRangeEntry> getCodeRangeEntrys() {
+		List<CodeRangeEntry> codeRangeEntries = new ArrayList<>();
+		List<Entry> entries = getEntrys();
+		if (entries.size() > 0 && isEnablePartialRecording()) {
+			for (Entry entry : entries) {
+				CodeRangeEntry codeRangeEntry = new CodeRangeEntry();
+				codeRangeEntry.setClassName(entry.getClassName());
+				codeRangeEntry.setStartLine(entry.getStartLine());
+				codeRangeEntry.setEndLine(entry.getEndLine());
+				codeRangeEntries.add(codeRangeEntry);
+			}
+		}
+		return codeRangeEntries;
 	}
 
 	@Override
