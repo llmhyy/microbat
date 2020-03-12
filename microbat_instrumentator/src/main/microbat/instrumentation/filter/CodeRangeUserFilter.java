@@ -22,35 +22,62 @@ public class CodeRangeUserFilter extends AbstractUserFilter {
 	public CodeRangeUserFilter(List<CodeRangeEntry> entries) {
 		this.list = entries;
 	}
-	
+
 	@Override
 	public boolean isInstrumentableClass(String className) {
 		// FIXME XUEZHI [3]
-		return super.isInstrumentableClass(className);
+		for (CodeRangeEntry entry : list) {
+			if (entry.getClassName().equals(className)) {
+				return true;
+			}
+		}
+		return false;
 	}
-	
+
 	@Override
 	public boolean isInstrumentableMethod(String className, Method method, LineNumberGen[] lineNumbers) {
 		// FIXME XUEZHI [4]
-		return super.isInstrumentableMethod(className, method, lineNumbers);
+		//foreache method line return false,true.
+		for (CodeRangeEntry entry : list) {
+			if (entry.getClassName().equals(className)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
 	public void filter(List<LineInstructionInfo> lineInsnInfos, String className, Method method) {
+		// FIXME XUEZHI [5]
 		for (LineInstructionInfo lineInfo : lineInsnInfos) {
-			if(!isLineInRange(lineInfo, className, method)) {
+			if (!isLineInRange(lineInfo, className, method)) {
 				Iterator<InstructionHandle> it = lineInfo.getInvokeInstructions().iterator();
 				while (it.hasNext()) {
+				    //it.next();
 					it.remove();
-				}			
+				}
 			}
 		}
-	
+
 	}
 
 	private boolean isLineInRange(LineInstructionInfo info, String className, Method method) {
-		// FIXME XUEZHI [5]
+		// FIXME XUEZHI [6]
+		for (CodeRangeEntry entry : list) {
+			if (entry.getClassName().equals(className) && isBetweenStartAndEndLine(info, entry)) {
+				return true;
+			}
+		}
 		return false;
 	}
 
+	private boolean isBetweenStartAndEndLine(LineInstructionInfo info, CodeRangeEntry entry) {
+		boolean result = false;
+		int lineNum = info.getLine();
+		if (lineNum >= entry.getStartLine() && lineNum <= entry.getEndLine()) {
+			result=true;
+		}
+		return result;
+
+	}
 }
