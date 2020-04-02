@@ -3,17 +3,12 @@
  */
 package microbat.instrumentation.filter;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.bcel.classfile.LineNumber;
 import org.apache.bcel.classfile.Method;
-import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.LineNumberGen;
-import org.apache.commons.io.FileUtils;
-import org.w3c.dom.css.ElementCSSInlineStyle;
 
 import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
 
@@ -23,7 +18,6 @@ import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
  */
 public class CodeRangeUserFilter extends AbstractUserFilter {
 	private List<CodeRangeEntry> list;
-	File file = new File("/Users/knightsong/Documents/project/log.txt");
 
 	public CodeRangeUserFilter(List<CodeRangeEntry> entries) {
 		this.list = entries;
@@ -31,40 +25,22 @@ public class CodeRangeUserFilter extends AbstractUserFilter {
 
 	@Override
 	public boolean isInstrumentableClass(String className) {
-		StringBuffer stringBuffer = new StringBuffer(className);
 		// FIXME XUEZHI [3]
 		for (CodeRangeEntry entry : list) {
 			if (entry.getClassName().equals(className)) {
-				stringBuffer.append(" true \n");
 				return true;
 			}
-		}
-		stringBuffer.append(" fasle \n");
-		try {
-			FileUtils.writeStringToFile(file, stringBuffer.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		return false;
 	}
-
+	
 	@Override
 	public boolean isInstrumentableMethod(String className, Method method, LineNumberGen[] lineNumbers) {
-		StringBuffer stringBuffer = new StringBuffer(className + "." + method.getName());
 		// FIXME XUEZHI [4]
 		for (CodeRangeEntry entry : list) {
 			if (entry.getClassName().equals(className) && isHitMethod(method, entry)) {
-				stringBuffer.append(" true \n");
 				return true;
 			}
-		}
-		stringBuffer.append(" false \n");
-		try {
-			FileUtils.writeStringToFile(file, stringBuffer.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		return false;
 	}
@@ -72,29 +48,12 @@ public class CodeRangeUserFilter extends AbstractUserFilter {
 	@Override
 	public void filter(List<LineInstructionInfo> lineInsnInfos, String className, Method method) {
 		// FIXME XUEZHI [5]
-		StringBuffer stringBuffer = new StringBuffer(
-				className + "." + method.getName() + "total lines num " + lineInsnInfos.size() + "\n");
-		int i=0;
-		for (LineInstructionInfo lineInfo : lineInsnInfos) {
-			++i;
-			stringBuffer.append("for no. "+i+" : "); 
-			stringBuffer.append("line " + lineInfo.getLine() + " ");
+		Iterator<LineInstructionInfo> iter=lineInsnInfos.iterator();
+		while (iter.hasNext()) {
+			LineInstructionInfo lineInfo = iter.next(); 
 			if (!isLineInRange(lineInfo, className, method)) {
-				stringBuffer.append(" is not in range\n");
-				Iterator<InstructionHandle> it = lineInfo.getInvokeInstructions().iterator();
-				while (it.hasNext()) {
-					it.next();
-					it.remove();
-				}
-			}else {
-				stringBuffer.append(" is in range\n");
+				iter.remove();		
 			}
-		}
-		try {
-			FileUtils.writeStringToFile(file, stringBuffer.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
