@@ -37,7 +37,7 @@ public class UserFilters {
 
 	public boolean isInstrumentable(String className, Method method, LineNumberGen[] lineNumbers) {
 		for (AbstractUserFilter filter : filters) {
-			if (!filter.isInstrumentableClass(className) ){
+			if (!filter.isInstrumentableMethod(className, method, lineNumbers)) {
 				return false;
 			}
 		}

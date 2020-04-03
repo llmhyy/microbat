@@ -26,7 +26,7 @@ public class JarPackageTool {
 			if (prjRelativeDir != null) {
 				DEPLOY_DIR = BASE_DIR.replace("microbat_instrumentator", prjRelativeDir);
 			} else {
-				DEPLOY_DIR = BASE_DIR.replace("microbat_instrumentator", "microbat");
+				DEPLOY_DIR = BASE_DIR.replace("microbat_instrumentator", "microbat/lib");
 			}
 		}
 		DEPLOY_JAR_PATH = DEPLOY_DIR + "instrumentator.jar";

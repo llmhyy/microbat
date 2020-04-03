@@ -99,10 +99,8 @@ public class ExecutionRangePreference extends PreferencePage implements IWorkben
 		List<Entry> entries = getEntrys();
 		if (entries.size() > 0 && isEnablePartialRecording()) {
 			for (Entry entry : entries) {
-				CodeRangeEntry codeRangeEntry = new CodeRangeEntry();
-				codeRangeEntry.setClassName(entry.getClassName());
-				codeRangeEntry.setStartLine(entry.getStartLine());
-				codeRangeEntry.setEndLine(entry.getEndLine());
+				CodeRangeEntry codeRangeEntry = new CodeRangeEntry(entry.getClassName(), entry.getStartLine(),
+						entry.getEndLine());
 				codeRangeEntries.add(codeRangeEntry);
 			}
 		}

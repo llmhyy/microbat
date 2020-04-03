@@ -14,8 +14,8 @@ public class TestCodeRangeEntry {
 	
 	@Before
 	public void setup() {
-		CodeRangeEntry codeRangeEntry= new CodeRangeEntry("Sample1",null,11,22);
-		CodeRangeEntry codeRangeEntry2= new CodeRangeEntry("Sample2",null,18,22);
+		CodeRangeEntry codeRangeEntry= new CodeRangeEntry("Sample1",11,22);
+		CodeRangeEntry codeRangeEntry2= new CodeRangeEntry("Sample2",18,22);
 		entries.add(codeRangeEntry);
 		entries.add(codeRangeEntry2);
 		cmdlines.add(codeRangeEntry.toString());
