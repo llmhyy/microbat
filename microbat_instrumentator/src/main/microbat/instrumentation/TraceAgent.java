@@ -18,6 +18,11 @@ import microbat.model.value.VarValue;
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
+/**
+ * 
+ * @author LLT
+ *
+ */
 public class TraceAgent implements IAgent {
 	private AgentParams agentParams;
 	private StopTimer timer;
@@ -32,7 +37,7 @@ public class TraceAgent implements IAgent {
 		/* init filter */
 		AppJavaClassPath appPath = agentParams.initAppClassPath();
 		GlobalFilterChecker.setup(appPath, agentParams.getIncludesExpression(), agentParams.getExcludesExpression());
-		ExecutionTracer.appJavaClassPath = appPath;
+		ExecutionTracer.setup(appPath);
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.setStepLimit(agentParams.getStepLimit());
 		if (!agentParams.isRequireMethodSplit()) {
@@ -180,8 +185,7 @@ public class TraceAgent implements IAgent {
 	@Override
 	public void startTest(String junitClass, String junitMethod) {
 		ExecutionTracer._start();
-		ExecutionTracer.appJavaClassPath.setOptionalTestClass(junitClass);
-		ExecutionTracer.appJavaClassPath.setOptionalTestMethod(junitMethod);
+		ExecutionTracer.setRunningTestcase(junitClass, junitMethod);
 	}
 
 	@Override

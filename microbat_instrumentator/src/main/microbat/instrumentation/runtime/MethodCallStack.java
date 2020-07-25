@@ -3,7 +3,6 @@ package microbat.instrumentation.runtime;
 import java.util.Stack;
 
 import microbat.model.trace.TraceNode;
-import sav.strategies.dto.AppJavaClassPath;
 
 public class MethodCallStack {
 	Stack<TraceNode> stack = new Stack<>();
@@ -35,7 +34,7 @@ public class MethodCallStack {
 	 * @param methodSignature
 	 * @return
 	 */
-	public boolean popForException(String methodSignature, AppJavaClassPath appPath) {
+	public boolean popForException(String methodSignature, String runningTestcase) {
 		if(!stack.isEmpty()){
 			int popLayer = 0;
 			boolean needPop = false;
@@ -59,7 +58,7 @@ public class MethodCallStack {
 				}
 			}
 			
-			String enterMethodString = appPath.getOptionalTestClass() + "#" + appPath.getOptionalTestMethod();
+			String enterMethodString = runningTestcase;
 			if(methodSignature.contains(enterMethodString)) {
 				needPop = true;
 			}

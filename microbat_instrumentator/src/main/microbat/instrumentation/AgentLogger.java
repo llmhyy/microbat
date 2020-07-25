@@ -4,6 +4,11 @@ import java.util.List;
 
 import microbat.instrumentation.AgentParams.LogType;
 
+/**
+ * 
+ * @author LLT
+ *
+ */
 public class AgentLogger {
 	private static boolean enableDebug;
 	private static boolean enableError;

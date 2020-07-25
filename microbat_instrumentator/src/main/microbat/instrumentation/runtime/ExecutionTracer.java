@@ -22,6 +22,7 @@ import microbat.codeanalysis.bytecode.MethodFinderBySignature;
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
+import microbat.instrumentation.ExecutionContext;
 import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.model.BreakPoint;
 import microbat.model.trace.StepVariableRelationEntry;
@@ -42,10 +43,17 @@ import microbat.util.PrimitiveUtils;
 import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
+/**
+ * 
+ * @author LLT
+ *
+ */
 public class ExecutionTracer implements IExecutionTracer, ITracer {
 	private static ExecutionTracerStore rtStore = new ExecutionTracerStore();
 	
-	public static AppJavaClassPath appJavaClassPath;
+	private static ExecutionContext executionContext;	
+	private static String runningTestcase;
+	
 	public static int variableLayer = 2;
 	private static int stepLimit = Integer.MAX_VALUE;
 	private static int expectedSteps = Integer.MAX_VALUE;
@@ -57,6 +65,14 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 
 	private MethodCallStack methodCallStack;
 	private Locker locker;
+	
+	public static void setup(AppJavaClassPath classpath) {
+		executionContext = new ExecutionContext(classpath);
+	}
+	
+	public static void setRunningTestcase(String junitClass, String junitMethod) {
+		runningTestcase = junitClass + "#" + junitMethod;
+	}
 	
 	public static void setExpectedSteps(int expectedSteps) {
 		if (expectedSteps != AgentConstants.UNSPECIFIED_INT_VALUE) {
@@ -75,7 +91,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		this.threadId = threadId;
 		locker = new Locker(threadId);
 		methodCallStack = new MethodCallStack();
-		trace = new Trace(appJavaClassPath);
+		trace = executionContext.newTrace();
 	}
 
 	private void buildDataRelation(TraceNode currentNode, VarValue value, String rw){
@@ -332,7 +348,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		}
 		String shortSign = fullSign.substring(fullSign.indexOf("#")+1, fullSign.length());
 		MethodFinderBySignature finder = new MethodFinderBySignature(shortSign);
-		ByteCodeParser.parse(className, finder, appJavaClassPath);
+		ByteCodeParser.parse(className, finder, executionContext.getAppJavaClassPath());
 		Method method = finder.getMethod();
 		
 		LocalVariableTable table = method.getLocalVariableTable();
@@ -664,7 +680,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			TraceNode latestNode = trace.getLatestNode();
 			latestNode.setException(true);
 			boolean invocationLayerChanged = this.methodCallStack.
-					popForException(methodSignature, appJavaClassPath);
+					popForException(methodSignature, runningTestcase);
 			
 			if(invocationLayerChanged){
 				TraceNode caller = null;
@@ -979,7 +995,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		String fullSign = point.getMethodSign();
 		String shortSign = fullSign.substring(fullSign.indexOf("#")+1, fullSign.length());
 		MethodFinderBySignature finder = new MethodFinderBySignature(shortSign);
-		ByteCodeParser.parse(className, finder, appJavaClassPath);
+		ByteCodeParser.parse(className, finder, executionContext.getAppJavaClassPath());
 		Method method = finder.getMethod();
 		
 		if(method!=null && method.getCode()!=null){
