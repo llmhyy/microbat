@@ -8,6 +8,7 @@
 
 package microbat.model;
 
+import microbat.filedb.annotation.Column;
 import microbat.util.BreakpointUtils;
 
 /**
@@ -18,8 +19,11 @@ public class ClassLocation {
 	public static String UNKNOWN_METHOD_SIGN = "unknown";
 	
 	protected String id;
+	@Column
 	protected String classCanonicalName;
+	@Column
 	protected String methodSign;
+	@Column
 	protected int lineNo = -1; // started with 1?
 	
 	protected String declaringCompilationUnitName;
@@ -65,6 +69,10 @@ public class ClassLocation {
 	}
 
 	public int getLineNumber() {
+		return lineNo;
+	}
+	
+	public int getLineNo() {
 		return lineNo;
 	}
 

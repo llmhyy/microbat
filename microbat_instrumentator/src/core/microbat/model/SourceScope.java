@@ -1,10 +1,16 @@
 package microbat.model;
 
+import microbat.filedb.annotation.Column;
+import microbat.filedb.annotation.Table;
 import microbat.model.trace.TraceNode;
 
+@Table
 public class SourceScope implements Scope{
+	@Column
 	private String className;
+	@Column
 	private int startLine;
+	@Column
 	private int endLine;
 	
 	public SourceScope(String className, int startLine, int endLine, boolean isLoopScope) {
@@ -23,7 +29,7 @@ public class SourceScope implements Scope{
 	}
 
 	/**
-	 * whether the scope contains some jump statments such as break, continue, 
+	 * whether the scope contains some jump statements such as break, continue, 
 	 * return, and throw.
 	 */
 	private boolean hasJumpStatement;

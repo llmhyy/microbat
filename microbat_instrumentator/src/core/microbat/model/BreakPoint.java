@@ -4,12 +4,18 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import microbat.filedb.annotation.Column;
+import microbat.filedb.annotation.Embedded;
+import microbat.filedb.annotation.Table;
 import sav.common.core.utils.ClassUtils;
 
+@Table
 public class BreakPoint extends ClassLocation {
+	@Column
 	private boolean isReturnStatement;
-	
+	@Column
 	private boolean isConditional;
+	@Column
 	private boolean isBranch;
 	
 	/**
@@ -18,7 +24,11 @@ public class BreakPoint extends ClassLocation {
 	 * can be control dependent on a statement inside a block.
 	 * (2) in contrast, loop scope can only include the statements inside a code block.
 	 */
+	@Column
+	@Embedded
 	private ControlScope controlScope;
+	@Column
+	@Embedded
 	private SourceScope loopScope;
 	private String declaringCompilationUnitName;
 	
