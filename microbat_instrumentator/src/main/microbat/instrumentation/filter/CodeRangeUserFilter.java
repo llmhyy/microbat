@@ -25,7 +25,6 @@ public class CodeRangeUserFilter extends AbstractUserFilter {
 
 	@Override
 	public boolean isInstrumentableClass(String className) {
-		// FIXME XUEZHI [3]
 		for (CodeRangeEntry entry : list) {
 			if (entry.getClassName().equals(className)) {
 				return true;
@@ -36,7 +35,6 @@ public class CodeRangeUserFilter extends AbstractUserFilter {
 	
 	@Override
 	public boolean isInstrumentableMethod(String className, Method method, LineNumberGen[] lineNumbers) {
-		// FIXME XUEZHI [4]
 		for (CodeRangeEntry entry : list) {
 			if (entry.getClassName().equals(className) && isHitMethod(method, entry)) {
 				return true;
@@ -47,7 +45,6 @@ public class CodeRangeUserFilter extends AbstractUserFilter {
 
 	@Override
 	public void filter(List<LineInstructionInfo> lineInsnInfos, String className, Method method) {
-		// FIXME XUEZHI [5]
 		Iterator<LineInstructionInfo> iter=lineInsnInfos.iterator();
 		while (iter.hasNext()) {
 			LineInstructionInfo lineInfo = iter.next(); 
@@ -58,7 +55,6 @@ public class CodeRangeUserFilter extends AbstractUserFilter {
 	}
 
 	private boolean isLineInRange(LineInstructionInfo info, String className, Method method) {
-		// FIXME XUEZHI [6]
 		for (CodeRangeEntry entry : list) {
 			if (entry.getClassName().equals(className) && isBetweenStartAndEndLine(info, entry)) {
 				return true;
