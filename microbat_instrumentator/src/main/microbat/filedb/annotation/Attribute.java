@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
  *
  */
 @Target({ElementType.METHOD, ElementType.FIELD}) 
-public @interface Column {
+public @interface Attribute {
 	
 	 /**
      * (Optional) The name of the column. Defaults to 

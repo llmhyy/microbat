@@ -18,7 +18,7 @@ import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import sav.common.core.utils.CollectionUtils;
 
-public class TraceNode{
+public class TraceNode {
 	
 	public final static int STEP_CORRECT = 0;
 	public final static int STEP_INCORRECT = 1;

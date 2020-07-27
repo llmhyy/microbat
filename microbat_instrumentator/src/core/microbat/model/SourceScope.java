@@ -1,16 +1,16 @@
 package microbat.model;
 
-import microbat.filedb.annotation.Column;
-import microbat.filedb.annotation.Table;
+import microbat.filedb.annotation.Attribute;
+import microbat.filedb.annotation.RecordType;
 import microbat.model.trace.TraceNode;
 
-@Table
+@RecordType
 public class SourceScope implements Scope{
-	@Column
+	@Attribute
 	private String className;
-	@Column
+	@Attribute
 	private int startLine;
-	@Column
+	@Attribute
 	private int endLine;
 	
 	public SourceScope(String className, int startLine, int endLine, boolean isLoopScope) {

@@ -6,7 +6,7 @@ import java.util.List;
  * @author LLT
  *
  */
-public class TableHeader {
+public class RecordsHeader {
 	private List<Long> idxPointers;
 	private long curPointer;
 	

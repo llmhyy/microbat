@@ -6,10 +6,10 @@ import java.util.List;
  * @author LLT
  *
  */
-public class FileDbService {
+public class FileDb {
 
 	public <T> void insertBatch(List<T> listObj, Class<T> clazz) {
-		Table<T> table = new Table<>(clazz);
+		RecordsHolder<T> table = new RecordsHolder<>(clazz);
 		table.insertBatch(listObj);
 	}
 	

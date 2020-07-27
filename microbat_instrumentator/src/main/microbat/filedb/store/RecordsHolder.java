@@ -7,16 +7,16 @@ import java.util.List;
  * @author LLT
  * Table which holds only data part, not header
  */
-public class Table<T> {
-	private TableHeader header;
+public class RecordsHolder<T> {
+	private RecordsHeader header;
 	private Class<T> clazz;
-	private String tableName; 
-	private List<String> columns = new ArrayList<String>();
+	private String recordName; 
+	private List<String> recordAttributes = new ArrayList<String>();
 	
-	public Table(Class<T> clazz) {
+	public RecordsHolder(Class<T> clazz) {
 		this.clazz = clazz;
-		microbat.filedb.annotation.Table tableAnnotation = clazz.getAnnotation(microbat.filedb.annotation.Table.class);
-		tableName = tableAnnotation.name();
+		microbat.filedb.annotation.RecordType recordType = clazz.getAnnotation(microbat.filedb.annotation.RecordType.class);
+		recordName = recordType.name();
 		
 	}
 	

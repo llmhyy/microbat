@@ -3,19 +3,19 @@ package microbat.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.filedb.annotation.Column;
-import microbat.filedb.annotation.Table;
+import microbat.filedb.annotation.Attribute;
+import microbat.filedb.annotation.RecordType;
 import microbat.filedb.annotation.EmptyRule;
 import microbat.model.trace.TraceNode;
 
-@Table
+@RecordType
 public class ControlScope implements Scope {
-	@Column
+	@Attribute
 	@EmptyRule
 	private List<ClassLocation> rangeList = new ArrayList<>();
 	private boolean isCondition;
 	private boolean isBranch;
-	@Column
+	@Attribute
 	private boolean isLoop;
 	
 	public ControlScope() {
