@@ -189,4 +189,10 @@ public class BreakPoint extends ClassLocation {
 	public void setBranch(boolean isBranch) {
 		this.isBranch = isBranch;
 	}
+
+	@Attribute
+	public int getKey() {
+		return hashCode();
+	}
+
 }

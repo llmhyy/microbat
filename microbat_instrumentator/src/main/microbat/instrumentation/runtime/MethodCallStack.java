@@ -4,8 +4,13 @@ import java.util.Stack;
 
 import microbat.model.trace.TraceNode;
 
+/**
+ * 
+ * @author LLT
+ *
+ */
 public class MethodCallStack {
-	Stack<TraceNode> stack = new Stack<>();
+	private Stack<TraceNode> stack = new Stack<>();
 	
 	public TraceNode safePop() {
 		if (stack.size() != 0) {

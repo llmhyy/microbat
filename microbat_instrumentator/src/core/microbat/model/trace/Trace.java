@@ -15,6 +15,9 @@ import microbat.codeanalysis.bytecode.CFG;
 import microbat.codeanalysis.bytecode.CFGConstructor;
 import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.codeanalysis.bytecode.MethodFinderByLine;
+import microbat.filedb.annotation.Attribute;
+import microbat.filedb.annotation.Key;
+import microbat.filedb.annotation.RecordType;
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
 import microbat.model.ControlScope;
@@ -29,8 +32,11 @@ import sav.strategies.dto.AppJavaClassPath;
  * @author Yun Lin
  *
  */
+@RecordType
 public class Trace {
-	
+	@Attribute
+	@Key
+	private int traceId; //FIXME LLT: set traceId
 	private AppJavaClassPath appJavaClassPath;
 	private List<String> includedLibraryClasses;
 	private List<String> excludedLibraryClasses;
@@ -50,12 +56,14 @@ public class Trace {
 		this.exectionList = new ArrayList<>(stepNums);
 	}
 	
+	@Attribute
 	private List<TraceNode> exectionList;
 	/**
 	 * tracking which steps read/write what variables, and what variables are read/written by which steps.
 	 * key is the variable ID, and value is the entry containing all the steps reading/writing the corresponding
 	 * variable.
 	 */
+	@Attribute
 	private Map<String, StepVariableRelationEntry> stepVariableTable = new HashMap<>();
 	
 	private boolean isMultiThread = false;

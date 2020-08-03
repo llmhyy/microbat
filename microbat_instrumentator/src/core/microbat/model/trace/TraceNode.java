@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import microbat.filedb.annotation.Attribute;
+import microbat.filedb.annotation.FetchType;
+import microbat.filedb.annotation.Key;
+import microbat.filedb.annotation.RecordType;
 import microbat.instrumentation.runtime.InvokingDetail;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
@@ -18,6 +22,7 @@ import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import sav.common.core.utils.CollectionUtils;
 
+@RecordType
 public class TraceNode {
 	
 	public final static int STEP_CORRECT = 0;
@@ -35,7 +40,9 @@ public class TraceNode {
 	private String invokingMethod = null;
 	private InvokingDetail invokingDetail = null;
 	
+	@Attribute
 	private BreakPoint breakPoint;
+	
 	private BreakPointValue afterStepInState;
 	private BreakPointValue afterStepOverState;
 	
@@ -50,7 +57,7 @@ public class TraceNode {
 	
 //	private Map<TraceNode, List<String>> dataDominators = new HashMap<>();
 //	private Map<TraceNode, List<String>> dataDominatees = new HashMap<>();
-	
+	@Attribute
 	private TraceNode controlDominator;
 	private List<TraceNode> controlDominatees = new ArrayList<>();
 	
@@ -69,20 +76,30 @@ public class TraceNode {
 	/**
 	 * the order of this node in the whole trace, starting from 1.
 	 */
+	@Key
+	@Attribute
 	private int order;
 	
+	@Attribute(fetch = FetchType.LAZY)
+	// FIXME-LLT: join mapping
 	private TraceNode stepInNext;
 	private TraceNode stepInPrevious;
 	
+	@Attribute(fetch = FetchType.LAZY)
 	private TraceNode stepOverNext;
 	private TraceNode stepOverPrevious;
 	
 	private List<TraceNode> invocationChildren = new ArrayList<>();
+	
+	@Attribute(fetch = FetchType.LAZY)
 	private TraceNode invocationParent;
 	
 	private List<TraceNode> loopChildren;
+	
+	@Attribute(fetch = FetchType.LAZY)
 	private TraceNode loopParent;
 	
+	@Attribute
 	private boolean isException;
 	
 	private TraceNode invokingMatchNode;

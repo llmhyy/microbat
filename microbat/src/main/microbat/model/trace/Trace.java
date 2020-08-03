@@ -1011,10 +1011,6 @@ public class Trace {
 		return localVariableScopes;
 	}
 
-	public void setLocalVariableScopes(LocalVariableScopes localVariableScopes) {
-		this.localVariableScopes = localVariableScopes;
-	}
-	
 	public TraceNode getTraceNode(int order){
 		return this.exectionList.get(order-1);
 	}

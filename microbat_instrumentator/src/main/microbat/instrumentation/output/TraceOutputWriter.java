@@ -22,6 +22,11 @@ import microbat.util.BreakpointUtils;
 import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
 
+/**
+ * 
+ * @author LLT
+ *
+ */
 public class TraceOutputWriter extends OutputWriter {
 	public static final int READ = 1;
 	public static final int WRITE = 2;
