@@ -40,7 +40,7 @@ import microbat.filedb.store.reflection.RType;
  * 
  * 		....
  * 
- * methods:
+ * methods: FIXME XUEZHI: methods to be implemented.
  * 	- removeHeaderByKey: update keyType to 
  *  - updateHeaderByKey
  *  - expandHeader:  moveRecordToTheEnd, update dataStartPos, updateHeaderByKey
@@ -60,6 +60,7 @@ public class RecordsFile<T> extends BaseFile {
 	}
 
 	public Object insert(T row) throws RecordsFileException {
+		// FIXME XUEZHI:
 		// write header
 		// write key
 		Object key = null;
@@ -84,7 +85,7 @@ public class RecordsFile<T> extends BaseFile {
 					} else {
 						RColAttribute col = (RColAttribute) attr;
 						if (col.isListAttr()) {
-							//TODO: store list
+							//FIXME XUEZHI: store list
 						} else {
 							throw new RecordsFileException(String.format("attribute Collection type {%s} not supported yet!", col.getClassName()));
 						}
@@ -109,12 +110,7 @@ public class RecordsFile<T> extends BaseFile {
 	}
 	
 	private T loadRecord(long recordPos) {
-		// FIXME XUEZHI
-		/* 
-		 * Based on record annotations, load object value from file as below:
-		 * - if attribute is an object load 
-		 */
-		
+		// FIXME XUEZHI: Based on record annotations, load record by key
 		return null;
 	}
 }
