@@ -10,5 +10,5 @@ public enum KeyType {
 	Long,
 	Float,
 	Short,
-	Abandon
+	Abandoned
 }

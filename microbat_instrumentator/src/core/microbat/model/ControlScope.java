@@ -6,10 +6,13 @@ import java.util.List;
 import microbat.filedb.annotation.Attribute;
 import microbat.filedb.annotation.RecordType;
 import microbat.filedb.annotation.EmptyRule;
+import microbat.filedb.annotation.Key;
 import microbat.model.trace.TraceNode;
 
 @RecordType
 public class ControlScope implements Scope {
+	@Key
+	private int key;
 	@Attribute
 	@EmptyRule
 	private List<ClassLocation> rangeList = new ArrayList<>();
@@ -85,5 +88,12 @@ public class ControlScope implements Scope {
 	public void setBranch(boolean isBranch) {
 		this.isBranch = isBranch;
 	}
-	
+
+	public int getKey() {
+		return key;
+	}
+
+	public void setKey(int key) {
+		this.key = key;
+	}
 }

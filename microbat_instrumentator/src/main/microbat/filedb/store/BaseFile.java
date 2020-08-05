@@ -36,12 +36,17 @@ public abstract class BaseFile {
 		curPointer = file.getFilePointer();
 	}
 	
-	protected void writePrimitive(Class<?> type, Object value) throws IOException {
+	protected void writePrimitive(String className, Object value) throws IOException {
 		/*
 		 * FIXME XUEZHI: check type, then using corresponding method in DataFile file to write value
 		 *  
 		 */
 		curPointer = file.getFilePointer();
+		System.out.println(value + "  (llt-test)");
+	}
+	
+	public DataFile getDataFile() {
+		return file;
 	}
 	
 	public static class Metadata {

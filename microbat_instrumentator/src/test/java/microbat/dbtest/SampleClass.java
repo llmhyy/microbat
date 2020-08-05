@@ -1,19 +1,35 @@
 package microbat.dbtest;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import microbat.filedb.annotation.Attribute;
 import microbat.filedb.annotation.RecordType;
 import microbat.model.ControlScope;
 
-@RecordType(name="SampleClass")
+@RecordType(name = "SampleClass")
 public class SampleClass {
 
-	@Attribute 
+	@Attribute
 	private String sampleString;
-	
-	private  int aInt=0;
-	
+
+	private int aInt = 0;
+
 	private ControlScope controlScope;
+
+	@Attribute
+	private List<ControlScope> listAttr;
+
+	@Attribute
+	private Map<String, ControlScope> mapAttr;
+
+	@Attribute
+	private Set<ControlScope> setAttr;
 	
+	@Attribute
+	private List<?> genericListAttr;
+
 	public ControlScope getControlScope() {
 		return controlScope;
 	}
@@ -25,8 +41,8 @@ public class SampleClass {
 	private User user;
 
 	public User getUser() {
-		if (user==null) {
-			user =new User("Test");
+		if (user == null) {
+			user = new User("Test");
 		}
 		return user;
 	}
@@ -54,5 +70,29 @@ public class SampleClass {
 	private void sampleMethod() {
 		return;
 	}
-	
+
+	public List<ControlScope> getListAttr() {
+		return listAttr;
+	}
+
+	public void setListAttr(List<ControlScope> listAttr) {
+		this.listAttr = listAttr;
+	}
+
+	public Map<String, ControlScope> getMapAttr() {
+		return mapAttr;
+	}
+
+	public void setMapAttr(Map<String, ControlScope> mapAttr) {
+		this.mapAttr = mapAttr;
+	}
+
+	public Set<ControlScope> getSetAttr() {
+		return setAttr;
+	}
+
+	public void setSetAttr(Set<ControlScope> setAttr) {
+		this.setAttr = setAttr;
+	}
+
 }

@@ -12,4 +12,9 @@ public class RecordsFileException extends Exception {
 		super(msg);
 	}
 
+	public RecordsFileException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	
 }

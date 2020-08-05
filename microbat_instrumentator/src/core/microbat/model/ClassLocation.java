@@ -9,12 +9,15 @@
 package microbat.model;
 
 import microbat.filedb.annotation.Attribute;
+import microbat.filedb.annotation.Key;
+import microbat.filedb.annotation.RecordType;
 import microbat.util.BreakpointUtils;
 
 /**
  * @author Yun Lin, modified from LLT
  * 
  */
+@RecordType
 public class ClassLocation {
 	public static String UNKNOWN_METHOD_SIGN = "unknown";
 	
@@ -127,13 +130,16 @@ public class ClassLocation {
 		return methodSign;
 	}
 
-	
-	
 	public String getFullJavaFilePath() {
 		return this.fullJavaFilePath;
 	}
 	
 	public void setFullJavaFilePath(String fullJavaFilePath) {
 		this.fullJavaFilePath = fullJavaFilePath;
+	}
+	
+	@Key
+	public int getKey() {
+		return hashCode();
 	}
 }

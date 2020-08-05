@@ -3,12 +3,15 @@ package microbat.filedb.store;
 import java.util.HashMap;
 import java.util.Map;
 
+import microbat.filedb.store.reflection.RTypeFactory;
+
 /**
  * @author LLT
  *
  */
 public class DbContext {
 	private Map<Class<?>, RecordsFile<?>> recordsFileMap = new HashMap<Class<?>, RecordsFile<?>>();
+	private RTypeFactory rTypeFactory = new RTypeFactory();
 
 	@SuppressWarnings("unchecked")
 	public <T>RecordsFile<T> getRecordsFile(Class<T> clazz) {
@@ -23,5 +26,9 @@ public class DbContext {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public RTypeFactory getrTypeFactory() {
+		return rTypeFactory;
 	}
 }
