@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/microbat_feature_1.0.0.qualifier.jar" id="microbat_feature" version="1.0.0.qualifier">
+      <category name="microbat_feature"/>
+   </feature>
+   <category-def name="microbat_feature" label="microbat_feature"/>
+</site>
