@@ -75,7 +75,6 @@ public class IResourceUtils {
 		if (!dropinsDir.exists() || !dropinsDir.isDirectory()) {
 			throw new SavRtException("Cannot find dropins folder!");
 		}
-		
 		DROPINS_DIR = dropinsDir.getAbsolutePath();
 		ECLIPSE_ROOT_DIR = dropinsDir.getParentFile().getAbsolutePath();
 	}

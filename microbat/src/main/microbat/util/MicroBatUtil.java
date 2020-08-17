@@ -1,6 +1,7 @@
 package microbat.util;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -18,6 +19,8 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import microbat.Activator;
 import microbat.model.trace.TraceNode;
@@ -31,6 +34,7 @@ import sav.strategies.dto.AppJavaClassPath;
 
 
 public class MicroBatUtil {
+	private static Logger log = LoggerFactory.getLogger(MicroBatUtil.class);
 	private MicroBatUtil(){}
 	
 	public static String getProjectPath(String projectName){
@@ -102,7 +106,6 @@ public class MicroBatUtil {
 			    System.currentTimeMillis();
 			}
 		}
-		
 		setSystemJars(appClassPath);
 		
 		/**
@@ -161,8 +164,36 @@ public class MicroBatUtil {
 		
 		/**
 		 * setting java agent lib 
-		 */
+		 */	
 		String agentLib = junitDir + File.separator + "instrumentator.jar";
+		File jar = new File("agentLib");
+		//if none  instrumentator.jar under the eclispe root
+		if (!jar.exists()) {
+			//find features installed in eclispe
+			String featuresFileName = IResourceUtils.getEclipseRootDir() + File.separator + "features";
+			//find our features
+			File[] mircobatFeature = new File(featuresFileName).listFiles(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.contains("microbat");
+				}
+			});
+			//if had find our feature ,change Agentlib to feature/jar
+			boolean  flag=false;
+			if (mircobatFeature.length > 0) {
+				String jarPath = mircobatFeature[0].getAbsolutePath() + File.separator + "junit_lib" + File.separator
+						+ "instrumentator.jar";
+				if (new File(jarPath).exists()) {
+					agentLib=jarPath;
+					flag=true;
+				}
+			}
+			if (!flag) {
+				log.error("can't find instrumentator");
+			}
+
+		}
+		
 		appClassPath.setAgentLib(agentLib);
 	}
 
