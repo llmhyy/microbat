@@ -37,58 +37,68 @@ import sav.common.core.utils.FileUtils;
  */
 public class IResourceUtils {
 	private static Logger log = LoggerFactory.getLogger(IResourceUtils.class);
-	private IResourceUtils(){}
+
+	private IResourceUtils() {
+	}
+
 	private static String DROPINS_DIR;
 	private static String ECLIPSE_ROOT_DIR;
-	
+
 	static {
 		initEclipseDirs();
 	}
-	
+
+	/**
+	 * Last_update Aug 18, 2020 3:14:14 PM Last_Modifier SongXuezhi
+	 * 
+	 * @since LLT Issue #190 Release version not working in Mac os, that cuz the
+	 *        method return a wrong dropins path.In fact,the dropins folder is just
+	 *        used by developer. When test performance during development,we need
+	 *        copy instrumentor.jar to dropins. In the release version,this folder
+	 *        is not necessary. Here we first search in the limited path according
+	 *        to the system category, if it fails, we traverse and search
+	 */
 	private static void initEclipseDirs() {
 		String eclipseExecutablePath = System.getProperty("eclipse.launcher");
-		String userDir = eclipseExecutablePath.substring(0, eclipseExecutablePath.lastIndexOf("eclipse") - 1);
-		File dropinsDir = new File(FileUtils.getFilePath(userDir, "dropins"));
-		
-		/* try the best to look up dropins folder */
-		if (!dropinsDir.exists() || !dropinsDir.isDirectory()) {
-			File dir = new File(eclipseExecutablePath).getParentFile();
-			while (!dir.exists()) {
-				dir = dir.getParentFile();
-			}
-			while (dir != null) {
-				File[] dropinsFolders = dir.listFiles(new FilenameFilter() {
-					
-					@Override
-					public boolean accept(File dir, String name) {
-						return "dropins".equals(name);
-					}
-				});
-				if (CollectionUtils.isEmpty(dropinsFolders)) {
-					dir = dir.getParentFile();
-				} else {
-					dropinsDir = dropinsFolders[0];
-					break;
-				}
-			}
+		File dirRoot = null;
+		String systemName = System.getProperty("os.name").toLowerCase();
+		if (systemName.contains("mac")) {
+			/**
+			 * In mac os the Eclipse root path is "../Eclipse.app/Contents/", the dropins
+			 * path is "../Eclipse.app/Contents/Eclipse/dropins", the eclipse launcher file
+			 * is "../Eclipse.app/Contents/MacOS/eclipse", So we fisrt locate
+			 * "../Eclipse.app/Contents/" from eclipse.launcher, and see as root dir
+			 */
+			dirRoot = new File(eclipseExecutablePath).getParentFile().getParentFile();
+			ECLIPSE_ROOT_DIR = dirRoot.getAbsolutePath() + File.separator + "Eclipse";
+			DROPINS_DIR = ECLIPSE_ROOT_DIR + File.separator + "dropins";
+
+		} else if (systemName.contains("windows")) {
+			/**
+			 *  In windows the Eclipse root path is ../eclipse/
+			 * ,the dropins path is ../eclipse/dropins ,the eclipse launcher file
+			 *  is ../eclipse/eclipse.exe, So we just locate "../eclipse" from eclipse.launcher
+			 */
+			dirRoot =new File(eclipseExecutablePath).getParentFile();
+			ECLIPSE_ROOT_DIR=dirRoot.getAbsolutePath();
+			DROPINS_DIR = ECLIPSE_ROOT_DIR + File.separator + "dropins";
+		} else {
+			/** TODO search */
 		}
-		if (!dropinsDir.exists() || !dropinsDir.isDirectory()) {
-			throw new SavRtException("Cannot find dropins folder!");
+		if (!new File(ECLIPSE_ROOT_DIR).exists() || !new File(DROPINS_DIR).exists()) {
+			//TODO search
 		}
-		DROPINS_DIR = dropinsDir.getAbsolutePath();
-		ECLIPSE_ROOT_DIR = dropinsDir.getParentFile().getAbsolutePath();
 	}
-	
+
 	public static String getEclipseRootDir() {
 		return ECLIPSE_ROOT_DIR;
 	}
-	
+
 	public static String getDropinsDir() {
 		return DROPINS_DIR;
 	}
-	
-	public static String getResourceAbsolutePath(String pluginId, String resourceRelativePath)
-			throws SavRtException {
+
+	public static String getResourceAbsolutePath(String pluginId, String resourceRelativePath) throws SavRtException {
 		try {
 			String resourceUrl = getResourceUrl(pluginId, resourceRelativePath);
 			URL fileURL = new URL(resourceUrl);
@@ -107,36 +117,36 @@ public class IResourceUtils {
 				.append(resourceRelativePath);
 		return sb.toString();
 	}
-	
-    public static IPath relativeToAbsolute(IPath relativePath) {
-        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-        IResource resource = root.findMember(relativePath);
-        if (resource != null) {
-            return resource.getLocation();
-        }
-        return relativePath;
-    }
-    
-    public static String getAbsolutePathOsStr(IPath relativePath) {
-    	IPath absolutePath = relativeToAbsolute(relativePath);
-    	return absolutePath.toOSString();
-    }
-    
-    public static String getSourceFolderPath(String projectName, String cName) {
+
+	public static IPath relativeToAbsolute(IPath relativePath) {
+		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+		IResource resource = root.findMember(relativePath);
+		if (resource != null) {
+			return resource.getLocation();
+		}
+		return relativePath;
+	}
+
+	public static String getAbsolutePathOsStr(IPath relativePath) {
+		IPath absolutePath = relativeToAbsolute(relativePath);
+		return absolutePath.toOSString();
+	}
+
+	public static String getSourceFolderPath(String projectName, String cName) {
 		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName, projectName);
 		String javaFilePath = IResourceUtils.getAbsolutePathOsStr(unit.getPath());
 		return javaFilePath.substring(0, javaFilePath.indexOf(cName.replace(".", Constants.FILE_SEPARATOR)) - 1);
 	}
-    
-    public static String getRelativeSourceFolderPath(String projectFolder, String projectName, String cName) {
-    	String sourceFolderPath = getSourceFolderPath(projectName, cName);
-    	if (!sourceFolderPath.startsWith(projectFolder)) {
+
+	public static String getRelativeSourceFolderPath(String projectFolder, String projectName, String cName) {
+		String sourceFolderPath = getSourceFolderPath(projectName, cName);
+		if (!sourceFolderPath.startsWith(projectFolder)) {
 			throw new InvalidParameterException(
 					String.format("ProjectFolder: %s, FullSourceFolderPath: %s ", projectFolder, sourceFolderPath));
 		}
 		return sourceFolderPath.substring(projectFolder.length(), sourceFolderPath.length());
-    }
-    
+	}
+
 	public static String getProjectPath(String projectName) {
 		return getAbsolutePathOsStr(JavaUtil.getSpecificJavaProjectInWorkspace(projectName).getFullPath());
 	}
@@ -157,5 +167,4 @@ public class IResourceUtils {
 		return outputFolder.getLocation().toOSString();
 	}
 
-	
 }
