@@ -75,19 +75,55 @@ public class IResourceUtils {
 
 		} else if (systemName.contains("windows")) {
 			/**
-			 *  In windows the Eclipse root path is ../eclipse/
-			 * ,the dropins path is ../eclipse/dropins ,the eclipse launcher file
-			 *  is ../eclipse/eclipse.exe, So we just locate "../eclipse" from eclipse.launcher
+			 * In windows the Eclipse root path is ../eclipse/ ,the dropins path is
+			 * ../eclipse/dropins ,the eclipse launcher file is ../eclipse/eclipse.exe, So
+			 * we just locate "../eclipse" from eclipse.launcher
 			 */
-			dirRoot =new File(eclipseExecutablePath).getParentFile();
-			ECLIPSE_ROOT_DIR=dirRoot.getAbsolutePath();
+			dirRoot = new File(eclipseExecutablePath).getParentFile();
+			ECLIPSE_ROOT_DIR = dirRoot.getAbsolutePath();
 			DROPINS_DIR = ECLIPSE_ROOT_DIR + File.separator + "dropins";
 		} else {
-			/** TODO search */
+			/** TODO Linux */
 		}
-		if (!new File(ECLIPSE_ROOT_DIR).exists() || !new File(DROPINS_DIR).exists()) {
-			//TODO search
+		File dropinsDir = new File(DROPINS_DIR);
+		if (!dropinsDir.exists() && !dropinsDir.isDirectory()) {
+			dropinsDir = searchDropinsDir(eclipseExecutablePath);
+			DROPINS_DIR = dropinsDir.getAbsolutePath();
+			ECLIPSE_ROOT_DIR = dropinsDir.getParentFile().getAbsolutePath();
 		}
+		ConsoleUtils.printMessage("ECLIPSE_ROOT_DIR: "+ECLIPSE_ROOT_DIR);
+	}
+
+	/**
+	 * 
+	 * Last_update Aug 24, 2020 1:16:55 AM Last_Modifier knightsong
+	 */
+	private static File searchDropinsDir(String eclipseExecutablePath) {
+		File dropinsDir = null;
+		/* try the best to look up dropins folder */
+		File dir = new File(eclipseExecutablePath).getParentFile();
+		while (!dir.exists()) {
+			dir = dir.getParentFile();
+		}
+		while (dir != null) {
+			File[] dropinsFolders = dir.listFiles(new FilenameFilter() {
+
+				@Override
+				public boolean accept(File dir, String name) {
+					return "dropins".equals(name);
+				}
+			});
+			if (CollectionUtils.isEmpty(dropinsFolders)) {
+				dir = dir.getParentFile();
+			} else {
+				dropinsDir = dropinsFolders[0];
+				break;
+			}
+		}
+		if (!dropinsDir.exists() || !dropinsDir.isDirectory()) {
+			throw new SavRtException("Cannot find dropins folder!");
+		}
+		return dropinsDir;
 	}
 
 	public static String getEclipseRootDir() {
