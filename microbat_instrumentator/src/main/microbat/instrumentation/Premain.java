@@ -56,21 +56,21 @@ public class Premain {
 										"bcel-6.0.jar",
 										"javassist.jar",
 										SAV_JAR,
-										"commons-io-1.3.2.jar"
+										"commons-io-1.3.2.jar",
 				/* 
 				 * LLT: mysql-connector-java-5.1.44-bin.jar & slf4j-api-1.7.12.jar
 				 * used to be added to bootstrap classloader to avoid ClassNotFoundException when the trace is
 				 * being stored into sql database using TraceRecorder, but later, we don't use that approach to
 				 * record trace anymore, so these two lines are commented to avoid any unnecessary cause.
 				 *  */
-//										"mysql-connector-java-5.1.44-bin.jar",
+										"sqlite-jdbc-3.32.3.2.jar"
 //										"slf4j-api-1.7.12.jar"
 										);
 		}
 		for (JarFile jarfile : bootJarPaths) {
 			debug("append to boostrap classloader: " + jarfile.getName());
 			inst.appendToBootstrapClassLoaderSearch(jarfile);
-			if (jarfile.getName().contains("mysql-connector-java")) {
+			if (jarfile.getName().contains("sqlite-jdbc")) {
 				inst.appendToSystemClassLoaderSearch(jarfile);
 			}
 		}

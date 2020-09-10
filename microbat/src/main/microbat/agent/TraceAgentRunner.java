@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 
@@ -14,6 +15,9 @@ import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.output.TraceOutputReader;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
+import microbat.sql.DBSettings;
+import microbat.sql.TraceRetriever01;
+import microbat.util.MicroBatUtil;
 import sav.common.core.SavException;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.CollectionBuilder;
@@ -71,7 +75,6 @@ public class TraceAgentRunner extends AgentVmRunner {
 			if (this.isProcessTimeout()) {
 				return false;
 			}
-			System.out.println();
 			/* collect result */
 			precheckInfo = PrecheckInfo.readFromFile(dumpFilePath);
 			updateTestResult(precheckInfo.getProgramMsg());
@@ -101,13 +104,37 @@ public class TraceAgentRunner extends AgentVmRunner {
 			} else {
 				dumpFile = FileUtils.getFileCreateIfNotExist(filePath);
 			}
-			System.out.println("Trace dumpfile: " + dumpFile.getPath());
-			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFile.getPath()));
+//			System.out.println("Trace dumpfile: " + dumpFile.getPath());
+//          addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFile.getPath()));
+			// TODO sxz  May add if statement to switch sql or trace file
+			String dbPath=MicroBatUtil.getSQLFolder()+File.separator+DBSettings.DB_NAME;
+			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dbPath));
+			System.out.println("db dumpfile: " + dbPath);
+			//todo end
 			super.startAndWaitUntilStop(getConfig());
 			System.out.println("|");
 //			System.out.println(super.getCommandLinesString(config));
 			timer.newPoint("Read output result");
-			runningInfo = RunningInfo.readFromFile(dumpFile);
+			//TODO sxz add read from sql
+			long t1=System.currentTimeMillis();
+			TraceRetriever01 traceRetriever01=new TraceRetriever01(dbPath);
+			Trace trace=null;
+			try {
+				 trace=traceRetriever01.retrieveTrace(traceRetriever01.getLatestTrace(null));
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			System.out.println("Select from sqlite"+(System.currentTimeMillis()-t1));
+			//todo end
+			runningInfo=new RunningInfo();
+			runningInfo.setTrace(trace);	
+			runningInfo.setCollectedSteps(trace.getExecutionList().size());
+			// TODO SXZ this info is not right ,here need to change 
+			runningInfo.setExpectedSteps(trace.getExecutionList().size());
+			//todo end
+//			long t1=System.currentTimeMillis();
+//			runningInfo = RunningInfo.readFromFile(dumpFile);
+//			System.out.println("Select from sqlite"+(System.currentTimeMillis()-t1));
 			updateTestResult(runningInfo.getProgramMsg());
 			if (toDeleteDumpFile) {
 				dumpFile.delete();

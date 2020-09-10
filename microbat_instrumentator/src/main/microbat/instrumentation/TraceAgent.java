@@ -1,5 +1,6 @@
 package microbat.instrumentation;
 
+import java.io.File;
 import java.lang.instrument.Instrumentation;
 
 import microbat.instrumentation.filter.CodeRangeUserFilter;
@@ -11,10 +12,13 @@ import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.instrumentation.output.tcp.TcpConnector;
 import microbat.instrumentation.runtime.ExecutionTracer;
 import microbat.instrumentation.runtime.IExecutionTracer;
+import microbat.instrumentation.utils.FileUtils;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.sql.TraceRecorder01;
+
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -71,35 +75,39 @@ public class TraceAgent implements IAgent {
 		AgentLogger.debug("construct ControlDomianceRelation....");
 		trace.constructControlDomianceRelation();
 		t2 = System.currentTimeMillis();
-		AgentLogger.debug("time for constructControlDomianceRelation: "  + (t2-t1)/1000);
+	
 //		trace.constructLoopParentRelation();
 		timer.newPoint("Saving trace");
+		t1 = System.currentTimeMillis();
 		writeOutput(trace);
+		t2 = System.currentTimeMillis();
+
 		AgentLogger.debug(timer.getResultString());
 	}
 
 	private void writeOutput(Trace trace) throws Exception {
 		AgentLogger.debug("Saving trace...");
-		if (agentParams.getDumpFile() != null) {
-			RunningInfo result = new RunningInfo();
-			result.setProgramMsg(Agent.getProgramMsg());
-			result.setTrace(trace);
-			result.setCollectedSteps(trace.getExecutionList().size());
-			result.setExpectedSteps(agentParams.getExpectedSteps());
-			result.saveToFile(agentParams.getDumpFile(), false);
-			AgentLogger.debug(result.toString());
-		} else if (agentParams.getTcpPort() != AgentConstants.UNSPECIFIED_INT_VALUE) {
-			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
-			TraceOutputWriter traceWriter = tcpConnector.connect();
-			traceWriter.writeString(Agent.getProgramMsg());
-			traceWriter.writeTrace(trace);
-			traceWriter.flush();
-			Thread.sleep(10000l);
-			tcpConnector.close();
-		} 
+//		if (agentParams.getDumpFile() != null) {
+//			RunningInfo result = new RunningInfo();
+//			result.setProgramMsg(Agent.getProgramMsg());
+//			result.setTrace(trace);
+//			result.setCollectedSteps(trace.getExecutionList().size());
+//			result.setExpectedSteps(agentParams.getExpectedSteps());
+//			result.saveToFile(agentParams.getDumpFile(), false);
+//			AgentLogger.debug(result.toString());
+//		} else if (agentParams.getTcpPort() != AgentConstants.UNSPECIFIED_INT_VALUE) {
+//			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
+//			TraceOutputWriter traceWriter = tcpConnector.connect();
+//			traceWriter.writeString(Agent.getProgramMsg());
+//			traceWriter.writeTrace(trace);
+//			traceWriter.flush();
+//			Thread.sleep(10000l);
+//			tcpConnector.close();
+//		} 
 		
-//			TraceRecorder traceRecorder = new TraceRecorder();
-//			traceRecorder.storeTrace(trace );
+		
+		TraceRecorder01 traceRecorder = new TraceRecorder01(agentParams.getDumpFile());
+		traceRecorder.storeTrace(trace );
 		AgentLogger.debug("Trace saved.");
 	}
 	

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src/main"/>
+	<classpathentry exported="true" kind="lib" path="lib/sqlite-jdbc-3.32.3.2.jar"/>
 	<classpathentry kind="src" path="src/core"/>
 	<classpathentry kind="lib" path="lib/commons-lang-2.6.jar"/>
 	<classpathentry kind="lib" path="lib/javassist.jar"/>

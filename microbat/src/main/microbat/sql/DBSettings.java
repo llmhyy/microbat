@@ -6,7 +6,9 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import microbat.Activator;
 
 public class DBSettings {
+	
 	public static String dbAddress = "localhost";
+	public final static String DB_NAME="microbat_test.db";
 	public static int dbPort = 3306;
 	public static String username = "root";
 	public static String password = "123456";
