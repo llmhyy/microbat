@@ -3,20 +3,17 @@ package microbat.sql;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import microbat.handler.xml.VarValueXmlWriter;
 import microbat.model.BreakPoint;
-import microbat.model.ClassLocation;
-import microbat.model.ControlScope;
-import microbat.model.SourceScope;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -91,7 +88,7 @@ public class TraceRecorder01 extends SqliteServer {
 				+ "location_id, read_vars, written_vars) VALUES (?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
-		Map<TraceNode, String> locationIdMap = insertLocation(traceId, exectionList, conn, closables);
+		insertLocation(traceId, exectionList, conn, closables);
 		int count = 0;
 		for (int i = 0; i < exectionList.size(); i++) {
 			TraceNode node = exectionList.get(i);
@@ -103,7 +100,7 @@ public class TraceRecorder01 extends SqliteServer {
 			setNodeOrder(ps, idx++, node.getStepOverNext());
 			setNodeOrder(ps, idx++, node.getInvocationParent());
 			setNodeOrder(ps, idx++, node.getLoopParent());
-			ps.setString(idx++, locationIdMap .get(node));
+			ps.setString(idx++, node.getClassCanonicalName()+"_"+node.getLineNumber());
 			ps.setString(idx++, generateXmlContent(node.getReadVariables()));
 			ps.setString(idx++, generateXmlContent(node.getWrittenVariables()));
 			ps.addBatch();
@@ -152,19 +149,19 @@ public class TraceRecorder01 extends SqliteServer {
 		}
 	}
 	
-	private Map<TraceNode, String> insertLocation(String traceId, List<TraceNode> nodes, Connection conn,
+	private void insertLocation(String traceId, List<TraceNode> nodes, Connection conn,
 			List<AutoCloseable> closables) throws SQLException {
-		String sql = "INSERT INTO Location (location_id,trace_id, class_name, line_number, is_conditional, is_return) "
+		String sql = "INSERT or ignore INTO Location (location_id,trace_id, class_name, line_number, is_conditional, is_return) "
 				+ "VALUES (?,?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		int count = 0;
+		HashSet<BreakPoint> set =getLoactionSet(nodes);
 		List<String> ids = new ArrayList<>();
-		for (TraceNode node : nodes) {
-			BreakPoint location = node.getBreakPoint();
+		for (BreakPoint location : set) {
 			int idx = 1;
 			String locationId=getUUID();
-			ps.setString(idx++, locationId);
+			ps.setString(idx++, location.getDeclaringCompilationUnitName()+"_"+location.getLineNumber());
 			ps.setString(idx++, traceId);
 			ps.setString(idx++, location.getDeclaringCompilationUnitName());
 			ps.setInt(idx++, location.getLineNumber());
@@ -181,17 +178,19 @@ public class TraceRecorder01 extends SqliteServer {
 			ps.executeBatch();
 		}
 
-		if (ids.size() != nodes.size()) {
+		if (ids.size() != set.size()) {
 			throw new SQLException("Number of locations is incorrect!");
-		}
-		Map<TraceNode, String> result = new HashMap<>();
-		for (int i = 0; i < nodes.size(); i++) {
-			String locId = ids.get(i);
-			result.put(nodes.get(i), locId);
 		}
 		//insertControlScope(traceId, result, conn, closables);
 		//insertLoopScope(traceId, result, conn, closables);
-		return result;
+	}
+	
+	private HashSet<BreakPoint> getLoactionSet(List<TraceNode> list) {
+		HashSet<BreakPoint> set= new HashSet<>();
+		for(TraceNode node:list) {
+			set.add(node.getBreakPoint());
+		}
+		return set;
 	}
 
 	protected String generateXmlContent(Collection<VarValue> varValues) {

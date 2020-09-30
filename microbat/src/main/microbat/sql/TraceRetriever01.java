@@ -130,6 +130,7 @@ public class TraceRetriever01 extends SqliteServer {
 
 	private List<TraceNode> loadSteps(String traceId, Connection conn, List<AutoCloseable> closables, Trace trace) 
 			throws SQLException {
+		
 		PreparedStatement ps = conn.prepareStatement("SELECT s.* FROM Step s WHERE s.trace_id=?");
 		ps.setString(1, traceId);
 		ResultSet rs = ps.executeQuery();
@@ -140,7 +141,7 @@ public class TraceRetriever01 extends SqliteServer {
 		for (int i = 0; i < total; i++) {
 			allSteps.add(new TraceNode(null, null, i + 1, trace));
 		}
-		Map<String, TraceNode> locationIdMap = new HashMap<>();
+		Map<String, List<TraceNode>> locationIdMap = new HashMap<>();
 		while (rs.next()) {
 			// step order
 			int order = rs.getInt("step_order");
@@ -148,6 +149,7 @@ public class TraceRetriever01 extends SqliteServer {
 				throw new SQLException("Detect invalid step order in result set!");
 			}
 			TraceNode step = allSteps.get(order - 1);
+			
 			step.setOrder(order);
 			// control_dominator
 			TraceNode controlDominator = getRelNode(allSteps, rs, "control_dominator");
@@ -179,8 +181,18 @@ public class TraceRetriever01 extends SqliteServer {
 			if (loopParent != null) {
 				loopParent.addLoopChild(step);
 			}
+			
 			// location_id
-			locationIdMap.put(rs.getString("location_id"), step);
+			String locID=rs.getString("location_id");
+			List<TraceNode> list=null;
+			if (locationIdMap.containsKey(locID)) {
+				list=locationIdMap.get(locID);		
+			}else {
+				list=new ArrayList<>();			
+			}
+			list.add(step);
+			locationIdMap.put(locID,list);
+
 			String loadVarStep = "read_vars";
 			try {
 				// read_vars
@@ -195,7 +207,7 @@ public class TraceRetriever01 extends SqliteServer {
 		}
 		rs.close();
 		ps.close();
-		loadLocations(locationIdMap, conn, closables);
+		loadLocations(locationIdMap, conn, closables);		
 		return allSteps;
 	}
 	
@@ -214,9 +226,9 @@ public class TraceRetriever01 extends SqliteServer {
 		return rs.getInt(1);
 	}
 
-	private void loadLocations(Map<String, TraceNode> locIdStepMap, Connection conn, List<AutoCloseable> closables) throws SQLException {
+	private void loadLocations(Map<String, List<TraceNode>> locIdStepMap, Connection conn, List<AutoCloseable> closables) throws SQLException {
 		if (locIdStepMap.isEmpty()) {
-			return;
+			return ;
 		}
 		Set<String> locationSet = locIdStepMap.keySet();
 		String matchList = StringUtils.joinWithApostrophe(locationSet, ",");
@@ -233,18 +245,20 @@ public class TraceRetriever01 extends SqliteServer {
 		closables.add(rs);
 		while(rs.next()) {
 			String locId = rs.getString("location_id");
-			TraceNode node = locIdStepMap.get(locId);
 			String className = rs.getString("class_name");
 			int lineNo = rs.getInt("line_number");
 			BreakPoint bkp = new BreakPoint(className, className, lineNo);
 			bkp.setConditional(rs.getBoolean("is_conditional"));
 			bkp.setReturnStatement(rs.getBoolean("is_return"));
+			
+			List<TraceNode>nodes=locIdStepMap.get(locId);
+			for(TraceNode node :nodes) {
+				node.setBreakPoint(bkp);
+			}		
 //			bkp.setControlScope(controlScopeMap.get(locId));
 //			bkp.setLoopScope(loopScopeMap.get(locId));
-			node.setBreakPoint(bkp);
 		}
 		ps.close();
-		rs.close();
 	}
 	protected List<VarValue> toVarValue(String xmlContent) {
 //		xmlContent = xmlContent.replace("&#", "#");
