@@ -100,7 +100,7 @@ public class TraceRecorder01 extends SqliteServer {
 			setNodeOrder(ps, idx++, node.getStepOverNext());
 			setNodeOrder(ps, idx++, node.getInvocationParent());
 			setNodeOrder(ps, idx++, node.getLoopParent());
-			ps.setString(idx++, node.getClassCanonicalName()+"_"+node.getLineNumber());
+			ps.setString(idx++, node.getDeclaringCompilationUnitName()+"_"+node.getLineNumber());
 			ps.setString(idx++, generateXmlContent(node.getReadVariables()));
 			ps.setString(idx++, generateXmlContent(node.getWrittenVariables()));
 			ps.addBatch();
@@ -151,7 +151,7 @@ public class TraceRecorder01 extends SqliteServer {
 	
 	private void insertLocation(String traceId, List<TraceNode> nodes, Connection conn,
 			List<AutoCloseable> closables) throws SQLException {
-		String sql = "INSERT or ignore INTO Location (location_id,trace_id, class_name, line_number, is_conditional, is_return) "
+		String sql = "INSERT INTO Location (location_id,trace_id, class_name, line_number, is_conditional, is_return) "
 				+ "VALUES (?,?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
@@ -161,7 +161,7 @@ public class TraceRecorder01 extends SqliteServer {
 		for (BreakPoint location : set) {
 			int idx = 1;
 			String locationId=getUUID();
-			ps.setString(idx++, location.getDeclaringCompilationUnitName()+"_"+location.getLineNumber());
+			ps.setString(idx++,location.getDeclaringCompilationUnitName()+"_"+location.getLineNumber());
 			ps.setString(idx++, traceId);
 			ps.setString(idx++, location.getDeclaringCompilationUnitName());
 			ps.setInt(idx++, location.getLineNumber());
