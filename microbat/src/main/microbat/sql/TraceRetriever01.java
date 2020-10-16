@@ -8,7 +8,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,9 +15,6 @@ import java.util.Set;
 
 import microbat.handler.xml.VarValueXmlReader;
 import microbat.model.BreakPoint;
-import microbat.model.ClassLocation;
-import microbat.model.ControlScope;
-import microbat.model.SourceScope;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -130,13 +126,13 @@ public class TraceRetriever01 extends SqliteServer {
 
 	private List<TraceNode> loadSteps(String traceId, Connection conn, List<AutoCloseable> closables, Trace trace) 
 			throws SQLException {
-		
 		PreparedStatement ps = conn.prepareStatement("SELECT s.* FROM Step s WHERE s.trace_id=?");
 		ps.setString(1, traceId);
 		ResultSet rs = ps.executeQuery();
 		closables.add(ps);
 		closables.add(rs);		
 		int total = countNumberOfStep(traceId,conn,closables);
+		long a =System.currentTimeMillis();
 		List<TraceNode> allSteps = new ArrayList<>(total);
 		for (int i = 0; i < total; i++) {
 			allSteps.add(new TraceNode(null, null, i + 1, trace));
@@ -207,6 +203,8 @@ public class TraceRetriever01 extends SqliteServer {
 		}
 		rs.close();
 		ps.close();
+		long b =System.currentTimeMillis();
+		System.out.println("fill step "+(b-a));
 		loadLocations(locationIdMap, conn, closables);		
 		return allSteps;
 	}

@@ -483,8 +483,7 @@ public class MicroBatUtil {
 				.toString();
 	}
 	public static String getSQLFolder() {
-		return new StringBuilder(IResourceUtils.getEclipseRootDir())
-				.toString();
+		return new StringBuilder(IResourceUtils.getEclipseRootDir()).toString();
 	}
 	
 	public static String generateTraceDir(String projectName, String bugID) {

@@ -187,3 +187,4 @@ Export-Package: microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,or
  org.apache.bcel;uses:="org.apache.bcel.classfile,org.apache.bcel.util",
  org.apache.bcel.classfile,
  org.apache.bcel.generic
+Import-Package: microbat.trace

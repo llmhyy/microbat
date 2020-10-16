@@ -15,6 +15,8 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
+import com.mysql.jdbc.DatabaseMetaDataUsingInfoSchema;
+
 import microbat.agent.TraceAgentRunner;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.AgentParams.LogType;
@@ -26,6 +28,7 @@ import microbat.model.ClassLocation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.preference.DatabasePreference;
 import microbat.preference.ExecutionRangePreference;
 import microbat.preference.MicrobatPreference;
 import microbat.util.JavaUtil;
@@ -170,7 +173,7 @@ public class InstrumentationExecutor {
 //			agentRunner.getConfig().setDebug(true);
 //			agentRunner.getConfig().setPort(8888);
 			agentRunner.addAgentParam(AgentParams.OPT_EXPECTED_STEP, info.getStepNum());
-			agentRunner.runWithDumpFileOption(traceExecFilePath);
+			agentRunner.run(DatabasePreference.getReader());
 			// agentRunner.runWithSocket();
 			RunningInfo result = agentRunner.getRunningInfo();
 //			System.out.println(result);
