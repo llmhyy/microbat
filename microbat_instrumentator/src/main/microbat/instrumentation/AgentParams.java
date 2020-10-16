@@ -9,6 +9,7 @@ import java.util.Set;
 import microbat.instrumentation.filter.CodeRangeEntry;
 import microbat.instrumentation.instr.instruction.info.EntryPoint;
 import microbat.instrumentation.utils.FileUtils;
+import microbat.sql.TraceRecorder;
 import sav.common.core.utils.CollectionUtils;
 import sav.common.core.utils.StringUtils;
 import sav.strategies.dto.AppJavaClassPath;
@@ -40,6 +41,7 @@ public class AgentParams extends CommonParams {
 	public static final String OPT_REQUIRE_METHOD_SPLITTING = "require_method_split";
 	public static final String OPT_AVOID_TO_STRING_OF_PROXY_OBJ = "avoid_proxy_tostring";
 	public static final String OPT_CODE_RANGE = "code_range";
+	public static final String OPT_TRACE_RECORDER = "trace_recorder";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -58,6 +60,7 @@ public class AgentParams extends CommonParams {
 	private boolean requireMethodSplit;
 	private boolean avoidProxyToString;
 	private List<CodeRangeEntry> codeRanges;
+	private String recorderName;
 	
 	public AgentParams(CommandLine cmd) {
 		super(cmd);
@@ -66,8 +69,7 @@ public class AgentParams extends CommonParams {
 		if (entryPointStr != null) {
 			int idx = entryPointStr.lastIndexOf(".");
 			String mainClass = entryPointStr.substring(0, idx);
-			String mainMethod = entryPointStr.substring(idx + 1);
-			
+			String mainMethod = entryPointStr.substring(idx + 1);	
 			EntryPoint entryPoint = new EntryPoint(mainClass, mainMethod);
 			this.entryPoint = entryPoint;
 		}
@@ -93,6 +95,7 @@ public class AgentParams extends CommonParams {
 		requireMethodSplit = cmd.getBoolean(OPT_REQUIRE_METHOD_SPLITTING, false);
 		avoidProxyToString = cmd.getBoolean(OPT_AVOID_TO_STRING_OF_PROXY_OBJ, false);
 		codeRanges = CodeRangeEntry.parse(cmd.getStringList(OPT_CODE_RANGE));
+		recorderName = cmd.getString(OPT_TRACE_RECORDER);
 	}
 
 	public static AgentParams initFrom(CommandLine cmd) {
@@ -188,7 +191,9 @@ public class AgentParams extends CommonParams {
 	public boolean isAvoidProxyToString() {
 		return avoidProxyToString;
 	}
-	
+	public String getTraceRecorderName() {
+		return recorderName;
+	}
 	public AppJavaClassPath initAppClassPath() {
 		return initAppClassPath(getLaunchClass(), getJavaHome(), getClassPaths(), getWorkingDirectory());
 	}

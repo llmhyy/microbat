@@ -166,7 +166,7 @@ public class MicroBatUtil {
 		 * setting java agent lib 
 		 */	
 		String agentLib = junitDir + File.separator + "instrumentator.jar";
-		File jar = new File("agentLib");
+		File jar = new File(agentLib);
 		//if none  instrumentator.jar under the eclispe root
 		if (!jar.exists()) {
 			//find features installed in eclispe
@@ -481,6 +481,9 @@ public class MicroBatUtil {
 	public static String getTraceFolder() {
 		return new StringBuilder(IResourceUtils.getEclipseRootDir()).append(File.separator).append("trace")
 				.toString();
+	}
+	public static String getSQLFolder() {
+		return new StringBuilder(IResourceUtils.getEclipseRootDir()).toString();
 	}
 	
 	public static String generateTraceDir(String projectName, String bugID) {

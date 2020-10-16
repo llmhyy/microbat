@@ -87,6 +87,8 @@ public class JarPackageTool {
 			.append("-C").append(BASE_DIR)
 			.append("lib/mysql-connector-java-5.1.44-bin.jar")
 			.append("-C").append(BASE_DIR)
+			.append("lib/sqlite-jdbc-3.32.3.2.jar")
+			.append("-C").append(BASE_DIR)
 			.append("lib/slf4j-api-1.7.12.jar");
 		vmRunner.startAndWaitUntilStop(cmd.toCollection());	
 		

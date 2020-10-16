@@ -14,6 +14,8 @@ import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.output.TraceOutputReader;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
+import microbat.preference.DatabasePreference;
+import microbat.trace.Reader;
 import sav.common.core.SavException;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.CollectionBuilder;
@@ -36,20 +38,20 @@ public class TraceAgentRunner extends AgentVmRunner {
 	private String testFailureMessage;
 	private VMConfiguration config;
 	private boolean enableSettingHeapSize = true;
-	
+
 	public TraceAgentRunner(String agentJar, VMConfiguration vmConfig) {
 		super(agentJar, AgentConstants.AGENT_OPTION_SEPARATOR, AgentConstants.AGENT_PARAMS_SEPARATOR);
 		this.setConfig(vmConfig);
 	}
-	
+
 	@Override
 	protected void buildVmOption(CollectionBuilder<String, ?> builder, VMConfiguration config) {
 		builder.appendIf("-Xmx30g", enableSettingHeapSize);
-//		builder.appendIf("-Xmn10g", enableSettingHeapSize);
+		// builder.appendIf("-Xmn10g", enableSettingHeapSize);
 		builder.appendIf("-XX:+UseG1GC", enableSettingHeapSize);
 		super.buildVmOption(builder, config);
 	}
-	
+
 	public boolean precheck(String filePath) throws SavException {
 		isPrecheckMode = true;
 		try {
@@ -63,7 +65,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 			} else {
 				dumpFile = FileUtils.getFileCreateIfNotExist(filePath);
 			}
-			
+
 			String dumpFilePath = dumpFile.getPath();
 			System.out.println("Precheck dumpfile: " + dumpFilePath);
 			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFilePath));
@@ -71,7 +73,6 @@ public class TraceAgentRunner extends AgentVmRunner {
 			if (this.isProcessTimeout()) {
 				return false;
 			}
-			System.out.println();
 			/* collect result */
 			precheckInfo = PrecheckInfo.readFromFile(dumpFilePath);
 			updateTestResult(precheckInfo.getProgramMsg());
@@ -87,7 +88,41 @@ public class TraceAgentRunner extends AgentVmRunner {
 		}
 		return true;
 	}
-	
+
+	public boolean run(Reader reader) throws SavException {
+		isPrecheckMode = false;
+		StopTimer timer = new StopTimer("Building trace");
+		timer.newPoint("Execution");
+		File dumpFile;
+		try {
+			boolean toDeleteDumpFile = false;
+			switch (reader) {
+			case FILE:
+				dumpFile = File.createTempFile("trace", ".exec");
+				dumpFile.deleteOnExit();
+				break;
+			default:
+				dumpFile = DatabasePreference.getDBFile();
+				break;
+			}
+			addAgentParam(AgentParams.OPT_TRACE_RECORDER, reader.name());
+			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFile.getPath()));
+			super.startAndWaitUntilStop(getConfig());
+			System.out.println("|");
+			timer.newPoint("Read output result");
+			runningInfo = reader.create().Read(precheckInfo,dumpFile.getPath());
+			updateTestResult(runningInfo.getProgramMsg());
+			if (toDeleteDumpFile) {
+				dumpFile.delete();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new SavRtException(e);
+		}
+		System.out.println(timer.getResultString());
+		return true;
+	}
+
 	public boolean runWithDumpFileOption(String filePath) throws SavException {
 		isPrecheckMode = false;
 		StopTimer timer = new StopTimer("Building trace");
@@ -101,11 +136,9 @@ public class TraceAgentRunner extends AgentVmRunner {
 			} else {
 				dumpFile = FileUtils.getFileCreateIfNotExist(filePath);
 			}
-			System.out.println("Trace dumpfile: " + dumpFile.getPath());
 			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFile.getPath()));
 			super.startAndWaitUntilStop(getConfig());
 			System.out.println("|");
-//			System.out.println(super.getCommandLinesString(config));
 			timer.newPoint("Read output result");
 			runningInfo = RunningInfo.readFromFile(dumpFile);
 			updateTestResult(runningInfo.getProgramMsg());
@@ -115,7 +148,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new SavRtException(e);
-		} 
+		}
 		System.out.println(timer.getResultString());
 		return true;
 	}
@@ -131,7 +164,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 			throw new SavRtException(e);
 		}
 		super.startVm(getConfig());
-//		System.out.println(super.getCommandLinesString(config));
+		// System.out.println(super.getCommandLinesString(config));
 		TraceOutputReader reader = null;
 		try {
 			Socket client = serverSocket.accept();
@@ -154,7 +187,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 		}
 		return true;
 	}
-	
+
 	@Override
 	protected void printOut(String line, boolean error) {
 		if (line.startsWith(AgentConstants.PROGRESS_HEADER)) {
@@ -164,7 +197,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 			System.out.println(line);
 		}
 	};
-	
+
 	private void printProgress(int size, int stepNum) {
 		double progress = ((double) size) / stepNum;
 
@@ -201,7 +234,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 		}
 		int sIdx = msg.indexOf(";");
 		isTestSuccessful = Boolean.valueOf(msg.substring(0, sIdx));
-		testFailureMessage = msg.substring(sIdx + 1, msg.length()); 
+		testFailureMessage = msg.substring(sIdx + 1, msg.length());
 	}
 
 	public boolean isTestSuccessful() {
@@ -218,26 +251,26 @@ public class TraceAgentRunner extends AgentVmRunner {
 		}
 		return runningInfo.getTrace();
 	}
-	
+
 	public RunningInfo getRunningInfo() {
 		return runningInfo;
 	}
-	
+
 	public PrecheckInfo getPrecheckInfo() {
 		if (!isPrecheckMode) {
 			throw new UnsupportedOperationException("TraceAgent has not been run in precheck mode!");
 		}
 		return precheckInfo;
 	}
-	
+
 	public void setVmConfig(VMConfiguration config) {
 		this.setConfig(config);
 	}
-	
+
 	public boolean isUnknownTestResult() {
 		return unknownTestResult;
 	}
-	
+
 	public void addAgentParams(String opt, Collection<?> values) {
 		super.addAgentParam(opt, StringUtils.join(values, AgentConstants.AGENT_PARAMS_MULTI_VALUE_SEPARATOR));
 	}
@@ -245,11 +278,11 @@ public class TraceAgentRunner extends AgentVmRunner {
 	public void addIncludesParam(List<String> includeLibs) {
 		addFilterParam(includeLibs, AgentParams.OPT_INCLUDES_FILE, AgentParams.OPT_INCLUDES, "includes");
 	}
-	
+
 	public void addExcludesParam(List<String> excludeLibs) {
 		addFilterParam(excludeLibs, AgentParams.OPT_EXCLUDES_FILE, AgentParams.OPT_EXCLUDES, "excludes");
 	}
-	
+
 	public void addFilterParam(List<String> filterLibs, String fileOpt, String opt, String filterType) {
 		if (filterLibs.size() > 10 && allowFilterFileOpt) {
 			File filterFile;

@@ -1,5 +1,6 @@
 package microbat.instrumentation;
 
+import java.io.File;
 import java.lang.instrument.Instrumentation;
 
 import microbat.instrumentation.filter.CodeRangeUserFilter;
@@ -11,10 +12,14 @@ import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.instrumentation.output.tcp.TcpConnector;
 import microbat.instrumentation.runtime.ExecutionTracer;
 import microbat.instrumentation.runtime.IExecutionTracer;
+import microbat.instrumentation.utils.FileUtils;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.sql.Recorder;
+import microbat.sql.SqliteRecorder;
+
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -71,15 +76,19 @@ public class TraceAgent implements IAgent {
 		AgentLogger.debug("construct ControlDomianceRelation....");
 		trace.constructControlDomianceRelation();
 		t2 = System.currentTimeMillis();
-		AgentLogger.debug("time for constructControlDomianceRelation: "  + (t2-t1)/1000);
+	
 //		trace.constructLoopParentRelation();
 		timer.newPoint("Saving trace");
-		writeOutput(trace);
+		t1 = System.currentTimeMillis();
+		Recorder.create(agentParams).store(trace);
+		t2 = System.currentTimeMillis();
+
 		AgentLogger.debug(timer.getResultString());
 	}
 
 	private void writeOutput(Trace trace) throws Exception {
 		AgentLogger.debug("Saving trace...");
+		
 		if (agentParams.getDumpFile() != null) {
 			RunningInfo result = new RunningInfo();
 			result.setProgramMsg(Agent.getProgramMsg());
@@ -98,8 +107,6 @@ public class TraceAgent implements IAgent {
 			tcpConnector.close();
 		} 
 		
-//			TraceRecorder traceRecorder = new TraceRecorder();
-//			traceRecorder.storeTrace(trace );
 		AgentLogger.debug("Trace saved.");
 	}
 	

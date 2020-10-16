@@ -52,7 +52,27 @@ public class StringUtils {
 		}
 		return str;
 	}
-
+	public static String joinWithApostrophe(Collection<?> vals, String separator) {
+		if (vals == null || vals.isEmpty()) {
+			return EMPTY;
+		}
+		StringBuilder varSb = new StringBuilder();
+		int i = 0;
+		for (Object val : vals) {
+			i ++;
+			if (val != null) {
+				varSb.append("'"+val.toString()+"'");
+				if (i != vals.size()) {
+					varSb.append(separator);
+				}
+			}
+		}
+		String str = varSb.toString();
+		if (str.endsWith(separator)) {
+			return str.substring(0, str.length() - separator.length());
+		}
+		return str;
+	}
 	public static String join(String separator, Object... params) {
 		return join(Arrays.asList(params), separator);
 	}
