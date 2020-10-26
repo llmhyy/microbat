@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.LocalVariable;
@@ -934,7 +935,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			
 			VarValue value = appendVarValue(varValue, var, null);
 			addRWriteValue(trace.getLatestNode(), value, false);
-			
+//			System.currentTimeMillis();
 			addHeuristicVarChildren(trace.getLatestNode(), value, false);
 			
 //			TraceNode currentNode = trace.getLatestNode();
@@ -1089,7 +1090,20 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 					return;
 				}
 			}
-		} else if (value instanceof ArrayValue) {
+		} 
+		else if (Stack.class.getName().equals(value.getRuntimeType())) {
+			/**
+			 * TODO for Xuezhi extend stack content here.
+			 */
+			for (VarValue child : value.getChildren()) {
+				if ("elementData".equals(child.getVarName())) {
+					addHeuristicVarChildren(latestNode, child, isWritten);
+					return;
+				}
+			}
+		}
+		
+		else if (value instanceof ArrayValue) {
 			Collection<VarValue> nodeReadVars = trace.getLatestNode().getReadVariables();
 			if (value.getChildren().size() > nodeReadVars.size()) {
 				((ArrayList<?>)nodeReadVars).ensureCapacity(nodeReadVars.size() + value.getChildren().size());
@@ -1106,6 +1120,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				}
 			}
 		} 
+		
 	}
 
 	/**

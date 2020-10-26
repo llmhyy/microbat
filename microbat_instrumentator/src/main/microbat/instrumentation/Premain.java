@@ -46,6 +46,11 @@ public class Premain {
 		debug("after retransform");
 	}
 
+	/**
+	 * see the tutorial for bootstrap classloader at: https://www.baeldung.com/java-classloaders
+	 * @param inst
+	 * @throws Exception
+	 */
 	private static void installBootstrap(Instrumentation inst) throws Exception {
 		debug("install jar to boostrap...");
 		File tempFolder = FileUtils.createTempFolder("microbat");
