@@ -6,4 +6,5 @@ public class ExecutionTracerStore extends TracerStore<ExecutionTracer> {
 	protected ExecutionTracer initTracer(long threadId) {
 		return new ExecutionTracer(threadId);
 	}
+
 }

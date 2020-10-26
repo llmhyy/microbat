@@ -1,7 +1,7 @@
 package microbat.instrumentation;
 
-import java.io.File;
 import java.lang.instrument.Instrumentation;
+import java.util.List;
 
 import microbat.instrumentation.filter.CodeRangeUserFilter;
 import microbat.instrumentation.filter.GlobalFilterChecker;
@@ -12,14 +12,11 @@ import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.instrumentation.output.tcp.TcpConnector;
 import microbat.instrumentation.runtime.ExecutionTracer;
 import microbat.instrumentation.runtime.IExecutionTracer;
-import microbat.instrumentation.utils.FileUtils;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.sql.Recorder;
-import microbat.sql.SqliteRecorder;
-
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -59,6 +56,10 @@ public class TraceAgent implements IAgent {
 		timer.newPoint("Building trace dependencies");
 		// FIXME -mutithread LINYUN [3]
 		// LLT: only trace of main thread is recorded.
+		List<IExecutionTracer> tracers = ExecutionTracer.getAllThreadStore();
+		
+		System.currentTimeMillis();
+		
 		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
 	
 		Trace trace = ((ExecutionTracer) tracer).getTrace();

@@ -1206,8 +1206,9 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			 */
 			ExecutionTracer tracer = rtStore.get(threadId);
 			if (tracer == null) {
-				lockedThreads.remove(threadId);
-				return EmptyExecutionTracer.getInstance();
+				tracer = rtStore.get(threadId);
+//				lockedThreads.remove(threadId);
+//				return EmptyExecutionTracer.getInstance();
 			}
 			tracer.enterMethod(className, methodSig, methodStartLine, methodEndLine, paramTypeSignsCode, paramNamesCode, params);
 			lockedThreads.remove(threadId);
@@ -1220,6 +1221,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	
 	public static IExecutionTracer getMainThreadStore() {
 		return rtStore.getMainThreadTracer();
+	}
+	
+	public static List<IExecutionTracer> getAllThreadStore() {
+		return rtStore.getAllThreadTracer();
 	}
 	
 	public static synchronized IExecutionTracer getCurrentThreadStore() {
