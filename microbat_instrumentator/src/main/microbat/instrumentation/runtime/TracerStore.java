@@ -1,5 +1,8 @@
 package microbat.instrumentation.runtime;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author LLT
  * This class is supposed to keep at very basic, NOT use or trigger ANY other liberay function even in jdk,
@@ -17,9 +20,9 @@ public abstract class TracerStore<T extends ITracer> {
 	public synchronized T get(long threadId) {
 		// FIXME -mutithread LINYUN [2]
 		// LLT: this is where we disable recording other threads not the main one
-		if (threadId != mainThreadId) {
-			return null; // for now, only recording trace for main thread.
-		}
+//		if (threadId != mainThreadId) {
+//			return null; // for now, only recording trace for main thread.
+//		}
 		
 		int i = 0;
 		while(i <= lastUsedIdx) {
@@ -46,5 +49,16 @@ public abstract class TracerStore<T extends ITracer> {
 	
 	public long getMainThreadId() {
 		return mainThreadId;
+	}
+	
+	public List<IExecutionTracer> getAllThreadTracer() {
+		List<IExecutionTracer> traces = new ArrayList<>();
+		for(int i=0; i<rtStore.length; i++) {
+			if(rtStore[i] != null) {
+				traces.add((IExecutionTracer) rtStore[i]);
+			}
+		}
+		
+		return traces;
 	}
 }

@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 
 import microbat.instrumentation.AgentLogger;
 import sav.common.core.utils.CollectionUtils;
@@ -252,6 +253,17 @@ public class HeuristicIgnoringFieldRule {
 				AgentLogger.error(e);
 			}
 		} 
+		
+		if(Vector.class.isAssignableFrom(objClass)) {
+			Field field;
+			try {
+				field = Vector.class.getDeclaredField("elementData");
+				validFields.add(field);
+			} catch (Exception e) {
+				AgentLogger.error(e);
+			}
+		}
+		
 		return validFields;
 	}
 
