@@ -73,14 +73,16 @@ public class VarValueXmlReader {
 			/* variable */
 			Variable variable = parseVariable((Element)valueEle.getElementsByTagName(VARIABLE_TAG).item(0));
 			/* value */
+			long unqiueID = getLongProperty(valueEle, VALUE_REF_UNIQUE_ID_PROP);
 			String valueEleId = getAttribute(valueEle, VALUE_ID_ATT);
 			boolean isRoot = getBooleanAttribute(valueEle, VALUE_IS_ROOT_ATT);
 			String varType = getAttribute(valueEle, VALUE_VAR_TYPE_ATT);
 			String stringVal = getStringValueProperty(valueEle);
 			boolean isArray = getBooleanProperty(valueEle, VALUE_IS_ARRAY_PROP);
+			
 			VarValue value = null;
 			if (varType == null) {
-				value = new VirtualValue(isRoot, variable);
+				value = new VirtualValue(isRoot, variable, unqiueID);
 				value.setStringValue(stringVal);
 			} else if (StringValue.TYPE.equals(varType)) {
 				value = new StringValue(stringVal, isRoot, variable);

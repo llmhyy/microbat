@@ -159,5 +159,10 @@ public class ReferenceValue extends VarValue {
 	public void setNull(boolean isNull) {
 		this.isNull = isNull;
 	}
+
+	@Override
+	public String getHeapID() {
+		return String.valueOf(uniqueID);
+	}
 	
 }

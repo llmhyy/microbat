@@ -6,9 +6,12 @@ import microbat.model.variable.VirtualVar;
 public class VirtualValue extends VarValue {
 	private static final long serialVersionUID = 8295559919201412983L;
 
-	public VirtualValue(boolean isRoot, Variable variable) {
+	private long uniqueId;
+	
+	public VirtualValue(boolean isRoot, Variable variable, long uniqueID) {
 		this.isRoot = isRoot;
 		this.variable = variable;
+		this.uniqueId = uniqueID;
 	}
 	
 	@Override
@@ -33,7 +36,12 @@ public class VirtualValue extends VarValue {
 
 	@Override
 	public VarValue clone() {
-		VirtualValue clonedValue = new VirtualValue(isRoot, variable.clone());
+		VirtualValue clonedValue = new VirtualValue(isRoot, variable.clone(), this.uniqueId);
 		return clonedValue;
+	}
+	
+	@Override
+	public String getHeapID() {
+		return String.valueOf(uniqueId);
 	}
 }

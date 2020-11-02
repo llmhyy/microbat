@@ -2017,7 +2017,13 @@ public class ProgramExecutor extends Executor {
 					int count = 0;
 					for(VarValue readVar: node.getReadVariables()){
 						VirtualVar virVar = new VirtualVar(varName+(count++), "return type");
-						VirtualValue virValue = new VirtualValue(false, virVar);
+						
+						Long uniqueID = -1l;
+						if(readVar instanceof ReferenceValue) {
+							uniqueID = ((ReferenceValue)readVar).getUniqueID();
+						}
+						
+						VirtualValue virValue = new VirtualValue(false, virVar, uniqueID);
 						virValue.setVarID(vID);
 						virValue.setStringValue(readVar.getStringValue());
 						node.addReturnVariable(virValue);
@@ -2028,7 +2034,7 @@ public class ProgramExecutor extends Executor {
 							|| expr instanceof StringLiteral || expr instanceof TypeLiteral 
 							|| expr instanceof BooleanLiteral || expr instanceof CharacterLiteral) {
 						Variable vVar = new VirtualVar(varName, "return type");
-						VirtualValue virValue = new VirtualValue(false, vVar);
+						VirtualValue virValue = new VirtualValue(false, vVar, -1l);
 						virValue.setVarID(vID);
 						virValue.setStringValue(exprString);
 						node.addReturnVariable(virValue);

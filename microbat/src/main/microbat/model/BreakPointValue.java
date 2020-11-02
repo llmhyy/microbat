@@ -147,4 +147,10 @@ public class BreakPointValue extends VarValue {
 	public BreakPointValue clone(){
 		return this;
 	}
+
+	@Override
+	public String getHeapID() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
