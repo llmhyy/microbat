@@ -57,9 +57,11 @@ public class TraceNode{
 //	private List<VarValue> hiddenReadVariables = new ArrayList<>();
 //	private List<VarValue> hiddenWrittenVariables = new ArrayList<>();
 	
-//	private Map<TraceNode, List<String>> dataDominators = new HashMap<>();
-//	private Map<TraceNode, List<String>> dataDominatees = new HashMap<>();
+	//TODO Xuezhi, we need to comment out those two varaibles, they should be calculated on real time.
+	private Map<TraceNode, List<String>> dataDominators = new HashMap<>();
+	private Map<TraceNode, List<String>> dataDominatees = new HashMap<>();
 	
+	//TODO Xuezhi, we need to comment out those two varaibles, they should be calculated on real time.
 	private TraceNode controlDominator;
 	private List<TraceNode> controlDominatees = new ArrayList<>();
 	
@@ -486,6 +488,7 @@ public class TraceNode{
 		return dataDominators;
 	}
 
+	//TODO
 	public Map<TraceNode, VarValue> getDataDominatee() {
 		Map<TraceNode, VarValue> dataDominatees = new HashMap<>();
 		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
@@ -501,25 +504,27 @@ public class TraceNode{
 		return dataDominatees;
 	}
 
-//	public void addDataDominator(TraceNode node, List<String> variables){
-//		List<String> varIDs = this.dataDominators.get(node);
-//		if(varIDs == null){
-//			this.dataDominators.put(node, variables);
-//		}
-//		else{
-//			varIDs.addAll(variables);
-//		}
-//	}
-//	
-//	public void addDataDominatee(TraceNode node, List<String> variables){
-//		List<String> varIDs = this.dataDominatees.get(node);
-//		if(varIDs == null){
-//			this.dataDominatees.put(node, variables);
-//		}
-//		else{
-//			varIDs.addAll(variables);
-//		}
-//	}
+	//TODO
+	public void addDataDominator(TraceNode node, List<String> variables){
+		List<String> varIDs = this.dataDominators.get(node);
+		if(varIDs == null){
+			this.dataDominators.put(node, variables);
+		}
+		else{
+			varIDs.addAll(variables);
+		}
+	}
+	
+	//TODO
+	public void addDataDominatee(TraceNode node, List<String> variables){
+		List<String> varIDs = this.dataDominatees.get(node);
+		if(varIDs == null){
+			this.dataDominatees.put(node, variables);
+		}
+		else{
+			varIDs.addAll(variables);
+		}
+	}
 
 	public boolean isException() {
 		return isException;
@@ -541,14 +546,6 @@ public class TraceNode{
 		this.readVariables.add(var);
 	}
 	
-//	public void addHiddenReadVariable(VarValue var){
-//		this.hiddenReadVariables.add(var);
-//	}
-//	
-//	public void addHiddenWrittenVariable(VarValue var){
-//		this.hiddenWrittenVariables.add(var);
-//	}
-
 	public List<VarValue> getWrittenVariables() {
 		return writtenVariables;
 	}
@@ -639,6 +636,7 @@ public class TraceNode{
 		
 	}
 	
+	//TODO
 	public Map<Integer, TraceNode> findAllDominatees() {
 		Map<Integer, TraceNode> dominatees = new HashMap<>();
 		
@@ -647,6 +645,7 @@ public class TraceNode{
 		return dominatees;
 	}
 
+	//TODO
 	private void findDominatees(TraceNode node, Map<Integer, TraceNode> dominatees) {
 		for(TraceNode dominatee: node.getDataDominatee().keySet()){
 			if(!dominatees.containsKey(dominatee.getOrder())){
@@ -671,27 +670,15 @@ public class TraceNode{
 		}
 	}
 	
+	//TODO
 	public void setControlDominator(TraceNode controlDominator){
 		this.controlDominator = controlDominator;
 	}
 	
+	//TODO
 	public TraceNode getControlDominator(){
 		return this.controlDominator;
 	}
-
-//	public List<TraceNode> getControlDominators() {
-//		return controlDominators;
-//	}
-//
-//	public void setControlDominators(List<TraceNode> controlDominators) {
-//		this.controlDominators = controlDominators;
-//	}
-//	
-//	public void addControlDominator(TraceNode dominator){
-//		if(!this.controlDominators.contains(dominator)){
-//			this.controlDominators.add(dominator);
-//		}
-//	}
 
 	public List<TraceNode> getControlDominatees() {
 		return controlDominatees;

@@ -73,6 +73,7 @@ public class TraceAgent implements IAgent {
 		long t2 = System.currentTimeMillis();
 		AgentLogger.debug("time for createVirtualDataRelation: "  + (t2-t1)/1000);
 		
+		//TODO Xuezhi we need to comment the code to build control dependencies here.
 		t1 = System.currentTimeMillis();
 		AgentLogger.debug("construct ControlDomianceRelation....");
 		trace.constructControlDomianceRelation();
