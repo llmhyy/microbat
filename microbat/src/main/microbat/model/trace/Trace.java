@@ -18,6 +18,7 @@ import microbat.model.Scope;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
+import microbat.model.variable.VirtualVar;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 import sav.strategies.dto.AppJavaClassPath;
@@ -959,6 +960,35 @@ public class Trace {
 		if(!entry.getProducers().isEmpty()){
 			return entry.getProducers().get(0);
 		}
+		
+		return null;
+	}
+	
+	public TraceNode getProducer(VarValue varValue, TraceNode startNode) {
+		
+		String varID = Variable.truncateSimpleID(varValue.getVarID());
+		String headID = Variable.truncateSimpleID(varValue.getAliasVarID());
+		
+		for(int i=startNode.getOrder(); i>=0; i--) {
+			TraceNode node = this.getTraceNode(i);
+			for(VarValue writtenValue: node.getWrittenVariables()) {
+				
+				if(!(writtenValue.getVariable() instanceof VirtualVar)) {
+					String wVarID = Variable.truncateSimpleID(writtenValue.getVarID());
+					String wHeadID = Variable.truncateSimpleID(writtenValue.getAliasVarID());
+					
+					if(wVarID != null && wVarID.equals(varID)) {
+						return node;
+					}
+					
+					if(wHeadID != null && wHeadID.equals(headID)) {
+						return node;
+					}					
+				}
+				
+			}
+		}
+		
 		
 		return null;
 	}
