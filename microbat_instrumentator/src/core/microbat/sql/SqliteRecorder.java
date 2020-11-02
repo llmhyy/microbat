@@ -113,40 +113,41 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 			ps.executeBatch();
 		}
 	}
+	
 	//TODO value_string is not true instance
 	private void insertStepVariableRelation(Trace trace, String traceId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
-		String sql = "INSERT INTO StepVariableRelation (var_id,step_order,rw,value_string,trace_id) VALUES (?, ?, ?, ?,?)";
-		PreparedStatement ps = conn.prepareStatement(sql);
-		closables.add(ps);
-		int count = 0;
-		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {
-			for (TraceNode node : entry.getProducers()) {
-				int idx = 1;
-				ps.setString(idx++, entry.getVarID());
-				ps.setInt(idx++, node.getOrder());
-				ps.setInt(idx++, WRITE);
-				ps.setString(idx++, node.getWrittenVariables().toString());
-				ps.setString(idx++, traceId);
-				ps.addBatch();
-			}
-			for (TraceNode node : entry.getConsumers()) {
-				int idx = 1;
-				ps.setString(idx++, entry.getVarID());
-				ps.setInt(idx++, node.getOrder());
-				ps.setInt(idx++, READ);
-				ps.setString(idx++, node.getReadVariables().toString());
-				ps.setString(idx++, traceId);
-				ps.addBatch();
-			}
-			if (++count >= BATCH_SIZE) {
-				ps.executeBatch();
-				count = 0;
-			}
-		}
-		if (count > 0) {
-			ps.executeBatch();
-		}
+//		String sql = "INSERT INTO StepVariableRelation (var_id,step_order,rw,value_string,trace_id) VALUES (?, ?, ?, ?,?)";
+//		PreparedStatement ps = conn.prepareStatement(sql);
+//		closables.add(ps);
+//		int count = 0;
+//		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {
+//			for (TraceNode node : entry.getProducers()) {
+//				int idx = 1;
+//				ps.setString(idx++, entry.getVarID());
+//				ps.setInt(idx++, node.getOrder());
+//				ps.setInt(idx++, WRITE);
+//				ps.setString(idx++, node.getWrittenVariables().toString());
+//				ps.setString(idx++, traceId);
+//				ps.addBatch();
+//			}
+//			for (TraceNode node : entry.getConsumers()) {
+//				int idx = 1;
+//				ps.setString(idx++, entry.getVarID());
+//				ps.setInt(idx++, node.getOrder());
+//				ps.setInt(idx++, READ);
+//				ps.setString(idx++, node.getReadVariables().toString());
+//				ps.setString(idx++, traceId);
+//				ps.addBatch();
+//			}
+//			if (++count >= BATCH_SIZE) {
+//				ps.executeBatch();
+//				count = 0;
+//			}
+//		}
+//		if (count > 0) {
+//			ps.executeBatch();
+//		}
 	}
 	
 	private void insertLocation(String traceId, List<TraceNode> nodes, Connection conn,

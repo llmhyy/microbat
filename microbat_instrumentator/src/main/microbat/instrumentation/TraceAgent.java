@@ -138,46 +138,6 @@ public class TraceAgent implements IAgent {
 				}
 			}
 			
-			if(currentNode.getInvocationParent()!=null && !currentNode.getPassParameters().isEmpty()){
-				TraceNode invocationParent = currentNode.getInvocationParent();
-				TraceNode firstChild = invocationParent.getInvocationChildren().get(0);
-				if(firstChild.getOrder()==currentNode.getOrder()){
-					for(VarValue value: currentNode.getPassParameters()){
-						String varID = value.getVarID();
-						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
-						if(entry==null){
-							entry = new StepVariableRelationEntry(varID);
-						}
-						entry.addProducer(invocationParent);
-						trace.getStepVariableTable().put(varID, entry);
-					}
-				}
-			}
-			
-			if(currentNode.getInvocationParent()!=null && !currentNode.getReturnedVariables().isEmpty()){
-				TraceNode invocationParent = currentNode.getInvocationParent();
-				TraceNode returnStep = invocationParent.getStepOverNext();
-				
-				if(returnStep==null){
-					returnStep = currentNode.getStepInNext();
-				}
-				
-				if(returnStep!=null){
-					for(VarValue value: currentNode.getReturnedVariables()){
-						currentNode.addWrittenVariable(value);
-						returnStep.addReadVariable(value);
-						String varID = value.getVarID();
-						value.setVarID(varID);
-						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
-						if(entry==null){
-							entry = new StepVariableRelationEntry(varID);
-						}
-						entry.addProducer(currentNode);
-						entry.addConsumer(returnStep);
-						trace.getStepVariableTable().put(varID, entry);
-					}
-				}
-			}
 		}
 	}
 	

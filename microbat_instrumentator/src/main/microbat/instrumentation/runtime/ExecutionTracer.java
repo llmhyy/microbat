@@ -79,50 +79,50 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		trace = new Trace(appJavaClassPath);
 	}
 
-	private void buildDataRelation(TraceNode currentNode, VarValue value, String rw){
-		Variable var = value.getVariable();
-		if(currentNode==null){
-			return;
-		}
-		
-		String order = trace.findDefiningNodeOrder(rw, currentNode, var, VariableDefinitions.USE_LAST);
-		
-		if(order.equals("0")){
-			if(var instanceof FieldVar || var instanceof ArrayElementVar){
-				if(!value.getParents().isEmpty()){
-					/**
-					 * use the first defining step of the parent.
-					 */
-					order = trace.findDefiningNodeOrder(rw, currentNode, 
-							value.getParents().get(0).getVariable(), VariableDefinitions.USE_FIRST);
-				}
-				
-			}
-		}
-		
-		String varID = var.getVarID() + ":" + order;
-		var.setVarID(varID);
-		if(var.getAliasVarID()!=null){
-			var.setAliasVarID(var.getAliasVarID()+":"+order);			
-		}
-		
-		StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
-		if(entry == null){
-			entry = new StepVariableRelationEntry(varID);
-			if(!order.equals("0")){
-				TraceNode producer = trace.getTraceNode(Integer.valueOf(order));
-				entry.addProducer(producer);
-				trace.getStepVariableTable().put(varID, entry);
-			}
-		}
-		if(rw.equals(Variable.READ)){
-			entry.addConsumer(currentNode);
-		}
-		else if(rw.equals(Variable.WRITTEN)){
-			entry.addProducer(currentNode);
-		}
-		trace.getStepVariableTable().put(varID, entry);
-	}
+//	private void buildDataRelation(TraceNode currentNode, VarValue value, String rw){
+//		Variable var = value.getVariable();
+//		if(currentNode==null){
+//			return;
+//		}
+//		
+//		String order = trace.findDefiningNodeOrder(rw, currentNode, var, VariableDefinitions.USE_LAST);
+//		
+//		if(order.equals("0")){
+//			if(var instanceof FieldVar || var instanceof ArrayElementVar){
+//				if(!value.getParents().isEmpty()){
+//					/**
+//					 * use the first defining step of the parent.
+//					 */
+//					order = trace.findDefiningNodeOrder(rw, currentNode, 
+//							value.getParents().get(0).getVariable(), VariableDefinitions.USE_FIRST);
+//				}
+//				
+//			}
+//		}
+//		
+//		String varID = var.getVarID() + ":" + order;
+//		var.setVarID(varID);
+//		if(var.getAliasVarID()!=null){
+//			var.setAliasVarID(var.getAliasVarID()+":"+order);			
+//		}
+//		
+//		StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
+//		if(entry == null){
+//			entry = new StepVariableRelationEntry(varID);
+//			if(!order.equals("0")){
+//				TraceNode producer = trace.getTraceNode(Integer.valueOf(order));
+//				entry.addProducer(producer);
+//				trace.getStepVariableTable().put(varID, entry);
+//			}
+//		}
+//		if(rw.equals(Variable.READ)){
+//			entry.addConsumer(currentNode);
+//		}
+//		else if(rw.equals(Variable.WRITTEN)){
+//			entry.addProducer(currentNode);
+//		}
+//		trace.getStepVariableTable().put(varID, entry);
+//	}
 	
 	private VarValue appendVarValue(Object value, Variable var, VarValue parent) {
 		return appendVarValue(value, var, parent, variableLayer);
@@ -760,10 +760,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	private void addSingleRWriteValue(TraceNode currentNode, VarValue value, boolean isWrittenVar) {
 		if (isWrittenVar) {
 			currentNode.addWrittenVariable(value);
-			buildDataRelation(currentNode, value, Variable.WRITTEN);
+//			buildDataRelation(currentNode, value, Variable.WRITTEN);
 		} else {
 			currentNode.addReadVariable(value);
-			buildDataRelation(currentNode, value, Variable.READ);
+//			buildDataRelation(currentNode, value, Variable.READ);
 		}
 	}
 	
