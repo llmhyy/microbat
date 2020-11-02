@@ -404,7 +404,9 @@ public class StepRecommender {
 		/**
 		 *
 		 */
-		TraceNode suspiciousNode = trace.getProducer(wrongVarID);
+		String aliasVarID = wrongVar.getAliasVarID();
+		String order = trace.findDefiningNodeOrder(Variable.WRITTEN, currentNode, wrongVarID, aliasVarID);
+		TraceNode suspiciousNode = trace.getTraceNode(Integer.valueOf(order));
 //		String parentVarID = wrongVarID;
 //		while(suspiciousNode == null){
 //			parentVarID = VariableUtil.generateSimpleParentVariableID(parentVarID);
