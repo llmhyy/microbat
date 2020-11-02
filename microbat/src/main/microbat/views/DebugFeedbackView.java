@@ -579,6 +579,13 @@ public class DebugFeedbackView extends ViewPart {
 			box.open();
 		}
 		
+		private void openWrongVariableDialog(){
+			MessageBox box = new MessageBox(PlatformUI.getWorkbench()
+					.getDisplay().getActiveShell());
+			box.setMessage("Please select a variable");
+			box.open();
+		}
+		
 		private void openBugFoundDialog(){
 			MessageBox box = new MessageBox(PlatformUI.getWorkbench()
 					.getDisplay().getActiveShell());
@@ -647,7 +654,10 @@ public class DebugFeedbackView extends ViewPart {
 		public void mouseDown(MouseEvent e) {
 			if (feedback == null) {
 				openChooseFeedbackDialog();
-			} 
+			} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)
+					&& feedback.getOption()==null) {
+				openWrongVariableDialog();
+			}
 			else {
 				final Trace trace = getTraceView().getTrace();
 				Job job = new Job("searching for suspicious step...") {
