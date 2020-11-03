@@ -1,6 +1,7 @@
-package microbat.instrumentation;
+ package microbat.instrumentation;
 
 import java.lang.instrument.Instrumentation;
+import java.util.ArrayList;
 import java.util.List;
 
 import microbat.instrumentation.filter.CodeRangeUserFilter;
@@ -23,7 +24,7 @@ import sav.strategies.dto.AppJavaClassPath;
 public class TraceAgent implements IAgent {
 	private AgentParams agentParams;
 	private StopTimer timer;
-	
+
 	public TraceAgent(CommandLine cmd) {
 		this.agentParams = AgentParams.initFrom(cmd);
 	}
@@ -40,11 +41,11 @@ public class TraceAgent implements IAgent {
 		if (!agentParams.isRequireMethodSplit()) {
 			agentParams.getUserFilters().register(new OverLongMethodFilter(agentParams.getOverlongMethods()));
 		}
-		
+
 		if (!agentParams.getCodeRanges().isEmpty()) {
 			agentParams.getUserFilters().register(new CodeRangeUserFilter(agentParams.getCodeRanges()));
 		}
-		
+
 		ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
 		ExecutionTracer.avoidProxyToString = agentParams.isAvoidProxyToString();
 	}
@@ -57,39 +58,51 @@ public class TraceAgent implements IAgent {
 		// FIXME -mutithread LINYUN [3]
 		// LLT: only trace of main thread is recorded.
 		List<IExecutionTracer> tracers = ExecutionTracer.getAllThreadStore();
-		
+        
 		System.currentTimeMillis();
 		
-		IExecutionTracer tracer = ExecutionTracer.getMainThreadStore();
-	
-		Trace trace = ((ExecutionTracer) tracer).getTrace();
+		int size=tracers.size();
+		List<Trace> traceList=new ArrayList<>(size);	
+		for(int i=0;i<size;i++) {
+			
+			ExecutionTracer tracer=(ExecutionTracer) tracers.get(i);
+			Trace trace = tracer.getTrace();	
+			if (size>1) {
+				trace.setMultiThread(true);
+			}
+			trace.setThreadId(tracer.getThreadId());
+			constructTrace(trace);
+			traceList.add(trace);
+		}		
+			
+		timer.newPoint("Saving trace");
+		Recorder.create(agentParams).store(traceList);
+		AgentLogger.debug(timer.getResultString());
+	}
+
+	public void constructTrace(Trace trace) {
 		GlobalFilterChecker.addFilterInfo(trace);
-		
+
 		StepMismatchChecker.logNormalSteps(trace);
 		ExecutionTracer.dispose(); // clear cache
 		long t1 = System.currentTimeMillis();
 		AgentLogger.debug("create VirtualDataRelation....");
 		createVirtualDataRelation(trace);
 		long t2 = System.currentTimeMillis();
-		AgentLogger.debug("time for createVirtualDataRelation: "  + (t2-t1)/1000);
-		
+		AgentLogger.debug("time for createVirtualDataRelation: " + (t2 - t1) / 1000);
+
 		t1 = System.currentTimeMillis();
 		AgentLogger.debug("construct ControlDomianceRelation....");
 		trace.constructControlDomianceRelation();
 		t2 = System.currentTimeMillis();
-	
-//		trace.constructLoopParentRelation();
-		timer.newPoint("Saving trace");
-		t1 = System.currentTimeMillis();
-		Recorder.create(agentParams).store(trace);
-		t2 = System.currentTimeMillis();
 
-		AgentLogger.debug(timer.getResultString());
+		// trace.constructLoopParentRelation();
+	
 	}
 
 	private void writeOutput(Trace trace) throws Exception {
 		AgentLogger.debug("Saving trace...");
-		
+
 		if (agentParams.getDumpFile() != null) {
 			RunningInfo result = new RunningInfo();
 			result.setProgramMsg(Agent.getProgramMsg());
@@ -106,46 +119,45 @@ public class TraceAgent implements IAgent {
 			traceWriter.flush();
 			Thread.sleep(10000l);
 			tcpConnector.close();
-		} 
-		
+		}
+
 		AgentLogger.debug("Trace saved.");
 	}
-	
+
 	private void createVirtualDataRelation(Trace trace) {
-		for(int i=0; i<trace.size(); i++){
-			int order = i+1;
+		for (int i = 0; i < trace.size(); i++) {
+			int order = i + 1;
 			TraceNode currentNode = trace.getTraceNode(order);
-			if(order<trace.size()){
-				TraceNode nextNode = trace.getTraceNode(order+1);
+			if (order < trace.size()) {
+				TraceNode nextNode = trace.getTraceNode(order + 1);
 				currentNode.setStepInNext(nextNode);
 				nextNode.setStepInPrevious(currentNode);
-			}
-			else if(order==trace.size()){
-				if(order>1){
-					TraceNode prevNode = trace.getTraceNode(order-1);
-					currentNode.setStepInPrevious(prevNode);					
+			} else if (order == trace.size()) {
+				if (order > 1) {
+					TraceNode prevNode = trace.getTraceNode(order - 1);
+					currentNode.setStepInPrevious(prevNode);
 				}
 			}
-			
+
 			TraceNode previousStepOver = currentNode.getStepOverPrevious();
-			if(previousStepOver!=null && 
-					previousStepOver.getClassCanonicalName().equals(currentNode.getClassCanonicalName()) &&
-					Math.abs(previousStepOver.getLineNumber()-currentNode.getLineNumber())<=0){
-				for(VarValue readVar: previousStepOver.getReadVariables()){
-					if(!currentNode.containReadVariable(readVar)){
+			if (previousStepOver != null
+					&& previousStepOver.getClassCanonicalName().equals(currentNode.getClassCanonicalName())
+					&& Math.abs(previousStepOver.getLineNumber() - currentNode.getLineNumber()) <= 0) {
+				for (VarValue readVar : previousStepOver.getReadVariables()) {
+					if (!currentNode.containReadVariable(readVar)) {
 						currentNode.addReadVariable(readVar);
 					}
 				}
 			}
-			
-			if(currentNode.getInvocationParent()!=null && !currentNode.getPassParameters().isEmpty()){
+
+			if (currentNode.getInvocationParent() != null && !currentNode.getPassParameters().isEmpty()) {
 				TraceNode invocationParent = currentNode.getInvocationParent();
 				TraceNode firstChild = invocationParent.getInvocationChildren().get(0);
-				if(firstChild.getOrder()==currentNode.getOrder()){
-					for(VarValue value: currentNode.getPassParameters()){
+				if (firstChild.getOrder() == currentNode.getOrder()) {
+					for (VarValue value : currentNode.getPassParameters()) {
 						String varID = value.getVarID();
 						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
-						if(entry==null){
+						if (entry == null) {
 							entry = new StepVariableRelationEntry(varID);
 						}
 						entry.addProducer(invocationParent);
@@ -153,23 +165,23 @@ public class TraceAgent implements IAgent {
 					}
 				}
 			}
-			
-			if(currentNode.getInvocationParent()!=null && !currentNode.getReturnedVariables().isEmpty()){
+
+			if (currentNode.getInvocationParent() != null && !currentNode.getReturnedVariables().isEmpty()) {
 				TraceNode invocationParent = currentNode.getInvocationParent();
 				TraceNode returnStep = invocationParent.getStepOverNext();
-				
-				if(returnStep==null){
+
+				if (returnStep == null) {
 					returnStep = currentNode.getStepInNext();
 				}
-				
-				if(returnStep!=null){
-					for(VarValue value: currentNode.getReturnedVariables()){
+
+				if (returnStep != null) {
+					for (VarValue value : currentNode.getReturnedVariables()) {
 						currentNode.addWrittenVariable(value);
 						returnStep.addReadVariable(value);
 						String varID = value.getVarID();
 						value.setVarID(varID);
 						StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
-						if(entry==null){
+						if (entry == null) {
 							entry = new StepVariableRelationEntry(varID);
 						}
 						entry.addProducer(currentNode);
@@ -180,7 +192,7 @@ public class TraceAgent implements IAgent {
 			}
 		}
 	}
-	
+
 	public AgentParams getAgentParams() {
 		return agentParams;
 	}

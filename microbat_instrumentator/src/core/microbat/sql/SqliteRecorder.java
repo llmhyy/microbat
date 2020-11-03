@@ -12,6 +12,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.text.DefaultEditorKit.InsertBreakAction;
+
 import microbat.handler.xml.VarValueXmlWriter;
 import microbat.instrumentation.AgentParams;
 import microbat.model.BreakPoint;
@@ -27,24 +29,26 @@ import sav.common.core.utils.CollectionUtils;
  */
 public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 
-
 	public static final int READ = 1;
 	public static final int WRITE = 2;
-	
+
 	/**
 	 * @param dbPath
 	 */
 	public SqliteRecorder(String dbPath) {
 		super(dbPath);
 	}
-	
-	public void store(Trace trace) {
+
+	public void store(List<Trace> traces) {
 		Connection conn = null;
 		List<AutoCloseable> closables = new ArrayList<AutoCloseable>();
 		try {
-			conn=getConnection();
+			conn = getConnection();
 			conn.setAutoCommit(false);
-			insertTrace(trace, conn, closables);
+			String runId=insertRun(conn,closables);
+			for (Trace trace : traces) {
+				insertTrace(trace,runId, conn, closables);
+			}
 			conn.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -54,36 +58,50 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		}
 	}
 
-	public String insertTrace(Trace trace, Connection conn, List<AutoCloseable> closables) throws SQLException {
-		return insertTrace(trace, null, null, null, null, conn, closables);
-	}
-  
-	/**
-	 *  TODO add insert Run table 
-	 *  So,there run id is not clear ,and thread_name is also no clear
-	 *  TODO add Variable to tb
-	 */
-	public String insertTrace(Trace trace, String projectName, String projectVersion, String launchClass,
-			String launchMethod, Connection conn, List<AutoCloseable> closables) throws SQLException {
+
+	public String insertRun(Connection conn, List<AutoCloseable> closables) throws SQLException {
 		PreparedStatement ps;
-		String sql = "INSERT INTO Trace ("
-				+"run_id, trace_id,thread_name,generated_time) " + "VALUES (?, ?, ?,?)";
+		String sql = "INSERT INTO Run ("
+				+ "run_id,project_name,project_version,launch_method,thread_status,launch_class) "
+				+ "VALUES (?, ?, ?,?,?,?)";
 		ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		int idx = 1;
-		ps.setInt(idx++, -1);
-		String traceId=getUUID();
+		String runId=getUUID();
+		//TODO add the other attributes
+		ps.setString(idx++, runId);
+		ps.setString(idx++, "");
+		ps.setString(idx++, "");
+		ps.setString(idx++, "");
+		ps.setString(idx++, "");
+		ps.setString(idx++, "");
+		ps.execute();
+		return runId;
+	}
+
+	/**
+	 * TODO add insert Run table So,there run id is not clear ,and thread_name is
+	 * also no clear TODO add Variable to tb
+	 */
+	public String insertTrace(Trace trace,String runId,Connection conn, List<AutoCloseable> closables) throws SQLException {
+		PreparedStatement ps;
+		String sql = "INSERT INTO Trace (" + "run_id, trace_id,thread_id,generated_time) " + "VALUES (?, ?, ?,?)";
+		ps = conn.prepareStatement(sql);
+		closables.add(ps);
+		int idx = 1;
+		ps.setString(idx++,runId);
+		String traceId = getUUID();
 		ps.setString(idx++, traceId);
-		ps.setString(idx++,"main");
+		ps.setString(idx++, String.valueOf(trace.getThreadId()));
 		ps.setTimestamp(idx++, new Timestamp(System.currentTimeMillis()));
 		ps.execute();
 		insertSteps(traceId, trace.getExecutionList(), conn, closables);
 		insertStepVariableRelation(trace, traceId, conn, closables);
 		return traceId;
 	}
-  
-	private void insertSteps(String traceId, List<TraceNode> exectionList, Connection conn, List<AutoCloseable> closables)
-			throws SQLException {
+
+	private void insertSteps(String traceId, List<TraceNode> exectionList, Connection conn,
+			List<AutoCloseable> closables) throws SQLException {
 		String sql = "INSERT INTO Step (trace_id, step_order, control_dominator, step_in, step_over, invocation_parent, loop_parent,"
 				+ "location_id, read_vars, written_vars) VALUES (?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
@@ -100,7 +118,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 			setNodeOrder(ps, idx++, node.getStepOverNext());
 			setNodeOrder(ps, idx++, node.getInvocationParent());
 			setNodeOrder(ps, idx++, node.getLoopParent());
-			ps.setString(idx++, node.getDeclaringCompilationUnitName()+"_"+node.getLineNumber());
+			ps.setString(idx++, node.getDeclaringCompilationUnitName() + "_" + node.getLineNumber());
 			ps.setString(idx++, generateXmlContent(node.getReadVariables()));
 			ps.setString(idx++, generateXmlContent(node.getWrittenVariables()));
 			ps.addBatch();
@@ -113,7 +131,8 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 			ps.executeBatch();
 		}
 	}
-	//TODO value_string is not true instance
+
+	// TODO value_string is not true instance
 	private void insertStepVariableRelation(Trace trace, String traceId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
 		String sql = "INSERT INTO StepVariableRelation (var_id,step_order,rw,value_string,trace_id) VALUES (?, ?, ?, ?,?)";
@@ -148,20 +167,20 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 			ps.executeBatch();
 		}
 	}
-	
-	private void insertLocation(String traceId, List<TraceNode> nodes, Connection conn,
-			List<AutoCloseable> closables) throws SQLException {
+
+	private void insertLocation(String traceId, List<TraceNode> nodes, Connection conn, List<AutoCloseable> closables)
+			throws SQLException {
 		String sql = "INSERT INTO Location (location_id,trace_id, class_name, line_number, is_conditional, is_return) "
 				+ "VALUES (?,?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		int count = 0;
-		HashSet<BreakPoint> set =getLoactionSet(nodes);
+		HashSet<BreakPoint> set = getLoactionSet(nodes);
 		List<String> ids = new ArrayList<>();
 		for (BreakPoint location : set) {
 			int idx = 1;
-			String locationId=getUUID();
-			ps.setString(idx++,location.getDeclaringCompilationUnitName()+"_"+location.getLineNumber());
+			String locationId = getUUID();
+			ps.setString(idx++, location.getDeclaringCompilationUnitName() + "_" + location.getLineNumber());
 			ps.setString(idx++, traceId);
 			ps.setString(idx++, location.getDeclaringCompilationUnitName());
 			ps.setInt(idx++, location.getLineNumber());
@@ -181,13 +200,13 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		if (ids.size() != set.size()) {
 			throw new SQLException("Number of locations is incorrect!");
 		}
-		//insertControlScope(traceId, result, conn, closables);
-		//insertLoopScope(traceId, result, conn, closables);
+		// insertControlScope(traceId, result, conn, closables);
+		// insertLoopScope(traceId, result, conn, closables);
 	}
-	
+
 	private HashSet<BreakPoint> getLoactionSet(List<TraceNode> list) {
-		HashSet<BreakPoint> set= new HashSet<>();
-		for(TraceNode node:list) {
+		HashSet<BreakPoint> set = new HashSet<>();
+		for (TraceNode node : list) {
 			set.add(node.getBreakPoint());
 		}
 		return set;

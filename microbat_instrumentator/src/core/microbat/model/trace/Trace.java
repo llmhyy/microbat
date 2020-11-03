@@ -34,6 +34,8 @@ public class Trace {
 	private AppJavaClassPath appJavaClassPath;
 	private List<String> includedLibraryClasses;
 	private List<String> excludedLibraryClasses;
+	private long threadId;
+
 	/**
 	 * This variable is to trace whether the variables in different lines are the same
 	 * local variable.
@@ -59,6 +61,14 @@ public class Trace {
 	private Map<String, StepVariableRelationEntry> stepVariableTable = new HashMap<>();
 	
 	private boolean isMultiThread = false;
+	
+	public long getThreadId() {
+		return threadId;
+	}
+
+	public void setThreadId(long threadId) {
+		this.threadId = threadId;
+	}
 
 	public List<TraceNode> getExecutionList() {
 		return exectionList;
