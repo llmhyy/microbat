@@ -62,4 +62,10 @@ public class PrimitiveValue extends VarValue {
 	}
 
 
+	@Override
+	public String getHeapID() {
+		return null;
+	}
+
+
 }

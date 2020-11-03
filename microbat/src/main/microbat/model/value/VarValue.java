@@ -462,8 +462,15 @@ public abstract class VarValue implements GraphNode, Serializable {
 		this.variable = variable;
 	}
 	
+	public abstract String getHeapID();
+	
 	public String getAliasVarID(){
-		return this.variable.getAliasVarID();
+		String aliasVarID = this.variable.getAliasVarID();
+		if(aliasVarID != null) 
+			return aliasVarID;
+		else {
+			return getHeapID();
+		}
 	}
 
 	public void linkAchild(VarValue value) {

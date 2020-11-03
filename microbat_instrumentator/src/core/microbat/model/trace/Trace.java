@@ -58,7 +58,7 @@ public class Trace {
 	 * key is the variable ID, and value is the entry containing all the steps reading/writing the corresponding
 	 * variable.
 	 */
-	private Map<String, StepVariableRelationEntry> stepVariableTable = new HashMap<>();
+//	private Map<String, StepVariableRelationEntry> stepVariableTable = new HashMap<>();
 	
 	private boolean isMultiThread = false;
 	
@@ -260,9 +260,9 @@ public class Trace {
 		return false;
 	}
 
-	public Map<String, StepVariableRelationEntry> getStepVariableTable() {
-		return stepVariableTable;
-	}
+//	public Map<String, StepVariableRelationEntry> getStepVariableTable() {
+//		return stepVariableTable;
+//	}
 
 	public TraceNode findLastestExceptionNode() {
 		for(int i=0; i<exectionList.size(); i++){
@@ -347,20 +347,20 @@ public class Trace {
 		return definingOrder;
 	}
 	
-	public TraceNode getProducer(String varID) {
-		StepVariableRelationEntry entry = this.stepVariableTable.get(varID);
-		
-		if(entry == null){
-			System.err.println("the variable with ID " + varID + " is not explicitly read or written");
-			return null;
-		}
-		
-		if(!entry.getProducers().isEmpty()){
-			return entry.getProducers().get(0);
-		}
-		
-		return null;
-	}
+//	public TraceNode getProducer(String varID) {
+//		StepVariableRelationEntry entry = this.stepVariableTable.get(varID);
+//		
+//		if(entry == null){
+//			System.err.println("the variable with ID " + varID + " is not explicitly read or written");
+//			return null;
+//		}
+//		
+//		if(!entry.getProducers().isEmpty()){
+//			return entry.getProducers().get(0);
+//		}
+//		
+//		return null;
+//	}
 
 	public Map<String, List<Integer>> getExecutedLocation(){
 		Map<String, List<Integer>> locationMap = new HashMap<>();

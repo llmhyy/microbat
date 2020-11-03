@@ -168,20 +168,20 @@ public class TraceOutputWriter extends OutputWriter {
 	}
 
 	private void writeStepVariableRelation(Trace trace) throws IOException {
-		writeVarInt(trace.getStepVariableTable().values().size());
-		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {
-			writeString(entry.getVarID());
-			writeVarInt(entry.getProducers().size());
-			for (TraceNode node : entry.getProducers()) {
-				writeVarInt(node.getOrder());
-				writeVarInt(WRITE);
-			}
-			writeVarInt(entry.getConsumers().size());
-			for (TraceNode node : entry.getConsumers()) {
-				writeVarInt(node.getOrder());
-				writeVarInt(READ);
-			}
-		}
+//		writeVarInt(trace.getStepVariableTable().values().size());
+//		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {
+//			writeString(entry.getVarID());
+//			writeVarInt(entry.getProducers().size());
+//			for (TraceNode node : entry.getProducers()) {
+//				writeVarInt(node.getOrder());
+//				writeVarInt(WRITE);
+//			}
+//			writeVarInt(entry.getConsumers().size());
+//			for (TraceNode node : entry.getConsumers()) {
+//				writeVarInt(node.getOrder());
+//				writeVarInt(READ);
+//			}
+//		}
 	}
 	
 	private void writeLocation(BreakPoint location) throws IOException {

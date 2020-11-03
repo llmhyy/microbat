@@ -127,18 +127,18 @@ public class TraceNode{
 		this.returnedVariables.add(var);
 	}
 	
-	public TraceNode getDataDominator(VarValue readVar) {
-		TraceNode dataDominator = null;
-		
-		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
-		StepVariableRelationEntry entry = table.get(readVar.getVarID());
-		if(entry!=null){
-			TraceNode latestProducer = findLatestProducer(entry);
-			dataDominator = latestProducer;
-		}
-		
-		return dataDominator;
-	}
+//	public TraceNode getDataDominator(VarValue readVar) {
+//		TraceNode dataDominator = null;
+//		
+//		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
+//		StepVariableRelationEntry entry = table.get(readVar.getVarID());
+//		if(entry!=null){
+//			TraceNode latestProducer = findLatestProducer(entry);
+//			dataDominator = latestProducer;
+//		}
+//		
+//		return dataDominator;
+//	}
 	
 	private TraceNode findLatestProducer(StepVariableRelationEntry entry) {
 		List<TraceNode> producers = entry.getProducers();
@@ -391,36 +391,36 @@ public class TraceNode{
 		return this.getBreakPoint().getShortMethodSignature();
 	}
 
-	public Map<TraceNode, VarValue> getDataDominators() {
-		Map<TraceNode, VarValue> dataDominators = new HashMap<>();
-		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
-		for(VarValue readVar: this.getReadVariables()){
-			StepVariableRelationEntry entry = table.get(readVar.getVariable().getVarID());
-			if(entry != null){
-				TraceNode dominator = findLatestProducer(entry);
-				if(dominator != null){
-					dataDominators.put(dominator, readVar);
-				}
-			}
-		}
-		
-		return dataDominators;
-	}
+//	public Map<TraceNode, VarValue> getDataDominators() {
+//		Map<TraceNode, VarValue> dataDominators = new HashMap<>();
+//		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
+//		for(VarValue readVar: this.getReadVariables()){
+//			StepVariableRelationEntry entry = table.get(readVar.getVariable().getVarID());
+//			if(entry != null){
+//				TraceNode dominator = findLatestProducer(entry);
+//				if(dominator != null){
+//					dataDominators.put(dominator, readVar);
+//				}
+//			}
+//		}
+//		
+//		return dataDominators;
+//	}
 
-	public Map<TraceNode, VarValue> getDataDominatee() {
-		Map<TraceNode, VarValue> dataDominatees = new HashMap<>();
-		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
-		for(VarValue writtenVar: this.getWrittenVariables()){
-			StepVariableRelationEntry entry = table.get(writtenVar.getVariable());
-			if(entry != null){
-				for(TraceNode consumer: entry.getConsumers()){
-					dataDominatees.put(consumer, writtenVar);
-				}
-			}
-		}
-		
-		return dataDominatees;
-	}
+//	public Map<TraceNode, VarValue> getDataDominatee() {
+//		Map<TraceNode, VarValue> dataDominatees = new HashMap<>();
+//		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
+//		for(VarValue writtenVar: this.getWrittenVariables()){
+//			StepVariableRelationEntry entry = table.get(writtenVar.getVariable());
+//			if(entry != null){
+//				for(TraceNode consumer: entry.getConsumers()){
+//					dataDominatees.put(consumer, writtenVar);
+//				}
+//			}
+//		}
+//		
+//		return dataDominatees;
+//	}
 
 //	public void addDataDominator(TraceNode node, List<String> variables){
 //		List<String> varIDs = this.dataDominators.get(node);
@@ -538,59 +538,59 @@ public class TraceNode{
 		return false;
 	}
 	
-	public Map<Integer, TraceNode> findAllDominators() {
-		Map<Integer, TraceNode> dominators = new HashMap<>();
-		
-		findDominators(this, dominators);
-		
-		return dominators;
-	}
-
-	private void findDominators(TraceNode node, Map<Integer, TraceNode> dominators) {
-		for(TraceNode dominator: node.getDataDominators().keySet()){
-			if(!dominators.containsKey(dominator.getOrder())){
-				dominators.put(dominator.getOrder(), dominator);		
-				findDominators(dominator, dominators);				
-			}
-		}
-		
-		if(this.controlDominator != null){
-			dominators.put(this.controlDominator.getOrder(), this.controlDominator);
-		}
-		
-	}
-	
-	public Map<Integer, TraceNode> findAllDominatees() {
-		Map<Integer, TraceNode> dominatees = new HashMap<>();
-		
-		findDominatees(this, dominatees);
-		
-		return dominatees;
-	}
-
-	private void findDominatees(TraceNode node, Map<Integer, TraceNode> dominatees) {
-		for(TraceNode dominatee: node.getDataDominatee().keySet()){
-			if(!dominatees.containsKey(dominatee.getOrder())){
-				if(dominatee.getOrder() == 1){
-					System.currentTimeMillis();
-				}
-				
-				dominatees.put(dominatee.getOrder(), dominatee);		
-				findDominatees(dominatee, dominatees);				
-			}
-		}
-		
-		for(TraceNode controlDominatee: node.getControlDominatees()){
-			if(!dominatees.containsKey(controlDominatee.getOrder())){
-				if(controlDominatee.getOrder() == 1){
-					System.currentTimeMillis();
-				}
-				
-				dominatees.put(controlDominatee.getOrder(), controlDominatee);
-				findDominatees(controlDominatee, dominatees);				
-			}
-		}
-	}
+//	public Map<Integer, TraceNode> findAllDominators() {
+//		Map<Integer, TraceNode> dominators = new HashMap<>();
+//		
+//		findDominators(this, dominators);
+//		
+//		return dominators;
+//	}
+//
+//	private void findDominators(TraceNode node, Map<Integer, TraceNode> dominators) {
+//		for(TraceNode dominator: node.getDataDominators().keySet()){
+//			if(!dominators.containsKey(dominator.getOrder())){
+//				dominators.put(dominator.getOrder(), dominator);		
+//				findDominators(dominator, dominators);				
+//			}
+//		}
+//		
+//		if(this.controlDominator != null){
+//			dominators.put(this.controlDominator.getOrder(), this.controlDominator);
+//		}
+//		
+//	}
+//	
+//	public Map<Integer, TraceNode> findAllDominatees() {
+//		Map<Integer, TraceNode> dominatees = new HashMap<>();
+//		
+//		findDominatees(this, dominatees);
+//		
+//		return dominatees;
+//	}
+//
+//	private void findDominatees(TraceNode node, Map<Integer, TraceNode> dominatees) {
+//		for(TraceNode dominatee: node.getDataDominatee().keySet()){
+//			if(!dominatees.containsKey(dominatee.getOrder())){
+//				if(dominatee.getOrder() == 1){
+//					System.currentTimeMillis();
+//				}
+//				
+//				dominatees.put(dominatee.getOrder(), dominatee);		
+//				findDominatees(dominatee, dominatees);				
+//			}
+//		}
+//		
+//		for(TraceNode controlDominatee: node.getControlDominatees()){
+//			if(!dominatees.containsKey(controlDominatee.getOrder())){
+//				if(controlDominatee.getOrder() == 1){
+//					System.currentTimeMillis();
+//				}
+//				
+//				dominatees.put(controlDominatee.getOrder(), controlDominatee);
+//				findDominatees(controlDominatee, dominatees);				
+//			}
+//		}
+//	}
 	
 	public void setControlDominator(TraceNode controlDominator){
 		this.controlDominator = controlDominator;
