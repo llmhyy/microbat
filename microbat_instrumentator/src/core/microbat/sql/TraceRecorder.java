@@ -3,6 +3,8 @@
  */
 package microbat.sql;
 
+import java.util.List;
+
 import microbat.model.trace.Trace;
 
 /**
@@ -10,5 +12,5 @@ import microbat.model.trace.Trace;
  *
  */
 public interface TraceRecorder {
-void store(Trace trace);
+void store(List<Trace> trace);
 }

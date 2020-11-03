@@ -3,6 +3,8 @@
  */
 package microbat.sql;
 
+import java.util.List;
+
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.output.TraceOutputWriter;
@@ -22,7 +24,8 @@ public class SocketRecorder implements TraceRecorder{
 	 * @see microbat.sql.TraceRecorder#store(microbat.model.trace.Trace)
 	 */
 	@Override
-	public void store(Trace trace) {
+	public void store(List<Trace> traceList) {
+		Trace trace =traceList.get(0);
 		TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
 		TraceOutputWriter traceWriter;
 		try {

@@ -31,45 +31,46 @@ public class TraceRetriever01 extends SqliteServer {
 	public TraceRetriever01(String dbPath) {
 		super(dbPath);
 	}
-	public String getLatestTrace(String projectName) throws SQLException {
-		String result = null;
+	public List<String> getLatestTraces(String projectName) throws SQLException {
+
 		Connection conn = null;
 		List<AutoCloseable> closables = new ArrayList<>();
+		List<String> tracesIdList=new ArrayList<>();
 		try {
 			conn = getConnection();
 			
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT trace_id FROM Trace order by generated_time desc");
+					"SELECT trace_id from Trace WHERE run_id=(SELECT MAX(run_id) FROM Run)");
 //			ps.setString(1, projectName);
 			ResultSet rs = ps.executeQuery();
 			closables.add(ps);
 			closables.add(rs);
-
-			if (rs.next()) {
-				result = rs.getString("trace_id"); // regression_id
-			} else {
-				throw new SQLException(
-						String.format("No record of Regression found for project %s", projectName));
-			}
+			
+		   while (rs.next()) {
+				tracesIdList.add(rs.getString("trace_id"));	
+		}
 			
 		} finally {
 			closeDb(conn, closables);
 		}
 		
-		return result;
+		return tracesIdList;
 	}
 	
-	public Trace retrieveTrace(String traceId) throws SQLException{
+	public List<Trace> retrieveTrace(List<String> traceIds) throws SQLException{
 		Connection conn = null;
+		List<Trace> list =new ArrayList<>(traceIds.size());
 		List<AutoCloseable> closables = new ArrayList<>();
 		try {
 			conn = getConnection();
-			Trace trace = loadTrace(traceId, conn, closables);
+			for(String traceId:traceIds) {
+				list.add(loadTrace(traceId, conn, closables));
+			}		
 			System.out.println("Retrieve done!");
-			return trace;
 		} finally {
 			closeDb(conn, closables);
 		}
+		return list;
 	}
 	
 	protected Trace loadTrace(String traceId, Connection conn, List<AutoCloseable> closables) throws SQLException {
