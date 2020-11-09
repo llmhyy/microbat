@@ -969,8 +969,9 @@ public class Trace {
 		String varID = Variable.truncateSimpleID(varValue.getVarID());
 		String headID = Variable.truncateSimpleID(varValue.getAliasVarID());
 		
-		for(int i=startNode.getOrder(); i>=0; i--) {
+		for(int i=startNode.getOrder(); i>=1; i--) {
 			TraceNode node = this.getTraceNode(i);
+			System.currentTimeMillis();
 			for(VarValue writtenValue: node.getWrittenVariables()) {
 				
 				if(!(writtenValue.getVariable() instanceof VirtualVar)) {
@@ -978,17 +979,24 @@ public class Trace {
 					String wHeadID = Variable.truncateSimpleID(writtenValue.getAliasVarID());
 					
 					if(wVarID != null && wVarID.equals(varID)) {
-						return node;
+						return node;						
 					}
 					
 					if(wHeadID != null && wHeadID.equals(headID)) {
 						return node;
-					}					
+					}
+					
+					VarValue childValue = writtenValue.findVarValue(varID, headID);
+					if(childValue != null) {
+						return node;
+					}
+
 				}
 				
 			}
 		}
 		
+		System.currentTimeMillis();
 		
 		return null;
 	}

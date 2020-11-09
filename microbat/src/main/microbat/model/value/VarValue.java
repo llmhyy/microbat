@@ -478,6 +478,17 @@ public abstract class VarValue implements GraphNode, Serializable {
 		value.addParent(this);
 	}
 
+	public VarValue findVarValue(String... varIDs) {
+		for(String varID: varIDs) {
+			VarValue value = findVarValue(varID);
+			if(value != null) {
+				return value;
+			}
+		}
+		
+		return null;
+	}
+
 	
 //	public abstract VarValue clone();
 }
