@@ -25,6 +25,14 @@
       </view>
       <view
             category="microbat.category"
+            class="microbat.views.MutilThreadTraceView"
+            icon="icons/trace.png"
+            id="microbat.view.currentTrace"
+            name="Concurrent Trace"
+            restorable="true">
+      </view>
+      <view
+            category="microbat.category"
             class="microbat.views.ReasonView"
             icon="icons/navigation_history.png"
             id="microbat.view.reason"
@@ -51,6 +59,16 @@
             name="After Trace"
             restorable="true">
       </view>
+      <view
+            class="microbat.views.MutilTraceView"
+            id="microbat.views.MutilTraceView"
+            name="New ViewPart">
+      </view>
+      <view
+            class="microbat.views.MutilThreadTraceView"
+            id="microbat.views.MutilThreadTraceView"
+            name="New ViewPart">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">
@@ -59,6 +77,12 @@
             icon="icons/microbat.png"
             id="microbat.perspectives.MicroBatPerspective"
             name="MicroBat">
+      </perspective>
+      <perspective
+            class="microbat.perspectives.ConcurrentPerspective"
+            icon="icons/microbat.png"
+            id="microbat.perspectives.ConcurrentPerspective"
+            name="Concurrent">
       </perspective>
       <perspective
             class="microbat.evaluation.perspectives.TraceComparisonPerspective"

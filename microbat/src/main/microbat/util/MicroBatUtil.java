@@ -390,7 +390,7 @@ public class MicroBatUtil {
 	 * This method is used for solving
 	 * @param retrievedChildren
 	 * @param currentNode
-	 * @param trace
+	 * @param curTrace
 	 */
 	public static void assignWrittenIdentifier(List<VarValue> retrievedChildren, TraceNode currentNode) {
 		for(VarValue var: retrievedChildren){

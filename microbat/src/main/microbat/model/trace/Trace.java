@@ -66,6 +66,8 @@ public class Trace {
 	private int constructTime = 0;
 	
 	private boolean isMultiThread = false;
+	
+	private String threadId;
 
 	public void resetCheckTime(){
 		this.checkTime = -1;
@@ -1088,5 +1090,19 @@ public class Trace {
 
 	public void setExcludedLibraryClasses(List<String> excludedLibraryClasses) {
 		this.excludedLibraryClasses = excludedLibraryClasses;
+	}
+
+	/**
+	 * @return the threadId
+	 */
+	public String getThreadId() {
+		return threadId;
+	}
+
+	/**
+	 * @param threadId the threadId to set
+	 */
+	public void setThreadId(String threadId) {
+		this.threadId = threadId;
 	}
 }

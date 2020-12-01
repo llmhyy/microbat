@@ -38,6 +38,8 @@ public class TraceAgentRunner extends AgentVmRunner {
 	private String testFailureMessage;
 	private VMConfiguration config;
 	private boolean enableSettingHeapSize = true;
+	
+	private List<Trace> traces;
 
 	public TraceAgentRunner(String agentJar, VMConfiguration vmConfig) {
 		super(agentJar, AgentConstants.AGENT_OPTION_SEPARATOR, AgentConstants.AGENT_PARAMS_SEPARATOR);
@@ -112,6 +114,40 @@ public class TraceAgentRunner extends AgentVmRunner {
 			timer.newPoint("Read output result");
 			runningInfo = reader.create().Read(precheckInfo,dumpFile.getPath());
 			updateTestResult(runningInfo.getProgramMsg());
+			if (toDeleteDumpFile) {
+				dumpFile.delete();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new SavRtException(e);
+		}
+		System.out.println(timer.getResultString());
+		return true;
+	}
+	
+	
+	public boolean run01(Reader reader) throws SavException {
+		isPrecheckMode = false;
+		StopTimer timer = new StopTimer("Building trace");
+		timer.newPoint("Execution");
+		File dumpFile;
+		try {
+			boolean toDeleteDumpFile = false;
+			switch (reader) {
+			case FILE:
+				dumpFile = File.createTempFile("trace", ".exec");
+				dumpFile.deleteOnExit();
+				break;
+			default:
+				dumpFile = DatabasePreference.getDBFile();
+				break;
+			}
+			addAgentParam(AgentParams.OPT_TRACE_RECORDER, reader.name());
+			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFile.getPath()));
+			super.startAndWaitUntilStop(getConfig());
+			System.out.println("|");
+			timer.newPoint("Read output result");
+			setTraces(reader.create().ReadTraces(precheckInfo,dumpFile.getPath()));
 			if (toDeleteDumpFile) {
 				dumpFile.delete();
 			}
@@ -306,5 +342,19 @@ public class TraceAgentRunner extends AgentVmRunner {
 
 	public void setConfig(VMConfiguration config) {
 		this.config = config;
+	}
+
+	/**
+	 * @return the traces
+	 */
+	public List<Trace> getTraces() {
+		return traces;
+	}
+
+	/**
+	 * @param traces the traces to set
+	 */
+	public void setTraces(List<Trace> traces) {
+		this.traces = traces;
 	}
 }

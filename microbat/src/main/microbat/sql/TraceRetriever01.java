@@ -75,6 +75,8 @@ public class TraceRetriever01 extends SqliteServer {
 	
 	protected Trace loadTrace(String traceId, Connection conn, List<AutoCloseable> closables) throws SQLException {
 		Trace trace = new Trace(null); 
+		//load a simple trace 
+		loadSimpleTrace(trace, traceId, conn, closables);
 		// load step
 		List<TraceNode> steps = loadSteps(traceId, conn, closables, trace);
 		trace.setExectionList(steps);
@@ -101,6 +103,20 @@ public class TraceRetriever01 extends SqliteServer {
 		return trace;
 	}
 	
+	private void loadSimpleTrace(Trace trace,String traceId, Connection conn, List<AutoCloseable> closables) throws SQLException {
+		PreparedStatement ps = conn.prepareStatement("SELECT thread_id FROM Trace WHERE trace_id=?");
+		ps.setString(1, traceId);
+		ResultSet rs = ps.executeQuery();
+		closables.add(ps);
+		closables.add(rs);
+		String threadId="";
+		if (rs.next()) {
+			threadId=rs.getString("thread_id");
+		}
+		trace.setThreadId(threadId);
+		ps.close();
+		rs.close();
+	}
 	/**
 	 * return list of relation info [step_order, var_id, RW]
 	 */

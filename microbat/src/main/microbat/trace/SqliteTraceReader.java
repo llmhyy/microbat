@@ -4,6 +4,7 @@
 package microbat.trace;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
@@ -40,6 +41,19 @@ public class SqliteTraceReader implements TraceReader {
 			e.printStackTrace();
 		}
 		return info;
+	}
+
+	@Override
+	public List<Trace> ReadTraces(PrecheckInfo info, String drumpFile) {
+		TraceRetriever01 traceRetriever01 = new TraceRetriever01(drumpFile);
+		List<Trace> traces = null;
+		try {
+			traces= traceRetriever01.retrieveTrace(traceRetriever01.getLatestTraces(info.getProgramMsg()));
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return traces;
 	}
 
 }

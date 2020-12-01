@@ -1,8 +1,10 @@
 package microbat.views;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -42,6 +44,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Text;
@@ -63,18 +66,29 @@ import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 
-public class TraceView extends ViewPart {
+public class MutilThreadTraceView extends ViewPart {
 
-	protected Trace trace;
-	protected TreeViewer listViewer;
+	protected Map<String, Trace> traceMap;
+	protected Trace curTrace;
+	public Trace getCurTrace() {
+		return curTrace;
+	}
+
+	public void setCurTrace(Trace curTrace) {
+		this.curTrace = curTrace;
+	}
+
+	protected TreeViewer curTreeViewer;
+	protected List<TreeViewer> viewerList;
+	private List<Trace> traces;
 
 	private Text searchText;
 	private Button searchButton;
-
+	private Composite parent;
 	private String previousSearchExpression = "";
 	private boolean jumpFromSearch = false;
 
-	public TraceView() {
+	public MutilThreadTraceView() {
 	}
 
 	public void setSearchText(String expression) {
@@ -82,18 +96,19 @@ public class TraceView extends ViewPart {
 		this.previousSearchExpression = expression;
 	}
 
-	private void createSearchBox(Composite parent) {
+	private void createSearchBox(Composite parent,int colnum) {
 		searchText = new Text(parent, SWT.BORDER);
-		searchText.setToolTipText("search trace node by class name and line number, e.g., ClassName line:20 or just ClassName\n"
-				+ "press \"enter\" for forward-search and \"shift+enter\" for backward-search.");
+		searchText.setToolTipText(
+				"search trace node by class name and line number, e.g., ClassName line:20 or just ClassName\n"
+						+ "press \"enter\" for forward-search and \"shift+enter\" for backward-search.");
 		FontData searchTextFont = searchText.getFont().getFontData()[0];
 		searchTextFont.setHeight(10);
 		searchText.setFont(new Font(Display.getCurrent(), searchTextFont));
-		searchText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		searchText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false,colnum-1, 1));
 		addSearchTextListener(searchText);
 
 		searchButton = new Button(parent, SWT.PUSH);
-		GridData buttonData = new GridData(SWT.FILL, SWT.FILL, false, false);
+		GridData buttonData = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
 		// buttonData.widthHint = 50;
 		searchButton.setLayoutData(buttonData);
 		searchButton.setText("Go");
@@ -126,25 +141,25 @@ public class TraceView extends ViewPart {
 		});
 
 	}
-	
+
 	public void jumpToNode(String searchContent, boolean next) {
 		// Trace trace = Activator.getDefault().getCurrentTrace();
 
 		if (!previousSearchExpression.equals(searchContent)) {
-			trace.resetObservingIndex();
+			curTrace.resetObservingIndex();
 			previousSearchExpression = searchContent;
 		}
 
 		int selectionIndex = -1;
 		if (next) {
-			selectionIndex = trace.searchForwardTraceNode(searchContent);
+			selectionIndex = curTrace.searchForwardTraceNode(searchContent);
 		} else {
-			selectionIndex = trace.searchBackwardTraceNode(searchContent);
+			selectionIndex = curTrace.searchBackwardTraceNode(searchContent);
 		}
 		// int selectionIndex = trace.searchBackwardTraceNode(searchContent);
 		if (selectionIndex != -1) {
 			this.jumpFromSearch = true;
-			jumpToNode(trace, selectionIndex + 1, true);
+			jumpToNode(curTrace, selectionIndex + 1, true);
 		} else {
 			MessageBox box = new MessageBox(PlatformUI.getWorkbench().getDisplay().getActiveShell());
 			box.setMessage("No more such node in trace!");
@@ -174,14 +189,14 @@ public class TraceView extends ViewPart {
 		}
 
 		/** keep the original expanded list */
-		Object[] expandedElements = listViewer.getExpandedElements();
+		Object[] expandedElements = curTreeViewer.getExpandedElements();
 		for (Object obj : expandedElements) {
 			TraceNode tn = (TraceNode) obj;
 			path.add(tn);
 		}
 
 		TraceNode[] list = path.toArray(new TraceNode[0]);
-		listViewer.setExpandedElements(list);
+		curTreeViewer.setExpandedElements(list);
 
 		node = trace.getExecutionList().get(order - 1);
 
@@ -190,11 +205,11 @@ public class TraceView extends ViewPart {
 		/**
 		 * This step will trigger a callback function of node selection.
 		 */
-		listViewer.setSelection(new StructuredSelection(node), true);
+		curTreeViewer.setSelection(new StructuredSelection(node), true);
 		programmingSelection = false;
 		this.refreshProgramState = true;
 
-		listViewer.refresh();
+		curTreeViewer.refresh();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -249,21 +264,27 @@ public class TraceView extends ViewPart {
 
 	@Override
 	public void createPartControl(Composite parent) {
+		this.parent = parent;
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+		layout.numColumns = 3;
 		parent.setLayout(layout);
+		createSearchBox(parent,3);
+		// creatPart(parent);
+	}
 
-		createSearchBox(parent);
+	public void creatPart(Composite parent, Trace trace) {
 
-		listViewer = new TreeViewer(parent, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
-		listViewer.getTree().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
-		listViewer.setContentProvider(new TraceContentProvider());
-		listViewer.setLabelProvider(new TraceLabelProvider());
+		TreeViewer viewer = new TreeViewer(parent, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
+		viewer.getTree().setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true, 1, 1));
+		viewer.setContentProvider(new TraceContentProvider());
+		viewer.setLabelProvider(new TraceLabelProvider());
+		viewerList.add(viewer);
+		
 
 		// Trace trace = Activator.getDefault().getCurrentTrace();
-		listViewer.setInput(trace);
+		viewer.setInput(trace);
 
-		listViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 
 			@SuppressWarnings("unused")
 			public void showDebuggingInfo(TraceNode node) {
@@ -345,12 +366,15 @@ public class TraceView extends ViewPart {
 					if (obj instanceof TraceNode) {
 						TraceNode node = (TraceNode) obj;
 
-//						String simpleSig = node.getMethodSign().substring(node.getMethodSign().indexOf("#")+1, node.getMethodSign().length());
-//						MethodFinderBySignature finder = new MethodFinderBySignature(simpleSig);
-//						ByteCodeParser.parse(node.getClassCanonicalName(), finder, node.getTrace().getAppJavaClassPath());
-//						System.currentTimeMillis();
-						
-//						 showDebuggingInfo(node);
+						// String simpleSig =
+						// node.getMethodSign().substring(node.getMethodSign().indexOf("#")+1,
+						// node.getMethodSign().length());
+						// MethodFinderBySignature finder = new MethodFinderBySignature(simpleSig);
+						// ByteCodeParser.parse(node.getClassCanonicalName(), finder,
+						// node.getTrace().getAppJavaClassPath());
+						// System.currentTimeMillis();
+
+						// showDebuggingInfo(node);
 
 						if (!programmingSelection) {
 							Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
@@ -375,11 +399,10 @@ public class TraceView extends ViewPart {
 								}
 							});
 
-						} else {
-							listViewer.getTree().setFocus();
 						}
-
-						trace.setObservingIndex(node.getOrder() - 1);
+						curTrace = traceMap.get(node.getTrace().getThreadId());
+						curTrace.setObservingIndex(node.getOrder() - 1);
+						curTreeViewer = getTreeViewerByThreadID(node.getTrace().getThreadId());
 					}
 				}
 
@@ -387,55 +410,67 @@ public class TraceView extends ViewPart {
 
 		});
 
-		appendMenuForTraceStep();
+		appendMenuForTraceStep(viewer);
+	}
+
+	public TreeViewer getTreeViewerByThreadID(String treadId) {
+		for (TreeViewer tv : viewerList) {
+			Trace t = (Trace) tv.getInput();
+			if (t.getThreadId().equals(treadId)) {
+				return tv;
+			}
+		}
+		return null;
+
 	}
 
 	protected Action createForSearchAction() {
 		Action action = new Action() {
 			public void run() {
-				if (listViewer.getSelection().isEmpty()) {
+				if (curTreeViewer.getSelection().isEmpty()) {
 					return;
 				}
 
-				if (listViewer.getSelection() instanceof IStructuredSelection) {
-					IStructuredSelection selection = (IStructuredSelection) listViewer.getSelection();
+				if (curTreeViewer.getSelection() instanceof IStructuredSelection) {
+					IStructuredSelection selection = (IStructuredSelection) curTreeViewer.getSelection();
 					TraceNode node = (TraceNode) selection.getFirstElement();
-					
+
 					String className = node.getBreakPoint().getDeclaringCompilationUnitName();
 					int lineNumber = node.getBreakPoint().getLineNumber();
 					String searchString = Trace.combineTraceNodeExpression(className, lineNumber);
-					TraceView.this.searchText.setText(searchString);
+					MutilThreadTraceView.this.searchText.setText(searchString);
 				}
-				
+
 			}
-			
+
 			public String getText() {
 				return "for search";
 			}
 		};
 		return action;
 	}
-	
+
 	protected MenuManager menuMgr = new MenuManager("#PopupMenu");
-	protected void appendMenuForTraceStep() {
+
+	protected void appendMenuForTraceStep(TreeViewer viewer) {
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
 			@Override
 			public void menuAboutToShow(IMenuManager manager) {
 				Action action = createForSearchAction();
 				menuMgr.add(action);
-				
+
 			}
 		});
-		
-		listViewer.getTree().setMenu(menuMgr.createContextMenu(listViewer.getTree()));
+
+		viewer.getTree().setMenu(menuMgr.createContextMenu(viewer.getTree()));
 	}
 
 	protected void otherViewsBehavior(TraceNode node) {
 		DebugFeedbackView feedbackView = MicroBatViews.getDebugFeedbackView();
 
 		if (this.refreshProgramState) {
-			feedbackView.setTraceView(TraceView.this);
+			feedbackView.setTraceView(MutilThreadTraceView.this);
 			feedbackView.refresh(node);
 		}
 
@@ -446,8 +481,28 @@ public class TraceView extends ViewPart {
 	}
 
 	public void updateData() {
-		listViewer.setInput(trace);
-		listViewer.refresh();
+		
+		Control[] childs = this.parent.getChildren();
+		for (int k = 0; k < childs.length; k++) {
+			childs[k].dispose();
+		}
+		GridLayout layout = new GridLayout();
+		int colnum=traces.size() >= 3 ? traces.size() : 3;
+		layout.numColumns = colnum;
+		parent.setLayout(layout);
+		createSearchBox(parent,colnum); // add search box in view
+		// 1. add viewList for each trace
+		// 2. add listener to each viewList
+		// 3. point current ViewList and Trace when a even be catch
+		viewerList = new ArrayList<>(traces.size());
+		for (int i = 0; i < traces.size(); i++) {		
+			creatPart(parent, traces.get(i));
+		}
+		
+		for(TreeViewer viewer :viewerList) {
+			viewer.refresh();
+		}
+		
 	}
 
 	@Override
@@ -455,12 +510,16 @@ public class TraceView extends ViewPart {
 
 	}
 
-	public Trace getTrace() {
-		return trace;
-	}
-
-	public void setTrace(Trace trace) {
-		this.trace = trace;
+	public void setTraceList(List<Trace> traces) {
+		this.traces = traces;
+		if (traceMap == null) {
+			traceMap = new HashMap<>();
+		}
+		traceMap.clear();
+		for (int i = 0; i < traces.size(); i++) {
+			Trace trace = traces.get(i);
+			traceMap.put(trace.getThreadId(), trace);
+		}
 	}
 
 	class TraceContentProvider implements ITreeContentProvider {
