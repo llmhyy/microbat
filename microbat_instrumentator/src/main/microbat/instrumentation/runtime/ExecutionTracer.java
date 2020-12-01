@@ -1076,50 +1076,50 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	}
 	
 	private void addHeuristicVarChildren(TraceNode latestNode, VarValue value, boolean isWritten) {
-		if (ArrayList.class.getName().equals(value.getRuntimeType())) {
-			for (VarValue child : value.getChildren()) {
-				if ("elementData".equals(child.getVarName())) {
-					addHeuristicVarChildren(latestNode, child, isWritten);
-					return;
-				}
-			}
-		} else if (HashMap.class.getName().equals(value.getRuntimeType())) {
-			for (VarValue child : value.getChildren()) {
-				if ("table".equals(child.getVarName())) {
-					addHeuristicVarChildren(latestNode, child, isWritten);
-					return;
-				}
-			}
-		} 
-		else if (Stack.class.getName().equals(value.getRuntimeType())) {
-			/**
-			 * TODO for Xuezhi extend stack content here.
-			 */
-			for (VarValue child : value.getChildren()) {
-				if ("elementData".equals(child.getVarName())) {
-					addHeuristicVarChildren(latestNode, child, isWritten);
-					return;
-				}
-			}
-		}
-		
-		else if (value instanceof ArrayValue) {
-			Collection<VarValue> nodeReadVars = trace.getLatestNode().getReadVariables();
-			if (value.getChildren().size() > nodeReadVars.size()) {
-				((ArrayList<?>)nodeReadVars).ensureCapacity(nodeReadVars.size() + value.getChildren().size());
-			}
-			for (VarValue child : value.getChildren()) {
-				if (child.getVariable() instanceof ArrayElementVar) {
-					if (HeuristicIgnoringFieldRule.isHashMapTableType(child.getRuntimeType())) {
-						for (VarValue nodeAttr : child.getChildren()) {
-							addRWriteValue(trace.getLatestNode(), nodeAttr, false);
-						}
-					} else {
-						addRWriteValue(trace.getLatestNode(), child, false);
-					}
-				}
-			}
-		} 
+//		if (ArrayList.class.getName().equals(value.getRuntimeType())) {
+//			for (VarValue child : value.getChildren()) {
+//				if ("elementData".equals(child.getVarName())) {
+//					addHeuristicVarChildren(latestNode, child, isWritten);
+//					return;
+//				}
+//			}
+//		} else if (HashMap.class.getName().equals(value.getRuntimeType())) {
+//			for (VarValue child : value.getChildren()) {
+//				if ("table".equals(child.getVarName())) {
+//					addHeuristicVarChildren(latestNode, child, isWritten);
+//					return;
+//				}
+//			}
+//		} 
+//		else if (Stack.class.getName().equals(value.getRuntimeType())) {
+//			/**
+//			 * TODO for Xuezhi extend stack content here.
+//			 */
+//			for (VarValue child : value.getChildren()) {
+//				if ("elementData".equals(child.getVarName())) {
+//					addHeuristicVarChildren(latestNode, child, isWritten);
+//					return;
+//				}
+//			}
+//		}
+//		
+//		else if (value instanceof ArrayValue) {
+//			Collection<VarValue> nodeReadVars = trace.getLatestNode().getReadVariables();
+//			if (value.getChildren().size() > nodeReadVars.size()) {
+//				((ArrayList<?>)nodeReadVars).ensureCapacity(nodeReadVars.size() + value.getChildren().size());
+//			}
+//			for (VarValue child : value.getChildren()) {
+//				if (child.getVariable() instanceof ArrayElementVar) {
+//					if (HeuristicIgnoringFieldRule.isHashMapTableType(child.getRuntimeType())) {
+//						for (VarValue nodeAttr : child.getChildren()) {
+//							addRWriteValue(trace.getLatestNode(), nodeAttr, false);
+//						}
+//					} else {
+//						addRWriteValue(trace.getLatestNode(), child, false);
+//					}
+//				}
+//			}
+//		} 
 		
 	}
 
