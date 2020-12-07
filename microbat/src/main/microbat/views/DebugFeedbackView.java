@@ -70,7 +70,8 @@ public class DebugFeedbackView extends ViewPart {
 	private TraceNode currentNode;
 //	private TraceNode lastestNode;
 	
-	private MutilThreadTraceView traceView;
+//	private MutilThreadTraceView traceView;
+	private TraceView traceView;
 	
 	private StepRecommender recommender = new StepRecommender(Settings.enableLoopInference);
 	
@@ -266,8 +267,8 @@ public class DebugFeedbackView extends ViewPart {
 			VarValue value = null;
 			
 			if(obj instanceof VarValue){
-				//Trace trace = getTraceView().getTrace();
-				Trace trace = getConcurrentTraceView().getCurTrace();
+				Trace trace = getTraceView().getTrace();
+//				Trace trace = getConcurrentTraceView().getCurTrace();
 				value = (VarValue)obj;
 				String varID = value.getVarID();
 				
@@ -659,8 +660,8 @@ public class DebugFeedbackView extends ViewPart {
 				openWrongVariableDialog();
 			}
 			else {
-				//final Trace trace = getTraceView().getTrace();
-				final Trace trace = getConcurrentTraceView().getCurTrace();
+				final Trace trace = getTraceView().getTrace();
+//				final Trace trace = getConcurrentTraceView().getCurTrace();
 				
 				Job job = new Job("searching for suspicious step...") {
 					@Override
@@ -754,8 +755,8 @@ public class DebugFeedbackView extends ViewPart {
 		
 		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
 //			TraceView view = MicroBatViews.getTraceView();
-//			getTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
-			getConcurrentTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
+			getTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
+//			getConcurrentTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
 		}
 	}
 	
@@ -785,31 +786,29 @@ public class DebugFeedbackView extends ViewPart {
 
 	}
 	
-//	public TraceView getTraceView() {
-//		if(traceView == null){
-//			traceView = MicroBatViews.getTraceView();
-//		}
-//		
-//		return traceView;
-//	}
-	public MutilThreadTraceView getConcurrentTraceView() {
+	public TraceView getTraceView() {
 		if(traceView == null){
-			traceView = MicroBatViews.getConcurrentTraceView();
+			traceView = MicroBatViews.getTraceView();
 		}
 		
 		return traceView;
 	}
+	
+//	public MutilThreadTraceView getConcurrentTraceView() {
+//		if(traceView == null){
+//			traceView = MicroBatViews.getConcurrentTraceView();
+//		}
+//		
+//		return traceView;
+//	}
 
-//	public void setTraceView(TraceView traceView) {
+	public void setTraceView(TraceView traceView) {
+		this.traceView = traceView;
+	}
+	
+//	public void setTraceView(MutilThreadTraceView traceView) {
 //		this.traceView = traceView;
 //	}
-	
-	public void setTraceView(MutilThreadTraceView traceView) {
-	this.traceView = traceView;
-}
-	public void setTraceView(TraceView traceView) {
-	//this.traceView = traceView;
-}
 
 	@SuppressWarnings("unchecked")
 	class RWVariableContentProvider implements ITreeContentProvider{

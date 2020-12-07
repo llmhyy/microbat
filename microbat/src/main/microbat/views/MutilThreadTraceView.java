@@ -66,7 +66,7 @@ import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 
-public class MutilThreadTraceView extends ViewPart {
+public class MutilThreadTraceView extends TraceView {
 
 	protected Map<String, Trace> traceMap;
 	protected Trace curTrace;
