@@ -24,7 +24,9 @@ Our debugger can be divided into two parts: trace collector and the bug inferenc
   <img src="/microbat/image/f1.png" width="300">
 </p>
 
-2. Given our trace collector is implemented through Java instrumentation technique, the user need to run microbat.tools.JarPackageTool. Please modify the DEPLOY_DIR by your eclipse_root_folder\dropins\junit_lib\. After running the code, you will generate an instrumentator.jar under the DEPLOY_DIR folder.
+2. Given our trace collector is implemented through Java instrumentation technique, the user need to run `microbat.tools.JarPackageTool`. 
+Please modify the DEPLOY_DIR by your $eclipse_root_folder\dropins\junit_lib\. After running the code, you will generate an instrumentator.jar under the DEPLOY_DIR folder.
+More details can be refer to https://github.com/llmhyy/microbat/wiki/Compile-Runtime-Agent.
 
 3. Remember to replace the instrumentaor.jar in the lib folder under microbat project.
 <p align="center">
