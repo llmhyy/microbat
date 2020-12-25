@@ -145,6 +145,18 @@ public class DebugFeedbackView extends ViewPart {
 		bugTypeInferenceButton.setEnabled(isValidToInferBugType());
 		
 		feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
+		VarValue readVar = null; 
+		if(this.readVariableTreeViewer.getCheckedElements()!=null && this.readVariableTreeViewer.getCheckedElements().length!=0) {
+			readVar = (VarValue) this.readVariableTreeViewer.getCheckedElements()[0];
+		}
+		
+		VarValue writtenVar = null; 
+		if(this.writtenVariableTreeViewer.getCheckedElements()!=null && this.writtenVariableTreeViewer.getCheckedElements().length!=0) {
+			writtenVar = (VarValue) this.writtenVariableTreeViewer.getCheckedElements()[0];
+		}
+		
+		ChosenVariableOption option = new ChosenVariableOption(readVar, writtenVar);
+		feedback.setOption(option);
 	}
 	
 	
