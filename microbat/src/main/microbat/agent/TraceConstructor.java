@@ -52,7 +52,7 @@ public class TraceConstructor {
 		long start = System.currentTimeMillis();
 		agentRunner.runWithDumpFileOption(null);
 //		agentRunner.runWithSocket(config);
-		Trace trace = agentRunner.getTrace();
+		Trace trace = agentRunner.getMainTrace();
 		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 		System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 		System.out.println("finish!");
@@ -71,7 +71,7 @@ public class TraceConstructor {
 		agentRunner.addAgentParam("entry_point",
 				ClassUtils.toClassMethodStr(appClassPath.getOptionalTestClass(), appClassPath.getOptionalTestMethod()));
 		agentRunner.startVm(config);
-		Trace trace = agentRunner.getTrace();
+		Trace trace = agentRunner.getMainTrace();
 		if (trace == null) {
 			throw new SavRtException("Cannot build trace");
 		}
@@ -138,7 +138,7 @@ public class TraceConstructor {
 				LogType.debug, LogType.error));
 		long start = System.currentTimeMillis();
 		agentRunner.runWithDumpFileOption("E:/lyly/fix.exec");
-		Trace info = agentRunner.getTrace();
+		Trace info = agentRunner.getMainTrace();
 		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 		System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 		System.out.println("trace length: " + info.size());
@@ -326,7 +326,7 @@ public class TraceConstructor {
 				LogType.debug, LogType.error));
 		long start = System.currentTimeMillis();
 		agentRunner.runWithDumpFileOption("E:/lyly/eclipse-java-mars-clean/eclipse-for-unmodified-code/trace/Mockito/6/fix.exec");
-		Trace trace = agentRunner.getTrace();
+		Trace trace = agentRunner.getMainTrace();
 		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 		System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 		System.out.println("trace length: " + trace.size());
@@ -403,7 +403,7 @@ public class TraceConstructor {
 				LogType.debug, LogType.error));
 		long start = System.currentTimeMillis();
 		agentRunner.runWithDumpFileOption(null);
-		Trace trace = agentRunner.getTrace();
+		Trace trace = agentRunner.getMainTrace();
 		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 		System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 		System.out.println("trace length: " + trace.size());
@@ -456,7 +456,7 @@ public class TraceConstructor {
 				LogType.debug, LogType.error));
 		long start = System.currentTimeMillis();
 		agentRunner.runWithDumpFileOption(null);
-		Trace trace = agentRunner.getTrace();
+		Trace trace = agentRunner.getMainTrace();
 		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 		System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 		System.out.println("trace length: " + trace.size());
@@ -494,7 +494,7 @@ public class TraceConstructor {
 				LogType.debug, LogType.error));
 		long start = System.currentTimeMillis();
 		agentRunner.runWithDumpFileOption(null);
-		Trace trace = agentRunner.getTrace();
+		Trace trace = agentRunner.getMainTrace();
 		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 		System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 		System.out.println("trace length: " + trace.size());

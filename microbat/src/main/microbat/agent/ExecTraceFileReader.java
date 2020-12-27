@@ -13,7 +13,7 @@ public class ExecTraceFileReader {
 	
 	public Trace read(String execTraceFile) {
 		RunningInfo info = RunningInfo.readFromFile(execTraceFile);
-		this.trace = info.getTrace();
+		this.trace = info.getMainTrace();
 		this.msg = info.getProgramMsg();
 		return trace;
 	}

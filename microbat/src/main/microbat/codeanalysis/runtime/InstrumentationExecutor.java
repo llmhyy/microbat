@@ -142,40 +142,6 @@ public class InstrumentationExecutor {
 		return new RunningInformation("", -1, -1, null);
 	}
 	
-	public List<Trace> run01(){
-		try {
-//			System.out.println("first precheck..");
-//			agentRunner.precheck(null);
-//			PrecheckInfo firstPrecheckInfo = agentRunner.getPrecheckInfo();
-//			System.out.println(firstPrecheckInfo);
-//			System.out.println("second precheck..");
-			System.out.println("precheck..");
-			agentRunner.precheck(null);
-			PrecheckInfo info = agentRunner.getPrecheckInfo();
-			System.out.println(info);
-			PreCheckInformation precheckInfomation = new PreCheckInformation(info.getThreadNum(), info.getStepTotal(),
-					info.isOverLong(), new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods(), info.getLoadedClasses());
-			precheckInfomation.setPassTest(agentRunner.isTestSuccessful());
-//			precheckInfomation.setUndeterministic(firstPrecheckInfo.getStepTotal() != precheckInfomation.getStepTotal());
-			this.setPrecheckInfo(precheckInfomation);
-			System.out.println("the trace length is: " + precheckInfomation.getStepNum());
-			if (precheckInfomation.isUndeterministic()) {
-				System.out.println("undeterministic!!");
-			} 
-			if (!info.isOverLong() /*&& !precheckInfomation.isUndeterministic() */) {
-				if (!info.getExceedingLimitMethods().isEmpty()) {
-					agentRunner.addAgentParams(AgentParams.OPT_OVER_LONG_METHODS, info.getExceedingLimitMethods());
-				}
-				List<Trace> traces = execute01(precheckInfomation);
-				return traces;
-			}
-		} catch (SavException e1) {
-			e1.printStackTrace();
-		}
-		
-		return new ArrayList<>();
-	}
-	
 	public PreCheckInformation runPrecheck(String dumpFile, int stepLimit) {
 		try {
 			/* test stepLimit */
@@ -211,21 +177,21 @@ public class InstrumentationExecutor {
 			RunningInfo result = agentRunner.getRunningInfo();
 //			System.out.println(result);
 			System.out.println("isExpectedStepsMet? " + result.isExpectedStepsMet());
-			System.out.println("trace length: " + result.getTrace().size());
+			System.out.println("trace length: " + result.getMainTrace().size());
 			System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 			System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 			System.out.println("finish!");
 			agentRunner.removeAgentParam(AgentParams.OPT_EXPECTED_STEP);
 			
-			Trace trace = result.getTrace();
+			Trace trace = result.getMainTrace();
 			trace.setAppJavaClassPath(appPath);
-			trace.setMultiThread(info.getThreadNum()!=1);
+//			trace.setMultiThread(info.getThreadNum()!=1);
 			
 			appendMissingInfo(trace, appPath);
 			trace.setConstructTime((int) (System.currentTimeMillis() - start));
 			
 			RunningInformation information = new RunningInformation(result.getProgramMsg(), result.getExpectedSteps(), 
-					result.getCollectedSteps(), result.getTrace());
+					result.getCollectedSteps(), result.getTraceList());
 			
 			return information;
 		} catch (SavException e1) {
@@ -235,32 +201,32 @@ public class InstrumentationExecutor {
 		return null;
 	}
 	
-	public List<Trace> execute01 (PreCheckInformation info) {
-		try {
-			long start = System.currentTimeMillis();
-//			agentRunner.getConfig().setDebug(true);
-//			agentRunner.getConfig().setPort(8888);
-			agentRunner.addAgentParam(AgentParams.OPT_EXPECTED_STEP, info.getStepNum());
-			agentRunner.run01(DatabasePreference.getReader());
-			// agentRunner.runWithSocket();
-//			System.out.println(result);
-
-			System.out.println("finish!");
-			agentRunner.removeAgentParam(AgentParams.OPT_EXPECTED_STEP);
-			
-			List<Trace> traces = agentRunner.getTraces();
-			for(Trace trace:traces) {
-				trace.setAppJavaClassPath(appPath);			
-				appendMissingInfo(trace, appPath);
-				trace.setConstructTime((int) (System.currentTimeMillis() - start));
-			}		
-			return traces;
-		} catch (SavException e1) {
-			e1.printStackTrace();
-		}
-
-		return null;
-	}
+//	public List<Trace> execute01 (PreCheckInformation info) {
+//		try {
+//			long start = System.currentTimeMillis();
+////			agentRunner.getConfig().setDebug(true);
+////			agentRunner.getConfig().setPort(8888);
+//			agentRunner.addAgentParam(AgentParams.OPT_EXPECTED_STEP, info.getStepNum());
+//			agentRunner.run01(DatabasePreference.getReader());
+//			// agentRunner.runWithSocket();
+////			System.out.println(result);
+//
+//			System.out.println("finish!");
+//			agentRunner.removeAgentParam(AgentParams.OPT_EXPECTED_STEP);
+//			
+//			List<Trace> traces = agentRunner.getTraces();
+//			for(Trace trace:traces) {
+//				trace.setAppJavaClassPath(appPath);			
+//				appendMissingInfo(trace, appPath);
+//				trace.setConstructTime((int) (System.currentTimeMillis() - start));
+//			}		
+//			return traces;
+//		} catch (SavException e1) {
+//			e1.printStackTrace();
+//		}
+//
+//		return null;
+//	}
 
 	public static void appendMissingInfo(Trace trace, AppJavaClassPath appPath) {
 		Map<String, String> classNameMap = new HashMap<>();

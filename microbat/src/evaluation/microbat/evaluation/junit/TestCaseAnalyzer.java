@@ -202,12 +202,12 @@ public class TestCaseAnalyzer {
 			@Override
 			public void run() {
 				BeforeTraceView beforeView = EvaluationViews.getBeforeTraceView();
-				beforeView.setTrace(correctTrace);
+				beforeView.setMainTrace(correctTrace);
 				beforeView.updateData();
 				beforeView.setPairList(pairList);
 				
 				AfterTraceView afterView = EvaluationViews.getAfterTraceView();
-				afterView.setTrace(killingMutatantTrace);
+				afterView.setMainTrace(killingMutatantTrace);
 				afterView.updateData();
 				afterView.setPairList(pairList);
 			}

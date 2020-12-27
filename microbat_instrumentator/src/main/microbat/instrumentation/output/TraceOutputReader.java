@@ -4,13 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
 import microbat.model.ControlScope;
 import microbat.model.SourceScope;
-import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -28,23 +26,31 @@ public class TraceOutputReader extends OutputReader {
 		this.traceExecFolder = traceExecFolder;
 	}
 
-	public Trace readTrace() throws IOException {
+	public List<Trace> readTrace() throws IOException {
 		int traceNo = readVarInt();
 		if (traceNo == 0) {
 			return null;
 		}
-		Trace trace = new Trace(null);
-		readString(); // projectName
-		readString(); // projectVersion
-		readString(); // launchClass
-		readString(); // launchMethod
-		trace.setMultiThread(readBoolean());
-		trace.setIncludedLibraryClasses(readFilterInfo());
-		trace.setExcludedLibraryClasses(readFilterInfo());
-		List<BreakPoint> locationList = readLocations();
-		trace.setExectionList(readSteps(trace, locationList));
-		readStepVariableRelation(trace);
-		return trace;
+		
+		List<Trace> traceList = new ArrayList<Trace>();
+		for(int i=0; i<traceNo; i++) {
+			Trace trace = new Trace(null);
+			readString(); // projectName
+			readString(); // projectVersion
+			readString(); // launchClass
+			readString(); // launchMethod
+			trace.setMain(readBoolean());
+			trace.setThreadName(readString());
+			trace.setIncludedLibraryClasses(readFilterInfo());
+			trace.setExcludedLibraryClasses(readFilterInfo());
+			List<BreakPoint> locationList = readLocations();
+			trace.setExectionList(readSteps(trace, locationList));
+			readStepVariableRelation(trace);
+			
+			traceList.add(trace);
+		}
+		
+		return traceList;
 	}
 
 	private List<String> readFilterInfo() throws IOException {

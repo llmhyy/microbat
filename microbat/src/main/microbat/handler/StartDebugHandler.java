@@ -21,6 +21,7 @@ import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReader;
 import microbat.behavior.BehaviorReporter;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
+import microbat.codeanalysis.runtime.RunningInformation;
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
@@ -98,19 +99,21 @@ public class StartDebugHandler extends AbstractHandler {
 						List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
 						InstrumentationExecutor exectuor = new InstrumentationExecutor(appClassPath,
 								generateTraceDir(appClassPath), "trace", includedClassNames, excludedClassNames);
-						final Trace trace = exectuor.run().getTrace();
-						trace.setAppJavaClassPath(appClassPath);
-//						final List<Trace> traces=exectuor.run01();
+						final RunningInformation result = exectuor.run();
+						
 						monitor.worked(80);
 						
 						Display.getDefault().asyncExec(new Runnable(){
 							
 							@Override
 							public void run() {
+								Trace trace = result.getMainTrace();
+								trace.setAppJavaClassPath(appClassPath);
+								List<Trace> traces = result.getTraceList();
+								
 								TraceView traceView = MicroBatViews.getTraceView();
-								traceView.setTrace(trace);
-//								MutilThreadTraceView traceView=MicroBatViews.getConcurrentTraceView();								
-//								traceView.setTraceList(traces);
+								traceView.setMainTrace(trace);
+								traceView.setTraceList(traces);
 								traceView.updateData();
 							}
 							

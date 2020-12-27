@@ -112,7 +112,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 			super.startAndWaitUntilStop(getConfig());
 			System.out.println("|");
 			timer.newPoint("Read output result");
-			runningInfo = reader.create().Read(precheckInfo,dumpFile.getPath());
+			runningInfo = reader.create().read(precheckInfo, dumpFile.getPath());
 			updateTestResult(runningInfo.getProgramMsg());
 			if (toDeleteDumpFile) {
 				dumpFile.delete();
@@ -126,38 +126,38 @@ public class TraceAgentRunner extends AgentVmRunner {
 	}
 	
 	
-	public boolean run01(Reader reader) throws SavException {
-		isPrecheckMode = false;
-		StopTimer timer = new StopTimer("Building trace");
-		timer.newPoint("Execution");
-		File dumpFile;
-		try {
-			boolean toDeleteDumpFile = false;
-			switch (reader) {
-			case FILE:
-				dumpFile = File.createTempFile("trace", ".exec");
-				dumpFile.deleteOnExit();
-				break;
-			default:
-				dumpFile = DatabasePreference.getDBFile();
-				break;
-			}
-			addAgentParam(AgentParams.OPT_TRACE_RECORDER, reader.name());
-			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFile.getPath()));
-			super.startAndWaitUntilStop(getConfig());
-			System.out.println("|");
-			timer.newPoint("Read output result");
-			setTraces(reader.create().ReadTraces(precheckInfo,dumpFile.getPath()));
-			if (toDeleteDumpFile) {
-				dumpFile.delete();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new SavRtException(e);
-		}
-		System.out.println(timer.getResultString());
-		return true;
-	}
+//	public boolean run01(Reader reader) throws SavException {
+//		isPrecheckMode = false;
+//		StopTimer timer = new StopTimer("Building trace");
+//		timer.newPoint("Execution");
+//		File dumpFile;
+//		try {
+//			boolean toDeleteDumpFile = false;
+//			switch (reader) {
+//			case FILE:
+//				dumpFile = File.createTempFile("trace", ".exec");
+//				dumpFile.deleteOnExit();
+//				break;
+//			default:
+//				dumpFile = DatabasePreference.getDBFile();
+//				break;
+//			}
+//			addAgentParam(AgentParams.OPT_TRACE_RECORDER, reader.name());
+//			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFile.getPath()));
+//			super.startAndWaitUntilStop(getConfig());
+//			System.out.println("|");
+//			timer.newPoint("Read output result");
+//			setTraces(reader.create().ReadTraces(precheckInfo,dumpFile.getPath()));
+//			if (toDeleteDumpFile) {
+//				dumpFile.delete();
+//			}
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			throw new SavRtException(e);
+//		}
+//		System.out.println(timer.getResultString());
+//		return true;
+//	}
 
 	public boolean runWithDumpFileOption(String filePath) throws SavException {
 		isPrecheckMode = false;
@@ -209,7 +209,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 			String msg = reader.readString();
 			updateTestResult(msg);
 			runningInfo = new RunningInfo();
-			runningInfo.setTrace(reader.readTrace());
+			runningInfo.setTraceList(reader.readTrace());
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -281,11 +281,11 @@ public class TraceAgentRunner extends AgentVmRunner {
 		return testFailureMessage;
 	}
 
-	public Trace getTrace() {
+	public Trace getMainTrace() {
 		if (isPrecheckMode) {
 			throw new UnsupportedOperationException("TraceAgent has been run in precheck mode!");
 		}
-		return runningInfo.getTrace();
+		return runningInfo.getMainTrace();
 	}
 
 	public RunningInfo getRunningInfo() {

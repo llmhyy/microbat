@@ -29,12 +29,12 @@ public class FileRecorder implements TraceRecorder {
 	@Override
 	public void store(List<Trace> traceList) {
 		
-		Trace trace = traceList.get(0);
+//		Trace trace = traceList.get(0);
 		
 		RunningInfo result = new RunningInfo();
 		result.setProgramMsg(Agent.getProgramMsg());
-		result.setTrace(trace);
-		result.setCollectedSteps(trace.getExecutionList().size());
+		result.setTraceList(traceList);
+		result.setCollectedSteps(traceList.get(0).getExecutionList().size());
 		result.setExpectedSteps(agentParams.getExpectedSteps());
 		try {
 			result.saveToFile(agentParams.getDumpFile(), false);

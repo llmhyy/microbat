@@ -12,7 +12,7 @@ import microbat.instrumentation.output.tcp.TcpConnector;
 import microbat.model.trace.Trace;
 
 /**
- * @author knightsong
+ * 
  *
  */
 public class SocketRecorder implements TraceRecorder{
@@ -25,13 +25,12 @@ public class SocketRecorder implements TraceRecorder{
 	 */
 	@Override
 	public void store(List<Trace> traceList) {
-		Trace trace =traceList.get(0);
 		TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
 		TraceOutputWriter traceWriter;
 		try {
 			traceWriter = tcpConnector.connect();
 			traceWriter.writeString(Agent.getProgramMsg());
-			traceWriter.writeTrace(trace);
+			traceWriter.writeTrace(traceList);
 			traceWriter.flush();
 			Thread.sleep(10000l);
 		} catch (Exception e) {

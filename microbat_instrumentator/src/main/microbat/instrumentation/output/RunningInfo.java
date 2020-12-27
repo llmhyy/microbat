@@ -8,13 +8,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 import microbat.model.trace.Trace;
 import sav.common.core.SavRtException;
 
 public class RunningInfo {
 	private static final String HEADER = "TracingResult";
-	private Trace trace;
+	private List<Trace> traceList;
 	private String programMsg;
 	private int expectedSteps;
 	private int collectedSteps;
@@ -38,7 +39,7 @@ public class RunningInfo {
 			} else {
 				info.programMsg = header; // for compatible reason with old version. TO BE REMOVED.
 			}
-			info.trace = reader.readTrace();
+			info.setTraceList(reader.readTrace());
 			return info;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -57,6 +58,16 @@ public class RunningInfo {
 		}
 	}
 	
+	public Trace getMainTrace() {
+		for(Trace trace: traceList) {
+			if(trace.isMain()) {
+				return trace;
+			}
+		}
+		
+		return null;
+	}
+	
 	public void saveToFile(String dumpFile, boolean append) throws IOException {
 		File file = new File(dumpFile);
 		String traceExecFolder = file.getParent();
@@ -72,7 +83,7 @@ public class RunningInfo {
 			outputWriter.writeString(programMsg);
 			outputWriter.writeInt(expectedSteps);
 			outputWriter.writeInt(collectedSteps);
-			outputWriter.writeTrace(trace);
+			outputWriter.writeTrace(traceList);
 		} finally {
 			bufferedStream.close();
 			if (outputWriter != null) {
@@ -82,14 +93,6 @@ public class RunningInfo {
 				fileStream.close();
 			}
 		}
-	}
-	
-	public Trace getTrace() {
-		return trace;
-	}
-
-	public void setTrace(Trace trace) {
-		this.trace = trace;
 	}
 
 	public String getProgramMsg() {
@@ -124,5 +127,13 @@ public class RunningInfo {
 	public String toString() {
 		return "RunningInfo [programMsg=" + programMsg + ", expectedSteps=" + expectedSteps + ", collectedSteps="
 				+ collectedSteps + "]";
+	}
+
+	public List<Trace> getTraceList() {
+		return traceList;
+	}
+
+	public void setTraceList(List<Trace> traceList) {
+		this.traceList = traceList;
 	}
 }

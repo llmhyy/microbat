@@ -38,10 +38,12 @@ public class TraceOutputWriter extends OutputWriter {
 		this.filterFilePrefix = filterFilePrefix;
 	}
 	
-	public void writeTrace(Trace trace) throws IOException {
-		int traceNum = (trace == null ? 0 : 1);
+	public void writeTrace(List<Trace> traceList) throws IOException {
+		int traceNum = traceList.size();
 		writeVarInt(traceNum);
-		writeTrace(trace, null, null, null, null);
+		for(Trace trace: traceList) {
+			writeTrace(trace, null, null, null, null);			
+		}
 	}
 	
 	public void writeTrace(Trace trace, String projectName, String projectVersion, String launchClass,
@@ -50,7 +52,8 @@ public class TraceOutputWriter extends OutputWriter {
 		writeString(projectVersion);
 		writeString(launchClass);
 		writeString(launchMethod);
-		writeBoolean(trace.isMultiThread());
+		writeBoolean(trace.isMain());
+		writeString(trace.getThreadName());
 		writeFilterInfo(trace.getIncludedLibraryClasses(), true);
 		writeFilterInfo(trace.getExcludedLibraryClasses(), false);
 		Map<String, Integer> locIdIdxMap = writeLocations(trace);

@@ -33,6 +33,8 @@ public class Trace {
 	private AppJavaClassPath appJavaClassPath;
 	private List<String> includedLibraryClasses = new ArrayList<>();
 	private List<String> excludedLibraryClasses = new ArrayList<>();
+	private boolean isMain;
+	private String threadName;
 	
 	/**
 	 * This variable is to trace whether the variables in different lines are the same
@@ -64,8 +66,6 @@ public class Trace {
 	 * the time used to construct the trace, which is used for evaluation.
 	 */
 	private int constructTime = 0;
-	
-	private boolean isMultiThread = false;
 	
 	private String threadId;
 
@@ -990,14 +990,6 @@ public class Trace {
 		return this.exectionList.get(order-1);
 	}
 
-	public boolean isMultiThread() {
-		return isMultiThread;
-	}
-
-	public void setMultiThread(boolean isMultiThread) {
-		this.isMultiThread = isMultiThread;
-	}
-
 	public List<BreakPoint> allLocations() {
 		List<BreakPoint> locations = new ArrayList<>();
 		for(TraceNode node: this.exectionList){
@@ -1043,6 +1035,22 @@ public class Trace {
 	 */
 	public void setThreadId(String threadId) {
 		this.threadId = threadId;
+	}
+
+	public String getThreadName() {
+		return threadName;
+	}
+
+	public void setThreadName(String threadName) {
+		this.threadName = threadName;
+	}
+
+	public boolean isMain() {
+		return isMain;
+	}
+
+	public void setMain(boolean isMain) {
+		this.isMain = isMain;
 	}
 
 	

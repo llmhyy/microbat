@@ -58,18 +58,16 @@ public class TraceAgent implements IAgent {
 		// LLT: only trace of main thread is recorded.
 		List<IExecutionTracer> tracers = ExecutionTracer.getAllThreadStore();
         
-		System.currentTimeMillis();
-		
 		int size=tracers.size();
 		List<Trace> traceList=new ArrayList<>(size);	
 		for(int i=0;i<size;i++) {
 			
 			ExecutionTracer tracer=(ExecutionTracer) tracers.get(i);
-			Trace trace = tracer.getTrace();	
-			if (size>1) {
-				trace.setMultiThread(true);
-			}
+			
+			Trace trace = tracer.getTrace();				
 			trace.setThreadId(tracer.getThreadId());
+			trace.setMain(ExecutionTracer.getMainThreadStore().equals(tracer));
+			
 			constructTrace(trace);
 			traceList.add(trace);
 		}		
@@ -100,29 +98,29 @@ public class TraceAgent implements IAgent {
 	
 	}
 
-	private void writeOutput(Trace trace) throws Exception {
-		AgentLogger.debug("Saving trace...");
-
-		if (agentParams.getDumpFile() != null) {
-			RunningInfo result = new RunningInfo();
-			result.setProgramMsg(Agent.getProgramMsg());
-			result.setTrace(trace);
-			result.setCollectedSteps(trace.getExecutionList().size());
-			result.setExpectedSteps(agentParams.getExpectedSteps());
-			result.saveToFile(agentParams.getDumpFile(), false);
-			AgentLogger.debug(result.toString());
-		} else if (agentParams.getTcpPort() != AgentConstants.UNSPECIFIED_INT_VALUE) {
-			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
-			TraceOutputWriter traceWriter = tcpConnector.connect();
-			traceWriter.writeString(Agent.getProgramMsg());
-			traceWriter.writeTrace(trace);
-			traceWriter.flush();
-			Thread.sleep(10000l);
-			tcpConnector.close();
-		}
-
-		AgentLogger.debug("Trace saved.");
-	}
+//	private void writeOutput(Trace trace) throws Exception {
+//		AgentLogger.debug("Saving trace...");
+//
+//		if (agentParams.getDumpFile() != null) {
+//			RunningInfo result = new RunningInfo();
+//			result.setProgramMsg(Agent.getProgramMsg());
+//			result.setTrace(trace);
+//			result.setCollectedSteps(trace.getExecutionList().size());
+//			result.setExpectedSteps(agentParams.getExpectedSteps());
+//			result.saveToFile(agentParams.getDumpFile(), false);
+//			AgentLogger.debug(result.toString());
+//		} else if (agentParams.getTcpPort() != AgentConstants.UNSPECIFIED_INT_VALUE) {
+//			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
+//			TraceOutputWriter traceWriter = tcpConnector.connect();
+//			traceWriter.writeString(Agent.getProgramMsg());
+//			traceWriter.writeTrace(trace);
+//			traceWriter.flush();
+//			Thread.sleep(10000l);
+//			tcpConnector.close();
+//		}
+//
+//		AgentLogger.debug("Trace saved.");
+//	}
 
 	private void createVirtualDataRelation(Trace trace) {
 		for (int i = 0; i < trace.size(); i++) {

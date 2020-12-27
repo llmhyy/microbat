@@ -44,7 +44,7 @@ public class TraceRestoreHandler extends AbstractHandler{
 						@Override
 						public void run() {
 							TraceView traceView = MicroBatViews.getTraceView();
-							traceView.setTrace(trace);
+							traceView.setMainTrace(trace);
 							traceView.updateData();
 						}
 

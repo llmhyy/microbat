@@ -63,7 +63,7 @@ public class TraceRecorder01 extends DbService {
 		ps.setString(idx++, launchClass);
 		ps.setString(idx++, launchMethod);
 		ps.setTimestamp(idx++, new Timestamp(System.currentTimeMillis()));
-		ps.setBoolean(idx++, trace.isMultiThread());
+		ps.setBoolean(idx++, trace.isMain());
 		ps.execute();
 		int traceId = getFirstGeneratedIntCol(ps);
 		insertSteps(traceId, trace.getExecutionList(), conn, closables);

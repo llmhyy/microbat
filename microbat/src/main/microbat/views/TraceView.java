@@ -65,6 +65,8 @@ import microbat.util.Settings;
 
 public class TraceView extends ViewPart {
 
+	protected List<Trace> traceList;
+	
 	protected Trace trace;
 	protected TreeViewer listViewer;
 
@@ -459,8 +461,16 @@ public class TraceView extends ViewPart {
 		return trace;
 	}
 
-	public void setTrace(Trace trace) {
+	public void setMainTrace(Trace trace) {
 		this.trace = trace;
+	}
+
+	public List<Trace> getTraceList() {
+		return traceList;
+	}
+
+	public void setTraceList(List<Trace> traceList) {
+		this.traceList = traceList;
 	}
 
 	class TraceContentProvider implements ITreeContentProvider {

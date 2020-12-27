@@ -106,7 +106,7 @@ public class TraceRetriever extends DbService {
 	private List<Object[]> loadStepVariableRelation(int traceId, Connection conn, List<AutoCloseable> closables) throws SQLException {
 		PreparedStatement ps = conn.prepareStatement("SELECT r.step_order, r.var_id, r.RW FROM StepVariableRelation r WHERE r.trace_id=?");
 		ps.setInt(1, traceId);
-		ResultSet rs = ps.executeQuery();
+		ResultSet rs = ps.executeQuery();	
 		closables.add(ps);
 		closables.add(rs);
 		List<Object[]> result = new ArrayList<>();

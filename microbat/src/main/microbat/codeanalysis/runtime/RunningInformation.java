@@ -1,19 +1,29 @@
 package microbat.codeanalysis.runtime;
 
+import java.util.List;
+
 import microbat.model.trace.Trace;
 
 public class RunningInformation {
 	private String programMsg;
 	private int expectedSteps;
 	private int collectedSteps;
-	private Trace trace;
+	private List<Trace> traceList;
+	private Trace mainTrace;
 	
-	public RunningInformation(String programMsg, int expectedSteps, int collectedSteps, Trace trace) {
+	public RunningInformation(String programMsg, int expectedSteps, int collectedSteps, List<Trace> traceList) {
 		super();
 		this.programMsg = programMsg;
 		this.expectedSteps = expectedSteps;
 		this.collectedSteps = collectedSteps;
-		this.setTrace(trace);
+		this.traceList = traceList;
+		
+		for(Trace trace: traceList) {
+			if(trace.isMain()) {
+				this.mainTrace = trace;
+				break;
+			}
+		}
 	}
 	
 	public boolean isExpectedStepsMet(){
@@ -47,12 +57,20 @@ public class RunningInformation {
 		this.collectedSteps = collectedSteps;
 	}
 
-	public Trace getTrace() {
-		return trace;
+	public List<Trace> getTraceList() {
+		return traceList;
 	}
 
-	public void setTrace(Trace trace) {
-		this.trace = trace;
+	public void setTraceList(List<Trace> traceList) {
+		this.traceList = traceList;
+	}
+
+	public Trace getMainTrace() {
+		return mainTrace;
+	}
+
+	public void setMainTrace(Trace mainTrace) {
+		this.mainTrace = mainTrace;
 	}
 
 }

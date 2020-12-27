@@ -805,22 +805,10 @@ public class DebugFeedbackView extends ViewPart {
 		return traceView;
 	}
 	
-//	public MutilThreadTraceView getConcurrentTraceView() {
-//		if(traceView == null){
-//			traceView = MicroBatViews.getConcurrentTraceView();
-//		}
-//		
-//		return traceView;
-//	}
-
 	public void setTraceView(TraceView traceView) {
 		this.traceView = traceView;
 	}
 	
-//	public void setTraceView(MutilThreadTraceView traceView) {
-//		this.traceView = traceView;
-//	}
-
 	@SuppressWarnings("unchecked")
 	class RWVariableContentProvider implements ITreeContentProvider{
 		/**

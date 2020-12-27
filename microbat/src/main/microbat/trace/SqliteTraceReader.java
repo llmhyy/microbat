@@ -25,35 +25,39 @@ public class SqliteTraceReader implements TraceReader {
 	 * @see microbat.trace.TraceReader#Read()
 	 */
 	@Override
-	public RunningInfo Read(PrecheckInfo precheckInfo, String drumpFile) {
-		TraceRetriever01 traceRetriever01 = new TraceRetriever01(drumpFile);
-		RunningInfo info = new RunningInfo();
-		Trace trace = null;
-		try {
-			trace = traceRetriever01.retrieveTrace(traceRetriever01.getLatestTraces(precheckInfo.getProgramMsg()))
-					.get(0);
-			info.setTrace(trace);
-			info.setCollectedSteps(trace.getExecutionList().size());
-			info.setExpectedSteps(precheckInfo.getStepTotal());
-			info.setProgramMsg(precheckInfo.getProgramMsg());
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return info;
-	}
-
-	@Override
-	public List<Trace> ReadTraces(PrecheckInfo info, String drumpFile) {
+	public RunningInfo read(PrecheckInfo precheckInfo, String drumpFile) {
+		
 		TraceRetriever01 traceRetriever01 = new TraceRetriever01(drumpFile);
 		List<Trace> traces = null;
 		try {
-			traces= traceRetriever01.retrieveTrace(traceRetriever01.getLatestTraces(info.getProgramMsg()));
+			traces= traceRetriever01.retrieveTrace(traceRetriever01.getLatestTraces(precheckInfo.getProgramMsg()));
 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return traces;
+//		return traces;
+		
+		RunningInfo info = new RunningInfo();
+		info.setTraceList(traces);
+		info.setCollectedSteps(traces.get(0).getExecutionList().size());
+		info.setExpectedSteps(precheckInfo.getStepTotal());
+		info.setProgramMsg(precheckInfo.getProgramMsg());
+		
+//		TraceRetriever01 traceRetriever01 = new TraceRetriever01(drumpFile);
+//		Trace trace = null;
+//		try {
+//			trace = traceRetriever01.retrieveTrace(traceRetriever01.getLatestTraces(precheckInfo.getProgramMsg()))
+//					.get(0);
+//
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		}
+		return info;
 	}
+
+//	@Override
+//	public List<Trace> ReadTraces(PrecheckInfo info, String drumpFile) {
+//		
+//	}
 
 }

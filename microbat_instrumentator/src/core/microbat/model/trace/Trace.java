@@ -35,6 +35,8 @@ public class Trace {
 	private List<String> includedLibraryClasses;
 	private List<String> excludedLibraryClasses;
 	private long threadId;
+	private boolean isMain;
+	private String threadName;
 
 	/**
 	 * This variable is to trace whether the variables in different lines are the same
@@ -59,8 +61,6 @@ public class Trace {
 	 * variable.
 	 */
 //	private Map<String, StepVariableRelationEntry> stepVariableTable = new HashMap<>();
-	
-	private boolean isMultiThread = false;
 	
 	public long getThreadId() {
 		return threadId;
@@ -401,14 +401,6 @@ public class Trace {
 		return this.exectionList.get(order-1);
 	}
 
-	public boolean isMultiThread() {
-		return isMultiThread;
-	}
-
-	public void setMultiThread(boolean isMultiThread) {
-		this.isMultiThread = isMultiThread;
-	}
-	
 	public List<String> getIncludedLibraryClasses() {
 		return CollectionUtils.nullToEmpty(includedLibraryClasses);
 	}
@@ -423,5 +415,21 @@ public class Trace {
 
 	public void setExcludedLibraryClasses(List<String> excludedLibraryClasses) {
 		this.excludedLibraryClasses = excludedLibraryClasses;
+	}
+
+	public String getThreadName() {
+		return threadName;
+	}
+
+	public void setThreadName(String threadName) {
+		this.threadName = threadName;
+	}
+
+	public boolean isMain() {
+		return isMain;
+	}
+
+	public void setMain(boolean isMain) {
+		this.isMain = isMain;
 	}
 }

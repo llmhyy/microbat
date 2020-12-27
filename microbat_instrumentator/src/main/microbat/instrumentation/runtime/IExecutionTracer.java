@@ -50,4 +50,6 @@ public interface IExecutionTracer {
 	
 	public void unLock();
 
+	public void setThreadName(String threadName);
+
 }

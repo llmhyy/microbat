@@ -114,4 +114,9 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 		
 	}
 
+	@Override
+	public void setThreadName(String threadName) {
+		
+	}
+
 }

@@ -161,7 +161,7 @@ public class StartDebugHandler0 extends AbstractHandler {
 							monitor.setTaskName("construct dominance and loop-parent relation");
 							
 							final Trace trace = tcExecutor.getTrace();
-							trace.setMultiThread(isMultiThread);
+//							trace.setMultiThread(isMultiThread);
 							trace.constructDomianceRelation();
 							trace.constructLoopParentRelation();
 							
@@ -173,7 +173,7 @@ public class StartDebugHandler0 extends AbstractHandler {
 								@Override
 								public void run() {
 									TraceView traceView = MicroBatViews.getTraceView();
-									traceView.setTrace(trace);
+									traceView.setMainTrace(trace);
 									traceView.updateData();
 								}
 								
