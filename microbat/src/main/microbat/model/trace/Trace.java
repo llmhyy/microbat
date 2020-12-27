@@ -248,11 +248,42 @@ public class Trace {
 		return findProducer(readVar, checkingNode);
 	}
 	
-	public TraceNode findDataDependentee(TraceNode traceNode, VarValue writtenVar) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<TraceNode> findDataDependentee(TraceNode traceNode, VarValue writtenVar) {
+		return findConsumer(writtenVar, traceNode);
 	}
 	
+	private List<TraceNode> findConsumer(VarValue writtenVar, TraceNode startNode) {
+		List<TraceNode> consumers = new ArrayList<TraceNode>();
+		
+		String varID = Variable.truncateSimpleID(writtenVar.getVarID());
+		String headID = Variable.truncateSimpleID(writtenVar.getAliasVarID());
+		
+		for(int i=startNode.getOrder()+1; i>=this.getExecutionList().size(); i++) {
+			TraceNode node = this.getTraceNode(i);
+			for(VarValue readVar: node.getReadVariables()) {
+				
+				String rVarID = Variable.truncateSimpleID(readVar.getVarID());
+				String rHeadID = Variable.truncateSimpleID(readVar.getAliasVarID());
+				
+				if(rVarID != null && rVarID.equals(varID)) {
+					consumers.add(node);						
+				}
+				
+				if(rHeadID != null && rHeadID.equals(headID)) {
+					consumers.add(node);
+				}
+				
+				VarValue childValue = readVar.findVarValue(varID, headID);
+				if(childValue != null) {
+					consumers.add(node);
+				}
+				
+			}
+		}
+		
+		return consumers;
+	}
+
 	public List<TraceNode> findNextReadingTraceNodes(VarValue value, int startOrder){
 		String varID = value.getAliasVarID();
 		varID = Variable.truncateSimpleID(varID);

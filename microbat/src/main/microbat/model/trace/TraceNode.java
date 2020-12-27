@@ -484,8 +484,8 @@ public class TraceNode{
 	public Map<TraceNode, VarValue> getDataDominatee() {
 		Map<TraceNode, VarValue> dataDominatees = new HashMap<>();
 		for(VarValue writtenVar: this.getWrittenVariables()){
-			TraceNode dominatee = this.trace.findDataDependentee(this, writtenVar);
-			if(dominatee != null){
+			List<TraceNode> dominatees = this.trace.findDataDependentee(this, writtenVar);
+			for(TraceNode dominatee: dominatees){
 				dataDominatees.put(dominatee, writtenVar);
 			}
 		}
