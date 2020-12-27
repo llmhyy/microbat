@@ -30,6 +30,15 @@ public class ConcurrentPerspective implements IPerspectiveFactory {
 	private void addViews() {
 		// Creates the overall folder layout. 
 		// Note that each new Folder uses a percentage of the remaining EditorArea.
+		IFolderLayout bottom =
+				factory.createFolder(
+						"bottom", //NON-NLS-1
+						IPageLayout.BOTTOM,
+						0.55f,
+						factory.getEditorArea());
+		bottom.addView(MicroBatViews.COMCURRENT_TRACE);
+		bottom.addPlaceholder(IConsoleConstants.ID_CONSOLE_VIEW);
+		
 		IFolderLayout topLeft =
 				factory.createFolder(
 						"topLeft",
@@ -47,14 +56,6 @@ public class ConcurrentPerspective implements IPerspectiveFactory {
 						factory.getEditorArea());
 		topRight.addView(MicroBatViews.DEBUG_FEEDBACK); 
 		
-		IFolderLayout bottom =
-			factory.createFolder(
-				"bottom", //NON-NLS-1
-				IPageLayout.BOTTOM,
-				0.75f,
-				factory.getEditorArea());
-		bottom.addView(MicroBatViews.COMCURRENT_TRACE);
-		bottom.addPlaceholder(IConsoleConstants.ID_CONSOLE_VIEW);
 	}
 
 }

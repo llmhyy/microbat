@@ -603,7 +603,6 @@ public class TraceNode{
 		
 	}
 	
-	//TODO
 	public Map<Integer, TraceNode> findAllDominatees() {
 		Map<Integer, TraceNode> dominatees = new HashMap<>();
 		
@@ -612,7 +611,6 @@ public class TraceNode{
 		return dominatees;
 	}
 
-	//TODO
 	private void findDominatees(TraceNode node, Map<Integer, TraceNode> dominatees) {
 		for(TraceNode dominatee: node.getDataDominatee().keySet()){
 			if(!dominatees.containsKey(dominatee.getOrder())){
