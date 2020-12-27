@@ -86,10 +86,10 @@ public class SimulatedUser {
 				
 				if(options.isEmpty()){
 					for(VarValue writtenVar: suspiciousNode.getWrittenVariables()){
-						Settings.interestedVariables.remove(writtenVar.getVarID());
+						Settings.interestedVariables.remove(writtenVar);
 					}
 					for(VarValue readVar: suspiciousNode.getReadVariables()){
-						Settings.interestedVariables.remove(readVar.getVarID());
+						Settings.interestedVariables.remove(readVar);
 					}
 					
 					feedback.setFeedbackType(UserFeedback.CORRECT);
@@ -101,9 +101,9 @@ public class SimulatedUser {
 						otherOptions.add(options.get(i));
 					}
 					
-					List<String> wrongVarIDs = option.getIncludedWrongVarID();
-					for(String wrongVarID: wrongVarIDs){
-						Settings.interestedVariables.add(wrongVarID, checkTime);						
+					List<VarValue> wrongVars = option.getIncludedWrongVars();
+					for(VarValue wrongVar: wrongVars){
+						Settings.interestedVariables.add(checkTime, wrongVar);						
 					}
 					
 					feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);

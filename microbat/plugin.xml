@@ -80,15 +80,9 @@
       </perspective>
       <perspective
             class="microbat.perspectives.ConcurrentPerspective"
-            icon="icons/microbat.png"
+            icon="icons/concurrency.png"
             id="microbat.perspectives.ConcurrentPerspective"
             name="Concurrent">
-      </perspective>
-      <perspective
-            class="microbat.evaluation.perspectives.TraceComparisonPerspective"
-            icon="icons/trace_comparison.png"
-            id="microbat.perspective.traceChecking"
-            name="Trace Comparison">
       </perspective>
    </extension>
    <extension
@@ -132,11 +126,6 @@
             defaultHandler="microbat.test.handler.RunTestHandler"
             id="microbat.command.runTest"
             name="Run Test">
-      </command>
-      <command
-            defaultHandler="microbat.handler.StaticAnalysisHandler"
-            id="microbat.command.staticAnalysis"
-            name="Static Analysis">
       </command>
       <command
             defaultHandler="microbat.handler.TransformLibHandler"
@@ -198,11 +187,6 @@
                   commandId="microbat.command.runTest"
                   icon="icons/evaluation.png"
                   label="Run Test"
-                  style="push">
-            </command>
-            <command
-                  commandId="microbat.command.staticAnalysis"
-                  label="Static Analysis"
                   style="push">
             </command>
             <command

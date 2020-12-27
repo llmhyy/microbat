@@ -78,25 +78,25 @@ public class TraceRetriever extends DbService {
 		List<TraceNode> steps = loadSteps(traceId, conn, closables, trace);
 		trace.setExectionList(steps);
 		// load stepVar
-		List<Object[]> rows = loadStepVariableRelation(traceId, conn, closables);
-		Map<String, StepVariableRelationEntry> stepVariableTable = trace.getStepVariableTable();
-		for (Object[] row : rows) {
-			int stepOrder = (int) row[0];
-			String varId = (String) row[1];
-			int rw = (int) row[2];
-			StepVariableRelationEntry entry = stepVariableTable.get(varId);
-			if (entry == null) {
-				entry = new StepVariableRelationEntry(varId);
-				stepVariableTable.put(varId, entry);
-			}
-			if (rw == TraceRecorder.WRITE) {
-				entry.addProducer(steps.get(stepOrder - 1));
-			} else if (rw == TraceRecorder.READ) {
-				entry.addConsumer(steps.get(stepOrder - 1));
-			} else {
-				throw new SQLException("Tabel StepVariableRelationEntry: Invalid RW value!");
-			}
-		}
+//		List<Object[]> rows = loadStepVariableRelation(traceId, conn, closables);
+//		Map<String, StepVariableRelationEntry> stepVariableTable = trace.getStepVariableTable();
+//		for (Object[] row : rows) {
+//			int stepOrder = (int) row[0];
+//			String varId = (String) row[1];
+//			int rw = (int) row[2];
+//			StepVariableRelationEntry entry = stepVariableTable.get(varId);
+//			if (entry == null) {
+//				entry = new StepVariableRelationEntry(varId);
+//				stepVariableTable.put(varId, entry);
+//			}
+//			if (rw == TraceRecorder.WRITE) {
+//				entry.addProducer(steps.get(stepOrder - 1));
+//			} else if (rw == TraceRecorder.READ) {
+//				entry.addConsumer(steps.get(stepOrder - 1));
+//			} else {
+//				throw new SQLException("Tabel StepVariableRelationEntry: Invalid RW value!");
+//			}
+//		}
 		return trace;
 	}
 	

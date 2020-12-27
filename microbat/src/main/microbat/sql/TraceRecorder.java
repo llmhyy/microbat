@@ -66,7 +66,7 @@ public class TraceRecorder extends DbService {
 		ps.execute();
 		int traceId = getFirstGeneratedIntCol(ps);
 		insertSteps(traceId, trace.getExecutionList(), conn, closables);
-		insertStepVariableRelation(trace, traceId, conn, closables);
+//		insertStepVariableRelation(trace, traceId, conn, closables);
 		return traceId;
 	}
 	
@@ -109,38 +109,38 @@ public class TraceRecorder extends DbService {
 		return VarValueXmlWriter.generateXmlContent(varValues);
 	}
 	
-	private void insertStepVariableRelation(Trace trace, int traceId, Connection conn, List<AutoCloseable> closables)
-			throws SQLException {
-		String sql = "INSERT INTO StepVariableRelation (var_id, trace_id, step_order, rw) VALUES (?, ?, ?, ?)";
-		PreparedStatement ps = conn.prepareStatement(sql);
-		closables.add(ps);
-		int count = 0;
-		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {
-			for (TraceNode node : entry.getProducers()) {
-				int idx = 1;
-				ps.setString(idx++, entry.getVarID());
-				ps.setInt(idx++, traceId);
-				ps.setInt(idx++, node.getOrder());
-				ps.setInt(idx++, WRITE);
-				ps.addBatch();
-			}
-			for (TraceNode node : entry.getConsumers()) {
-				int idx = 1;
-				ps.setString(idx++, entry.getVarID());
-				ps.setInt(idx++, traceId);
-				ps.setInt(idx++, node.getOrder());
-				ps.setInt(idx++, READ);
-				ps.addBatch();
-			}
-			if (++count >= BATCH_SIZE) {
-				ps.executeBatch();
-				count = 0;
-			}
-		}
-		if (count > 0) {
-			ps.executeBatch();
-		}
-	}
+//	private void insertStepVariableRelation(Trace trace, int traceId, Connection conn, List<AutoCloseable> closables)
+//			throws SQLException {
+//		String sql = "INSERT INTO StepVariableRelation (var_id, trace_id, step_order, rw) VALUES (?, ?, ?, ?)";
+//		PreparedStatement ps = conn.prepareStatement(sql);
+//		closables.add(ps);
+//		int count = 0;
+//		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {
+//			for (TraceNode node : entry.getProducers()) {
+//				int idx = 1;
+//				ps.setString(idx++, entry.getVarID());
+//				ps.setInt(idx++, traceId);
+//				ps.setInt(idx++, node.getOrder());
+//				ps.setInt(idx++, WRITE);
+//				ps.addBatch();
+//			}
+//			for (TraceNode node : entry.getConsumers()) {
+//				int idx = 1;
+//				ps.setString(idx++, entry.getVarID());
+//				ps.setInt(idx++, traceId);
+//				ps.setInt(idx++, node.getOrder());
+//				ps.setInt(idx++, READ);
+//				ps.addBatch();
+//			}
+//			if (++count >= BATCH_SIZE) {
+//				ps.executeBatch();
+//				count = 0;
+//			}
+//		}
+//		if (count > 0) {
+//			ps.executeBatch();
+//		}
+//	}
 
 	private void setNodeOrder(PreparedStatement ps, int idx, TraceNode node) throws SQLException {
 		if (node != null) {

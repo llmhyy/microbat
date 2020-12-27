@@ -57,11 +57,9 @@ public class TraceNode{
 //	private List<VarValue> hiddenReadVariables = new ArrayList<>();
 //	private List<VarValue> hiddenWrittenVariables = new ArrayList<>();
 	
-	//TODO Xuezhi, we need to comment out those two varaibles, they should be calculated on real time.
-	private Map<TraceNode, List<String>> dataDominators = new HashMap<>();
-	private Map<TraceNode, List<String>> dataDominatees = new HashMap<>();
+//	private Map<TraceNode, List<String>> dataDominators = new HashMap<>();
+//	private Map<TraceNode, List<String>> dataDominatees = new HashMap<>();
 	
-	//TODO Xuezhi, we need to comment out those two varaibles, they should be calculated on real time.
 	private TraceNode controlDominator;
 	private List<TraceNode> controlDominatees = new ArrayList<>();
 	
@@ -107,8 +105,7 @@ public class TraceNode{
 	public List<VarValue> findMarkedReadVariable(){
 		List<VarValue> markedReadVars = new ArrayList<>();
 		for(VarValue readVarValue: this.readVariables){
-			String readVarID = readVarValue.getVarID();
-			if(Settings.interestedVariables.contains(readVarID)){
+			if(Settings.interestedVariables.contains(readVarValue)){
 				markedReadVars.add(readVarValue);
 			}
 		}		
@@ -142,53 +139,54 @@ public class TraceNode{
 	}
 	
 	public TraceNode getDataDominator(VarValue readVar) {
-		TraceNode dataDominator = null;
+//		TraceNode dataDominator = null;
+//		
+//		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
+//		StepVariableRelationEntry entry = table.get(readVar.getVarID());
+//		if(entry!=null){
+//			TraceNode latestProducer = findLatestProducer(entry);
+//			dataDominator = latestProducer;
+//		}
+//		
+//		return dataDominator;
 		
-		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
-		StepVariableRelationEntry entry = table.get(readVar.getVarID());
-		if(entry!=null){
-			TraceNode latestProducer = findLatestProducer(entry);
-			dataDominator = latestProducer;
-		}
-		
-		return dataDominator;
+		return this.trace.findDataDependency(this, readVar);
 	}
 	
-	private TraceNode findLatestProducer(StepVariableRelationEntry entry) {
-		List<TraceNode> producers = entry.getProducers();
-		
-		if(producers == null){
-			return null;
-		}
-		
-		TraceNode latestProducer = null;
-		for(TraceNode producer: producers){
-			if(producer.getOrder()<this.getOrder()){
-				if(latestProducer==null){
-					latestProducer = producer;
-				}
-				else{
-					if(producer.getOrder()>latestProducer.getOrder()){
-						latestProducer = producer;
-					}
-				}
-			}
-		}
-		
-		return latestProducer;
-	}
+//	private TraceNode findLatestProducer(StepVariableRelationEntry entry) {
+//		List<TraceNode> producers = entry.getProducers();
+//		
+//		if(producers == null){
+//			return null;
+//		}
+//		
+//		TraceNode latestProducer = null;
+//		for(TraceNode producer: producers){
+//			if(producer.getOrder()<this.getOrder()){
+//				if(latestProducer==null){
+//					latestProducer = producer;
+//				}
+//				else{
+//					if(producer.getOrder()>latestProducer.getOrder()){
+//						latestProducer = producer;
+//					}
+//				}
+//			}
+//		}
+//		
+//		return latestProducer;
+//	}
 
 	public int getReadVarCorrectness(UserInterestedVariables interestedVariables, boolean isUICheck){
 		
 		for(VarValue var: getReadVariables()){
-			String readVarID = var.getVarID();
-			if(interestedVariables.contains(readVarID)){
+			if(interestedVariables.contains(var)){
 				return TraceNode.READ_VARS_INCORRECT;
 			}
 			
 			List<VarValue> children = var.getAllDescedentChildren();
 			for(VarValue child: children){
-				if(interestedVariables.contains(child.getVarID())){
+				if(interestedVariables.contains(child)){
 					return TraceNode.READ_VARS_INCORRECT;
 				}
 			}
@@ -213,14 +211,13 @@ public class TraceNode{
 	public int getWittenVarCorrectness(UserInterestedVariables interestedVariables, boolean isUICheck){
 		
 		for(VarValue var: getWrittenVariables()){
-			String writtenVarID = var.getVarID();
-			if(interestedVariables.contains(writtenVarID)){
+			if(interestedVariables.contains(var)){
 				return TraceNode.WRITTEN_VARS_INCORRECT;
 			}
 			
 			List<VarValue> children = var.getAllDescedentChildren();
 			for(VarValue child: children){
-				if(interestedVariables.contains(child.getVarID())){
+				if(interestedVariables.contains(child)){
 					return TraceNode.READ_VARS_INCORRECT;
 				}
 			}
@@ -474,56 +471,26 @@ public class TraceNode{
 
 	public Map<TraceNode, VarValue> getDataDominators() {
 		Map<TraceNode, VarValue> dataDominators = new HashMap<>();
-		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
 		for(VarValue readVar: this.getReadVariables()){
-			StepVariableRelationEntry entry = table.get(readVar.getVariable().getVarID());
-			if(entry != null){
-				TraceNode dominator = findLatestProducer(entry);
-				if(dominator != null){
-					dataDominators.put(dominator, readVar);
-				}
+			TraceNode dominator = this.trace.findDataDependency(this, readVar);
+			if(dominator != null){
+				dataDominators.put(dominator, readVar);
 			}
 		}
 		
 		return dataDominators;
 	}
 
-	//TODO
 	public Map<TraceNode, VarValue> getDataDominatee() {
 		Map<TraceNode, VarValue> dataDominatees = new HashMap<>();
-		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
 		for(VarValue writtenVar: this.getWrittenVariables()){
-			StepVariableRelationEntry entry = table.get(writtenVar.getVariable());
-			if(entry != null){
-				for(TraceNode consumer: entry.getConsumers()){
-					dataDominatees.put(consumer, writtenVar);
-				}
+			TraceNode dominatee = this.trace.findDataDependentee(this, writtenVar);
+			if(dominatee != null){
+				dataDominatees.put(dominatee, writtenVar);
 			}
 		}
 		
 		return dataDominatees;
-	}
-
-	//TODO
-	public void addDataDominator(TraceNode node, List<String> variables){
-		List<String> varIDs = this.dataDominators.get(node);
-		if(varIDs == null){
-			this.dataDominators.put(node, variables);
-		}
-		else{
-			varIDs.addAll(variables);
-		}
-	}
-	
-	//TODO
-	public void addDataDominatee(TraceNode node, List<String> variables){
-		List<String> varIDs = this.dataDominatees.get(node);
-		if(varIDs == null){
-			this.dataDominatees.put(node, variables);
-		}
-		else{
-			varIDs.addAll(variables);
-		}
 	}
 
 	public boolean isException() {
@@ -670,12 +637,10 @@ public class TraceNode{
 		}
 	}
 	
-	//TODO
 	public void setControlDominator(TraceNode controlDominator){
 		this.controlDominator = controlDominator;
 	}
 	
-	//TODO
 	public TraceNode getControlDominator(){
 		return this.controlDominator;
 	}
@@ -1021,13 +986,13 @@ public class TraceNode{
 	public List<VarValue> getWrongReadVars(UserInterestedVariables interestedVariables) {
 		List<VarValue> vars = new ArrayList<>();
 		for(VarValue var: getReadVariables()){
-			if(interestedVariables.contains(var.getVarID())){
+			if(interestedVariables.contains(var)){
 				vars.add(var);
 			}
 			
 			List<VarValue> children = var.getAllDescedentChildren();
 			for(VarValue child: children){
-				if(interestedVariables.contains(child.getVarID())){
+				if(interestedVariables.contains(child)){
 					if(!vars.contains(child)){
 						vars.add(child);
 					}

@@ -362,8 +362,9 @@ public class SimulatedMicroBat {
 						recommender = state.getRecommender();
 						
 						ChosenVariableOption option = stateWrapper.getVariableOption();
-						for(String wrongVarID: option.getIncludedWrongVarID()){
-							Settings.interestedVariables.add(wrongVarID, checkTime);
+						List<VarValue> wrongVars = option.getIncludedWrongVars();
+						for(VarValue wrongVar: wrongVars){
+							Settings.interestedVariables.add(checkTime, wrongVar);						
 						}
 						feedback = new UserFeedback(option, UserFeedback.WRONG_VARIABLE_VALUE);
 						
@@ -560,16 +561,16 @@ public class SimulatedMicroBat {
 	
 	private void updateVariableCheckTime(Trace trace, TraceNode currentNode) {
 		for(VarValue var: currentNode.getReadVariables()){
-			String varID = var.getVarID();
-			if(Settings.interestedVariables.contains(varID)){
-				Settings.interestedVariables.add(varID, trace.getCheckTime());
+//			String varID = var.getVarID();
+			if(Settings.interestedVariables.contains(var)){
+				Settings.interestedVariables.add(trace.getCheckTime(), var);
 			}
 		}
 		
 		for(VarValue var: currentNode.getWrittenVariables()){
-			String varID = var.getVarID();
-			if(Settings.interestedVariables.contains(varID)){
-				Settings.interestedVariables.add(varID, trace.getCheckTime());
+//			String varID = var.getVarID();
+			if(Settings.interestedVariables.contains(var)){
+				Settings.interestedVariables.add(trace.getCheckTime(), var);
 			}
 		}
 	}

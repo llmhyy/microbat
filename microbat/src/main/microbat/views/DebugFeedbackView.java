@@ -253,7 +253,7 @@ public class DebugFeedbackView extends ViewPart {
 		}
 		
 		String varID = ev.getVarID();
-		if(Settings.interestedVariables.contains(varID)){
+		if(Settings.interestedVariables.contains(ev)){
 			item.setChecked(true);
 		}
 		else{
@@ -284,8 +284,8 @@ public class DebugFeedbackView extends ViewPart {
 				value = (VarValue)obj;
 				String varID = value.getVarID();
 				
-				if(!Settings.interestedVariables.contains(varID)){
-					Settings.interestedVariables.add(varID, trace.getCheckTime());
+				if(!Settings.interestedVariables.contains(value)){
+					Settings.interestedVariables.add(trace.getCheckTime(), value);
 					
 					ChosenVariableOption option = feedback.getOption();
 					if(option == null){
@@ -306,7 +306,7 @@ public class DebugFeedbackView extends ViewPart {
 					TempVariableInfo.cu = JavaUtil.findCompilationUnitInProject(cuName, null);
 				}
 				else{
-					Settings.interestedVariables.remove(varID);
+					Settings.interestedVariables.remove(value);
 				}
 				
 				setChecks(writtenVariableTreeViewer, RW);
@@ -750,16 +750,15 @@ public class DebugFeedbackView extends ViewPart {
 		
 		private void updateVariableCheckTime(Trace trace, TraceNode currentNode) {
 			for(VarValue var: currentNode.getReadVariables()){
-				String varID = var.getVarID();
-				if(Settings.interestedVariables.contains(varID)){
-					Settings.interestedVariables.add(varID, trace.getCheckTime());
+				if(Settings.interestedVariables.contains(var)){
+					Settings.interestedVariables.add(trace.getCheckTime(), var);
 				}
 			}
 			
 			for(VarValue var: currentNode.getWrittenVariables()){
 				String varID = var.getVarID();
-				if(Settings.interestedVariables.contains(varID)){
-					Settings.interestedVariables.add(varID, trace.getCheckTime());
+				if(Settings.interestedVariables.contains(var)){
+					Settings.interestedVariables.add(trace.getCheckTime(), var);
 				}
 			}
 		}
@@ -1220,8 +1219,7 @@ public class DebugFeedbackView extends ViewPart {
 //				BreakPoint point = node.getBreakPoint();
 //				InterestedVariable iVar = new InterestedVariable(point.getDeclaringCompilationUnitName(), 
 //						point.getLineNo(), value);
-				String varID = value.getVarID();
-				if(Settings.interestedVariables.contains(varID)){
+				if(Settings.interestedVariables.contains(value)){
 					return true;
 				}
 			}

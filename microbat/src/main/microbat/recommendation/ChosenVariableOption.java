@@ -37,6 +37,18 @@ public class ChosenVariableOption {
 		
 		return varIDs;
 	}
+	
+	public List<VarValue> getIncludedWrongVars(){
+		List<VarValue> vars = new ArrayList<>();
+		if(readVar != null){
+			vars.add(readVar);
+		}
+		if(writtenVar != null){
+			vars.add(writtenVar);
+		}
+		
+		return vars;
+	}
 
 	public VarValue getReadVar() {
 		return readVar;

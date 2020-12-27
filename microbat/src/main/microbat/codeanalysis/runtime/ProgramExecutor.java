@@ -115,9 +115,12 @@ import sav.strategies.dto.AppJavaClassPath;
  * 
  *         This class origins from three classes written by LLT, i.e.,
  *         BreakpointDebugger, JunitDebugger, and TestcaseExecutor.
+ *         
+ *         This class is deprecated, please check the InstrumentationExecutor class.
  * 
  */
 @SuppressWarnings("restriction")
+@Deprecated
 public class ProgramExecutor extends Executor {
 	public static final long DEFAULT_TIMEOUT = -1;
 	public static String returnVariableValue = "microbat_return_value";

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 
 /**
  * This class represents the attribution relation among variables. If a variable is considered wrong, it is possible
@@ -17,6 +18,7 @@ import microbat.model.trace.TraceNode;
 public class AttributionVar {
 	private String varID;
 	private int checkTime;
+	private VarValue value;
 	
 	/**
 	 * record the latest trace node reading this variable in the process of user's debugging.
@@ -32,11 +34,11 @@ public class AttributionVar {
 	 */
 	private List<AttributionVar> children = new ArrayList<>();
 	
-	public AttributionVar(String varID, int checkTime) {
+	public AttributionVar(int checkTime, VarValue value) {
 		super();
-		this.varID = varID;
+		this.varID = value.getVarID();
 		this.checkTime = checkTime;
-		
+		this.setValue(value);
 	}
 	
 	@Override
@@ -137,5 +139,13 @@ public class AttributionVar {
 		if(readTraceNode.isReadVariablesContains(varID)){
 			this.latesetReadTraceNode = readTraceNode;			
 		}
+	}
+
+	public VarValue getValue() {
+		return value;
+	}
+
+	public void setValue(VarValue value) {
+		this.value = value;
 	}
 }	

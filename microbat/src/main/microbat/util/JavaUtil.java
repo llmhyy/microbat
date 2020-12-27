@@ -207,59 +207,59 @@ public class JavaUtil {
 		return buffer.toString();
 	}
 	
-	/**
-	 * This method is used to retrieve the toString() value of an object. I deprecate it for it consume too much
-	 * time when constructing the trace model.
-	 * 
-	 * @param thread
-	 * @param objValue
-	 * @param executor
-	 * @return
-	 * @throws TimeoutException
-	 */
-	@Deprecated
-	public static String retrieveToStringValue(ThreadReference thread,
-			ObjectReference objValue, ProgramExecutor executor) throws TimeoutException {
-		
-		ReferenceType type = (ReferenceType) objValue.type();
-		Method method = type.methodsByName(TO_STRING_NAME, TO_STRING_SIGN).get(0);
-		
-		if(type.toString().equals("org.apache.commons.math.exception.NonMonotonousSequenceException")){
-			System.currentTimeMillis();
-		}
-		
-		boolean classPrepare = executor.getClassPrepareRequest().isEnabled();
-		boolean step = executor.getStepRequest(thread).isEnabled();
-		boolean methodEntry = executor.getMethodEntryRequest().isEnabled();
-		boolean methodExit = executor.getMethodExitRequset().isEnabled();
-		boolean exception = executor.getExceptionRequest().isEnabled();
-		
-		executor.getClassPrepareRequest().disable();
-		executor.getStepRequest(thread).disable();
-		executor.getMethodEntryRequest().disable();
-		executor.getMethodExitRequset().disable();
-		executor.getExceptionRequest().disable();
-		
-		//((VirtualMachine)thread.virtualMachine()).setRequestTimeout(5000);
-		
-		Value messageValue = null;
-		try {
-			messageValue = objValue.invokeMethod(thread, method, 
-					new ArrayList<Value>(), ObjectReference.INVOKE_SINGLE_THREADED);
-		} catch (InvalidTypeException | ClassNotLoadedException | IncompatibleThreadStateException
-				| InvocationException e) {
-			//e.printStackTrace();
-		}
-		
-		executor.getClassPrepareRequest().setEnabled(classPrepare);
-		executor.getStepRequest(thread).setEnabled(step);
-		executor.getMethodEntryRequest().setEnabled(methodEntry);;
-		executor.getMethodExitRequset().setEnabled(methodExit);;
-		executor.getExceptionRequest().setEnabled(exception);;
-		
-		String stringValue = (messageValue != null) ? messageValue.toString() : "null";
-		return stringValue;
-	}
+//	/**
+//	 * This method is used to retrieve the toString() value of an object. I deprecate it for it consume too much
+//	 * time when constructing the trace model.
+//	 * 
+//	 * @param thread
+//	 * @param objValue
+//	 * @param executor
+//	 * @return
+//	 * @throws TimeoutException
+//	 */
+//	@Deprecated
+//	public static String retrieveToStringValue(ThreadReference thread,
+//			ObjectReference objValue, ProgramExecutor executor) throws TimeoutException {
+//		
+//		ReferenceType type = (ReferenceType) objValue.type();
+//		Method method = type.methodsByName(TO_STRING_NAME, TO_STRING_SIGN).get(0);
+//		
+//		if(type.toString().equals("org.apache.commons.math.exception.NonMonotonousSequenceException")){
+//			System.currentTimeMillis();
+//		}
+//		
+//		boolean classPrepare = executor.getClassPrepareRequest().isEnabled();
+//		boolean step = executor.getStepRequest(thread).isEnabled();
+//		boolean methodEntry = executor.getMethodEntryRequest().isEnabled();
+//		boolean methodExit = executor.getMethodExitRequset().isEnabled();
+//		boolean exception = executor.getExceptionRequest().isEnabled();
+//		
+//		executor.getClassPrepareRequest().disable();
+//		executor.getStepRequest(thread).disable();
+//		executor.getMethodEntryRequest().disable();
+//		executor.getMethodExitRequset().disable();
+//		executor.getExceptionRequest().disable();
+//		
+//		//((VirtualMachine)thread.virtualMachine()).setRequestTimeout(5000);
+//		
+//		Value messageValue = null;
+//		try {
+//			messageValue = objValue.invokeMethod(thread, method, 
+//					new ArrayList<Value>(), ObjectReference.INVOKE_SINGLE_THREADED);
+//		} catch (InvalidTypeException | ClassNotLoadedException | IncompatibleThreadStateException
+//				| InvocationException e) {
+//			//e.printStackTrace();
+//		}
+//		
+//		executor.getClassPrepareRequest().setEnabled(classPrepare);
+//		executor.getStepRequest(thread).setEnabled(step);
+//		executor.getMethodEntryRequest().setEnabled(methodEntry);;
+//		executor.getMethodExitRequset().setEnabled(methodExit);;
+//		executor.getExceptionRequest().setEnabled(exception);;
+//		
+//		String stringValue = (messageValue != null) ? messageValue.toString() : "null";
+//		return stringValue;
+//	}
 	
 	public static Value retriveExpression(final StackFrame frame, String expression){
 		ExpressionParser.GetFrame frameGetter = new ExpressionParser.GetFrame() {

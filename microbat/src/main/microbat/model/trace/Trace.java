@@ -18,7 +18,6 @@ import microbat.model.Scope;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
-import microbat.model.variable.VirtualVar;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 import sav.strategies.dto.AppJavaClassPath;
@@ -58,6 +57,7 @@ public class Trace {
 	 * key is the variable ID, and value is the entry containing all the steps reading/writing the corresponding
 	 * variable.
 	 */
+	@Deprecated
 	private Map<String, StepVariableRelationEntry> stepVariableTable = new HashMap<>();
 	
 	/**
@@ -244,50 +244,13 @@ public class Trace {
 	 * @param readVar
 	 * @return
 	 */
-	public TraceNode findDataDominator(TraceNode checkingNode, VarValue readVar) {
-		List<TraceNode> producers = new ArrayList<>();
-		String varID = readVar.getVarID();
-		StepVariableRelationEntry entry = getStepVariableTable().get(varID);
-		if(entry != null){
-			producers.addAll(entry.getProducers());
-		}
-		
-		if(readVar.getAliasVarID()!=null){
-			StepVariableRelationEntry entry0 = getStepVariableTable().get(readVar.getAliasVarID());
-			if(entry0 != null){
-				producers.addAll(entry0.getProducers());				
-			}
-		}
-		
-		if(producers.isEmpty()) {
-			return null;
-		}
-		else {
-			if(producers.size()==1){
-				return producers.get(0);				
-			}
-			else{
-				int distance = 0;
-				TraceNode producer = null;
-				for(TraceNode n: producers){
-					if(producer==null){
-						int dis = checkingNode.getOrder() - n.getOrder();
-						if(dis>0){
-							producer = n;							
-						}
-					}
-					else{
-						int dis = checkingNode.getOrder() - n.getOrder();
-						if(dis>0 && dis<distance){
-							producer = n;							
-						}
-					}
-				}
-				return producer;
-			}
-			
-		}
-		
+	public TraceNode findDataDependency(TraceNode checkingNode, VarValue readVar) {
+		return findProducer(readVar, checkingNode);
+	}
+	
+	public TraceNode findDataDependentee(TraceNode traceNode, VarValue writtenVar) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	public List<TraceNode> findNextReadingTraceNodes(VarValue value, int startOrder){
@@ -631,22 +594,12 @@ public class Trace {
 //		
 //	}
 
+	@Deprecated
 	public Map<String, StepVariableRelationEntry> getStepVariableTable() {
 		return stepVariableTable;
 	}
 
-	public TraceNode findLastestExceptionNode() {
-		for(int i=0; i<exectionList.size(); i++){
-			TraceNode lastestNode = exectionList.get(exectionList.size()-1-i);
-			if(lastestNode.isException()){
-				return lastestNode;
-			}
-		}
-		
-		return null;
-	}
-	
-	private Map<String, TraceNode> latestNodeDefiningVariableMap = new HashMap<>();
+//	private Map<String, TraceNode> latestNodeDefiningVariableMap = new HashMap<>();
 	
 	/**
 	 * if we are finding defining step of a read variable, v, the defining step is the latest
@@ -667,40 +620,43 @@ public class Trace {
 	 */
 	public String findDefiningNodeOrder(String accessType, TraceNode currentNode,
 			String varID, String aliasVarID) {
+		
 		varID = Variable.truncateSimpleID(varID);
 		aliasVarID = Variable.truncateSimpleID(aliasVarID);
 		String definingOrder = "0";
 		if(accessType.equals(Variable.WRITTEN)){
 			definingOrder = String.valueOf(currentNode.getOrder());
-			latestNodeDefiningVariableMap.put(varID, currentNode);
-			if(aliasVarID!=null){
-				latestNodeDefiningVariableMap.put(aliasVarID, currentNode);				
-			}
+//			latestNodeDefiningVariableMap.put(varID, currentNode);
+//			if(aliasVarID!=null){
+//				latestNodeDefiningVariableMap.put(aliasVarID, currentNode);				
+//			}
 		}
 		else if(accessType.equals(Variable.READ)){
-			TraceNode node1 = latestNodeDefiningVariableMap.get(varID);
-			TraceNode node2 = latestNodeDefiningVariableMap.get(aliasVarID);
-			
-			int order = 0;
-			if(node1!=null && node2==null){
-				order = node1.getOrder();
-			}
-			else if(node1==null && node2!=null){
-				order = node2.getOrder();
-			}
-			else if(node1!=null && node2!=null){
-				order = (node1.getOrder()>node2.getOrder())?node1.getOrder():node2.getOrder();
+//			TraceNode node1 = latestNodeDefiningVariableMap.get(varID);
+//			TraceNode node2 = latestNodeDefiningVariableMap.get(aliasVarID);
+//			
+//			int order = 0;
+//			if(node1!=null && node2==null){
+//				order = node1.getOrder();
+//			}
+//			else if(node1==null && node2!=null){
 //				order = node2.getOrder();
-			}
+//			}
+//			else if(node1!=null && node2!=null){
+//				order = (node1.getOrder()>node2.getOrder())?node1.getOrder():node2.getOrder();
+////				order = node2.getOrder();
+//			}
+//			TraceNode node = this.findProducer(varValue, startNode)
+//			definingOrder = String.valueOf(order);
 			
-			definingOrder = String.valueOf(order);
+			definingOrder = null;
 		}
 		
 		return definingOrder;
 	}
 
-	public TraceNode findLastestNodeDefiningVariable(String varID, int limitOrder){
-		for(int i=limitOrder-2; i>=0; i--){
+	public TraceNode findLatestNodeDefiningVariable(String varID, int startingOrder){
+		for(int i=startingOrder-2; i>=0; i--){
 			TraceNode node = exectionList.get(i);
 			int count = 0;
 			for(VarValue var: node.getWrittenVariables()){
@@ -723,11 +679,6 @@ public class Trace {
 		}
 		
 		return null;
-	}
-
-	public TraceNode findLastestNodeDefiningPrimitiveVariable(String varID) {
-		TraceNode node = findLastestNodeDefiningVariable(varID, exectionList.size());
-		return node;
 	}
 
 	/**
@@ -921,52 +872,7 @@ public class Trace {
 		return null;
 	}
 	
-	public TraceNode getLatestProducerBySimpleVarIDForm(int startOrder, String simpleVarID){
-		int latestOrder = -1;
-		String latestVarID = null;
-		for(String varID: this.stepVariableTable.keySet()){
-			String orderString = varID.substring(varID.indexOf(":")+1);
-			int order = Integer.valueOf(orderString);
-			
-			String simVarID = Variable.truncateSimpleID(varID);
-			if(order > startOrder || !simpleVarID.equals(simVarID)){
-				continue;
-			}
-			
-			if(latestOrder == -1){
-				latestOrder = order;
-				latestVarID = varID;
-			}
-			else{
-				if(latestOrder > order){
-					latestOrder = order;
-					latestVarID = varID;
-				}
-			}
-		}
-		
-		if(latestVarID != null){
-			return getProducer(latestVarID);			
-		}
-		return null;
-	}
-
-	public TraceNode getProducer(String varID) {
-		StepVariableRelationEntry entry = this.stepVariableTable.get(varID);
-		
-		if(entry == null){
-			System.err.println("the variable with ID " + varID + " is not explicitly read or written");
-			return null;
-		}
-		
-		if(!entry.getProducers().isEmpty()){
-			return entry.getProducers().get(0);
-		}
-		
-		return null;
-	}
-	
-	public TraceNode getProducer(VarValue varValue, TraceNode startNode) {
+	public TraceNode findProducer(VarValue varValue, TraceNode startNode) {
 		
 		String varID = Variable.truncateSimpleID(varValue.getVarID());
 		String headID = Variable.truncateSimpleID(varValue.getAliasVarID());
@@ -1107,4 +1013,6 @@ public class Trace {
 	public void setThreadId(String threadId) {
 		this.threadId = threadId;
 	}
+
+	
 }

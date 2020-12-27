@@ -7,27 +7,27 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 
 public class UserInterestedVariables {
 	
 	private List<AttributionVar> roots = new ArrayList<>();
 	
-	private Map<String, Integer> varIDs = new HashMap<>();
+	//key: varID, value: checkTime 
+	private Map<VarValue, Integer> varIDs = new HashMap<>();
 	
-	public boolean contains(String varID){
+	public boolean contains(VarValue varID){
 		return this.varIDs.keySet().contains(varID);
 	}
 	
-	public AttributionVar add(String varID, int checkTime){
+	public AttributionVar add(int checkTime, VarValue value){
 		
-		this.varIDs.put(varID, checkTime);
+		this.varIDs.put(value, checkTime);
 		
-		AttributionVar var = new AttributionVar(varID, checkTime);
+		AttributionVar var = new AttributionVar(checkTime, value);
 		Map<String, AttributionVar> vars = findAllValidateAttributionVar();
 		if(!vars.containsKey(var.getVarID())){
 			roots.add(var);
@@ -41,55 +41,16 @@ public class UserInterestedVariables {
 		
 	}
 
-	public void remove(String varID) {
+	public void remove(VarValue varID) {
 		this.varIDs.remove(varID);
 	}
 	
-	public Set<String> getVarIDs(){
-		return this.varIDs.keySet();
-	}
-	
-	public double getVarScore(String varID){
-		return varIDs.get(varID);
-	}
-	
-	public String getNewestVarID(){
-		String newestID = null;
-		for(String varID: this.varIDs.keySet()){
-			if(newestID == null){
-				newestID = varID;
-			}
-			else{
-				if(this.varIDs.get(newestID) < this.varIDs.get(varID)){
-					newestID = varID;
-				}
-			}
-		}
-		return newestID;
-	}
-
 	public List<AttributionVar> getRoots() {
 		return roots;
 	}
 
 	public void setRoots(List<AttributionVar> roots) {
 		this.roots = roots;
-	}
-
-	public AttributionVar findOrCreateVar(String varID, int checkTime) {
-		
-		for(AttributionVar rootVar: this.roots){
-			AttributionVar var = rootVar.findChild(varID);
-			if(var != null){
-				var.setCheckTime(checkTime);
-				return var;
-			}
-		}
-		
-		AttributionVar var = new AttributionVar(varID, checkTime);
-		roots.add(var);
-		
-		return var;
 	}
 
 	public void updateAttributionTrees() {
@@ -110,18 +71,17 @@ public class UserInterestedVariables {
 			collectVars(vars, var);
 		}
 		
-		for(String varID: varIDs.keySet()){
-			if(!vars.containsKey(varID)){
-				AttributionVar aVar = new AttributionVar(varID, varIDs.get(varID));
-				vars.put(varID, aVar);
+		for(VarValue varID: varIDs.keySet()){
+			if(!vars.containsKey(varID.getVarID())){
+				AttributionVar aVar = new AttributionVar(varIDs.get(varID), varID);
+				vars.put(varID.getVarID(), aVar);
 			}
 		}
 		
 		Iterator<String> iter = vars.keySet().iterator();
 		while(iter.hasNext()){
 			String varID = iter.next();
-			
-			if(varIDs.get(varID) == null){
+			if(varIDs.get(vars.get(varID).getValue()) == null){
 				AttributionVar aVar = vars.get(varID);
 				for(AttributionVar parent: aVar.getParents()){
 					parent.getChildren().remove(aVar);
@@ -208,17 +168,17 @@ public class UserInterestedVariables {
 	}
 
 	private int calculateDistanceWithCurrentNode(Trace trace, TraceNode currentNode, AttributionVar bestRoot) {
-		String varID = bestRoot.getVarID();
-		StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
-		TraceNode producer = entry.getProducers().get(0);
+//		String varID = bestRoot.getVarID();
+//		StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
+		TraceNode producer = trace.findProducer(bestRoot.getValue(), currentNode);
 		
 		return Math.abs(producer.getOrder()-currentNode.getOrder());
 	}
 	
 	public UserInterestedVariables clone(){
-		Map<String, Integer> clonedVarIDs = new HashMap<>();
+		Map<VarValue, Integer> clonedVarIDs = new HashMap<>();
 		
-		for(String key: varIDs.keySet()){
+		for(VarValue key: varIDs.keySet()){
 			clonedVarIDs.put(key, varIDs.get(key));
 		}
 		
@@ -248,7 +208,7 @@ public class UserInterestedVariables {
 	}
 
 	private void traverse(AttributionVar var0, List<AttributionVar> list) {
-		AttributionVar var = new AttributionVar(var0.getVarID(), var0.getCheckTime());
+		AttributionVar var = new AttributionVar(var0.getCheckTime(), var0.getValue());
 		list.add(var);
 		for(AttributionVar child: var0.getChildren()){
 			traverse(child, list);
