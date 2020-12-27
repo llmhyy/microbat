@@ -51,7 +51,6 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.editors.text.TextFileDocumentProvider;
-import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
@@ -66,7 +65,7 @@ import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 
-public class MutilThreadTraceView extends TraceView {
+public class ConcurrentTraceView extends TraceView {
 
 	protected Map<String, Trace> traceMap;
 	protected Trace curTrace;
@@ -88,7 +87,7 @@ public class MutilThreadTraceView extends TraceView {
 	private String previousSearchExpression = "";
 	private boolean jumpFromSearch = false;
 
-	public MutilThreadTraceView() {
+	public ConcurrentTraceView() {
 	}
 
 	public void setSearchText(String expression) {
@@ -438,7 +437,7 @@ public class MutilThreadTraceView extends TraceView {
 					String className = node.getBreakPoint().getDeclaringCompilationUnitName();
 					int lineNumber = node.getBreakPoint().getLineNumber();
 					String searchString = Trace.combineTraceNodeExpression(className, lineNumber);
-					MutilThreadTraceView.this.searchText.setText(searchString);
+					ConcurrentTraceView.this.searchText.setText(searchString);
 				}
 
 			}
@@ -470,7 +469,7 @@ public class MutilThreadTraceView extends TraceView {
 		DebugFeedbackView feedbackView = MicroBatViews.getDebugFeedbackView();
 
 		if (this.refreshProgramState) {
-			feedbackView.setTraceView(MutilThreadTraceView.this);
+			feedbackView.setTraceView(ConcurrentTraceView.this);
 			feedbackView.refresh(node);
 		}
 

@@ -36,7 +36,7 @@ public class ConcurrentPerspective implements IPerspectiveFactory {
 						IPageLayout.BOTTOM,
 						0.55f,
 						factory.getEditorArea());
-		bottom.addView(MicroBatViews.COMCURRENT_TRACE);
+		bottom.addView(MicroBatViews.CONCURRENT_TRACE);
 		bottom.addPlaceholder(IConsoleConstants.ID_CONSOLE_VIEW);
 		
 		IFolderLayout topLeft =

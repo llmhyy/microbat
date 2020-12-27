@@ -3,10 +3,12 @@ package microbat.views;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
+import microbat.util.Settings;
+
 public class MicroBatViews {
 	public static final String DEBUG_FEEDBACK = "microbat.view.debugFeedback";
 	public static final String TRACE = "microbat.view.trace";
-	public static final String COMCURRENT_TRACE = "microbat.view.currentTrace";
+	public static final String CONCURRENT_TRACE = "microbat.view.concurrentTrace";
 	public static final String REASON = "microbat.view.reason";
 	
 	public static DebugFeedbackView getDebugFeedbackView(){
@@ -24,7 +26,12 @@ public class MicroBatViews {
 	public static TraceView getTraceView(){
 		TraceView view = null;
 		try {
-			view = (TraceView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.TRACE);
+			if(Settings.supportConcurrentTrace) {
+				view = (ConcurrentTraceView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.CONCURRENT_TRACE);
+			}
+			else {
+				view = (TraceView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.TRACE);				
+			}
 		} catch (PartInitException e) {
 			e.printStackTrace();
 		}
@@ -32,16 +39,17 @@ public class MicroBatViews {
 		return view;
 	}
 	
-	public static MutilThreadTraceView getConcurrentTraceView(){
-		MutilThreadTraceView view = null;
-		try {
-			view = (MutilThreadTraceView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.COMCURRENT_TRACE);
-		} catch (PartInitException e) {
-			e.printStackTrace();
-		}
-		
-		return view;
-	}
+//	public static ConcurrentTraceView getConcurrentTraceView(){
+//		ConcurrentTraceView view = null;
+//		try {
+//			view = (ConcurrentTraceView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.CONCURRENT_TRACE);
+//		} catch (PartInitException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		return view;
+//	}
+	
 	public static ReasonView getReasonView(){
 		ReasonView view = null;
 		try {
