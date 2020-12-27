@@ -54,6 +54,7 @@ public class TraceOutputWriter extends OutputWriter {
 		writeString(launchMethod);
 		writeBoolean(trace.isMain());
 		writeString(trace.getThreadName());
+		writeString(String.valueOf(trace.getThreadId()));
 		writeFilterInfo(trace.getIncludedLibraryClasses(), true);
 		writeFilterInfo(trace.getExcludedLibraryClasses(), false);
 		Map<String, Integer> locIdIdxMap = writeLocations(trace);

@@ -67,7 +67,7 @@ import microbat.util.Settings;
 
 public class ConcurrentTraceView extends TraceView {
 
-	protected Map<String, Trace> traceMap;
+	protected Map<Long, Trace> traceMap;
 	protected Trace curTrace;
 	public Trace getCurTrace() {
 		return curTrace;
@@ -412,10 +412,10 @@ public class ConcurrentTraceView extends TraceView {
 		appendMenuForTraceStep(viewer);
 	}
 
-	public TreeViewer getTreeViewerByThreadID(String treadId) {
+	public TreeViewer getTreeViewerByThreadID(long threadId) {
 		for (TreeViewer tv : viewerList) {
 			Trace t = (Trace) tv.getInput();
-			if (t.getThreadId().equals(treadId)) {
+			if (t.getThreadId() == threadId) {
 				return tv;
 			}
 		}

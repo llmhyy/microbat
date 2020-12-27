@@ -109,11 +109,11 @@ public class TraceRetriever01 extends SqliteServer {
 		ResultSet rs = ps.executeQuery();
 		closables.add(ps);
 		closables.add(rs);
-		String threadId="";
+		String threadId= "";
 		if (rs.next()) {
 			threadId=rs.getString("thread_id");
 		}
-		trace.setThreadId(threadId);
+		trace.setThreadId(Long.parseLong(threadId));
 		ps.close();
 		rs.close();
 	}

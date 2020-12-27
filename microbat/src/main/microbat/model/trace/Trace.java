@@ -67,7 +67,7 @@ public class Trace {
 	 */
 	private int constructTime = 0;
 	
-	private String threadId;
+	private long threadId;
 
 	public void resetCheckTime(){
 		this.checkTime = -1;
@@ -1026,14 +1026,14 @@ public class Trace {
 	/**
 	 * @return the threadId
 	 */
-	public String getThreadId() {
+	public long getThreadId() {
 		return threadId;
 	}
 
 	/**
 	 * @param threadId the threadId to set
 	 */
-	public void setThreadId(String threadId) {
+	public void setThreadId(long threadId) {
 		this.threadId = threadId;
 	}
 

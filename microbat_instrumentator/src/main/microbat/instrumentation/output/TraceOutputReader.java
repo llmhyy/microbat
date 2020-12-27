@@ -41,6 +41,7 @@ public class TraceOutputReader extends OutputReader {
 			readString(); // launchMethod
 			trace.setMain(readBoolean());
 			trace.setThreadName(readString());
+			trace.setThreadId(Long.parseLong(readString()));
 			trace.setIncludedLibraryClasses(readFilterInfo());
 			trace.setExcludedLibraryClasses(readFilterInfo());
 			List<BreakPoint> locationList = readLocations();
