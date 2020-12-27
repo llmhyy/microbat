@@ -96,6 +96,7 @@ public class TraceOutputReader extends OutputReader {
 		for (int i = 0; i < size; i++) {
 			TraceNode step = allSteps.get(i);
 			step.setBreakPoint(locationList.get(readVarInt()));
+			step.setTimestamp(readLong());
 			TraceNode controlDominator = readNode(allSteps);
 			step.setControlDominator(controlDominator);
 			if (controlDominator != null) {

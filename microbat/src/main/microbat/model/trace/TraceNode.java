@@ -92,6 +92,8 @@ public class TraceNode{
 	private long runtimePC;
 	private Trace trace;
 	
+	private long timestamp;
+	
 	private transient double sliceBreakerProbability = 0;
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
@@ -1113,6 +1115,14 @@ public class TraceNode{
 
 	public void setSliceBreakerProbability(double sliceBreakerProbability) {
 		this.sliceBreakerProbability = sliceBreakerProbability;
+	}
+
+	public long getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(long timestamp) {
+		this.timestamp = timestamp;
 	}
 
 

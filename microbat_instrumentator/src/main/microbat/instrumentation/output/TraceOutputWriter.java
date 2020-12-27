@@ -130,6 +130,7 @@ public class TraceOutputWriter extends OutputWriter {
 		for (int i = 0; i < exectionList.size(); i++) {
 			TraceNode node = exectionList.get(i);
 			writeVarInt(locIdIdxMap.get(node.getBreakPoint().getId()));
+			writeLong(node.getTimestamp());
 			writeNodeOrder(node.getControlDominator());
 			writeNodeOrder(node.getStepInNext());
 			writeNodeOrder(node.getStepOverNext());

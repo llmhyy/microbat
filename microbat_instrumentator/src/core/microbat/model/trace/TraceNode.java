@@ -90,6 +90,8 @@ public class TraceNode{
 	private long runtimePC;
 	private Trace trace;
 	
+	private long timestamp;
+	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
 		this(breakPoint, programState, order, trace, -1, -1);
 	}
@@ -981,6 +983,14 @@ public class TraceNode{
 
 	public void setInvokingMatchNode(TraceNode invokingMatchNode) {
 		this.invokingMatchNode = invokingMatchNode;
+	}
+
+	public long getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(long timestamp) {
+		this.timestamp = timestamp;
 	}
 
 }
