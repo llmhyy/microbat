@@ -25,9 +25,9 @@
       </view>
       <view
             category="microbat.category"
-            class="microbat.views.MutilThreadTraceView"
+            class="microbat.views.ConcurrentTraceView"
             icon="icons/trace.png"
-            id="microbat.view.currentTrace"
+            id="microbat.view.concurrentTrace"
             name="Concurrent Trace"
             restorable="true">
       </view>
@@ -58,16 +58,6 @@
             id="microbat.evalView.afterTraceView"
             name="After Trace"
             restorable="true">
-      </view>
-      <view
-            class="microbat.views.MutilTraceView"
-            id="microbat.views.MutilTraceView"
-            name="New ViewPart">
-      </view>
-      <view
-            class="microbat.views.MutilThreadTraceView"
-            id="microbat.views.MutilThreadTraceView"
-            name="New ViewPart">
       </view>
    </extension>
    <extension
