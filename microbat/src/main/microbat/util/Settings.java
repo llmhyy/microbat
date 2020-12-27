@@ -71,6 +71,9 @@ public class Settings {
 				
 				String applyRecordingOptimization = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RECORDING_OPTIMIZATION);
 				applyLibraryOptimization = applyRecordingOptimization.equals("true");
+				
+				String supportConcurrentTraceString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.SUPPORT_CONCURRENT_TRACE);
+				supportConcurrentTrace = supportConcurrentTraceString.equals("true");
 			}
 			catch(Exception e){
 				e.printStackTrace();
@@ -111,6 +114,6 @@ public class Settings {
 	public static HashMap<String, CompilationUnit> compilationUnitMap = new HashMap<>();
 	public static HashMap<String, ICompilationUnit> iCompilationUnitMap = new HashMap<>();
 	public static boolean enableLoopInference = true;
-	public static boolean supportConcurrentTrace = false;
+	public static boolean supportConcurrentTrace;
 	
 }
