@@ -46,6 +46,7 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultTestMethod = Activator.getDefault().getPreferenceStore().getString(TEST_METHOD);
 		this.defaultLineNumber = Activator.getDefault().getPreferenceStore().getString(LINE_NUMBER);
 		this.defaultLanuchClass = Activator.getDefault().getPreferenceStore().getString(LANUCH_CLASS);
+		this.defaultSupportConcurrentTrace = Activator.getDefault().getPreferenceStore().getString(SUPPORT_CONCURRENT_TRACE);
 		this.defaultRecordSnapshot = Activator.getDefault().getPreferenceStore().getString(RECORD_SNAPSHORT);
 		this.defaultAdvancedDetailInspector = Activator.getDefault().getPreferenceStore().getString(APPLY_ADVANCE_INSPECTOR);
 		this.defaultStepLimit = getStepLimit();
@@ -81,6 +82,7 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String JAVA7HOME_PATH = "java7_path";
 	public static final String RECORDING_OPTIMIZATION = "recording_optimization";
 	public static final String REQUIRE_METHOD_SPLITTING = "enableMethodSplitting";
+	public static final String SUPPORT_CONCURRENT_TRACE = "supportConcurrentTrace";
 	
 	private Combo projectCombo;
 	private Text lanuchClassText;
@@ -90,6 +92,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Text stepLimitText;
 	private Text variableLayerText;
 	private Button recordSnapshotButton;
+	private Button supportConcurrentTraceButton;
 	private Button recordingOptimizationButton;
 	private Button advancedDetailInspectorButton;
 	private Button runTestButton;
@@ -104,6 +107,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultVariableLayer = "";
 	private String defaultStepLimit = "5000";
 	private String defaultRecordSnapshot = "true";
+	private String defaultSupportConcurrentTrace = "false";
 	private String defaultAdvancedDetailInspector = "true";
 	private String defaultRunTest = "false";
 	private String defaultJava7HomePath;
@@ -171,6 +175,14 @@ public class MicrobatPreference extends PreferencePage implements
 		variableLayerTextData.horizontalSpan = 2;
 		variableLayerText.setLayoutData(variableLayerTextData);
 		variableLayerText.setToolTipText("how many layers of variable children does the debugger need to retrieve, -1 means infinite.");
+		
+		supportConcurrentTraceButton = new Button(settingGroup, SWT.CHECK);
+		supportConcurrentTraceButton.setText("Support concurrent trace");
+		GridData supportConcurrentTraceButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		supportConcurrentTraceButtonData.horizontalSpan = 3;
+		supportConcurrentTraceButton.setLayoutData(supportConcurrentTraceButtonData);
+		boolean supportConcurrentTraceSelected = this.defaultSupportConcurrentTrace.equals("true");
+		supportConcurrentTraceButton.setSelection(supportConcurrentTraceSelected);
 		
 		recordSnapshotButton = new Button(settingGroup, SWT.CHECK);
 		recordSnapshotButton.setText("Record snapshot");
@@ -269,6 +281,7 @@ public class MicrobatPreference extends PreferencePage implements
 		preferences.put(JAVA7HOME_PATH, this.java7HomePathText.getText());
 		preferences.put(RECORDING_OPTIMIZATION, String.valueOf(this.recordingOptimizationButton.getSelection()));
 		preferences.putBoolean(REQUIRE_METHOD_SPLITTING, this.enableMethodSplittingButton.getSelection());
+		preferences.put(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(LANUCH_CLASS, this.lanuchClassText.getText());
@@ -283,6 +296,8 @@ public class MicrobatPreference extends PreferencePage implements
 		Activator.getDefault().getPreferenceStore().putValue(JAVA7HOME_PATH, this.java7HomePathText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(RECORDING_OPTIMIZATION, String.valueOf(this.recordingOptimizationButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(REQUIRE_METHOD_SPLITTING, String.valueOf(this.enableMethodSplittingButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
+		
 		confirmChanges();
 		
 		return true;
@@ -301,6 +316,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Settings.setVariableLayer(Integer.valueOf(this.variableLayerText.getText()));
 		Settings.isRunTest = this.runTestButton.getSelection();
 		Settings.applyLibraryOptimization = this.recordingOptimizationButton.getSelection();
+		Settings.supportConcurrentTrace = this.supportConcurrentTraceButton.getSelection();
 	}
 	
 	private String[] getProjectsInWorkspace(){
