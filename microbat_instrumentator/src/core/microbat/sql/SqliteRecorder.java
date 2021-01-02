@@ -85,7 +85,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 	 */
 	public String insertTrace(Trace trace,String runId,Connection conn, List<AutoCloseable> closables) throws SQLException {
 		PreparedStatement ps;
-		String sql = "INSERT INTO Trace (" + "run_id, trace_id,thread_id,generated_time) " + "VALUES (?, ?, ?,?)";
+		String sql = "INSERT INTO Trace (" + "run_id, trace_id,thread_id,threadName,isMain,generated_time) " + "VALUES (?, ?, ?,?,?,?)";
 		ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		int idx = 1;
@@ -93,6 +93,8 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		String traceId = getUUID();
 		ps.setString(idx++, traceId);
 		ps.setString(idx++, String.valueOf(trace.getThreadId()));
+		ps.setString(idx++, trace.getThreadName());
+		ps.setBoolean(idx++,trace.isMain());
 		ps.setTimestamp(idx++, new Timestamp(System.currentTimeMillis()));
 		ps.execute();
 		insertSteps(traceId, trace.getExecutionList(), conn, closables);
