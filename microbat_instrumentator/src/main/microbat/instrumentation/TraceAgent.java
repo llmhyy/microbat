@@ -1,4 +1,4 @@
- package microbat.instrumentation;
+package microbat.instrumentation;
 
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -8,9 +8,6 @@ import microbat.instrumentation.filter.CodeRangeUserFilter;
 import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.instrumentation.filter.OverLongMethodFilter;
 import microbat.instrumentation.instr.TraceTransformer;
-import microbat.instrumentation.output.RunningInfo;
-import microbat.instrumentation.output.TraceOutputWriter;
-import microbat.instrumentation.output.tcp.TcpConnector;
 import microbat.instrumentation.runtime.ExecutionTracer;
 import microbat.instrumentation.runtime.IExecutionTracer;
 import microbat.model.trace.Trace;
@@ -57,21 +54,22 @@ public class TraceAgent implements IAgent {
 		// FIXME -mutithread LINYUN [3]
 		// LLT: only trace of main thread is recorded.
 		List<IExecutionTracer> tracers = ExecutionTracer.getAllThreadStore();
-        
-		int size=tracers.size();
-		List<Trace> traceList=new ArrayList<>(size);	
-		for(int i=0;i<size;i++) {
-			
-			ExecutionTracer tracer=(ExecutionTracer) tracers.get(i);
-			
-			Trace trace = tracer.getTrace();				
+
+		int size = tracers.size();
+		List<Trace> traceList = new ArrayList<>(size);
+		for (int i = 0; i < size; i++) {
+
+			ExecutionTracer tracer = (ExecutionTracer) tracers.get(i);
+
+			Trace trace = tracer.getTrace();
 			trace.setThreadId(tracer.getThreadId());
+			trace.setThreadName(tracer.getThreadName());
 			trace.setMain(ExecutionTracer.getMainThreadStore().equals(tracer));
-			
+
 			constructTrace(trace);
 			traceList.add(trace);
-		}		
-			
+		}
+
 		timer.newPoint("Saving trace");
 		Recorder.create(agentParams).store(traceList);
 		AgentLogger.debug(timer.getResultString());
@@ -87,15 +85,15 @@ public class TraceAgent implements IAgent {
 		createVirtualDataRelation(trace);
 		long t2 = System.currentTimeMillis();
 		AgentLogger.debug("time for createVirtualDataRelation: " + (t2 - t1) / 1000);
-		
-	    //TODO Xuezhi we need to comment the code to build control dependencies here.
+
+		// TODO Xuezhi we need to comment the code to build control dependencies here.
 		t1 = System.currentTimeMillis();
 		AgentLogger.debug("construct ControlDomianceRelation....");
 		trace.constructControlDomianceRelation();
 		t2 = System.currentTimeMillis();
 
 		// trace.constructLoopParentRelation();
-	
+
 	}
 
 //	private void writeOutput(Trace trace) throws Exception {

@@ -40,12 +40,14 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PartInitException;
@@ -278,9 +280,12 @@ public class ConcurrentTraceView extends TraceView {
 	}
 
 	public void creatPart(Composite parent, Trace trace) {
-
-		TreeViewer viewer = new TreeViewer(parent, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
-		viewer.getTree().setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true, 1, 1));
+		Group group = new Group(parent, SWT.NONE);
+		group.setLayout(new FillLayout());
+		group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		String threadName = trace.getThreadName();
+		group.setText(threadName != null ? threadName : "NA");
+		TreeViewer viewer = new TreeViewer(group, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
 		viewer.setContentProvider(new TraceContentProvider());
 		viewer.setLabelProvider(new TraceLabelProvider());
 		viewerList.add(viewer);
