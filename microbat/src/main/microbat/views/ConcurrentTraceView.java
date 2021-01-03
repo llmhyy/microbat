@@ -69,6 +69,7 @@ public class ConcurrentTraceView extends TraceView {
 
 	protected Map<Long, Trace> traceMap;
 	protected Trace curTrace;
+
 	public Trace getCurTrace() {
 		return curTrace;
 	}
@@ -83,7 +84,7 @@ public class ConcurrentTraceView extends TraceView {
 
 	private Text searchText;
 	private Button searchButton;
-	private Composite parent;
+	private Composite tracePanel;
 	private String previousSearchExpression = "";
 	private boolean jumpFromSearch = false;
 
@@ -95,19 +96,23 @@ public class ConcurrentTraceView extends TraceView {
 		this.previousSearchExpression = expression;
 	}
 
-	private void createSearchBox(Composite parent,int colnum) {
-		searchText = new Text(parent, SWT.BORDER);
+	private void createSearchBox(Composite parent) {
+		Composite searchPanel = new Composite(parent, SWT.NONE);
+		searchPanel.setLayoutData(new GridData(SWT.FILL, SWT.UP, true, false));
+		GridLayout gridLayout = new GridLayout(2, true);
+		gridLayout.makeColumnsEqualWidth = false;
+		searchPanel.setLayout(gridLayout);
+		searchText = new Text(searchPanel, SWT.BORDER);
 		searchText.setToolTipText(
 				"search trace node by class name and line number, e.g., ClassName line:20 or just ClassName\n"
 						+ "press \"enter\" for forward-search and \"shift+enter\" for backward-search.");
 		FontData searchTextFont = searchText.getFont().getFontData()[0];
 		searchTextFont.setHeight(10);
 		searchText.setFont(new Font(Display.getCurrent(), searchTextFont));
-		searchText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false,colnum-1, 1));
+		searchText.setLayoutData(new GridData(SWT.FILL, SWT.UP, true, false));
 		addSearchTextListener(searchText);
-
-		searchButton = new Button(parent, SWT.PUSH);
-		GridData buttonData = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
+		searchButton = new Button(searchPanel, SWT.PUSH);
+		GridData buttonData = new GridData(SWT.RIGHT, SWT.UP, false, false);
 		// buttonData.widthHint = 50;
 		searchButton.setLayoutData(buttonData);
 		searchButton.setText("Go");
@@ -263,12 +268,13 @@ public class ConcurrentTraceView extends TraceView {
 
 	@Override
 	public void createPartControl(Composite parent) {
-		this.parent = parent;
+		parent.setLayout(new GridLayout(1, true));
+		createSearchBox(parent);
+		// Add basic trace panel
+		tracePanel = new Composite(parent, SWT.NONE);
+		tracePanel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 3;
-		parent.setLayout(layout);
-		createSearchBox(parent,3);
-		// creatPart(parent);
+		tracePanel.setLayout(layout);
 	}
 
 	public void creatPart(Composite parent, Trace trace) {
@@ -278,7 +284,6 @@ public class ConcurrentTraceView extends TraceView {
 		viewer.setContentProvider(new TraceContentProvider());
 		viewer.setLabelProvider(new TraceLabelProvider());
 		viewerList.add(viewer);
-		
 
 		// Trace trace = Activator.getDefault().getCurrentTrace();
 		viewer.setInput(trace);
@@ -480,28 +485,26 @@ public class ConcurrentTraceView extends TraceView {
 	}
 
 	public void updateData() {
-		
-		Control[] childs = this.parent.getChildren();
+
+		Control[] childs = tracePanel.getChildren();
 		for (int k = 0; k < childs.length; k++) {
 			childs[k].dispose();
 		}
-		GridLayout layout = new GridLayout();
-		int colnum=traces.size() >= 3 ? traces.size() : 3;
-		layout.numColumns = colnum;
-		parent.setLayout(layout);
-		createSearchBox(parent,colnum); // add search box in view
+		GridLayout layout = (GridLayout) tracePanel.getLayout();
+		layout.numColumns = traces.size();
+		layout.makeColumnsEqualWidth = true;
 		// 1. add viewList for each trace
 		// 2. add listener to each viewList
 		// 3. point current ViewList and Trace when a even be catch
 		viewerList = new ArrayList<>(traces.size());
-		for (int i = 0; i < traces.size(); i++) {		
-			creatPart(parent, traces.get(i));
+		for (int i = 0; i < traces.size(); i++) {
+			creatPart(tracePanel, traces.get(i));
 		}
-		
-		for(TreeViewer viewer :viewerList) {
+
+		for (TreeViewer viewer : viewerList) {
 			viewer.refresh();
 		}
-		
+		tracePanel.layout();
 	}
 
 	@Override
