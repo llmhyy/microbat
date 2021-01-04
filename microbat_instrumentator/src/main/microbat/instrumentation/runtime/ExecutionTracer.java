@@ -1240,12 +1240,12 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	public static synchronized IExecutionTracer getCurrentThreadStore() {
 		synchronized (rtStore) {
 			long threadId = Thread.currentThread().getId();
-			String threadName = Thread.currentThread().getName();
+//			String threadName = Thread.currentThread().getName();
 			if (lockedThreads.contains(threadId)) {
 				return EmptyExecutionTracer.getInstance();
 			}
 			IExecutionTracer store = rtStore.get(threadId);
-			store.setThreadName(threadName);
+//			store.setThreadName(threadName);
 
 			if (store == null) {
 				store = EmptyExecutionTracer.getInstance();

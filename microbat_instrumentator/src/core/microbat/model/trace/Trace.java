@@ -45,6 +45,11 @@ public class Trace {
 //	private LocalVariableScopes localVariableScopes = new LocalVariableScopes();
 	
 	public Trace(AppJavaClassPath appJavaClassPath) {
+		if(threadName == null) {
+			String threadName = Thread.currentThread().getName();
+			this.threadName = threadName;
+		}
+		
 		this.setAppJavaClassPath(appJavaClassPath);
 		exectionList = new ArrayList<>();
 	}
