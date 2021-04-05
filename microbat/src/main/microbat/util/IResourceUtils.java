@@ -83,7 +83,13 @@ public class IResourceUtils {
 			ECLIPSE_ROOT_DIR = dirRoot.getAbsolutePath();
 			DROPINS_DIR = ECLIPSE_ROOT_DIR + File.separator + "dropins";
 		} else {
-			/** TODO Linux */
+			/**
+			 * Under installation with tar file, root path is ../eclipse,
+			 * launcher file is ./eclipse, dropins at ./dropins
+			 */
+			dirRoot = new File(eclipseExecutablePath);
+			ECLIPSE_ROOT_DIR = dirRoot.getAbsolutePath();
+			DROPINS_DIR = ECLIPSE_ROOT_DIR + File.separator + "dropins";
 		}
 		File dropinsDir = new File(DROPINS_DIR);
 		if (!dropinsDir.exists() && !dropinsDir.isDirectory()) {
