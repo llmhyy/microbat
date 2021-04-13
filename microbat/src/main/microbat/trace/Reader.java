@@ -3,7 +3,6 @@
  */
 package microbat.trace;
 
-
 /**
  * @author knightsong
  *
@@ -14,22 +13,26 @@ public enum Reader {
 		public TraceReader create() {
 			return new FileTraceReader();
 		}
-	}, SQLITE3 {
+	},
+	SQLITE3 {
 		@Override
 		public TraceReader create() {
 			return new SqliteTraceReader();
 		}
-	},MYSQL {
+	},
+	MYSQL {
 		@Override
 		public TraceReader create() {
 			return new SqliteTraceReader();
 		}
 	};
+
 	@Override
 	public String toString() {
 		String id = name();
 		String lower = id.substring(1).toLowerCase();
 		return id.charAt(0) + lower;
 	}
-   public abstract TraceReader  create();
+
+	public abstract TraceReader create();
 }

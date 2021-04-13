@@ -152,7 +152,7 @@ public class MutationGenerator {
 			return null;
 		}
 
-		Trace correctTrace = info.getTrace();
+		Trace correctTrace = info.getTraceList().get(0);
 		Regression.fillMissingInfo(correctTrace, testcaseConfig);
 		return new TraceExecutionInfo(precheckInfo, correctTrace, executor.getTraceExecFilePath(), precheckPath);
 	}
@@ -315,7 +315,7 @@ public class MutationGenerator {
 				includedClassNames, excludedClassNames);
 		executor.setTimeout(params.getAnalysisParams().getExecutionTimeout());
 		RunningInformation runningInfo = executor.execute(buggyPrecheck);
-		return runningInfo.getTrace();
+		return runningInfo.getTraceList().get(0);
 	}
 	
 	private Trace generateCorrectTrace(AnalysisTestcaseParams params, AppJavaClassPath testcaseConfig,
@@ -326,7 +326,7 @@ public class MutationGenerator {
 				includedClassNames, excludedClassNames);
 		executor.setTimeout(params.getAnalysisParams().getExecutionTimeout());
 		RunningInformation info = executor.execute(correctPrecheck);
-		return info.getTrace();
+		return info.getTraceList().get(0);
 	}
 	
 	private List<ClassLocation> getAllExecutedLocations(Trace fixTrace) {
@@ -398,7 +398,7 @@ public class MutationGenerator {
 					long t1 = System.currentTimeMillis();
 					RunningInformation info = executor.execute(precheck);
 					if(info.isExpectedStepsMet()){
-						Trace trace = info.getTrace();
+						Trace trace = info.getTraceList().get(0);
 						long t2 = System.currentTimeMillis();
 						int time = (int) ((t2-t1)/1000);
 						trace.setConstructTime(time);

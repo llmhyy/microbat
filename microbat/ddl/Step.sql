@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS Step
-;
 CREATE TABLE Step
 (
 	trace_id INTEGER NOT NULL,

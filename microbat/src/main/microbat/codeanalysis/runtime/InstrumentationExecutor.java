@@ -1,6 +1,7 @@
 package microbat.codeanalysis.runtime;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,6 +31,8 @@ import microbat.model.value.VarValue;
 import microbat.preference.DatabasePreference;
 import microbat.preference.ExecutionRangePreference;
 import microbat.preference.MicrobatPreference;
+import microbat.sql.DBSettings;
+import microbat.sql.DbService;
 import microbat.util.JavaUtil;
 import microbat.util.MinimumASTNodeFinder;
 import sav.common.core.SavException;
@@ -66,6 +69,15 @@ public class InstrumentationExecutor {
 	}
 	
 	private TraceAgentRunner createTraceAgentRunner() {
+		
+		if(DBSettings.USE_DB.equals("true")) {
+			try {
+				DbService.getConnection();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		String jarPath = appPath.getAgentLib();
 		VMConfiguration config = new VMConfiguration();
 		TraceAgentRunner agentRunner = new TraceAgentRunner(jarPath, config);

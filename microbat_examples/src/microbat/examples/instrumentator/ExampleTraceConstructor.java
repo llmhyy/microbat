@@ -43,7 +43,7 @@ public class ExampleTraceConstructor {
 	private void execute(TraceAgentRunner agentRunner) throws SavException {
 		long start = System.currentTimeMillis();
 		agentRunner.runWithDumpFileOption(null);
-		Trace trace = agentRunner.getTrace();
+		Trace trace = agentRunner.getTraces().get(0);
 		System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 		System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 		System.out.println("trace length: " + trace.size());
@@ -59,7 +59,7 @@ public class ExampleTraceConstructor {
 		config.setJavaHome(TestConfiguration.getJavaHome());
 		
 		/* debug */
-		agentRunner.setVmDebugPort(debugPort);
+//		agentRunner.setVmDebugPort(debugPort);
 		
 		config.addClasspath(EXAMPLE_PRJ_ROOT + "/bin");
 		config.addClasspath( EXAMPLE_PRJ_ROOT + "/resources/testrunner.jar");

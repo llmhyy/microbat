@@ -13,7 +13,7 @@ import org.eclipse.swt.widgets.Display;
 
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.model.trace.Trace;
-import microbat.sql.TraceRetriever;
+import microbat.sql.MysqlTraceRetriever;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import microbat.views.MicroBatViews;
@@ -35,7 +35,7 @@ public class TraceRestoreHandler extends AbstractHandler{
 			
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				TraceRetriever retriever = new TraceRetriever();
+				MysqlTraceRetriever retriever = new MysqlTraceRetriever();
 				try {
 					int traceID = retriever.getLatestTrace(Settings.projectName);
 					final Trace trace = retriever.retrieveTrace(traceID);

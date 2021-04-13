@@ -19,17 +19,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-
 import microbat.Activator;
 import microbat.util.IResourceUtils;
 import sav.common.core.utils.CollectionUtils;
 
 public class DbService {
 	protected static final int BATCH_SIZE = 1000;
-	private static final List<String> MICROBAT_TABLES;
-	private static int dbSettingsVersion = -1;
-	private static MysqlDataSource dataSource;
+	public static final List<String> MICROBAT_TABLES;
+	
+	private static Connection connection = null;
 	
 	static {
 		MICROBAT_TABLES = collectDbTables();
@@ -62,67 +60,25 @@ public class DbService {
 		return new ArrayList<>();
 	}
 	
-	public Connection getConnection() throws SQLException {
-		if (!verifyDatasource()) {
-			Connection conn = dataSource.getConnection();
-			verifyDbTables(conn);
-			return conn;
-		} else {
-			return dataSource.getConnection();
+	public static Connection getConnection() throws SQLException {
+		if(connection != null) {
+			return connection;
 		}
+		
+		if(DBSettings.DMBS_TYPE == DBSettings.MYSQL_DBMS) {
+			connection = MysqlConnectionFactory.initilizeMysqlConnection();
+		}
+		else if(DBSettings.DMBS_TYPE == DBSettings.SQLITE3_DBMS) {
+			connection = SqliteConnectionFactory.initilizeMysqlConnection();
+		}
+		else {
+			throw new SQLException("we yet support dbms type other than mysql and sqlite3");
+		}
+		
+		return connection;
 	}
 	
-	/**
-	 * return whether datasource is verified or not;
-	 * */
-	private boolean verifyDatasource() throws SQLException {
-		synchronized (DBSettings.class) {
-			int dbVersion = DBSettings.getVersion();
-			if (dbVersion == dbSettingsVersion) {
-				return true; // verified!
-			}
-			// verify database
-			dataSource = new MysqlDataSource();
-			dataSource.setServerName(DBSettings.dbAddress);
-			dataSource.setPort(DBSettings.dbPort);
-			dataSource.setUser(DBSettings.username);
-			dataSource.setPassword(DBSettings.password);
-			String dbName = DBSettings.dbName;
-			Connection conn = null;
-			Statement stmt = null;
-			ResultSet rs = null;
-			try {
-				conn = dataSource.getConnection();
-				conn.setAutoCommit(true);
-				rs = conn.getMetaData().getCatalogs();
-				boolean exist = false;
-				while(rs.next()) {
-					String database = rs.getString(1);
-					if (database.equals(dbName)) {
-						exist = true;
-						break;
-					}
-				}
-				rs.close();
-				if (!exist) {
-					stmt = conn.createStatement();
-					int row = stmt.executeUpdate("CREATE DATABASE " + dbName);
-					if (row <= 0) {
-						throw new SQLException("Cannot create database " + dbName);
-					}
-				}
-				dataSource.setDatabaseName(dbName);
-				conn.close();
-				dbSettingsVersion = dbVersion;
-				return false;
-			} finally {
-				closeDb(conn, CollectionUtils.<AutoCloseable>listOf(stmt, rs));
-				if (conn != null) {
-					conn.close();
-				}
-			}
-		}
-	}
+	
 	
 	public void rollback(Connection conn) {
 		try {
@@ -134,10 +90,10 @@ public class DbService {
 		}
 	}
 	
-	protected void verifyDbTables(Connection conn) throws SQLException {
+	public static void verifyDbTables(Connection conn) throws SQLException {
 		DatabaseMetaData metaData = conn.getMetaData();
 		ResultSet rs = metaData.getTables(null, null, "%", new String[]{"TABLE"});
-		Set<String> expectedTables = new HashSet<String>(MICROBAT_TABLES);
+		Set<String> expectedTables = new HashSet<String>(DbService.MICROBAT_TABLES);
 		while (rs.next()) {
 			String rsString = rs.getString(3);
 			Iterator<String> iterator = expectedTables.iterator();
@@ -153,7 +109,7 @@ public class DbService {
 			System.out.println("Missing tables: " + expectedTables.toString());
 			StringBuffer sb = new StringBuffer();
 			try {
-				for (String tableName : MICROBAT_TABLES) {
+				for (String tableName : DbService.MICROBAT_TABLES) {
 					readSqlScriptFile(sb, tableName);
 				}
 				String[] inst = sb.toString().split(";");
@@ -172,7 +128,7 @@ public class DbService {
 		}
 	}
 
-	private void readSqlScriptFile(StringBuffer sb, String tableName) throws FileNotFoundException, IOException {
+	private static void readSqlScriptFile(StringBuffer sb, String tableName) throws FileNotFoundException, IOException {
 		String s;
 		File file = new File(
 				IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "ddl/" + tableName + ".sql"));
@@ -202,7 +158,6 @@ public class DbService {
 			fw.close();
 		}
 	}
-	
 	
 	
 	protected int countNumberOfRows(ResultSet rs) throws SQLException {
@@ -242,7 +197,7 @@ public class DbService {
 		return generatedIds;
 	}
 
-	public void closeDb(Connection connection, List<AutoCloseable> closableList) {
+	public static void closeDb(Connection connection, List<AutoCloseable> closableList) {
 		for (AutoCloseable obj : CollectionUtils.nullToEmpty(closableList)) {
 			if (obj != null) {
 				try {

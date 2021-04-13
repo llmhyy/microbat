@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS Location
-;
 CREATE TABLE Location
 (
 	location_id INTEGER NOT NULL AUTO_INCREMENT,

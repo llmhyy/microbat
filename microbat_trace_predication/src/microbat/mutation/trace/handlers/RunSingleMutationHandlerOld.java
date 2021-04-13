@@ -134,12 +134,12 @@ public class RunSingleMutationHandlerOld  extends AbstractHandler {
 
 		if (rootcauseFinder.getRealRootCaseList().isEmpty()) {
 			EmpiricalTrial trial = EmpiricalTrial.createDumpTrial("cannot find real root cause");
-			if (buggyTrace.isMultiThread() || correctTrace.isMultiThread()) {
-				trial.setMultiThread(true);
-				StepOperationTuple tuple = new StepOperationTuple(simulator.getObservedFault(),
-						new UserFeedback(UserFeedback.UNCLEAR), simulator.getObservedFault(), DebugState.UNCLEAR);
-				trial.getCheckList().add(tuple);
-			}
+//			if (buggyTrace.isMultiThread() || correctTrace.isMultiThread()) {
+//			}
+			trial.setMultiThread(true);
+			StepOperationTuple tuple = new StepOperationTuple(simulator.getObservedFault(),
+					new UserFeedback(UserFeedback.UNCLEAR), simulator.getObservedFault(), DebugState.UNCLEAR);
+			trial.getCheckList().add(tuple);
 
 			return trial;
 		}

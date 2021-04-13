@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS StepVariableRelation
-;
 CREATE TABLE StepVariableRelation
 (
 	var_id TEXT,

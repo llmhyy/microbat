@@ -9,7 +9,7 @@ import java.util.List;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
-import microbat.sql.TraceRetriever01;
+import microbat.sql.SqliteTraceRetriever;
 
 /**
  * @author knightsong
@@ -27,7 +27,7 @@ public class SqliteTraceReader implements TraceReader {
 	@Override
 	public RunningInfo read(PrecheckInfo precheckInfo, String drumpFile) {
 		
-		TraceRetriever01 traceRetriever01 = new TraceRetriever01(drumpFile);
+		SqliteTraceRetriever traceRetriever01 = new SqliteTraceRetriever();
 		List<Trace> traces = null;
 		try {
 			traces= traceRetriever01.retrieveTrace(traceRetriever01.getLatestTraces(precheckInfo.getProgramMsg()));

@@ -11,9 +11,8 @@ import microbat.instrumentation.precheck.PrecheckInfo;
  */
 public interface TraceReader {
 	/**
-	 * @author SongXuezhi
-	 * Please overwrite the method to read trace from any source
+	 * @author SongXuezhi Please overwrite the method to read trace from any source
 	 * @return Trace
 	 */
-	RunningInfo read(PrecheckInfo info,String drumpFile);
+	RunningInfo read(PrecheckInfo info, String drumpFile);
 }

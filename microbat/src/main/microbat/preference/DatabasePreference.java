@@ -5,7 +5,6 @@ import java.io.File;
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
-import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.PreferencePage;
@@ -67,7 +66,7 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		dataBaseDropDown.add(Reader.MYSQL.toString());
 		dataBaseDropDown.select(0);
 
-		SWTFactory.createLabel(contents, "MySql Database Configuration:", 2);
+		SWTFactory.createLabel(contents, "Database Configuration:", 2);
 		Group group = SWTFactory.createGroup(contents, "", 3);
 		hostField = new StringFieldEditor(HOST, "Host Name", group);
 		portField = new IntegerFieldEditor(PORT, "Port", group);
@@ -86,7 +85,7 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 	public static Reader getReader() {
 		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
 		if (pref.getBoolean(IS_STARTDB)) {
-			return pref.getInt(DBMS)==1?Reader.MYSQL:Reader.SQLITE3;
+			return pref.getInt(DBMS) == 1 ? Reader.MYSQL : Reader.SQLITE3;
 		}else {
 			return Reader.FILE;
 		}
@@ -148,5 +147,4 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		DBSettings.updateFromPreference();
 		return true;
 	}
-
 }
