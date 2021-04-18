@@ -86,18 +86,23 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
 		if (pref.getBoolean(IS_STARTDB)) {
 			return pref.getInt(DBMS) == 1 ? Reader.MYSQL : Reader.SQLITE3;
-		}else {
+		} else {
 			return Reader.FILE;
 		}
 	}
+
 	public static File getDBFile() {
-	String filePath = Activator.getDefault().getPreferenceStore().getString(DBPATH);
-	if (filePath.trim().equals("") || filePath==null) {
-		return new File(MicroBatUtil.getSQLFolder()+File.separator+"microbat_test.db");
-	}else {
-		return new File(filePath+File.separator+"microbat_test.db");
+		String filePath = Activator.getDefault().getPreferenceStore().getString(DBPATH);
+		
+		if (filePath.trim().equals("") || filePath == null) {
+			System.err.println("need to specify the db file location");
+		} else {
+			return new File(filePath);
+		}
+		
+		return null;
 	}
-	}
+
 	private void setDefaultValue() {
 		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
 		hostField.setStringValue(pref.getString(HOST));
@@ -127,7 +132,7 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		preferences.put(PASSWORD, passwordField.getStringValue());
 		preferences.putBoolean(IS_STARTDB, startWithSQL.getSelection());
 		preferences.putInt(DBMS, dataBaseDropDown.getSelectionIndex());
-		preferences.put(DBPATH,sqliteDBPath.getStringValue());
+		preferences.put(DBPATH, sqliteDBPath.getStringValue());
 		try {
 			preferences.flush();
 		} catch (BackingStoreException e) {
