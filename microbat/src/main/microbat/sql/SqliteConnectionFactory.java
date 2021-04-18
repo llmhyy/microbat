@@ -1,11 +1,13 @@
 package microbat.sql;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,7 +15,6 @@ import org.sqlite.SQLiteDataSource;
 
 import microbat.Activator;
 import microbat.util.IResourceUtils;
-import sav.common.core.utils.CollectionUtils;
 
 public class SqliteConnectionFactory {
 	private static SQLiteDataSource dataSource = new SQLiteDataSource();
@@ -34,7 +35,7 @@ public class SqliteConnectionFactory {
 		Connection conn = dataSource.getConnection();
 		
 		try {
-			transferSql();
+			transferSql(conn);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -43,20 +44,29 @@ public class SqliteConnectionFactory {
 		return conn;
 	}
 
-	private static void transferSql() throws FileNotFoundException {
+	private static void transferSql(Connection conn) throws FileNotFoundException {
 		// TODO Yuchen
 		/**
 		 * translate the autocrement, create a backup for mysql ddl, and use sqlite ddl.
 		 */
 		Set<String> expectedTables = new HashSet<String>(DbService.MICROBAT_TABLES);
 		for(String tableName: expectedTables) {
-			File file = new File(
-					IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "ddl/" + tableName + ".sql"));
-			FileReader fr = new FileReader(file);
-			BufferedReader br = new BufferedReader(fr);
-			
-			
+			transferSql(conn, tableName);
+		}
+		System.out.println("created table");
+	}
+
+
+	private static void transferSql(Connection conn, String tableName) {
+		Path file = Paths.get(
+				IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "ddl/" + tableName + ".sql"));
+		try {
+			String sqlCreateTableScript = new String(Files.readAllBytes(file));
+			// remove instances of "AUTO_INCREMENT"
+			Statement st = conn.createStatement();
+			st.execute(sqlCreateTableScript.replace("AUTO_INCREMENT", ""));
+		} catch (IOException | SQLException e) {
+			e.printStackTrace();
 		}
 	}
-	
 }

@@ -258,7 +258,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 		for (int i = 0; i < percentiles.length; i++) {
 			int percentile = percentiles[i];
 			if (preP < percentile && percentile <= prog) {
-				System.out.print(prog + "%");
+				System.out.println(prog + "%");
 			}
 		}
 	}
