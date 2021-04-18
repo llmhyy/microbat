@@ -25,13 +25,13 @@ import sav.common.core.utils.CollectionUtils;
 public class SqliteServer {
 
 	// Sqllite db file path
-	public static String dbFilePath = "microbat_test.db";
+//	public static String dbFilePath = "microbat_test.db";
 	protected static final int BATCH_SIZE = 1000;
 	private static SQLiteDataSource dataSource = new SQLiteDataSource();
 
 	public SqliteServer(String dbPath) {
-		SqliteServer.dbFilePath = dbPath;
-		dataSource.setUrl("jdbc:sqlite:" + dbFilePath);
+//		SqliteServer.dbFilePath = dbPath;
+		dataSource.setUrl("jdbc:sqlite:" + dbPath);
 	}
 
 	public Connection getConnection() throws SQLException {
