@@ -53,7 +53,7 @@ public class SqliteConnectionFactory {
 		for(String tableName: expectedTables) {
 			transferSql(conn, tableName);
 		}
-		System.out.println("created table");
+		// System.out.println("created table");
 	}
 
 
