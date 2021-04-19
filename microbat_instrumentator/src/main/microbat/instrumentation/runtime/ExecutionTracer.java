@@ -76,50 +76,52 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		trace = new Trace(appJavaClassPath);
 	}
 
-//	private void buildDataRelation(TraceNode currentNode, VarValue value, String rw){
-//		Variable var = value.getVariable();
-//		if(currentNode==null){
-//			return;
-//		}
-//		
-//		String order = trace.findDefiningNodeOrder(rw, currentNode, var, VariableDefinitions.USE_LAST);
-//		
-//		if(order.equals("0")){
-//			if(var instanceof FieldVar || var instanceof ArrayElementVar){
-//				if(!value.getParents().isEmpty()){
-//					/**
-//					 * use the first defining step of the parent.
-//					 */
-//					order = trace.findDefiningNodeOrder(rw, currentNode, 
-//							value.getParents().get(0).getVariable(), VariableDefinitions.USE_FIRST);
-//				}
-//				
-//			}
-//		}
-//		
-//		String varID = var.getVarID() + ":" + order;
-//		var.setVarID(varID);
-//		if(var.getAliasVarID()!=null){
-//			var.setAliasVarID(var.getAliasVarID()+":"+order);			
-//		}
-//		
-//		StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
-//		if(entry == null){
-//			entry = new StepVariableRelationEntry(varID);
-//			if(!order.equals("0")){
-//				TraceNode producer = trace.getTraceNode(Integer.valueOf(order));
-//				entry.addProducer(producer);
-//				trace.getStepVariableTable().put(varID, entry);
-//			}
-//		}
-//		if(rw.equals(Variable.READ)){
-//			entry.addConsumer(currentNode);
-//		}
-//		else if(rw.equals(Variable.WRITTEN)){
-//			entry.addProducer(currentNode);
-//		}
-//		trace.getStepVariableTable().put(varID, entry);
-//	}
+	// private void buildDataRelation(TraceNode currentNode, VarValue value, String
+	// rw){
+	// Variable var = value.getVariable();
+	// if(currentNode==null){
+	// return;
+	// }
+	//
+	// String order = trace.findDefiningNodeOrder(rw, currentNode, var,
+	// VariableDefinitions.USE_LAST);
+	//
+	// if(order.equals("0")){
+	// if(var instanceof FieldVar || var instanceof ArrayElementVar){
+	// if(!value.getParents().isEmpty()){
+	// /**
+	// * use the first defining step of the parent.
+	// */
+	// order = trace.findDefiningNodeOrder(rw, currentNode,
+	// value.getParents().get(0).getVariable(), VariableDefinitions.USE_FIRST);
+	// }
+	//
+	// }
+	// }
+	//
+	// String varID = var.getVarID() + ":" + order;
+	// var.setVarID(varID);
+	// if(var.getAliasVarID()!=null){
+	// var.setAliasVarID(var.getAliasVarID()+":"+order);
+	// }
+	//
+	// StepVariableRelationEntry entry = trace.getStepVariableTable().get(varID);
+	// if(entry == null){
+	// entry = new StepVariableRelationEntry(varID);
+	// if(!order.equals("0")){
+	// TraceNode producer = trace.getTraceNode(Integer.valueOf(order));
+	// entry.addProducer(producer);
+	// trace.getStepVariableTable().put(varID, entry);
+	// }
+	// }
+	// if(rw.equals(Variable.READ)){
+	// entry.addConsumer(currentNode);
+	// }
+	// else if(rw.equals(Variable.WRITTEN)){
+	// entry.addProducer(currentNode);
+	// }
+	// trace.getStepVariableTable().put(varID, entry);
+	// }
 
 	private VarValue appendVarValue(Object value, Variable var, VarValue parent) {
 		return appendVarValue(value, var, parent, variableLayer);
@@ -142,7 +144,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			ArrayValue arrVal = new ArrayValue(value == null, isRoot, var);
 			arrVal.setComponentType(var.getType().substring(0, var.getType().length() - 2)); // 2 = "[]".length
 			varValue = arrVal;
-//			varValue.setStringValue(getStringValue(value, arrVal.getComponentType()));
+			// varValue.setStringValue(getStringValue(value, arrVal.getComponentType()));
 			varValue.setStringValue(getStringValue(value, var.getType()));
 			if (value == null) {
 				arrVal.setNull(true);
@@ -153,8 +155,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 					String parentSimpleID = Variable.truncateSimpleID(var.getVarID());
 					String arrayElementID = Variable.concanateArrayElementVarID(parentSimpleID, String.valueOf(i));
 					String varName = arrayElementID;
-					ArrayElementVar varElement = new ArrayElementVar(varName, arrVal.getComponentType(),
-							arrayElementID);
+					ArrayElementVar varElement = new ArrayElementVar(varName, arrVal.getComponentType(), arrayElementID);
 					Object elementValue = Array.get(value, i);
 					if (HeuristicIgnoringFieldRule.isHashMapTableType(arrVal.getComponentType())) {
 						appendVarValue(elementValue, varElement, arrVal, retrieveLayer + 1);
@@ -166,7 +167,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} else {
 			ReferenceValue refVal = new ReferenceValue(value == null, TraceUtils.getUniqueId(value), isRoot, var);
 			varValue = refVal;
-//			varValue.setStringValue(getStringValue(value, var.getType()));
+			// varValue.setStringValue(getStringValue(value, var.getType()));
 			varValue.setStringValue(getStringValue(value, null));
 			if (value != null) {
 				Class<?> objClass = value.getClass();
@@ -191,12 +192,11 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 								}
 							}
 							if (fieldValue != null) {
-								FieldVar fieldVar = new FieldVar(Modifier.isStatic(field.getModifiers()),
-										field.getName(), fieldTypeStr, field.getDeclaringClass().getName());
-								fieldVar.setVarID(TraceUtils.getFieldVarId(var.getVarID(), field.getName(),
-										fieldTypeStr, fieldValue));
-								if (isCollectionOrHashMap && HeuristicIgnoringFieldRule
-										.isCollectionOrMapElement(var.getRuntimeType(), field.getName())) {
+								FieldVar fieldVar = new FieldVar(Modifier.isStatic(field.getModifiers()), field.getName(), fieldTypeStr,
+										field.getDeclaringClass().getName());
+								fieldVar.setVarID(TraceUtils.getFieldVarId(var.getVarID(), field.getName(), fieldTypeStr, fieldValue));
+								if (isCollectionOrHashMap
+										&& HeuristicIgnoringFieldRule.isCollectionOrMapElement(var.getRuntimeType(), field.getName())) {
 									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer + 1);
 								} else {
 									appendVarValue(fieldValue, fieldVar, refVal, retrieveLayer);
@@ -233,18 +233,18 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				}
 			}
 
-//			if (FilterChecker.isCustomizedToStringClass(obj.getClass().getName())) {
-//			java.lang.reflect.Method toStringMethod = null;
-//			for (java.lang.reflect.Method method : obj.getClass().getDeclaredMethods()) {
-//				if (method.getName().equals(TraceInstrumenter.NEW_TO_STRING_METHOD)) {
-//					toStringMethod = method;
-//					break;
-//				}
-//			}
-//			if (toStringMethod != null) {
-//				return (String) toStringMethod.invoke(obj);
-//			}
-//		}
+			// if (FilterChecker.isCustomizedToStringClass(obj.getClass().getName())) {
+			// java.lang.reflect.Method toStringMethod = null;
+			// for (java.lang.reflect.Method method : obj.getClass().getDeclaredMethods()) {
+			// if (method.getName().equals(TraceInstrumenter.NEW_TO_STRING_METHOD)) {
+			// toStringMethod = method;
+			// break;
+			// }
+			// }
+			// if (toStringMethod != null) {
+			// return (String) toStringMethod.invoke(obj);
+			// }
+			// }
 
 			if (avoidProxyToString && isProxyClass(obj.getClass())) {
 				return obj.getClass().getName();
@@ -428,8 +428,8 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		}
 	}
 
-	public void buildWriteRelationForArrayCopy(Object targetArray, int startPosition, Object sourceArray,
-			int srcStartPos, int length, int line) {
+	public void buildWriteRelationForArrayCopy(Object targetArray, int startPosition, Object sourceArray, int srcStartPos,
+			int length, int line) {
 		Variable targetParentVariable = new FieldVar(false, "unknown", targetArray.getClass().getName(), "unknown");
 		String targetParentVarId = TraceUtils.getObjectVarId(targetArray, targetArray.getClass().getName());
 		targetParentVariable.setVarID(targetParentVarId);
@@ -439,8 +439,8 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			Object elementValue = Array.get(sourceArray, k);
 
 			int index = startPosition + i;
-			VarValue value = addArrayElementVarValue(targetArray, index, elementValue,
-					elementValue.getClass().getName(), line);
+			VarValue value = addArrayElementVarValue(targetArray, index, elementValue, elementValue.getClass().getName(),
+					line);
 			value.addParent(targetParentValue);
 			addRWriteValue(trace.getLatestNode(), value, true);
 		}
@@ -500,11 +500,12 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				TraceNode latestNode = trace.getLatestNode();
 				if (latestNode != null) {
 					latestNode.setInvokingDetail(null);
-//					TraceNode invokingMatchNode = findInvokingMatchNode(latestNode, invokeMethodSig);
-//					if(invokingMatchNode!=null){
-//						invokingMatchNode.setInvokingMatchNode(latestNode);
-//						latestNode.setInvokingMatchNode(invokingMatchNode);
-//					}
+					// TraceNode invokingMatchNode = findInvokingMatchNode(latestNode,
+					// invokeMethodSig);
+					// if(invokingMatchNode!=null){
+					// invokingMatchNode.setInvokingMatchNode(latestNode);
+					// latestNode.setInvokingMatchNode(invokingMatchNode);
+					// }
 				}
 
 				if (returnedValue != null && invokeMethodSig.contains("clone()")) {
@@ -761,10 +762,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	private void addSingleRWriteValue(TraceNode currentNode, VarValue value, boolean isWrittenVar) {
 		if (isWrittenVar) {
 			currentNode.addWrittenVariable(value);
-//			buildDataRelation(currentNode, value, Variable.WRITTEN);
+			// buildDataRelation(currentNode, value, Variable.WRITTEN);
 		} else {
 			currentNode.addReadVariable(value);
-//			buildDataRelation(currentNode, value, Variable.READ);
+			// buildDataRelation(currentNode, value, Variable.READ);
 		}
 	}
 
@@ -780,10 +781,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			String className, String methodSignature) {
 		locker.lock();
 		try {
-//			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
-//			if (exclusive) {
-//				return;
-//			}
+			// boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			// if (exclusive) {
+			// return;
+			// }
 			hitLine(line, className, methodSignature);
 			Variable var = new FieldVar(false, fieldName, fieldType, refType);
 			var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
@@ -855,11 +856,11 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			String className, String methodSignature) {
 		locker.lock();
 		try {
-//			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
-//			if (exclusive) {
-//				locker.unLock();
-//				return;
-//			}
+			// boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			// if (exclusive) {
+			// locker.unLock();
+			// return;
+			// }
 			hitLine(line, className, methodSignature);
 			Variable var = new FieldVar(true, fieldName, fieldType, refType);
 			var.setVarID(Variable.concanateFieldVarID(refType, fieldName));
@@ -886,11 +887,11 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			int varScopeStartLine, int varScopeEndLine, String className, String methodSignature) {
 		locker.lock();
 		try {
-//			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
-//			if (exclusive) {
-//				locker.unLock();
-//				return;
-//			}
+			// boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			// if (exclusive) {
+			// locker.unLock();
+			// return;
+			// }
 			hitLine(line, className, methodSignature);
 			Variable var = new LocalVar(varName, varType, className, line);
 
@@ -919,57 +920,59 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			int varScopeStartLine, int varScopeEndLine, String className, String methodSignature) {
 		locker.lock();
 		try {
-//			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
-//			if (exclusive) {
-//				locker.unLock();
-//				return;
-//			}
+			// boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			// if (exclusive) {
+			// locker.unLock();
+			// return;
+			// }
 			hitLine(line, className, methodSignature);
 			TraceNode latestNode = trace.getLatestNode();
 			Variable var = new LocalVar(varName, varType, className, line);
 
 			String varID = Variable.concanateLocalVarID(className, varName, varScopeStartLine, varScopeEndLine,
 					latestNode.getInvocationLevel());
-//			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);				
+			// String varID = TraceUtils.getLocalVarId(className, varScopeStartLine,
+			// varScopeEndLine, varName, varType, varValue);
 			var.setVarID(varID);
 			String aliasVarID = TraceUtils.getObjectVarId(varValue, varType);
 			var.setAliasVarID(aliasVarID);
 
 			VarValue value = appendVarValue(varValue, var, null);
 			addRWriteValue(trace.getLatestNode(), value, false);
-//			System.currentTimeMillis();
+			// System.currentTimeMillis();
 			addHeuristicVarChildren(trace.getLatestNode(), value, false);
 
-//			TraceNode currentNode = trace.getLatestNode();
-//			String order = trace.findDefiningNodeOrder(Variable.READ, currentNode, var.getVarID(), var.getAliasVarID());
-//			if(value instanceof ReferenceValue && order.equals("0")){
-//				if(isParameter(varScopeStartLine, varScopeEndLine, className)){
-//					
-//					TraceNode invocationParent = currentNode.getInvocationParent();
-//					if(invocationParent!=null){
-//						String simpleVarID = Variable.truncateSimpleID(varID);
-//						varID = simpleVarID + ":" + invocationParent.getOrder();
-//						value.setVarID(varID);
-//						
-//						if(!invocationParent.getWrittenVariables().contains(value)){
-//							invocationParent.addWrittenVariable(value);							
-//						}
-//						if(!currentNode.getReadVariables().contains(value)){
-//							currentNode.addReadVariable(value);							
-//						}
-//						
-//						StepVariableRelationEntry entry = new StepVariableRelationEntry(varID);
-//						entry.addProducer(invocationParent);
-//						entry.addConsumer(currentNode);
-//						trace.getStepVariableTable().put(varID, entry);
-//						
-//						
-//					}
-//				}
-//			}
-//			else{
-//				addRWriteValue(value, false);
-//			}
+			// TraceNode currentNode = trace.getLatestNode();
+			// String order = trace.findDefiningNodeOrder(Variable.READ, currentNode,
+			// var.getVarID(), var.getAliasVarID());
+			// if(value instanceof ReferenceValue && order.equals("0")){
+			// if(isParameter(varScopeStartLine, varScopeEndLine, className)){
+			//
+			// TraceNode invocationParent = currentNode.getInvocationParent();
+			// if(invocationParent!=null){
+			// String simpleVarID = Variable.truncateSimpleID(varID);
+			// varID = simpleVarID + ":" + invocationParent.getOrder();
+			// value.setVarID(varID);
+			//
+			// if(!invocationParent.getWrittenVariables().contains(value)){
+			// invocationParent.addWrittenVariable(value);
+			// }
+			// if(!currentNode.getReadVariables().contains(value)){
+			// currentNode.addReadVariable(value);
+			// }
+			//
+			// StepVariableRelationEntry entry = new StepVariableRelationEntry(varID);
+			// entry.addProducer(invocationParent);
+			// entry.addConsumer(currentNode);
+			// trace.getStepVariableTable().put(varID, entry);
+			//
+			//
+			// }
+			// }
+			// }
+			// else{
+			// addRWriteValue(value, false);
+			// }
 
 		} catch (Throwable t) {
 			handleException(t);
@@ -1009,18 +1012,19 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			int bcLocalVarIdx, int varScopeStartLine, int varScopeEndLine, String className, String methodSignature) {
 		locker.lock();
 		try {
-//			boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
-//			if (exclusive) {
-//				locker.unLock();
-//				return;
-//			}
+			// boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
+			// if (exclusive) {
+			// locker.unLock();
+			// return;
+			// }
 			hitLine(line, className, methodSignature);
 
 			TraceNode latestNode = trace.getLatestNode();
 			Variable var = new LocalVar(varName, varType, className, line);
 			String varID = Variable.concanateLocalVarID(className, varName, varScopeStartLine, varScopeEndLine,
 					latestNode.getInvocationLevel());
-//			String varID = TraceUtils.getLocalVarId(className, varScopeStartLine, varScopeEndLine, varName, varType, varValue);
+			// String varID = TraceUtils.getLocalVarId(className, varScopeStartLine,
+			// varScopeEndLine, varName, varType, varValue);
 			var.setVarID(varID);
 
 			Variable varBefore = var.clone();
@@ -1080,50 +1084,51 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	}
 
 	private void addHeuristicVarChildren(TraceNode latestNode, VarValue value, boolean isWritten) {
-//		if (ArrayList.class.getName().equals(value.getRuntimeType())) {
-//			for (VarValue child : value.getChildren()) {
-//				if ("elementData".equals(child.getVarName())) {
-//					addHeuristicVarChildren(latestNode, child, isWritten);
-//					return;
-//				}
-//			}
-//		} else if (HashMap.class.getName().equals(value.getRuntimeType())) {
-//			for (VarValue child : value.getChildren()) {
-//				if ("table".equals(child.getVarName())) {
-//					addHeuristicVarChildren(latestNode, child, isWritten);
-//					return;
-//				}
-//			}
-//		} 
-//		else if (Stack.class.getName().equals(value.getRuntimeType())) {
-//			/**
-//			 * TODO for Xuezhi extend stack content here.
-//			 */
-//			for (VarValue child : value.getChildren()) {
-//				if ("elementData".equals(child.getVarName())) {
-//					addHeuristicVarChildren(latestNode, child, isWritten);
-//					return;
-//				}
-//			}
-//		}
-//		
-//		else if (value instanceof ArrayValue) {
-//			Collection<VarValue> nodeReadVars = trace.getLatestNode().getReadVariables();
-//			if (value.getChildren().size() > nodeReadVars.size()) {
-//				((ArrayList<?>)nodeReadVars).ensureCapacity(nodeReadVars.size() + value.getChildren().size());
-//			}
-//			for (VarValue child : value.getChildren()) {
-//				if (child.getVariable() instanceof ArrayElementVar) {
-//					if (HeuristicIgnoringFieldRule.isHashMapTableType(child.getRuntimeType())) {
-//						for (VarValue nodeAttr : child.getChildren()) {
-//							addRWriteValue(trace.getLatestNode(), nodeAttr, false);
-//						}
-//					} else {
-//						addRWriteValue(trace.getLatestNode(), child, false);
-//					}
-//				}
-//			}
-//		} 
+		// if (ArrayList.class.getName().equals(value.getRuntimeType())) {
+		// for (VarValue child : value.getChildren()) {
+		// if ("elementData".equals(child.getVarName())) {
+		// addHeuristicVarChildren(latestNode, child, isWritten);
+		// return;
+		// }
+		// }
+		// } else if (HashMap.class.getName().equals(value.getRuntimeType())) {
+		// for (VarValue child : value.getChildren()) {
+		// if ("table".equals(child.getVarName())) {
+		// addHeuristicVarChildren(latestNode, child, isWritten);
+		// return;
+		// }
+		// }
+		// }
+		// else if (Stack.class.getName().equals(value.getRuntimeType())) {
+		// /**
+		// * TODO for Xuezhi extend stack content here.
+		// */
+		// for (VarValue child : value.getChildren()) {
+		// if ("elementData".equals(child.getVarName())) {
+		// addHeuristicVarChildren(latestNode, child, isWritten);
+		// return;
+		// }
+		// }
+		// }
+		//
+		// else if (value instanceof ArrayValue) {
+		// Collection<VarValue> nodeReadVars = trace.getLatestNode().getReadVariables();
+		// if (value.getChildren().size() > nodeReadVars.size()) {
+		// ((ArrayList<?>)nodeReadVars).ensureCapacity(nodeReadVars.size() +
+		// value.getChildren().size());
+		// }
+		// for (VarValue child : value.getChildren()) {
+		// if (child.getVariable() instanceof ArrayElementVar) {
+		// if (HeuristicIgnoringFieldRule.isHashMapTableType(child.getRuntimeType())) {
+		// for (VarValue nodeAttr : child.getChildren()) {
+		// addRWriteValue(trace.getLatestNode(), nodeAttr, false);
+		// }
+		// } else {
+		// addRWriteValue(trace.getLatestNode(), child, false);
+		// }
+		// }
+		// }
+		// }
 
 	}
 
@@ -1169,8 +1174,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		locker.unLock();
 	}
 
-	private VarValue addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType,
-			int line) {
+	private VarValue addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType, int line) {
 		String id = new StringBuilder(TraceUtils.getObjectVarId(arrayRef, elementType + "[]")).append("[").append(index)
 				.append("]").toString();
 		String name = id;
@@ -1216,8 +1220,8 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			ExecutionTracer tracer = rtStore.get(threadId);
 			if (tracer == null) {
 				tracer = rtStore.get(threadId);
-//				lockedThreads.remove(threadId);
-//				return EmptyExecutionTracer.getInstance();
+				// lockedThreads.remove(threadId);
+				// return EmptyExecutionTracer.getInstance();
 			}
 			tracer.enterMethod(className, methodSig, methodStartLine, methodEndLine, paramTypeSignsCode, paramNamesCode,
 					params);
@@ -1240,12 +1244,12 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	public static synchronized IExecutionTracer getCurrentThreadStore() {
 		synchronized (rtStore) {
 			long threadId = Thread.currentThread().getId();
-//			String threadName = Thread.currentThread().getName();
+			// String threadName = Thread.currentThread().getName();
 			if (lockedThreads.contains(threadId)) {
 				return EmptyExecutionTracer.getInstance();
 			}
 			IExecutionTracer store = rtStore.get(threadId);
-//			store.setThreadName(threadName);
+			// store.setThreadName(threadName);
 
 			if (store == null) {
 				store = EmptyExecutionTracer.getInstance();
@@ -1261,8 +1265,8 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	}
 
 	public static void dispose() {
-		adjustVarMap = null;
-		lockedThreads = null;
+		adjustVarMap = new HashMap<>();
+		lockedThreads = new LockedThreads();
 		HeuristicIgnoringFieldRule.clearCache();
 	}
 
