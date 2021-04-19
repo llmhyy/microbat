@@ -89,8 +89,8 @@ public class DbService {
 			// ignore
 		}
 	}
-	
-	public static void verifyDbTables(Connection conn) throws SQLException {
+
+	public static Set<String> findMissingTables(Connection conn) throws SQLException {
 		DatabaseMetaData metaData = conn.getMetaData();
 		ResultSet rs = metaData.getTables(null, null, "%", new String[]{"TABLE"});
 		Set<String> expectedTables = new HashSet<String>(DbService.MICROBAT_TABLES);
@@ -103,8 +103,12 @@ public class DbService {
 					iterator.remove();					
 				}				
 			}
-			
 		}
+		return expectedTables;
+	}
+	
+	public static void verifyDbTables(Connection conn) throws SQLException {
+		Set<String> expectedTables = findMissingTables(conn);
 		if (!expectedTables.isEmpty() && DBSettings.enableAutoUpdateDb) {
 			System.out.println("Missing tables: " + expectedTables.toString());
 			StringBuffer sb = new StringBuffer();

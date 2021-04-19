@@ -31,30 +31,28 @@ public class SqliteConnectionFactory {
 	}
 
 	private static Connection getConnection() throws SQLException {
-		
 		Connection conn = dataSource.getConnection();
 		
-		try {
-			transferSql(conn);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+		Set<String> missingTables = DbService.findMissingTables(conn);
+		for (String table : missingTables) {
+			transferSql(conn, table);
 		}
 		
 		DbService.verifyDbTables(conn);
 		return conn;
 	}
 
-	private static void transferSql(Connection conn) throws FileNotFoundException {
-		// TODO Yuchen
-		/**
-		 * translate the autocrement, create a backup for mysql ddl, and use sqlite ddl.
-		 */
-		Set<String> expectedTables = new HashSet<String>(DbService.MICROBAT_TABLES);
-		for(String tableName: expectedTables) {
-			transferSql(conn, tableName);
-		}
-		// System.out.println("created table");
-	}
+	/**
+	 * translate the autocrement, create a backup for mysql ddl, and use sqlite ddl.
+	 */
+	// private static void transferSql(Connection conn) throws FileNotFoundException {
+	// 	// check if tables already exist
+	// 	Set<String> expectedTables = new HashSet<String>(DbService.MICROBAT_TABLES);
+	// 	for(String tableName: expectedTables) {
+	// 		transferSql(conn, tableName);
+	// 	}
+	// 	// System.out.println("created table");
+	// }
 
 
 	private static void transferSql(Connection conn, String tableName) {
