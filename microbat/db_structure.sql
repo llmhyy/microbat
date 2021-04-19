@@ -104,7 +104,7 @@ CREATE TABLE "Trace" (
   "run_id" text(100),
   "trace_id" text(100),
   "thread_id" text,
-  "threadName" text(255),
+  "thread_name" text(255),
   "generated_time" integer,
   "isMain" integer
 );
