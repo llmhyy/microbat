@@ -45,9 +45,9 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		try {
 			conn = getConnection();
 			conn.setAutoCommit(false);
-			String runId=insertRun(conn,closables);
+			String runId = insertRun(conn, closables);
 			for (Trace trace : traces) {
-				insertTrace(trace,runId, conn, closables);
+				insertTrace(trace, runId, conn, closables);
 			}
 			conn.commit();
 		} catch (SQLException e) {
@@ -58,17 +58,15 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		}
 	}
 
-
 	public String insertRun(Connection conn, List<AutoCloseable> closables) throws SQLException {
 		PreparedStatement ps;
-		String sql = "INSERT INTO Run ("
-				+ "run_id,project_name,project_version,launch_method,thread_status,launch_class) "
+		String sql = "INSERT INTO Run (" + "run_id,project_name,project_version,launch_method,thread_status,launch_class) "
 				+ "VALUES (?, ?, ?,?,?,?)";
 		ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		int idx = 1;
-		String runId=getUUID();
-		//TODO add the other attributes
+		String runId = getUUID();
+		// TODO add the other attributes
 		ps.setString(idx++, runId);
 		ps.setString(idx++, "");
 		ps.setString(idx++, "");
@@ -83,18 +81,20 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 	 * TODO add insert Run table So,there run id is not clear ,and thread_name is
 	 * also no clear TODO add Variable to tb
 	 */
-	public String insertTrace(Trace trace,String runId,Connection conn, List<AutoCloseable> closables) throws SQLException {
+	public String insertTrace(Trace trace, String runId, Connection conn, List<AutoCloseable> closables)
+			throws SQLException {
 		PreparedStatement ps;
-		String sql = "INSERT INTO Trace (" + "run_id, trace_id,thread_id,thread_name,isMain,generated_time) " + "VALUES (?, ?, ?,?,?,?)";
+		String sql = "INSERT INTO Trace (" + "trace_id, run_id,thread_id,thread_name,isMain,generated_time) "
+				+ "VALUES (?, ?, ?, ?,?,?)";
 		ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		int idx = 1;
-		ps.setString(idx++,runId);
+		ps.setString(idx++, runId);
 		String traceId = getUUID();
 		ps.setString(idx++, traceId);
 		ps.setString(idx++, String.valueOf(trace.getThreadId()));
 		ps.setString(idx++, trace.getThreadName());
-		ps.setBoolean(idx++,trace.isMain());
+		ps.setBoolean(idx++, trace.isMain());
 		ps.setTimestamp(idx++, new Timestamp(System.currentTimeMillis()));
 		ps.execute();
 		insertSteps(traceId, trace.getExecutionList(), conn, closables);
@@ -102,8 +102,8 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		return traceId;
 	}
 
-	private void insertSteps(String traceId, List<TraceNode> exectionList, Connection conn,
-			List<AutoCloseable> closables) throws SQLException {
+	private void insertSteps(String traceId, List<TraceNode> exectionList, Connection conn, List<AutoCloseable> closables)
+			throws SQLException {
 		String sql = "INSERT INTO Step (trace_id, step_order, control_dominator, step_in, step_over, invocation_parent, loop_parent,"
 				+ "location_id, read_vars, written_vars) VALUES (?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
@@ -133,41 +133,43 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 			ps.executeBatch();
 		}
 	}
-	
-	//TODO value_string is not true instance
+
+	// TODO value_string is not true instance
 	private void insertStepVariableRelation(Trace trace, String traceId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
-//		String sql = "INSERT INTO StepVariableRelation (var_id,step_order,rw,value_string,trace_id) VALUES (?, ?, ?, ?,?)";
-//		PreparedStatement ps = conn.prepareStatement(sql);
-//		closables.add(ps);
-//		int count = 0;
-//		for (StepVariableRelationEntry entry : trace.getStepVariableTable().values()) {
-//			for (TraceNode node : entry.getProducers()) {
-//				int idx = 1;
-//				ps.setString(idx++, entry.getVarID());
-//				ps.setInt(idx++, node.getOrder());
-//				ps.setInt(idx++, WRITE);
-//				ps.setString(idx++, node.getWrittenVariables().toString());
-//				ps.setString(idx++, traceId);
-//				ps.addBatch();
-//			}
-//			for (TraceNode node : entry.getConsumers()) {
-//				int idx = 1;
-//				ps.setString(idx++, entry.getVarID());
-//				ps.setInt(idx++, node.getOrder());
-//				ps.setInt(idx++, READ);
-//				ps.setString(idx++, node.getReadVariables().toString());
-//				ps.setString(idx++, traceId);
-//				ps.addBatch();
-//			}
-//			if (++count >= BATCH_SIZE) {
-//				ps.executeBatch();
-//				count = 0;
-//			}
-//		}
-//		if (count > 0) {
-//			ps.executeBatch();
-//		}
+		// String sql = "INSERT INTO StepVariableRelation
+		// (var_id,step_order,rw,value_string,trace_id) VALUES (?, ?, ?, ?,?)";
+		// PreparedStatement ps = conn.prepareStatement(sql);
+		// closables.add(ps);
+		// int count = 0;
+		// for (StepVariableRelationEntry entry : trace.getStepVariableTable().values())
+		// {
+		// for (TraceNode node : entry.getProducers()) {
+		// int idx = 1;
+		// ps.setString(idx++, entry.getVarID());
+		// ps.setInt(idx++, node.getOrder());
+		// ps.setInt(idx++, WRITE);
+		// ps.setString(idx++, node.getWrittenVariables().toString());
+		// ps.setString(idx++, traceId);
+		// ps.addBatch();
+		// }
+		// for (TraceNode node : entry.getConsumers()) {
+		// int idx = 1;
+		// ps.setString(idx++, entry.getVarID());
+		// ps.setInt(idx++, node.getOrder());
+		// ps.setInt(idx++, READ);
+		// ps.setString(idx++, node.getReadVariables().toString());
+		// ps.setString(idx++, traceId);
+		// ps.addBatch();
+		// }
+		// if (++count >= BATCH_SIZE) {
+		// ps.executeBatch();
+		// count = 0;
+		// }
+		// }
+		// if (count > 0) {
+		// ps.executeBatch();
+		// }
 	}
 
 	private void insertLocation(String traceId, List<TraceNode> nodes, Connection conn, List<AutoCloseable> closables)

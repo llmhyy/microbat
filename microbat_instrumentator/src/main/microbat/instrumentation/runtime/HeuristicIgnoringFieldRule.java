@@ -282,8 +282,8 @@ public class HeuristicIgnoringFieldRule {
 	}
 
 	public static void clearCache() {
-		isCollectionMap = null;
-		isHashMapMap = null;
-		parsingTypeMap = null;
+		isCollectionMap = new HashMap<>();
+		isHashMapMap = new HashMap<>();
+		parsingTypeMap = new HashMap<>();
 	}
 }

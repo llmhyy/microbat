@@ -1,6 +1,6 @@
 CREATE TABLE Trace
 (
-	trace_id INTEGER NOT NULL AUTO_INCREMENT,
+	trace_id TEXT NOT NULL,
 	run_id VARCHAR(255),
 	thread_id VARCHAR(255),
 	thread_name VARCHAR(255),

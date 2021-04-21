@@ -23,12 +23,12 @@ import sav.common.core.utils.StringUtils;
 /**
  * @author knightsong SQL lite
  */
-public class SqliteTraceRetriever extends DbService{
+public class SqliteTraceRetriever extends DbService {
 	/**
 	 * return Object[]: regression_id, buggy_trace id, correct_trace id
 	 */
 	public SqliteTraceRetriever() {
-//		super(dbPath);
+		// super(dbPath);
 	}
 
 	public List<String> getLatestTraces(String projectName) throws SQLException {
@@ -41,7 +41,7 @@ public class SqliteTraceRetriever extends DbService{
 
 			PreparedStatement ps = conn
 					.prepareStatement("SELECT trace_id from Trace WHERE run_id=(SELECT MAX(run_id) FROM Run)");
-//			ps.setString(1, projectName);
+			// ps.setString(1, projectName);
 			ResultSet rs = ps.executeQuery();
 			closables.add(ps);
 			closables.add(rs);
@@ -82,24 +82,25 @@ public class SqliteTraceRetriever extends DbService{
 		trace.setExectionList(steps);
 		// load stepVar
 		List<Object[]> rows = loadStepVariableRelation(traceId, conn, closables);
-//		Map<String, StepVariableRelationEntry> stepVariableTable = trace.getStepVariableTable();
-//		for (Object[] row : rows) {
-//			int stepOrder = (int) row[0];
-//			String varId = (String) row[1];
-//			int rw = (int) row[2];
-//			StepVariableRelationEntry entry = stepVariableTable.get(varId);
-//			if (entry == null) {
-//				entry = new StepVariableRelationEntry(varId);
-//				stepVariableTable.put(varId, entry);
-//			}
-//			if (rw == TraceRecorder.WRITE) {
-//				entry.addProducer(steps.get(stepOrder - 1));
-//			} else if (rw == TraceRecorder.READ) {
-//				entry.addConsumer(steps.get(stepOrder - 1));
-//			} else {
-//				throw new SQLException("Tabel StepVariableRelationEntry: Invalid RW value!");
-//			}
-//		}
+		// Map<String, StepVariableRelationEntry> stepVariableTable =
+		// trace.getStepVariableTable();
+		// for (Object[] row : rows) {
+		// int stepOrder = (int) row[0];
+		// String varId = (String) row[1];
+		// int rw = (int) row[2];
+		// StepVariableRelationEntry entry = stepVariableTable.get(varId);
+		// if (entry == null) {
+		// entry = new StepVariableRelationEntry(varId);
+		// stepVariableTable.put(varId, entry);
+		// }
+		// if (rw == TraceRecorder.WRITE) {
+		// entry.addProducer(steps.get(stepOrder - 1));
+		// } else if (rw == TraceRecorder.READ) {
+		// entry.addConsumer(steps.get(stepOrder - 1));
+		// } else {
+		// throw new SQLException("Tabel StepVariableRelationEntry: Invalid RW value!");
+		// }
+		// }
 		return trace;
 	}
 
@@ -115,7 +116,7 @@ public class SqliteTraceRetriever extends DbService{
 		boolean isMain = false;
 		if (rs.next()) {
 			threadId = rs.getString("thread_id");
-			threadName =rs.getString("threadName");
+			threadName = rs.getString("thread_name");
 			isMain = rs.getBoolean("isMain");
 		}
 		trace.setThreadId(Long.parseLong(threadId));
@@ -220,8 +221,8 @@ public class SqliteTraceRetriever extends DbService{
 				loadVarStep = "written_vars";
 				step.setWrittenVariables(toVarValue(rs.getString("written_vars")));
 			} catch (Exception e) {
-				System.out.println(String.format("%s: Xml error at step: [trace_id, order] = [%d, %d]", loadVarStep,
-						traceId, order));
+				System.out
+						.println(String.format("%s: Xml error at step: [trace_id, order] = [%d, %d]", loadVarStep, traceId, order));
 				throw e;
 			}
 		}
@@ -249,17 +250,19 @@ public class SqliteTraceRetriever extends DbService{
 		return rs.getInt(1);
 	}
 
-	private void loadLocations(Map<String, List<TraceNode>> locIdStepMap, Connection conn,
-			List<AutoCloseable> closables) throws SQLException {
+	private void loadLocations(Map<String, List<TraceNode>> locIdStepMap, Connection conn, List<AutoCloseable> closables)
+			throws SQLException {
 		if (locIdStepMap.isEmpty()) {
 			return;
 		}
 		Set<String> locationSet = locIdStepMap.keySet();
 		String matchList = StringUtils.joinWithApostrophe(locationSet, ",");
 		/* control scope */
-//		Map<Integer, ControlScope> controlScopeMap = loadControlScopes(locationSet, matchList, conn, closables);
+		// Map<Integer, ControlScope> controlScopeMap = loadControlScopes(locationSet,
+		// matchList, conn, closables);
 		/* loop scope */
-//		Map<Integer, SourceScope> loopScopeMap = loadLoopScope(locationSet, matchList, conn, closables);
+		// Map<Integer, SourceScope> loopScopeMap = loadLoopScope(locationSet,
+		// matchList, conn, closables);
 		/* location */
 		PreparedStatement ps = conn.prepareStatement(String.format(
 				"SELECT location_id,class_name,line_number,is_conditional,is_return FROM Location WHERE location_id IN (%s)",
@@ -279,14 +282,14 @@ public class SqliteTraceRetriever extends DbService{
 			for (TraceNode node : nodes) {
 				node.setBreakPoint(bkp);
 			}
-//			bkp.setControlScope(controlScopeMap.get(locId));
-//			bkp.setLoopScope(loopScopeMap.get(locId));
+			// bkp.setControlScope(controlScopeMap.get(locId));
+			// bkp.setLoopScope(loopScopeMap.get(locId));
 		}
 		ps.close();
 	}
 
 	protected List<VarValue> toVarValue(String xmlContent) {
-//		xmlContent = xmlContent.replace("&#", "#");
+		// xmlContent = xmlContent.replace("&#", "#");
 		return VarValueXmlReader.read(xmlContent);
 	}
 
