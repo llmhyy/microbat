@@ -107,7 +107,7 @@ public class SqliteTraceRetriever extends DbService {
 
 	private void loadSimpleTrace(Trace trace, String traceId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
-		PreparedStatement ps = conn.prepareStatement("SELECT thread_id,threadName,isMain FROM Trace WHERE trace_id=?");
+		PreparedStatement ps = conn.prepareStatement("SELECT thread_id,thread_name,isMain FROM Trace WHERE trace_id=?");
 		ps.setString(1, traceId);
 		ResultSet rs = ps.executeQuery();
 		closables.add(ps);

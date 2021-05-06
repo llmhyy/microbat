@@ -26,13 +26,13 @@ import sav.common.core.utils.CollectionUtils;
 public class DbService {
 	protected static final int BATCH_SIZE = 1000;
 	public static final List<String> MICROBAT_TABLES;
-	
+
 	private static Connection connection = null;
-	
+
 	static {
 		MICROBAT_TABLES = collectDbTables();
 	}
-	
+
 	public static List<String> collectDbTables() {
 		try {
 			File ddlFolder = new File(IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "ddl"));
@@ -44,7 +44,7 @@ public class DbService {
 					if (name.endsWith(".sql") || name.endsWith(".SQL")) {
 						String tableName = name.substring(0, name.length() - 4 /* ".sql".length */);
 						String os = System.getProperty("os.name");
-						if(os.toLowerCase().contains("win")){
+						if (os.toLowerCase().contains("win")) {
 							tableName = tableName.toLowerCase();
 						}
 						tables.add(tableName);
@@ -59,27 +59,20 @@ public class DbService {
 		}
 		return new ArrayList<>();
 	}
-	
+
 	public static Connection getConnection() throws SQLException {
-		if(connection != null) {
-			return connection;
-		}
-		
-		if(DBSettings.DMBS_TYPE == DBSettings.MYSQL_DBMS) {
+		// each retrieval will close the connection
+		if (DBSettings.DMBS_TYPE == DBSettings.MYSQL_DBMS) {
 			connection = MysqlConnectionFactory.initializeConnection();
-		}
-		else if(DBSettings.DMBS_TYPE == DBSettings.SQLITE3_DBMS) {
+		} else if (DBSettings.DMBS_TYPE == DBSettings.SQLITE3_DBMS) {
 			connection = SqliteConnectionFactory.initializeConnection();
-		}
-		else {
+		} else {
 			throw new SQLException("we yet support dbms type other than mysql and sqlite3");
 		}
-		
+
 		return connection;
 	}
-	
-	
-	
+
 	public void rollback(Connection conn) {
 		try {
 			if (conn != null) {
@@ -92,21 +85,21 @@ public class DbService {
 
 	public static Set<String> findMissingTables(Connection conn) throws SQLException {
 		DatabaseMetaData metaData = conn.getMetaData();
-		ResultSet rs = metaData.getTables(null, null, "%", new String[]{"TABLE"});
+		ResultSet rs = metaData.getTables(null, null, "%", new String[] { "TABLE" });
 		Set<String> expectedTables = new HashSet<String>(DbService.MICROBAT_TABLES);
 		while (rs.next()) {
 			String rsString = rs.getString(3);
 			Iterator<String> iterator = expectedTables.iterator();
-			while(iterator.hasNext()){
+			while (iterator.hasNext()) {
 				String table = iterator.next();
-				if(table.toLowerCase().equals(rsString.toLowerCase())){
-					iterator.remove();					
-				}				
+				if (table.toLowerCase().equals(rsString.toLowerCase())) {
+					iterator.remove();
+				}
 			}
 		}
 		return expectedTables;
 	}
-	
+
 	public static void verifyDbTables(Connection conn) throws SQLException {
 		Set<String> expectedTables = findMissingTables(conn);
 		if (!expectedTables.isEmpty() && DBSettings.enableAutoUpdateDb) {
@@ -134,8 +127,7 @@ public class DbService {
 
 	private static void readSqlScriptFile(StringBuffer sb, String tableName) throws FileNotFoundException, IOException {
 		String s;
-		File file = new File(
-				IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "ddl/" + tableName + ".sql"));
+		File file = new File(IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID, "ddl/" + tableName + ".sql"));
 		FileReader fr = new FileReader(file);
 		BufferedReader br = new BufferedReader(fr);
 		boolean check = CollectionUtils.existIn(tableName, "step", "mutationfile");
@@ -162,8 +154,7 @@ public class DbService {
 			fw.close();
 		}
 	}
-	
-	
+
 	protected int countNumberOfRows(ResultSet rs) throws SQLException {
 		if (rs == null) {
 			return 0;
@@ -175,7 +166,7 @@ public class DbService {
 			rs.beforeFirst();
 		}
 	}
-	
+
 	protected int getFirstGeneratedIntCol(PreparedStatement ps) throws SQLException {
 		int id = -1;
 		try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
@@ -190,7 +181,7 @@ public class DbService {
 		}
 		return id;
 	}
-	
+
 	protected List<Integer> getGeneratedIntIds(PreparedStatement ps) throws SQLException {
 		List<Integer> generatedIds = new ArrayList<>();
 		try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
