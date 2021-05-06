@@ -66,10 +66,10 @@ public class DbService {
 		}
 		
 		if(DBSettings.DMBS_TYPE == DBSettings.MYSQL_DBMS) {
-			connection = MysqlConnectionFactory.initilizeMysqlConnection();
+			connection = MysqlConnectionFactory.initializeConnection();
 		}
 		else if(DBSettings.DMBS_TYPE == DBSettings.SQLITE3_DBMS) {
-			connection = SqliteConnectionFactory.initilizeMysqlConnection();
+			connection = SqliteConnectionFactory.initializeConnection();
 		}
 		else {
 			throw new SQLException("we yet support dbms type other than mysql and sqlite3");

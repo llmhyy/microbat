@@ -13,22 +13,15 @@ public class MysqlConnectionFactory {
 	private static int dbSettingsVersion = -1;
 	private static MysqlDataSource dataSource;
 	
-	public static Connection initilizeMysqlConnection() {
-		try {
-			if (!verifyDatasource()) {
-				Connection conn = dataSource.getConnection();
-				DbService.verifyDbTables(conn);
-				
-				return conn;
-			} else {
-				return dataSource.getConnection();
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public static Connection initializeConnection() throws SQLException {
+		if (!verifyDatasource()) {
+			Connection conn = dataSource.getConnection();
+			DbService.verifyDbTables(conn);
+			
+			return conn;
+		} else {
+			return dataSource.getConnection();
 		}
-		
-		return null;
 	}
 	
 	/**

@@ -23,7 +23,7 @@ public enum Reader {
 	MYSQL {
 		@Override
 		public TraceReader create() {
-			return new SqliteTraceReader();
+			return new MysqlTraceReader();
 		}
 	};
 

@@ -30,7 +30,8 @@ public class SqliteTraceReader implements TraceReader {
 		SqliteTraceRetriever traceRetriever01 = new SqliteTraceRetriever();
 		List<Trace> traces = null;
 		try {
-			traces= traceRetriever01.retrieveTrace(traceRetriever01.getLatestTraces(precheckInfo.getProgramMsg()));
+			List<String> latestTraces = traceRetriever01.getLatestTraces(precheckInfo.getProgramMsg());
+			traces= traceRetriever01.retrieveTrace(latestTraces);
 
 		} catch (SQLException e) {
 			e.printStackTrace();

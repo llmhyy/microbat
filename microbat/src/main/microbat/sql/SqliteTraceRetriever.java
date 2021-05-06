@@ -38,9 +38,8 @@ public class SqliteTraceRetriever extends DbService {
 		List<String> tracesIdList = new ArrayList<>();
 		try {
 			conn = getConnection();
-
-			PreparedStatement ps = conn
-					.prepareStatement("SELECT trace_id from Trace WHERE run_id=(SELECT MAX(run_id) FROM Run)");
+			String query = "SELECT trace_id from Trace ORDER BY generated_time";
+			PreparedStatement ps = conn.prepareStatement(query);
 			// ps.setString(1, projectName);
 			ResultSet rs = ps.executeQuery();
 			closables.add(ps);
@@ -67,6 +66,8 @@ public class SqliteTraceRetriever extends DbService {
 				list.add(loadTrace(traceId, conn, closables));
 			}
 			System.out.println("Retrieve done!");
+		} catch (SQLException e) {
+			e.printStackTrace();
 		} finally {
 			closeDb(conn, closables);
 		}

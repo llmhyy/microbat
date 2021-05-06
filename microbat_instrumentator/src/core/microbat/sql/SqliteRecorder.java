@@ -12,8 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.text.DefaultEditorKit.InsertBreakAction;
-
 import microbat.handler.xml.VarValueXmlWriter;
 import microbat.instrumentation.AgentParams;
 import microbat.model.BreakPoint;
