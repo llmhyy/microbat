@@ -62,7 +62,8 @@ CREATE TABLE "Run" (
   "project_version" text(255),
   "launch_method" text(255),
   "thread_status" integer,
-  "launch_class" text(255)
+  "launch_class" text(255),
+  "created_at" text DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ----------------------------
@@ -121,12 +122,12 @@ CREATE TABLE "Variable" (
 -- ----------------------------
 -- Table structure for sqlite_stat1
 -- ----------------------------
-DROP TABLE IF EXISTS "sqlite_stat1";
-CREATE TABLE "sqlite_stat1" (
-  "tbl",
-  "idx",
-  "stat"
-);
+-- DROP TABLE IF EXISTS "sqlite_stat1";
+-- CREATE TABLE "sqlite_stat1" (
+--  "tbl",
+--  "idx",
+--  "stat"
+--);
 
 -- ----------------------------
 -- Indexes structure for table Step

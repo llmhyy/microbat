@@ -38,7 +38,8 @@ public class SqliteTraceRetriever extends DbService {
 		List<String> tracesIdList = new ArrayList<>();
 		try {
 			conn = getConnection();
-			String query = "SELECT trace_id from Trace ORDER BY generated_time";
+			// String query = "SELECT trace_id FROM trace WHERE run_id = (SELECT run_id FROM trace ORDER BY generated_time DESC LIMIT 1)";
+			String query = "SELECT trace_id FROM trace WHERE run_id = (SELECT MAX(run_id) FROM run)";
 			PreparedStatement ps = conn.prepareStatement(query);
 			// ps.setString(1, projectName);
 			ResultSet rs = ps.executeQuery();

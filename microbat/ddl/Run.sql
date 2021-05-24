@@ -6,6 +6,7 @@ CREATE TABLE Run
 	launch_method TEXT,
 	thread_status INTEGER,
 	launch_class TEXT,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (run_id)
 ) 
 ;

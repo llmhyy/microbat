@@ -58,7 +58,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 
 	public String insertRun(Connection conn, List<AutoCloseable> closables) throws SQLException {
 		PreparedStatement ps;
-		String sql = "INSERT INTO Run (" + "run_id,project_name,project_version,launch_method,thread_status,launch_class) "
+		String sql = "INSERT INTO run (run_id,project_name,project_version,launch_method,thread_status,launch_class) "
 				+ "VALUES (?, ?, ?,?,?,?)";
 		ps = conn.prepareStatement(sql);
 		closables.add(ps);
@@ -82,14 +82,14 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 	public String insertTrace(Trace trace, String runId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
 		PreparedStatement ps;
-		String sql = "INSERT INTO Trace (" + "trace_id, run_id,thread_id,thread_name,isMain,generated_time) "
+		String sql = "INSERT INTO Trace (trace_id, run_id,thread_id,thread_name,isMain,generated_time) "
 				+ "VALUES (?, ?, ?, ?,?,?)";
 		ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		int idx = 1;
-		ps.setString(idx++, runId);
 		String traceId = getUUID();
 		ps.setString(idx++, traceId);
+		ps.setString(idx++, runId);
 		ps.setString(idx++, String.valueOf(trace.getThreadId()));
 		ps.setString(idx++, trace.getThreadName());
 		ps.setBoolean(idx++, trace.isMain());
@@ -172,7 +172,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 
 	private void insertLocation(String traceId, List<TraceNode> nodes, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
-		String sql = "INSERT INTO Location (location_id,trace_id, class_name, line_number, is_conditional, is_return) "
+		String sql = "INSERT INTO location (location_id,trace_id, class_name, line_number, is_conditional, is_return) "
 				+ "VALUES (?,?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);

@@ -40,7 +40,12 @@ public class SqliteTraceReader implements TraceReader {
 		
 		RunningInfo info = new RunningInfo();
 		info.setTraceList(traces);
-		info.setCollectedSteps(traces.get(0).getExecutionList().size());
+		if (traces.size() == 0) {
+			info.setCollectedSteps(0);
+		} else {
+			info.setCollectedSteps(traces.get(0).getExecutionList().size());
+		}
+//		info.setCollectedSteps(traces.get(0).getExecutionList().size());
 		info.setExpectedSteps(precheckInfo.getStepTotal());
 		info.setProgramMsg(precheckInfo.getProgramMsg());
 		

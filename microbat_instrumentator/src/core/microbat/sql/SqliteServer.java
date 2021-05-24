@@ -25,7 +25,7 @@ import sav.common.core.utils.CollectionUtils;
 public class SqliteServer {
 
 	// Sqllite db file path
-//	public static String dbFilePath = "microbat_test.db";
+	// public static String dbFilePath = "microbat_test.db";
 	protected static final int BATCH_SIZE = 1000;
 	private static SQLiteDataSource dataSource = new SQLiteDataSource();
 
@@ -36,7 +36,8 @@ public class SqliteServer {
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
-}
+	}
+	
 	public void rollback(Connection conn) {
 		try {
 			if (conn != null) {
@@ -70,7 +71,7 @@ public class SqliteServer {
         UUID uuid=UUID.randomUUID();
         String uuidStr=uuid.toString();
         return uuidStr;
-}
+	}
 	
 //	protected int getFirstGeneratedIntCol(PreparedStatement ps) throws SQLException {
 //		int id = -1;
