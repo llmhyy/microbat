@@ -10,15 +10,18 @@ import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
 import microbat.sql.SqliteTraceRetriever;
+import microbat.sql.TraceRetriever;
+import sav.commons.testdata.calculator.CalculatorTest1;
 
 /**
  * @author knightsong
  *
  */
 public class SqliteTraceReader implements TraceReader {
+	private TraceRetriever traceRetriever;
 
 	public SqliteTraceReader() {
-
+		this.traceRetriever = new SqliteTraceRetriever();
 	}
 
 	/*
@@ -27,16 +30,7 @@ public class SqliteTraceReader implements TraceReader {
 	@Override
 	public RunningInfo read(PrecheckInfo precheckInfo, String drumpFile) {
 		
-		SqliteTraceRetriever traceRetriever01 = new SqliteTraceRetriever();
-		List<Trace> traces = null;
-		try {
-			List<String> latestTraces = traceRetriever01.getLatestTraces(precheckInfo.getProgramMsg());
-			traces= traceRetriever01.retrieveTrace(latestTraces);
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-//		return traces;
+		List<Trace> traces = this.traceRetriever.getLatestTraces();
 		
 		RunningInfo info = new RunningInfo();
 		info.setTraceList(traces);
@@ -49,21 +43,7 @@ public class SqliteTraceReader implements TraceReader {
 		info.setExpectedSteps(precheckInfo.getStepTotal());
 		info.setProgramMsg(precheckInfo.getProgramMsg());
 		
-//		TraceRetriever01 traceRetriever01 = new TraceRetriever01(drumpFile);
-//		Trace trace = null;
-//		try {
-//			trace = traceRetriever01.retrieveTrace(traceRetriever01.getLatestTraces(precheckInfo.getProgramMsg()))
-//					.get(0);
-//
-//		} catch (SQLException e) {
-//			e.printStackTrace();
-//		}
 		return info;
 	}
-
-//	@Override
-//	public List<Trace> ReadTraces(PrecheckInfo info, String drumpFile) {
-//		
-//	}
 
 }

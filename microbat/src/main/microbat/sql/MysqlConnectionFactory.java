@@ -9,11 +9,20 @@ import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 
 import sav.common.core.utils.CollectionUtils;
 
-public class MysqlConnectionFactory {
-	private static int dbSettingsVersion = -1;
-	private static MysqlDataSource dataSource;
+public class MysqlConnectionFactory implements ConnectionFactory {
+	private int dbSettingsVersion;
+	private MysqlDataSource dataSource;
 	
-	public static Connection initializeConnection() throws SQLException {
+	MysqlConnectionFactory() {
+		this.dbSettingsVersion = -1;
+		this.dataSource = new MysqlDataSource();
+		this.dataSource.setServerName(DBSettings.dbAddress);
+		this.dataSource.setPort(DBSettings.dbPort);
+		this.dataSource.setUser(DBSettings.username);
+		this.dataSource.setPassword(DBSettings.password);
+	}
+	
+	public Connection initializeConnection() throws SQLException {
 		if (!verifyDatasource()) {
 			Connection conn = dataSource.getConnection();
 			DbService.verifyDbTables(conn);
@@ -27,18 +36,13 @@ public class MysqlConnectionFactory {
 	/**
 	 * return whether datasource is verified or not;
 	 * */
-	private static boolean verifyDatasource() throws SQLException {
+	private boolean verifyDatasource() throws SQLException {
 		synchronized (DBSettings.class) {
 			int dbVersion = DBSettings.getVersion();
 			if (dbVersion == dbSettingsVersion) {
 				return true; // verified!
 			}
 			// verify database
-			dataSource = new MysqlDataSource();
-			dataSource.setServerName(DBSettings.dbAddress);
-			dataSource.setPort(DBSettings.dbPort);
-			dataSource.setUser(DBSettings.username);
-			dataSource.setPassword(DBSettings.password);
 			String dbName = DBSettings.dbName;
 			Connection conn = null;
 			Statement stmt = null;
@@ -63,9 +67,9 @@ public class MysqlConnectionFactory {
 						throw new SQLException("Cannot create database " + dbName);
 					}
 				}
-				dataSource.setDatabaseName(dbName);
+				this.dataSource.setDatabaseName(dbName);
 				conn.close();
-				dbSettingsVersion = dbVersion;
+				this.dbSettingsVersion = dbVersion;
 				return false;
 			} finally {
 				DbService.closeDb(conn, CollectionUtils.<AutoCloseable>listOf(stmt, rs));

@@ -62,18 +62,22 @@ public class DbService {
 
 	public static Connection getConnection() throws SQLException {
 		// each retrieval will close the connection
-		if (DBSettings.DMBS_TYPE == DBSettings.MYSQL_DBMS) {
-			connection = MysqlConnectionFactory.initializeConnection();
-		} else if (DBSettings.DMBS_TYPE == DBSettings.SQLITE3_DBMS) {
-			connection = SqliteConnectionFactory.initializeConnection();
-		} else {
+		ConnectionFactory factory;
+		switch (DBSettings.DMBS_TYPE) {
+		case DBSettings.MYSQL_DBMS:
+			factory = new MysqlConnectionFactory();
+			break;
+		case DBSettings.SQLITE3_DBMS:
+			factory = new SqliteConnectionFactory();
+			break;
+		default:
 			throw new SQLException("we yet support dbms type other than mysql and sqlite3");
 		}
 
-		return connection;
+		return factory.initializeConnection();
 	}
 
-	public void rollback(Connection conn) {
+	public static void rollback(Connection conn) {
 		try {
 			if (conn != null) {
 				conn.rollback();
@@ -100,6 +104,11 @@ public class DbService {
 		return expectedTables;
 	}
 
+	/**
+	 * Check table names against ddl file and run create table scripts if table is not found
+	 * @param conn Connection to database
+	 * @throws SQLException
+	 */
 	public static void verifyDbTables(Connection conn) throws SQLException {
 		Set<String> expectedTables = findMissingTables(conn);
 		if (!expectedTables.isEmpty() && DBSettings.enableAutoUpdateDb) {

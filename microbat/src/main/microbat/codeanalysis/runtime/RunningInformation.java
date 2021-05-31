@@ -18,6 +18,10 @@ public class RunningInformation {
 		this.collectedSteps = collectedSteps;
 		this.traceList = traceList;
 		
+		if (!this.traceList.isEmpty()) {
+			this.mainTrace = this.traceList.get(0);
+		}
+		
 		for(Trace trace: traceList) {
 			if(trace.isMain()) {
 				this.mainTrace = trace;

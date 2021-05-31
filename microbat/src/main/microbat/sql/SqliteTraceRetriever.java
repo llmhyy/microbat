@@ -23,54 +23,56 @@ import sav.common.core.utils.StringUtils;
 /**
  * @author knightsong SQL lite
  */
-public class SqliteTraceRetriever extends DbService {
-	/**
-	 * return Object[]: regression_id, buggy_trace id, correct_trace id
-	 */
+public class SqliteTraceRetriever implements TraceRetriever {
+	private static final String GET_LATEST_TRACE_ID_QUERY = 
+			"SELECT trace_id, thread_id, thread_name, isMain FROM Trace WHERE run_id = (SELECT MAX(run_id) FROM run)";
+	private static final String GET_TRACE_QUERY = 
+			"SELECT thread_id,thread_name,isMain FROM Trace WHERE trace_id=?";
 	public SqliteTraceRetriever() {
 		// super(dbPath);
 	}
 
-	public List<String> getLatestTraces(String projectName) throws SQLException {
+	@Override
+	public List<Trace> getLatestTraces() {
 
 		Connection conn = null;
 		List<AutoCloseable> closables = new ArrayList<>();
 		List<String> tracesIdList = new ArrayList<>();
 		try {
-			conn = getConnection();
-			// String query = "SELECT trace_id FROM trace WHERE run_id = (SELECT run_id FROM trace ORDER BY generated_time DESC LIMIT 1)";
-			String query = "SELECT trace_id FROM trace WHERE run_id = (SELECT MAX(run_id) FROM run)";
-			PreparedStatement ps = conn.prepareStatement(query);
-			// ps.setString(1, projectName);
+			conn = DbService.getConnection();
+			PreparedStatement ps = conn.prepareStatement(GET_LATEST_TRACE_ID_QUERY);
 			ResultSet rs = ps.executeQuery();
 			closables.add(ps);
 			closables.add(rs);
 
 			while (rs.next()) {
+//				Trace trace = new Trace(appJavaClassPath);
 				tracesIdList.add(rs.getString("trace_id"));
 			}
-
+		} catch (SQLException e) {
+			e.printStackTrace();
 		} finally {
-			closeDb(conn, closables);
+			DbService.closeDb(conn, closables);
 		}
 
-		return tracesIdList;
+		return this.retrieveTrace(tracesIdList);
 	}
 
-	public List<Trace> retrieveTrace(List<String> traceIds) throws SQLException {
+	public List<Trace> retrieveTrace(List<String> traceIds) {
 		Connection conn = null;
 		List<Trace> list = new ArrayList<>(traceIds.size());
 		List<AutoCloseable> closables = new ArrayList<>();
 		try {
-			conn = getConnection();
+			conn = DbService.getConnection();
 			for (String traceId : traceIds) {
 				list.add(loadTrace(traceId, conn, closables));
 			}
 			System.out.println("Retrieve done!");
 		} catch (SQLException e) {
+			System.out.println("Unsupported sql system");
 			e.printStackTrace();
 		} finally {
-			closeDb(conn, closables);
+			DbService.closeDb(conn, closables);
 		}
 		return list;
 	}
@@ -108,7 +110,7 @@ public class SqliteTraceRetriever extends DbService {
 
 	private void loadSimpleTrace(Trace trace, String traceId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
-		PreparedStatement ps = conn.prepareStatement("SELECT thread_id,thread_name,isMain FROM Trace WHERE trace_id=?");
+		PreparedStatement ps = conn.prepareStatement(GET_TRACE_QUERY);
 		ps.setString(1, traceId);
 		ResultSet rs = ps.executeQuery();
 		closables.add(ps);

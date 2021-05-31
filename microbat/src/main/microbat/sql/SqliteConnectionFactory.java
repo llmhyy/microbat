@@ -1,6 +1,5 @@
 package microbat.sql;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,7 +7,6 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.sqlite.SQLiteDataSource;
@@ -17,21 +15,19 @@ import microbat.Activator;
 import microbat.util.IResourceUtils;
 import sav.common.core.SavRtException;
 
-public class SqliteConnectionFactory {
-	private static SQLiteDataSource dataSource = new SQLiteDataSource();
-
-	public static Connection initializeConnection() {
-		dataSource.setUrl("jdbc:sqlite:" + DBSettings.dbPath);
-		try {
-			return getConnection();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		return null;
+public class SqliteConnectionFactory implements ConnectionFactory {
+	private SQLiteDataSource dataSource = new SQLiteDataSource();
+	
+	public SqliteConnectionFactory() {
+		this.dataSource = new SQLiteDataSource();
 	}
 
-	private static Connection getConnection() throws SQLException {
+	public Connection initializeConnection() throws SQLException {
+		dataSource.setUrl("jdbc:sqlite:" + DBSettings.dbPath);
+		return getConnection();
+	}
+
+	private Connection getConnection() throws SQLException {
 		Connection conn = dataSource.getConnection();
 		conn.setAutoCommit(true);
 

@@ -120,7 +120,7 @@ public class InstrumentationExecutor {
 		return agentRunner;
 	}
 	
-	public RunningInformation run(){
+	public RunningInformation run() throws StepLimitException {
 		try {
 //			System.out.println("first precheck..");
 //			agentRunner.precheck(null);
@@ -140,18 +140,19 @@ public class InstrumentationExecutor {
 			if (precheckInfomation.isUndeterministic()) {
 				System.out.println("undeterministic!!");
 			} 
-			if (!info.isOverLong() /*&& !precheckInfomation.isUndeterministic() */) {
-				if (!info.getExceedingLimitMethods().isEmpty()) {
-					agentRunner.addAgentParams(AgentParams.OPT_OVER_LONG_METHODS, info.getExceedingLimitMethods());
-				}
-				RunningInformation rInfo = execute(precheckInfomation);
-				return rInfo;
+			if (info.isOverLong() /*&& !precheckInfomation.isUndeterministic() */) {
+				throw new StepLimitException();
 			}
+			if (!info.getExceedingLimitMethods().isEmpty()) {
+				agentRunner.addAgentParams(AgentParams.OPT_OVER_LONG_METHODS, info.getExceedingLimitMethods());
+			}
+			RunningInformation rInfo = execute(precheckInfomation);
+			return rInfo;
 		} catch (SavException e1) {
 			e1.printStackTrace();
 		}
 		
-		return new RunningInformation("", -1, -1, null);
+		return new RunningInformation("", -1, -1, new ArrayList<Trace>());
 	}
 	
 	public PreCheckInformation runPrecheck(String dumpFile, int stepLimit) {

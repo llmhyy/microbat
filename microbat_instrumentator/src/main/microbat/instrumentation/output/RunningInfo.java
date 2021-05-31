@@ -49,9 +49,6 @@ public class RunningInfo {
 				if (reader != null) {
 					reader.close();
 				}
-				if (reader != null) {
-					reader.close();
-				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

@@ -22,6 +22,7 @@ import microbat.behavior.BehaviorReader;
 import microbat.behavior.BehaviorReporter;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.RunningInformation;
+import microbat.codeanalysis.runtime.StepLimitException;
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
@@ -118,6 +119,9 @@ public class StartDebugHandler extends AbstractHandler {
 							}
 							
 						});
+					} catch (StepLimitException e) {
+						System.out.println("Step limit exceeded");
+						e.printStackTrace();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

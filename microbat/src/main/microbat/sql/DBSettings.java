@@ -7,11 +7,10 @@ import microbat.Activator;
 
 public class DBSettings {
 	
-	public static int SQLITE3_DBMS = 0;
-	public static int MYSQL_DBMS = 1;
+	public static final int SQLITE3_DBMS = 0;
+	public static final int MYSQL_DBMS = 1;
 	
 	public static String dbAddress = "localhost";
-//	public final static String DB_NAME = "microbat_trace.db";
 	public static int dbPort = 3306;
 	public static String username = "root";
 	public static String password = "123456";

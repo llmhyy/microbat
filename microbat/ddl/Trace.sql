@@ -8,7 +8,7 @@ CREATE TABLE Trace
 	isMain BOOL,
 	PRIMARY KEY (trace_id),
 	FOREIGN KEY(run_id) REFERENCES Run(run_id)
-) 
-;
+);
 
+CREATE UNIQUE INDEX tid ON Trace;
 
