@@ -109,9 +109,9 @@ public class VMConfiguration {
 		return port;
 	}
 	
-	@Deprecated
+//	@Deprecated
 	/**
-	 * using getPort instead.
+	 * using getPort instead. Note that, this method can only be used for debugging purpose.
 	 * */
 	public void setPort(int port) {
 		this.port = port;
