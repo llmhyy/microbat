@@ -56,6 +56,7 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultJava7HomePath = Activator.getDefault().getPreferenceStore().getString(JAVA7HOME_PATH);
 		this.defaultApplyRecodingOptimization = Activator.getDefault().getPreferenceStore().getString(RECORDING_OPTIMIZATION);
 		this.defaultEnableMethodSplitting = Activator.getDefault().getPreferenceStore().getBoolean(REQUIRE_METHOD_SPLITTING);
+		this.defaultRunWithDebugMode = Activator.getDefault().getPreferenceStore().getString(RUN_WITH_DEBUG_MODE);
 	}
 
 	public static String getStepLimit() {

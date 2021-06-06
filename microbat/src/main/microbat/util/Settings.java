@@ -24,6 +24,7 @@ public class Settings {
 	public static boolean isRunTest;
 	public static boolean isRunWtihDebugMode;
 	public static int stepLimit;
+	
 	private static Integer variableLayer;
 	
 	/**
@@ -75,6 +76,9 @@ public class Settings {
 				
 				String supportConcurrentTraceString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.SUPPORT_CONCURRENT_TRACE);
 				supportConcurrentTrace = supportConcurrentTraceString.equals("true");
+				
+				String runWithDebugModeString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RUN_WITH_DEBUG_MODE);
+				isRunWtihDebugMode = runWithDebugModeString.equals("true");
 			}
 			catch(Exception e){
 				e.printStackTrace();
