@@ -412,6 +412,7 @@ public class ConcurrentTraceView extends TraceView {
 						curTrace = traceMap.get(node.getTrace().getThreadId());
 						curTrace.setObservingIndex(node.getOrder() - 1);
 						curTreeViewer = getTreeViewerByThreadID(node.getTrace().getThreadId());
+						curTreeViewer.getControl().setFocus();
 					}
 				}
 
