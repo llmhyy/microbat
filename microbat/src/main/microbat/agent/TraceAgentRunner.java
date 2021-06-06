@@ -235,6 +235,11 @@ public class TraceAgentRunner extends AgentVmRunner {
 	};
 
 	private void printProgress(int size, int stepNum) {
+		
+		if(stepNum == 0) {
+			return;
+		}
+		
 		double progress = ((double) size) / stepNum;
 
 		double preProgr = 0;
