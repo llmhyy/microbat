@@ -49,7 +49,7 @@ public class VMRunner {
 	 * want to use the old flags, be careful about when to quote the value and
 	 * when to not quote.
 	 */
-	protected static final String debugToken = "-agentlib:jdwp=transport=dt_socket,suspend=y,address=%s";
+	protected static final String debugToken = "-agentlib:jdwp=transport=dt_socket,suspend=y,server=y,address=%s";
 	protected static final String enableAssertionToken = "-ea";
 	protected static final String noVerifyToken = "-noverify";
 	/* timeout in millisecond */

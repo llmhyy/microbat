@@ -35,6 +35,7 @@ import microbat.sql.DBSettings;
 import microbat.sql.DbService;
 import microbat.util.JavaUtil;
 import microbat.util.MinimumASTNodeFinder;
+import microbat.util.Settings;
 import sav.common.core.SavException;
 import sav.strategies.dto.AppJavaClassPath;
 import sav.strategies.vm.VMConfiguration;
@@ -146,6 +147,10 @@ public class InstrumentationExecutor {
 			if (!info.getExceedingLimitMethods().isEmpty()) {
 				agentRunner.addAgentParams(AgentParams.OPT_OVER_LONG_METHODS, info.getExceedingLimitMethods());
 			}
+			
+			agentRunner.getConfig().setDebug(Settings.isRunWtihDebugMode);
+			agentRunner.getConfig().setPort(8000);
+			
 			RunningInformation rInfo = execute(precheckInfomation);
 			return rInfo;
 		} catch (SavException e1) {
@@ -182,7 +187,6 @@ public class InstrumentationExecutor {
 	public RunningInformation execute(PreCheckInformation info) {
 		try {
 			long start = System.currentTimeMillis();
-//			agentRunner.getConfig().setDebug(true);
 //			agentRunner.getConfig().setPort(8888);
 			agentRunner.addAgentParam(AgentParams.OPT_EXPECTED_STEP, info.getStepNum());
 			agentRunner.run(DatabasePreference.getReader());
