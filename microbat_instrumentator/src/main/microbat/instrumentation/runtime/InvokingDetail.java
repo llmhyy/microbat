@@ -26,6 +26,11 @@ public class InvokingDetail {
 		}
 		
 		String objectVarId = TraceUtils.getObjectVarId(refValue, fieldType);
+		
+		if(relevantVars == null) {
+			System.err.println("we miss the invocation information for the step " + node.toString());
+		}
+		
 		boolean relevant = relevantVars.contains(objectVarId);
 		if (!relevant && (node.getBreakPoint().getClassCanonicalName().equals(refValue.getClass().getName()))) {
 			relevant = true;
