@@ -336,6 +336,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		ByteCodeParser.parse(className, finder, appJavaClassPath);
 		Method method = finder.getMethod();
 
+		if(method == null) {
+			System.currentTimeMillis();
+		}
+		
 		LocalVariableTable table = method.getLocalVariableTable();
 		int start = -1;
 		if (table != null) {
@@ -636,10 +640,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				shutdown();
 				Agent._exitProgram("fail;Trace is over long!");
 			}
-			if (order > tolerantExpectedSteps) {
-				shutdown();
-				Agent._exitProgram("fail;Trace size exceeds expected_steps!");
-			}
+//			if (order > tolerantExpectedSteps) {
+//				shutdown();
+//				Agent._exitProgram("fail;Trace size exceeds expected_steps!");
+//			}
 
 			BreakPoint bkp = new BreakPoint(className, methodSignature, line);
 			TraceNode currentNode = new TraceNode(bkp, null, order, trace, numOfReadVars, numOfWrittenVars);
@@ -1248,13 +1252,23 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			if (lockedThreads.contains(threadId)) {
 				return EmptyExecutionTracer.getInstance();
 			}
-			IExecutionTracer store = rtStore.get(threadId);
+			IExecutionTracer tracer = rtStore.get(threadId);
 			// store.setThreadName(threadName);
 
-			if (store == null) {
-				store = EmptyExecutionTracer.getInstance();
+			if (tracer == null) {
+				tracer = EmptyExecutionTracer.getInstance();
 			}
-			return store;
+			return tracer;
+		}
+	}
+	
+	public static List<Long> stoppedThreads = new ArrayList<Long>();
+	
+	public static synchronized void stopRecordingCurrendThread() {
+		synchronized (rtStore) {
+			long threadId = Thread.currentThread().getId();
+			lockedThreads.add(threadId);
+			stoppedThreads.add(threadId);
 		}
 	}
 

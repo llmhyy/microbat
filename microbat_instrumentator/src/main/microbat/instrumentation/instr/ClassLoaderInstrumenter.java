@@ -29,7 +29,7 @@ public class ClassLoaderInstrumenter extends TraceInstrumenter {
 
 	@Override
 	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
-			boolean isAppClass, boolean isMainMethod) {
+			boolean isAppClass, boolean isMainMethod, boolean isEntry) {
 		if (!method.getName().equals("loadClass")) {
 			return false;
 		}

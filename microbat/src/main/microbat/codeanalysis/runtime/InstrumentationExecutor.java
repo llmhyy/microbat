@@ -128,6 +128,10 @@ public class InstrumentationExecutor {
 //			PrecheckInfo firstPrecheckInfo = agentRunner.getPrecheckInfo();
 //			System.out.println(firstPrecheckInfo);
 //			System.out.println("second precheck..");
+			
+			agentRunner.getConfig().setDebug(Settings.isRunWtihDebugMode);
+			agentRunner.getConfig().setPort(9000);
+			
 			System.out.println("precheck..");
 			agentRunner.precheck(null);
 			PrecheckInfo info = agentRunner.getPrecheckInfo();
@@ -148,8 +152,8 @@ public class InstrumentationExecutor {
 				agentRunner.addAgentParams(AgentParams.OPT_OVER_LONG_METHODS, info.getExceedingLimitMethods());
 			}
 			
-			agentRunner.getConfig().setDebug(Settings.isRunWtihDebugMode);
-			agentRunner.getConfig().setPort(8000);
+//			agentRunner.getConfig().setDebug(Settings.isRunWtihDebugMode);
+//			agentRunner.getConfig().setPort(8000);
 			
 			RunningInformation rInfo = execute(precheckInfomation);
 			return rInfo;

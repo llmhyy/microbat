@@ -105,7 +105,15 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 				if (entry && entryPoint.matchMethod(method.getName(), method.getSignature())) {
 					isMainMethod = true;
 				}
-				GeneratedMethods generatedMethods = runMethodInstrumentation(classGen, constPool, methodGen, method, isAppClass, isMainMethod);
+				
+				boolean isEntry = false;
+				if(method.getName().equals("run") && isThread(jc)) {
+					isEntry = true;
+				}
+				
+				
+				GeneratedMethods generatedMethods = runMethodInstrumentation(classGen, constPool, methodGen, 
+						method, isAppClass, isMainMethod, isEntry);
 				if (generatedMethods != null) {
 					if (doesBytecodeExceedLimit(generatedMethods)) {
 						AgentLogger.info(String.format("Warning: %s exceeds bytecode limit!",
@@ -144,6 +152,29 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		return null;
 	}
 	
+	private boolean isThread(JavaClass jc) {
+		try {
+			for(JavaClass interf: jc.getAllInterfaces()) {
+				if(interf.getClassName().equals("java.lang.Runnable")) {
+					return true;
+				}
+			}
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		try {
+			for(JavaClass interf: jc.getSuperClasses()) {
+				if(interf.getClassName().equals("java.lang.Thread")) {
+					return true;
+				}
+			}
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+
 	private boolean doesBytecodeExceedLimit(GeneratedMethods generatedMethods) {
 		boolean excessive = doesBytecodeExceedLimit(generatedMethods.getRootMethod());
 		for (MethodGen addedMethod : generatedMethods.getExtractedMethods()) {
@@ -153,9 +184,9 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	}
 
 	private GeneratedMethods runMethodInstrumentation(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
-			boolean isAppClass, boolean isMainMethod) {
+			boolean isAppClass, boolean isMainMethod, boolean isEntry) {
 		String methodFullName = MicrobatUtils.getMicrobatMethodFullName(classGen.getClassName(), method);
-		boolean changed = instrumentMethod(classGen, constPool, methodGen, method, isAppClass, isMainMethod);
+		boolean changed = instrumentMethod(classGen, constPool, methodGen, method, isAppClass, isMainMethod, isEntry);
 		if (requireSplittingMethods.contains(methodFullName)) {
 			MethodSplitter methodSplitter = new MethodSplitter(classGen, constPool);
 			return methodSplitter.splitMethod(methodGen);
@@ -167,10 +198,13 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	}
 	
 	/**
+	 * 
+	 * isEntry means either main() or run() (e.g, thread)
+	 * 
 	 * @return whether method is changed
 	 */
 	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
-			boolean isAppClass, boolean isMainMethod) {
+			boolean isAppClass, boolean isMainMethod, boolean isEntry) {
 		if (!userFilters.isInstrumentable(classGen.getClassName(), method, methodGen.getLineNumbers())) {
 			return false;
 		}
@@ -264,7 +298,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 			 * instrument exit instructions
 			 */
 			for (InstructionHandle exitInsHandle : lineInfo.getExitInsns()) {
-				injectCodeTracerExit(exitInsHandle, insnList, constPool, tracerVar, line, classNameVar, methodSigVar, isMainMethod);
+				injectCodeTracerExit(exitInsHandle, insnList, constPool, tracerVar, line, classNameVar, methodSigVar, isMainMethod, isEntry);
 			}
 
 			lineInfo.dispose();
@@ -275,7 +309,8 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	}
 
 	private void injectCodeTracerExit(InstructionHandle exitInsHandle, InstructionList insnList, 
-			ConstantPoolGen constPool, LocalVariableGen tracerVar, int line, LocalVariableGen classNameVar, LocalVariableGen methodSigVar, boolean isMainMethod) {
+			ConstantPoolGen constPool, LocalVariableGen tracerVar, int line, LocalVariableGen classNameVar, 
+			LocalVariableGen methodSigVar, boolean isMainMethod, boolean isEntry) {
 		InstructionList newInsns = new InstructionList();
 		
 		newInsns.append(new ALOAD(tracerVar.getIndex()));
@@ -284,7 +319,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		newInsns.append(new ALOAD(methodSigVar.getIndex()));
 		appendTracerMethodInvoke(newInsns, TracerMethods.HIT_METHOD_END, constPool);
 		
-		if (isMainMethod) {
+		if (isMainMethod || isEntry) {
 			int index = constPool.addInterfaceMethodref(Agent.class.getName().replace(".", "/"), "_exitProgram",
 					"(Ljava/lang/String;)V");
 			newInsns.append(new ALOAD(classNameVar.getIndex()));

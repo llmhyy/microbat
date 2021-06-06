@@ -43,7 +43,7 @@ public class ByteCodeParser{
 			visitor.setJavaClass(clazz);
 		}
 		catch(Exception e){
-//			e.printStackTrace();
+			e.printStackTrace();
 		}
 		finally{
 			System.setProperty("java.class.path", originalSystemClassPath);			

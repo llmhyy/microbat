@@ -57,7 +57,7 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 			boolean changed = false;
 			MethodGen methodGen = new MethodGen(method, classFName, constPool);
 			try {
-				changed = super.instrumentMethod(classGen, constPool, methodGen, method, true, false);
+				changed = super.instrumentMethod(classGen, constPool, methodGen, method, true, false, false);
 				methodGen.getMethod().toString(); // exception if exceeding limit.
 				if (changed && doesBytecodeExceedLimit(methodGen)) {
 					exceedLimitMethods.add(classMethod);

@@ -9,6 +9,8 @@ import microbat.instrumentation.AgentParams.LogType;
 import microbat.instrumentation.cfgcoverage.CoverageAgent;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
 import microbat.instrumentation.filter.GlobalFilterChecker;
+import microbat.instrumentation.runtime.ExecutionTracer;
+import microbat.instrumentation.runtime.IExecutionTracer;
 
 /**
  * @author LLT
@@ -51,10 +53,54 @@ public class Agent {
 		});
 	}
 
+	/**
+	 * This method will be instrumented at the end of main() method.
+	 * @param programMsg
+	 */
 	public static void _exitProgram(String programMsg) {
-		Agent.programMsg = programMsg;
-		stop();
-		Runtime.getRuntime().exit(1); // force program to exit to avoid getting stuck by background running threads.
+		
+		if(Thread.currentThread().getName().equals("main")) {
+			Agent.programMsg = programMsg;
+			
+			boolean allInterestedThreadsStop = false;
+			while(!allInterestedThreadsStop) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+				boolean needToConitnue = false;
+				for(IExecutionTracer tracer: ExecutionTracer.getAllThreadStore()) {
+					if(tracer instanceof ExecutionTracer) {
+						ExecutionTracer eTracer = (ExecutionTracer)tracer;
+						
+						if(eTracer.getThreadName().equals("main") || eTracer.getTrace().size()==0) {
+							continue;
+						}
+						
+						if(!ExecutionTracer.stoppedThreads.contains(eTracer.getThreadId())) {
+							needToConitnue = true;
+							break;
+							
+						}
+					}
+				}
+				
+				allInterestedThreadsStop = !needToConitnue;
+			}
+			
+			stop();
+			Runtime.getRuntime().exit(1); // force program to exit to avoid getting stuck by background running threads.
+		}
+		else {
+			/**
+			 * we do not record the thread any more
+			 */
+//			long threadId = Thread.currentThread().getId();
+			ExecutionTracer.stopRecordingCurrendThread();
+			
+		}
 	}
 	
 	public static void _exitTest(String testResultMsg, String junitClass, String junitMethod, Long threadId) {
