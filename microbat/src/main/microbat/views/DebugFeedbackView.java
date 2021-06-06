@@ -672,7 +672,7 @@ public class DebugFeedbackView extends ViewPart {
 				openWrongVariableDialog();
 			}
 			else {
-				final Trace trace = getTraceView().getTrace();
+				final Trace trace = getTraceView().getCurrentTrace();
 //				final Trace trace = getConcurrentTraceView().getCurTrace();
 				
 				Job job = new Job("searching for suspicious step...") {

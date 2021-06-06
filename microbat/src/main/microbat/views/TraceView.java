@@ -590,4 +590,8 @@ public class TraceView extends ViewPart {
 
 	}
 
+	public Trace getCurrentTrace() {
+		return this.trace;
+	}
+
 }

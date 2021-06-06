@@ -72,11 +72,11 @@ public class ConcurrentTraceView extends TraceView {
 	protected Map<Long, Trace> traceMap;
 	protected Trace curTrace;
 
-	public Trace getCurTrace() {
+	public Trace getCurrentTrace() {
 		return curTrace;
 	}
 
-	public void setCurTrace(Trace curTrace) {
+	public void setCurrentTrace(Trace curTrace) {
 		this.curTrace = curTrace;
 	}
 
@@ -647,4 +647,5 @@ public class ConcurrentTraceView extends TraceView {
 
 	}
 
+	
 }
