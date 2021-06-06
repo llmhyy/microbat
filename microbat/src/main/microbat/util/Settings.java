@@ -22,6 +22,7 @@ public class Settings {
 	public static boolean isRecordSnapshot;
 	public static boolean isApplyAdvancedInspector;
 	public static boolean isRunTest;
+	public static boolean isRunWtihDebugMode;
 	public static int stepLimit;
 	private static Integer variableLayer;
 	

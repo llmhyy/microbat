@@ -48,6 +48,7 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultLanuchClass = Activator.getDefault().getPreferenceStore().getString(LANUCH_CLASS);
 		this.defaultSupportConcurrentTrace = Activator.getDefault().getPreferenceStore().getString(SUPPORT_CONCURRENT_TRACE);
 		this.defaultRecordSnapshot = Activator.getDefault().getPreferenceStore().getString(RECORD_SNAPSHORT);
+		this.defaultRunWithDebugMode = Activator.getDefault().getPreferenceStore().getString(RUN_WITH_DEBUG_MODE);
 		this.defaultAdvancedDetailInspector = Activator.getDefault().getPreferenceStore().getString(APPLY_ADVANCE_INSPECTOR);
 		this.defaultStepLimit = getStepLimit();
 		this.defaultRunTest = Activator.getDefault().getPreferenceStore().getString(RUN_TEST);
@@ -83,6 +84,7 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String RECORDING_OPTIMIZATION = "recording_optimization";
 	public static final String REQUIRE_METHOD_SPLITTING = "enableMethodSplitting";
 	public static final String SUPPORT_CONCURRENT_TRACE = "supportConcurrentTrace";
+	public static final String RUN_WITH_DEBUG_MODE = "runWithDebugMode";
 	
 	private Combo projectCombo;
 	private Text lanuchClassText;
@@ -96,6 +98,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Button recordingOptimizationButton;
 	private Button advancedDetailInspectorButton;
 	private Button runTestButton;
+	private Button runWithDebugModeButton;
 	private Button enableMethodSplittingButton;
 	private Text java7HomePathText;
 	
@@ -112,6 +115,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultRunTest = "false";
 	private String defaultJava7HomePath;
 	private String defaultApplyRecodingOptimization;
+	private String defaultRunWithDebugMode = "false";
 	private boolean defaultEnableMethodSplitting;
 	
 	@Override
@@ -191,6 +195,14 @@ public class MicrobatPreference extends PreferencePage implements
 		recordSnapshotButton.setLayoutData(recordButtonData);
 		boolean recordSnapshotSelected = this.defaultRecordSnapshot.equals("true");
 		recordSnapshotButton.setSelection(recordSnapshotSelected);
+		
+		runWithDebugModeButton = new Button(settingGroup, SWT.CHECK);
+		runWithDebugModeButton.setText("Run with debug mode");
+		GridData runWithDebugModeButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		runWithDebugModeButtonData.horizontalSpan = 3;
+		runWithDebugModeButton.setLayoutData(runWithDebugModeButtonData);
+		boolean runWithDebugModeButtonSelected = this.defaultRunWithDebugMode.equals("true");
+		runWithDebugModeButton.setSelection(runWithDebugModeButtonSelected);
 		
 		advancedDetailInspectorButton = new Button(settingGroup, SWT.CHECK);
 		advancedDetailInspectorButton.setText("Apply advanced detail inspection");
@@ -282,6 +294,7 @@ public class MicrobatPreference extends PreferencePage implements
 		preferences.put(RECORDING_OPTIMIZATION, String.valueOf(this.recordingOptimizationButton.getSelection()));
 		preferences.putBoolean(REQUIRE_METHOD_SPLITTING, this.enableMethodSplittingButton.getSelection());
 		preferences.put(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
+		preferences.put(RUN_WITH_DEBUG_MODE, String.valueOf(this.runWithDebugModeButton.getSelection()));
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(LANUCH_CLASS, this.lanuchClassText.getText());
@@ -297,6 +310,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Activator.getDefault().getPreferenceStore().putValue(RECORDING_OPTIMIZATION, String.valueOf(this.recordingOptimizationButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(REQUIRE_METHOD_SPLITTING, String.valueOf(this.enableMethodSplittingButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(RUN_WITH_DEBUG_MODE, String.valueOf(this.runWithDebugModeButton.getSelection()));
 		
 		confirmChanges();
 		
@@ -317,6 +331,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Settings.isRunTest = this.runTestButton.getSelection();
 		Settings.applyLibraryOptimization = this.recordingOptimizationButton.getSelection();
 		Settings.supportConcurrentTrace = this.supportConcurrentTraceButton.getSelection();
+		Settings.isRunWtihDebugMode = this.runWithDebugModeButton.getSelection();
 	}
 	
 	private String[] getProjectsInWorkspace(){
