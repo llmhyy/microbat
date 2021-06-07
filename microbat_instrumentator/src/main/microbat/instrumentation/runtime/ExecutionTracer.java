@@ -45,9 +45,9 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 
 	public static AppJavaClassPath appJavaClassPath;
 	public static int variableLayer = 2;
-	private static int stepLimit = Integer.MAX_VALUE;
-	private static int expectedSteps = Integer.MAX_VALUE;
-	private static int tolerantExpectedSteps = expectedSteps;
+	public static int stepLimit = Integer.MAX_VALUE;
+	public static int expectedSteps = Integer.MAX_VALUE;
+//	private static int tolerantExpectedSteps = expectedSteps;
 	public static boolean avoidProxyToString = false;
 	private long threadId;
 
@@ -59,7 +59,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	public static void setExpectedSteps(int expectedSteps) {
 		if (expectedSteps != AgentConstants.UNSPECIFIED_INT_VALUE) {
 			ExecutionTracer.expectedSteps = expectedSteps;
-			tolerantExpectedSteps = expectedSteps * 2;
+//			tolerantExpectedSteps = expectedSteps * 2;
 		}
 	}
 
@@ -651,7 +651,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			currentNode.setTimestamp(timestamp);
 
 			trace.addTraceNode(currentNode);
-			AgentLogger.printProgress(order, expectedSteps);
+			AgentLogger.printProgress(order);
 			if (!methodCallStack.isEmpty()) {
 				TraceNode caller = methodCallStack.peek();
 				caller.addInvocationChild(currentNode);
@@ -1359,5 +1359,6 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	public String getThreadName() {
 		return this.trace.getThreadName();
 	}
+
 
 }

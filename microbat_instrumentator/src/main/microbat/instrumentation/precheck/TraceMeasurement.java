@@ -19,7 +19,7 @@ public class TraceMeasurement {
 	private long threadId;
 
 	public void _hitLine(int line, String className, String methodSignature) {
-		if (state != TracingState.RECORDING || (threadId != mainThreadId)) {
+		if (state != TracingState.RECORDING) {
 			return;
 		}
 		if (trace.getStepTotal() > maxSteps) {
@@ -73,7 +73,14 @@ public class TraceMeasurement {
 	}
 	
 	public static PrecheckInfo getPrecheckInfo() {
-		return new PrecheckInfo(rtStores.size(), getMainThreadInstance().trace);
+		TraceInfo total = new TraceInfo(stepLimit);
+		for(Long key: rtStores.keySet()) {
+			TraceInfo info = rtStores.get(key).trace;
+			total.stepsTotal += info.stepsTotal;
+			total.visitedLocs.addAll(info.visitedLocs);
+		}
+		
+		return new PrecheckInfo(rtStores.size(), total);
 	}
 	
 	public static void setStepLimit(int stepLimit) {
