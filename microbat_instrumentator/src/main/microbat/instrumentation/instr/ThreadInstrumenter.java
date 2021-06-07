@@ -76,5 +76,12 @@ public class ThreadInstrumenter extends AbstractInstrumenter {
 		return true;
 	}
 
+	@Override
+	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
+			boolean isAppClass, boolean isMainMethod, boolean isEntry) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	
 }

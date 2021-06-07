@@ -13,7 +13,7 @@ public class TraceMeasurement {
 	private static Map<Long, TraceMeasurement> rtStores = new HashMap<>();
 	private static long mainThreadId = -1;
 	private TraceInfo trace = new TraceInfo(stepLimit);
-	private static int stepLimit = Integer.MAX_VALUE;
+	public static int stepLimit = Integer.MAX_VALUE;
 	private static int maxSteps = stepLimit;
 	private static TracingState state = TracingState.INIT;
 	private long threadId;

@@ -5,12 +5,14 @@ import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
+import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.AASTORE;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ANEWARRAY;
 import org.apache.bcel.generic.ASTORE;
 import org.apache.bcel.generic.ArrayType;
 import org.apache.bcel.generic.BasicType;
+import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.ClassGenException;
 import org.apache.bcel.generic.CodeExceptionGen;
 import org.apache.bcel.generic.ConstantPoolGen;
@@ -44,6 +46,9 @@ public abstract class AbstractInstrumenter {
 		
 		return instrument(classFName, className, jc);
 	}
+	
+	protected abstract boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
+			boolean isAppClass, boolean isMainMethod, boolean isEntry);
 	
 	
 	protected abstract byte[] instrument(String classFName, String className, JavaClass jc);

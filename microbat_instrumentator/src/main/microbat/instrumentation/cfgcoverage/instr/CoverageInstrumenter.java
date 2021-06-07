@@ -98,7 +98,7 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 		return null;
 	}
 
-	private boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
+	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
 			boolean isAppClass) {
 		InstructionList insnList = methodGen.getInstructionList();
 		InstructionHandle startInsn = insnList.getStart();
@@ -332,5 +332,12 @@ public class CoverageInstrumenter extends AbstractInstrumenter {
 	
 	public void setEntryPoint(String entryPoint) {
 		this.entryPoint = entryPoint;
+	}
+
+	@Override
+	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
+			boolean isAppClass, boolean isMainMethod, boolean isEntry) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

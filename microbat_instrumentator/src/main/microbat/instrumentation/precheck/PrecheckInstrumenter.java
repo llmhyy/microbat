@@ -77,7 +77,7 @@ public class PrecheckInstrumenter extends TraceInstrumenter {
 	}
 	
 	protected boolean instrumentMethod(ClassGen classGen, ConstantPoolGen constPool, MethodGen methodGen, Method method,
-			boolean isAppClass, boolean isMainMethod) {
+			boolean isAppClass, boolean isMainMethod, boolean isEntry) {
 		InstructionList insnList = methodGen.getInstructionList();
 
 		Set<Integer> visitedLines = new HashSet<>();
