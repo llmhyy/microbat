@@ -21,7 +21,7 @@ import microbat.model.value.VarValue;
 import sav.common.core.utils.StringUtils;
 
 /**
- * @author knightsong SQL lite
+ * @author dingyuchen SQL lite
  */
 public class SqliteTraceRetriever implements TraceRetriever {
 	private static final String GET_LATEST_TRACE_ID_QUERY = 
