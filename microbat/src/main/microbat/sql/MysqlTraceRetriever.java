@@ -72,10 +72,10 @@ public class MysqlTraceRetriever extends DbService {
 	}
 	
 	protected Trace loadTrace(int traceId, Connection conn, List<AutoCloseable> closables) throws SQLException {
-		Trace trace = new Trace(null); 
+		Trace trace = new Trace(""); 
 		// load step
 		List<TraceNode> steps = loadSteps(traceId, conn, closables, trace);
-		trace.setExectionList(steps);
+		trace.setExecutionList(steps);
 		// load stepVar
 //		List<Object[]> rows = loadStepVariableRelation(traceId, conn, closables);
 //		Map<String, StepVariableRelationEntry> stepVariableTable = trace.getStepVariableTable();

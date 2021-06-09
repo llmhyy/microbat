@@ -21,140 +21,66 @@ import microbat.model.value.VarValue;
 import sav.common.core.utils.StringUtils;
 
 /**
- * @author knightsong SQL lite
+ * @author dingyuchen SQL lite
  */
 public class SqliteTraceRetriever implements TraceRetriever {
 	private static final String GET_LATEST_TRACE_ID_QUERY = 
-			"SELECT trace_id, thread_id, thread_name, isMain FROM Trace WHERE run_id = (SELECT MAX(run_id) FROM run)";
-	private static final String GET_TRACE_QUERY = 
-			"SELECT thread_id,thread_name,isMain FROM Trace WHERE trace_id=?";
-	public SqliteTraceRetriever() {
-		// super(dbPath);
+			"SELECT trace_id, thread_id, thread_name, isMain FROM Trace WHERE run_id = (SELECT run_id FROM Run ORDER BY created_at DESC LIMIT 1)";
+	private static final String GET_TRACE_WITH_STEP = 
+			"SELECT * from Trace INNER JOIN Step ON Trace.trace_id = Step.trace_id";
+	private static final String GET_STEPS = 
+			"SELECT s.* FROM Step s WHERE s.trace_id=?";
+	private static final String GET_STEP_VARIABLE_RELATION = 
+			"SELECT r.step_order, r.var_id, r.RW FROM StepVariableRelation r WHERE r.trace_id=?";
+	private final Connection conn;
+	private List<AutoCloseable> closables = new ArrayList<>();
+
+	public SqliteTraceRetriever(Connection conn) {
+		this.conn = conn;
 	}
 
 	@Override
 	public List<Trace> getLatestTraces() {
 
-		Connection conn = null;
-		List<AutoCloseable> closables = new ArrayList<>();
-		List<String> tracesIdList = new ArrayList<>();
+		List<Trace> traces = new ArrayList<>();
 		try {
-			conn = DbService.getConnection();
-			PreparedStatement ps = conn.prepareStatement(GET_LATEST_TRACE_ID_QUERY);
+			PreparedStatement ps = this.conn.prepareStatement(GET_LATEST_TRACE_ID_QUERY);
 			ResultSet rs = ps.executeQuery();
-			closables.add(ps);
-			closables.add(rs);
+			this.closables.add(ps);
+			this.closables.add(rs);
 
 			while (rs.next()) {
-//				Trace trace = new Trace(appJavaClassPath);
-				tracesIdList.add(rs.getString("trace_id"));
+				Trace trace = new Trace(rs.getString("trace_id"));
+				String threadId = rs.getString("thread_id");
+				String threadName = rs.getString("thread_name");
+				boolean isMain = rs.getBoolean("isMain");
+				trace.setThreadId(Long.parseLong(threadId));
+				trace.setThreadName(threadName);
+				trace.setMain(isMain);
+				
+				loadTrace(trace);
+
+				traces.add(trace);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
 			DbService.closeDb(conn, closables);
+			this.closables = new ArrayList<>();
 		}
 
-		return this.retrieveTrace(tracesIdList);
+		return traces;
 	}
 
-	public List<Trace> retrieveTrace(List<String> traceIds) {
-		Connection conn = null;
-		List<Trace> list = new ArrayList<>(traceIds.size());
-		List<AutoCloseable> closables = new ArrayList<>();
-		try {
-			conn = DbService.getConnection();
-			for (String traceId : traceIds) {
-				list.add(loadTrace(traceId, conn, closables));
-			}
-			System.out.println("Retrieve done!");
-		} catch (SQLException e) {
-			System.out.println("Unsupported sql system");
-			e.printStackTrace();
-		} finally {
-			DbService.closeDb(conn, closables);
-		}
-		return list;
-	}
-
-	protected Trace loadTrace(String traceId, Connection conn, List<AutoCloseable> closables) throws SQLException {
-		Trace trace = new Trace(null);
-		// load a simple trace
-		loadSimpleTrace(trace, traceId, conn, closables);
+	protected void loadTrace(Trace trace) throws SQLException {
 		// load step
-		List<TraceNode> steps = loadSteps(traceId, conn, closables, trace);
-		trace.setExectionList(steps);
-		// load stepVar
-		List<Object[]> rows = loadStepVariableRelation(traceId, conn, closables);
-		// Map<String, StepVariableRelationEntry> stepVariableTable =
-		// trace.getStepVariableTable();
-		// for (Object[] row : rows) {
-		// int stepOrder = (int) row[0];
-		// String varId = (String) row[1];
-		// int rw = (int) row[2];
-		// StepVariableRelationEntry entry = stepVariableTable.get(varId);
-		// if (entry == null) {
-		// entry = new StepVariableRelationEntry(varId);
-		// stepVariableTable.put(varId, entry);
-		// }
-		// if (rw == TraceRecorder.WRITE) {
-		// entry.addProducer(steps.get(stepOrder - 1));
-		// } else if (rw == TraceRecorder.READ) {
-		// entry.addConsumer(steps.get(stepOrder - 1));
-		// } else {
-		// throw new SQLException("Tabel StepVariableRelationEntry: Invalid RW value!");
-		// }
-		// }
-		return trace;
+		List<TraceNode> steps = loadSteps(trace);
+		trace.setExecutionList(steps);
 	}
 
-	private void loadSimpleTrace(Trace trace, String traceId, Connection conn, List<AutoCloseable> closables)
-			throws SQLException {
-		PreparedStatement ps = conn.prepareStatement(GET_TRACE_QUERY);
-		ps.setString(1, traceId);
-		ResultSet rs = ps.executeQuery();
-		closables.add(ps);
-		closables.add(rs);
-		String threadId = "";
-		String threadName = "";
-		boolean isMain = false;
-		if (rs.next()) {
-			threadId = rs.getString("thread_id");
-			threadName = rs.getString("thread_name");
-			isMain = rs.getBoolean("isMain");
-		}
-		trace.setThreadId(Long.parseLong(threadId));
-		trace.setThreadName(threadName);
-		trace.setMain(isMain);
-		ps.close();
-		rs.close();
-	}
-
-	/**
-	 * return list of relation info [step_order, var_id, RW]
-	 */
-	private List<Object[]> loadStepVariableRelation(String traceId, Connection conn, List<AutoCloseable> closables)
-			throws SQLException {
-		PreparedStatement ps = conn
-				.prepareStatement("SELECT r.step_order, r.var_id, r.RW FROM StepVariableRelation r WHERE r.trace_id=?");
-		ps.setString(1, traceId);
-		ResultSet rs = ps.executeQuery();
-		closables.add(ps);
-		closables.add(rs);
-		List<Object[]> result = new ArrayList<>();
-		while (rs.next()) {
-			int idx = 1;
-			Object[] row = new Object[] { rs.getInt(idx++), rs.getString(idx++), rs.getInt(idx++) };
-			result.add(row);
-		}
-		ps.close();
-		rs.close();
-		return result;
-	}
-
-	private List<TraceNode> loadSteps(String traceId, Connection conn, List<AutoCloseable> closables, Trace trace)
-			throws SQLException {
-		PreparedStatement ps = conn.prepareStatement("SELECT s.* FROM Step s WHERE s.trace_id=?");
+	private List<TraceNode> loadSteps(Trace trace) throws SQLException {
+		String traceId = trace.getId();
+		PreparedStatement ps = conn.prepareStatement(GET_STEPS);
 		ps.setString(1, traceId);
 		ResultSet rs = ps.executeQuery();
 		closables.add(ps);
@@ -230,8 +156,6 @@ public class SqliteTraceRetriever implements TraceRetriever {
 				throw e;
 			}
 		}
-		rs.close();
-		ps.close();
 		long b = System.currentTimeMillis();
 		System.out.println("fill step " + (b - a));
 		loadLocations(locationIdMap, conn, closables);
