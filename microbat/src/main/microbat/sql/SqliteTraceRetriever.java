@@ -143,23 +143,33 @@ public class SqliteTraceRetriever implements TraceRetriever {
 			list.add(step);
 			locationIdMap.put(locID, list);
 
-			String loadVarStep = "read_vars";
-			try {
-				// read_vars
-				step.setReadVariables(toVarValue(rs.getString("read_vars")));
-				// written_vars
-				loadVarStep = "written_vars";
-				step.setWrittenVariables(toVarValue(rs.getString("written_vars")));
-			} catch (Exception e) {
-				System.out
-						.println(String.format("%s: Xml error at step: [trace_id, order] = [%d, %d]", loadVarStep, traceId, order));
-				throw e;
-			}
 		}
 		long b = System.currentTimeMillis();
 		System.out.println("fill step " + (b - a));
 		loadLocations(locationIdMap, conn, closables);
 		return allSteps;
+	}
+	
+	public void loadRWVars(TraceNode step, String traceId) {
+		String loadVarStep = "read_vars";
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT read_vars, written_vars from Step where step_order = ? AND trace_id = ?");
+			ps.setInt(1, step.getOrder());
+			ps.setString(2, traceId);
+			ResultSet rs = ps.executeQuery();
+			closables.add(rs);
+			closables.add(ps);
+			// read_vars
+			step.setReadVariables(toVarValue(rs.getString("read_vars")));
+			// written_vars
+			loadVarStep = "written_vars";
+			step.setWrittenVariables(toVarValue(rs.getString("written_vars")));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			System.out.println(String.format("%s: Xml error at step: [trace_id, order] = [%d, %d]", loadVarStep, traceId, step.getOrder()));
+			throw e;
+		}
 	}
 
 	/**

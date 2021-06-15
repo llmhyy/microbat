@@ -1,5 +1,7 @@
 package microbat.views;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -63,6 +65,8 @@ import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.sql.DbService;
+import microbat.sql.SqliteTraceRetriever;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
@@ -212,6 +216,13 @@ public class ConcurrentTraceView extends TraceView {
 		 * This step will trigger a callback function of node selection.
 		 */
 		curTreeViewer.setSelection(new StructuredSelection(node), true);
+		Connection conn = null;
+		try {
+			conn = DbService.getConnection();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		new SqliteTraceRetriever(conn).loadRWVars(node, trace.getId());
 		programmingSelection = false;
 		this.refreshProgramState = true;
 
