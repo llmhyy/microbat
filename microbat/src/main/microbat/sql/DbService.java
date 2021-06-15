@@ -211,12 +211,12 @@ public class DbService {
 				}
 			}
 		}
-		if (connection != null) {
-			try {
-				connection.close();
-			} catch (SQLException e) {
-				// ignore
-			}
-		}
+//		if (connection != null) {
+//			try {
+//				connection.close();
+//			} catch (SQLException e) {
+//				// ignore
+//			}
+//		}
 	}
 }

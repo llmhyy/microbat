@@ -58,7 +58,7 @@ public class SqliteConnectionFactory implements ConnectionFactory {
 		String ret = sql;
 		ret = ret.replace("AUTO_INCREMENT", "");
 		ret = ret.replace("VARCHAR", "TEXT");
-		ret = ret.replace("TIMESTAMP", "INTEGER");
+//		ret = ret.replace("TIMESTAMP", "INTEGER");
 		ret = ret.replace("BOOL", "INTEGER");
 		return ret;
 	}

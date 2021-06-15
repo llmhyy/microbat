@@ -3,12 +3,15 @@
  */
 package microbat.trace;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
+import microbat.sql.DbService;
 import microbat.sql.SqliteTraceRetriever;
 import microbat.sql.TraceRetriever;
 import sav.commons.testdata.calculator.CalculatorTest1;
@@ -21,7 +24,14 @@ public class SqliteTraceReader implements TraceReader {
 	private TraceRetriever traceRetriever;
 
 	public SqliteTraceReader() {
-		this.traceRetriever = new SqliteTraceRetriever();
+		Connection conn = null;
+		try {
+			conn = DbService.getConnection();
+		} catch (SQLException e) {
+			// should not fail here, since SqliteTrace is selected
+			e.printStackTrace();
+		}
+		this.traceRetriever = new SqliteTraceRetriever(conn);
 	}
 
 	/*

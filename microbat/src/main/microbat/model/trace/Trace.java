@@ -35,6 +35,7 @@ public class Trace {
 	private List<String> excludedLibraryClasses = new ArrayList<>();
 	private boolean isMain;
 	private String threadName;
+	private String id;
 	
 	/**
 	 * This variable is to trace whether the variables in different lines are the same
@@ -44,6 +45,10 @@ public class Trace {
 	
 	public Trace(AppJavaClassPath appJavaClassPath) {
 		this.setAppJavaClassPath(appJavaClassPath);
+	}
+	
+	public Trace(String id) {
+		this.id = id;
 	}
 	
 	/**
@@ -80,7 +85,7 @@ public class Trace {
 		return exectionList;
 	}
 
-	public void setExectionList(List<TraceNode> exectionList) {
+	public void setExecutionList(List<TraceNode> exectionList) {
 		this.exectionList = exectionList;
 	}
 	
@@ -145,6 +150,10 @@ public class Trace {
 
 	public void setObservingIndex(int observingIndex) {
 		this.observingIndex = observingIndex;
+	}
+	
+	public String getId() {
+		return this.id;
 	}
 	
 	public int searchBackwardTraceNode(String expression){
