@@ -10,19 +10,19 @@ package microbat.trace;
 public enum Reader {
 	FILE {
 		@Override
-		public TraceReader create() {
+		public TraceReader create(String runId) {
 			return new FileTraceReader();
 		}
 	},
 	SQLITE3 {
 		@Override
-		public TraceReader create() {
-			return new SqliteTraceReader();
+		public TraceReader create(String runId) {
+			return new SqliteTraceReader(runId);
 		}
 	},
 	MYSQL {
 		@Override
-		public TraceReader create() {
+		public TraceReader create(String runId) {
 			return new MysqlTraceReader();
 		}
 	};
@@ -34,5 +34,5 @@ public enum Reader {
 		return id.charAt(0) + lower;
 	}
 
-	public abstract TraceReader create();
+	public abstract TraceReader create(String runId);
 }

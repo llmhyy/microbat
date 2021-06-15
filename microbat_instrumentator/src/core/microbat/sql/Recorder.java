@@ -17,9 +17,9 @@ public enum Recorder {
 		case "FILE":
 			return new FileRecorder(params);
 		case "SQLITE3":
-			return new SqliteRecorder(params.getDumpFile());
+			return new SqliteRecorder(params.getDumpFile(), params.getRunId());
 		default:
-			return new SqliteRecorder(params.getDumpFile());
+			return new SqliteRecorder(params.getDumpFile(), params.getRunId());
 		}
 	}
 

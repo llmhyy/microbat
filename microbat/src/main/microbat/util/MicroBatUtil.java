@@ -132,7 +132,7 @@ public class MicroBatUtil {
 		appClassPath.setJavaHome(javaHome);
 		appClassPath.addClasspath(outputPath);
 		appClassPath.setWorkingDirectory(projectPath);
-		appClassPath.setLaunchClass(Settings.lanuchClass);
+		appClassPath.setLaunchClass(Settings.launchClass);
 		return appClassPath;
 		
 	}

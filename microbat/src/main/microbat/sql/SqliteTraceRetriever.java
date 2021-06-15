@@ -25,7 +25,7 @@ import sav.common.core.utils.StringUtils;
  */
 public class SqliteTraceRetriever implements TraceRetriever {
 	private static final String GET_LATEST_TRACE_ID_QUERY = 
-			"SELECT trace_id, thread_id, thread_name, isMain FROM Trace WHERE run_id = (SELECT run_id FROM Run ORDER BY created_at DESC LIMIT 1)";
+			"SELECT trace_id, thread_id, thread_name, isMain FROM Trace WHERE run_id = ?";
 	private static final String GET_TRACE_WITH_STEP = 
 			"SELECT * from Trace INNER JOIN Step ON Trace.trace_id = Step.trace_id";
 	private static final String GET_STEPS = 
@@ -40,11 +40,12 @@ public class SqliteTraceRetriever implements TraceRetriever {
 	}
 
 	@Override
-	public List<Trace> getLatestTraces() {
+	public List<Trace> getTraces(String runId) {
 
 		List<Trace> traces = new ArrayList<>();
 		try {
 			PreparedStatement ps = this.conn.prepareStatement(GET_LATEST_TRACE_ID_QUERY);
+			ps.setString(1, runId);
 			ResultSet rs = ps.executeQuery();
 			this.closables.add(ps);
 			this.closables.add(rs);

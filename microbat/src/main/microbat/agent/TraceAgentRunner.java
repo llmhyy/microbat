@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentParams;
@@ -93,6 +94,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 
 	public boolean run(Reader reader) throws SavException {
 		isPrecheckMode = false;
+		String runId = UUID.randomUUID().toString();
 		StopTimer timer = new StopTimer("Building trace");
 		timer.newPoint("Execution");
 		File dumpFile;
@@ -107,12 +109,13 @@ public class TraceAgentRunner extends AgentVmRunner {
 				dumpFile = DatabasePreference.getDBFile();
 				break;
 			}
-			addAgentParam(AgentParams.OPT_TRACE_RECORDER, reader.name());
+			addAgentParam(AgentParams.OPT_TRACE_RECORDER, reader.name()); // why is reader name used for recorder option?
+			addAgentParam(AgentParams.OPT_RUN_ID, runId);
 			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFile.getPath()));
-			super.startAndWaitUntilStop(getConfig());
+			super.startAndWaitUntilStop(getConfig()); // Trace recording
 			System.out.println("|");
 			timer.newPoint("Read output result");
-			runningInfo = reader.create().read(precheckInfo, dumpFile.getPath());
+			this.runningInfo = reader.create(runId).read(precheckInfo, dumpFile.getPath());
 			updateTestResult(runningInfo.getProgramMsg());
 			if (toDeleteDumpFile) {
 				dumpFile.delete();

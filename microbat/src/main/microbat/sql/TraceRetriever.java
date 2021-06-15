@@ -5,6 +5,6 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 
 public interface TraceRetriever {
-	List<Trace> getLatestTraces();
+	List<Trace> getTraces(String runId);
 	void loadRWVars(TraceNode step, String traceId);
 }

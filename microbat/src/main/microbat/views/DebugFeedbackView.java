@@ -707,9 +707,9 @@ public class DebugFeedbackView extends ViewPart {
 							lastFeedbackType = feedbackType;
 							
 							if(recommender.getState()==DebugState.BINARY_SEARCH || recommender.getState()==DebugState.SKIP){
-								Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+								Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
 								behavior.increaseSkip();
-								new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
+								new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
 							}
 							
 							if(suspiciousNode != null){
@@ -732,7 +732,7 @@ public class DebugFeedbackView extends ViewPart {
 		}
 		
 		private void collectBehavior(String feedbackType) {
-			Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+			Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
 			if(feedbackType.equals(UserFeedback.CORRECT)){
 				behavior.increaseCorrectFeedback();
 			}
@@ -745,7 +745,7 @@ public class DebugFeedbackView extends ViewPart {
 			else if(feedbackType.equals(UserFeedback.UNCLEAR)){
 				behavior.increaseUnclearFeedback();
 			}
-			new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);;
+			new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);;
 		}
 		
 		private void updateVariableCheckTime(Trace trace, TraceNode currentNode) {

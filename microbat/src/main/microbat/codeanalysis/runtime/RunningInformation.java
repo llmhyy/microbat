@@ -12,7 +12,6 @@ public class RunningInformation {
 	private Trace mainTrace;
 	
 	public RunningInformation(String programMsg, int expectedSteps, int collectedSteps, List<Trace> traceList) {
-		super();
 		this.programMsg = programMsg;
 		this.expectedSteps = expectedSteps;
 		this.collectedSteps = collectedSteps;

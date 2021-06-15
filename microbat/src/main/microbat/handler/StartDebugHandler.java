@@ -61,10 +61,10 @@ public class StartDebugHandler extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		if (Settings.isRunTest) {
-			appClassPath.setOptionalTestClass(Settings.lanuchClass);
+			appClassPath.setOptionalTestClass(Settings.launchClass);
 			appClassPath.setOptionalTestMethod(Settings.testMethod);
 			appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
-			appClassPath.setTestCodePath(MicroBatUtil.getSourceFolder(Settings.lanuchClass, Settings.projectName));
+			appClassPath.setTestCodePath(MicroBatUtil.getSourceFolder(Settings.launchClass, Settings.projectName));
 		}
 		List<String> srcFolders = MicroBatUtil.getSourceFolders(Settings.projectName);
 		appClassPath.setSourceCodePath(appClassPath.getTestCodePath());
@@ -83,9 +83,9 @@ public class StartDebugHandler extends AbstractHandler {
 			e.printStackTrace();
 		};
 		
-		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
 		behavior.increaseGenerateTrace();
-		new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
+		new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
 		
 		try {
 			
@@ -98,9 +98,9 @@ public class StartDebugHandler extends AbstractHandler {
 						
 						List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
 						List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
-						InstrumentationExecutor exectuor = new InstrumentationExecutor(appClassPath,
+						InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
 								generateTraceDir(appClassPath), "trace", includedClassNames, excludedClassNames);
-						final RunningInformation result = exectuor.run();
+						final RunningInformation result = executor.run();
 						
 						monitor.worked(80);
 						

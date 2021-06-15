@@ -355,9 +355,9 @@ public class TraceView extends ViewPart {
 //						 showDebuggingInfo(node);
 
 						if (!programmingSelection) {
-							Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+							Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
 							behavior.increaseAdditionalClick();
-							new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
+							new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
 						}
 
 						otherViewsBehavior(node);

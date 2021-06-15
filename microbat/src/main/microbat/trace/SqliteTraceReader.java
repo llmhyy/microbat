@@ -22,8 +22,9 @@ import sav.commons.testdata.calculator.CalculatorTest1;
  */
 public class SqliteTraceReader implements TraceReader {
 	private TraceRetriever traceRetriever;
+	private String runId;
 
-	public SqliteTraceReader() {
+	public SqliteTraceReader(String runId) {
 		Connection conn = null;
 		try {
 			conn = DbService.getConnection();
@@ -40,7 +41,7 @@ public class SqliteTraceReader implements TraceReader {
 	@Override
 	public RunningInfo read(PrecheckInfo precheckInfo, String drumpFile) {
 		
-		List<Trace> traces = this.traceRetriever.getLatestTraces();
+		List<Trace> traces = this.traceRetriever.getTraces(runId);
 		
 		RunningInfo info = new RunningInfo();
 		info.setTraceList(traces);

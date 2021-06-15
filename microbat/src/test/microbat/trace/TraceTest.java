@@ -30,7 +30,7 @@ public class TraceTest {
 	@Before
 	public void setup(){
 		originalSettings.projectName = Settings.projectName;
-		originalSettings.launchClass = Settings.lanuchClass;
+		originalSettings.launchClass = Settings.launchClass;
 		originalSettings.isRecordSnapshort = Settings.isRecordSnapshot;
 		originalSettings.stepLimit = Settings.stepLimit;
 		originalSettings.referenceFieldLayerInString = Settings.getVariableLayer();
@@ -39,7 +39,7 @@ public class TraceTest {
 	@After
 	public void tearDown(){
 		Settings.projectName = originalSettings.projectName;
-		Settings.lanuchClass = originalSettings.launchClass;
+		Settings.launchClass = originalSettings.launchClass;
 		Settings.isRecordSnapshot = originalSettings.isRecordSnapshort;
 		Settings.stepLimit = originalSettings.stepLimit;
 		Settings.setVariableLayer(originalSettings.referenceFieldLayerInString);
@@ -49,7 +49,7 @@ public class TraceTest {
 	public void testRetrieveRunningStatement() {
 		Settings.projectName = "Bugs";
 		Settings.stepLimit = 10000;
-		Settings.lanuchClass = "com.simplecalculator.SimpleCalculator";
+		Settings.launchClass = "com.simplecalculator.SimpleCalculator";
 		
 		AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		ExecutionStatementCollector collector = new ExecutionStatementCollector();

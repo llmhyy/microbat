@@ -29,9 +29,9 @@ public class UndoHandler extends AbstractHandler {
 			}
 		}
 		
-		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
 		behavior.increaseUndo();
-		new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
+		new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
 		
 		return null;
 	}

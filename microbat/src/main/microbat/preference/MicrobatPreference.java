@@ -321,7 +321,7 @@ public class MicrobatPreference extends PreferencePage implements
 	
 	private void confirmChanges(){
 		Settings.projectName = this.projectCombo.getText();
-		Settings.lanuchClass = this.lanuchClassText.getText();
+		Settings.launchClass = this.lanuchClassText.getText();
 		Settings.testMethod = this.testMethodText.getText();
 //		Settings.buggyClassName = this.classNameText.getText();
 //		Settings.buggyLineNumber = this.lineNumberText.getText();

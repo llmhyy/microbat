@@ -14,9 +14,9 @@ public class SearchStepForwardHandler extends SearchStepHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		this.directionDown = true;
 		
-		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
 		behavior.increaseSearchForward();
-		new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
+		new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
 		
 		return super.execute(event);
 	}

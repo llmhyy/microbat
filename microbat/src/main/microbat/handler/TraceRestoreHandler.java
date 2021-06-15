@@ -26,7 +26,7 @@ public class TraceRestoreHandler extends AbstractHandler{
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		if (Settings.isRunTest) {
-			appClassPath.setOptionalTestClass(Settings.lanuchClass);
+			appClassPath.setOptionalTestClass(Settings.launchClass);
 			appClassPath.setOptionalTestMethod(Settings.testMethod);
 			appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
 		}

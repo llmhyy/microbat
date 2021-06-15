@@ -29,12 +29,14 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 
 	public static final int READ = 1;
 	public static final int WRITE = 2;
+	private String runId;
 
 	/**
 	 * @param dbPath
 	 */
-	public SqliteRecorder(String dbPath) {
+	public SqliteRecorder(String dbPath, String runId) {
 		super(dbPath);
+		this.runId = runId;
 	}
 
 	public void store(List<Trace> traces) {
@@ -43,7 +45,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		try {
 			conn = getConnection();
 			conn.setAutoCommit(false);
-			String runId = insertRun(conn, closables);
+			insertRun(conn, closables);
 			for (Trace trace : traces) {
 				insertTrace(trace, runId, conn, closables);
 			}
@@ -56,23 +58,21 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		}
 	}
 
-	public String insertRun(Connection conn, List<AutoCloseable> closables) throws SQLException {
+	public void insertRun(Connection conn, List<AutoCloseable> closables) throws SQLException {
 		PreparedStatement ps;
 		String sql = "INSERT INTO run (run_id,project_name,project_version,launch_method,thread_status,launch_class) "
 				+ "VALUES (?, ?, ?,?,?,?)";
 		ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		int idx = 1;
-		String runId = getUUID();
 		// TODO add the other attributes
-		ps.setString(idx++, runId);
+		ps.setString(idx++, this.runId);
 		ps.setString(idx++, "");
 		ps.setString(idx++, "");
 		ps.setString(idx++, "");
 		ps.setString(idx++, "");
 		ps.setString(idx++, "");
 		ps.execute();
-		return runId;
 	}
 
 	/**

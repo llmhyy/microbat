@@ -13,6 +13,11 @@ import java.util.List;
 import microbat.model.trace.Trace;
 import sav.common.core.SavRtException;
 
+/**
+ * Wrapper class over Traces collected in an execution
+ * @author dingyuchen
+ *
+ */
 public class RunningInfo {
 	private static final String HEADER = "TracingResult";
 	private List<Trace> traceList;

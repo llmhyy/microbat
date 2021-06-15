@@ -78,7 +78,7 @@ public class BehaviorReporter {
 	}
 
 	private void fillRowInformation(Row row, HashMap<String, Behavior> data) {
-		Behavior behavior = data.get(Settings.lanuchClass);
+		Behavior behavior = data.get(Settings.launchClass);
 		row.createCell(0).setCellValue(behavior.getWrongValueFeedbacks());
 		row.createCell(1).setCellValue(behavior.getWrongPathFeedbacks());
 		row.createCell(2).setCellValue(behavior.getCorrectFeedbacks());

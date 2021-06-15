@@ -42,6 +42,7 @@ public class AgentParams extends CommonParams {
 	public static final String OPT_AVOID_TO_STRING_OF_PROXY_OBJ = "avoid_proxy_tostring";
 	public static final String OPT_CODE_RANGE = "code_range";
 	public static final String OPT_TRACE_RECORDER = "trace_recorder";
+	public static final String OPT_RUN_ID = "run_id";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -61,6 +62,7 @@ public class AgentParams extends CommonParams {
 	private boolean avoidProxyToString;
 	private List<CodeRangeEntry> codeRanges;
 	private String recorderName;
+	private String runId;
 	
 	public AgentParams(CommandLine cmd) {
 		super(cmd);
@@ -96,6 +98,7 @@ public class AgentParams extends CommonParams {
 		avoidProxyToString = cmd.getBoolean(OPT_AVOID_TO_STRING_OF_PROXY_OBJ, false);
 		codeRanges = CodeRangeEntry.parse(cmd.getStringList(OPT_CODE_RANGE));
 		recorderName = cmd.getString(OPT_TRACE_RECORDER);
+		runId = cmd.getString(OPT_RUN_ID);
 	}
 
 	public static AgentParams initFrom(CommandLine cmd) {
@@ -194,6 +197,11 @@ public class AgentParams extends CommonParams {
 	public String getTraceRecorderName() {
 		return recorderName;
 	}
+	
+	public String getRunId() {
+		return this.runId;
+	}
+	
 	public AppJavaClassPath initAppClassPath() {
 		return initAppClassPath(getLaunchClass(), getJavaHome(), getClassPaths(), getWorkingDirectory());
 	}

@@ -21,7 +21,7 @@ public class BehaviorReader {
 	@SuppressWarnings("resource")
 	public void readXLSX() throws IOException {
 		
-		String fileName = Settings.lanuchClass + "_behavior" + ".xlsx";
+		String fileName = Settings.launchClass + "_behavior" + ".xlsx";
 		
 		File file = new File(fileName);
 		if(file.exists()) {
@@ -90,7 +90,7 @@ public class BehaviorReader {
 						}
 					}
 					
-					BehaviorData.projectBehavior.put(Settings.lanuchClass, behavior);
+					BehaviorData.projectBehavior.put(Settings.launchClass, behavior);
 				}
 				
 			}

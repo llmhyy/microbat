@@ -16,7 +16,7 @@ import microbat.views.ImageUI;
 
 public class Settings {
 	public static String projectName;
-	public static String lanuchClass;
+	public static String launchClass;
 	public static String testMethod;
 	
 	public static boolean isRecordSnapshot;
@@ -55,7 +55,7 @@ public class Settings {
 		if(Activator.getDefault() != null){
 			try{
 				projectName = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.TARGET_PORJECT);
-				lanuchClass = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.LANUCH_CLASS);
+				launchClass = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.LANUCH_CLASS);
 				testMethod = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.TEST_METHOD);
 				String isRecord = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RECORD_SNAPSHORT);
 				isRecordSnapshot = isRecord.equals("true");

@@ -65,7 +65,7 @@ public class StartDebugHandler0 extends AbstractHandler {
 		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		if (Settings.isRunTest) {
-			appClassPath.setOptionalTestClass(Settings.lanuchClass);
+			appClassPath.setOptionalTestClass(Settings.launchClass);
 			appClassPath.setOptionalTestMethod(Settings.testMethod);
 			appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
 		}
@@ -76,9 +76,9 @@ public class StartDebugHandler0 extends AbstractHandler {
 			e.printStackTrace();
 		};
 		
-		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.lanuchClass);
+		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
 		behavior.increaseGenerateTrace();
-		new BehaviorReporter(Settings.lanuchClass).export(BehaviorData.projectBehavior);
+		new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
 		
 		try {
 			
