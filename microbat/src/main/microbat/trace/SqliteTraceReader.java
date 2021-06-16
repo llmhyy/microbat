@@ -33,6 +33,7 @@ public class SqliteTraceReader implements TraceReader {
 			e.printStackTrace();
 		}
 		this.traceRetriever = new SqliteTraceRetriever(conn);
+		this.runId = runId;
 	}
 
 	/*
