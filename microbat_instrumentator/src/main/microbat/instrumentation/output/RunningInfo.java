@@ -67,7 +67,7 @@ public class RunningInfo {
 			}
 		}
 		
-		return null;
+		return new Trace(null);
 	}
 	
 	public void saveToFile(String dumpFile, boolean append) throws IOException {
