@@ -51,15 +51,15 @@ public class Trace {
 		}
 		
 		this.setAppJavaClassPath(appJavaClassPath);
-		exectionList = new ArrayList<>();
+		executionList = new ArrayList<>();
 	}
 	
 	public Trace(AppJavaClassPath appJavaClassPath, int stepNums) {
 		this.setAppJavaClassPath(appJavaClassPath);
-		this.exectionList = new ArrayList<>(stepNums);
+		this.executionList = new ArrayList<>(stepNums);
 	}
 	
-	private List<TraceNode> exectionList;
+	private List<TraceNode> executionList;
 	/**
 	 * tracking which steps read/write what variables, and what variables are read/written by which steps.
 	 * key is the variable ID, and value is the entry containing all the steps reading/writing the corresponding
@@ -76,24 +76,24 @@ public class Trace {
 	}
 
 	public List<TraceNode> getExecutionList() {
-		return exectionList;
+		return executionList;
 	}
 
-	public void setExectionList(List<TraceNode> exectionList) {
-		this.exectionList = exectionList;
+	public void setExecutionList(List<TraceNode> exectionList) {
+		this.executionList = exectionList;
 	}
 	
 	public void addTraceNode(TraceNode node){
-		this.exectionList.add(node);
+		this.executionList.add(node);
 	}
 	
 	public int size(){
-		return this.exectionList.size();
+		return this.executionList.size();
 	}
 	
 	public List<TraceNode> getTopMethodLevelNodes(){
 		List<TraceNode> topList = new ArrayList<>();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(node.getInvocationParent() == null){
 				topList.add(node);
 			}
@@ -105,7 +105,7 @@ public class Trace {
 	public TraceNode getLatestNode(){
 		int len = size();
 		if(len > 0){
-			return this.exectionList.get(len-1);
+			return this.executionList.get(len-1);
 		}
 		else{
 			return null;
@@ -170,7 +170,7 @@ public class Trace {
 	public void constructControlDomianceRelation() {
 		TraceNode controlDominator = null;
 		fillInControlScope();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(controlDominator != null){
 				
 				if(isContainedInScope(node, controlDominator.getControlScope())){
@@ -196,7 +196,7 @@ public class Trace {
 
 	private void fillInControlScope() {
 		Map<BreakPoint, List<TraceNode>> breakpointMap = new HashMap<>();
-		for (TraceNode node : exectionList) {
+		for (TraceNode node : executionList) {
 			CollectionUtils.getListInitIfEmpty(breakpointMap, node.getBreakPoint()).add(node);
 		}
 		Map<String, Set<String>> classMethodMap = new HashMap<>();
@@ -270,8 +270,8 @@ public class Trace {
 //	}
 
 	public TraceNode findLastestExceptionNode() {
-		for(int i=0; i<exectionList.size(); i++){
-			TraceNode lastestNode = exectionList.get(exectionList.size()-1-i);
+		for(int i=0; i<executionList.size(); i++){
+			TraceNode lastestNode = executionList.get(executionList.size()-1-i);
 			if(lastestNode.isException()){
 				return lastestNode;
 			}
@@ -369,7 +369,7 @@ public class Trace {
 
 	public Map<String, List<Integer>> getExecutedLocation(){
 		Map<String, List<Integer>> locationMap = new HashMap<>();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			List<Integer> lines = locationMap.get(node.getDeclaringCompilationUnitName());
 			Integer line = node.getLineNumber();
 			if(lines == null){
@@ -403,7 +403,7 @@ public class Trace {
 //	}
 	
 	public TraceNode getTraceNode(int order){
-		return this.exectionList.get(order-1);
+		return this.executionList.get(order-1);
 	}
 
 	public List<String> getIncludedLibraryClasses() {
