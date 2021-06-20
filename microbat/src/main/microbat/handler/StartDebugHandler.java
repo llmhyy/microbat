@@ -1,7 +1,9 @@
 package microbat.handler;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -21,9 +23,9 @@ import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReader;
 import microbat.behavior.BehaviorReporter;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
-import microbat.codeanalysis.runtime.RunningInformation;
 import microbat.codeanalysis.runtime.StepLimitException;
 import microbat.evaluation.junit.TestCaseAnalyzer;
+import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
 import microbat.util.JavaUtil;
@@ -32,7 +34,6 @@ import microbat.util.Settings;
 import microbat.views.DebugFeedbackView;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
-//import microbat.views.TraceView;
 import sav.common.core.utils.FileUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -90,7 +91,6 @@ public class StartDebugHandler extends AbstractHandler {
 		try {
 			
 			Job job = new Job("Preparing for Debugging ...") {
-				
 				@Override
 				protected IStatus run(IProgressMonitor monitor) {
 					try{
@@ -100,7 +100,7 @@ public class StartDebugHandler extends AbstractHandler {
 						List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
 						InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
 								generateTraceDir(appClassPath), "trace", includedClassNames, excludedClassNames);
-						final RunningInformation result = executor.run();
+						final RunningInfo result = executor.run();
 						
 						monitor.worked(80);
 						
@@ -108,12 +108,12 @@ public class StartDebugHandler extends AbstractHandler {
 							
 							@Override
 							public void run() {
-								Trace trace = result.getMainTrace();
-								trace.setAppJavaClassPath(appClassPath);
-								List<Trace> traces = result.getTraceList();
+								Optional<Trace> trace = result.getMainTrace();
+								trace.ifPresent(tr-> tr.setAppJavaClassPath(appClassPath));
+								List<Trace> traces = result.getTraceList().orElse(new ArrayList<>());
 								
 								TraceView traceView = MicroBatViews.getTraceView();
-								traceView.setMainTrace(trace);
+								trace.ifPresent(tr-> traceView.setMainTrace(tr));
 								traceView.setTraceList(traces);
 								traceView.updateData();
 							}

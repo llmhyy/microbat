@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import microbat.instrumentation.AgentConstants;
@@ -212,7 +213,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 			String msg = reader.readString();
 			updateTestResult(msg);
 			runningInfo = new RunningInfo();
-			runningInfo.setTraceList(reader.readTrace());
+			runningInfo.setTraceList(Optional.ofNullable(reader.readTrace()));
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -293,7 +294,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 		if (isPrecheckMode) {
 			throw new UnsupportedOperationException("TraceAgent has been run in precheck mode!");
 		}
-		return runningInfo.getMainTrace();
+		return runningInfo.getMainTrace().orElse(null);
 	}
 
 	public RunningInfo getRunningInfo() {

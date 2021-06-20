@@ -8,7 +8,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import microbat.model.trace.Trace;
 import sav.common.core.SavRtException;
@@ -20,7 +22,7 @@ import sav.common.core.SavRtException;
  */
 public class RunningInfo {
 	private static final String HEADER = "TracingResult";
-	private List<Trace> traceList;
+	private Optional<List<Trace>> traceList;
 	private String programMsg;
 	private int expectedSteps;
 	private int collectedSteps;
@@ -44,7 +46,8 @@ public class RunningInfo {
 			} else {
 				info.programMsg = header; // for compatible reason with old version. TO BE REMOVED.
 			}
-			info.setTraceList(reader.readTrace());
+			
+			info.setTraceList(Optional.ofNullable(reader.readTrace()));
 			return info;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -60,14 +63,11 @@ public class RunningInfo {
 		}
 	}
 	
-	public Trace getMainTrace() {
-		for(Trace trace: traceList) {
-			if(trace.isMain()) {
-				return trace;
-			}
-		}
-		
-		return new Trace(null);
+	public Optional<Trace> getMainTrace() {
+		return this.traceList
+				.flatMap(list -> list.stream()
+							.filter(trace -> trace.isMain())
+							.findFirst());
 	}
 	
 	public void saveToFile(String dumpFile, boolean append) throws IOException {
@@ -85,7 +85,7 @@ public class RunningInfo {
 			outputWriter.writeString(programMsg);
 			outputWriter.writeInt(expectedSteps);
 			outputWriter.writeInt(collectedSteps);
-			outputWriter.writeTrace(traceList);
+			outputWriter.writeTrace(traceList.orElse(new ArrayList<>()));
 		} finally {
 			bufferedStream.close();
 			if (outputWriter != null) {
@@ -131,11 +131,11 @@ public class RunningInfo {
 				+ collectedSteps + "]";
 	}
 
-	public List<Trace> getTraceList() {
+	public Optional<List<Trace>> getTraceList() {
 		return traceList;
 	}
 
-	public void setTraceList(List<Trace> traceList) {
+	public void setTraceList(Optional<List<Trace>> traceList) {
 		this.traceList = traceList;
 	}
 }

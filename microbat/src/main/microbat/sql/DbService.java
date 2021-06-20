@@ -164,7 +164,7 @@ public class DbService {
 		}
 	}
 
-	protected int countNumberOfRows(ResultSet rs) throws SQLException {
+	public static int countNumberOfRows(ResultSet rs) throws SQLException {
 		if (rs == null) {
 			return 0;
 		}

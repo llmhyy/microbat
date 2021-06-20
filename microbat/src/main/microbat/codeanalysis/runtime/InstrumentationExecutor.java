@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -121,7 +122,7 @@ public class InstrumentationExecutor {
 		return agentRunner;
 	}
 	
-	public RunningInformation run() throws StepLimitException {
+	public RunningInfo run() throws StepLimitException {
 		try {
 //			System.out.println("first precheck..");
 //			agentRunner.precheck(null);
@@ -136,13 +137,13 @@ public class InstrumentationExecutor {
 			agentRunner.precheck(null);
 			PrecheckInfo info = agentRunner.getPrecheckInfo();
 			System.out.println(info);
-			PreCheckInformation precheckInfomation = new PreCheckInformation(info.getThreadNum(), info.getStepTotal(),
+			PreCheckInformation precheckInformation = new PreCheckInformation(info.getThreadNum(), info.getStepTotal(),
 					info.isOverLong(), new ArrayList<>(info.getVisitedLocs()), info.getExceedingLimitMethods(), info.getLoadedClasses());
-			precheckInfomation.setPassTest(agentRunner.isTestSuccessful());
+			precheckInformation.setPassTest(agentRunner.isTestSuccessful());
 //			precheckInfomation.setUndeterministic(firstPrecheckInfo.getStepTotal() != precheckInfomation.getStepTotal());
-			this.setPrecheckInfo(precheckInfomation);
-			System.out.println("the trace length is: " + precheckInfomation.getStepNum());
-			if (precheckInfomation.isUndeterministic()) {
+			this.setPrecheckInfo(precheckInformation);
+			System.out.println("the trace length is: " + precheckInformation.getStepNum());
+			if (precheckInformation.isUndeterministic()) {
 				System.out.println("undeterministic!!");
 			} 
 			if (info.isOverLong() /*&& !precheckInfomation.isUndeterministic() */) {
@@ -155,13 +156,13 @@ public class InstrumentationExecutor {
 //			agentRunner.getConfig().setDebug(Settings.isRunWtihDebugMode);
 //			agentRunner.getConfig().setPort(8000);
 			
-			RunningInformation rInfo = execute(precheckInfomation);
-			return rInfo;
+//			RunningInformation rInfo = execute(precheckInfomation);
+			return execute(precheckInformation);
 		} catch (SavException e1) {
 			e1.printStackTrace();
 		}
 		
-		return new RunningInformation("", -1, -1, new ArrayList<Trace>());
+		return null;
 	}
 	
 	public PreCheckInformation runPrecheck(String dumpFile, int stepLimit) {
@@ -188,33 +189,34 @@ public class InstrumentationExecutor {
 		return new PreCheckInformation(-1, -1, false, new ArrayList<ClassLocation>(), new ArrayList<String>(), new ArrayList<String>());
 	}
 	
-	public RunningInformation execute(PreCheckInformation info) {
+	public RunningInfo execute(PreCheckInformation info) {
 		try {
 			long start = System.currentTimeMillis();
-//			agentRunner.getConfig().setPort(8888);
 			agentRunner.addAgentParam(AgentParams.OPT_EXPECTED_STEP, info.getStepNum());
 			agentRunner.run(DatabasePreference.getReader());
-			// agentRunner.runWithSocket();
+
 			RunningInfo result = agentRunner.getRunningInfo();
 //			System.out.println(result);
 			System.out.println("isExpectedStepsMet? " + result.isExpectedStepsMet());
-			System.out.println("trace length: " + result.getMainTrace().size());
+			System.out.println("trace length: " + result.getMainTrace().map(t -> t.size()).orElse(0));
 			System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 			System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 			System.out.println("finish!");
 			agentRunner.removeAgentParam(AgentParams.OPT_EXPECTED_STEP);
+			return result;
 			
-			Trace trace = result.getMainTrace();
-			trace.setAppJavaClassPath(appPath);
-//			trace.setMultiThread(info.getThreadNum()!=1);
-			
-			appendMissingInfo(trace, appPath);
-			trace.setConstructTime((int) (System.currentTimeMillis() - start));
-			
-			RunningInformation information = new RunningInformation(result.getProgramMsg(), result.getExpectedSteps(), 
-					result.getCollectedSteps(), result.getTraceList());
-			
-			return information;
+//			Optional<Trace> trace = result.getMainTrace();
+//			trace.ifPresent(t -> {
+//				t.setAppJavaClassPath(appPath);
+//				appendMissingInfo(t, appPath);
+//				t.setConstructTime((int) (System.currentTimeMillis() - start));
+//			});
+//			
+//			RunningInformation information = new RunningInformation(result.getProgramMsg(),
+//																	result.getExpectedSteps(), 
+//																	result.getCollectedSteps(), 
+//																	new TraceInfo(result.getTraceList()));
+//			return information;
 		} catch (SavException e1) {
 			e1.printStackTrace();
 		}

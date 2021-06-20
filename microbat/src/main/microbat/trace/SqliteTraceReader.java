@@ -43,15 +43,21 @@ public class SqliteTraceReader implements TraceReader {
 	public RunningInfo read(PrecheckInfo precheckInfo, String drumpFile) {
 		
 		List<Trace> traces = this.traceRetriever.getTraces(runId);
-		
 		RunningInfo info = new RunningInfo();
-		info.setTraceList(traces);
+		if (traces.isEmpty()) {
+			info.setCollectedSteps(0);
+			info.setTraceList(Optional.<List<Trace>>empty());
+		} else {
+			info.setCollectedSteps(traces.stream()
+									.mapToInt(trace -> trace.getExecutionList().size())
+									.sum());
+			info.setTraceList(Optional.of(traces));
+		}
+		
 		if (traces.size() == 0) {
 			info.setCollectedSteps(0);
 		} else {
-			info.setCollectedSteps(traces.get(0).getExecutionList().size());
 		}
-//		info.setCollectedSteps(traces.get(0).getExecutionList().size());
 		info.setExpectedSteps(precheckInfo.getStepTotal());
 		info.setProgramMsg(precheckInfo.getProgramMsg());
 		

@@ -504,6 +504,9 @@ public class TraceNode{
 	}
 
 	public List<VarValue> getReadVariables() {
+		if (writtenVariables == null) {
+			// poll database for result
+		}
 		return readVariables;
 	}
 
@@ -516,6 +519,9 @@ public class TraceNode{
 	}
 	
 	public List<VarValue> getWrittenVariables() {
+		if (writtenVariables == null) {
+			// poll database for result
+		}
 		return writtenVariables;
 	}
 

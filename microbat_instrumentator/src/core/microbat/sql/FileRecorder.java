@@ -5,6 +5,7 @@ package microbat.sql;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentLogger;
@@ -33,7 +34,7 @@ public class FileRecorder implements TraceRecorder {
 		
 		RunningInfo result = new RunningInfo();
 		result.setProgramMsg(Agent.getProgramMsg());
-		result.setTraceList(traceList);
+		result.setTraceList(Optional.ofNullable(traceList));
 		result.setCollectedSteps(traceList.get(0).getExecutionList().size());
 		result.setExpectedSteps(agentParams.getExpectedSteps());
 		try {
