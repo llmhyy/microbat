@@ -40,10 +40,10 @@ public class JunitRunner {
 
 	private static Request toRequest(Pair<String, String> pair)
 			throws ClassNotFoundException {
-		Class<?> junitClass = loadClass(pair.a);
+		Class<?> junitClass = loadClass(pair.first());
 		Method[] methods = junitClass.getMethods();
 		for (Method method : methods) {
-			if (method.getName().equals(pair.b)) {
+			if (method.getName().equals(pair.second())) {
 				return Request.method(junitClass, method.getName());
 			}
 		}

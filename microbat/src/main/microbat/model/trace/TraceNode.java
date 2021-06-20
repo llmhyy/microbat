@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.function.Supplier;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
@@ -25,6 +26,7 @@ import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
+import sav.common.core.Pair;
 
 public class TraceNode{
 	
@@ -96,6 +98,8 @@ public class TraceNode{
 	
 	private transient double sliceBreakerProbability = 0;
 	
+	private Supplier<Pair<List<VarValue>, List<VarValue>>> RWVarSupplier;
+	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
 		super();
 		this.breakPoint = breakPoint;
@@ -104,6 +108,7 @@ public class TraceNode{
 		this.trace = trace;
 	}
 	
+	// TODO: change all this.access to this.get()
 	public List<VarValue> findMarkedReadVariable(){
 		List<VarValue> markedReadVars = new ArrayList<>();
 		for(VarValue readVarValue: this.readVariables){
@@ -502,8 +507,17 @@ public class TraceNode{
 	public void setException(boolean isException) {
 		this.isException = isException;
 	}
+	
+	private void populateRWVars() {
+		Pair<List<VarValue>, List<VarValue>> pair = this.RWVarSupplier.get();
+		this.setReadVariables(pair.first());
+		this.setWrittenVariables(pair.second());
+	}
 
 	public List<VarValue> getReadVariables() {
+		if (this.readVariables.isEmpty()) {
+			this.populateRWVars();
+		}
 		return readVariables;
 	}
 
@@ -516,6 +530,9 @@ public class TraceNode{
 	}
 	
 	public List<VarValue> getWrittenVariables() {
+		if (this.writtenVariables.isEmpty()) {
+			this.populateRWVars();
+		}
 		return writtenVariables;
 	}
 
@@ -1123,6 +1140,14 @@ public class TraceNode{
 
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public Supplier<Pair<List<VarValue>, List<VarValue>>> getRWVarSupplier() {
+		return RWVarSupplier;
+	}
+
+	public void setRWVarSupplier(Supplier<Pair<List<VarValue>, List<VarValue>>> rWVarSupplier) {
+		RWVarSupplier = rWVarSupplier;
 	}
 
 

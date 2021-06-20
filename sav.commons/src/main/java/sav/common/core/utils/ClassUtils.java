@@ -116,7 +116,7 @@ public class ClassUtils {
 	}
 	
 	public static String toClassMethodStr(Pair<String, String> classMethod) {
-		return toClassMethodStr(classMethod.a, classMethod.b);
+		return toClassMethodStr(classMethod.first(), classMethod.second());
 	}
 	
 	public static String toClassMethodStr(String clazz, String method) {

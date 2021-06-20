@@ -69,11 +69,11 @@ public enum Operator {
 
 	public static Operator notOf(Operator op) {
 		for (Pair<Operator, Operator> pair : Operator.OPPOSITE_PAIRS) {
-			if (op == pair.a) {
-				return pair.b;
+			if (op == pair.first()) {
+				return pair.second();
 			}
-			if (op == pair.b) {
-				return pair.a;
+			if (op == pair.second()) {
+				return pair.first();
 			}
 		}
 		return null;
