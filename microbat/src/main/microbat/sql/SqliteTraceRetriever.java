@@ -51,16 +51,14 @@ public class SqliteTraceRetriever implements TraceRetriever {
 			this.closables.add(rs);
 
 			while (rs.next()) {
-				Trace trace = new Trace(rs.getString("trace_id"));
+				Trace trace = new Trace(null);
+				trace.setId(rs.getString("trace_id"));
 				String threadId = rs.getString("thread_id");
 				String threadName = rs.getString("thread_name");
 				boolean isMain = rs.getBoolean("isMain");
 				trace.setThreadId(Long.parseLong(threadId));
 				trace.setThreadName(threadName);
 				trace.setMain(isMain);
-				
-				loadTrace(trace);
-
 				traces.add(trace);
 			}
 		} catch (SQLException e) {
@@ -73,13 +71,7 @@ public class SqliteTraceRetriever implements TraceRetriever {
 		return traces;
 	}
 
-	protected void loadTrace(Trace trace) throws SQLException {
-		// load step
-		List<TraceNode> steps = loadSteps(trace);
-		trace.setExecutionList(steps);
-	}
-
-	private List<TraceNode> loadSteps(Trace trace) throws SQLException {
+	public List<TraceNode> getSteps(Trace trace) throws SQLException {
 		String traceId = trace.getId();
 		PreparedStatement ps = conn.prepareStatement(GET_STEPS);
 		ps.setString(1, traceId);

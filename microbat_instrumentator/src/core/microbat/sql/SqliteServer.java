@@ -72,29 +72,5 @@ public class SqliteServer {
         String uuidStr=uuid.toString();
         return uuidStr;
 	}
-	
-//	protected int getFirstGeneratedIntCol(PreparedStatement ps) throws SQLException {
-//		int id = -1;
-//		try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
-//			if (generatedKeys.next()) {
-//				id = generatedKeys.getInt("last_insert_rowid()");
-//			} else {
-//				throw new SQLException("Update failed, no ID obtained.");
-//			}
-//		}
-//		if (id < 0) {
-//			throw new SQLException("Insert trace failed, no traceId obtained.");
-//		}
-//		return id;
-//	}
-//	
-//	protected List<Integer> getGeneratedIntIds(PreparedStatement ps) throws SQLException {
-//		List<Integer> generatedIds = new ArrayList<>();
-//		try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
-//			while (generatedKeys.next()) {
-//				generatedIds.add(generatedKeys.getInt("last_insert_rowid()"));
-//			}
-//		}
-//		return generatedIds;
-//	}
+
 }

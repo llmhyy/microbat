@@ -27,6 +27,5 @@ public class StoreTraceHandler extends AbstractHandler {
 		System.out.println("test");
 		return null;
 	}
-
 	
 }

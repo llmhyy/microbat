@@ -16,7 +16,7 @@ public class ExecTraceFileReader {
 		RunningInfo info = RunningInfo.readFromFile(execTraceFile);
 		this.trace = info.getMainTrace();
 		this.msg = info.getProgramMsg();
-		return trace.orElse(new Trace(""));
+		return trace.orElse(new Trace(null));
 	}
 	
 	public PreCheckInformation readPrecheck(String precheckFile) {

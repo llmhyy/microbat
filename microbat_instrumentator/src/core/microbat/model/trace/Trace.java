@@ -19,6 +19,7 @@ import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
 import microbat.model.ControlScope;
 import microbat.model.Scope;
+import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import sav.common.core.utils.CollectionUtils;
@@ -31,12 +32,16 @@ import sav.strategies.dto.AppJavaClassPath;
  */
 public class Trace {
 	
-	private AppJavaClassPath appJavaClassPath;
-	private List<String> includedLibraryClasses;
-	private List<String> excludedLibraryClasses;
-	private long threadId;
-	private boolean isMain;
-	private String threadName;
+	protected AppJavaClassPath appJavaClassPath;
+	protected List<String> includedLibraryClasses;
+	protected List<String> excludedLibraryClasses;
+	protected long threadId;
+	protected boolean isMain;
+	protected String threadName;
+	protected String id;
+	protected int observingIndex = -1;
+	protected int checkTime = 1;
+	private VariableDefinitions variableDefs = new VariableDefinitions();
 
 	/**
 	 * This variable is to trace whether the variables in different lines are the same
@@ -51,15 +56,15 @@ public class Trace {
 		}
 		
 		this.setAppJavaClassPath(appJavaClassPath);
-		exectionList = new ArrayList<>();
+		executionList = new ArrayList<>();
 	}
 	
 	public Trace(AppJavaClassPath appJavaClassPath, int stepNums) {
 		this.setAppJavaClassPath(appJavaClassPath);
-		this.exectionList = new ArrayList<>(stepNums);
+		this.executionList = new ArrayList<>(stepNums);
 	}
 	
-	private List<TraceNode> exectionList;
+	private List<TraceNode> executionList;
 	/**
 	 * tracking which steps read/write what variables, and what variables are read/written by which steps.
 	 * key is the variable ID, and value is the entry containing all the steps reading/writing the corresponding
@@ -76,25 +81,36 @@ public class Trace {
 	}
 
 	public List<TraceNode> getExecutionList() {
-		return exectionList;
+		return executionList;
 	}
 
 	public void setExectionList(List<TraceNode> exectionList) {
-		this.exectionList = exectionList;
+		this.executionList = exectionList;
 	}
 	
 	public void addTraceNode(TraceNode node){
-		this.exectionList.add(node);
+		this.executionList.add(node);
 	}
 	
-	public int size(){
-		return this.exectionList.size();
+	private int size(){
+		return this.executionList.size();
 	}
 	
 	public List<TraceNode> getTopMethodLevelNodes(){
 		List<TraceNode> topList = new ArrayList<>();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(node.getInvocationParent() == null){
+				topList.add(node);
+			}
+		}
+		
+		return topList;
+	}
+
+	public List<TraceNode> getTopAbstractionLevelNodes(){
+		List<TraceNode> topList = new ArrayList<>();
+		for(TraceNode node: this.executionList){
+			if(node.getAbstractionParent() == null){
 				topList.add(node);
 			}
 		}
@@ -105,11 +121,102 @@ public class Trace {
 	public TraceNode getLatestNode(){
 		int len = size();
 		if(len > 0){
-			return this.exectionList.get(len-1);
+			return this.executionList.get(len-1);
 		}
 		else{
 			return null;
 		}
+	}
+
+	public int searchBackwardTraceNode(String expression){
+		int resultIndex = -1;
+		
+		for(int i=observingIndex-1; i>=0; i--){
+			resultIndex = searchTraceNode(expression, i);
+			if(resultIndex != -1){
+				break;
+			}
+		}
+		
+		if(resultIndex != -1){
+			this.observingIndex = resultIndex;
+		}
+		return resultIndex;
+	}
+
+	public int searchForwardTraceNode(String expression){
+		int resultIndex = -1;
+		
+		for(int i=observingIndex+1; i<executionList.size(); i++){
+			resultIndex = searchTraceNode(expression, i);
+			if(resultIndex != -1){
+				break;
+			}
+		}
+		
+		if(resultIndex != -1){
+			this.observingIndex = resultIndex;			
+		}
+		return resultIndex;
+	}
+
+	private int searchTraceNode(String expression, int i) {
+		int resultIndex = -1;
+		TraceNode node = executionList.get(i);
+		BreakPoint breakPoint = node.getBreakPoint();
+		String className = breakPoint.getDeclaringCompilationUnitName();
+		int lineNumber = breakPoint.getLineNumber();
+		
+		String simpleClassName = className.substring(className.lastIndexOf(".")+1, className.length());
+		
+		try{
+			int order = Integer.valueOf(expression);
+			if(node.getOrder()==order){
+				resultIndex = i;
+			}
+		}
+		catch(Exception e){
+//			if(expression.matches("id=(\\w|\\W)+:\\d+")){
+			if(expression.matches("id=(\\w|\\W)+")){
+				String id = expression.replace("id=", "");
+				for(VarValue readVar: node.getReadVariables()){
+					if(readVar.getVarID().contains(id)){
+						resultIndex = i;
+					}
+					else if(readVar.getAliasVarID()!=null && readVar.getAliasVarID().equals(id)){
+						resultIndex = i;
+					}
+				}
+			}
+			else{
+				String exp = this.combineTraceNodeExpression(className, lineNumber);
+				if(exp.equals(expression)){
+					resultIndex = i;
+				}
+				else if(simpleClassName.equals(expression)){
+					if (resultIndex==-1) {
+						resultIndex = i;					
+					}
+				}
+			}
+		}
+		
+		return resultIndex;
+	}
+	
+	public static String combineTraceNodeExpression(String className, int lineNumber){
+		className = className.substring(className.lastIndexOf(".")+1, className.length());
+		
+		String exp = className + " line:" + lineNumber;
+		return exp;
+	}
+
+	public void conductStateDiff() {
+		for(int i=0; i<this.size(); i++){
+			TraceNode node = this.getExecutionList().get(i);
+			node.conductStateDiff();
+		}
+		
 	}
 	
 	private ControlScope parseControlScope(BreakPoint breakPoint, CFG cfg) {
@@ -170,7 +277,7 @@ public class Trace {
 	public void constructControlDomianceRelation() {
 		TraceNode controlDominator = null;
 		fillInControlScope();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(controlDominator != null){
 				
 				if(isContainedInScope(node, controlDominator.getControlScope())){
@@ -196,7 +303,7 @@ public class Trace {
 
 	private void fillInControlScope() {
 		Map<BreakPoint, List<TraceNode>> breakpointMap = new HashMap<>();
-		for (TraceNode node : exectionList) {
+		for (TraceNode node : executionList) {
 			CollectionUtils.getListInitIfEmpty(breakpointMap, node.getBreakPoint()).add(node);
 		}
 		Map<String, Set<String>> classMethodMap = new HashMap<>();
@@ -270,8 +377,8 @@ public class Trace {
 //	}
 
 	public TraceNode findLastestExceptionNode() {
-		for(int i=0; i<exectionList.size(); i++){
-			TraceNode lastestNode = exectionList.get(exectionList.size()-1-i);
+		for(int i=0; i<executionList.size(); i++){
+			TraceNode lastestNode = executionList.get(executionList.size()-1-i);
 			if(lastestNode.isException()){
 				return lastestNode;
 			}
@@ -280,7 +387,47 @@ public class Trace {
 		return null;
 	}
 	
-	private VariableDefinitions variableDefs = new VariableDefinitions();
+	/**
+	 * Get the step where the read variable is defined. If we cannot find such a 
+	 * step, we find the step defining its (grand)parent of the read variable. 
+	 * @param readVar
+	 * @return
+	 */
+	public TraceNode findDataDependency(TraceNode checkingNode, VarValue readVar) {
+		return findProducer(readVar, checkingNode);
+	}
+
+	public TraceNode findProducer(VarValue varValue, TraceNode startNode) {
+		
+		String varID = Variable.truncateSimpleID(varValue.getVarID());
+		String headID = Variable.truncateSimpleID(varValue.getAliasVarID());
+		
+		for(int i=startNode.getOrder()-1; i>=1; i--) {
+			TraceNode node = this.getTraceNode(i);
+			for(VarValue writtenValue: node.getWrittenVariables()) {
+				
+				String wVarID = Variable.truncateSimpleID(writtenValue.getVarID());
+				String wHeadID = Variable.truncateSimpleID(writtenValue.getAliasVarID());
+				
+				if(wVarID != null && wVarID.equals(varID)) {
+					return node;						
+				}
+				
+				if(wHeadID != null && wHeadID.equals(headID)) {
+					return node;
+				}
+				
+				VarValue childValue = writtenValue.findVarValue(varID, headID);
+				if(childValue != null) {
+					return node;
+				}
+				
+			}
+		}
+		
+		return null;
+	}
+	
 	/**
 	 * if we are finding defining step of a read variable, v, the defining step is the latest
 	 * step defining v.
@@ -369,7 +516,7 @@ public class Trace {
 
 	public Map<String, List<Integer>> getExecutedLocation(){
 		Map<String, List<Integer>> locationMap = new HashMap<>();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			List<Integer> lines = locationMap.get(node.getDeclaringCompilationUnitName());
 			Integer line = node.getLineNumber();
 			if(lines == null){
@@ -403,7 +550,7 @@ public class Trace {
 //	}
 	
 	public TraceNode getTraceNode(int order){
-		return this.exectionList.get(order-1);
+		return this.executionList.get(order-1);
 	}
 
 	public List<String> getIncludedLibraryClasses() {
@@ -436,5 +583,25 @@ public class Trace {
 
 	public void setMain(boolean isMain) {
 		this.isMain = isMain;
+	}
+	
+	public void setId(String id) {
+		this.id = id;
+	}
+	
+	public String getId() {
+		return this.id;
+	}
+
+	public void resetObservingIndex(){
+		this.observingIndex = -1;
+	}
+	
+	public int getObservingIndex() {
+		return observingIndex;
+	}
+
+	public void setObservingIndex(int observingIndex) {
+		this.observingIndex = observingIndex;
 	}
 }

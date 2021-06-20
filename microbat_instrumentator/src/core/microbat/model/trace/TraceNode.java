@@ -1,22 +1,19 @@
 package microbat.model.trace;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import microbat.instrumentation.runtime.InvokingDetail;
+import microbat.graphdiff.GraphDiff;
+import microbat.graphdiff.HierarchyGraphDiffer;
+import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
-import microbat.model.ControlScope;
-import microbat.model.Scope;
+import microbat.model.UserInterestedVariables;
 import microbat.model.value.VarValue;
-import microbat.model.variable.Variable;
-import sav.common.core.utils.CollectionUtils;
+import microbat.util.Settings;
 
 public class TraceNode{
 	
@@ -32,18 +29,19 @@ public class TraceNode{
 	public final static int WRITTEN_VARS_INCORRECT = 7;
 	public final static int WRITTEN_VARS_UNKNOWN = 8;
 	
-	private String invokingMethod = null;
-	private InvokingDetail invokingDetail = null;
+	private Map<AttributionVar, Double> suspicousScoreMap = new HashMap<>();
+	
+	private int checkTime = -1;
 	
 	private BreakPoint breakPoint;
+	private BreakPointValue programState;
 	private BreakPointValue afterStepInState;
 	private BreakPointValue afterStepOverState;
 	
-	private List<VarValue> readVariables;
-	private List<VarValue> writtenVariables;
+	private List<GraphDiff> consequences;
 	
-	private transient Map<String, VarValue> readVariableMap = new HashMap<>();
-	private transient Map<String, VarValue> writtenVariableMap = new HashMap<>();
+	private List<VarValue> readVariables = new ArrayList<>();
+	private List<VarValue> writtenVariables = new ArrayList<>();
 	
 //	private List<VarValue> hiddenReadVariables = new ArrayList<>();
 //	private List<VarValue> hiddenWrittenVariables = new ArrayList<>();
@@ -53,18 +51,12 @@ public class TraceNode{
 	
 	private TraceNode controlDominator;
 	private List<TraceNode> controlDominatees = new ArrayList<>();
+	private HashSet<TraceNode> allControlDominatees;
 	
 	/**
-	 * this filed is used as a temporary field during the trace 
-	 * construction for returning value.
+	 * this filed is used as a temporary field during the trace construction.
 	 */
-	private List<VarValue> returnedVariables;
-	
-	/**
-	 * this filed is used as a temporary field during the trace 
-	 * construction for passing parameter of method invocation.
-	 */
-	private List<VarValue> passParameters = null;
+	private List<VarValue> returnedVariables = new ArrayList<>();
 	
 	/**
 	 * the order of this node in the whole trace, starting from 1.
@@ -80,7 +72,7 @@ public class TraceNode{
 	private List<TraceNode> invocationChildren = new ArrayList<>();
 	private TraceNode invocationParent;
 	
-	private List<TraceNode> loopChildren;
+	private List<TraceNode> loopChildren = new ArrayList<>();
 	private TraceNode loopParent;
 	
 	private boolean isException;
@@ -92,26 +84,38 @@ public class TraceNode{
 	
 	private long timestamp;
 	
-	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
-		this(breakPoint, programState, order, trace, -1, -1);
-	}
+	private transient double sliceBreakerProbability = 0;
 	
-	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace,
-			int initReadVarsSize, int initWrittenVarsSize) {
+	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
+		super();
 		this.breakPoint = breakPoint;
+		this.programState = programState;
 		this.order = order;
 		this.trace = trace;
-		if (initReadVarsSize >= 0) {
-			readVariables = new ArrayList<>(initReadVarsSize);
-		} else {
-			readVariables = new ArrayList<>();
-		}
+	}
+	
+	public List<VarValue> findMarkedReadVariable(){
+		List<VarValue> markedReadVars = new ArrayList<>();
+		for(VarValue readVarValue: this.readVariables){
+			if(Settings.interestedVariables.contains(readVarValue)){
+				markedReadVars.add(readVarValue);
+			}
+		}		
 		
-		if (initWrittenVarsSize >= 0) {
-			writtenVariables = new ArrayList<>(initWrittenVarsSize);
-		} else {
-			writtenVariables = new ArrayList<>();
-		}
+		return markedReadVars;
+	}
+	
+	/**
+	 * @param isUICheck
+	 * whether this trace node is checked on UI for now.
+	 * 
+	 * @return
+	 */
+	public boolean isAllReadWrittenVarCorrect(boolean isUICheck){
+		boolean writtenCorrect = getWittenVarCorrectness(Settings.interestedVariables, isUICheck) == TraceNode.WRITTEN_VARS_CORRECT;
+		boolean readCorrect = getReadVarCorrectness(Settings.interestedVariables, isUICheck) == TraceNode.READ_VARS_CORRECT;
+		
+		return writtenCorrect && readCorrect;
 	}
 	
 	public String getMethodSign() {
@@ -123,13 +127,10 @@ public class TraceNode{
 	}
 	
 	public void addReturnVariable(VarValue var){
-		if (returnedVariables == null) {
-			returnedVariables = new ArrayList<>(5);
-		}
 		this.returnedVariables.add(var);
 	}
 	
-//	public TraceNode getDataDominator(VarValue readVar) {
+	public TraceNode getDataDominator(VarValue readVar) {
 //		TraceNode dataDominator = null;
 //		
 //		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
@@ -140,32 +141,88 @@ public class TraceNode{
 //		}
 //		
 //		return dataDominator;
-//	}
+		
+		return this.trace.findDataDependency(this, readVar);
+	}
 	
-	private TraceNode findLatestProducer(StepVariableRelationEntry entry) {
-		List<TraceNode> producers = entry.getProducers();
+//	private TraceNode findLatestProducer(StepVariableRelationEntry entry) {
+//		List<TraceNode> producers = entry.getProducers();
+//		
+//		if(producers == null){
+//			return null;
+//		}
+//		
+//		TraceNode latestProducer = null;
+//		for(TraceNode producer: producers){
+//			if(producer.getOrder()<this.getOrder()){
+//				if(latestProducer==null){
+//					latestProducer = producer;
+//				}
+//				else{
+//					if(producer.getOrder()>latestProducer.getOrder()){
+//						latestProducer = producer;
+//					}
+//				}
+//			}
+//		}
+//		
+//		return latestProducer;
+//	}
+
+	public int getReadVarCorrectness(UserInterestedVariables interestedVariables, boolean isUICheck){
 		
-		if(producers == null){
-			return null;
-		}
-		
-		TraceNode latestProducer = null;
-		for(TraceNode producer: producers){
-			if(producer.getOrder()<this.getOrder()){
-				if(latestProducer==null){
-					latestProducer = producer;
-				}
-				else{
-					if(producer.getOrder()>latestProducer.getOrder()){
-						latestProducer = producer;
-					}
+		for(VarValue var: getReadVariables()){
+			if(interestedVariables.contains(var)){
+				return TraceNode.READ_VARS_INCORRECT;
+			}
+			
+			List<VarValue> children = var.getAllDescedentChildren();
+			for(VarValue child: children){
+				if(interestedVariables.contains(child)){
+					return TraceNode.READ_VARS_INCORRECT;
 				}
 			}
 		}
 		
-		return latestProducer;
+		/**
+		 * Distinguish between "correct" and "unknown".
+		 * 
+		 * When none of the read variables is located in {@code interestedVariables}, the node is
+		 * correct if either (1) the node has been checked or (2) it is being checked on the UI.
+		 *  
+		 */
+		if(hasChecked() || isUICheck){
+			return TraceNode.READ_VARS_CORRECT;			
+		}
+		else{
+			return TraceNode.READ_VARS_UNKNOWN;
+		}
+		
 	}
-
+	
+	public int getWittenVarCorrectness(UserInterestedVariables interestedVariables, boolean isUICheck){
+		
+		for(VarValue var: getWrittenVariables()){
+			if(interestedVariables.contains(var)){
+				return TraceNode.WRITTEN_VARS_INCORRECT;
+			}
+			
+			List<VarValue> children = var.getAllDescedentChildren();
+			for(VarValue child: children){
+				if(interestedVariables.contains(child)){
+					return TraceNode.READ_VARS_INCORRECT;
+				}
+			}
+		}
+		
+		if(hasChecked()|| isUICheck){
+			return TraceNode.WRITTEN_VARS_CORRECT;
+		}
+		else{
+			return TraceNode.WRITTEN_VARS_UNKNOWN;
+		}
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -229,6 +286,14 @@ public class TraceNode{
 		this.breakPoint = breakPoint;
 	}
 
+	public BreakPointValue getProgramState() {
+		return programState;
+	}
+
+	public void setProgramState(BreakPointValue programState) {
+		this.programState = programState;
+	}
+
 	public int getOrder() {
 		return order;
 	}
@@ -288,16 +353,7 @@ public class TraceNode{
 					stepOverNext = n;
 					return n;
 				}
-				
-				if(p2!=null){
-					int index = p2.getInvocationChildren().size()-1;
-					TraceNode lastChild = p2.getInvocationChildren().get(index);
-					if(n.getOrder()>lastChild.getOrder()){
-						break;						
-					}
-				}
-				
-				if(p1!=null && p2!=null) {
+				else if(p1!=null && p2!=null) {
 					if(p1.getOrder()==p2.getOrder()) {
 						stepOverNext = n;
 						return n;
@@ -323,17 +379,11 @@ public class TraceNode{
 			while(n!=null) {
 				TraceNode p1 = n.getInvocationParent();
 				TraceNode p2 = this.getInvocationParent();
-				
 				if(p1==null && p2==null) {
 					stepOverPrevious = n;
 					return n;
 				}
-				
-				if(p2!=null && n.getOrder()<=p2.getOrder()){
-					break;
-				}
-				
-				if(p1!=null && p2!=null) {
+				else if(p1!=null && p2!=null) {
 					if(p1.getOrder()==p2.getOrder()) {
 						stepOverPrevious = n;
 						return n;
@@ -385,6 +435,24 @@ public class TraceNode{
 		this.afterStepOverState = afterStepOverState;
 	}
 
+	public List<GraphDiff> getConsequences() {
+		return consequences;
+	}
+
+	public void setConsequences(List<GraphDiff> consequences) {
+		this.consequences = consequences;
+	}
+
+	public void conductStateDiff() {
+		BreakPointValue nodeBefore = getProgramState();
+		BreakPointValue nodeAfter = getAfterState();
+		
+		HierarchyGraphDiffer differ = new HierarchyGraphDiffer();
+		differ.diff(nodeBefore, nodeAfter, false);
+		List<GraphDiff> diffs = differ.getDiffs();
+		this.consequences = diffs;
+	}
+	
 	public String getMethodName() {
 		return this.getBreakPoint().getMethodName();
 	}
@@ -393,56 +461,29 @@ public class TraceNode{
 		return this.getBreakPoint().getShortMethodSignature();
 	}
 
-//	public Map<TraceNode, VarValue> getDataDominators() {
-//		Map<TraceNode, VarValue> dataDominators = new HashMap<>();
-//		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
-//		for(VarValue readVar: this.getReadVariables()){
-//			StepVariableRelationEntry entry = table.get(readVar.getVariable().getVarID());
-//			if(entry != null){
-//				TraceNode dominator = findLatestProducer(entry);
-//				if(dominator != null){
-//					dataDominators.put(dominator, readVar);
-//				}
-//			}
-//		}
-//		
-//		return dataDominators;
-//	}
+	public Map<TraceNode, VarValue> getDataDominators() {
+		Map<TraceNode, VarValue> dataDominators = new HashMap<>();
+		for(VarValue readVar: this.getReadVariables()){
+			TraceNode dominator = this.trace.findDataDependency(this, readVar);
+			if(dominator != null){
+				dataDominators.put(dominator, readVar);
+			}
+		}
+		
+		return dataDominators;
+	}
 
-//	public Map<TraceNode, VarValue> getDataDominatee() {
-//		Map<TraceNode, VarValue> dataDominatees = new HashMap<>();
-//		Map<String, StepVariableRelationEntry> table = this.trace.getStepVariableTable();
-//		for(VarValue writtenVar: this.getWrittenVariables()){
-//			StepVariableRelationEntry entry = table.get(writtenVar.getVariable());
-//			if(entry != null){
-//				for(TraceNode consumer: entry.getConsumers()){
-//					dataDominatees.put(consumer, writtenVar);
-//				}
-//			}
-//		}
-//		
-//		return dataDominatees;
-//	}
-
-//	public void addDataDominator(TraceNode node, List<String> variables){
-//		List<String> varIDs = this.dataDominators.get(node);
-//		if(varIDs == null){
-//			this.dataDominators.put(node, variables);
-//		}
-//		else{
-//			varIDs.addAll(variables);
-//		}
-//	}
-//	
-//	public void addDataDominatee(TraceNode node, List<String> variables){
-//		List<String> varIDs = this.dataDominatees.get(node);
-//		if(varIDs == null){
-//			this.dataDominatees.put(node, variables);
-//		}
-//		else{
-//			varIDs.addAll(variables);
-//		}
-//	}
+	public Map<TraceNode, VarValue> getDataDominatee() {
+		Map<TraceNode, VarValue> dataDominatees = new HashMap<>();
+		for(VarValue writtenVar: this.getWrittenVariables()){
+			List<TraceNode> dominatees = this.trace.findDataDependentee(this, writtenVar);
+			for(TraceNode dominatee: dominatees){
+				dataDominatees.put(dominatee, writtenVar);
+			}
+		}
+		
+		return dataDominatees;
+	}
 
 	public boolean isException() {
 		return isException;
@@ -451,29 +492,12 @@ public class TraceNode{
 	public void setException(boolean isException) {
 		this.isException = isException;
 	}
-	
-	public boolean containReadVariable(VarValue readVar){
-		if(!readVariableMap.isEmpty()){
-			return this.readVariableMap.containsKey(readVar.getVarID());			
-		}
-		else{
-			return this.readVariables.contains(readVar);
-		}
-	}
 
-	public Collection<VarValue> getReadVariables() {
-		if(this.readVariables==null || this.readVariables.size() < this.readVariableMap.size()){
-			this.readVariables = new ArrayList<>(this.readVariableMap.values());
+	public List<VarValue> getReadVariables() {
+		if (writtenVariables == null) {
+			// poll database for result
 		}
-		return this.readVariables;
-	}
-	
-	public Collection<VarValue> getWrittenVariables() {
-		if(this.writtenVariables==null || this.writtenVariables.size() < this.writtenVariableMap.size()){
-			this.writtenVariables = new ArrayList<>(writtenVariableMap.values());			
-		}
-		
-		return this.writtenVariables;
+		return readVariables;
 	}
 
 	public void setReadVariables(List<VarValue> readVariables) {
@@ -481,46 +505,53 @@ public class TraceNode{
 	}
 	
 	public void addReadVariable(VarValue var){
-//		VarValue readVar = find(this.readVariables, var);
-//		if(readVar != null){
-//			readVar.setStringValue(var.getStringValue());
-//		}
-//		else{
-//			this.readVariables.add(var);			
-//		}
-		
-		this.readVariableMap.put(var.getVarID(), var);
+		this.readVariables.add(var);
 	}
 	
-	public void addWrittenVariable(VarValue var){
-//		VarValue writtenVar = find(this.writtenVariables, var);
-//		if(writtenVar != null){
-//			writtenVar.setStringValue(var.getStringValue());
-//		}
-//		else{
-//			this.writtenVariables.add(var);			
-//		}
-		
-		this.writtenVariableMap.put(var.getVarID(), var);
-	}
-	
-	private VarValue find(List<VarValue> variables, VarValue var) {
-		for(VarValue existingVar: variables){
-			String simpleID = Variable.truncateSimpleID(existingVar.getVarID());
-			if(simpleID.equals(var.getVarID())){
-				return existingVar;
-			}
+	public List<VarValue> getWrittenVariables() {
+		if (writtenVariables == null) {
+			// poll database for result
 		}
-		return null;
+		return writtenVariables;
 	}
-
-	
 
 	public void setWrittenVariables(List<VarValue> writtenVariables) {
 		this.writtenVariables = writtenVariables;
 	}
 	
+	public void addWrittenVariable(VarValue var){
+		this.writtenVariables.add(var);
+	}
+
+	public Double getSuspicousScore(AttributionVar var) {
+		return this.suspicousScoreMap.get(var);
+	}
+
+	public void setSuspicousScore(AttributionVar var, double suspicousScore) {
+		this.suspicousScoreMap.put(var, suspicousScore);
+	}
 	
+	public void addSuspicousScore(AttributionVar var, double score) {
+		Double ss = getSuspicousScore(var);
+		if(ss == null){
+			setSuspicousScore(var, score);
+		}
+		else{
+			setSuspicousScore(var, ss+score);
+		}
+	}
+
+	public boolean hasChecked(){
+		return checkTime != -1;
+	}
+	
+	public int getCheckTime() {
+		return checkTime;
+	}
+
+	public void setCheckTime(int markTime) {
+		this.checkTime = markTime;
+	}
 
 	public boolean isReadVariablesContains(String varID){
 		for(VarValue readVar: this.getReadVariables()){
@@ -540,59 +571,67 @@ public class TraceNode{
 		return false;
 	}
 	
-//	public Map<Integer, TraceNode> findAllDominators() {
-//		Map<Integer, TraceNode> dominators = new HashMap<>();
-//		
-//		findDominators(this, dominators);
-//		
-//		return dominators;
-//	}
-//
-//	private void findDominators(TraceNode node, Map<Integer, TraceNode> dominators) {
-//		for(TraceNode dominator: node.getDataDominators().keySet()){
-//			if(!dominators.containsKey(dominator.getOrder())){
-//				dominators.put(dominator.getOrder(), dominator);		
-//				findDominators(dominator, dominators);				
-//			}
-//		}
-//		
-//		if(this.controlDominator != null){
-//			dominators.put(this.controlDominator.getOrder(), this.controlDominator);
-//		}
-//		
-//	}
-//	
-//	public Map<Integer, TraceNode> findAllDominatees() {
-//		Map<Integer, TraceNode> dominatees = new HashMap<>();
-//		
-//		findDominatees(this, dominatees);
-//		
-//		return dominatees;
-//	}
-//
-//	private void findDominatees(TraceNode node, Map<Integer, TraceNode> dominatees) {
-//		for(TraceNode dominatee: node.getDataDominatee().keySet()){
-//			if(!dominatees.containsKey(dominatee.getOrder())){
-//				if(dominatee.getOrder() == 1){
-//					System.currentTimeMillis();
-//				}
-//				
-//				dominatees.put(dominatee.getOrder(), dominatee);		
-//				findDominatees(dominatee, dominatees);				
-//			}
-//		}
-//		
-//		for(TraceNode controlDominatee: node.getControlDominatees()){
-//			if(!dominatees.containsKey(controlDominatee.getOrder())){
-//				if(controlDominatee.getOrder() == 1){
-//					System.currentTimeMillis();
-//				}
-//				
-//				dominatees.put(controlDominatee.getOrder(), controlDominatee);
-//				findDominatees(controlDominatee, dominatees);				
-//			}
-//		}
-//	}
+	public Map<AttributionVar, Double> getSuspicousScoreMap() {
+		return suspicousScoreMap;
+	}
+
+	public void setSuspicousScoreMap(Map<AttributionVar, Double> suspicousScoreMap) {
+		this.suspicousScoreMap = suspicousScoreMap;
+	}
+
+	public Map<Integer, TraceNode> findAllDominators() {
+		Map<Integer, TraceNode> dominators = new HashMap<>();
+		
+		findDominators(this, dominators);
+		
+		return dominators;
+	}
+
+	private void findDominators(TraceNode node, Map<Integer, TraceNode> dominators) {
+		for(TraceNode dominator: node.getDataDominators().keySet()){
+			if(!dominators.containsKey(dominator.getOrder())){
+				dominators.put(dominator.getOrder(), dominator);		
+				findDominators(dominator, dominators);				
+			}
+		}
+		
+		if(this.controlDominator != null){
+			dominators.put(this.controlDominator.getOrder(), this.controlDominator);
+		}
+		
+	}
+	
+	public Map<Integer, TraceNode> findAllDominatees() {
+		Map<Integer, TraceNode> dominatees = new HashMap<>();
+		
+		findDominatees(this, dominatees);
+		
+		return dominatees;
+	}
+
+	private void findDominatees(TraceNode node, Map<Integer, TraceNode> dominatees) {
+		for(TraceNode dominatee: node.getDataDominatee().keySet()){
+			if(!dominatees.containsKey(dominatee.getOrder())){
+				if(dominatee.getOrder() == 1){
+					System.currentTimeMillis();
+				}
+				
+				dominatees.put(dominatee.getOrder(), dominatee);		
+				findDominatees(dominatee, dominatees);				
+			}
+		}
+		
+		for(TraceNode controlDominatee: node.getControlDominatees()){
+			if(!dominatees.containsKey(controlDominatee.getOrder())){
+				if(controlDominatee.getOrder() == 1){
+					System.currentTimeMillis();
+				}
+				
+				dominatees.put(controlDominatee.getOrder(), controlDominatee);
+				findDominatees(controlDominatee, dominatees);				
+			}
+		}
+	}
 	
 	public void setControlDominator(TraceNode controlDominator){
 		this.controlDominator = controlDominator;
@@ -601,20 +640,6 @@ public class TraceNode{
 	public TraceNode getControlDominator(){
 		return this.controlDominator;
 	}
-
-//	public List<TraceNode> getControlDominators() {
-//		return controlDominators;
-//	}
-//
-//	public void setControlDominators(List<TraceNode> controlDominators) {
-//		this.controlDominators = controlDominators;
-//	}
-//	
-//	public void addControlDominator(TraceNode dominator){
-//		if(!this.controlDominators.contains(dominator)){
-//			this.controlDominators.add(dominator);
-//		}
-//	}
 
 	public List<TraceNode> getControlDominatees() {
 		return controlDominatees;
@@ -632,6 +657,10 @@ public class TraceNode{
 
 	public boolean isConditional(){
 		return this.breakPoint.isConditional();
+	}
+	
+	public boolean isBranch(){
+		return this.breakPoint.isBranch();
 	}
 	
 	public Scope getControlScope(){
@@ -674,21 +703,37 @@ public class TraceNode{
 		return false;
 	}
 
-	private List<TraceNode> allControlDominatees;
 	public List<TraceNode> findAllControlDominatees() {
 		if(allControlDominatees==null){
-			List<TraceNode> controlDominatees = new ArrayList<>();
+			HashSet<TraceNode> controlDominatees = new HashSet<>();
 			findAllControlDominatees(this, controlDominatees);
 			allControlDominatees = controlDominatees;
 		}
-		return allControlDominatees;
+		
+		
+		return new ArrayList<TraceNode>(allControlDominatees);
 	}
 
-	private void findAllControlDominatees(TraceNode node, List<TraceNode> controlDominatees) {
-		for(TraceNode dominatee: node.getControlDominatees()){
-			if(!controlDominatees.contains(dominatee)){
-				controlDominatees.add(dominatee);
-				findAllControlDominatees(dominatee, controlDominatees);				
+//	private void findAllControlDominatees(TraceNode node, HashSet<TraceNode> controlDominatees) {
+//		System.out.println("Node: " + node.getOrder());
+//		for(TraceNode dominatee: node.getControlDominatees()){
+//			if(!controlDominatees.contains(dominatee)){
+//				controlDominatees.add(dominatee);
+//				findAllControlDominatees(dominatee, controlDominatees);				
+//			}
+//		}
+//	}
+	
+	private void findAllControlDominatees(TraceNode node, HashSet<TraceNode> controlDominatees) {
+		Stack<TraceNode> stack = new Stack<>();
+		stack.push(node);
+		while (!stack.isEmpty()) {
+			TraceNode curNode = stack.pop();
+			for(TraceNode dominatee: curNode.getControlDominatees()){
+				if(!controlDominatees.contains(dominatee)){
+					controlDominatees.add(dominatee);
+					stack.push(dominatee);
+				}
 			}
 		}
 	}
@@ -828,13 +873,9 @@ public class TraceNode{
 		
 //		Collections.sort(abstractChildren, new TraceNodeOrderComparator());
 		
-		if(this.getOrder()==5){
-			System.currentTimeMillis();
-		}
-		
 		abstractChildren.addAll(this.invocationChildren);
 		clearLoopParentsInMethodParent(abstractChildren);
-		for(TraceNode loopChild: getLoopChildren()){
+		for(TraceNode loopChild: this.loopChildren){
 			if(!abstractChildren.contains(loopChild)){
 				abstractChildren.add(loopChild);
 			}
@@ -889,7 +930,11 @@ public class TraceNode{
 	}
 
 	public List<TraceNode> getLoopChildren() {
-		return CollectionUtils.nullToEmpty(loopChildren);
+		return loopChildren;
+	}
+
+	public void setLoopChildren(List<TraceNode> loopChildren) {
+		this.loopChildren = loopChildren;
 	}
 
 	public TraceNode getLoopParent() {
@@ -901,7 +946,6 @@ public class TraceNode{
 	}
 	
 	public void addLoopChild(TraceNode loopChild){
-		loopChildren = CollectionUtils.initIfEmpty(loopChildren);
 		this.loopChildren.add(loopChild);
 	}
 
@@ -925,6 +969,67 @@ public class TraceNode{
 		return allInvocationParents;
 	}
 
+	public void resetCheckTime() {
+		this.checkTime = -1;
+		
+	}
+
+	public boolean isWrongPathNode() {
+		return Settings.wrongPathNodeOrder.contains(new Integer(this.getOrder()));
+	}
+	
+	public List<VarValue> getWrongReadVars(UserInterestedVariables interestedVariables) {
+		List<VarValue> vars = new ArrayList<>();
+		for(VarValue var: getReadVariables()){
+			if(interestedVariables.contains(var)){
+				vars.add(var);
+			}
+			
+			List<VarValue> children = var.getAllDescedentChildren();
+			for(VarValue child: children){
+				if(interestedVariables.contains(child)){
+					if(!vars.contains(child)){
+						vars.add(child);
+					}
+				}
+			}
+		}
+		
+		return vars;
+	}
+
+	public boolean containSynonymousReadVar(VarValue readVar) {
+		for(VarValue readVariable: getReadVariables()){
+			if(readVariable.getVarName().equals(readVar.getVarName())
+					&& readVariable.getClass().equals(readVar.getClass())){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public TraceNode getInvocationMethodOrDominator() {
+		TraceNode controlDom = getControlDominator();
+		TraceNode invocationParent = getInvocationParent();
+		
+		if(controlDom!=null && invocationParent!=null) {
+			if(controlDom.getOrder()<invocationParent.getOrder()) {
+				return invocationParent;
+			}
+			else {
+				return controlDom;
+			}
+		}
+		else if(controlDom!=null && invocationParent==null) {
+			return controlDom;
+		}
+		else if(controlDom==null && invocationParent!=null) {
+			return invocationParent;
+		}
+		
+		return null;
+	}
+
 	public Trace getTrace() {
 		return trace;
 	}
@@ -934,7 +1039,11 @@ public class TraceNode{
 	}
 
 	public List<VarValue> getReturnedVariables() {
-		return CollectionUtils.nullToEmpty(returnedVariables);
+		return returnedVariables;
+	}
+
+	public void setReturnedVariables(List<VarValue> returnedVariables) {
+		this.returnedVariables = returnedVariables;
 	}
 
 	public long getRuntimePC() {
@@ -945,36 +1054,46 @@ public class TraceNode{
 		this.runtimePC = runtimePC;
 	}
 
-	public String getInvokingMethod() {
-		return invokingMethod;
-	}
+	class CatchClauseFinder extends ASTVisitor{
+		int line;
+		CompilationUnit cu;
+		
+		boolean find = false;
+		
+		public CatchClauseFinder(int line, CompilationUnit cu) {
+			super();
+			this.line = line;
+			this.cu = cu;
+		}
 
-	public void setInvokingMethod(String invokingMethod) {
-		this.invokingMethod = invokingMethod;
+		public boolean visit(CatchClause clause){
+			int startLine = cu.getLineNumber(clause.getStartPosition());
+			int endLine = cu.getLineNumber(clause.getStartPosition()+clause.getLength());
+			
+			if(startLine<=line && line<=endLine){
+				find = true;
+			}
+			
+			return false;
+		}
 	}
-
-	public InvokingDetail getInvokingDetail() {
-		return invokingDetail;
+	
+	public boolean insideException() {
+		CompilationUnit cu = JavaUtil.findCompilationUnitInProject(
+				this.getDeclaringCompilationUnitName(), this.getTrace().getAppJavaClassPath());
+		
+//		if(cu==null){
+//			return false;
+//		}
+		
+		CatchClauseFinder finder = new CatchClauseFinder(this.breakPoint.getLineNumber(), cu);
+		cu.accept(finder);
+		
+		return finder.find;
 	}
-
-	public void setInvokingDetail(InvokingDetail invokingDetail) {
-		this.invokingDetail = invokingDetail;
-	}
-
-	public List<VarValue> getPassParameters() {
-		return CollectionUtils.nullToEmpty(passParameters);
-	}
-
-	public void setPassParameters(List<VarValue> passParameters) {
-		this.passParameters = passParameters;
-	}
-
-	public void setControlScope(ControlScope scope) {
-		this.breakPoint.setControlScope(scope);;
-	}
-
-	public boolean isBranch() {
-		return this.breakPoint.isBranch();
+	
+	public void setSourceVersion(boolean flag){
+		this.breakPoint.setSourceVersion(flag);
 	}
 
 	public TraceNode getInvokingMatchNode() {
@@ -985,6 +1104,14 @@ public class TraceNode{
 		this.invokingMatchNode = invokingMatchNode;
 	}
 
+	public double getSliceBreakerProbability() {
+		return sliceBreakerProbability;
+	}
+
+	public void setSliceBreakerProbability(double sliceBreakerProbability) {
+		this.sliceBreakerProbability = sliceBreakerProbability;
+	}
+
 	public long getTimestamp() {
 		return timestamp;
 	}
@@ -993,4 +1120,20 @@ public class TraceNode{
 		this.timestamp = timestamp;
 	}
 
+
+//	public List<VarValue> getHiddenReadVariables() {
+//		return hiddenReadVariables;
+//	}
+//
+//	public void setHiddenReadVariables(List<VarValue> hiddenReadVariables) {
+//		this.hiddenReadVariables = hiddenReadVariables;
+//	}
+//
+//	public List<VarValue> getHiddenWrittenVariables() {
+//		return hiddenWrittenVariables;
+//	}
+//
+//	public void setHiddenWrittenVariables(List<VarValue> hiddenWrittenVariables) {
+//		this.hiddenWrittenVariables = hiddenWrittenVariables;
+//	}
 }

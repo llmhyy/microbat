@@ -71,8 +71,9 @@ public class MysqlTraceRetriever extends DbService {
 		}
 	}
 	
-	protected Trace loadTrace(int traceId, Connection conn, List<AutoCloseable> closables) throws SQLException {
-		Trace trace = new Trace(""); 
+	protected Trace loadTrace(String traceId, Connection conn, List<AutoCloseable> closables) throws SQLException {
+		Trace trace = new Trace(null); 
+		trace.setId(traceId);
 		// load step
 		List<TraceNode> steps = loadSteps(traceId, conn, closables, trace);
 		trace.setExecutionList(steps);
