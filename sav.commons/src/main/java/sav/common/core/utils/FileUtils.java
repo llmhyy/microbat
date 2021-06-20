@@ -193,7 +193,7 @@ public class FileUtils {
 		int fileIdx = FILE_SEQ_START_IDX;
 		Pair<File, Integer> lastFile = getLastFile(dir, filePrefix, fileSuffix);
 		if (lastFile != null) {
-			fileIdx = lastFile.b + 1;
+			fileIdx = lastFile.second() + 1;
 		}
 		String filepath = new StringBuilder(dir).append(File.separator)
 							.append(filePrefix).append(FILE_IDX_START_CH).append(fileIdx).append(fileSuffix)

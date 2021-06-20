@@ -128,8 +128,8 @@ public class JunitResult {
 			IOUtils.write("\n", output);
 			for (Entry<Pair<String, String>, TestResult> entry : testResult.entrySet()) {
 				boolean pass = entry.getValue().isPass();
-				IOUtils.write(StringUtils.spaceJoin(entry.getKey().a,
-						entry.getKey().b, pass), output);
+				IOUtils.write(StringUtils.spaceJoin(entry.getKey().first(),
+						entry.getKey().second(), pass), output);
 				IOUtils.write("\n", output);
 				if (!pass && storeSingleFailTrace) {
 					IOUtils.write(entry.getValue().getFailureTrace(), output);

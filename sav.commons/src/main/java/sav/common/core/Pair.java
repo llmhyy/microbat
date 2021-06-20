@@ -1,19 +1,14 @@
 package sav.common.core;
 
-
-import java.util.Arrays;
-
-import sav.common.core.utils.ObjectUtils;
-
 public class Pair<A, B> {
-	public A a;
-	public B b;
+	private final A a;
+	private final B b;
 
 	public static <A, B> Pair<A, B> of(A a, B b) {
 		return new Pair<A, B>(a, b);
 	}
 
-	public Pair(A a, B b) {
+	private Pair(A a, B b) {
 		this.a = a;
 		this.b = b;
 	}

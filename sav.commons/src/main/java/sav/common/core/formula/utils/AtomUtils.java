@@ -60,15 +60,15 @@ public class AtomUtils {
 			}
 			double curConst = curAtom.getConstant() / curTerm.getCoefficient();
 			double liaConst = liaAtom.getConstant() / liaTerm.getCoefficient();
-			if (isNegation(opPair.a, opPair.b, curConst, liaConst)
-					|| isHalfNegation(opPair.a, opPair.b, curConst, liaConst)
-					|| isHalfNegation(opPair.b, opPair.a, liaConst, curConst)) {
+			if (isNegation(opPair.first(), opPair.second(), curConst, liaConst)
+					|| isHalfNegation(opPair.first(), opPair.second(), curConst, liaConst)
+					|| isHalfNegation(opPair.second(), opPair.first(), liaConst, curConst)) {
 				return ATOMS_NEGATION;
 			}
-			if (isBound(opPair.a, opPair.b, curConst, liaConst)) {
+			if (isBound(opPair.first(), opPair.second(), curConst, liaConst)) {
 				return ATOMS_A_BOUND_B;
 			}
-			if (isBound(opPair.b, opPair.a, liaConst, curConst)) {
+			if (isBound(opPair.first(), opPair.second(), liaConst, curConst)) {
 				return ATOMS_B_BOUND_A;
 			}
 		}

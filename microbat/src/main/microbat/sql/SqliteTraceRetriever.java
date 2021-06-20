@@ -18,6 +18,7 @@ import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import sav.common.core.Pair;
 import sav.common.core.utils.StringUtils;
 
 /**
@@ -90,7 +91,9 @@ public class SqliteTraceRetriever implements TraceRetriever {
 		long a = System.currentTimeMillis();
 		List<TraceNode> allSteps = new ArrayList<>(total);
 		for (int i = 0; i < total; i++) {
-			allSteps.add(new TraceNode(null, null, i + 1, trace));
+			TraceNode node = new TraceNode(null, null, i + 1, trace);
+			node.setRWVarSupplier(() -> this.loadRWVars(node, traceId));
+			allSteps.add(node);
 		}
 		Map<String, List<TraceNode>> locationIdMap = new HashMap<>();
 		while (rs.next()) {
@@ -151,7 +154,7 @@ public class SqliteTraceRetriever implements TraceRetriever {
 		return allSteps;
 	}
 	
-	public void loadRWVars(TraceNode step, String traceId) {
+	public Pair<List<VarValue>, List<VarValue>> loadRWVars(TraceNode step, String traceId) {
 		String loadVarStep = "read_vars";
 		try {
 			PreparedStatement ps = conn.prepareStatement("SELECT read_vars, written_vars from Step where step_order = ? AND trace_id = ?");
@@ -161,16 +164,18 @@ public class SqliteTraceRetriever implements TraceRetriever {
 			closables.add(rs);
 			closables.add(ps);
 			// read_vars
-			step.setReadVariables(toVarValue(rs.getString("read_vars")));
+			List<VarValue>readVars = toVarValue(rs.getString("read_vars"));
 			// written_vars
 			loadVarStep = "written_vars";
-			step.setWrittenVariables(toVarValue(rs.getString("written_vars")));
+			List<VarValue>writeVars = toVarValue(rs.getString("written_vars"));
+			return Pair.of(readVars, writeVars);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
 			System.out.println(String.format("%s: Xml error at step: [trace_id, order] = [%d, %d]", loadVarStep, traceId, step.getOrder()));
 			throw e;
 		}
+		return null;
 	}
 
 	/**
