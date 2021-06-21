@@ -1,6 +1,6 @@
 CREATE TABLE Step
 (
-	trace_id TEXT NOT NULL,
+	trace_id INTEGER NOT NULL,
 	step_order INTEGER NOT NULL,
 	control_dominator INTEGER,
 	step_in INTEGER,
@@ -8,10 +8,10 @@ CREATE TABLE Step
 	invocation_parent INTEGER,
 	loop_parent INTEGER,
 	location_id INTEGER,
-	read_vars MEDIUMTEXT,
-	written_vars MEDIUMTEXT,
-	PRIMARY KEY (trace_id, step_order),
-	FOREIGN KEY (trace_id) REFERENCES Trace(trace_id)
+	read_vars TEXT,
+	written_vars TEXT,
+	time TIMESTAMP,
+	PRIMARY KEY (trace_id, step_order)
 ) 
 ;
 
