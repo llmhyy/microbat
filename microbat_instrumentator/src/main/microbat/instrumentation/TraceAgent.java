@@ -75,6 +75,7 @@ public class TraceAgent implements IAgent {
 		AgentLogger.debug(timer.getResultString());
 	}
 
+	//FIXME this method can be handled in an asynchronized way
 	public void constructTrace(Trace trace) {
 		GlobalFilterChecker.addFilterInfo(trace);
 
@@ -151,7 +152,7 @@ public class TraceAgent implements IAgent {
 				TraceNode firstChild = invocationParent.getInvocationChildren().get(0);
 				if (firstChild.getOrder() == currentNode.getOrder()) {
 					for (VarValue value : currentNode.getPassParameters()) {
-						invocationParent.addWrittenVariable(value);
+						invocationParent.addWrittenVariable(value);							
 					}
 				}
 			}
