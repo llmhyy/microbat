@@ -98,7 +98,11 @@ public class TraceNode{
 	
 	private transient double sliceBreakerProbability = 0;
 	
-	private Supplier<Pair<List<VarValue>, List<VarValue>>> RWVarSupplier;
+	/**
+	 * the first element of the pair is the read variable list, the second element is the 
+	 * written variable list.
+	 */
+	private Supplier<Pair<List<VarValue>, List<VarValue>>> RWVarSupplier = () -> {return Pair.of(readVariables, writtenVariables);};
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
 		super();
