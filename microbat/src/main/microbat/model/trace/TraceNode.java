@@ -53,8 +53,8 @@ public class TraceNode{
 	
 	private List<GraphDiff> consequences;
 	
-	private List<VarValue> readVariables = new ArrayList<>();
-	private List<VarValue> writtenVariables = new ArrayList<>();
+	protected List<VarValue> readVariables = new ArrayList<>();
+	protected List<VarValue> writtenVariables = new ArrayList<>();
 	
 //	private List<VarValue> hiddenReadVariables = new ArrayList<>();
 //	private List<VarValue> hiddenWrittenVariables = new ArrayList<>();
@@ -102,7 +102,6 @@ public class TraceNode{
 	 * the first element of the pair is the read variable list, the second element is the 
 	 * written variable list.
 	 */
-	private Supplier<Pair<List<VarValue>, List<VarValue>>> RWVarSupplier = () -> {return Pair.of(readVariables, writtenVariables);};
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
 		super();
@@ -512,16 +511,7 @@ public class TraceNode{
 		this.isException = isException;
 	}
 	
-	private void populateRWVars() {
-		Pair<List<VarValue>, List<VarValue>> pair = this.RWVarSupplier.get();
-		this.setReadVariables(pair.first());
-		this.setWrittenVariables(pair.second());
-	}
-
 	public List<VarValue> getReadVariables() {
-		if (this.readVariables.isEmpty()) {
-			this.populateRWVars();
-		}
 		return readVariables;
 	}
 
@@ -534,9 +524,6 @@ public class TraceNode{
 	}
 	
 	public List<VarValue> getWrittenVariables() {
-		if (this.writtenVariables.isEmpty()) {
-			this.populateRWVars();
-		}
 		return writtenVariables;
 	}
 
@@ -1145,15 +1132,6 @@ public class TraceNode{
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
-
-	public Supplier<Pair<List<VarValue>, List<VarValue>>> getRWVarSupplier() {
-		return RWVarSupplier;
-	}
-
-	public void setRWVarSupplier(Supplier<Pair<List<VarValue>, List<VarValue>>> rWVarSupplier) {
-		RWVarSupplier = rWVarSupplier;
-	}
-
 
 //	public List<VarValue> getHiddenReadVariables() {
 //		return hiddenReadVariables;

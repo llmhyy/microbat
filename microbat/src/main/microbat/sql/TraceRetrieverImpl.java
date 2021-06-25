@@ -15,6 +15,7 @@ import java.util.Set;
 
 import microbat.handler.xml.VarValueXmlReader;
 import microbat.model.BreakPoint;
+import microbat.model.trace.LazyTraceNode;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -22,9 +23,11 @@ import sav.common.core.Pair;
 import sav.common.core.utils.StringUtils;
 
 /**
- * @author dingyuchen SQL lite
+ * The retriever works on any DBMS since DBMS-specific details are handled by DBService and connection factory
+ * @author dingyuchen
+ *
  */
-public class SqliteTraceRetriever implements TraceRetriever {
+public class TraceRetrieverImpl implements TraceRetriever {
 	private static final String GET_LATEST_TRACE_ID_QUERY = 
 			"SELECT trace_id, thread_id, thread_name, isMain FROM Trace WHERE run_id = ?";
 	private static final String GET_TRACE_WITH_STEP = 
@@ -36,7 +39,7 @@ public class SqliteTraceRetriever implements TraceRetriever {
 	private final Connection conn;
 	private List<AutoCloseable> closables = new ArrayList<>();
 
-	public SqliteTraceRetriever(Connection conn) {
+	public TraceRetrieverImpl(Connection conn) {
 		this.conn = conn;
 	}
 
@@ -76,11 +79,11 @@ public class SqliteTraceRetriever implements TraceRetriever {
 
 	protected void loadTrace(Trace trace) throws SQLException {
 		// load step
-		List<TraceNode> steps = loadSteps(trace);
+		List<TraceNode> steps = getSteps(trace);
 		trace.setExecutionList(steps);
 	}
 
-	private List<TraceNode> loadSteps(Trace trace) throws SQLException {
+	private List<TraceNode> getSteps(Trace trace) throws SQLException {
 		String traceId = trace.getId();
 		PreparedStatement ps = conn.prepareStatement(GET_STEPS);
 		ps.setString(1, traceId);
@@ -91,8 +94,7 @@ public class SqliteTraceRetriever implements TraceRetriever {
 		long a = System.currentTimeMillis();
 		List<TraceNode> allSteps = new ArrayList<>(total);
 		for (int i = 0; i < total; i++) {
-			TraceNode node = new TraceNode(null, null, i + 1, trace);
-			node.setRWVarSupplier(() -> this.loadRWVars(node, traceId));
+			TraceNode node = new LazyTraceNode(null, null, i + 1, trace, step -> this.loadRWVars(step, traceId));
 			allSteps.add(node);
 		}
 		Map<String, List<TraceNode>> locationIdMap = new HashMap<>();

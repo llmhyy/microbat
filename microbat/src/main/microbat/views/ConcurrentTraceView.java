@@ -65,8 +65,6 @@ import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.sql.DbService;
-import microbat.sql.SqliteTraceRetriever;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
@@ -216,13 +214,6 @@ public class ConcurrentTraceView extends TraceView {
 		 * This step will trigger a callback function of node selection.
 		 */
 		curTreeViewer.setSelection(new StructuredSelection(node), true);
-		Connection conn = null;
-		try {
-			conn = DbService.getConnection();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		new SqliteTraceRetriever(conn).loadRWVars(node, trace.getId());
 		programmingSelection = false;
 		this.refreshProgramState = true;
 
@@ -262,7 +253,8 @@ public class ConcurrentTraceView extends TraceView {
 				sourceEditor.selectAndReveal(region.getOffset(), 0);
 			}
 
-			ReferenceAnnotation annotation = new ReferenceAnnotation(false, "Please check the status of this line");
+			ReferenceAnnotation annotation = new ReferenceAnnotation(false,
+					"Please check the status of this line");
 			Position position = new Position(region.getOffset(), region.getLength());
 
 			annotationModel.addAnnotation(annotation, position);
@@ -389,7 +381,8 @@ public class ConcurrentTraceView extends TraceView {
 						// String simpleSig =
 						// node.getMethodSign().substring(node.getMethodSign().indexOf("#")+1,
 						// node.getMethodSign().length());
-						// MethodFinderBySignature finder = new MethodFinderBySignature(simpleSig);
+						// MethodFinderBySignature finder = new
+						// MethodFinderBySignature(simpleSig);
 						// ByteCodeParser.parse(node.getClassCanonicalName(), finder,
 						// node.getTrace().getAppJavaClassPath());
 						// System.currentTimeMillis();
@@ -397,9 +390,11 @@ public class ConcurrentTraceView extends TraceView {
 						// showDebuggingInfo(node);
 
 						if (!programmingSelection) {
-							Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
+							Behavior behavior = BehaviorData
+									.getOrNewBehavior(Settings.launchClass);
 							behavior.increaseAdditionalClick();
-							new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
+							new BehaviorReporter(Settings.launchClass)
+									.export(BehaviorData.projectBehavior);
 						}
 
 						otherViewsBehavior(node);
@@ -453,7 +448,8 @@ public class ConcurrentTraceView extends TraceView {
 				}
 
 				if (curTreeViewer.getSelection() instanceof IStructuredSelection) {
-					IStructuredSelection selection = (IStructuredSelection) curTreeViewer.getSelection();
+					IStructuredSelection selection = (IStructuredSelection) curTreeViewer
+							.getSelection();
 					TraceNode node = (TraceNode) selection.getFirstElement();
 
 					String className = node.getBreakPoint().getDeclaringCompilationUnitName();
@@ -639,7 +635,8 @@ public class ConcurrentTraceView extends TraceView {
 
 				String className = breakPoint.getClassCanonicalName();
 				if (className.contains(".")) {
-					className = className.substring(className.lastIndexOf(".") + 1, className.length());
+					className = className.substring(className.lastIndexOf(".") + 1,
+							className.length());
 				}
 
 				// String methodName = breakPoint.getMethodName();
@@ -648,7 +645,8 @@ public class ConcurrentTraceView extends TraceView {
 
 				// TODO it is better to parse method name as well.
 				// String message = className + "." + methodName + "(...): line " + lineNumber;
-				String message = order + ". " + MicroBatUtil.combineTraceNodeExpression(className, lineNumber);
+				String message = order + ". "
+						+ MicroBatUtil.combineTraceNodeExpression(className, lineNumber);
 				return message;
 
 			}
@@ -658,5 +656,4 @@ public class ConcurrentTraceView extends TraceView {
 
 	}
 
-	
 }

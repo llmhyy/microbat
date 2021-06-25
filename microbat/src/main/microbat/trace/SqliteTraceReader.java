@@ -12,7 +12,7 @@ import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
 import microbat.sql.DbService;
-import microbat.sql.SqliteTraceRetriever;
+import microbat.sql.TraceRetrieverImpl;
 import microbat.sql.TraceRetriever;
 import sav.commons.testdata.calculator.CalculatorTest1;
 
@@ -32,7 +32,7 @@ public class SqliteTraceReader implements TraceReader {
 			// should not fail here, since SqliteTrace is selected
 			e.printStackTrace();
 		}
-		this.traceRetriever = new SqliteTraceRetriever(conn);
+		this.traceRetriever = new TraceRetrieverImpl(conn);
 		this.runId = runId;
 	}
 
