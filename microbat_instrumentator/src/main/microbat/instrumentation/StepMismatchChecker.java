@@ -12,7 +12,7 @@ import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
 
 public class StepMismatchChecker {
-	private static boolean check = false;;
+	private static boolean check = false;
 	
 	public static void logPrecheckSteps(TraceInfo info) {
 		if (!check) {

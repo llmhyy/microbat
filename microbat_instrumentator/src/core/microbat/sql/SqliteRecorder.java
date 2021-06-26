@@ -76,8 +76,8 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 	}
 
 	/**
-	 * TODO add insert Run table So,there run id is not clear ,and thread_name is
-	 * also no clear TODO add Variable to tb
+	 * 
+	 * 	 
 	 */
 	public String insertTrace(Trace trace, String runId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
@@ -107,7 +107,6 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		insertLocation(traceId, exectionList, conn, closables);
-		int count = 0;
 		for (int i = 0; i < exectionList.size(); i++) {
 			TraceNode node = exectionList.get(i);
 			int idx = 1;
@@ -122,14 +121,8 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 			ps.setString(idx++, generateXmlContent(node.getReadVariables()));
 			ps.setString(idx++, generateXmlContent(node.getWrittenVariables()));
 			ps.addBatch();
-			if (++count == BATCH_SIZE) {
-				ps.executeBatch();
-				count = 0;
-			}
 		}
-		if (count > 0) {
-			ps.executeBatch();
-		}
+		ps.executeBatch();
 	}
 
 	// TODO value_string is not true instance
@@ -176,7 +169,6 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 				+ "VALUES (?,?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
-		int count = 0;
 		HashSet<BreakPoint> set = getLoactionSet(nodes);
 		List<String> ids = new ArrayList<>();
 		for (BreakPoint location : set) {
@@ -190,14 +182,9 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 			ps.setBoolean(idx++, location.isReturnStatement());
 			ids.add(locationId);
 			ps.addBatch();
-			if (++count == BATCH_SIZE) {
-				ps.executeBatch();
-				count = 0;
-			}
 		}
-		if (count > 0) {
-			ps.executeBatch();
-		}
+
+		ps.executeBatch();
 
 		if (ids.size() != set.size()) {
 			throw new SQLException("Number of locations is incorrect!");

@@ -1,6 +1,6 @@
 CREATE TABLE Step
 (
-	trace_id INTEGER NOT NULL,
+	trace_id TEXT NOT NULL,
 	step_order INTEGER NOT NULL,
 	control_dominator INTEGER,
 	step_in INTEGER,
@@ -10,8 +10,9 @@ CREATE TABLE Step
 	location_id INTEGER,
 	read_vars TEXT,
 	written_vars TEXT,
-	time TIMESTAMP,
-	PRIMARY KEY (trace_id, step_order)
+	time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (trace_id, step_order),
+	FOREIGN KEY (trace_id) REFERENCES Trace(trace_id)
 ) 
 ;
 
