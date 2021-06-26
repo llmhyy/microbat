@@ -24,6 +24,7 @@ import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.RunningInformation;
 import microbat.codeanalysis.runtime.StepLimitException;
 import microbat.evaluation.junit.TestCaseAnalyzer;
+import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
 import microbat.util.JavaUtil;
@@ -100,7 +101,10 @@ public class StartDebugHandler extends AbstractHandler {
 						List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
 						InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
 								generateTraceDir(appClassPath), "trace", includedClassNames, excludedClassNames);
-						final RunningInformation result = executor.run();
+						final RunningInfo result = executor.run();
+						if (result == null) {
+							throw new Exception("Execution failed");
+						}
 						
 						monitor.worked(80);
 						
@@ -123,6 +127,7 @@ public class StartDebugHandler extends AbstractHandler {
 						System.out.println("Step limit exceeded");
 						e.printStackTrace();
 					} catch (Exception e) {
+						System.out.println("Debug failed");
 						e.printStackTrace();
 					}
 					finally{

@@ -121,7 +121,7 @@ public class InstrumentationExecutor {
 		return agentRunner;
 	}
 	
-	public RunningInformation run() throws StepLimitException {
+	public RunningInfo run() throws StepLimitException {
 		try {
 //			System.out.println("first precheck..");
 //			agentRunner.precheck(null);
@@ -155,13 +155,13 @@ public class InstrumentationExecutor {
 //			agentRunner.getConfig().setDebug(Settings.isRunWtihDebugMode);
 //			agentRunner.getConfig().setPort(8000);
 			
-			RunningInformation rInfo = execute(precheckInfomation);
+			RunningInfo rInfo = execute(precheckInfomation);
 			return rInfo;
 		} catch (SavException e1) {
 			e1.printStackTrace();
 		}
 		
-		return new RunningInformation("", -1, -1, new ArrayList<Trace>());
+		return null;
 	}
 	
 	public PreCheckInformation runPrecheck(String dumpFile, int stepLimit) {
@@ -188,7 +188,7 @@ public class InstrumentationExecutor {
 		return new PreCheckInformation(-1, -1, false, new ArrayList<ClassLocation>(), new ArrayList<String>(), new ArrayList<String>());
 	}
 	
-	public RunningInformation execute(PreCheckInformation info) {
+	public RunningInfo execute(PreCheckInformation info) {
 		try {
 			long start = System.currentTimeMillis();
 //			agentRunner.getConfig().setPort(8888);
@@ -211,10 +211,7 @@ public class InstrumentationExecutor {
 			appendMissingInfo(trace, appPath);
 			trace.setConstructTime((int) (System.currentTimeMillis() - start));
 			
-			RunningInformation information = new RunningInformation(result.getProgramMsg(), result.getExpectedSteps(), 
-					result.getCollectedSteps(), result.getTraceList());
-			
-			return information;
+			return result;
 		} catch (SavException e1) {
 			e1.printStackTrace();
 		}
