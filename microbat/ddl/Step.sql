@@ -10,7 +10,7 @@ CREATE TABLE Step
 	location_id INTEGER,
 	read_vars TEXT,
 	written_vars TEXT,
-	time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	time TIMESTAMP NOT NULL,
 	PRIMARY KEY (trace_id, step_order),
 	FOREIGN KEY (trace_id) REFERENCES Trace(trace_id)
 ) 
