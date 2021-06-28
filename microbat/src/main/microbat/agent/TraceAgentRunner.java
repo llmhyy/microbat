@@ -211,8 +211,11 @@ public class TraceAgentRunner extends AgentVmRunner {
 			reader = new TraceOutputReader(inputStream);
 			String msg = reader.readString();
 			updateTestResult(msg);
-			runningInfo = new RunningInfo();
-			runningInfo.setTraceList(reader.readTrace());
+			List<Trace> traces = reader.readTrace();
+			int collected = traces.stream()
+					.mapToInt(trace -> trace.size())
+					.sum();
+			runningInfo = new RunningInfo(msg, traces, precheckInfo.getStepTotal(), collected);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

@@ -23,6 +23,7 @@ import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import microbat.sql.DBSettings;
 import sav.common.core.utils.CollectionUtils;
 
+@Deprecated
 public class DbCreator {
 	public static void main(String[] args) {
 		try {

@@ -31,11 +31,9 @@ public class FileRecorder implements TraceRecorder {
 		
 //		Trace trace = traceList.get(0);
 		
-		RunningInfo result = new RunningInfo();
-		result.setProgramMsg(Agent.getProgramMsg());
-		result.setTraceList(traceList);
-		result.setCollectedSteps(traceList.get(0).getExecutionList().size());
-		result.setExpectedSteps(agentParams.getExpectedSteps());
+		int collectedSteps = traceList.get(0).getExecutionList().size();
+		int expectedSteps = agentParams.getExpectedSteps();
+		RunningInfo result = new RunningInfo(Agent.getProgramMsg(), traceList, collectedSteps, expectedSteps);
 		try {
 			result.saveToFile(agentParams.getDumpFile(), false);
 		} catch (IOException e) {

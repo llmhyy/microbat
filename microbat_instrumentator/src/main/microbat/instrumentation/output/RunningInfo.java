@@ -25,6 +25,13 @@ public class RunningInfo {
 	private int expectedSteps;
 	private int collectedSteps;
 	
+	public RunningInfo(String programMsg, List<Trace> traceList, int expectedSteps, int collectedSteps) {
+		this.programMsg = programMsg;
+		this.traceList = traceList;
+		this.expectedSteps = expectedSteps;
+		this.collectedSteps = collectedSteps;
+	}
+	
 	public static RunningInfo readFromFile(String execTraceFile) { 
 		return readFromFile(new File(execTraceFile));
 	}
@@ -35,17 +42,19 @@ public class RunningInfo {
 		try {
 			stream = new FileInputStream(execTraceFile);
 			reader = new TraceOutputReader(new BufferedInputStream(stream), execTraceFile.getParent());
-			RunningInfo info = new RunningInfo();
 			String header = reader.readString();
+			String programMsg;
+			int expectedSteps = 0;
+			int collectedSteps = 0;
 			if (HEADER.equals(header)) {
-				info.programMsg = reader.readString();
-				info.expectedSteps = reader.readInt();
-				info.collectedSteps = reader.readInt();
+				programMsg = reader.readString();
+				expectedSteps = reader.readInt();
+				collectedSteps = reader.readInt();
 			} else {
-				info.programMsg = header; // for compatible reason with old version. TO BE REMOVED.
+				programMsg = header; // for compatible reason with old version. TO BE REMOVED.
 			}
-			info.setTraceList(reader.readTrace());
-			return info;
+			List<Trace> traceList = reader.readTrace();
+			return new RunningInfo(programMsg, traceList, expectedSteps, collectedSteps);
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new SavRtException(e);
@@ -67,7 +76,7 @@ public class RunningInfo {
 			}
 		}
 		
-		return new Trace(null);
+		return null;
 	}
 	
 	public void saveToFile(String dumpFile, boolean append) throws IOException {

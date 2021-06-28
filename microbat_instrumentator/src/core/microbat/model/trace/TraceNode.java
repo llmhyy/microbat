@@ -93,11 +93,11 @@ public class TraceNode{
 	private long timestamp;
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
-		this(breakPoint, programState, order, trace, -1, -1);
+		this(breakPoint, programState, order, trace, -1, -1, System.currentTimeMillis());
 	}
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace,
-			int initReadVarsSize, int initWrittenVarsSize) {
+			int initReadVarsSize, int initWrittenVarsSize, long timestamp) {
 		this.breakPoint = breakPoint;
 		this.order = order;
 		this.trace = trace;
@@ -112,6 +112,7 @@ public class TraceNode{
 		} else {
 			writtenVariables = new ArrayList<>();
 		}
+		this.timestamp = timestamp;
 	}
 	
 	public String getMethodSign() {
@@ -988,9 +989,8 @@ public class TraceNode{
 	public long getTimestamp() {
 		return timestamp;
 	}
-
+	
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
-
 }

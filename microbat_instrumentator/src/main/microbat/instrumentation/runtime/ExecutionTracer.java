@@ -648,9 +648,8 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 //			}
 
 			BreakPoint bkp = new BreakPoint(className, methodSignature, line);
-			TraceNode currentNode = new TraceNode(bkp, null, order, trace, numOfReadVars, numOfWrittenVars);
 			long timestamp = System.currentTimeMillis();
-			currentNode.setTimestamp(timestamp);
+			TraceNode currentNode = new TraceNode(bkp, null, order, trace, numOfReadVars, numOfWrittenVars, timestamp);
 
 			trace.addTraceNode(currentNode);
 			AgentLogger.printProgress(order);

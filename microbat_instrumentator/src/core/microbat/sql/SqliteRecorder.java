@@ -1,6 +1,7 @@
 package microbat.sql;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -103,7 +104,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 	private void insertSteps(String traceId, List<TraceNode> exectionList, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
 		String sql = "INSERT INTO Step (trace_id, step_order, control_dominator, step_in, step_over, invocation_parent, loop_parent,"
-				+ "location_id, read_vars, written_vars) VALUES (?,?,?,?,?,?,?,?,?,?)";
+				+ "location_id, read_vars, written_vars, time) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		insertLocation(traceId, exectionList, conn, closables);
@@ -120,6 +121,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 			ps.setString(idx++, node.getDeclaringCompilationUnitName() + "_" + node.getLineNumber());
 			ps.setString(idx++, generateXmlContent(node.getReadVariables()));
 			ps.setString(idx++, generateXmlContent(node.getWrittenVariables()));
+			ps.setDate(idx, new Date(node.getTimestamp()));
 			ps.addBatch();
 		}
 		ps.executeBatch();

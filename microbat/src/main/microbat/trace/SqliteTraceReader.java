@@ -44,18 +44,11 @@ public class SqliteTraceReader implements TraceReader {
 		
 		List<Trace> traces = this.traceRetriever.getTraces(runId);
 		
-		RunningInfo info = new RunningInfo();
-		info.setTraceList(traces);
-		if (traces.size() == 0) {
-			info.setCollectedSteps(0);
-		} else {
-			info.setCollectedSteps(traces.get(0).getExecutionList().size());
-		}
-//		info.setCollectedSteps(traces.get(0).getExecutionList().size());
-		info.setExpectedSteps(precheckInfo.getStepTotal());
-		info.setProgramMsg(precheckInfo.getProgramMsg());
+		int collectedSteps = traces.isEmpty() ? 0 : 
+			traces.stream().mapToInt(trace -> trace.size()).sum();
+		int expectedSteps = precheckInfo.getStepTotal();
 		
-		return info;
+		return new RunningInfo(precheckInfo.getProgramMsg(), traces, expectedSteps, collectedSteps);
 	}
 
 }
