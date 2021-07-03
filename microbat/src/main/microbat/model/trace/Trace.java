@@ -58,7 +58,7 @@ public class Trace {
 	 */
 	private int checkTime = 1;
 	
-	private List<TraceNode> exectionList = new ArrayList<>();
+	private List<TraceNode> executionList = new ArrayList<>();
 	/**
 	 * tracking which steps read/write what variables, and what variables are read/written by which steps.
 	 * key is the variable ID, and value is the entry containing all the steps reading/writing the corresponding
@@ -82,24 +82,24 @@ public class Trace {
 	}
 	
 	public List<TraceNode> getExecutionList() {
-		return exectionList;
+		return executionList;
 	}
 
 	public void setExecutionList(List<TraceNode> exectionList) {
-		this.exectionList = exectionList;
+		this.executionList = exectionList;
 	}
 	
 	public void addTraceNode(TraceNode node){
-		this.exectionList.add(node);
+		this.executionList.add(node);
 	}
 	
 	public int size(){
-		return this.exectionList.size();
+		return this.executionList.size();
 	}
 	
 	public List<TraceNode> getTopMethodLevelNodes(){
 		List<TraceNode> topList = new ArrayList<>();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(node.getInvocationParent() == null){
 				topList.add(node);
 			}
@@ -110,7 +110,7 @@ public class Trace {
 	
 	public List<TraceNode> getTopLoopLevelNodes(){
 		List<TraceNode> topList = new ArrayList<>();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(node.getLoopParent() == null){
 				topList.add(node);
 			}
@@ -121,7 +121,7 @@ public class Trace {
 	
 	public List<TraceNode> getTopAbstractionLevelNodes(){
 		List<TraceNode> topList = new ArrayList<>();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(node.getAbstractionParent() == null){
 				topList.add(node);
 			}
@@ -133,7 +133,7 @@ public class Trace {
 	public TraceNode getLatestNode(){
 		int len = size();
 		if(len > 0){
-			return this.exectionList.get(len-1);
+			return this.executionList.get(len-1);
 		}
 		else{
 			return null;
@@ -175,7 +175,7 @@ public class Trace {
 	public int searchForwardTraceNode(String expression){
 		int resultIndex = -1;
 		
-		for(int i=observingIndex+1; i<exectionList.size(); i++){
+		for(int i=observingIndex+1; i<executionList.size(); i++){
 			resultIndex = searchTraceNode(expression, i);
 			if(resultIndex != -1){
 				break;
@@ -190,7 +190,7 @@ public class Trace {
 
 	private int searchTraceNode(String expression, int i) {
 		int resultIndex = -1;
-		TraceNode node = exectionList.get(i);
+		TraceNode node = executionList.get(i);
 		BreakPoint breakPoint = node.getBreakPoint();
 		String className = breakPoint.getDeclaringCompilationUnitName();
 		int lineNumber = breakPoint.getLineNumber();
@@ -240,8 +240,8 @@ public class Trace {
 	}
 
 	public void conductStateDiff() {
-		for(int i=0; i<this.exectionList.size(); i++){
-			TraceNode node = this.exectionList.get(i);
+		for(int i=0; i<this.executionList.size(); i++){
+			TraceNode node = this.executionList.get(i);
 			node.conductStateDiff();
 		}
 		
@@ -298,8 +298,8 @@ public class Trace {
 		varID = Variable.truncateSimpleID(varID);
 		
 		List<TraceNode> list = new ArrayList<>();
-		for(int i=startOrder; i<this.exectionList.size(); i++){
-			TraceNode node = this.exectionList.get(i);
+		for(int i=startOrder; i<this.executionList.size(); i++){
+			TraceNode node = this.executionList.get(i);
 			for(VarValue readVar: node.getReadVariables()){
 				if(readVar.getAliasVarID()!=null){
 					String readVarID = Variable.truncateSimpleID(readVar.getAliasVarID());
@@ -318,7 +318,7 @@ public class Trace {
 	public List<TraceNode> findPrevReadingTraceNodes(VarValue value, int startOrder){
 		List<TraceNode> list = new ArrayList<>();
 		for(int i=startOrder-2; i>0; i--){
-			TraceNode node = this.exectionList.get(i);
+			TraceNode node = this.executionList.get(i);
 			if(node.getReadVariables().contains(value)){
 				list.add(node);
 			}
@@ -330,7 +330,7 @@ public class Trace {
 	public void constructLoopParentRelation(){
 		Stack<TraceNode> loopParentStack = new Stack<>();
 		System.currentTimeMillis();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			
 			/**
 			 * if out of the scope the loop parent, pop
@@ -435,7 +435,7 @@ public class Trace {
 	
 	private void constructControlDomianceRelation() {
 		TraceNode controlDominator = null;
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(controlDominator != null){
 				
 				if(isContainedInScope(node, controlDominator.getControlScope())){
@@ -697,7 +697,7 @@ public class Trace {
 
 	public TraceNode findLatestNodeDefiningVariable(String varID, int startingOrder){
 		for(int i=startingOrder-2; i>=0; i--){
-			TraceNode node = exectionList.get(i);
+			TraceNode node = executionList.get(i);
 			int count = 0;
 			for(VarValue var: node.getWrittenVariables()){
 				count++;
@@ -735,7 +735,7 @@ public class Trace {
 	 */
 	public String findTrueIDFromStateVariable(String varID, int order) {
 		for(int i=order; i>=1; i--){
-			TraceNode node = this.exectionList.get(i-1);
+			TraceNode node = this.executionList.get(i-1);
 			String trueID = findTrueID(node.getWrittenVariables(), varID); 
 			
 			if(trueID != null){
@@ -776,7 +776,7 @@ public class Trace {
 	}
 	
 	public void clearAllSuspiciousness(){
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			node.getSuspicousScoreMap().clear();
 		}
 	}
@@ -807,7 +807,7 @@ public class Trace {
 	
 	public TraceNode findMostSupiciousNode(AttributionVar var) {
 		TraceNode suspiciousNode = null;
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(suspiciousNode == null){
 				suspiciousNode = node;
 			}
@@ -859,7 +859,7 @@ public class Trace {
 
 		List<TraceNode> range = new ArrayList<>();
 		for(int i=controlLoopDominator.getOrder()-2; i>=0; i--){
-			TraceNode node = this.exectionList.get(i);
+			TraceNode node = this.executionList.get(i);
 			boolean isInSameLoop = isInSameLoop(node, controlLoopDominator);
 			if(isInSameLoop){
 				range.add(node);
@@ -870,8 +870,8 @@ public class Trace {
 		}
 		
 		TraceNode lastLoopNode = allControlDominatees.get(allControlDominatees.size()-1);
-		for(int i=lastLoopNode.getOrder()-1+1; i<exectionList.size(); i++){
-			TraceNode node = this.exectionList.get(i);
+		for(int i=lastLoopNode.getOrder()-1+1; i<executionList.size(); i++){
+			TraceNode node = this.executionList.get(i);
 			boolean isInSameLoop = isInSameLoop(node, controlLoopDominator);
 			if(isInSameLoop){
 				range.add(node);
@@ -903,7 +903,7 @@ public class Trace {
 	}
 
 	public TraceNode getEarliestNodeWithWrongVar() {
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(node.getWittenVarCorrectness(Settings.interestedVariables, false)==TraceNode.WRITTEN_VARS_INCORRECT
 					|| node.getReadVarCorrectness(Settings.interestedVariables, false)==TraceNode.READ_VARS_INCORRECT){
 				return node;
@@ -952,7 +952,7 @@ public class Trace {
 	}
 
 	public TraceNode getLatestWrongNode() {
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(!node.isAllReadWrittenVarCorrect(false) || node.isWrongPathNode()){
 				return node;
 			}
@@ -962,7 +962,7 @@ public class Trace {
 
 	public Map<String, List<Integer>> getExecutedLocation(){
 		Map<String, List<Integer>> locationMap = new HashMap<>();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			List<Integer> lines = locationMap.get(node.getDeclaringCompilationUnitName());
 			Integer line = node.getLineNumber();
 			if(lines == null){
@@ -996,12 +996,12 @@ public class Trace {
 	}
 	
 	public TraceNode getTraceNode(int order){
-		return this.exectionList.get(order-1);
+		return this.executionList.get(order-1);
 	}
 
 	public List<BreakPoint> allLocations() {
 		List<BreakPoint> locations = new ArrayList<>();
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			if(!locations.contains(node.getBreakPoint())){
 				locations.add(node.getBreakPoint());
 			}
@@ -1011,7 +1011,7 @@ public class Trace {
 	}
 
 	public void setSourceVersion(boolean isBuggy) {
-		for(TraceNode node: this.exectionList){
+		for(TraceNode node: this.executionList){
 			node.setSourceVersion(isBuggy);
 		}
 	}
