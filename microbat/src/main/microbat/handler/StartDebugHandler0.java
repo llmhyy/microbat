@@ -38,7 +38,11 @@ import microbat.views.TraceView;
 import sav.common.core.SavException;
 import sav.strategies.dto.AppJavaClassPath;
 
+/*
+ * StartDebugHandler0 is a backup 
+ */
 public class StartDebugHandler0 extends AbstractHandler {
+
 	
 	private void clearOldData(){
 		Settings.interestedVariables.clear();
