@@ -19,7 +19,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import microbat.codeanalysis.bytecode.ByteCodeParser;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.PreCheckInformation;
-import microbat.codeanalysis.runtime.RunningInformation;
+import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.mutation.mutation.ControlDominatedMutationVisitor;
@@ -147,7 +147,7 @@ public class MutationGenerator {
 		}
 
 		System.out.println(params.getTestcaseName() + " is a passed test case");
-		RunningInformation info = executor.execute(precheckInfo);
+		RunningInfo info = executor.execute(precheckInfo);
 		if (!info.isExpectedStepsMet()) {
 			return null;
 		}
@@ -314,7 +314,7 @@ public class MutationGenerator {
 		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, traceDir, "bug",
 				includedClassNames, excludedClassNames);
 		executor.setTimeout(params.getAnalysisParams().getExecutionTimeout());
-		RunningInformation runningInfo = executor.execute(buggyPrecheck);
+		RunningInfo runningInfo = executor.execute(buggyPrecheck);
 		return runningInfo.getTraceList().get(0);
 	}
 	
@@ -325,7 +325,7 @@ public class MutationGenerator {
 		InstrumentationExecutor executor = new InstrumentationExecutor(testcaseConfig, outputFolder, "fix",
 				includedClassNames, excludedClassNames);
 		executor.setTimeout(params.getAnalysisParams().getExecutionTimeout());
-		RunningInformation info = executor.execute(correctPrecheck);
+		RunningInfo info = executor.execute(correctPrecheck);
 		return info.getTraceList().get(0);
 	}
 	
@@ -396,7 +396,7 @@ public class MutationGenerator {
 					System.out.println("A valid trace of " + precheck.getStepNum() + 
 							" steps is to be generated for " + testMethod + " (mutation: " + mutation.getFile() + ")");
 					long t1 = System.currentTimeMillis();
-					RunningInformation info = executor.execute(precheck);
+					RunningInfo info = executor.execute(precheck);
 					if(info.isExpectedStepsMet()){
 						Trace trace = info.getTraceList().get(0);
 						long t2 = System.currentTimeMillis();
