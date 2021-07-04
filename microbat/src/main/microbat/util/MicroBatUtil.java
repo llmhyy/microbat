@@ -327,8 +327,8 @@ public class MicroBatUtil {
 		return (T) obj;
 	}
 	
-	public static String combineTraceNodeExpression(String className, int lineNumber){
-		String exp = className + " line:" + lineNumber;
+	public static String combineTraceNodeExpression(String className, int lineNumber, long duration){
+		String exp = className + " line:" + lineNumber + " duration: " + duration + "ms";
 		return exp;
 	}
 	

@@ -21,7 +21,7 @@ public class ReasonGenerator {
 		}
 		
 		int currentState = recommender.getState();
-		if(currentState == DebugState.SIMPLE_INFERENCE){
+		if(currentState == DebugState.SCLICING){
 			Cause latestCause = recommender.getLatestCause();
 			if(latestCause.isCausedByWrongPath()){
 				return WRONG_PATH;

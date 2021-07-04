@@ -113,7 +113,7 @@ public class StepRecommender {
 	
 	private boolean enableLoopInference = true;
 	
-	private int state = DebugState.SIMPLE_INFERENCE;
+	private int state = DebugState.SCLICING;
 	
 	/**
 	 * Fields for clear state.
@@ -139,7 +139,7 @@ public class StepRecommender {
 		
 		if(feedbackType.equals(UserFeedback.UNCLEAR)){
 			
-			if(state==DebugState.SIMPLE_INFERENCE || state==DebugState.SKIP || state==DebugState.BINARY_SEARCH || state==DebugState.DETAIL_INSPECT){
+			if(state==DebugState.SCLICING || state==DebugState.SKIP || state==DebugState.BINARY_SEARCH || state==DebugState.DETAIL_INSPECT){
 				latestClearState = state;
 			}
 			
@@ -246,11 +246,11 @@ public class StepRecommender {
 		
 		TraceNode lastRecommendNode = latestCause.getRecommendedNode();
 		if(lastRecommendNode!= null && !currentNode.equals(lastRecommendNode)){
-			state = DebugState.SIMPLE_INFERENCE;
+			state = DebugState.SCLICING;
 		}
 		
 		TraceNode suspiciousNode = null;
-		if(state == DebugState.SIMPLE_INFERENCE){
+		if(state == DebugState.SCLICING){
 			suspiciousNode = handleSimpleInferenceState(trace, currentNode, userFeedBack);
 			
 		}
@@ -316,7 +316,7 @@ public class StepRecommender {
 						this.lastNode = currentNode;
 					}
 					else{
-						state = DebugState.SIMPLE_INFERENCE;
+						state = DebugState.SCLICING;
 						suspiciousNode = handleSimpleInferenceState(trace, currentNode, userFeedback);
 					}
 				}
@@ -361,7 +361,7 @@ public class StepRecommender {
 			this.lastNode = currentNode;
 		}
 		else{
-			state = DebugState.SIMPLE_INFERENCE;
+			state = DebugState.SCLICING;
 			
 			this.loopRange.clearSkipPoints();
 			
@@ -370,7 +370,7 @@ public class StepRecommender {
 		return suspiciousNode;
 	}
 	
-	private TraceNode handleWrongPath(Trace trace, TraceNode currentNode, String feedback){
+	private TraceNode handleControlSlicing(Trace trace, TraceNode currentNode, String feedback){
 //		TraceNode suspiciousNode = trace.findSuspiciousControlDominator(currentNode, feedback);
 		TraceNode suspiciousNode = currentNode.getControlDominator();
 		
@@ -381,7 +381,7 @@ public class StepRecommender {
 		return suspiciousNode;
 	}
 	
-	private TraceNode handleWrongValue(Trace trace, TraceNode currentNode, UserFeedback userFeedback){
+	private TraceNode handleDataSlicing(Trace trace, TraceNode currentNode, UserFeedback userFeedback){
 		
 		String userFeedBackType = userFeedback.getFeedbackType();
 		
@@ -465,14 +465,14 @@ public class StepRecommender {
 			 * In this case, it means that there is actually nothing skipped.
 			 */
 			if(this.loopRange.skipPoints.isEmpty()){
-				state = DebugState.SIMPLE_INFERENCE;
+				state = DebugState.SCLICING;
 			}
 			
 			this.lastNode = currentNode;
 			return oldSusiciousNode;
 		}
 		else{
-			state = DebugState.SIMPLE_INFERENCE;
+			state = DebugState.SCLICING;
 			
 			this.lastNode = currentNode;
 			
@@ -494,7 +494,7 @@ public class StepRecommender {
 		
 		TraceNode node;
 		if(userFeedBack.getFeedbackType().equals(UserFeedback.WRONG_PATH)){
-			node = handleWrongPath(trace, currentNode, userFeedBack.getFeedbackType());
+			node = handleControlSlicing(trace, currentNode, userFeedBack.getFeedbackType());
 		}
 		else if(userFeedBack.getFeedbackType().equals(UserFeedback.CORRECT)){
 			//TODO it could be done in a more intelligent way.
@@ -506,7 +506,7 @@ public class StepRecommender {
 			return recommendedNode;
 		}
 		else{
-			node = handleWrongValue(trace, currentNode, userFeedBack);
+			node = handleDataSlicing(trace, currentNode, userFeedBack);
 		}
 		
 		return node;

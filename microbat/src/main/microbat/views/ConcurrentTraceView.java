@@ -643,10 +643,12 @@ public class ConcurrentTraceView extends TraceView {
 				int lineNumber = breakPoint.getLineNumber();
 				int order = node.getOrder();
 
+				long duration = node.calulcateDuration();
+				
 				// TODO it is better to parse method name as well.
 				// String message = className + "." + methodName + "(...): line " + lineNumber;
 				String message = order + ". "
-						+ MicroBatUtil.combineTraceNodeExpression(className, lineNumber);
+						+ MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration);
 				return message;
 
 			}

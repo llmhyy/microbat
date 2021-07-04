@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.function.Supplier;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
@@ -21,12 +20,9 @@ import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
 import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
-import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
-import microbat.model.variable.Variable;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
-import sav.common.core.Pair;
 
 public class TraceNode{
 	
@@ -146,6 +142,17 @@ public class TraceNode{
 	
 	public void addReturnVariable(VarValue var){
 		this.returnedVariables.add(var);
+	}
+	
+	public long calulcateDuration() {
+		long t1 = getTimestamp();
+		TraceNode next = getStepOverNext();
+		if(next != null) {
+			long t2 = next.getTimestamp();
+			return t2 - t1;
+		}
+		
+		return 0l;
 	}
 	
 	public TraceNode getDataDominator(VarValue readVar) {

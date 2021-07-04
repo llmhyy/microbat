@@ -566,6 +566,7 @@ public class TraceView extends ViewPart {
 		public String getText(Object element) {
 			if (element instanceof TraceNode) {
 				TraceNode node = (TraceNode) element;
+				
 				BreakPoint breakPoint = node.getBreakPoint();
 				// BreakPointValue programState = node.getProgramState();
 
@@ -578,9 +579,11 @@ public class TraceView extends ViewPart {
 				int lineNumber = breakPoint.getLineNumber();
 				int order = node.getOrder();
 
+				long duration = node.calulcateDuration();
+				
 				// TODO it is better to parse method name as well.
 				// String message = className + "." + methodName + "(...): line " + lineNumber;
-				String message = order + ". " + MicroBatUtil.combineTraceNodeExpression(className, lineNumber);
+				String message = order + ". " + MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration);
 				return message;
 
 			}
