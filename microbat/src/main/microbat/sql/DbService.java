@@ -27,8 +27,6 @@ public class DbService {
 	protected static final int BATCH_SIZE = 1000;
 	public static final List<String> MICROBAT_TABLES;
 
-	private static Connection connection = null;
-
 	static {
 		MICROBAT_TABLES = collectDbTables();
 	}
@@ -211,12 +209,12 @@ public class DbService {
 				}
 			}
 		}
-//		if (connection != null) {
-//			try {
-//				connection.close();
-//			} catch (SQLException e) {
-//				// ignore
-//			}
-//		}
+		if (connection != null) {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				// ignore
+			}
+		}
 	}
 }

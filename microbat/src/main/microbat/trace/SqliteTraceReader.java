@@ -21,18 +21,9 @@ import sav.commons.testdata.calculator.CalculatorTest1;
  *
  */
 public class SqliteTraceReader implements TraceReader {
-	private TraceRetriever traceRetriever;
 	private String runId;
 
 	public SqliteTraceReader(String runId) {
-		Connection conn = null;
-		try {
-			conn = DbService.getConnection();
-		} catch (SQLException e) {
-			// should not fail here, since SqliteTrace is selected
-			e.printStackTrace();
-		}
-		this.traceRetriever = new TraceRetrieverImpl(conn);
 		this.runId = runId;
 	}
 
@@ -41,8 +32,16 @@ public class SqliteTraceReader implements TraceReader {
 	 */
 	@Override
 	public RunningInfo read(PrecheckInfo precheckInfo, String drumpFile) {
-		
-		List<Trace> traces = this.traceRetriever.getTraces(runId);
+		TraceRetriever traceRetriever;
+		try {
+			traceRetriever = new TraceRetrieverImpl();
+		} catch (SQLException e) {
+			// should not fail here, since SqliteTrace is selected
+			e.printStackTrace();
+			return null;
+		}
+
+		List<Trace> traces = traceRetriever.getTraces(runId);
 		
 		int collectedSteps = traces.isEmpty() ? 0 : 
 			traces.stream().mapToInt(trace -> trace.size()).sum();

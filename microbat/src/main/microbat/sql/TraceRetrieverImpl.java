@@ -37,11 +37,11 @@ public class TraceRetrieverImpl implements TraceRetriever {
 			"SELECT s.* FROM Step s WHERE s.trace_id=?";
 	private static final String GET_STEP_VARIABLE_RELATION = 
 			"SELECT r.step_order, r.var_id, r.RW FROM StepVariableRelation r WHERE r.trace_id=?";
-	private final Connection conn;
+	private Connection conn;
 	private List<AutoCloseable> closables = new ArrayList<>();
 
-	public TraceRetrieverImpl(Connection conn) {
-		this.conn = conn;
+	public TraceRetrieverImpl() throws SQLException {
+		this.conn = DbService.getConnection();
 	}
 
 	@Override
@@ -164,6 +164,7 @@ public class TraceRetrieverImpl implements TraceRetriever {
 	public Pair<List<VarValue>, List<VarValue>> loadRWVars(TraceNode step, String traceId) {
 		String loadVarStep = "read_vars";
 		try {
+			conn = DbService.getConnection();
 			PreparedStatement ps = conn.prepareStatement("SELECT read_vars, written_vars from Step where step_order = ? AND trace_id = ?");
 			ps.setInt(1, step.getOrder());
 			ps.setString(2, traceId);
@@ -181,6 +182,9 @@ public class TraceRetrieverImpl implements TraceRetriever {
 		} catch (Exception e) {
 			System.out.println(String.format("%s: Xml error at step: [trace_id, order] = [%d, %d]", loadVarStep, traceId, step.getOrder()));
 			throw e;
+		} finally {
+			DbService.closeDb(conn, closables);
+			this.closables = new ArrayList<>();
 		}
 		return null;
 	}

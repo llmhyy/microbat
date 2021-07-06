@@ -188,6 +188,7 @@ public class ConcurrentTraceView extends TraceView {
 	protected boolean refreshProgramState = true;
 
 	public void jumpToNode(Trace trace, int order, boolean refreshProgramState) {
+		assert order > 0;
 		TraceNode node = trace.getExecutionList().get(order - 1);
 
 		List<TraceNode> path = new ArrayList<>();
@@ -295,6 +296,9 @@ public class ConcurrentTraceView extends TraceView {
 
 		// Trace trace = Activator.getDefault().getCurrentTrace();
 		viewer.setInput(trace);
+		viewer.getTree().getVerticalBar().addListener(SWT.V_SCROLL, event -> {
+			System.out.println(event);
+		});
 
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 

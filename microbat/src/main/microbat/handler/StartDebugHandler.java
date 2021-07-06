@@ -1,6 +1,7 @@
 package microbat.handler;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -102,9 +103,6 @@ public class StartDebugHandler extends AbstractHandler {
 						InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
 								generateTraceDir(appClassPath), "trace", includedClassNames, excludedClassNames);
 						final RunningInfo result = executor.run();
-						if (result == null) {
-							throw new Exception("Execution failed");
-						}
 						
 						monitor.worked(80);
 						
@@ -112,11 +110,16 @@ public class StartDebugHandler extends AbstractHandler {
 							
 							@Override
 							public void run() {
+								TraceView traceView = MicroBatViews.getTraceView();
+								if (result == null) {
+									traceView.setMainTrace(null);
+									traceView.setTraceList(null);
+									return;
+								}
 								Trace trace = result.getMainTrace();
 								trace.setAppJavaClassPath(appClassPath);
 								List<Trace> traces = result.getTraceList();
 								
-								TraceView traceView = MicroBatViews.getTraceView();
 								traceView.setMainTrace(trace);
 								traceView.setTraceList(traces);
 								traceView.updateData();
