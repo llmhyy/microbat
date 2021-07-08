@@ -31,12 +31,10 @@ import sav.common.core.utils.StringUtils;
 public class TraceRetrieverImpl implements TraceRetriever {
 	private static final String GET_LATEST_TRACE_ID_QUERY = 
 			"SELECT trace_id, thread_id, thread_name, isMain FROM Trace WHERE run_id = ?";
-	private static final String GET_TRACE_WITH_STEP = 
-			"SELECT * from Trace INNER JOIN Step ON Trace.trace_id = Step.trace_id";
 	private static final String GET_STEPS = 
 			"SELECT s.* FROM Step s WHERE s.trace_id=?";
-	private static final String GET_STEP_VARIABLE_RELATION = 
-			"SELECT r.step_order, r.var_id, r.RW FROM StepVariableRelation r WHERE r.trace_id=?";
+	private static final String GET_TOPMOST_STEPS =
+			"SELECT * FROM Step WHERE trace_id = ? AND invocation_parent IS NULL";
 	private Connection conn;
 	private List<AutoCloseable> closables = new ArrayList<>();
 
@@ -86,7 +84,8 @@ public class TraceRetrieverImpl implements TraceRetriever {
 
 	private List<TraceNode> getSteps(Trace trace) throws SQLException {
 		String traceId = trace.getId();
-		PreparedStatement ps = conn.prepareStatement(GET_STEPS);
+//		PreparedStatement ps = conn.prepareStatement(GET_STEPS);
+		PreparedStatement ps = conn.prepareStatement(GET_TOPMOST_STEPS);
 		ps.setString(1, traceId);
 		ResultSet rs = ps.executeQuery();
 		closables.add(ps);
@@ -102,7 +101,7 @@ public class TraceRetrieverImpl implements TraceRetriever {
 		while (rs.next()) {
 			// step order
 			int order = rs.getInt("step_order");
-			if (order > total) {
+			if (order > total) { // is this necessary
 				throw new SQLException("Detect invalid step order in result set!");
 			}
 			TraceNode step = allSteps.get(order - 1);
@@ -249,6 +248,8 @@ public class TraceRetrieverImpl implements TraceRetriever {
 	}
 
 	private TraceNode getRelNode(List<TraceNode> allSteps, ResultSet rs, String colName) throws SQLException {
+		// TODO: deprecate this for lazy evaluation
+		return null;
 		int relNodeOrder = rs.getInt(colName);
 		if (!rs.wasNull()) {
 			if (relNodeOrder > allSteps.size()) {
