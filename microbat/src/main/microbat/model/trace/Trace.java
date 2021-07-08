@@ -419,6 +419,7 @@ public class Trace {
 
 		CatchClause containingClause;
 		
+		@Override
 		public boolean visit(CatchClause clause) {
 			int startLine = cu.getLineNumber(clause.getStartPosition());
 			int endLine = cu.getLineNumber(clause.getStartPosition()+clause.getLength());

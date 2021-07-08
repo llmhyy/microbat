@@ -42,7 +42,7 @@ public class IProjectUtils {
 				urlList.add(url);
 			}
 			ClassLoader parentClassLoader = javaProject.getClass().getClassLoader();
-			URL[] urls = (URL[]) urlList.toArray(new URL[urlList.size()]);
+			URL[] urls = urlList.toArray(new URL[urlList.size()]);
 			URLClassLoader classLoader = new URLClassLoader(urls, parentClassLoader);
 			return classLoader;
 		} catch (MalformedURLException e) {

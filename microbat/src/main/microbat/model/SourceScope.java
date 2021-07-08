@@ -49,10 +49,12 @@ public class SourceScope implements Scope{
 		this.endLine = endLine;
 	}
 
+	@Override
 	public boolean containsNodeScope(TraceNode node) {
 		return containLocation(node.getBreakPoint());
 	}
 
+	@Override
 	public boolean isLoop() {
 		return isLoopScope;
 	}

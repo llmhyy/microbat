@@ -77,6 +77,7 @@ public class TraceNodeWrapper implements GraphNode {
 		this.traceNode = traceNode;
 	}
 
+	@Override
 	public String toString(){
 		return this.traceNode.toString();
 	}

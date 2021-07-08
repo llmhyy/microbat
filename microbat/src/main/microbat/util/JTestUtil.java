@@ -141,6 +141,7 @@ public class JTestUtil {
 	public static List<MethodDeclaration> findBeforeAfterMethod(CompilationUnit cu) {
 		final List<MethodDeclaration> mdList = new ArrayList<>();
 		cu.accept(new ASTVisitor() {
+			@Override
 			@SuppressWarnings("rawtypes")
 			public boolean visit(MethodDeclaration md){
 				ChildListPropertyDescriptor desc = md.getModifiersProperty();

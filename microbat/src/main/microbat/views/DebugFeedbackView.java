@@ -477,13 +477,16 @@ public class DebugFeedbackView extends ViewPart {
 		yesButton.setText(" Yes");
 		yesButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
 		yesButton.addMouseListener(new MouseListener() {
+			@Override
 			public void mouseUp(MouseEvent e) {
 			}
 
+			@Override
 			public void mouseDown(MouseEvent e) {
 				feedback = new UserFeedback(UserFeedback.CORRECT);
 			}
 
+			@Override
 			public void mouseDoubleClick(MouseEvent e) {
 			}
 		});
@@ -492,13 +495,16 @@ public class DebugFeedbackView extends ViewPart {
 		noButton.setText(" No");
 		noButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
 		noButton.addMouseListener(new MouseListener() {
+			@Override
 			public void mouseUp(MouseEvent e) {
 			}
 
+			@Override
 			public void mouseDown(MouseEvent e) {
 				feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 			}
 
+			@Override
 			public void mouseDoubleClick(MouseEvent e) {
 			}
 		});
@@ -507,13 +513,16 @@ public class DebugFeedbackView extends ViewPart {
 		wrongPathButton.setText("(Wrong Path)");
 		wrongPathButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
 		wrongPathButton.addMouseListener(new MouseListener() {
+			@Override
 			public void mouseUp(MouseEvent e) {
 			}
 
+			@Override
 			public void mouseDown(MouseEvent e) {
 				feedback = new UserFeedback(UserFeedback.WRONG_PATH);
 			}
 
+			@Override
 			public void mouseDoubleClick(MouseEvent e) {
 			}
 		});
@@ -522,13 +531,16 @@ public class DebugFeedbackView extends ViewPart {
 		unclearButton.setText(" Unclear");
 		unclearButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
 		unclearButton.addMouseListener(new MouseListener() {
+			@Override
 			public void mouseUp(MouseEvent e) {
 			}
 
+			@Override
 			public void mouseDown(MouseEvent e) {
 				feedback = new UserFeedback(UserFeedback.UNCLEAR);
 			}
 
+			@Override
 			public void mouseDoubleClick(MouseEvent e) {
 			}
 		});
@@ -582,7 +594,9 @@ public class DebugFeedbackView extends ViewPart {
 	}
 	
 	class FeedbackSubmitListener implements MouseListener{
+		@Override
 		public void mouseUp(MouseEvent e) {}
+		@Override
 		public void mouseDoubleClick(MouseEvent e) {}
 		
 		private void openChooseFeedbackDialog(){
@@ -664,6 +678,7 @@ public class DebugFeedbackView extends ViewPart {
 			return true;
 		}
 
+		@Override
 		public void mouseDown(MouseEvent e) {
 			if (feedback == null) {
 				openChooseFeedbackDialog();
@@ -944,23 +959,29 @@ public class DebugFeedbackView extends ViewPart {
 	}
 	
 	class ConsequenceLabelProvider implements ITableLabelProvider{
+		@Override
 		public void addListener(ILabelProviderListener listener) {
 		}
 
+		@Override
 		public void dispose() {
 		}
 
+		@Override
 		public boolean isLabelProperty(Object element, String property) {
 			return false;
 		}
 
+		@Override
 		public void removeListener(ILabelProviderListener listener) {
 		}
 
+		@Override
 		public Image getColumnImage(Object element, int columnIndex) {
 			return null;
 		}
 		
+		@Override
 		public String getColumnText(Object ele, int columnIndex) {
 			
 			if(ele instanceof GraphDiff){
@@ -1053,12 +1074,15 @@ public class DebugFeedbackView extends ViewPart {
 	}
 	
 	class VariableContentProvider implements ITreeContentProvider{
+		@Override
 		public void dispose() {
 		}
 
+		@Override
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 		}
 
+		@Override
 		public Object[] getElements(Object inputElement) {
 			if(inputElement instanceof BreakPointValue){
 				BreakPointValue value = (BreakPointValue)inputElement;
@@ -1078,14 +1102,17 @@ public class DebugFeedbackView extends ViewPart {
 			return null;
 		}
 
+		@Override
 		public Object[] getChildren(Object parentElement) {
 			return getElements(parentElement);
 		}
 
+		@Override
 		public Object getParent(Object element) {
 			return null;
 		}
 
+		@Override
 		public boolean hasChildren(Object element) {
 			if(element instanceof ReferenceValue){
 				ReferenceValue rValue = (ReferenceValue)element;
@@ -1099,23 +1126,29 @@ public class DebugFeedbackView extends ViewPart {
 
 	class VariableLabelProvider implements ITableLabelProvider{
 
+		@Override
 		public void addListener(ILabelProviderListener listener) {
 		}
 
+		@Override
 		public void dispose() {
 		}
 
+		@Override
 		public boolean isLabelProperty(Object element, String property) {
 			return false;
 		}
 
+		@Override
 		public void removeListener(ILabelProviderListener listener) {
 		}
 
+		@Override
 		public Image getColumnImage(Object element, int columnIndex) {
 			return null;
 		}
 		
+		@Override
 		public String getColumnText(Object element, int columnIndex) {
 			if(element instanceof VarValue){
 				VarValue varValue = (VarValue)element;

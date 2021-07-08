@@ -18,6 +18,7 @@ public class MethodDeclarationFinder extends ASTVisitor{
 		this.linNumber = linNumber;
 	}
 	
+	@Override
 	public boolean visit(MethodDeclaration md){
 		int startLine = cu.getLineNumber(md.getStartPosition());
 		int endLine = cu.getLineNumber(md.getStartPosition()+md.getLength());

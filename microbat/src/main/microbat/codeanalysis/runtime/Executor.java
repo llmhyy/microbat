@@ -266,7 +266,7 @@ public abstract class Executor {
 					listOfLocations = refType.locationsOfLine(count++);
 				}
 				
-				Location loc = (Location)listOfLocations.get(0);
+				Location loc = listOfLocations.get(0);
 				breakpointRequest = erm.createBreakpointRequest(loc);
 				breakpointRequest.setEnabled(true);
 				
@@ -344,7 +344,7 @@ public abstract class Executor {
 		}
 		
 		for (Iterator<String> iterator = excludeList.iterator(); iterator.hasNext();) {
-			String excludeString = (String) iterator.next();
+			String excludeString = iterator.next();
 			excludeString = excludeString.replace("/", ".");
 			if (!existingList.contains(excludeString)) {
 				existingList.add(excludeString);

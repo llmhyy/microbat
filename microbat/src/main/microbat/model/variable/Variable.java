@@ -135,5 +135,6 @@ public abstract class Variable implements Serializable {
 //	}
 
 	public abstract String getSimpleName();
+	@Override
 	public abstract Variable clone();
 }

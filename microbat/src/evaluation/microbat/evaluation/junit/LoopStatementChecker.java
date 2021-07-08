@@ -27,6 +27,7 @@ public class LoopStatementChecker extends ASTVisitor {
 		this.cu = cu;
 	}
 
+	@Override
 	public boolean visit(DoStatement statement) {
 		if(isNodeAboveLoop(node, statement)){
 			this.isValid = true;
@@ -34,6 +35,7 @@ public class LoopStatementChecker extends ASTVisitor {
 		return false;
 	}
 
+	@Override
 	public boolean visit(EnhancedForStatement statement) {
 		if(isNodeAboveLoop(node, statement)){
 			this.isValid = true;
@@ -41,6 +43,7 @@ public class LoopStatementChecker extends ASTVisitor {
 		return false;
 	}
 
+	@Override
 	public boolean visit(ForStatement statement) {
 		if(isNodeAboveLoop(node, statement)){
 			this.isValid = true;
@@ -48,6 +51,7 @@ public class LoopStatementChecker extends ASTVisitor {
 		return false;
 	}
 
+	@Override
 	public boolean visit(WhileStatement statement) {
 		if(isNodeAboveLoop(node, statement)){
 			this.isValid = true;

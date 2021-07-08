@@ -27,16 +27,19 @@ public class MutationPointChecker extends ASTVisitor{
 		this.lines = lines;
 	}
 	
+	@Override
 	public boolean visit(InfixExpression expr){
 		checkMutationPoint(expr);
 		return false;
 	}
 	
+	@Override
 	public boolean visit(PostfixExpression expr){
 		checkMutationPoint(expr);
 		return false;
 	}
 	
+	@Override
 	public boolean visit(PrefixExpression expr){
 		checkMutationPoint(expr);
 		return false;

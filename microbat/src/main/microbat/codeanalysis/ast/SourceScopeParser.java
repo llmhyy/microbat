@@ -29,6 +29,7 @@ public class SourceScopeParser {
 			this.conditionLineNumber = lineNumber;
 		}
 		
+		@Override
 		public boolean visit(DoStatement statement){
 			int line = cu.getLineNumber(statement.getExpression().getStartPosition());
 			if(line == conditionLineNumber){
@@ -39,6 +40,7 @@ public class SourceScopeParser {
 			return true;
 		}
 		
+		@Override
 		public boolean visit(EnhancedForStatement statement){
 			int line = cu.getLineNumber(statement.getStartPosition());
 			if(line == conditionLineNumber){
@@ -48,6 +50,7 @@ public class SourceScopeParser {
 			return true;
 		}
 		
+		@Override
 		public boolean visit(ForStatement statement){
 			int line = cu.getLineNumber(statement.getStartPosition());
 			if(line == conditionLineNumber){
@@ -57,6 +60,7 @@ public class SourceScopeParser {
 			return true;
 		}
 		
+		@Override
 		public boolean visit(IfStatement statement){
 			int line = cu.getLineNumber(statement.getExpression().getStartPosition());
 			if(line == conditionLineNumber){
@@ -66,6 +70,7 @@ public class SourceScopeParser {
 			return true;
 		}
 		
+		@Override
 		public boolean visit(SwitchStatement statement){
 			int line = cu.getLineNumber(statement.getExpression().getStartPosition());
 			if(line == conditionLineNumber){
@@ -75,6 +80,7 @@ public class SourceScopeParser {
 			return true;
 		}
 		
+		@Override
 		public boolean visit(WhileStatement statement){
 			int line = cu.getLineNumber(statement.getExpression().getStartPosition());
 			if(line == conditionLineNumber){
@@ -100,21 +106,25 @@ public class SourceScopeParser {
 	class JumpStatementFinder extends ASTVisitor{
 		boolean hasJumpStatement = false;
 		
+		@Override
 		public boolean visit(BreakStatement statement){
 			hasJumpStatement = true;
 			return false;
 		}
 		
+		@Override
 		public boolean visit(ContinueStatement statement){
 			hasJumpStatement = true;
 			return false;
 		}
 		
+		@Override
 		public boolean visit(ReturnStatement statement){
 			hasJumpStatement = true;
 			return false;
 		}
 		
+		@Override
 		public boolean visit(ThrowStatement statement){
 			hasJumpStatement = true;
 			return false;

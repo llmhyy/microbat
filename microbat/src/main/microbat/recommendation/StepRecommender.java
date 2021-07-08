@@ -46,6 +46,7 @@ public class StepRecommender {
 			return skipPoints.get(index);
 		}
 		
+		@Override
 		@SuppressWarnings("unchecked")
 		public LoopRange clone(){
 			LoopRange loopRange = new LoopRange();
@@ -590,6 +591,7 @@ public class StepRecommender {
 	}
 	
 	
+	@Override
 	@SuppressWarnings("unchecked")
 	public StepRecommender clone(){
 		StepRecommender recommender = new StepRecommender(this.isEnableLoopInference());

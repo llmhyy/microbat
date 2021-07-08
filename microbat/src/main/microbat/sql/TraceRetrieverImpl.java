@@ -160,6 +160,7 @@ public class TraceRetrieverImpl implements TraceRetriever {
 		return allSteps;
 	}
 	
+	@Override
 	public Pair<List<VarValue>, List<VarValue>> loadRWVars(TraceNode step, String traceId) {
 		String loadVarStep = "read_vars";
 		try {

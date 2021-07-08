@@ -23,6 +23,7 @@ public class WrittenArrayElementRetriever extends ASTNodeRetriever{
 		this.typeName = typeName;
 	}
 	
+	@Override
 	public boolean visit(Assignment assignment){
 		int linNum = cu.getLineNumber(assignment.getStartPosition());
 		if(linNum == lineNumber){

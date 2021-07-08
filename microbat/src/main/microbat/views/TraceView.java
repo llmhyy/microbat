@@ -338,6 +338,7 @@ public class TraceView extends ViewPart {
 				System.out.println();
 			}
 
+			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				ISelection iSel = event.getSelection();
 				if (iSel instanceof StructuredSelection) {
@@ -394,6 +395,7 @@ public class TraceView extends ViewPart {
 
 	protected Action createForSearchAction() {
 		Action action = new Action() {
+			@Override
 			public void run() {
 				if (listViewer.getSelection().isEmpty()) {
 					return;
@@ -411,6 +413,7 @@ public class TraceView extends ViewPart {
 				
 			}
 			
+			@Override
 			public String getText() {
 				return "for search";
 			}
@@ -475,10 +478,12 @@ public class TraceView extends ViewPart {
 
 	class TraceContentProvider implements ITreeContentProvider {
 
+		@Override
 		public void dispose() {
 
 		}
 
+		@Override
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 
 		}
@@ -527,22 +532,27 @@ public class TraceView extends ViewPart {
 
 	class TraceLabelProvider implements ILabelProvider {
 
+		@Override
 		public void addListener(ILabelProviderListener listener) {
 
 		}
 
+		@Override
 		public void dispose() {
 
 		}
 
+		@Override
 		public boolean isLabelProperty(Object element, String property) {
 			return false;
 		}
 
+		@Override
 		public void removeListener(ILabelProviderListener listener) {
 
 		}
 
+		@Override
 		public Image getImage(Object element) {
 			if (element instanceof TraceNode) {
 				TraceNode node = (TraceNode) element;
@@ -563,6 +573,7 @@ public class TraceView extends ViewPart {
 			return null;
 		}
 
+		@Override
 		public String getText(Object element) {
 			if (element instanceof TraceNode) {
 				TraceNode node = (TraceNode) element;

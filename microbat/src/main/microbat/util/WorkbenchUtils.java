@@ -20,7 +20,8 @@ public class WorkbenchUtils {
         // need to call from UI thread
         final IWorkbenchWindow[] window = new IWorkbenchWindow[1];
         Display.getDefault().syncExec(new Runnable() {
-            public void run() {
+            @Override
+			public void run() {
                 window[0] = Activator.getDefault().getWorkbench().getActiveWorkbenchWindow();
             }
         });

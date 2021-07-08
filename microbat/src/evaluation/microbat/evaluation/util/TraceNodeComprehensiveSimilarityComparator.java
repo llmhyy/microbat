@@ -3,6 +3,7 @@ package microbat.evaluation.util;
 import microbat.model.trace.TraceNode;
 
 public class TraceNodeComprehensiveSimilarityComparator implements TraceNodeSimilarityComparator{
+	@Override
 	public double compute(TraceNode traceNode1, TraceNode traceNode2) {
 		TraceNodeVariableSimilarityComparator vComparator = new TraceNodeVariableSimilarityComparator();
 		TraceNodeStructureSimilarityComparator sComparator = new TraceNodeStructureSimilarityComparator();

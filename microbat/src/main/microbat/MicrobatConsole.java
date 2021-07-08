@@ -38,6 +38,7 @@ public class MicrobatConsole extends MessageConsole implements IPropertyChangeLi
 	private void setConsoleFont() {
 		if (Display.getCurrent() == null) {
 			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				@Override
 				public void run() {
 					setConsoleFont();
 				}

@@ -76,6 +76,7 @@ public class MutationPointChecker extends ASTVisitor {
 			this.cu = cu;
 		}
 
+		@Override
 		public boolean visit(IfStatement ifStatement) {
 			if (ifStatement.getElseStatement() != null) {
 				int nodeLineNumber = cu.getLineNumber(node.getStartPosition() + node.getLength());
@@ -110,6 +111,7 @@ public class MutationPointChecker extends ASTVisitor {
 	 * For the following case: for{ if(){ *** } else{ *** } }
 	 * 
 	 */
+	@Override
 	public boolean visit(IfStatement statement) {
 		int start = cu.getLineNumber(statement.getExpression().getStartPosition());
 		int end = cu.getLineNumber(statement.getStartPosition() + statement.getLength());

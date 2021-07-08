@@ -10,6 +10,7 @@ import org.eclipse.jdt.core.dom.Type;
 public class MainMethodFinder extends ASTVisitor {
 	private MethodDeclaration md;
 	
+	@Override
 	@SuppressWarnings("rawtypes")
 	public boolean visit(MethodDeclaration md){
 		String methodName = md.getName().getFullyQualifiedName();

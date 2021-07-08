@@ -36,7 +36,7 @@ public class SearchStepHandler extends AbstractHandler {
 			ExpressionContext context = (ExpressionContext) event.getApplicationContext();
 			IEditorPart editor = (IEditorPart) context.getVariable("activeEditor");
 
-			IVerticalRulerInfo verticalRulerInfo = (IVerticalRulerInfo) editor.getAdapter(IVerticalRulerInfo.class);
+			IVerticalRulerInfo verticalRulerInfo = editor.getAdapter(IVerticalRulerInfo.class);
 			if (verticalRulerInfo != null) {
 				
 				IEditorInput input = editor.getEditorInput();

@@ -30,6 +30,7 @@ public class MethodFinderByLine extends ByteCodeMethodFinder {
 		this.setPoint(point);
 	}
 	
+	@Override
 	public void visitMethod(Method method){
 		if(method.getLineNumberTable()!=null){
 			

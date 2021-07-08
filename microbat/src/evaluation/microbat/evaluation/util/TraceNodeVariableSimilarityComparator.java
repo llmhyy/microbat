@@ -3,10 +3,8 @@ package microbat.evaluation.util;
 import java.util.Comparator;
 import java.util.List;
 
-import microbat.Activator;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.algorithm.graphdiff.SortedGraphMatcher;
-import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.GraphNode;
 import microbat.model.value.ReferenceValue;
@@ -26,6 +24,7 @@ import microbat.util.MicroBatUtil;
  */
 public class TraceNodeVariableSimilarityComparator implements TraceNodeSimilarityComparator{
 
+	@Override
 	public double compute(TraceNode traceNode1, TraceNode traceNode2) {
 		
 		if(traceNode1.getOrder() == 103 && traceNode2.getOrder() == 95){
@@ -49,7 +48,7 @@ public class TraceNodeVariableSimilarityComparator implements TraceNodeSimilarit
 				simVarScore = 1;
 			}
 			else{
-				simVarScore = (2*(double)commonReadVarWithSameValue+2*commonWrittenVarWithSameValue)/totalVars;
+				simVarScore = (2*commonReadVarWithSameValue+2*commonWrittenVarWithSameValue)/totalVars;
 			}
 			
 			return 0.05 + 0.95*simVarScore;

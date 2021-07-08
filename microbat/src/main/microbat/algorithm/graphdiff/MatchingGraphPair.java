@@ -12,6 +12,7 @@ public class MatchingGraphPair{
 		this.nodeAfter = nodeAfter;
 	}
 	
+	@Override
 	public String toString(){
 		StringBuffer buffer = new StringBuffer();
 		String diffType = getDiffType();

@@ -37,6 +37,7 @@ public class VariableScopeParser {
 
 	private void parseLocalVariables(CompilationUnit cu) {
 		cu.accept(new ASTVisitor() {
+			@Override
 			public boolean visit(VariableDeclarationFragment fragment){
 				SimpleName name = fragment.getName();
 				ASTNode scope = findLeastContainingBlock(name);
@@ -49,6 +50,7 @@ public class VariableScopeParser {
 				return true;
 			}
 			
+			@Override
 			public boolean visit(SingleVariableDeclaration svd){
 				SimpleName name = svd.getName();
 				ASTNode scope = findLeastContainingBlock(name);
@@ -135,6 +137,7 @@ public class VariableScopeParser {
 		}
 		
 		cu.accept(new ASTVisitor(){
+			@Override
 			public boolean visit(MethodDeclaration md){
 				
 				int startLine = cu.getLineNumber(md.getStartPosition());

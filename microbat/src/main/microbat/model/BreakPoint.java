@@ -41,6 +41,7 @@ public class BreakPoint extends ClassLocation {
 		this.declaringCompilationUnitName = declaringCompilationUnitName;
 	}
 	
+	@Override
 	public Object clone(){
 		ClassLocation location = (ClassLocation) super.clone();
 		BreakPoint point = new BreakPoint(location.getClassCanonicalName(), declaringCompilationUnitName, lineNo);
@@ -119,6 +120,7 @@ public class BreakPoint extends ClassLocation {
 		return lineNo > 0;
 	}
 	
+	@Override
 	public String getMethodSign() {
 //		if(methodSign == null){
 //			System.err.println("missing method name!");
@@ -158,6 +160,7 @@ public class BreakPoint extends ClassLocation {
 		this.isReturnStatement = isReturnStatement;
 	}
 	
+	@Override
 	public String getClassCanonicalName(){
 		return super.getClassCanonicalName();
 	}
@@ -199,7 +202,7 @@ public class BreakPoint extends ClassLocation {
 		else{
 			for(ClassLocation location: locationScope.getRangeList()){
 				if(this.controlScope instanceof ControlScope){
-					ControlScope thisScope = (ControlScope)this.controlScope;
+					ControlScope thisScope = this.controlScope;
 					if(!thisScope.containLocation(location)){
 						thisScope.addLocation(location);
 					}

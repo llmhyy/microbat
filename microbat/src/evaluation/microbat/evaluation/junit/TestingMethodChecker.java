@@ -21,6 +21,7 @@ public class TestingMethodChecker extends ASTVisitor {
 	}
 
 
+	@Override
 	public boolean visit(MethodDeclaration md){
 		
 		if(isSubclassOfTestCase){

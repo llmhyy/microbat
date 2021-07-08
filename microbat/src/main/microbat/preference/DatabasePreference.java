@@ -25,7 +25,6 @@ import microbat.Activator;
 import microbat.sql.DBSettings;
 import microbat.trace.Reader;
 import microbat.util.MessageDialogs;
-import microbat.util.MicroBatUtil;
 import microbat.util.SWTFactory;
 
 public class DatabasePreference extends PreferencePage implements IWorkbenchPreferencePage {

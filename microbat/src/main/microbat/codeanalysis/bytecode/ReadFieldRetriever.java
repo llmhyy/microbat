@@ -12,6 +12,7 @@ public class ReadFieldRetriever extends ASTNodeRetriever{
 		super(cu, lineNumber, varName);
 	}
 	
+	@Override
 	public boolean visit(QualifiedName name){
 		int linNum = cu.getLineNumber(name.getStartPosition());
 		if(linNum == lineNumber){
@@ -26,6 +27,7 @@ public class ReadFieldRetriever extends ASTNodeRetriever{
 		return true;
 	}
 	
+	@Override
 	public boolean visit(SimpleName name){
 		int linNum = cu.getLineNumber(name.getStartPosition());
 		if(linNum == lineNumber){
@@ -38,6 +40,7 @@ public class ReadFieldRetriever extends ASTNodeRetriever{
 		return true;
 	}
 	
+	@Override
 	public boolean visit(FieldAccess access){
 		int linNum = cu.getLineNumber(access.getStartPosition());
 		if(linNum == lineNumber){

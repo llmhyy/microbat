@@ -175,6 +175,7 @@ public class UserInterestedVariables {
 		return Math.abs(producer.getOrder()-currentNode.getOrder());
 	}
 	
+	@Override
 	public UserInterestedVariables clone(){
 		Map<VarValue, Integer> clonedVarIDs = new HashMap<>();
 		

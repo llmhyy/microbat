@@ -3,15 +3,11 @@
  */
 package microbat.trace;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
-
 import microbat.instrumentation.output.RunningInfo;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
-import microbat.sql.DbService;
 import microbat.sql.TraceRetrieverImpl;
 import microbat.sql.TraceRetriever;
 

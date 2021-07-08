@@ -370,6 +370,7 @@ public class InstrumentationExecutor {
 			this.canonicalClassName = canonicalClassName;
 		}
 		
+		@Override
 		public boolean visit(TypeDeclaration type){
 			String simpleName = canonicalClassName;
 			if(canonicalClassName.contains(".")){

@@ -1,7 +1,5 @@
 package microbat.views;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -74,6 +72,7 @@ public class ConcurrentTraceView extends TraceView {
 	protected Map<Long, Trace> traceMap;
 	protected Trace curTrace;
 
+	@Override
 	public Trace getCurrentTrace() {
 		return curTrace;
 	}
@@ -95,6 +94,7 @@ public class ConcurrentTraceView extends TraceView {
 	public ConcurrentTraceView() {
 	}
 
+	@Override
 	public void setSearchText(String expression) {
 		this.searchText.setText(expression);
 		this.previousSearchExpression = expression;
@@ -123,6 +123,7 @@ public class ConcurrentTraceView extends TraceView {
 		addSearchButtonListener(searchButton);
 	}
 
+	@Override
 	protected void addSearchTextListener(final Text searchText) {
 		searchText.addKeyListener(new KeyAdapter() {
 			@Override
@@ -139,6 +140,7 @@ public class ConcurrentTraceView extends TraceView {
 
 	}
 
+	@Override
 	protected void addSearchButtonListener(final Button serachButton) {
 		searchButton.addMouseListener(new MouseAdapter() {
 			@Override
@@ -150,6 +152,7 @@ public class ConcurrentTraceView extends TraceView {
 
 	}
 
+	@Override
 	public void jumpToNode(String searchContent, boolean next) {
 		// Trace trace = Activator.getDefault().getCurrentTrace();
 
@@ -187,6 +190,7 @@ public class ConcurrentTraceView extends TraceView {
 	 */
 	protected boolean refreshProgramState = true;
 
+	@Override
 	public void jumpToNode(Trace trace, int order, boolean refreshProgramState) {
 		assert order > 0;
 		TraceNode node = trace.getExecutionList().get(order - 1);
@@ -221,6 +225,7 @@ public class ConcurrentTraceView extends TraceView {
 		curTreeViewer.refresh();
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	protected void markJavaEditor(TraceNode node) {
 		BreakPoint breakPoint = node.getBreakPoint();
@@ -373,6 +378,7 @@ public class ConcurrentTraceView extends TraceView {
 				System.out.println();
 			}
 
+			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				ISelection iSel = event.getSelection();
 				if (iSel instanceof StructuredSelection) {
@@ -444,8 +450,10 @@ public class ConcurrentTraceView extends TraceView {
 
 	}
 
+	@Override
 	protected Action createForSearchAction() {
 		Action action = new Action() {
+			@Override
 			public void run() {
 				if (curTreeViewer.getSelection().isEmpty()) {
 					return;
@@ -464,6 +472,7 @@ public class ConcurrentTraceView extends TraceView {
 
 			}
 
+			@Override
 			public String getText() {
 				return "for search";
 			}
@@ -487,6 +496,7 @@ public class ConcurrentTraceView extends TraceView {
 		viewer.getTree().setMenu(menuMgr.createContextMenu(viewer.getTree()));
 	}
 
+	@Override
 	protected void otherViewsBehavior(TraceNode node) {
 		DebugFeedbackView feedbackView = MicroBatViews.getDebugFeedbackView();
 
@@ -501,6 +511,7 @@ public class ConcurrentTraceView extends TraceView {
 		markJavaEditor(node);
 	}
 
+	@Override
 	public void updateData() {
 
 		Control[] childs = tracePanel.getChildren();
@@ -529,6 +540,7 @@ public class ConcurrentTraceView extends TraceView {
 
 	}
 
+	@Override
 	public void setTraceList(List<Trace> traces) {
 		this.traces = traces;
 		if (traceMap == null) {
@@ -543,10 +555,12 @@ public class ConcurrentTraceView extends TraceView {
 
 	class TraceContentProvider implements ITreeContentProvider {
 
+		@Override
 		public void dispose() {
 
 		}
 
+		@Override
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 
 		}
@@ -595,22 +609,27 @@ public class ConcurrentTraceView extends TraceView {
 
 	class TraceLabelProvider implements ILabelProvider {
 
+		@Override
 		public void addListener(ILabelProviderListener listener) {
 
 		}
 
+		@Override
 		public void dispose() {
 
 		}
 
+		@Override
 		public boolean isLabelProperty(Object element, String property) {
 			return false;
 		}
 
+		@Override
 		public void removeListener(ILabelProviderListener listener) {
 
 		}
 
+		@Override
 		public Image getImage(Object element) {
 			if (element instanceof TraceNode) {
 				TraceNode node = (TraceNode) element;
@@ -631,6 +650,7 @@ public class ConcurrentTraceView extends TraceView {
 			return null;
 		}
 
+		@Override
 		public String getText(Object element) {
 			if (element instanceof TraceNode) {
 				TraceNode node = (TraceNode) element;

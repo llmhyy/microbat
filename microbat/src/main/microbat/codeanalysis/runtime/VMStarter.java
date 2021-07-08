@@ -76,7 +76,7 @@ public class VMStarter {
         Connector.Argument argument = arguments.get("home");
         argument.setValue(configuration.getJavaHome());
         
-        Connector.Argument mainArg = (Connector.Argument)arguments.get("main");
+        Connector.Argument mainArg = arguments.get("main");
         if (mainArg == null) {
             throw new Error("Bad launching connector");
         }
@@ -93,7 +93,7 @@ public class VMStarter {
         
         // We need a VM that supports watchpoints
         Connector.Argument optionArg =
-            (Connector.Argument)arguments.get("options");
+            arguments.get("options");
 
         
         if (optionArg == null) {

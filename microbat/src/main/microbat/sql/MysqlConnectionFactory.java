@@ -22,6 +22,7 @@ public class MysqlConnectionFactory implements ConnectionFactory {
 		this.dataSource.setPassword(DBSettings.password);
 	}
 	
+	@Override
 	public Connection initializeConnection() throws SQLException {
 		if (!verifyDatasource()) {
 			Connection conn = dataSource.getConnection();

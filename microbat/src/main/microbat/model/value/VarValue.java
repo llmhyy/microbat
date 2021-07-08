@@ -10,7 +10,6 @@ package microbat.model.value;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -49,6 +48,7 @@ public abstract class VarValue implements GraphNode, Serializable {
 		
 	}
 	
+	@Override
 	public abstract VarValue clone();
 	
 	/**

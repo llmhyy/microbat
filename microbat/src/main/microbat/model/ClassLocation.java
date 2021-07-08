@@ -29,6 +29,7 @@ public class ClassLocation {
 	 */
 	private String fullJavaFilePath;
 	
+	@Override
 	public Object clone(){
 		ClassLocation location = new ClassLocation(classCanonicalName, methodSign, lineNo);
 		return location;

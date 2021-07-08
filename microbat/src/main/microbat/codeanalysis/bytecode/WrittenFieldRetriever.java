@@ -15,6 +15,7 @@ public class WrittenFieldRetriever extends ASTNodeRetriever{
 		super(cu, lineNumber, varName);
 	}
 	
+	@Override
 	public boolean visit(Assignment assignment){
 		int linNum = cu.getLineNumber(assignment.getStartPosition());
 		if(linNum == lineNumber){
@@ -38,6 +39,7 @@ public class WrittenFieldRetriever extends ASTNodeRetriever{
 		return true;
 	}
 	
+	@Override
 	public boolean visit(FieldDeclaration fd){
 		int startLineNum = cu.getLineNumber(fd.getStartPosition());
 		int endLineNum = cu.getLineNumber(fd.getStartPosition()+fd.getLength());

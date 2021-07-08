@@ -16,6 +16,7 @@ public abstract class DetailInspector {
 	}
 
 	public abstract TraceNode recommendDetailNode(TraceNode currentNode, Trace trace, VarValue wrongValue);
+	@Override
 	public abstract DetailInspector clone();
 
 }

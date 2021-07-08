@@ -54,6 +54,7 @@ public class SingleLineByteCodeVisitor extends ByteCodeVisitor {
 	private List<InstructionHandle> instructionList = new ArrayList<>();
 	private Method method;
 	
+	@Override
 	public void visitMethod(Method method){
 		Code code = method.getCode();
 		if(code == null){

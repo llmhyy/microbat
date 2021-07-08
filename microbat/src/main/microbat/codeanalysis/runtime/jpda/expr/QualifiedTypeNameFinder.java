@@ -18,6 +18,7 @@ public class QualifiedTypeNameFinder extends ASTVisitor {
 		this.cu = cu;
 	}
 	
+	@Override
 	public boolean visit(QualifiedName name){
 		int lineNum = cu.getLineNumber(name.getStartPosition());
 		if(lineNum == ExpressionParser.lineNumber){

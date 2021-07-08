@@ -6,6 +6,7 @@ import microbat.model.value.VarValue;
 
 public class SimpleDetailInspector extends DetailInspector{
 	
+	@Override
 	public TraceNode recommendDetailNode(TraceNode currentNode, Trace trace, VarValue wrongValue) {
 		TraceNode nextNode;
 		if(currentNode.getOrder() > this.inspectingRange.endNode.getOrder()){

@@ -91,6 +91,7 @@ public class PotentialCorrectPatternList {
 		return patterns;
 	}
 
+	@Override
 	public PotentialCorrectPatternList clone(){
 		PotentialCorrectPatternList clonedPatterns = new PotentialCorrectPatternList();
 		

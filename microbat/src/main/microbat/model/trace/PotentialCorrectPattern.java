@@ -16,6 +16,7 @@ public class PotentialCorrectPattern {
 	private PathInstance labelInstance;
 
 	
+	@Override
 	@SuppressWarnings("unchecked")
 	public PotentialCorrectPattern clone(){
 		PotentialCorrectPattern clonedPattern = new PotentialCorrectPattern();

@@ -18,6 +18,7 @@ public class MethodFinderBySignature extends ByteCodeMethodFinder {
 		this.signature = signature;
 	}
 
+	@Override
 	public void visitMethod(Method method){
 		String sig = method.getName() + method.getSignature();
 		if(sig.equals(signature)){

@@ -270,6 +270,7 @@ public class TraceNode{
 		return true;
 	}
 
+	@Override
 	public String toString(){
 		StringBuffer buffer = new StringBuffer();
 		
@@ -1086,6 +1087,7 @@ public class TraceNode{
 			this.cu = cu;
 		}
 
+		@Override
 		public boolean visit(CatchClause clause){
 			int startLine = cu.getLineNumber(clause.getStartPosition());
 			int endLine = cu.getLineNumber(clause.getStartPosition()+clause.getLength());

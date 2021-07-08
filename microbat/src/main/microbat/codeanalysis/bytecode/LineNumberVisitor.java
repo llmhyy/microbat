@@ -34,6 +34,7 @@ public class LineNumberVisitor extends ByteCodeVisitor {
 	}
 
 	
+	@Override
 	public void visitMethod(Method method){
 		Code code = method.getCode();
 		
@@ -82,6 +83,7 @@ public class LineNumberVisitor extends ByteCodeVisitor {
 				breakPoint.getDeclaringCompilationUnitName(), appJavaClassPath);
 		final List<TypeDeclaration> list = new ArrayList<>();
 		cu.accept(new ASTVisitor() {
+			@Override
 			public boolean visit(TypeDeclaration type) {
 				list.add(type);
 				return true;

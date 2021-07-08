@@ -22,6 +22,7 @@ public class SqliteConnectionFactory implements ConnectionFactory {
 		this.dataSource = new SQLiteDataSource();
 	}
 
+	@Override
 	public Connection initializeConnection() throws SQLException {
 		dataSource.setUrl("jdbc:sqlite:" + DBSettings.dbPath);
 		return getConnection();

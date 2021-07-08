@@ -17,6 +17,7 @@ public class LocalVariableScope {
 		this.scope = scope;
 	}
 	
+	@Override
 	public String toString(){
 		CompilationUnit cu = getCompilationUnit();
 		int startPosition = this.scope.getStartPosition();
@@ -34,6 +35,7 @@ public class LocalVariableScope {
 		return buffer.toString();
 	}
 	
+	@Override
 	public boolean equals(Object obj){
 		if(obj == null){
 			return false;

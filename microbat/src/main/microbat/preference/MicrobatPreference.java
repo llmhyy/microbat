@@ -279,6 +279,7 @@ public class MicrobatPreference extends PreferencePage implements
 		
 	}
 	
+	@Override
 	public boolean performOk(){
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode("microbat.preference");
 		preferences.put(TARGET_PORJECT, this.projectCombo.getText());

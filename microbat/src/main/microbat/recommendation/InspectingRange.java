@@ -21,6 +21,7 @@ public class InspectingRange {
 	// endNode = suspiciousNode;
 	// }
 
+	@Override
 	public InspectingRange clone() {
 		InspectingRange inspectingRange = new InspectingRange(startNode, endNode);
 		return inspectingRange;

@@ -49,6 +49,7 @@ public class Cause {
 		return this.isWrongPath;
 	}
 	
+	@Override
 	public Cause clone(){
 		Cause clonedCause = new Cause();
 		clonedCause.buggyNode = this.buggyNode;

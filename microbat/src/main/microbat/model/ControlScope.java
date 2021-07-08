@@ -23,6 +23,7 @@ public class ControlScope implements Scope{
 		return rangeList;
 	}
 
+	@Override
 	public boolean isLoop() {
 		return isLoop;
 	}
@@ -46,6 +47,7 @@ public class ControlScope implements Scope{
 		return false;
 	}
 
+	@Override
 	public boolean containsNodeScope(TraceNode node) {
 		return containLocation(node.getBreakPoint());
 	}

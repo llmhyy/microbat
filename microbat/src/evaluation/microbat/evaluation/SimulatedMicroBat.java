@@ -617,7 +617,7 @@ public class SimulatedMicroBat {
 		
 		List<TraceNode> commonNodes = findCommonNodes(dominatees, actualWrongNodes);
 		
-		double precision = (double)commonNodes.size()/modelInfluencedSize;
+		double precision = commonNodes.size()/modelInfluencedSize;
 		double recall = (double)commonNodes.size()/actualWrongNodes.size();
 		
 		Accuracy accuracy = new Accuracy(precision, recall);

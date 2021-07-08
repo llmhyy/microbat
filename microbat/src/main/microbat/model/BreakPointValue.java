@@ -49,6 +49,7 @@ public class BreakPointValue extends VarValue {
 //		return getVariablePath();
 //	}
 	
+	@Override
 	public void setChildren(List<VarValue> children){
 		this.children = children;
 	}

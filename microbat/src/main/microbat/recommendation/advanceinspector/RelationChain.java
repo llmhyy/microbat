@@ -36,6 +36,7 @@ public class RelationChain {
 		return vars.get(searchingIndex);
 	}
 	
+	@Override
 	public String toString(){
 		StringBuffer buffer = new StringBuffer();
 		for(int i=vars.size()-1; i>=0; i--){

@@ -1509,6 +1509,7 @@ public class ProgramExecutor extends Executor {
 			this.lineNumber = lineNumber;
 		}
 
+		@Override
 		public boolean visit(MethodDeclaration md) {
 			int startLine = cu.getLineNumber(md.getStartPosition());
 			int endLine = cu.getLineNumber(md.getStartPosition() + md.getLength());
@@ -1542,6 +1543,7 @@ public class ProgramExecutor extends Executor {
 			this.lineNumber = lineNumber;
 		}
 
+		@Override
 		public boolean visit(MethodDeclaration md) {
 			int start = cu.getLineNumber(md.getStartPosition());
 			int end = cu.getLineNumber(md.getStartPosition() + md.getLength());

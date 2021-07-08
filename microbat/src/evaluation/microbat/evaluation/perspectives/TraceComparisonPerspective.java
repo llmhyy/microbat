@@ -16,6 +16,7 @@ public class TraceComparisonPerspective implements IPerspectiveFactory {
 		super();
 	}
 
+	@Override
 	public void createInitialLayout(IPageLayout factory) {
 		this.factory = factory;
 		addViews();

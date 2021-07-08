@@ -6,6 +6,7 @@ import microbat.evaluation.model.PairList;
 import microbat.model.trace.TraceNode;
 
 public class TraceNodeStructureSimilarityComparator implements TraceNodeSimilarityComparator{
+	@Override
 	public double compute(TraceNode traceNode1, TraceNode traceNode2) {
 		List<TraceNode> children1 = traceNode1.getAbstractChildren();
 		List<TraceNode> children2 = traceNode2.getAbstractChildren();

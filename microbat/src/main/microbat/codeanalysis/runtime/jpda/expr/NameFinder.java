@@ -22,6 +22,7 @@ public class NameFinder extends ASTVisitor{
 		this.token = token;
 	}
 	
+	@Override
 	public boolean visit(SimpleName name){
 		int lineNumber = cu.getLineNumber(name.getStartPosition());
 		if(lineNumber == ExpressionParser.lineNumber){

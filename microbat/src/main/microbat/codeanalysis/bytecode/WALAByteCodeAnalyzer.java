@@ -224,6 +224,7 @@ public class WALAByteCodeAnalyzer{
 			CollectionUtils.filter(allSlice,
 					new Predicate<Statement>() {
 
+						@Override
 						public boolean apply(Statement val) {
 							return val.getNode().getMethod()
 									.getDeclaringClass().getClassLoader()
@@ -637,6 +638,7 @@ public class WALAByteCodeAnalyzer{
 			this.cu = cu;
 		}
 
+		@Override
 		public boolean visit(MethodDeclaration md){
 			int startLine = cu.getLineNumber(md.getStartPosition());
 			int endLine = cu.getLineNumber(md.getStartPosition()+md.getLength());
@@ -694,7 +696,7 @@ public class WALAByteCodeAnalyzer{
 			for(int k=0; k<allInsts.length; k++){
 				
 				NormalStatement stmt = new NormalStatement(node, k);
-				StatementWithInstructionIndex stwI = (StatementWithInstructionIndex) stmt;
+				StatementWithInstructionIndex stwI = stmt;
 
 				int stmtLinNumber = getStatementLineNumber(method, stwI);
 				
@@ -863,18 +865,22 @@ public class WALAByteCodeAnalyzer{
 		}
 		
 		return new Iterable<Entrypoint>() {
+			@Override
 			public Iterator<Entrypoint> iterator() {
 				return new Iterator<Entrypoint>() {
 					private int index = 0;
 
+					@Override
 					public void remove() {
 						Assert.fail("unsupported!!");
 					}
 
+					@Override
 					public boolean hasNext() {
 						return index < entries.size();
 					}
 
+					@Override
 					public Entrypoint next() {
 						Entrypoint entry = entries.get(index);
 						index++;

@@ -631,6 +631,7 @@ public class TestCaseAnalyzer {
 		for(final BreakPoint point: executingStatements){
 			final CompilationUnit cu = JavaUtil.findCompilationUnitInProject(point.getDeclaringCompilationUnitName(), appPath);
 			cu.accept(new ASTVisitor() {
+				@Override
 				public boolean visit(MethodInvocation invocation){
 					int startLine = cu.getLineNumber(invocation.getStartPosition());
 					
