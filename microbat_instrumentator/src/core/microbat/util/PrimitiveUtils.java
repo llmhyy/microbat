@@ -58,7 +58,15 @@ public class PrimitiveUtils {
 				type.equals("double") ||
 				type.equals("long") ||
 				type.equals("short") ||
-				type.equals("byte")){
+				type.equals("byte") ||
+				type.equals(Integer.class.getCanonicalName()) ||
+				type.equals(Boolean.class.getCanonicalName()) ||
+				type.equals(Float.class.getCanonicalName()) ||
+				type.equals(Double.class.getCanonicalName()) ||
+				type.equals(Long.class.getCanonicalName()) ||
+				type.equals(Short.class.getCanonicalName()) ||
+				type.equals(Byte.class.getCanonicalName()) ||
+				type.equals(Character.class.getCanonicalName())){
 			return true;
 		}
 		
