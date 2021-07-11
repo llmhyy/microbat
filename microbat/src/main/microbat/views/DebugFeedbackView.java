@@ -53,6 +53,7 @@ import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
+import microbat.model.variable.VirtualVar;
 import microbat.recommendation.Bug;
 import microbat.recommendation.BugInferer;
 import microbat.recommendation.ChosenVariableOption;
@@ -489,7 +490,7 @@ public class DebugFeedbackView extends ViewPart {
 		});
 
 		noButton = new Button(feedbackGroup, SWT.RADIO);
-		noButton.setText(" No");
+		noButton.setText("Wrong-Var");
 		noButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
 		noButton.addMouseListener(new MouseListener() {
 			public void mouseUp(MouseEvent e) {
@@ -504,7 +505,7 @@ public class DebugFeedbackView extends ViewPart {
 		});
 		
 		wrongPathButton = new Button(feedbackGroup, SWT.CHECK);
-		wrongPathButton.setText("(Wrong Path)");
+		wrongPathButton.setText("Wrong-Flow");
 		wrongPathButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
 		wrongPathButton.addMouseListener(new MouseListener() {
 			public void mouseUp(MouseEvent e) {
@@ -1128,7 +1129,7 @@ public class DebugFeedbackView extends ViewPart {
 					return type;
 				case 1: 
 					String name = varValue.getVarName();
-					if(varValue instanceof VirtualValue){
+					if(varValue.getVariable() instanceof VirtualVar){
 						String methodName = name.substring(name.indexOf(":")+1);
 						name = "return from " + methodName + "()";
 					}
