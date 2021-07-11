@@ -75,7 +75,7 @@ public class TraceRetrieverImpl implements TraceRetriever {
 
 		return traces;
 	}
-
+	
 	protected void loadTrace(Trace trace) throws SQLException {
 		// load step
 		List<TraceNode> steps = getSteps(trace);
@@ -90,23 +90,16 @@ public class TraceRetrieverImpl implements TraceRetriever {
 		ResultSet rs = ps.executeQuery();
 		closables.add(ps);
 		closables.add(rs);
-		int total = countNumberOfStep(traceId, conn, closables);
 		long a = System.currentTimeMillis();
-		List<TraceNode> allSteps = new ArrayList<>(total);
-		for (int i = 0; i < total; i++) {
-			TraceNode node = new LazyTraceNode(null, null, i + 1, trace, step -> this.loadRWVars(step, traceId));
-			allSteps.add(node);
-		}
+		List<TraceNode> allSteps = new ArrayList<>();
 		Map<String, List<TraceNode>> locationIdMap = new HashMap<>();
 		while (rs.next()) {
 			// step order
 			int order = rs.getInt("step_order");
-			if (order > total) { // is this necessary
-				throw new SQLException("Detect invalid step order in result set!");
-			}
-			TraceNode step = allSteps.get(order - 1);
+			// TraceNode step = allSteps.get(order - 1);
+			TraceNode step = new LazyTraceNode(null, null, order, trace, new LazySupplier(traceId));
+//			TraceNode step = new TraceNode(null, null, order, trace);
 
-			step.setOrder(order);
 			// control_dominator
 			TraceNode controlDominator = getRelNode(allSteps, rs, "control_dominator");
 			step.setControlDominator(controlDominator);
@@ -153,6 +146,7 @@ public class TraceRetrieverImpl implements TraceRetriever {
 			Date timestamp = rs.getDate("time");
 			step.setTimestamp(timestamp.getTime());
 
+			allSteps.add(step);
 		}
 		long b = System.currentTimeMillis();
 		System.out.println("fill step " + (b - a));
@@ -172,10 +166,10 @@ public class TraceRetrieverImpl implements TraceRetriever {
 			closables.add(rs);
 			closables.add(ps);
 			// read_vars
-			List<VarValue>readVars = toVarValue(rs.getString("read_vars"));
+			List<VarValue>readVars = DbService.toVarValue(rs.getString("read_vars"));
 			// written_vars
 			loadVarStep = "written_vars";
-			List<VarValue>writeVars = toVarValue(rs.getString("written_vars"));
+			List<VarValue>writeVars = DbService.toVarValue(rs.getString("written_vars"));
 			return Pair.of(readVars, writeVars);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -187,22 +181,6 @@ public class TraceRetrieverImpl implements TraceRetriever {
 			this.closables = new ArrayList<>();
 		}
 		return null;
-	}
-
-	/**
-	 * Last_update knightsong Sep 9, 2020
-	 * 
-	 * @param rs
-	 * @return
-	 * @throws SQLException
-	 */
-	private int countNumberOfStep(String traceId, Connection conn, List<AutoCloseable> closables) throws SQLException {
-		PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM Step s WHERE s.trace_id=?");
-		ps.setString(1, traceId);
-		ResultSet rs = ps.executeQuery();
-		closables.add(ps);
-		closables.add(rs);
-		return rs.getInt(1);
 	}
 
 	private void loadLocations(Map<String, List<TraceNode>> locIdStepMap, Connection conn, List<AutoCloseable> closables)
@@ -243,22 +221,17 @@ public class TraceRetrieverImpl implements TraceRetriever {
 		ps.close();
 	}
 
-	protected List<VarValue> toVarValue(String xmlContent) {
-		// xmlContent = xmlContent.replace("&#", "#");
-		return VarValueXmlReader.read(xmlContent);
-	}
-
 	private TraceNode getRelNode(List<TraceNode> allSteps, ResultSet rs, String colName) throws SQLException {
 		// TODO: deprecate this for lazy evaluation
 		return null;
-		int relNodeOrder = rs.getInt(colName);
-		if (!rs.wasNull()) {
-			if (relNodeOrder > allSteps.size()) {
-				System.err.println(String.format("index out of bound: size=%d, idx=%d", allSteps.size(), relNodeOrder));
-				return null;
-			}
-			return allSteps.get(relNodeOrder - 1);
-		}
-		return null;
+//		int relNodeOrder = rs.getInt(colName);
+//		if (!rs.wasNull()) {
+//			if (relNodeOrder > allSteps.size()) {
+//				System.err.println(String.format("index out of bound: size=%d, idx=%d", allSteps.size(), relNodeOrder));
+//				return null;
+//			}
+//			return allSteps.get(relNodeOrder - 1);
+//		}
+//		return null;
 	}
 }

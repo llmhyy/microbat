@@ -593,9 +593,7 @@ public class ConcurrentTraceView extends TraceView {
 		public boolean hasChildren(Object element) {
 			if (element instanceof TraceNode) {
 				TraceNode node = (TraceNode) element;
-				// return !node.getInvocationChildren().isEmpty();
-				// return !node.getLoopChildren().isEmpty();
-				return !node.getAbstractChildren().isEmpty();
+				return node.hasChildren();
 			}
 			return false;
 		}
@@ -607,6 +605,8 @@ public class ConcurrentTraceView extends TraceView {
 
 	}
 
+	// TODO is there any difference between Providers in ConcurrentTraceView and TraceView?
+	// Re-implementation can be removed.
 	class TraceLabelProvider implements ILabelProvider {
 
 		@Override
@@ -656,6 +656,11 @@ public class ConcurrentTraceView extends TraceView {
 				TraceNode node = (TraceNode) element;
 				BreakPoint breakPoint = node.getBreakPoint();
 				// BreakPointValue programState = node.getProgramState();
+				
+				// fixed breakpoint issue, leaving this in to fail fast
+				if (breakPoint == null) {
+					throw new RuntimeException("breakpoint is null");
+				}
 
 				String className = breakPoint.getClassCanonicalName();
 				if (className.contains(".")) {

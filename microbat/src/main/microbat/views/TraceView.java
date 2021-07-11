@@ -516,9 +516,7 @@ public class TraceView extends ViewPart {
 		public boolean hasChildren(Object element) {
 			if (element instanceof TraceNode) {
 				TraceNode node = (TraceNode) element;
-				// return !node.getInvocationChildren().isEmpty();
-				// return !node.getLoopChildren().isEmpty();
-				return !node.getAbstractChildren().isEmpty();
+				return node.hasChildren();
 			}
 			return false;
 		}

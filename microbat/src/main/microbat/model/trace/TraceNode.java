@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
@@ -872,51 +874,19 @@ public class TraceNode{
 	}
 	
 	public List<TraceNode> getAbstractChildren(){
-		List<TraceNode> abstractChildren = new ArrayList<>();
+		Set<TraceNode> abstractChildren = new HashSet<>();
 		
-//		if(this.loopChildren.isEmpty() && this.invocationChildren.isEmpty()){
-////			return abstractChildren;
-//		}
-//		else if(!this.loopChildren.isEmpty() && this.invocationChildren.isEmpty()){
-//			abstractChildren = loopChildren;
-//		}
-//		else if(this.loopChildren.isEmpty() && !this.invocationChildren.isEmpty()){
-//			abstractChildren.addAll(this.invocationChildren);
-//			clearLoopParentsInMethodParent(abstractChildren);
-////			return abstractChildren;
-//		}
-//		else{
-//			abstractChildren.addAll(this.invocationChildren);
-//			clearLoopParentsInMethodParent(abstractChildren);
-//			abstractChildren.addAll(this.loopChildren);
-////			return abstractChildren;
-//		}
+		abstractChildren.addAll(this.getInvocationChildren());
+		abstractChildren = abstractChildren.stream()
+				.filter(child -> !isIndirectlyLoopContains(child))
+				.collect(Collectors.toSet());
 		
-//		Collections.sort(abstractChildren, new TraceNodeOrderComparator());
-		
-		abstractChildren.addAll(this.invocationChildren);
-		clearLoopParentsInMethodParent(abstractChildren);
-		for(TraceNode loopChild: this.loopChildren){
-			if(!abstractChildren.contains(loopChild)){
-				abstractChildren.add(loopChild);
-			}
-		}
-		
-		return abstractChildren;
+		abstractChildren.addAll(this.getLoopChildren());
+		return new ArrayList<>(abstractChildren);
 	}
 	
 	public boolean isAbstractParent(){
 		return getAbstractChildren().size()!=0;
-	}
-
-	private void clearLoopParentsInMethodParent(List<TraceNode> abstractChildren) {
-		Iterator<TraceNode> iter = abstractChildren.iterator();
-		while(iter.hasNext()){
-			TraceNode node = iter.next();
-			if(isIndirectlyLoopContains(node)){
-				iter.remove();
-			}
-		}
 	}
 
 	private boolean isIndirectlyLoopContains(TraceNode node) {
@@ -934,20 +904,6 @@ public class TraceNode{
 		}
 		
 		return false;
-	}
-
-	public int findTraceLength() {
-		TraceNode node = this;
-		while(node.getStepInNext() != null){
-			if(node.getStepOverNext() != null){
-				node = node.getStepOverNext();
-			}
-			else{
-				node = node.getStepInNext();
-			}
-		}
-		
-		return node.getOrder();
 	}
 
 	public List<TraceNode> getLoopChildren() {
@@ -1140,6 +1096,10 @@ public class TraceNode{
 
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public boolean hasChildren() {
+		return !this.getAbstractChildren().isEmpty();
 	}
 
 //	public List<VarValue> getHiddenReadVariables() {

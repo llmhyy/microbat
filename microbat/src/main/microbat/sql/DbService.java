@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Set;
 
 import microbat.Activator;
+import microbat.handler.xml.VarValueXmlReader;
+import microbat.model.value.VarValue;
 import microbat.util.IResourceUtils;
 import sav.common.core.utils.CollectionUtils;
 
@@ -217,4 +219,9 @@ public class DbService {
 			}
 		}
 	}
+
+	public static List<VarValue> toVarValue(String xmlContent) {
+		return VarValueXmlReader.read(xmlContent);
+	}
+
 }

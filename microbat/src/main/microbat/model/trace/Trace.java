@@ -93,6 +93,11 @@ public class Trace {
 		this.executionList.add(node);
 	}
 	
+	public void addAllTraceNode(List<TraceNode> nodes) {
+		this.executionList.addAll(nodes);
+		this.executionList.sort(new TraceOrderComparator());
+	}
+	
 	public int size(){
 		return this.executionList.size();
 	}

@@ -272,11 +272,6 @@ public class MysqlTraceRetriever extends DbService {
 		return map;
 	}
 
-	protected List<VarValue> toVarValue(String xmlContent) {
-//		xmlContent = xmlContent.replace("&#", "#");
-		return VarValueXmlReader.read(xmlContent);
-	}
-	
 	private TraceNode getRelNode(List<TraceNode> allSteps, ResultSet rs, String colName) throws SQLException {
 		int relNodeOrder = rs.getInt(colName);
 		if (!rs.wasNull()) {

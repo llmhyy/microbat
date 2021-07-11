@@ -15,7 +15,7 @@ import sav.common.core.SavRtException;
 
 /**
  * Wrapper class over Traces collected in an execution
- * @author dingyuchen
+ * @author 
  *
  */
 public class RunningInfo {
