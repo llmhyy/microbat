@@ -132,6 +132,7 @@ Export-Package: microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,or
    org.eclipse.core.commands,
    microbat.model.trace",
  microbat.handler.xml,
+ microbat.instrumentation.output,
  microbat.model;uses:="microbat.model.variable,microbat.model.value,microbat.model.trace",
  microbat.model.trace;
   uses:="microbat.model,
