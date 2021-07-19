@@ -48,6 +48,8 @@ public class LazySupplier {
 			e.printStackTrace();
 		} finally {
 			DbService.closeDb(this.conn, this.closables);
+			this.conn = null;
+			this.closables = new ArrayList<>();
 		}
 		return null;
 	}

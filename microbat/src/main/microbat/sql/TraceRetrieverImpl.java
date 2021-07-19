@@ -71,6 +71,7 @@ public class TraceRetrieverImpl implements TraceRetriever {
 		} finally {
 			DbService.closeDb(conn, closables);
 			this.closables = new ArrayList<>();
+			this.conn = null;
 		}
 
 		return traces;
