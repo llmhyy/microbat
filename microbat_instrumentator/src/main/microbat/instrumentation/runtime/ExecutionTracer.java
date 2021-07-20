@@ -6,8 +6,10 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.LocalVariable;
@@ -215,7 +217,9 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		return varValue;
 	}
 
-	private String getStringValue(Object obj, String type) {
+	private static Set<Class<?>> stringValueBlackList = new HashSet<>();
+	
+	private String getStringValue(final Object obj, String type) {
 		try {
 			if (obj == null) {
 				return "null";
@@ -250,7 +254,18 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				return obj.getClass().getName();
 			}
 
-			return String.valueOf(obj);// obj.toString();
+			if(stringValueBlackList.contains(obj.getClass())) {
+				return "$unknown (estimated as too cost to have its value)";
+			}
+			
+			long t1 = System.currentTimeMillis();
+			String value = String.valueOf(obj);// obj.toString();
+			long t2 = System.currentTimeMillis();
+			if(t2-t1 > 500) {
+				stringValueBlackList.add(obj.getClass());
+			}
+			
+			return value;
 		} catch (Throwable t) {
 			return null;
 		}
@@ -677,6 +692,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		try {
 			hitLine(line, className, methodSignature);
 			TraceNode latestNode = trace.getLatestNode();
+			if(latestNode == null) return;
 			latestNode.setException(true);
 			boolean invocationLayerChanged = this.methodCallStack.popForException(methodSignature, appJavaClassPath);
 
