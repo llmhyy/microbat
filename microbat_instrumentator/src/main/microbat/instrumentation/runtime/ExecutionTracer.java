@@ -428,7 +428,11 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		for (int i = 0; i < length; i++) {
 			int k = startPosition + i;
 			Object elementValue = Array.get(array, k);
-			VarValue value = addArrayElementVarValue(array, k, elementValue, elementValue.getClass().getName(), line);
+			String elementType = "Object";
+			if(elementValue != null) {
+				elementType = elementValue.getClass().getName();
+			}
+			VarValue value = addArrayElementVarValue(array, k, elementValue, elementType, line);
 			value.addParent(sourceParentValue);
 			addRWriteValue(trace.getLatestNode(), value, false);
 		}
@@ -443,10 +447,12 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		for (int i = 0; i < length; i++) {
 			int k = srcStartPos + i;
 			Object elementValue = Array.get(sourceArray, k);
-
+			String elementType = "Object";
+			if(elementValue != null) {
+				elementType = elementValue.getClass().getName();
+			}
 			int index = startPosition + i;
-			VarValue value = addArrayElementVarValue(targetArray, index, elementValue, elementValue.getClass().getName(),
-					line);
+			VarValue value = addArrayElementVarValue(targetArray, index, elementValue, elementType, line);
 			value.addParent(targetParentValue);
 			addRWriteValue(trace.getLatestNode(), value, true);
 		}
