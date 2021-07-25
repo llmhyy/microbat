@@ -80,7 +80,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 	 * 
 	 * 	 
 	 */
-	public String insertTrace(Trace trace, String runId, Connection conn, List<AutoCloseable> closables)
+	public void insertTrace(Trace trace, String runId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
 		PreparedStatement ps;
 		String sql = "INSERT INTO Trace (trace_id, run_id,thread_id,thread_name,isMain,generated_time) "
@@ -88,7 +88,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		int idx = 1;
-		String traceId = getUUID();
+		String traceId = Long.toString(trace.getThreadId());
 		ps.setString(idx++, traceId);
 		ps.setString(idx++, runId);
 		ps.setString(idx++, String.valueOf(trace.getThreadId()));
@@ -98,7 +98,6 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		ps.execute();
 		insertSteps(traceId, trace.getExecutionList(), conn, closables);
 		insertStepVariableRelation(trace, traceId, conn, closables);
-		return traceId;
 	}
 
 	private void insertSteps(String traceId, List<TraceNode> exectionList, Connection conn, List<AutoCloseable> closables)
@@ -216,6 +215,22 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		} else {
 			ps.setNull(idx, java.sql.Types.INTEGER);
 		}
+	}
+
+	@Override
+	public void storeTraceNodes(long threadId, List<TraceNode> nodes) {
+		Connection conn = null;
+		List<AutoCloseable> closables = new ArrayList<AutoCloseable>();
+		try {
+			conn = getConnection();
+			this.insertSteps(Long.toString(threadId), nodes, conn, closables);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			rollback(conn);
+		} finally {
+			closeDb(conn, closables);
+		}
+		
 	}
 
 }

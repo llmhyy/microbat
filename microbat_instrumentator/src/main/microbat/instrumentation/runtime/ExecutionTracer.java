@@ -21,6 +21,7 @@ import microbat.codeanalysis.bytecode.MethodFinderBySignature;
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
+import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
@@ -47,11 +48,13 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	public static int variableLayer = 2;
 	public static int stepLimit = Integer.MAX_VALUE;
 	public static int expectedSteps = Integer.MAX_VALUE;
+	public static AgentParams agentParams;
 //	private static int tolerantExpectedSteps = expectedSteps;
 	public static boolean avoidProxyToString = false;
 	private long threadId;
 
 	private Trace trace;
+	private IntervalRecorder recorder;
 
 	private MethodCallStack methodCallStack;
 	private TrackingDelegate trackingDelegate;
@@ -74,6 +77,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		trackingDelegate = new TrackingDelegate(threadId);
 		methodCallStack = new MethodCallStack();
 		trace = new Trace(appJavaClassPath);
+		this.recorder = new IntervalRecorder(threadId);
 	}
 
 	// private void buildDataRelation(TraceNode currentNode, VarValue value, String
@@ -1360,6 +1364,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 
 	public String getThreadName() {
 		return this.trace.getThreadName();
+	}
+
+	public static void setAgentParams(AgentParams agentParams) {
+		ExecutionTracer.agentParams = agentParams;
 	}
 
 
