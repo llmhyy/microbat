@@ -95,6 +95,9 @@ public class StartDebugHandler extends AbstractHandler {
 				
 				@Override
 				protected IStatus run(IProgressMonitor monitor) {
+					Settings.interestedVariables.clear();
+					Settings.potentialCorrectPatterns.clear();
+					
 					try{
 						monitor.beginTask("Construct Trace Model", 100);
 						
