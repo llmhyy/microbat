@@ -113,7 +113,7 @@ public class StepRecommender {
 	
 	private boolean enableLoopInference = true;
 	
-	private int state = DebugState.SCLICING;
+	private int state = DebugState.SLICING;
 	
 	/**
 	 * Fields for clear state.
@@ -139,7 +139,7 @@ public class StepRecommender {
 		
 		if(feedbackType.equals(UserFeedback.UNCLEAR)){
 			
-			if(state==DebugState.SCLICING || state==DebugState.SKIP || state==DebugState.BINARY_SEARCH || state==DebugState.DETAIL_INSPECT){
+			if(state==DebugState.SLICING || state==DebugState.SKIP || state==DebugState.BINARY_SEARCH || state==DebugState.DETAIL_INSPECT){
 				latestClearState = state;
 			}
 			
@@ -246,11 +246,11 @@ public class StepRecommender {
 		
 		TraceNode lastRecommendNode = latestCause.getRecommendedNode();
 		if(lastRecommendNode!= null && !currentNode.equals(lastRecommendNode)){
-			state = DebugState.SCLICING;
+			state = DebugState.SLICING;
 		}
 		
 		TraceNode suspiciousNode = null;
-		if(state == DebugState.SCLICING){
+		if(state == DebugState.SLICING){
 			suspiciousNode = handleSimpleInferenceState(trace, currentNode, userFeedBack);
 			
 		}
@@ -316,7 +316,7 @@ public class StepRecommender {
 						this.lastNode = currentNode;
 					}
 					else{
-						state = DebugState.SCLICING;
+						state = DebugState.SLICING;
 						suspiciousNode = handleSimpleInferenceState(trace, currentNode, userFeedback);
 					}
 				}
@@ -361,7 +361,7 @@ public class StepRecommender {
 			this.lastNode = currentNode;
 		}
 		else{
-			state = DebugState.SCLICING;
+			state = DebugState.SLICING;
 			
 			this.loopRange.clearSkipPoints();
 			
@@ -427,58 +427,91 @@ public class StepRecommender {
 			this.latestCause.setWrongPath(false);			
 		}
 		
-		
-		boolean isPathInPattern = false;
-		PathInstance path = null;
-		if(this.latestCause.getBuggyNode() != null){
-			path = new PathInstance(suspiciousNode, this.latestCause.getBuggyNode());
-			isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path);				
-		}
-		
-		if(this.isEnableLoopInference() && isPathInPattern && !shouldStopOnCheckedNode(currentNode, path)){
-			state = DebugState.SKIP;
+		if(this.isEnableLoopInference()) {
+			PathInstance path = new PathInstance(suspiciousNode, this.latestCause.getBuggyNode());
+			Settings.potentialCorrectPatterns.addPathForPattern(path);
 			
-			this.loopRange.endNode = path.getEndNode();
 			this.loopRange.skipPoints.clear();
+			suspiciousNode = trySkip(suspiciousNode, trace);
 			
-			TraceNode oldSusiciousNode = suspiciousNode;
-			while(Settings.potentialCorrectPatterns.containsPattern(path) 
-					&& !shouldStopOnCheckedNode(suspiciousNode, path)){
-				
-				Settings.potentialCorrectPatterns.addPathForPattern(path);
-				
-				oldSusiciousNode = suspiciousNode;
-				
-				suspiciousNode = Settings.potentialCorrectPatterns.inferNextSuspiciousNode(oldSusiciousNode);
-				System.currentTimeMillis();
-				
-				if(suspiciousNode == null){
-					break;
-				}
-				else{
-					this.loopRange.skipPoints.add(oldSusiciousNode);
-					path = new PathInstance(suspiciousNode, oldSusiciousNode);					
-				}
-			}
-			
-			/**
-			 * In this case, it means that there is actually nothing skipped.
-			 */
-			if(this.loopRange.skipPoints.isEmpty()){
-				state = DebugState.SCLICING;
-			}
-			
-			this.lastNode = currentNode;
-			return oldSusiciousNode;
+			return suspiciousNode;
 		}
 		else{
-			state = DebugState.SCLICING;
+			state = DebugState.SLICING;
 			
 			this.lastNode = currentNode;
 			
 			return suspiciousNode;				
 		}
 		
+//		boolean isPathInPattern = false;
+//		PathInstance path = null;
+//		if(this.latestCause.getBuggyNode() != null){
+//			path = new PathInstance(suspiciousNode, this.latestCause.getBuggyNode());
+//			isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path);				
+//		}
+//		
+//		if(this.isEnableLoopInference() && isPathInPattern && !shouldStopOnCheckedNode(currentNode, path)){
+//			state = DebugState.SKIP;
+//			
+//			this.loopRange.endNode = path.getEndNode();
+//			this.loopRange.skipPoints.clear();
+//			
+//			TraceNode oldSusiciousNode = suspiciousNode;
+//			while(Settings.potentialCorrectPatterns.containsPattern(path) 
+//					&& !shouldStopOnCheckedNode(suspiciousNode, path)){
+//				
+//				Settings.potentialCorrectPatterns.addPathForPattern(path);
+//				
+//				oldSusiciousNode = suspiciousNode;
+//				
+//				suspiciousNode = Settings.potentialCorrectPatterns.inferNextSuspiciousNode(oldSusiciousNode);
+//				System.currentTimeMillis();
+//				
+//				if(suspiciousNode == null){
+//					break;
+//				}
+//				else{
+//					this.loopRange.skipPoints.add(oldSusiciousNode);
+//					path = new PathInstance(suspiciousNode, oldSusiciousNode);					
+//				}
+//			}
+//			
+//			/**
+//			 * In this case, it means that there is actually nothing skipped.
+//			 */
+//			if(this.loopRange.skipPoints.isEmpty()){
+//				state = DebugState.SCLICING;
+//			}
+//			
+//			this.lastNode = currentNode;
+//			return oldSusiciousNode;
+//		}
+//		else{
+//			state = DebugState.SCLICING;
+//			
+//			this.lastNode = currentNode;
+//			
+//			return suspiciousNode;				
+//		}
+		
+	}
+
+	private TraceNode trySkip(TraceNode suspiciousNode, Trace trace) {
+		for(VarValue value: suspiciousNode.getReadVariables()) {
+			TraceNode node = trace.findProducer(value, suspiciousNode);
+			
+			PathInstance path = new PathInstance(node, suspiciousNode);
+			boolean isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path);
+			if(isPathInPattern) {
+				state = DebugState.SKIP;
+				this.loopRange.skipPoints.add(node);
+				
+				return trySkip(node, trace);
+			}
+		}
+		
+		return suspiciousNode;
 	}
 
 	/**
