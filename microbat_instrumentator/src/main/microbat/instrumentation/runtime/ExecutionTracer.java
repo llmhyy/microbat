@@ -1314,6 +1314,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	public static boolean isShutdown() {
 		return state == TracingState.SHUTDOWN;
 	}
+	
+	public static TracingState getTracingState() {
+		return state;
+	}
 
 	public Trace getTrace() {
 		return trace;

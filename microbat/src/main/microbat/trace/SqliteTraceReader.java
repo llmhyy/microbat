@@ -14,7 +14,6 @@ import microbat.model.trace.Trace;
 import microbat.sql.DbService;
 import microbat.sql.TraceRetrieverImpl;
 import microbat.sql.TraceRetriever;
-import sav.commons.testdata.calculator.CalculatorTest1;
 
 /**
  * @author knightsong
