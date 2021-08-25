@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
 
 public class ExecutionTracerTest {
 
@@ -60,11 +61,19 @@ public class ExecutionTracerTest {
 
 	@Test
 	public final void test_hitInvoke() {
-		final String classname = "exp.concurrency.case1.DiningPhilosophersDebug";
-		final String methodSig = "exp.concurrency.case1.DiningPhilosophersDebug#main([Ljava/lang/String;)V";
-		final int line = 18;
+		final String invokeTypeSign = "exp.concurrency.case1.Philosopher";
+		final String methodSig = "exp.concurrency.case1.Philosopher#start()V";
+		final String residingClassName = "exp.concurrency.case1.DiningPhilosophersDebug";
+		final String residingMethodSignature = "exp.concurrency.case1.DiningPhilosophersDebug#main([Ljava/lang/String;)V";
+		final String paramTypeSignsCode = "";
+		final String returnTypeSign = "V";
+		final Object[] params = new Object[]{};
+		final int line = 21;
 		ExecutionTracer tracer = new ExecutionTracer(0);
-		tracer._hitInvoke();
+		tracer._hitInvoke(null, invokeTypeSign, methodSig, params, paramTypeSignsCode, returnTypeSign,
+				line, residingClassName, residingMethodSignature);
+		TraceNode node = tracer.getTrace().getLatestNode();
+		// assert node's invoking details
 	}
 
 	@Test
