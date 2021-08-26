@@ -38,8 +38,6 @@ public class VMStarter {
 		SocketLanchingConnector0 connector = new SocketLanchingConnector0((VirtualMachineManagerImpl)manager);
 		Map<String, Connector.Argument> arguments = connectorArguments(connector, configuration);
 		
-		System.currentTimeMillis();
-		
         try {
         	File workDir = new File(configuration.getWorkingDirectory());
         	vm = connector.launch(arguments, workDir, configuration);

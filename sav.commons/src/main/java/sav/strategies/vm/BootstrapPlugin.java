@@ -2,7 +2,6 @@ package sav.strategies.vm;
 
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jdt.internal.debug.core.JDIDebugPlugin;
 
 /**
  * The code of this class is copied from eclipse JDT project, in order to make the whole Ziyuan project works
@@ -29,7 +28,8 @@ public class BootstrapPlugin {
 												// started
 				className = extensionRegistry
 						.getExtensionPoint(
-								JDIDebugPlugin.getUniqueIdentifier(),
+//								JDIDebugPlugin.getUniqueIdentifier(),
+								"",
 								"jdiclient").getLabel(); //$NON-NLS-1$
 			}
 			Class<?> clazz = null;
@@ -48,7 +48,7 @@ public class BootstrapPlugin {
 
 		if (fVirtualMachineManager == null) {
 			// If any exceptions occurred, we'll end up here
-			fVirtualMachineManager = new org.eclipse.jdi.internal.VirtualMachineManagerImpl();
+			fVirtualMachineManager = virtualMachineManager();
 		}
 
 		return fVirtualMachineManager;

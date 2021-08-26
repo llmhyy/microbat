@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.CommandLine;

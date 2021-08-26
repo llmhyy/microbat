@@ -1,17 +1,16 @@
 package microbat.tools;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.io.FileUtils;
-
 import microbat.instrumentation.Premain;
+import org.apache.commons.io.FileUtils;
 import sav.common.core.SavException;
 import sav.common.core.utils.CollectionBuilder;
 import sav.common.core.utils.StringUtils;
 import sav.commons.TestConfiguration;
 import sav.strategies.vm.VMRunner;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RelocateJarPackageTool extends JarPackageTool {
 	public static final String MAVEN_FOLDER = BASE_DIR + "build/maven";

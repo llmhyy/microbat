@@ -1,20 +1,18 @@
 package microbat.instrumentation.runtime;
 
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import microbat.model.trace.Trace;
-import microbat.model.trace.TraceNode;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ExecutionTracerTest {
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeEach
+	public void setUp() {
 		ExecutionTracer.appJavaClassPath = null;
 		ExecutionTracer.setExpectedSteps(0);
 		ExecutionTracer.setStepLimit(0);
