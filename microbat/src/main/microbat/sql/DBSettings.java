@@ -9,6 +9,7 @@ public class DBSettings {
 	
 	public static final int SQLITE3_DBMS = 0;
 	public static final int MYSQL_DBMS = 1;
+	public static final int NEO4J_DBMS = 2;
 	
 	public static String dbAddress = "localhost";
 	public static int dbPort = 3306;
