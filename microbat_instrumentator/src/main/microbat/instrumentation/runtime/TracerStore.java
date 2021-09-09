@@ -31,6 +31,7 @@ public abstract class TracerStore<T extends ExecutionTracer> {
 
 	public void setMainThreadId(long mainThreadId) {
 		this.mainThreadId = mainThreadId;
+		get(mainThreadId).setMain(true);
 	}
 
 	public T getMainThreadTracer() {

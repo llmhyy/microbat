@@ -1239,4 +1239,8 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	public Trace getTrace() {
 		return this.trace;
 	}
+
+	public void setMain(boolean isMain) {
+		this.trace.setMain(isMain);
+	}
 }
