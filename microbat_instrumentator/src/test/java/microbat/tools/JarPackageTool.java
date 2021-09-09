@@ -91,6 +91,35 @@ public class JarPackageTool {
 			.append("-C").append(BASE_DIR)
 			.append("lib/slf4j-api-1.7.12.jar");
 		vmRunner.startAndWaitUntilStop(cmd.toCollection());	
+		cmd.clear();
+		
+		DEPLOY_JAR_PATH = "/home/dingyuchen/eclipse/committers-2021-03/eclipse/dropins/junit_lib";
+		cmd.append(TestConfiguration.getJavaHome() + "/bin/jar")
+			.append("cfm")
+			.append(DEPLOY_JAR_PATH)
+			.append(BASE_DIR + "/META-INF/MANIFEST.MF")
+			.append("-C")
+			.append(BASE_DIR + "bin")
+			.append("microbat")
+			.append("-C").append(BASE_DIR)
+			.append("lib/" + agentJar)
+			.append("-C").append(BASE_DIR)
+			.append("lib/bcel-6.0.jar")
+			.append("-C").append(BASE_DIR)
+			.append("lib/javassist.jar")
+			.append("-C").append(BASE_DIR)
+			.append("lib/commons-lang-2.6.jar")
+			.append("-C").append(BASE_DIR)
+			.append("lib/sav.commons.simplified.jar")
+			.append("-C").append(BASE_DIR)
+			.append("lib/commons-io-1.3.2.jar")
+			.append("-C").append(BASE_DIR)
+			.append("lib/mysql-connector-java-5.1.44-bin.jar")
+			.append("-C").append(BASE_DIR)
+			.append("lib/sqlite-jdbc-3.32.3.2.jar")
+			.append("-C").append(BASE_DIR)
+			.append("lib/slf4j-api-1.7.12.jar");
+		vmRunner.startAndWaitUntilStop(cmd.toCollection());	
 		
 		System.out.println("Deploy instrumentator.jar to " + DEPLOY_JAR_PATH);
 		System.out.println("Done!");

@@ -3,7 +3,7 @@ package microbat.instrumentation.trace.testdata;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.instrumentation.runtime.ExecutionTracer;
+import microbat.instrumentation.runtime.ExecutionTrace;
 import microbat.instrumentation.runtime.IExecutionTracer;
 
 public class InvokeSample {
@@ -17,7 +17,7 @@ public class InvokeSample {
       }
   }
 
-  private void run() { IExecutionTracer tracer = ExecutionTracer._getTracer(true, "InvokeSample", "run", 19, 22, "", 
+  private void run() { IExecutionTracer tracer = ExecutionTrace._getTracer(true, "InvokeSample", "run", 19, 22, "", 
 		  "", new Object[1]);
       List<String> ls = new ArrayList<>();
       ls.add("Good Day");  tracer._hitInvoke(null, null, "methodname", null, "paramTypeSignsCode", "returnTypeSign", 17, "", "");

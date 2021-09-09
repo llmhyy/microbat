@@ -7,7 +7,7 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
 import microbat.instrumentation.AgentLogger;
-import microbat.instrumentation.runtime.ExecutionTracer;
+import microbat.instrumentation.runtime.ExecutionTrace;
 import microbat.instrumentation.runtime.IExecutionTracer;
 import sav.common.core.utils.FileUtils;
 
@@ -16,10 +16,10 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 	@Override
 	public final byte[] transform(ClassLoader loader, String classFName, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-		if (ExecutionTracer.isShutdown()) {
+		if (ExecutionTrace.isShutdown()) {
 			return null;
 		}
-		IExecutionTracer tracer = ExecutionTracer.getCurrentThreadStore();
+		IExecutionTracer tracer = ExecutionTrace.getCurrentThreadStore();
 		/*
 		 * The reason we need to lock and unlock the tracer:
 		 * when a method which is being traced invoke a another method which class is required to be loaded,

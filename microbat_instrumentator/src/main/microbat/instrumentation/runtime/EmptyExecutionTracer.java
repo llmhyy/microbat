@@ -1,5 +1,7 @@
 package microbat.instrumentation.runtime;
 
+import microbat.model.trace.Trace;
+
 public class EmptyExecutionTracer implements IExecutionTracer {
 	private static final IExecutionTracer instance = new EmptyExecutionTracer();
 	
@@ -117,6 +119,11 @@ public class EmptyExecutionTracer implements IExecutionTracer {
 	@Override
 	public void setThreadName(String threadName) {
 		
+	}
+
+	@Override
+	public Trace getTrace() {
+		return null;
 	}
 
 }
