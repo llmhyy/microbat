@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import microbat.instrumentation.runtime.ExecutionTrace;
 import microbat.instrumentation.runtime.ExecutionTracer;
 import microbat.model.trace.Trace;
 import sav.common.core.utils.StringUtils;
@@ -31,7 +32,7 @@ public class GlobalFilterChecker {
 	public void startup(AppJavaClassPath appClasspath, String includeExpression, String excludeExpression) {
 		extLibs = new ArrayList<>();
 		appBinFolders = new ArrayList<>();
-		ExecutionTracer.appJavaClassPath = appClasspath;
+		ExecutionTrace.setAppJavaClassPath(appClasspath);
 		String workingDir = getPath(appClasspath.getWorkingDirectory());
 		for (String cp : appClasspath.getClasspaths()) {
 			String path = getPath(cp);

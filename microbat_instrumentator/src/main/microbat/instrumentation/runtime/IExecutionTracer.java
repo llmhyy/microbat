@@ -1,5 +1,7 @@
 package microbat.instrumentation.runtime;
 
+import microbat.model.trace.Trace;
+
 public interface IExecutionTracer {
 
 	public void _hitInvoke(Object invokeObj, String invokeTypeSign, String methodName, Object[] params,
@@ -51,5 +53,7 @@ public interface IExecutionTracer {
 	public void unLock();
 
 	public void setThreadName(String threadName);
+
+	public Trace getTrace();
 
 }

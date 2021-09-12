@@ -3,7 +3,7 @@ package microbat.instrumentation;
 import java.util.List;
 
 import microbat.instrumentation.AgentParams.LogType;
-import microbat.instrumentation.runtime.ExecutionTracer;
+import microbat.instrumentation.runtime.ExecutionTrace;
 
 public class AgentLogger {
 	private static boolean enableDebug;
@@ -50,7 +50,7 @@ public class AgentLogger {
 
 	public static void printProgress(int curStep) {
 		if (printProgress) {
-			int totalSteps = ExecutionTracer.expectedSteps == Integer.MAX_VALUE? ExecutionTracer.stepLimit : ExecutionTracer.expectedSteps;
+			int totalSteps = ExecutionTrace.getExpectedSteps() == Integer.MAX_VALUE? ExecutionTrace.getStepLimit() : ExecutionTrace.getExpectedSteps();
 			System.out.println(new StringBuffer().append(AgentConstants.PROGRESS_HEADER)
 					.append(curStep).append(" ").append(totalSteps).append(" ").toString());
 		}

@@ -8,7 +8,7 @@ import microbat.instrumentation.filter.CodeRangeUserFilter;
 import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.instrumentation.filter.OverLongMethodFilter;
 import microbat.instrumentation.instr.TraceTransformer;
-import microbat.instrumentation.runtime.ExecutionTracer;
+import microbat.instrumentation.runtime.ExecutionTrace;
 import microbat.instrumentation.runtime.IExecutionTracer;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -31,9 +31,9 @@ public class TraceAgent implements IAgent {
 		/* init filter */
 		AppJavaClassPath appPath = agentParams.initAppClassPath();
 		GlobalFilterChecker.setup(appPath, agentParams.getIncludesExpression(), agentParams.getExcludesExpression());
-		ExecutionTracer.appJavaClassPath = appPath;
-		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
-		ExecutionTracer.setStepLimit(agentParams.getStepLimit());
+		ExecutionTrace.setAppJavaClassPath(appPath);
+		ExecutionTrace.setVariableLayer(agentParams.getVariableLayer());
+		ExecutionTrace.setStepLimit(agentParams.getStepLimit());
 		if (!agentParams.isRequireMethodSplit()) {
 			agentParams.getUserFilters().register(new OverLongMethodFilter(agentParams.getOverlongMethods()));
 		}
@@ -42,32 +42,26 @@ public class TraceAgent implements IAgent {
 			agentParams.getUserFilters().register(new CodeRangeUserFilter(agentParams.getCodeRanges()));
 		}
 
-		ExecutionTracer.setExpectedSteps(agentParams.getExpectedSteps());
-		ExecutionTracer.avoidProxyToString = agentParams.isAvoidProxyToString();
+		ExecutionTrace.setExpectedSteps(agentParams.getExpectedSteps());
+		ExecutionTrace.setAvoidProxyToString(agentParams.isAvoidProxyToString());
 	}
 
 	public void shutdown() throws Exception {
-		ExecutionTracer.shutdown();
+		ExecutionTrace.shutdown();
 		/* collect trace & store */
 		AgentLogger.debug("Building trace dependencies ...");
 		timer.newPoint("Building trace dependencies");
 		// FIXME -mutithread LINYUN [3]
 		// LLT: only trace of main thread is recorded.
-		List<IExecutionTracer> tracers = ExecutionTracer.getAllThreadStore();
+		List<IExecutionTracer> tracers = ExecutionTrace.getAllThreadStore();
 
-		int size = tracers.size();
-		List<Trace> traceList = new ArrayList<>(size);
-		for (int i = 0; i < size; i++) {
-
-			ExecutionTracer tracer = (ExecutionTracer) tracers.get(i);
-
-			Trace trace = tracer.getTrace();
-			trace.setThreadId(tracer.getThreadId());
-			trace.setThreadName(tracer.getThreadName());
-			trace.setMain(ExecutionTracer.getMainThreadStore().equals(tracer));
-
+		List<Trace> traceList = ExecutionTrace.getTraceList();
+		for (Trace trace : traceList) {
+			// TODO: check for name and Id and main to be initialized in tracer
+//			trace.setThreadId(tracer.getThreadId());
+//			trace.setThreadName(tracer.getThreadName());
+//			trace.setMain(ExecutionTrace.getMainThreadStore().equals(tracer));
 			constructTrace(trace);
-			traceList.add(trace);
 		}
 
 		timer.newPoint("Saving trace");
@@ -80,7 +74,7 @@ public class TraceAgent implements IAgent {
 		GlobalFilterChecker.addFilterInfo(trace);
 
 		StepMismatchChecker.logNormalSteps(trace);
-		ExecutionTracer.dispose(); // clear cache
+		ExecutionTrace.dispose(); // clear cache
 		long t1 = System.currentTimeMillis();
 		AgentLogger.debug("create VirtualDataRelation....");
 		createVirtualDataRelation(trace);
@@ -182,14 +176,14 @@ public class TraceAgent implements IAgent {
 
 	@Override
 	public void startTest(String junitClass, String junitMethod) {
-		ExecutionTracer._start();
-		ExecutionTracer.appJavaClassPath.setOptionalTestClass(junitClass);
-		ExecutionTracer.appJavaClassPath.setOptionalTestMethod(junitMethod);
+		ExecutionTrace._start();
+		ExecutionTrace.setAppJavaClassPathOptionalTestClass(junitClass);
+		ExecutionTrace.setAppJavaClassPathOptionalTestMethod(junitMethod);
 	}
 
 	@Override
 	public void finishTest(String junitClass, String junitMethod) {
-		ExecutionTracer.shutdown();
+		ExecutionTrace.shutdown();
 	}
 
 	@Override
@@ -210,6 +204,6 @@ public class TraceAgent implements IAgent {
 
 	@Override
 	public boolean isInstrumentationActive() {
-		return !ExecutionTracer.isShutdown();
+		return !ExecutionTrace.isShutdown();
 	}
 }

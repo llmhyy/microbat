@@ -43,39 +43,16 @@ import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class ExecutionTracer implements IExecutionTracer, ITracer {
-	private static ExecutionTracerStore rtStore = new ExecutionTracerStore();
-
-	public static AppJavaClassPath appJavaClassPath;
-	public static int variableLayer = 2;
-	public static int stepLimit = Integer.MAX_VALUE;
-	public static int expectedSteps = Integer.MAX_VALUE;
-//	private static int tolerantExpectedSteps = expectedSteps;
-	public static boolean avoidProxyToString = false;
 	private long threadId;
-
 	private Trace trace;
-
 	private MethodCallStack methodCallStack;
-	private TrackingDelegate trackingDelegate;
+	private TracingContext ctx;
 
-	public static void setExpectedSteps(int expectedSteps) {
-		if (expectedSteps != AgentConstants.UNSPECIFIED_INT_VALUE) {
-			ExecutionTracer.expectedSteps = expectedSteps;
-//			tolerantExpectedSteps = expectedSteps * 2;
-		}
-	}
-
-	public static void setStepLimit(int stepLimit) {
-		if (stepLimit != AgentConstants.UNSPECIFIED_INT_VALUE) {
-			ExecutionTracer.stepLimit = stepLimit;
-		}
-	}
-
-	public ExecutionTracer(long threadId) {
+	public ExecutionTracer(long threadId, TracingContext ctx) {
 		this.threadId = threadId;
-		trackingDelegate = new TrackingDelegate(threadId);
-		methodCallStack = new MethodCallStack();
-		trace = new Trace(appJavaClassPath);
+		this.methodCallStack = new MethodCallStack();
+		this.trace = new Trace(ctx.appJavaClassPath);
+		this.ctx = ctx;
 	}
 
 	// private void buildDataRelation(TraceNode currentNode, VarValue value, String
@@ -126,7 +103,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	// }
 
 	private VarValue appendVarValue(Object value, Variable var, VarValue parent) {
-		return appendVarValue(value, var, parent, variableLayer);
+		return appendVarValue(value, var, parent, ctx.variableLayer);
 	}
 
 	private VarValue appendVarValue(Object value, Variable var, VarValue parent, int retrieveLayer) {
@@ -250,7 +227,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			// }
 			// }
 
-			if (avoidProxyToString && isProxyClass(obj.getClass())) {
+			if (ctx.avoidProxyToString && isProxyClass(obj.getClass())) {
 				return obj.getClass().getName();
 			}
 
@@ -289,7 +266,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	 */
 	public void enterMethod(String className, String methodSignature, int methodStartLine, int methodEndLine,
 			String paramTypeSignsCode, String paramNamesCode, Object[] params) {
-		trackingDelegate.untrack();
+		this.untrack();
 		TraceNode caller = trace.getLatestNode();
 		if (caller != null && caller.getMethodSign().contains("<clinit>")) {
 			caller = caller.getInvocationParent();
@@ -335,10 +312,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			}
 			hitLine(methodStartLine, className, methodSignature);
 		} else {
-			trackingDelegate.track();
+			this.track();
 			return;
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	private static Map<String, Integer> adjustVarMap = new HashMap<>();
@@ -350,7 +327,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		}
 		String shortSign = fullSign.substring(fullSign.indexOf("#") + 1, fullSign.length());
 		MethodFinderBySignature finder = new MethodFinderBySignature(shortSign);
-		ByteCodeParser.parse(className, finder, appJavaClassPath);
+		ByteCodeParser.parse(className, finder, ctx.appJavaClassPath);
 		Method method = finder.getMethod();
 
 		if(method == null) {
@@ -377,19 +354,19 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	}
 
 	public void exitMethod(int line, String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 		if (!exclusive) {
 			methodCallStack.safePop();
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	@Override
 	public void _hitInvoke(Object invokeObj, String invokeTypeSign, String methodSig, Object[] params,
 			String paramTypeSignsCode, String returnTypeSign, int line, String residingClassName,
 			String residingMethodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			hitLine(line, residingClassName, residingMethodSignature);
 			TraceNode latestNode = trace.getLatestNode();
@@ -419,7 +396,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			handleException(t);
 		}
 
-		trackingDelegate.track();
+		this.track();
 	}
 
 	private void initInvokingDetail(Object invokeObj, String invokeTypeSign, String methodSig, Object[] params,
@@ -476,7 +453,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	@Override
 	public void _hitInvokeStatic(String invokeTypeSign, String methodSig, Object[] params, String paramTypeSignsCode,
 			String returnTypeSign, int line, String className, String residingMethodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			hitLine(line, className, residingMethodSignature);
 
@@ -499,18 +476,18 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	@Override
 	public void _hitMethodEnd(int line, String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			exitMethod(line, className, methodSignature);
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	/**
@@ -519,7 +496,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	@Override
 	public void _afterInvoke(Object returnedValue, Object invokeObj, String invokeMethodSig, int line,
 			String residingClassName, String residingMethodSignature, boolean needRevisiting) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			boolean exclusive = GlobalFilterChecker.isExclusive(residingClassName, residingMethodSignature);
 			if (!exclusive) {
@@ -555,7 +532,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	private TraceNode findInvokingMatchNode(TraceNode latestNode, String invokingMethodSig) {
@@ -591,7 +568,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	@Override
 	public void _hitReturn(Object returnObj, String returnGeneralTypeSign, int line, String className,
 			String methodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			hitLine(line, className, methodSignature);
 			String returnGeneralType = SignatureUtils.signatureToName(returnGeneralTypeSign);
@@ -618,7 +595,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			handleException(t);
 		}
 
-		trackingDelegate.track();
+		this.track();
 	}
 
 	private void handleException(Throwable t) {
@@ -643,24 +620,24 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 
 	@Override
 	public void _hitLine(int line, String className, String methodSignature, int numOfReadVars, int numOfWrittenVars) {
-		boolean isLocked = trackingDelegate.isUntrack();
-		trackingDelegate.untrack();
+		boolean isLocked = this.ctx.lockedThreads.isUntracking(this.threadId);
+		this.untrack();
 		try {
 			boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
-				trackingDelegate.track(isLocked);
+				this.track(isLocked);
 				return;
 			}
 			TraceNode latestNode = trace.getLatestNode();
 			if (latestNode != null && latestNode.getBreakPoint().getClassCanonicalName().equals(className)
 					&& latestNode.getBreakPoint().getLineNumber() == line) {
-				trackingDelegate.track(isLocked);
+				this.track(isLocked);
 				return;
 			}
 
 			int order = trace.size() + 1;
-			if (order > stepLimit) {
-				shutdown();
+			if (order > ctx.stepLimit) {
+				this.ctx.shutdown();
 				Agent._exitProgram("fail;Trace is over long!");
 			}
 //			if (order > tolerantExpectedSteps) {
@@ -683,18 +660,18 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			handleException(t);
 		}
 
-		trackingDelegate.track(isLocked);
+		this.track(isLocked);
 	}
 
 	@Override
 	public void _hitExeptionTarget(int line, String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			hitLine(line, className, methodSignature);
 			TraceNode latestNode = trace.getLatestNode();
 			if(latestNode == null) return;
 			latestNode.setException(true);
-			boolean invocationLayerChanged = this.methodCallStack.popForException(methodSignature, appJavaClassPath);
+			boolean invocationLayerChanged = this.methodCallStack.popForException(methodSignature, ctx.appJavaClassPath);
 
 			if (invocationLayerChanged) {
 				TraceNode caller = null;
@@ -711,7 +688,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	/**
@@ -723,7 +700,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	@Override
 	public void _writeField(Object refValue, Object fieldValue, String fieldName, String fieldType, int line,
 			String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			hitLine(line, className, methodSignature);
 			boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
@@ -733,11 +710,11 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 					InvokingDetail invokingDetail = latestNode.getInvokingDetail();
 					boolean relevant = invokingDetail.updateRelevantVar(refValue, fieldValue, fieldType);
 					if (!relevant) {
-						trackingDelegate.track();
+						this.track();
 						return;
 					}
 				} else {
-					trackingDelegate.track();
+					this.track();
 					return;
 				}
 			}
@@ -761,7 +738,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	private void addRWriteValue(TraceNode currentNode, List<VarValue> value, boolean isWrittenVar) {
@@ -806,7 +783,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	@Override
 	public void _writeStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line,
 			String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			// boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			// if (exclusive) {
@@ -824,7 +801,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	/**
@@ -836,7 +813,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	@Override
 	public void _readField(Object refValue, Object fieldValue, String fieldName, String fieldType, int line,
 			String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
@@ -847,7 +824,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 					relevant = invokingDetail.updateRelevantVar(refValue, fieldValue, fieldType);
 				}
 				if (!relevant) {
-					trackingDelegate.track();
+					this.track();
 					return;
 				}
 			}
@@ -875,13 +852,13 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	@Override
 	public void _readStaticField(Object fieldValue, String refType, String fieldName, String fieldType, int line,
 			String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			// boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			// if (exclusive) {
@@ -902,7 +879,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	/**
@@ -912,7 +889,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	@Override
 	public void _writeLocalVar(Object varValue, String varName, String varType, int line, int bcLocalVarIdx,
 			int varScopeStartLine, int varScopeEndLine, String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			// boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			// if (exclusive) {
@@ -936,7 +913,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	/**
@@ -945,7 +922,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	@Override
 	public void _readLocalVar(Object varValue, String varName, String varType, int line, int bcLocalVarIdx,
 			int varScopeStartLine, int varScopeEndLine, String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			// boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			// if (exclusive) {
@@ -1004,7 +981,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	private boolean isParameter(int varScopeStartLine, int varScopeEndLine, String className) {
@@ -1012,7 +989,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		String fullSign = point.getMethodSign();
 		String shortSign = fullSign.substring(fullSign.indexOf("#") + 1, fullSign.length());
 		MethodFinderBySignature finder = new MethodFinderBySignature(shortSign);
-		ByteCodeParser.parse(className, finder, appJavaClassPath);
+		ByteCodeParser.parse(className, finder, ctx.appJavaClassPath);
 		Method method = finder.getMethod();
 
 		if (method != null && method.getCode() != null) {
@@ -1037,7 +1014,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	@Override
 	public void _iincLocalVar(Object varValue, Object varValueAfter, String varName, String varType, int line,
 			int bcLocalVarIdx, int varScopeStartLine, int varScopeEndLine, String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.untrack();
 		try {
 			// boolean exclusive = FilterChecker.isExclusive(className, methodSignature);
 			// if (exclusive) {
@@ -1064,7 +1041,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	/**
@@ -1077,7 +1054,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	@Override
 	public void _readArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line,
 			String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.ctx.lockedThreads.untrack(this.threadId);
 		try {
 			boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
@@ -1088,7 +1065,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 					relevant = invokingDetail.updateRelevantVar(arrayRef, eleValue, elementType);
 				}
 				if (!relevant) {
-					trackingDelegate.track();
+					this.track();
 					return;
 				}
 			}
@@ -1107,7 +1084,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	private void addHeuristicVarChildren(TraceNode latestNode, VarValue value, boolean isWritten) {
@@ -1170,7 +1147,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	@Override
 	public void _writeArrayElementVar(Object arrayRef, int index, Object eleValue, String elementType, int line,
 			String className, String methodSignature) {
-		trackingDelegate.untrack();
+		this.ctx.lockedThreads.untrack(this.threadId);
 		try {
 			boolean exclusive = GlobalFilterChecker.isExclusive(className, methodSignature);
 			if (exclusive) {
@@ -1181,7 +1158,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 					relevant = invokingDetail.updateRelevantVar(arrayRef, eleValue, elementType);
 				}
 				if (!relevant) {
-					trackingDelegate.track();
+					this.track();
 					return;
 				}
 			}
@@ -1198,7 +1175,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		} catch (Throwable t) {
 			handleException(t);
 		}
-		trackingDelegate.track();
+		this.track();
 	}
 
 	private VarValue addArrayElementVarValue(Object arrayRef, int index, Object eleValue, String elementType, int line) {
@@ -1217,160 +1194,6 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		return value;
 	}
 
-	/**
-	 * BE VERY CAREFUL WHEN MODIFYING THIS FUNCTION! TO AVOID CREATING A LOOP, DO
-	 * KEEP THIS ATMOST SIMPLE, AVOID INVOKE ANY EXTERNAL LIBRARY FUNCTION, EVEN JDK
-	 * INSIDE THIS BLOCK OF CODE AND ITS INVOKED METHODS.! (ONLY
-	 * Thread.currentThread().getId() is exceptional used) IF NEED TO USE A LIST,MAP
-	 * -> USE AN ARRAY INSTEAD!
-	 */
-	public synchronized static IExecutionTracer _getTracer(boolean isAppClass, String className, String methodSig,
-			int methodStartLine, int methodEndLine, String paramNamesCode, String paramTypeSignsCode, Object[] params) {
-		try {
-			if (state == TracingState.TEST_STARTED && isAppClass) {
-				state = TracingState.RECORDING;
-				rtStore.setMainThreadId(Thread.currentThread().getId());
-			}
-			if (state != TracingState.RECORDING) {
-				return EmptyExecutionTracer.getInstance();
-			}
-			long threadId = Thread.currentThread().getId();
-			if (lockedThreads.isUntracking(threadId)) {
-				return EmptyExecutionTracer.getInstance();
-			}
-			lockedThreads.untrack(threadId);
-			// FIXME -mutithread LINYUN [1]
-			/*
-			 * LLT: the corresponding tracer for a thread will be load by threadId,
-			 * currently we always return null if not main thread.
-			 */
-			ExecutionTracer tracer = rtStore.get(threadId);
-			if (tracer == null) {
-				tracer = rtStore.get(threadId);
-				// lockedThreads.remove(threadId);
-				// return EmptyExecutionTracer.getInstance();
-			}
-			tracer.enterMethod(className, methodSig, methodStartLine, methodEndLine, paramTypeSignsCode, paramNamesCode,
-					params);
-			lockedThreads.track(threadId);
-			return tracer;
-		} catch (Throwable t) {
-			t.printStackTrace();
-			throw t;
-		}
-	}
-
-	public static IExecutionTracer getMainThreadStore() {
-		return rtStore.getMainThreadTracer();
-	}
-
-	public static List<IExecutionTracer> getAllThreadStore() {
-		return rtStore.getAllThreadTracer();
-	}
-
-	public static synchronized IExecutionTracer getCurrentThreadStore() {
-		synchronized (rtStore) {
-			long threadId = Thread.currentThread().getId();
-			// String threadName = Thread.currentThread().getName();
-			if (lockedThreads.isUntracking(threadId)) {
-				return EmptyExecutionTracer.getInstance();
-			}
-			IExecutionTracer tracer = rtStore.get(threadId);
-			// store.setThreadName(threadName);
-
-			if (tracer == null) {
-				tracer = EmptyExecutionTracer.getInstance();
-			}
-			return tracer;
-		}
-	}
-	
-	public static List<Long> stoppedThreads = new ArrayList<Long>();
-	
-	public static synchronized void stopRecordingCurrendThread() {
-		synchronized (rtStore) {
-			long threadId = Thread.currentThread().getId();
-			lockedThreads.untrack(threadId);
-			stoppedThreads.add(threadId);
-		}
-	}
-
-	private static TracingState state = TracingState.INIT;
-
-	public static void shutdown() {
-		state = TracingState.SHUTDOWN;
-	}
-
-	public static void dispose() {
-		adjustVarMap = new HashMap<>();
-		lockedThreads = new LockedThreads();
-		HeuristicIgnoringFieldRule.clearCache();
-	}
-
-	public static void _start() {
-		state = TracingState.TEST_STARTED;
-	}
-
-	public static boolean isShutdown() {
-		return state == TracingState.SHUTDOWN;
-	}
-
-	public Trace getTrace() {
-		return trace;
-	}
-
-	private static volatile LockedThreads lockedThreads = new LockedThreads();
-
-	static class TrackingDelegate {
-//		boolean tracing;
-		long threadId;
-
-		public TrackingDelegate(long threadId) {
-			this.threadId = threadId;
-		}
-
-		public void untrack() {
-//			if (!tracing) {
-//				lockedThreads.untrack(threadId);
-//				tracing = true;
-//			}
-			lockedThreads.untrack(threadId);
-		}
-
-		public void track(boolean preserveLock) {
-			if (!preserveLock) {
-				track();
-			}
-		}
-
-		public void track() {
-//			tracing = false;
-			lockedThreads.track(threadId);
-		}
-
-		public boolean isUntrack() {
-			return lockedThreads.isUntracking(threadId);
-		}
-	}
-
-	@Override
-	public boolean lock() {
-		boolean isLock = trackingDelegate.isUntrack();
-		if (!isLock) {
-			trackingDelegate.untrack();
-		}
-		return isLock;
-	}
-
-	public boolean isLock() {
-		return trackingDelegate.isUntrack();
-	}
-
-	@Override
-	public void unLock() {
-		trackingDelegate.track();
-	}
-
 	public long getThreadId() {
 		return threadId;
 	}
@@ -1384,5 +1207,40 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		return this.trace.getThreadName();
 	}
 
+	@Override
+	public boolean lock() {
+		boolean isLock = this.ctx.lockedThreads.isUntracking(this.threadId);
+		if (!isLock) {
+			this.untrack();
+		}
+		return isLock;
+	}
 
+	@Override
+	public void unLock() {
+		this.track();
+	}
+
+	private void untrack() {
+		this.ctx.lockedThreads.untrack(this.threadId);
+	}
+
+	private void track() {
+		this.ctx.lockedThreads.track(this.threadId);
+	}
+
+	private void track(boolean preserveLock) {
+		if (!preserveLock) {
+			this.track();
+		}
+	}
+
+	@Override
+	public Trace getTrace() {
+		return this.trace;
+	}
+
+	public void setMain(boolean isMain) {
+		this.trace.setMain(isMain);
+	}
 }

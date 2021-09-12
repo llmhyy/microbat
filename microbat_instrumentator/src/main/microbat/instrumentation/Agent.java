@@ -10,6 +10,7 @@ import microbat.instrumentation.cfgcoverage.CoverageAgent;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
 import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.instrumentation.runtime.ExecutionTracer;
+import microbat.instrumentation.runtime.ExecutionTrace;
 import microbat.instrumentation.runtime.IExecutionTracer;
 
 /**
@@ -59,7 +60,7 @@ public class Agent {
 	 */
 	public static void _exitProgram(String programMsg) {
 		if(Thread.currentThread().getName().equals("main")) {
-			ExecutionTracer.getMainThreadStore().lock();
+			ExecutionTrace.getMainThreadStore().lock();
 			Agent.programMsg = programMsg;
 			
 			boolean allInterestedThreadsStop = false;
@@ -72,7 +73,7 @@ public class Agent {
 				
 				boolean needToConitnue = false;
 				
-				for(IExecutionTracer tracer: ExecutionTracer.getAllThreadStore()) {
+				for(IExecutionTracer tracer: ExecutionTrace.getAllThreadStore()) {
 					if(tracer instanceof ExecutionTracer) {
 						ExecutionTracer eTracer = (ExecutionTracer)tracer;
 						
@@ -80,7 +81,7 @@ public class Agent {
 							continue;
 						}
 						
-						if(!ExecutionTracer.stoppedThreads.contains(eTracer.getThreadId())) {
+						if(!ExecutionTrace.stoppedThreads.contains(eTracer.getThreadId())) {
 							needToConitnue = true;
 							break;
 							
@@ -92,7 +93,7 @@ public class Agent {
 			}
 			
 			stop();
-			ExecutionTracer.getMainThreadStore().unLock();
+			ExecutionTrace.getMainThreadStore().unLock();
 			Runtime.getRuntime().exit(1); // force program to exit to avoid getting stuck by background running threads.
 		}
 		else {
@@ -100,7 +101,7 @@ public class Agent {
 			 * we do not record the thread any more
 			 */
 //			long threadId = Thread.currentThread().getId();
-			ExecutionTracer.stopRecordingCurrendThread();
+			ExecutionTrace.stopRecordingCurrendThread();
 		}
 	}
 	
