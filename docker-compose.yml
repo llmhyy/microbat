@@ -12,5 +12,6 @@ services:
       - ./neo4j/import:/import
       - ./neo4j/logs:/logs
       - ./neo4j/plugins:/plugins
+    user: "${UID}:${GID}"
 volumes:
   neo4j:
