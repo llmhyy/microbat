@@ -53,6 +53,9 @@ public class Premain {
 	 */
 	private static void installBootstrap(Instrumentation inst) throws Exception {
 		debug("install jar to boostrap...");
+//		debug("install jar to boostrap...");
+//		debug("install jar to boostrap...");
+//		debug("install jar to boostrap...");
 		File tempFolder = FileUtils.createTempFolder("microbat");
 		debug("Temp folder to extract jars: " + tempFolder.getAbsolutePath());
 		List<JarFile> bootJarPaths = getJarFiles("instrumentator_all.jar");
@@ -69,15 +72,15 @@ public class Premain {
 				 * record trace anymore, so these two lines are commented to avoid any unnecessary cause.
 				 *  */
 										"sqlite-jdbc-3.32.3.2.jar",
-										"neo4j-java-driver-4.3.4",
-										"neo4j-jdbc-driver-4.0.2"
+										"neo4j-java-driver-4.3.4.jar",
+										"neo4j-jdbc-driver-4.0.2.jar"
 //										"slf4j-api-1.7.12.jar"
 										);
 		}
 		for (JarFile jarfile : bootJarPaths) {
 			debug("append to boostrap classloader: " + jarfile.getName());
 			inst.appendToBootstrapClassLoaderSearch(jarfile);
-			if (jarfile.getName().contains("jdbc")) {
+			if (jarfile.getName().contains("jdbc") || jarfile.getName().contains("neo4j")) {
 				inst.appendToSystemClassLoaderSearch(jarfile);
 			}
 		}
