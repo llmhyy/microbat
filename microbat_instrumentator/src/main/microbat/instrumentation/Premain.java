@@ -43,7 +43,7 @@ public class Premain {
 		inst.addTransformer(new TestRunnerTranformer());
 		agent.retransformClasses(retransformableClasses);
 		
-		debug("after retransform");
+		debug("after retransform"); 
 	}
 
 	/**
