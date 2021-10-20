@@ -658,7 +658,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				return;
 			}
 
+			// TODO: keep as a counter in trace recorder
+			// TODO: or keep as a counter in trace
 			int order = trace.size() + 1;
+			// TODO: remove step limit check?
 			if (order > stepLimit) {
 				shutdown();
 				Agent._exitProgram("fail;Trace is over long!");

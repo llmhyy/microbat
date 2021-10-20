@@ -65,6 +65,7 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		dataBaseDropDown = SWTFactory.creatDropdown(contents);
 		dataBaseDropDown.add(Reader.SQLITE3.toString());
 		dataBaseDropDown.add(Reader.MYSQL.toString());
+		dataBaseDropDown.add(Reader.NEO4J.toString());
 		dataBaseDropDown.select(0);
 
 		SWTFactory.createLabel(contents, "Database Configuration:", 2);
@@ -87,7 +88,7 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
 		if (pref.getBoolean(IS_STARTDB)) {
 //			return pref.getInt(DBMS) == 1 ? Reader.MYSQL : Reader.SQLITE3;
-			return pref.getInt(DBMS) == 1 ? Reader.MYSQL : Reader.SQLITE3;
+			return READERS[pref.getInt(DBMS)];
 		} else {
 			return Reader.FILE;
 		}

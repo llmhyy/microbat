@@ -1,119 +1,109 @@
 package microbat.sql;
 
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Enumeration;
-import java.util.HashSet;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
-import org.neo4j.jdbc.Neo4jDriver;
-import org.neo4j.jdbc.bolt.impl.BoltNeo4jDriverImpl;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Transaction;
 
+import org.neo4j.driver.Driver;
+import static org.neo4j.driver.Values.parameters;
+
+import microbat.handler.xml.VarValueXmlWriter;
+import sav.common.core.utils.CollectionUtils;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 
-public class GraphRecorder {
-	private String runId;
-	// TODO: ensure query interpolation format
-	private static final String CONNECTION_URI = "jdbc:neo4j:bolt://localhost";
-	private static final String CREATE_STEP_IN_RELATIONS = "MATCH (a: Step), (b: Step) WHERE a.trace_id = b.trace_id AND a.step_in= b.step_order CREATE (a)-[:STEP_IN]->(b)";
-	private static final String CREATE_CONTROL_RELATIONS = "MATCH (a: Step), (b: Step) WHERE a.trace_id = b.trace_id AND a.step_order = b.control_dominator CREATE (a)-[:CONTROL_DOMINATES]->(b)";
-	private static final String CREATE_INVOCATION_RELATIONS = "MATCH (a: Step), (b: Step) WHERE a.trace_id = b.trace_id AND a.step_order = b.invocation_parent CREATE (a)-[:INVOKES]->(b)";
-	private static final String CREATE_LOOP_RELATIONS = "MATCH (a: Step), (b: Step) WHERE a.trace_id = b.trace_id AND a.step_order = b.loop_parent CREATE (a)-[:LOOPS]->(b)";
-	private static final String CREATE_LOCATION_RELATIONS = "MATCH (a: Step), (b: Location) WHERE a.trace_id = b.trace_id AND a.location_id = b.location_id CREATE (a)-[:AT]->(b)";
-	private static final String INSERT_STEPS_QUERY = "MERGE (a:Step {trace_id: {1}, step_order: {2}, step_in: {3}, step_over:{4}, control_dominator: {5}, invocation_parent: {6}, loop_parent: {7}, location_id: {8}, time: {9}})";
-	private static final String INSERT_LOCATION = "MERGE (a:Location {location_id: {1}, trace_id: {2}, class_name: {3}, line_number:{4}, is_conditional:{5}, is_return:{6}})";
+public class GraphRecorder implements TraceRecorder {
+	private final String runId;
+	private final Driver driver;
+	private static final String CONNECTION_URI = "bolt://localhost";
+	private static final String CREATE_TRACE_QUERY = "CREATE (t: Trace) SET t = $props";
+	private static final String CREATE_TRACE_STEP_RELATION = "MATCH (t: Trace), (s:Step) where t.traceId = s.traceId CREATE (t)-[:COMPRISES]->(s)";
+	private static final String CREATE_STEP_IN_RELATIONS = "MATCH (a: Step), (b: Step) WHERE a.traceId = b.traceId AND a.stepIn= b.stepOrder CREATE (a)-[:STEP_IN]->(b)";
+	private static final String CREATE_CONTROL_RELATIONS = "MATCH (a: Step), (b: Step) WHERE a.traceId = b.traceId AND a.stepOrder = b.controlDominator CREATE (a)-[:CONTROL_DOMINATES]->(b)";
+	private static final String CREATE_INVOCATION_RELATIONS = "MATCH (a: Step), (b: Step) WHERE a.traceId = b.traceId AND a.stepOrder = b.invocationParent CREATE (a)-[:INVOKES]->(b)";
+	private static final String CREATE_LOOP_RELATIONS = "MATCH (a: Step), (b: Step) WHERE a.traceId = b.traceId AND a.stepOrder = b.loopParent CREATE (a)-[:LOOPS]->(b)";
+	private static final String CREATE_LOCATION_RELATIONS = "MATCH (a: Step), (b: Location) WHERE a.traceId = b.traceId AND a.locationId = b.locationId CREATE (a)-[:AT]->(b)";
+	private static final String INSERT_STEPS_QUERY = "CREATE (n:Step) SET n = $props";
+	private static final String INSERT_LOCATION = "MERGE (a:Location {locationId: $locationId, traceId: $traceId, className: $className, lineNumber: $lineNumber, isConditional: $isConditional, isReturn: $isReturn})";
 
 	public GraphRecorder(String runId) {
 		this.runId = runId;
-		try {
-			DriverManager.registerDriver(new org.neo4j.jdbc.Driver());
-		} catch (SQLException e) {
-			e.printStackTrace();
+		driver = GraphDatabase.driver(CONNECTION_URI, AuthTokens.basic("neo4j", "microbat"));
+	}
+
+	private Result insertLocation(final Transaction tx, final BreakPoint bp, final String traceId) {
+		Map<String, Object> props = new HashMap<>();
+		props.put("locationId", bp.getDeclaringCompilationUnitName() + "_" + bp.getLineNumber());
+		props.put("traceId", traceId);
+		props.put("className", bp.getDeclaringCompilationUnitName());
+		props.put("lineNumber", bp.getLineNumber());
+		props.put("isConditional", bp.isConditional());
+		props.put("isReturn", bp.isReturnStatement());
+		// Location might be batch inserted since the MERGE check takes a longer time to complete than CREATE
+		return tx.run(INSERT_LOCATION, props);
+	}
+
+	private void insertSteps(final Session session, final Trace trace, final String traceId) {
+		for (TraceNode node : trace.getExecutionList()) {
+			Map<String, Object> props = new HashMap<>();
+			props.put("traceId", traceId);
+			props.put("stepOrder", node.getOrder());
+			Optional.ofNullable(node.getControlDominator()).ifPresent(cd -> props.put("controlDominator", cd.getOrder()));
+			Optional.ofNullable(node.getStepInNext()).ifPresent(cd -> props.put("stepIn", cd.getOrder()));
+			Optional.ofNullable(node.getStepOverNext()).ifPresent(cd -> props.put("stepOver", cd.getOrder()));
+			Optional.ofNullable(node.getInvocationParent()).ifPresent(cd -> props.put("invocationParent", cd.getOrder()));
+			Optional.ofNullable(node.getLoopParent()).ifPresent(cd -> props.put("loopParent", cd.getOrder()));
+			props.put("locationId", node.getDeclaringCompilationUnitName() + "_" + node.getLineNumber());
+			props.put("time", LocalDateTime.ofEpochSecond(node.getTimestamp(), 0, ZoneOffset.UTC));
+			Optional.ofNullable(generateXmlContent(node.getReadVariables())).ifPresent(xmlContent -> props.put("readVariables", xmlContent));
+			Optional.ofNullable(generateXmlContent(node.getWrittenVariables())).ifPresent(xmlContent -> props.put("writeVariables", xmlContent));
+			session.writeTransaction(tx -> tx.run(INSERT_STEPS_QUERY, parameters("props", props)));
+			BreakPoint bp = node.getBreakPoint();
+			session.writeTransaction(tx -> insertLocation(tx, bp, traceId));
 		}
 	}
 
+	@Override
 	public void store(List<Trace> traces) {
-		try (Connection conn = DriverManager.getConnection(CONNECTION_URI, "neo4j", "microbat")) {
-			// Store this run
-			String createRunQuery = "CREATE (r: RUN {runId: {1}})";
-			try (PreparedStatement stmt = conn.prepareStatement(createRunQuery)) {
-				stmt.setString(1, this.runId);
-				stmt.execute();
-			}
+		try (Session session = driver.session()) {
 			for (Trace trace : traces) {
 				String traceId = UUID.randomUUID().toString();
-				this.insertSteps(conn, trace, traceId);
+				Map<String, Object> props = new HashMap<>();
+				props.put("runId", runId);
+				props.put("traceId", traceId);
+				props.put("threadId", trace.getThreadId());
+				props.put("threadName", trace.getThreadName());
+				props.put("isMain", trace.isMain());
+				session.writeTransaction(tx -> tx.run(CREATE_TRACE_QUERY, parameters("props", props)));
+				insertSteps(session, trace, traceId);
 			}
-			this.createRelations(conn, CREATE_STEP_IN_RELATIONS);
-			this.createRelations(conn, CREATE_CONTROL_RELATIONS);
-			this.createRelations(conn, CREATE_INVOCATION_RELATIONS);
-			this.createRelations(conn, CREATE_LOOP_RELATIONS);
-			this.createRelations(conn, CREATE_LOCATION_RELATIONS);
-		} catch (SQLException err) {
-			for (Enumeration<Driver> drivers = DriverManager.getDrivers(); drivers.hasMoreElements();)
-				System.out.println(drivers.nextElement());
-			err.printStackTrace();
+			session.writeTransaction(tx -> tx.run(CREATE_STEP_IN_RELATIONS));
+			session.writeTransaction(tx -> tx.run(CREATE_CONTROL_RELATIONS));
+			session.writeTransaction(tx -> tx.run(CREATE_INVOCATION_RELATIONS));
+			session.writeTransaction(tx -> tx.run(CREATE_LOOP_RELATIONS));
+			session.writeTransaction(tx -> tx.run(CREATE_LOCATION_RELATIONS));
+			session.writeTransaction(tx -> tx.run(CREATE_TRACE_STEP_RELATION));
 		}
 	}
 
-	private void insertSteps(Connection conn, Trace trace, String traceId) {
-		try (PreparedStatement stmt = conn.prepareStatement(INSERT_STEPS_QUERY)) {
-			Set<BreakPoint> set = new HashSet<>();
-			for (TraceNode node : trace.getExecutionList()) {
-				int idx = 1;
-				stmt.setString(idx++, traceId);
-				stmt.setInt(idx++, node.getOrder());
-				stmt.setInt(idx++, node.getStepOverNext().getOrder());
-				stmt.setInt(idx++, node.getStepInNext().getOrder());
-				stmt.setInt(idx++, node.getControlDominator().getOrder());
-				stmt.setInt(idx++, node.getInvocationParent().getOrder());
-				stmt.setInt(idx++, node.getLoopParent().getOrder());
-				stmt.setString(idx++, node.getDeclaringCompilationUnitName() + "_" + node.getLineNumber());
-				// TODO: create similar query for variables
-//				ps.setString(idx++, generateXmlContent(node.getReadVariables()));
-//				ps.setString(idx++, generateXmlContent(node.getWrittenVariables()));
-				stmt.setDate(idx, new Date(node.getTimestamp()));
-				stmt.addBatch();
-				set.add(node.getBreakPoint());
-			}
-			insertLocations(conn, traceId, set);
-			stmt.executeBatch();
-		} catch (SQLException err) {
-			err.printStackTrace();
+	protected String generateXmlContent(Collection<VarValue> varValues) {
+		if (CollectionUtils.isEmpty(varValues)) {
+			return null;
 		}
-	}
-
-	private void insertLocations(Connection conn, String traceId, Set<BreakPoint> set) {
-		try (PreparedStatement ps = conn.prepareStatement(INSERT_LOCATION)) {
-			for (BreakPoint location : set) {
-				int idx = 1;
-				ps.setString(idx++, location.getDeclaringCompilationUnitName() + "_" + location.getLineNumber());
-				ps.setString(idx++, traceId);
-				ps.setString(idx++, location.getDeclaringCompilationUnitName());
-				ps.setInt(idx++, location.getLineNumber());
-				ps.setBoolean(idx++, location.isConditional());
-				ps.setBoolean(idx++, location.isReturnStatement());
-				ps.addBatch();
-			}
-			ps.executeBatch();
-		} catch (SQLException err) {
-			err.printStackTrace();
-		}
-	}
-
-	private void createRelations(Connection conn, String query) {
-		try (PreparedStatement stmt = conn.prepareStatement(query)) {
-			stmt.executeUpdate();
-		} catch (SQLException err) {
-			err.printStackTrace();
-		}
+		return VarValueXmlWriter.generateXmlContent(varValues);
 	}
 }

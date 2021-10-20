@@ -118,13 +118,13 @@ public class TraceAgentRunner extends AgentVmRunner {
 			System.out.println("|");
 			timer.newPoint("Read output result");
 			this.runningInfo = reader.create(runId).read(precheckInfo, dumpFile.getPath());
-			timer.newPoint("Push traces to graph database");
-			GraphRecorder gr = new GraphRecorder(runId);
-			gr.store(this.runningInfo.getTraceList());
-			timer.newPoint("Retrieve traces from graph database");
-			GraphTraceReader gtr = new GraphTraceReader(runId);
-			RunningInfo temp = gtr.read(precheckInfo, runId);
-			timer.newPoint("graph database end");
+//			timer.newPoint("Push traces to graph database");
+//			GraphRecorder gr = new GraphRecorder(runId);
+//			gr.store(this.runningInfo.getTraceList());
+//			timer.newPoint("Retrieve traces from graph database");
+//			GraphTraceReader gtr = new GraphTraceReader(runId);
+//			RunningInfo temp = gtr.read(precheckInfo, runId);
+//			timer.newPoint("graph database end");
 			updateTestResult(runningInfo.getProgramMsg());
 			if (toDeleteDumpFile) {
 				dumpFile.delete();

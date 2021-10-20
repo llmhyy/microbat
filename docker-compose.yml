@@ -8,9 +8,8 @@ services:
       - 7474:7474
       - 7687:7687
     volumes:
-      - ./neo4j/data:/data
+      - ./neo4j/data:/neo4j-data
       - ./neo4j/import:/import
-      - ./neo4j/logs:/logs
       - ./neo4j/plugins:/plugins
     user: "${UID}:${GID}"
 volumes:

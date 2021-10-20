@@ -19,6 +19,8 @@ public enum Recorder {
 		case "SQLITE3":
 		case "MYSQL":
 			return new SqliteRecorder(params.getDumpFile(), params.getRunId());
+		case "NEO4J":
+			return new GraphRecorder(params.getRunId());
 		default:
 			return new FileRecorder(params);
 		}
