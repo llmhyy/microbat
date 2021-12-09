@@ -40,6 +40,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		this.runId = runId;
 	}
 
+	@Override
 	public void store(List<Trace> traces) {
 		Connection conn = null;
 		List<AutoCloseable> closables = new ArrayList<AutoCloseable>();
@@ -88,7 +89,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		int idx = 1;
-		String traceId = getUUID();
+		String traceId = trace.getTraceId();
 		ps.setString(idx++, traceId);
 		ps.setString(idx++, runId);
 		ps.setString(idx++, String.valueOf(trace.getThreadId()));
@@ -101,8 +102,19 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		return traceId;
 	}
 
-	private void insertSteps(String traceId, List<TraceNode> exectionList, Connection conn, List<AutoCloseable> closables)
-			throws SQLException {
+	@Override
+	public void insertSteps(String traceId, List<TraceNode> traces) {
+		try (Connection conn = getConnection()) {
+			List<AutoCloseable> closables = new ArrayList<>();
+			insertSteps(traceId, traces, conn, closables);
+			closeDb(conn, closables);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void insertSteps(String traceId, List<TraceNode> exectionList, Connection conn,
+			List<AutoCloseable> closables) throws SQLException {
 		String sql = "INSERT INTO Step (trace_id, step_order, control_dominator, step_in, step_over, invocation_parent, loop_parent,"
 				+ "location_id, read_vars, written_vars, time) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
@@ -172,23 +184,22 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		HashSet<BreakPoint> set = getLoactionSet(nodes);
-		List<String> ids = new ArrayList<>();
+		int locCount = 0;
 		for (BreakPoint location : set) {
 			int idx = 1;
-			String locationId = getUUID();
 			ps.setString(idx++, location.getDeclaringCompilationUnitName() + "_" + location.getLineNumber());
 			ps.setString(idx++, traceId);
 			ps.setString(idx++, location.getDeclaringCompilationUnitName());
 			ps.setInt(idx++, location.getLineNumber());
 			ps.setBoolean(idx++, location.isConditional());
 			ps.setBoolean(idx++, location.isReturnStatement());
-			ids.add(locationId);
 			ps.addBatch();
+			locCount++;
 		}
 
 		ps.executeBatch();
 
-		if (ids.size() != set.size()) {
+		if (locCount != set.size()) {
 			throw new SQLException("Number of locations is incorrect!");
 		}
 		// insertControlScope(traceId, result, conn, closables);

@@ -34,7 +34,7 @@ public class TraceOutputReader extends OutputReader {
 		
 		List<Trace> traceList = new ArrayList<Trace>();
 		for(int i=0; i<traceNo; i++) {
-			Trace trace = new Trace(null);
+			Trace trace = new Trace(null, "");
 			readString(); // projectName
 			readString(); // projectVersion
 			readString(); // launchClass

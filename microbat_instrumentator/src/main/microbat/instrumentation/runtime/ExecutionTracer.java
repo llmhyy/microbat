@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.LocalVariable;
@@ -25,6 +26,7 @@ import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.model.BreakPoint;
+import microbat.model.trace.HookedTrace;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.trace.VariableDefinitions;
@@ -38,6 +40,8 @@ import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
+import microbat.sql.IntervalRecorder;
+import microbat.sql.RecorderFactory;
 import microbat.util.PrimitiveUtils;
 import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
@@ -51,9 +55,12 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	public static int expectedSteps = Integer.MAX_VALUE;
 //	private static int tolerantExpectedSteps = expectedSteps;
 	public static boolean avoidProxyToString = false;
+
+	private static RecorderFactory recorderFactory = null;
 	private long threadId;
 
 	private Trace trace;
+	private String traceId;
 
 	private MethodCallStack methodCallStack;
 	private TrackingDelegate trackingDelegate;
@@ -70,13 +77,29 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			ExecutionTracer.stepLimit = stepLimit;
 		}
 	}
-
+	
+	public static void setRecorderFactory(RecorderFactory rf) {
+		recorderFactory = rf;
+	}
+	
 	public ExecutionTracer(long threadId) {
 		this.threadId = threadId;
+		this.traceId = getUUID();
 		trackingDelegate = new TrackingDelegate(threadId);
 		methodCallStack = new MethodCallStack();
-		trace = new Trace(appJavaClassPath);
+		if (recorderFactory == null) {
+			trace = new Trace(appJavaClassPath, traceId);
+		} else {
+			trace = new HookedTrace(traceId, appJavaClassPath, recorderFactory.createRecorder());
+		}
 	}
+
+	private String getUUID(){
+        UUID uuid=UUID.randomUUID();
+        String uuidStr=uuid.toString();
+        return uuidStr;
+	}
+	
 
 	// private void buildDataRelation(TraceNode currentNode, VarValue value, String
 	// rw){

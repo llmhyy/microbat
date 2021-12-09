@@ -3,6 +3,7 @@ package microbat.instrumentation;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import microbat.instrumentation.filter.CodeRangeUserFilter;
 import microbat.instrumentation.filter.GlobalFilterChecker;
@@ -13,7 +14,10 @@ import microbat.instrumentation.runtime.IExecutionTracer;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.sql.IntervalRecorder;
 import microbat.sql.Recorder;
+import microbat.sql.RecorderFactory;
+import microbat.sql.TraceRecorder;
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
@@ -34,6 +38,15 @@ public class TraceAgent implements IAgent {
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.setStepLimit(agentParams.getStepLimit());
+		TraceRecorder selectedRecorder = Recorder.create(agentParams);
+		// TODO: set the proper condition
+		if (true) { // if agent sets recording threshold
+			final int threshold = 1000; // TODO: set threshold from input options
+			RecorderFactory factory = new RecorderFactory(threshold, selectedRecorder); // can remove the factory so
+																						// that all tracers use same
+																						// recorder
+			ExecutionTracer.setRecorderFactory(factory);
+		}
 		if (!agentParams.isRequireMethodSplit()) {
 			agentParams.getUserFilters().register(new OverLongMethodFilter(agentParams.getOverlongMethods()));
 		}
@@ -57,6 +70,7 @@ public class TraceAgent implements IAgent {
 
 		int size = tracers.size();
 		List<Trace> traceList = new ArrayList<>(size);
+		TraceRecorder recorder = Recorder.create(agentParams);
 		for (int i = 0; i < size; i++) {
 
 			ExecutionTracer tracer = (ExecutionTracer) tracers.get(i);
@@ -66,8 +80,11 @@ public class TraceAgent implements IAgent {
 			trace.setThreadName(tracer.getThreadName());
 			trace.setMain(ExecutionTracer.getMainThreadStore().equals(tracer));
 
-			constructTrace(trace);
+			// Construct Trace adds the relationship mappings for each trace node
+			// TODO: handle relationship construction somewhere
+			// constructTrace(trace);
 			traceList.add(trace);
+
 		}
 
 		timer.newPoint("Saving trace");
@@ -75,7 +92,7 @@ public class TraceAgent implements IAgent {
 		AgentLogger.debug(timer.getResultString());
 	}
 
-	//FIXME this method can be handled in an asynchronized way
+	// FIXME this method can be handled in an asynchronized way
 	public void constructTrace(Trace trace) {
 		GlobalFilterChecker.addFilterInfo(trace);
 
@@ -152,7 +169,7 @@ public class TraceAgent implements IAgent {
 				TraceNode firstChild = invocationParent.getInvocationChildren().get(0);
 				if (firstChild.getOrder() == currentNode.getOrder()) {
 					for (VarValue value : currentNode.getPassParameters()) {
-						invocationParent.addWrittenVariable(value);							
+						invocationParent.addWrittenVariable(value);
 					}
 				}
 			}

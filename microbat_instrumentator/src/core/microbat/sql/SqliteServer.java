@@ -67,12 +67,6 @@ public class SqliteServer {
 		}
 	}
 	
-	public String getUUID(){
-        UUID uuid=UUID.randomUUID();
-        String uuidStr=uuid.toString();
-        return uuidStr;
-	}
-	
 //	protected int getFirstGeneratedIntCol(PreparedStatement ps) throws SQLException {
 //		int id = -1;
 //		try (ResultSet generatedKeys = ps.getGeneratedKeys()) {

@@ -56,7 +56,7 @@ public class TraceRetrieverImpl implements TraceRetriever {
 			this.closables.add(rs);
 
 			while (rs.next()) {
-				Trace trace = new Trace(rs.getString("trace_id"));
+				Trace trace = new Trace(null, rs.getString("trace_id"));
 				String threadId = rs.getString("thread_id");
 				String threadName = rs.getString("thread_name");
 				boolean isMain = rs.getBoolean("isMain");

@@ -11,6 +11,7 @@ import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
 
 /**
  * @author knightsong
@@ -43,4 +44,8 @@ public class FileRecorder implements TraceRecorder {
 		
 	}
 
+	@Override
+	public void insertSteps(String traceId, List<TraceNode> traces) {
+		// no op
+	}
 }

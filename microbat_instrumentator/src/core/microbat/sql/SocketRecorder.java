@@ -10,6 +10,7 @@ import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.instrumentation.output.tcp.TcpConnector;
 import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
 
 /**
  * 
@@ -37,6 +38,10 @@ public class SocketRecorder implements TraceRecorder{
 			e.printStackTrace();
 		}
 		tcpConnector.close();
+	}
+	@Override
+	public void insertSteps(String traceId, List<TraceNode> traces) {
+		// no op
 	}
 
 }

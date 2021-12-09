@@ -37,6 +37,7 @@ public class Trace {
 	private long threadId;
 	private boolean isMain;
 	private String threadName;
+	private final String traceId;
 
 	/**
 	 * This variable is to trace whether the variables in different lines are the same
@@ -44,7 +45,7 @@ public class Trace {
 	 */
 //	private LocalVariableScopes localVariableScopes = new LocalVariableScopes();
 	
-	public Trace(AppJavaClassPath appJavaClassPath) {
+	public Trace(AppJavaClassPath appJavaClassPath, String traceId) {
 		if(threadName == null) {
 			String threadName = Thread.currentThread().getName();
 			this.threadName = threadName;
@@ -52,11 +53,7 @@ public class Trace {
 		
 		this.setAppJavaClassPath(appJavaClassPath);
 		executionList = new ArrayList<>();
-	}
-	
-	public Trace(AppJavaClassPath appJavaClassPath, int stepNums) {
-		this.setAppJavaClassPath(appJavaClassPath);
-		this.executionList = new ArrayList<>(stepNums);
+		this.traceId = traceId;
 	}
 	
 	private List<TraceNode> executionList;
@@ -436,5 +433,9 @@ public class Trace {
 
 	public void setMain(boolean isMain) {
 		this.isMain = isMain;
+	}
+
+	public String getTraceId() {
+		return traceId;
 	}
 }
