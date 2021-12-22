@@ -39,6 +39,8 @@ Bundle-ClassPath: .,
  lib/asm-util-6.0.jar,
  lib/mysql-connector-java-5.1.44-bin.jar,
  lib/sqlite-jdbc-3.32.3.2.jar,
+ lib/neo4j-java-driver-4.3.4.jar,
+ lib/neo4j-jdbc-driver-4.0.2.jar,
  lib/instrumentator.jar
 Export-Package: microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,org.eclipse.ui.plugin",
  microbat.agent,

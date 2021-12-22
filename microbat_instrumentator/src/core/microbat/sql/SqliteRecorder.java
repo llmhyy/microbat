@@ -167,14 +167,8 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		// ps.setString(idx++, traceId);
 		// ps.addBatch();
 		// }
-		// if (++count >= BATCH_SIZE) {
+		// }
 		// ps.executeBatch();
-		// count = 0;
-		// }
-		// }
-		// if (count > 0) {
-		// ps.executeBatch();
-		// }
 	}
 
 	private void insertLocation(String traceId, List<TraceNode> nodes, Connection conn, List<AutoCloseable> closables)
@@ -183,8 +177,8 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 				+ "VALUES (?,?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
-		HashSet<BreakPoint> set = getLoactionSet(nodes);
-		int locCount = 0;
+		HashSet<BreakPoint> set = getLocationSet(nodes);
+		List<String> ids = new ArrayList<>();
 		for (BreakPoint location : set) {
 			int idx = 1;
 			ps.setString(idx++, location.getDeclaringCompilationUnitName() + "_" + location.getLineNumber());
@@ -194,19 +188,15 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 			ps.setBoolean(idx++, location.isConditional());
 			ps.setBoolean(idx++, location.isReturnStatement());
 			ps.addBatch();
-			locCount++;
 		}
 
 		ps.executeBatch();
 
-		if (locCount != set.size()) {
-			throw new SQLException("Number of locations is incorrect!");
-		}
 		// insertControlScope(traceId, result, conn, closables);
 		// insertLoopScope(traceId, result, conn, closables);
 	}
 
-	private HashSet<BreakPoint> getLoactionSet(List<TraceNode> list) {
+	private HashSet<BreakPoint> getLocationSet(List<TraceNode> list) {
 		HashSet<BreakPoint> set = new HashSet<>();
 		for (TraceNode node : list) {
 			set.add(node.getBreakPoint());

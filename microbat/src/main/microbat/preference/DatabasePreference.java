@@ -30,6 +30,7 @@ import microbat.util.SWTFactory;
 
 public class DatabasePreference extends PreferencePage implements IWorkbenchPreferencePage {
 	private static final String ID = "microbat.preference.database";
+	private static final Reader[] READERS = new Reader[] { Reader.MYSQL, Reader.SQLITE3, Reader.NEO4J };
 	public static final String HOST = "dbHost";
 	public static final String PORT = "dbPort";
 	public static final String DATABASE = "dbName";
@@ -64,6 +65,7 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		dataBaseDropDown = SWTFactory.creatDropdown(contents);
 		dataBaseDropDown.add(Reader.SQLITE3.toString());
 		dataBaseDropDown.add(Reader.MYSQL.toString());
+		dataBaseDropDown.add(Reader.NEO4J.toString());
 		dataBaseDropDown.select(0);
 
 		SWTFactory.createLabel(contents, "Database Configuration:", 2);
@@ -85,7 +87,8 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 	public static Reader getReader() {
 		IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
 		if (pref.getBoolean(IS_STARTDB)) {
-			return pref.getInt(DBMS) == 1 ? Reader.MYSQL : Reader.SQLITE3;
+//			return pref.getInt(DBMS) == 1 ? Reader.MYSQL : Reader.SQLITE3;
+			return READERS[pref.getInt(DBMS)];
 		} else {
 			return Reader.FILE;
 		}
@@ -93,13 +96,13 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 
 	public static File getDBFile() {
 		String filePath = Activator.getDefault().getPreferenceStore().getString(DBPATH);
-		
+
 		if (filePath.trim().equals("") || filePath == null) {
 			System.err.println("need to specify the db file location");
 		} else {
 			return new File(filePath);
 		}
-		
+
 		return null;
 	}
 
