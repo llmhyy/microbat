@@ -16,7 +16,6 @@ import microbat.instrumentation.output.TraceOutputReader;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
 import microbat.preference.DatabasePreference;
-import microbat.sql.GraphRecorder;
 import microbat.trace.GraphTraceReader;
 import microbat.trace.Reader;
 import sav.common.core.SavException;

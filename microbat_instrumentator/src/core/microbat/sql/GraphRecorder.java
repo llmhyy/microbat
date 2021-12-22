@@ -53,7 +53,8 @@ public class GraphRecorder implements TraceRecorder {
 		props.put("lineNumber", bp.getLineNumber());
 		props.put("isConditional", bp.isConditional());
 		props.put("isReturn", bp.isReturnStatement());
-		// Location might be batch inserted since the MERGE check takes a longer time to complete than CREATE
+		// Location might be batch inserted since the MERGE check takes a longer time to
+		// complete than CREATE
 		return tx.run(INSERT_LOCATION, props);
 	}
 
@@ -62,15 +63,19 @@ public class GraphRecorder implements TraceRecorder {
 			Map<String, Object> props = new HashMap<>();
 			props.put("traceId", traceId);
 			props.put("stepOrder", node.getOrder());
-			Optional.ofNullable(node.getControlDominator()).ifPresent(cd -> props.put("controlDominator", cd.getOrder()));
+			Optional.ofNullable(node.getControlDominator())
+					.ifPresent(cd -> props.put("controlDominator", cd.getOrder()));
 			Optional.ofNullable(node.getStepInNext()).ifPresent(cd -> props.put("stepIn", cd.getOrder()));
 			Optional.ofNullable(node.getStepOverNext()).ifPresent(cd -> props.put("stepOver", cd.getOrder()));
-			Optional.ofNullable(node.getInvocationParent()).ifPresent(cd -> props.put("invocationParent", cd.getOrder()));
+			Optional.ofNullable(node.getInvocationParent())
+					.ifPresent(cd -> props.put("invocationParent", cd.getOrder()));
 			Optional.ofNullable(node.getLoopParent()).ifPresent(cd -> props.put("loopParent", cd.getOrder()));
 			props.put("locationId", node.getDeclaringCompilationUnitName() + "_" + node.getLineNumber());
 			props.put("time", LocalDateTime.ofEpochSecond(node.getTimestamp(), 0, ZoneOffset.UTC));
-			Optional.ofNullable(generateXmlContent(node.getReadVariables())).ifPresent(xmlContent -> props.put("readVariables", xmlContent));
-			Optional.ofNullable(generateXmlContent(node.getWrittenVariables())).ifPresent(xmlContent -> props.put("writeVariables", xmlContent));
+			Optional.ofNullable(generateXmlContent(node.getReadVariables()))
+					.ifPresent(xmlContent -> props.put("readVariables", xmlContent));
+			Optional.ofNullable(generateXmlContent(node.getWrittenVariables()))
+					.ifPresent(xmlContent -> props.put("writeVariables", xmlContent));
 			session.writeTransaction(tx -> tx.run(INSERT_STEPS_QUERY, parameters("props", props)));
 			BreakPoint bp = node.getBreakPoint();
 			session.writeTransaction(tx -> insertLocation(tx, bp, traceId));
@@ -105,5 +110,14 @@ public class GraphRecorder implements TraceRecorder {
 			return null;
 		}
 		return VarValueXmlWriter.generateXmlContent(varValues);
+	}
+
+	@Override
+	public void insertSteps(String traceId, List<TraceNode> traces) {
+		try (Session session = driver.session()) {
+			Map<String, Object> props = new HashMap<>();
+			props.put("traceId", traceId);
+			session.writeTransaction(tx -> tx.run(CREATE_TRACE_QUERY, parameters("props", props)));
+		}
 	}
 }

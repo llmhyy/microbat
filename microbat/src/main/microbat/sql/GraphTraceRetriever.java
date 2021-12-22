@@ -113,7 +113,7 @@ public class GraphTraceRetriever implements TraceRetriever {
 			Result res = session.run(GET_TRACES_QUERY, parameters("runId", runId));
 			for (Record rec : res.list()) {
 				String traceId = rec.values().get(0).get("traceId").asString();
-				Trace trace = new Trace(traceId);
+				Trace trace = new Trace(null, traceId);
 				trace.setThreadId(rec.values().get(0).get("threadId").asLong());
 				trace.setThreadName(rec.values().get(0).get("threadName").asString());
 				trace.setMain(rec.values().get(0).get("isMain").asBoolean());
