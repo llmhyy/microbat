@@ -38,6 +38,7 @@ public class Trace {
 	private boolean isMain;
 	private String threadName;
 	private final String traceId;
+	private int order = 1;
 
 	/**
 	 * This variable is to trace whether the variables in different lines are the same
@@ -82,6 +83,7 @@ public class Trace {
 	
 	public void addTraceNode(TraceNode node){
 		this.executionList.add(node);
+		this.order++;
 	}
 	
 	public int size(){
@@ -437,5 +439,9 @@ public class Trace {
 
 	public String getTraceId() {
 		return traceId;
+	}
+
+	public int getOrder() {
+		return order;
 	}
 }

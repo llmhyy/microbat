@@ -30,13 +30,14 @@ import microbat.util.SWTFactory;
 
 public class DatabasePreference extends PreferencePage implements IWorkbenchPreferencePage {
 	private static final String ID = "microbat.preference.database";
-	private static final Reader[] READERS = new Reader[] { Reader.MYSQL, Reader.SQLITE3, Reader.NEO4J };
+	private static final Reader[] READERS = new Reader[] { Reader.SQLITE3, Reader.MYSQL, Reader.NEO4J };
 	public static final String HOST = "dbHost";
 	public static final String PORT = "dbPort";
 	public static final String DATABASE = "dbName";
 	public static final String USER_NAME = "dbUserName";
 	public static final String PASSWORD = "dbPassword";
 	public static final String IS_STARTDB = "startdb";
+	public static final String IS_INC_STORAGE= "incrementalStorage";
 	public static final String DBMS = "dbms";
 	public static final String DBPATH = "dbPath`";
 
@@ -47,6 +48,7 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 	private StringFieldEditor passwordField;
 	private Combo dataBaseDropDown;
 	private Button startWithSQL;
+	private Button incrementalStorage;
 	private DirectoryFieldEditor sqliteDBPath;
 
 	@Override
@@ -62,6 +64,7 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		contents.setLayout(layout);
 		contents.setLayoutData(new GridData(GridData.FILL_BOTH));
 		startWithSQL = SWTFactory.createCheckbox(contents, "Start with SQL", 1);
+		incrementalStorage = SWTFactory.createCheckbox(contents, "Turn on incremental storage", 1);
 		dataBaseDropDown = SWTFactory.creatDropdown(contents);
 		dataBaseDropDown.add(Reader.SQLITE3.toString());
 		dataBaseDropDown.add(Reader.MYSQL.toString());
@@ -114,6 +117,7 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		userNameField.setStringValue(pref.getString(USER_NAME));
 		passwordField.setStringValue(pref.getString(PASSWORD));
 		startWithSQL.setSelection(pref.getBoolean(IS_STARTDB));
+		incrementalStorage.setSelection(pref.getBoolean(IS_INC_STORAGE));
 		dataBaseDropDown.select(pref.getInt(DBMS));
 		sqliteDBPath.setStringValue(pref.getString(DBPATH));
 	}
@@ -134,6 +138,7 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		preferences.put(USER_NAME, userNameField.getStringValue());
 		preferences.put(PASSWORD, passwordField.getStringValue());
 		preferences.putBoolean(IS_STARTDB, startWithSQL.getSelection());
+		preferences.putBoolean(IS_INC_STORAGE, incrementalStorage.getSelection());
 		preferences.putInt(DBMS, dataBaseDropDown.getSelectionIndex());
 		preferences.put(DBPATH, sqliteDBPath.getStringValue());
 		try {
@@ -149,6 +154,7 @@ public class DatabasePreference extends PreferencePage implements IWorkbenchPref
 		pref.putValue(USER_NAME, userNameField.getStringValue());
 		pref.putValue(PASSWORD, passwordField.getStringValue());
 		pref.putValue(IS_STARTDB, String.valueOf(startWithSQL.getSelection()));
+		pref.putValue(IS_INC_STORAGE, String.valueOf(incrementalStorage.getSelection()));
 		pref.putValue(DBMS, String.valueOf(dataBaseDropDown.getSelectionIndex()));
 		pref.putValue(DBPATH, String.valueOf(sqliteDBPath.getStringValue()));
 

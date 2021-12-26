@@ -1,6 +1,5 @@
 package microbat.sql;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
@@ -103,6 +102,7 @@ public class GraphRecorder implements TraceRecorder {
 			session.writeTransaction(tx -> tx.run(CREATE_LOCATION_RELATIONS));
 			session.writeTransaction(tx -> tx.run(CREATE_TRACE_STEP_RELATION));
 		}
+		driver.close();
 	}
 
 	protected String generateXmlContent(Collection<VarValue> varValues) {

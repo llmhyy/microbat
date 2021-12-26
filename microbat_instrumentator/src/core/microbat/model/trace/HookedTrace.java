@@ -1,28 +1,10 @@
 package microbat.model.trace;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.apache.bcel.Repository;
-import org.apache.bcel.classfile.Method;
-import org.apache.bcel.generic.InstructionHandle;
-
-import microbat.codeanalysis.bytecode.ByteCodeParser;
-import microbat.codeanalysis.bytecode.CFG;
-import microbat.codeanalysis.bytecode.CFGConstructor;
-import microbat.codeanalysis.bytecode.CFGNode;
-import microbat.codeanalysis.bytecode.MethodFinderByLine;
-import microbat.model.BreakPoint;
-import microbat.model.ClassLocation;
-import microbat.model.ControlScope;
-import microbat.model.Scope;
-import microbat.model.variable.LocalVar;
-import microbat.model.variable.Variable;
 import microbat.sql.IntervalRecorder;
-import sav.common.core.utils.CollectionUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
 /**
@@ -31,20 +13,28 @@ import sav.strategies.dto.AppJavaClassPath;
  */
 public class HookedTrace extends Trace{
 	private final IntervalRecorder recorder;
-	private final String traceId;
+	private List<TraceNode> dependencies = new ArrayList<>();
+	private List<TraceNode> nodeCache = new ArrayList<>();
 
 	public HookedTrace(String traceId, AppJavaClassPath appJavaClassPath, IntervalRecorder recorder) {
 		super(appJavaClassPath, traceId);
 		this.recorder = recorder;
-		this.traceId = traceId;
 	}
 	
 	@Override
 	public void addTraceNode(TraceNode node){
 		super.addTraceNode(node);
+		nodeCache.add(node);
 		if (this.getExecutionList().size() > recorder.getThreshold()) {
-			this.recorder.partialStore(getThreadName(), getExecutionList());
-			setExecutionList(new ArrayList<TraceNode>());
+			this.recorder.partialStore(getTraceId(), nodeCache); // store what hasn't been stored
+			nodeCache = new ArrayList<>(); // remove from cache
+			List<TraceNode> executionList = new ArrayList<>(dependencies); // set new nodes as those with invocation parent + latest node
+			executionList.add(node);
+			setExecutionList(executionList);
+		} else {
+			 if (node.getInvocationParent() != null) {
+				 dependencies.add(node);
+			 }
 		}
 	}
 }

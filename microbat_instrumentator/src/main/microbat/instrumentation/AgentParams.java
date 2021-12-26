@@ -43,6 +43,7 @@ public class AgentParams extends CommonParams {
 	public static final String OPT_CODE_RANGE = "code_range";
 	public static final String OPT_TRACE_RECORDER = "trace_recorder";
 	public static final String OPT_RUN_ID = "run_id";
+	public static final String OPT_IS_INC_STORAGE = "incremental_storage";
 	
 	private boolean precheck;
 	private EntryPoint entryPoint;
@@ -57,6 +58,7 @@ public class AgentParams extends CommonParams {
 	private String excludesExpression;
 	private int stepLimit;
 	private int expectedSteps;
+	private boolean incrementalStorage;
 	private Set<String> overlongMethods;
 	private boolean requireMethodSplit;
 	private boolean avoidProxyToString;
@@ -96,6 +98,7 @@ public class AgentParams extends CommonParams {
 		overlongMethods = cmd.getStringSet(OPT_OVER_LONG_METHODS);
 		requireMethodSplit = cmd.getBoolean(OPT_REQUIRE_METHOD_SPLITTING, false);
 		avoidProxyToString = cmd.getBoolean(OPT_AVOID_TO_STRING_OF_PROXY_OBJ, false);
+		incrementalStorage = cmd.getBoolean(OPT_IS_INC_STORAGE, false);
 		codeRanges = CodeRangeEntry.parse(cmd.getStringList(OPT_CODE_RANGE));
 		recorderName = cmd.getString(OPT_TRACE_RECORDER);
 		runId = cmd.getString(OPT_RUN_ID);
@@ -181,6 +184,10 @@ public class AgentParams extends CommonParams {
 
 	public int getExpectedSteps() {
 		return expectedSteps;
+	}
+	
+	public boolean isIncrementalStorage() { 
+		return incrementalStorage;
 	}
 	
 	public Set<String> getOverlongMethods() {

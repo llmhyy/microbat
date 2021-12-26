@@ -69,8 +69,8 @@ public class DbService {
 			factory = new SqliteConnectionFactory();
 			break;
 		case DBSettings.NEO4J_DBMS:
-			factory = new SqliteConnectionFactory();
-			break;
+//			factory = new SqliteConnectionFactory();
+			return null;
 		default:
 			throw new SQLException("we yet support dbms type other than mysql and sqlite3");
 		}

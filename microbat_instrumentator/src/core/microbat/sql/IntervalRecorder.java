@@ -39,7 +39,7 @@ public class IntervalRecorder {
 		this.recorderInstance = recorder;
 	}
 
-	public void partialStore(String traceId, List<TraceNode> traces) {
+	public synchronized void partialStore(String traceId, List<TraceNode> traces) {
 		recorderInstance.insertSteps(traceId, traces);
 	}
 	

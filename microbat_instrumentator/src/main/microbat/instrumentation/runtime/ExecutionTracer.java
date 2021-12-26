@@ -41,7 +41,7 @@ import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
 import microbat.sql.IntervalRecorder;
-import microbat.sql.RecorderFactory;
+import microbat.sql.TraceRecorder;
 import microbat.util.PrimitiveUtils;
 import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
@@ -56,7 +56,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 //	private static int tolerantExpectedSteps = expectedSteps;
 	public static boolean avoidProxyToString = false;
 
-	private static RecorderFactory recorderFactory = null;
+	private static IntervalRecorder intervalRecorder = null;
 	private long threadId;
 
 	private Trace trace;
@@ -78,8 +78,8 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		}
 	}
 	
-	public static void setRecorderFactory(RecorderFactory rf) {
-		recorderFactory = rf;
+	public static void setRecorderFactory(final int threshold, TraceRecorder tr) {
+		intervalRecorder = new IntervalRecorder(threshold, tr);
 	}
 	
 	public ExecutionTracer(long threadId) {
@@ -87,10 +87,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		this.traceId = getUUID();
 		trackingDelegate = new TrackingDelegate(threadId);
 		methodCallStack = new MethodCallStack();
-		if (recorderFactory == null) {
+		if (intervalRecorder == null) {
 			trace = new Trace(appJavaClassPath, traceId);
 		} else {
-			trace = new HookedTrace(traceId, appJavaClassPath, recorderFactory.createRecorder());
+			trace = new HookedTrace(traceId, appJavaClassPath, intervalRecorder);
 		}
 	}
 
@@ -681,9 +681,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				return;
 			}
 
-			// TODO: keep as a counter in trace recorder
-			// TODO: or keep as a counter in trace
-			int order = trace.size() + 1;
+			int order = trace.getOrder();
 			// TODO: remove step limit check?
 			if (order > stepLimit) {
 				shutdown();

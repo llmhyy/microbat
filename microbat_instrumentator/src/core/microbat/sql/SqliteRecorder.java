@@ -60,7 +60,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		}
 	}
 
-	public void insertRun(Connection conn, List<AutoCloseable> closables) throws SQLException {
+	private void insertRun(Connection conn, List<AutoCloseable> closables) throws SQLException {
 		PreparedStatement ps;
 		String sql = "INSERT INTO run (run_id,project_name,project_version,launch_method,thread_status,launch_class) "
 				+ "VALUES (?, ?, ?,?,?,?)";
@@ -81,7 +81,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 	 * 
 	 * 	 
 	 */
-	public String insertTrace(Trace trace, String runId, Connection conn, List<AutoCloseable> closables)
+	private String insertTrace(Trace trace, String runId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
 		PreparedStatement ps;
 		String sql = "INSERT INTO Trace (trace_id, run_id,thread_id,thread_name,isMain,generated_time) "
@@ -104,12 +104,15 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 
 	@Override
 	public void insertSteps(String traceId, List<TraceNode> traces) {
-		try (Connection conn = getConnection()) {
-			List<AutoCloseable> closables = new ArrayList<>();
+		Connection conn = null;
+		List<AutoCloseable> closables = new ArrayList<>();
+		try {
+			conn = getConnection();
 			insertSteps(traceId, traces, conn, closables);
-			closeDb(conn, closables);
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			closeDb(conn, closables);
 		}
 	}
 

@@ -16,7 +16,6 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.sql.IntervalRecorder;
 import microbat.sql.Recorder;
-import microbat.sql.RecorderFactory;
 import microbat.sql.TraceRecorder;
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
@@ -38,14 +37,11 @@ public class TraceAgent implements IAgent {
 		ExecutionTracer.appJavaClassPath = appPath;
 		ExecutionTracer.variableLayer = agentParams.getVariableLayer();
 		ExecutionTracer.setStepLimit(agentParams.getStepLimit());
-		TraceRecorder selectedRecorder = Recorder.create(agentParams);
 		// TODO: set the proper condition
-		if (true) { // if agent sets recording threshold
+		if (agentParams.isIncrementalStorage()) { // if agent sets recording threshold
+			TraceRecorder selectedRecorder = Recorder.create(agentParams);
 			final int threshold = 1000; // TODO: set threshold from input options
-			RecorderFactory factory = new RecorderFactory(threshold, selectedRecorder); // can remove the factory so
-																						// that all tracers use same
-																						// recorder
-			ExecutionTracer.setRecorderFactory(factory);
+			ExecutionTracer.setRecorderFactory(threshold, selectedRecorder);
 		}
 		if (!agentParams.isRequireMethodSplit()) {
 			agentParams.getUserFilters().register(new OverLongMethodFilter(agentParams.getOverlongMethods()));
