@@ -40,6 +40,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		this.runId = runId;
 	}
 
+	@Override
 	public void store(List<Trace> traces) {
 		Connection conn = null;
 		List<AutoCloseable> closables = new ArrayList<AutoCloseable>();
@@ -59,7 +60,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		}
 	}
 
-	public void insertRun(Connection conn, List<AutoCloseable> closables) throws SQLException {
+	private void insertRun(Connection conn, List<AutoCloseable> closables) throws SQLException {
 		PreparedStatement ps;
 		String sql = "INSERT INTO run (run_id,project_name,project_version,launch_method,thread_status,launch_class) "
 				+ "VALUES (?, ?, ?,?,?,?)";
@@ -80,7 +81,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 	 * 
 	 * 	 
 	 */
-	public String insertTrace(Trace trace, String runId, Connection conn, List<AutoCloseable> closables)
+	private String insertTrace(Trace trace, String runId, Connection conn, List<AutoCloseable> closables)
 			throws SQLException {
 		PreparedStatement ps;
 		String sql = "INSERT INTO Trace (trace_id, run_id,thread_id,thread_name,isMain,generated_time) "
@@ -88,7 +89,7 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		ps = conn.prepareStatement(sql);
 		closables.add(ps);
 		int idx = 1;
-		String traceId = getUUID();
+		String traceId = trace.getTraceId();
 		ps.setString(idx++, traceId);
 		ps.setString(idx++, runId);
 		ps.setString(idx++, String.valueOf(trace.getThreadId()));
@@ -101,8 +102,22 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		return traceId;
 	}
 
-	private void insertSteps(String traceId, List<TraceNode> exectionList, Connection conn, List<AutoCloseable> closables)
-			throws SQLException {
+	@Override
+	public void insertSteps(String traceId, List<TraceNode> traces) {
+		Connection conn = null;
+		List<AutoCloseable> closables = new ArrayList<>();
+		try {
+			conn = getConnection();
+			insertSteps(traceId, traces, conn, closables);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			closeDb(conn, closables);
+		}
+	}
+
+	private void insertSteps(String traceId, List<TraceNode> exectionList, Connection conn,
+			List<AutoCloseable> closables) throws SQLException {
 		String sql = "INSERT INTO Step (trace_id, step_order, control_dominator, step_in, step_over, invocation_parent, loop_parent,"
 				+ "location_id, read_vars, written_vars, time) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
@@ -155,14 +170,8 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		// ps.setString(idx++, traceId);
 		// ps.addBatch();
 		// }
-		// if (++count >= BATCH_SIZE) {
+		// }
 		// ps.executeBatch();
-		// count = 0;
-		// }
-		// }
-		// if (count > 0) {
-		// ps.executeBatch();
-		// }
 	}
 
 	private void insertLocation(String traceId, List<TraceNode> nodes, Connection conn, List<AutoCloseable> closables)
@@ -171,31 +180,26 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 				+ "VALUES (?,?, ?, ?, ?, ?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		closables.add(ps);
-		HashSet<BreakPoint> set = getLoactionSet(nodes);
+		HashSet<BreakPoint> set = getLocationSet(nodes);
 		List<String> ids = new ArrayList<>();
 		for (BreakPoint location : set) {
 			int idx = 1;
-			String locationId = getUUID();
 			ps.setString(idx++, location.getDeclaringCompilationUnitName() + "_" + location.getLineNumber());
 			ps.setString(idx++, traceId);
 			ps.setString(idx++, location.getDeclaringCompilationUnitName());
 			ps.setInt(idx++, location.getLineNumber());
 			ps.setBoolean(idx++, location.isConditional());
 			ps.setBoolean(idx++, location.isReturnStatement());
-			ids.add(locationId);
 			ps.addBatch();
 		}
 
 		ps.executeBatch();
 
-		if (ids.size() != set.size()) {
-			throw new SQLException("Number of locations is incorrect!");
-		}
 		// insertControlScope(traceId, result, conn, closables);
 		// insertLoopScope(traceId, result, conn, closables);
 	}
 
-	private HashSet<BreakPoint> getLoactionSet(List<TraceNode> list) {
+	private HashSet<BreakPoint> getLocationSet(List<TraceNode> list) {
 		HashSet<BreakPoint> set = new HashSet<>();
 		for (TraceNode node : list) {
 			set.add(node.getBreakPoint());

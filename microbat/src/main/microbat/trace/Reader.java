@@ -25,6 +25,12 @@ public enum Reader {
 		public TraceReader create(String runId) {
 			return new MysqlTraceReader();
 		}
+	},
+	NEO4J {
+		@Override
+		public TraceReader create(String runId) {
+			return new GraphTraceReader(runId);
+		}
 	};
 
 	@Override

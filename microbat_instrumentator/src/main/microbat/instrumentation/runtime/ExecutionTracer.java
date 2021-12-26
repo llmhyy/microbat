@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.LocalVariable;
@@ -25,6 +26,7 @@ import microbat.instrumentation.AgentConstants;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.model.BreakPoint;
+import microbat.model.trace.HookedTrace;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.trace.VariableDefinitions;
@@ -38,6 +40,8 @@ import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
+import microbat.sql.IntervalRecorder;
+import microbat.sql.TraceRecorder;
 import microbat.util.PrimitiveUtils;
 import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
@@ -51,9 +55,12 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	public static int expectedSteps = Integer.MAX_VALUE;
 //	private static int tolerantExpectedSteps = expectedSteps;
 	public static boolean avoidProxyToString = false;
+
+	private static IntervalRecorder intervalRecorder = null;
 	private long threadId;
 
 	private Trace trace;
+	private String traceId;
 
 	private MethodCallStack methodCallStack;
 	private TrackingDelegate trackingDelegate;
@@ -70,13 +77,29 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			ExecutionTracer.stepLimit = stepLimit;
 		}
 	}
-
+	
+	public static void setRecorderFactory(final int threshold, TraceRecorder tr) {
+		intervalRecorder = new IntervalRecorder(threshold, tr);
+	}
+	
 	public ExecutionTracer(long threadId) {
 		this.threadId = threadId;
+		this.traceId = getUUID();
 		trackingDelegate = new TrackingDelegate(threadId);
 		methodCallStack = new MethodCallStack();
-		trace = new Trace(appJavaClassPath);
+		if (intervalRecorder == null) {
+			trace = new Trace(appJavaClassPath, traceId);
+		} else {
+			trace = new HookedTrace(traceId, appJavaClassPath, intervalRecorder);
+		}
 	}
+
+	private String getUUID(){
+        UUID uuid=UUID.randomUUID();
+        String uuidStr=uuid.toString();
+        return uuidStr;
+	}
+	
 
 	// private void buildDataRelation(TraceNode currentNode, VarValue value, String
 	// rw){
@@ -658,7 +681,8 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				return;
 			}
 
-			int order = trace.size() + 1;
+			int order = trace.getOrder();
+			// TODO: remove step limit check?
 			if (order > stepLimit) {
 				shutdown();
 				Agent._exitProgram("fail;Trace is over long!");

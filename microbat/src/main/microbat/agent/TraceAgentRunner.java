@@ -16,6 +16,7 @@ import microbat.instrumentation.output.TraceOutputReader;
 import microbat.instrumentation.precheck.PrecheckInfo;
 import microbat.model.trace.Trace;
 import microbat.preference.DatabasePreference;
+import microbat.sql.DBSettings;
 import microbat.trace.Reader;
 import sav.common.core.SavException;
 import sav.common.core.SavRtException;
@@ -39,7 +40,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 	private String testFailureMessage;
 	private VMConfiguration config;
 	private boolean enableSettingHeapSize = true;
-	
+
 	private List<Trace> traces;
 
 	public TraceAgentRunner(String agentJar, VMConfiguration vmConfig) {
@@ -109,9 +110,11 @@ public class TraceAgentRunner extends AgentVmRunner {
 				dumpFile = DatabasePreference.getDBFile();
 				break;
 			}
-			addAgentParam(AgentParams.OPT_TRACE_RECORDER, reader.name()); // why is reader name used for recorder option?
+			addAgentParam(AgentParams.OPT_TRACE_RECORDER, reader.name()); // why is reader name used for recorder
+																			// option?
 			addAgentParam(AgentParams.OPT_RUN_ID, runId);
 			addAgentParam(AgentParams.OPT_DUMP_FILE, String.valueOf(dumpFile.getPath()));
+			addAgentParam(AgentParams.OPT_IS_INC_STORAGE, DBSettings.INC_STORAGE);
 			super.startAndWaitUntilStop(getConfig()); // Trace recording
 			System.out.println("|");
 			timer.newPoint("Read output result");
@@ -127,8 +130,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 		System.out.println(timer.getResultString());
 		return true;
 	}
-	
-	
+
 //	public boolean run01(Reader reader) throws SavException {
 //		isPrecheckMode = false;
 //		StopTimer timer = new StopTimer("Building trace");
@@ -212,9 +214,7 @@ public class TraceAgentRunner extends AgentVmRunner {
 			String msg = reader.readString();
 			updateTestResult(msg);
 			List<Trace> traces = reader.readTrace();
-			int collected = traces.stream()
-					.mapToInt(trace -> trace.size())
-					.sum();
+			int collected = traces.stream().mapToInt(trace -> trace.size()).sum();
 			runningInfo = new RunningInfo(msg, traces, precheckInfo.getStepTotal(), collected);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -241,11 +241,11 @@ public class TraceAgentRunner extends AgentVmRunner {
 	};
 
 	private void printProgress(int size, int stepNum) {
-		
-		if(stepNum == 0) {
+
+		if (stepNum == 0) {
 			return;
 		}
-		
+
 		double progress = ((double) size) / stepNum;
 
 		double preProgr = 0;

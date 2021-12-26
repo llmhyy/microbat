@@ -89,7 +89,11 @@ public class JarPackageTool {
 			.append("-C").append(BASE_DIR)
 			.append("lib/sqlite-jdbc-3.32.3.2.jar")
 			.append("-C").append(BASE_DIR)
-			.append("lib/slf4j-api-1.7.12.jar");
+			.append("lib/slf4j-api-1.7.12.jar")
+			.append("-C").append(BASE_DIR)
+			.append("lib/neo4j-java-driver-4.3.4.jar")
+			.append("-C").append(BASE_DIR)
+			.append("lib/neo4j-jdbc-driver-4.0.2.jar");
 		vmRunner.startAndWaitUntilStop(cmd.toCollection());	
 		
 		System.out.println("Deploy instrumentator.jar to " + DEPLOY_JAR_PATH);

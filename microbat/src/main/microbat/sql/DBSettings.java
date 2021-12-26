@@ -9,6 +9,7 @@ public class DBSettings {
 	
 	public static final int SQLITE3_DBMS = 0;
 	public static final int MYSQL_DBMS = 1;
+	public static final int NEO4J_DBMS = 2;
 	
 	public static String dbAddress = "localhost";
 	public static int dbPort = 3306;
@@ -18,6 +19,7 @@ public class DBSettings {
 	public static String dbPath = "microbat.db";
 	public static int DMBS_TYPE = SQLITE3_DBMS;
 	public static String USE_DB = "false";
+	public static String INC_STORAGE = "false";
 	public static boolean enableAutoUpdateDb = true;
 	private static int version = -1; //keep track for the update
 	
@@ -35,6 +37,7 @@ public class DBSettings {
 			password = pref.getString(PASSWORD);
 			DMBS_TYPE = pref.getInt(DBMS);
 			USE_DB = pref.getString(IS_STARTDB);
+			INC_STORAGE = pref.getString(IS_INC_STORAGE);
 			dbPath = pref.getString(DBPATH);
 			version++;
 		}

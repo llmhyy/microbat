@@ -173,7 +173,7 @@ public class ProgramExecutor extends Executor {
 	 */
 	public void run(List<BreakPoint> runningStatements, List<BreakPoint> executionOrderList, IProgressMonitor monitor,
 			int stepNum, boolean isTestcaseEvaluation) throws SavException, TimeoutException {
-		this.trace = new Trace(appPath);
+		this.trace = new Trace(appPath, "");
 
 		List<String> classScope = parseScope(runningStatements);
 		List<LocalVariableScope> lvsList = parseLocalVariables(classScope, this.appPath);
