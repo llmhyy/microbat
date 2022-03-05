@@ -11,7 +11,7 @@ public class MuDiffMatcher extends DiffMatcher {
 	private String fixSourcePath;
 	
 	public MuDiffMatcher(String sourceFolder, String orgFilePath, String mutationFilePath) {
-		super(sourceFolder, null, null, null);
+		super(sourceFolder, null, null, null, null, null);
 		this.buggySourcePath = mutationFilePath;
 		this.fixSourcePath = orgFilePath;
 	}
