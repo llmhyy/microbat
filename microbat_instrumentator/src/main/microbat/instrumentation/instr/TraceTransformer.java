@@ -43,5 +43,9 @@ public class TraceTransformer extends AbstractTransformer implements ClassFileTr
 		}
 		return null;
 	}
+	
+	public TraceInstrumenter getInstrumenter() {
+		return this.instrumenter;
+	}
 
 }

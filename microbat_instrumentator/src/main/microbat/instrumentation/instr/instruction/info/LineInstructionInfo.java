@@ -12,6 +12,7 @@ import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ArrayInstruction;
+import org.apache.bcel.generic.BranchInstruction;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.CodeExceptionGen;
 import org.apache.bcel.generic.ConstantPoolGen;
@@ -33,7 +34,7 @@ import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.AgentConstants;
 import sav.common.core.utils.StringUtils;
 
-public class LineInstructionInfo {
+public class LineInstructionInfo{	
 	protected int line;
 	protected InstructionHandle lineNumberInsn;
 	protected List<InstructionHandle> lineInsns;
@@ -89,6 +90,14 @@ public class LineInstructionInfo {
 	
 	public ConstantPoolGen getConstPool() {
 		return constPool;
+	}
+	
+	public List<Short> getAllOpcode() {
+		List<Short> result = new ArrayList<>();
+		for (InstructionHandle ih : this.lineInsns) {
+			result.add(ih.getInstruction().getOpcode());
+		}
+		return result;
 	}
 
 	protected List<RWInstructionInfo> extractRWInstructions(String locId, boolean isAppClass) {

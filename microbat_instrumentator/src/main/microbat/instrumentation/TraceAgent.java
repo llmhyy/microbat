@@ -20,9 +20,11 @@ import sav.strategies.dto.AppJavaClassPath;
 public class TraceAgent implements IAgent {
 	private AgentParams agentParams;
 	private StopTimer timer;
+	private TraceTransformer transformer; 
 
 	public TraceAgent(CommandLine cmd) {
 		this.agentParams = AgentParams.initFrom(cmd);
+		this.transformer = new TraceTransformer(agentParams);
 	}
 
 	public void startup(long vmStartupTime, long agentPreStartup) {
@@ -72,6 +74,7 @@ public class TraceAgent implements IAgent {
 
 		timer.newPoint("Saving trace");
 		Recorder.create(agentParams).store(traceList);
+		Recorder.create(agentParams).serialize(transformer.getInstrumenter().getInstructionTable());
 		AgentLogger.debug(timer.getResultString());
 	}
 
@@ -194,7 +197,10 @@ public class TraceAgent implements IAgent {
 
 	@Override
 	public TraceTransformer getTransformer() {
-		return new TraceTransformer(agentParams);
+		// impact of using a singleton?
+		// return new TraceTransformer(agentParams);
+		return this.transformer;
+		
 	}
 
 	@Override
