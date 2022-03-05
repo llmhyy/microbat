@@ -17,6 +17,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import microbat.baseline.HasProbability;
+import microbat.baseline.Configs;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
@@ -26,7 +28,7 @@ import microbat.model.variable.Variable;
  * @author Yun Lin
  *
  */
-public abstract class VarValue implements GraphNode, Serializable {
+public abstract class VarValue implements GraphNode, Serializable, HasProbability {
 	private static final long serialVersionUID = -4243257984929286188L;
 	protected String stringValue;
 	protected List<VarValue> parents = new ArrayList<>();
@@ -38,6 +40,7 @@ public abstract class VarValue implements GraphNode, Serializable {
 	 */
 	protected boolean isRoot = false;
 	
+	protected double probability = Configs.UNCERTAIN;
 	
 	public static final int NOT_NULL_VAL = 1;
 	
@@ -487,6 +490,14 @@ public abstract class VarValue implements GraphNode, Serializable {
 		}
 		
 		return null;
+	}
+	
+	public double getProbability() {
+		return this.probability;
+	}
+	
+	public void setProbability(double probability) {
+		this.probability = probability;
 	}
 
 	
