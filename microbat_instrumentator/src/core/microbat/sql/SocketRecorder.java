@@ -3,12 +3,18 @@
  */
 package microbat.sql;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
+import org.apache.bcel.generic.InstructionHandle;
 
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
 import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.instrumentation.output.tcp.TcpConnector;
+import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 
 /**
@@ -38,5 +44,10 @@ public class SocketRecorder implements TraceRecorder{
 		}
 		tcpConnector.close();
 	}
-
+	
+	@Override
+	public void serialize(HashMap<Integer, ArrayList<Short>> instructionTable) {
+		// TODO Auto-generated method stub
+		
+	}
 }
