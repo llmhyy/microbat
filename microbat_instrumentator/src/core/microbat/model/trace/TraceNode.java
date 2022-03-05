@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.bcel.generic.InstructionHandle;
+
 import microbat.instrumentation.runtime.InvokingDetail;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
@@ -91,6 +93,8 @@ public class TraceNode{
 	private Trace trace;
 	
 	private long timestamp;
+	
+	private List<Short> opcodes;
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
 		this(breakPoint, programState, order, trace, -1, -1, System.currentTimeMillis());
@@ -992,5 +996,13 @@ public class TraceNode{
 	
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
+	}
+	
+	public void setOpcodes(List<Short> opcodes) {
+		this.opcodes = new ArrayList<>(opcodes);
+	}
+	
+	public List<Short> getOpcodes() {
+		return this.opcodes;
 	}
 }

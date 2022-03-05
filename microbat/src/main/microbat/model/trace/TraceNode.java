@@ -15,6 +15,8 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
+import microbat.baseline.Configs;
+import microbat.baseline.HasProbability;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
@@ -24,7 +26,7 @@ import microbat.model.value.VarValue;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 
-public class TraceNode{
+public class TraceNode implements HasProbability{
 	
 	public final static int STEP_CORRECT = 0;
 	public final static int STEP_INCORRECT = 1;
@@ -92,7 +94,11 @@ public class TraceNode{
 	
 	private long timestamp;
 	
+	private List<Short> opcodes;
+	
 	private transient double sliceBreakerProbability = 0;
+	
+	private double probability = Configs.UNCERTAIN;
 	
 	/**
 	 * the first element of the pair is the read variable list, the second element is the 
@@ -1155,4 +1161,20 @@ public class TraceNode{
 //	public void setHiddenWrittenVariables(List<VarValue> hiddenWrittenVariables) {
 //		this.hiddenWrittenVariables = hiddenWrittenVariables;
 //	}
+	
+	public void setOpcodes(List<Short> opcodes) {
+		this.opcodes = new ArrayList<>(opcodes);
+	}
+	
+	public List<Short> getOpcodes() {
+		return this.opcodes;
+	}
+	
+	public void setProbability(double probability) {
+		this.probability = probability;
+	}
+	
+	public double getProbability() {
+		return this.probability;
+	}
 }
