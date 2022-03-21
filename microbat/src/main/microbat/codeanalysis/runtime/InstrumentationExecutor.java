@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
 import microbat.agent.TraceAgentRunner;
+import microbat.baseline.encoders.ProbabilityEncoder;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.AgentParams.LogType;
 import microbat.instrumentation.filter.CodeRangeEntry;
@@ -210,6 +211,10 @@ public class InstrumentationExecutor {
 			
 			appendMissingInfo(trace, appPath);
 			trace.setConstructTime((int) (System.currentTimeMillis() - start));
+			
+			// calculate probability using trace here
+			ProbabilityEncoder pe = new ProbabilityEncoder(trace);
+			pe.encode();
 			
 			return result;
 		} catch (SavException e1) {
