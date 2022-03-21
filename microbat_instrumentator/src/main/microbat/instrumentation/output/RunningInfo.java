@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import microbat.instrumentation.instr.instruction.info.SerializableLineInfo;
 import microbat.model.trace.Trace;
 import sav.common.core.SavRtException;
 
@@ -44,7 +45,7 @@ public class RunningInfo {
 		InputStream stream = null;
 		try {
 			// TODO: Use a variable path for serialized object
-			HashMap<Integer, ArrayList<Short>> opcodeTable = readSerializedOpcodes("C:\\Users\\Siang\\AppData\\Local\\Temp\\serialize.tmp");
+			HashMap<Integer, SerializableLineInfo> opcodeTable = readSerializedOpcodes("C:\\Users\\Siang\\AppData\\Local\\Temp\\serialize.tmp");
 			stream = new FileInputStream(execTraceFile);
 			reader = new TraceOutputReader(new BufferedInputStream(stream), execTraceFile.getParent(), opcodeTable);
 			String header = reader.readString();
@@ -75,12 +76,12 @@ public class RunningInfo {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static HashMap<Integer, ArrayList<Short>> readSerializedOpcodes(String fileName) throws IOException {
-		HashMap<Integer, ArrayList<Short>> obj = null;
+	public static HashMap<Integer, SerializableLineInfo> readSerializedOpcodes(String fileName) throws IOException {
+		HashMap<Integer, SerializableLineInfo> obj = null;
 		try {
 			FileInputStream fis = new FileInputStream(fileName);
 			ObjectInputStream ois = new ObjectInputStream(fis);
-			obj = (HashMap<Integer, ArrayList<Short>>) ois.readObject();
+			obj = (HashMap<Integer, SerializableLineInfo>) ois.readObject();
 			ois.close();
 			fis.close();
 		} catch (ClassNotFoundException | ClassCastException e) {

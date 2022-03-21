@@ -16,6 +16,7 @@ import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
+import microbat.instrumentation.instr.instruction.info.SerializableLineInfo;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
@@ -52,7 +53,7 @@ public class FileRecorder implements TraceRecorder {
 	
 
 	@Override
-	public void serialize(HashMap<Integer, ArrayList<Short>> instructionTable) {
+	public void serialize(HashMap<Integer, SerializableLineInfo> instructionTable) {
 		try {
 			FileOutputStream fos = new FileOutputStream("C:\\Users\\Siang\\AppData\\Local\\Temp\\serialize.tmp");
 			fos.getChannel().lock();

@@ -12,6 +12,7 @@ import org.apache.bcel.generic.InstructionHandle;
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
+import microbat.instrumentation.instr.instruction.info.SerializableLineInfo;
 import microbat.instrumentation.output.TraceOutputWriter;
 import microbat.instrumentation.output.tcp.TcpConnector;
 import microbat.model.BreakPoint;
@@ -46,7 +47,7 @@ public class SocketRecorder implements TraceRecorder{
 	}
 	
 	@Override
-	public void serialize(HashMap<Integer, ArrayList<Short>> instructionTable) {
+	public void serialize(HashMap<Integer, SerializableLineInfo> instructionTable) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -63,6 +63,7 @@ import microbat.instrumentation.instr.instruction.info.FieldInstructionInfo;
 import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
 import microbat.instrumentation.instr.instruction.info.LocalVarInstructionInfo;
 import microbat.instrumentation.instr.instruction.info.RWInstructionInfo;
+import microbat.instrumentation.instr.instruction.info.SerializableLineInfo;
 import microbat.instrumentation.runtime.IExecutionTracer;
 import microbat.instrumentation.runtime.TraceUtils;
 import microbat.instrumentation.utils.MicrobatUtils;
@@ -76,9 +77,8 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	private EntryPoint entryPoint;
 	private Set<String> requireSplittingMethods = Collections.emptySet();
 	private UserFilters userFilters;
-	
-	// use an ArrayList as it is serializable
-	private HashMap<Integer, ArrayList<Short>> instructionTable;
+
+	private HashMap<Integer, SerializableLineInfo> instructionTable;
 	
 	TraceInstrumenter() {
 	}
@@ -225,7 +225,6 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		
 		/* fill up missing variables in localVariableTable */
 		LocalVariableSupporter.fillUpVariableTable(methodGen, method, constPool);
-		
 		List<LineInstructionInfo> lineInsnInfos = LineInstructionInfo.buildLineInstructionInfos(classGen, constPool,
 				methodGen, method, isAppClass, insnList);
 		int startLine = Integer.MAX_VALUE;
@@ -255,7 +254,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 			// Store the instructions into the HashMap
 			//TODO: Fix breakpoint so it is exactly the same as in the traceNode
 			BreakPoint bp = new BreakPoint(classGen.getClassName(), classGen.getClassName() + "#" + method.getName(), lineInfo.getLine());
-			instructionTable.put(bp.hashCode(), new ArrayList<>(lineInfo.getAllOpcode()));
+			instructionTable.put(bp.hashCode(), lineInfo.getSerializable());
 			
 			injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getLine(), lineInfo.getLineNumberInsn(),
 					classNameVar, methodSigVar, lineInfo.hasExceptionTarget(), lineInfo.getReadWriteInsnTotal(false),
@@ -1052,7 +1051,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		return TEMP_VAR_NAME + (++tempVarIdx);
 	}
 
-	public HashMap<Integer, ArrayList<Short>> getInstructionTable() {
+	public HashMap<Integer, SerializableLineInfo> getInstructionTable() {
 		return this.instructionTable;
 	}
 	
