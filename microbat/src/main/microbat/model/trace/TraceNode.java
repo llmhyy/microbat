@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.apache.bcel.generic.InstructionHandle;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -94,7 +95,9 @@ public class TraceNode implements HasProbability{
 	
 	private long timestamp;
 	
-	private List<Short> opcodes;
+	private List<InstructionHandle> instructions;
+	private String[] stackVariables;
+	private HashMap<Integer, ConstWrapper> constPool;
 	
 	private transient double sliceBreakerProbability = 0;
 	
@@ -1162,19 +1165,42 @@ public class TraceNode implements HasProbability{
 //		this.hiddenWrittenVariables = hiddenWrittenVariables;
 //	}
 	
-	public void setOpcodes(List<Short> opcodes) {
-		this.opcodes = new ArrayList<>(opcodes);
-	}
-	
-	public List<Short> getOpcodes() {
-		return this.opcodes;
-	}
-	
 	public void setProbability(double probability) {
 		this.probability = probability;
 	}
 	
 	public double getProbability() {
 		return this.probability;
+	}
+	
+	public void setInstructions(List<InstructionHandle> instructions) {
+		this.instructions = new ArrayList<>(instructions);
+	}
+	
+	public List<InstructionHandle> getInstructions() {
+		return this.instructions;
+	}
+	
+	public void setStackVariables(String[] stackVariables) {
+		this.stackVariables = stackVariables;
+	}
+	
+	public String getStackVariable(int i) {
+		if (i >= this.stackVariables.length) {
+			return null;
+		}
+		return stackVariables[i];
+	}
+	
+	public String[] getStackVariables() {
+		return this.stackVariables;
+	}
+	
+	public void setConstPool(HashMap<Integer, ConstWrapper> constPool) {
+		this.constPool = constPool;
+	}
+	
+	public HashMap<Integer, ConstWrapper> getConstPool() {
+		return this.constPool;
 	}
 }
