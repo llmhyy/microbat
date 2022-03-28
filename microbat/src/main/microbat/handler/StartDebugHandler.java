@@ -27,6 +27,7 @@ import microbat.codeanalysis.runtime.StepLimitException;
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
+import microbat.model.vectorizer.StepVectorizer;
 import microbat.preference.AnalysisScopePreference;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
@@ -122,6 +123,8 @@ public class StartDebugHandler extends AbstractHandler {
 								Trace trace = result.getMainTrace();
 								trace.setAppJavaClassPath(appClassPath);
 								List<Trace> traces = result.getTraceList();
+								
+								StepVectorizer sv = new StepVectorizer(trace);
 								
 								traceView.setMainTrace(trace);
 								traceView.setTraceList(traces);
