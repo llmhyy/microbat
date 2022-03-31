@@ -21,6 +21,7 @@ import org.apache.bcel.generic.LSHR;
 import org.apache.bcel.generic.LUSHR;
 import org.apache.bcel.generic.LoadInstruction;
 
+import microbat.baseline.BitRepresentation;
 import microbat.baseline.Configs;
 import microbat.baseline.constraints.Constraint;
 import microbat.baseline.constraints.ConstraintType;
@@ -30,6 +31,7 @@ import microbat.baseline.constraints.ReferenceConstraints;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.model.variable.Variable;
 
 /*
  * First phase of the encoding.
@@ -38,24 +40,93 @@ import microbat.model.value.VarValue;
  */
 
 public class VariableEncoder {
-	
+	private List<TraceNode> executionList;
 	private Trace trace;
 	
-	public VariableEncoder(Trace trace) {
+	public VariableEncoder(Trace trace, List<TraceNode> executionList) {
+		this.executionList = executionList;
 		this.trace = trace;
 	}
 	
-	public void encode() {
-		for (TraceNode tn : trace.getExecutionList())
-			encode(tn);
+	public boolean encode() {
+		boolean hasChange = false;
+		for (TraceNode tn : executionList) {
+			// the order matters as Java short circuit evaluate
+			hasChange = encode(tn) || hasChange;
+		}
+		return hasChange;
 	}
 	
-	private void encode(TraceNode tn) {
-
+	private boolean encode(TraceNode tn) {
+		boolean hasChange = false;
+//		System.out.println(tn.getOrder());
+//		System.out.println(tn.getInstructions());
+		int readLength = tn.getReadVariables().size();
+		int writeLength = tn.getWrittenVariables().size();
+		int totalVariableLength = readLength + writeLength;
+		if (totalVariableLength > 20) {
+			return hasChange; 
+		}
+		
+		List<Constraint> constraints = getConstraints(tn);
+		int maxInt = 1 << totalVariableLength;
+		
+		HashMap<Integer, Double> memoization = new HashMap<>();
+		double denominator = 0;
+		for (int i = 0; i < maxInt; i++) {
+			double product = 1; 
+			for (Constraint c: constraints) {
+				product *= c.getProbability(i);
+			}
+			memoization.put(i, product);
+			denominator += product;
+		}
+		
+		for (int i = 0; i < totalVariableLength; i++) {
+			List<Integer> numbers = getNumbers(totalVariableLength, i);
+			VarValue var;
+			if (i < readLength)
+				var = tn.getReadVariables().get(i);
+			else
+				var = tn.getWrittenVariables().get(i - readLength);
+			double sum = 0;
+			for (int number : numbers) {
+				sum += memoization.get(number);
+			}
+			double prob = sum / denominator;
+			if (Math.abs(var.getProbability() - prob) > 0.01) {
+				hasChange = true;
+//				System.out.println("Prev prob: " + var.getProbability() + " | Current prob: " + prob);
+			}
+			var.setProbability(prob);
+		}
+		System.gc();
+		return hasChange;
+	}
+	
+	private List<Integer> getNumbers(int length, int bitPos) {
+		/*
+		 * bitPos is 0-indexed
+		 */
+		List<Integer> result = new ArrayList<>(1 << length);
+		int numBitLeft = bitPos;
+		int numBitRight = length - (numBitLeft + 1);
+		int value = 1 << numBitRight;
+		List<Integer> tempResult = new ArrayList<>(value);
+		for (int i = 0; i < value; i++) {
+			tempResult.add(value + i);
+		}
+		
+		int maxLeft = 1 << numBitLeft;
+		for (int i = 0; i < maxLeft; i++) {
+			int temp = i << (numBitRight + 1);
+			for (int j : tempResult)
+				result.add(j + temp);
+		}
+		return result;
 	}
 	
 	private List<Constraint> getConstraints(TraceNode tn) {
-		System.out.println(tn.getOrder());
 		List<Constraint> constraints = new ArrayList<>();
 		int readLength = tn.getReadVariables().size();
 		int writeLength = tn.getWrittenVariables().size();
@@ -71,13 +142,13 @@ public class VariableEncoder {
 			 * of the other write variables
 			 * TODO: Handle cases where it is int x = (y++) + z;
 			 */
-			BitSet variablesIncluded = new BitSet(totalVariableLength);
+			BitRepresentation variablesIncluded = new BitRepresentation(totalVariableLength);
 			variablesIncluded.set(0, readLength);
 			variablesIncluded.set(i + readLength);
 			Constraint constraint = new DefiniteConstraint(variablesIncluded, i + readLength);
 			constraints.add(constraint);
 		}
-		// TODO: Consider using stack
+		
 		Stack<String> runtimeStack = new Stack<>();
 		String[] localVarStack = tn.getStackVariables();
 		HashMap<String, ConstraintType> variableMapping = new HashMap<>();
@@ -128,7 +199,7 @@ public class VariableEncoder {
 			 * TODO: Should we classify them as individual constraints or 
 			 * one big constraint?
 			 */
-			BitSet variablesIncluded = new BitSet(totalVariableLength);
+			BitRepresentation variablesIncluded = new BitRepresentation(totalVariableLength);
 			// all variables are involved for use statement
 			variablesIncluded.set(0, totalVariableLength);
 			
@@ -154,6 +225,25 @@ public class VariableEncoder {
 			}
 			constraints.add(constraint);
 		}
+		
+		// Handle the probability passed down from the previous node
+		for (int i = 0; i < readLength; i++) {
+			VarValue v = tn.getReadVariables().get(i);
+			TraceNode prev = trace.findDataDependency(tn, v);
+			if (prev == null)
+				continue;
+			for (VarValue pv : prev.getWrittenVariables()) {
+				if (pv.equals(v)) {
+					BitRepresentation br = new BitRepresentation(totalVariableLength);
+					br.set(i);
+					boolean isTrue = pv.getProbability() > 0.5 ? true : false;
+					Constraint constraint = new DefiniteConstraint(br, i, isTrue);
+					constraints.add(constraint);
+					break;
+				}
+			}
+		}
+		
 		return constraints;
 	}
 }

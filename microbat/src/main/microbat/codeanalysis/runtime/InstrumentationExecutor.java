@@ -212,10 +212,6 @@ public class InstrumentationExecutor {
 			appendMissingInfo(trace, appPath);
 			trace.setConstructTime((int) (System.currentTimeMillis() - start));
 			
-			// calculate probability using trace here
-			ProbabilityEncoder pe = new ProbabilityEncoder(trace);
-			pe.encode();
-			
 			return result;
 		} catch (SavException e1) {
 			e1.printStackTrace();

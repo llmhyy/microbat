@@ -9,7 +9,6 @@ public enum OpcodeType {
 	NEW, ARRAY_LENGTH, THROW, CHECK, LOCK, UNLOCK, WIDE, NOT_IMPL;
 	
 	public static OpcodeType parse(short opcode) {
-		// TODO: Change to handle short
 		if (opcode == 0)
 			return NOOP;
 		else if (opcode < 16)

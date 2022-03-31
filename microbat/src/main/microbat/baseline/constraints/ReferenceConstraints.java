@@ -1,11 +1,10 @@
 package microbat.baseline.constraints;
 
-import java.util.BitSet;
-
+import microbat.baseline.BitRepresentation;
 import microbat.baseline.Configs;
 
 public class ReferenceConstraints extends Constraint {
-	public ReferenceConstraints(BitSet variablesIncluded, int conclusionIndex, int n) {
+	public ReferenceConstraints(BitRepresentation variablesIncluded, int conclusionIndex, int n) {
 		super(variablesIncluded, conclusionIndex, tau(n));
 	}
 	
