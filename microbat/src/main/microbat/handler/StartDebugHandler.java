@@ -125,6 +125,8 @@ public class StartDebugHandler extends AbstractHandler {
 								List<Trace> traces = result.getTraceList();
 								
 								StepVectorizer sv = new StepVectorizer(trace);
+								// TODO: Set export path
+								sv.exportCSV("trace.csv");
 								
 								traceView.setMainTrace(trace);
 								traceView.setTraceList(traces);

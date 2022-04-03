@@ -198,7 +198,7 @@ public class InstrumentationExecutor {
 			RunningInfo result = agentRunner.getRunningInfo();
 //			System.out.println(result);
 			System.out.println("isExpectedStepsMet? " + result.isExpectedStepsMet());
-			System.out.println("trace length: " + result.getMainTrace() == null ? "0" : result.getMainTrace().size());
+			System.out.println("trace length: " + (result.getMainTrace() == null ? "0" : result.getMainTrace().size()));
 			System.out.println("isTestSuccessful? " + agentRunner.isTestSuccessful());
 			System.out.println("testFailureMessage: " + agentRunner.getTestFailureMessage());
 			System.out.println("finish!");
