@@ -3,9 +3,13 @@ package microbat.model.vectorizer;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
@@ -26,6 +30,7 @@ public class StepVectorizer {
 
 	// Set of ID of variables used in trace
 	HashMap<String, Integer> variableSet = new HashMap<>();
+	HashMap<TraceNode, Integer> idMapping = new HashMap<>();
 
 	public StepVectorizer(Trace trace) {
 
@@ -87,6 +92,19 @@ public class StepVectorizer {
 
 		System.out.println("---------------------------------------");
 
+		// set previous
+		node.stepInPrev = Optional.ofNullable(targetStep.getStepInPrevious()).map(step -> step.getOrder()).orElse(0);
+		node.stepOverPrev = Optional.ofNullable(targetStep.getStepOverPrevious()).map(step -> step.getOrder())
+				.orElse(0);
+		// set next
+		node.stepOverNext = Optional.ofNullable(targetStep.getStepOverNext()).map(step -> step.getOrder()).orElse(0);
+		node.stepInNext = Optional.ofNullable(targetStep.getStepInNext()).map(step -> step.getOrder()).orElse(0);
+		// set control flow
+		node.controlFlow.add(Optional.ofNullable(targetStep.getControlDominator()).map(s -> s.getOrder()).orElse(0));
+		// set data flow
+		Set<Integer> controlDominators = targetStep.findAllDominators().keySet();
+		node.dataFlow.addAll(controlDominators);
+
 		// one-hot encode read variables
 		List<VarValue> readVariables = targetStep.getReadVariables();
 		readVariables.stream().mapToInt(var -> this.variableSet.get(var.getVarID())).forEach(i -> node.setRead(i));
@@ -99,7 +117,8 @@ public class StepVectorizer {
 	public void exportCSV(String path) {
 		File csvFile = FileUtils.getFileCreateIfNotExist(path);
 		String headers = Stream.of("id", "isThrowingException", "isInsideLoop", "isInsideIf", "isCondition",
-				"readVariables", "writeVariables").collect(Collectors.joining(","));
+				"readVariables", "writeVariables", "stepOverNext", "stepInNext", "stepOverPrev", "stepOverPrev",
+				"controlDominators", "dataDominators").collect(Collectors.joining(","));
 		try (PrintWriter pw = new PrintWriter(csvFile)) {
 			pw.println(headers);
 			for (int i = 0; i < this.trace.getExecutionList().size(); i++) {

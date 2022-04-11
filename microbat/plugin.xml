@@ -291,6 +291,12 @@
             id="microbat.preference.executionRange"
             name="Execution Range">
       </page>
+      <page
+            category="microbat.preference"
+            class="microbat.preference.VectorizerPreference"
+            id="microbat.preference.vectorizerPreference"
+            name="Vectorizer Preference">
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.editors.annotationTypes">
