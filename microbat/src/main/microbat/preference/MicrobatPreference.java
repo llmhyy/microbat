@@ -25,8 +25,7 @@ import microbat.Activator;
 import microbat.util.SWTFactory;
 import microbat.util.Settings;
 
-public class MicrobatPreference extends PreferencePage implements
-		IWorkbenchPreferencePage {
+public class MicrobatPreference extends PreferencePage implements IWorkbenchPreferencePage {
 
 	public MicrobatPreference() {
 	}
@@ -46,16 +45,20 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultTestMethod = Activator.getDefault().getPreferenceStore().getString(TEST_METHOD);
 		this.defaultLineNumber = Activator.getDefault().getPreferenceStore().getString(LINE_NUMBER);
 		this.defaultLanuchClass = Activator.getDefault().getPreferenceStore().getString(LANUCH_CLASS);
-		this.defaultSupportConcurrentTrace = Activator.getDefault().getPreferenceStore().getString(SUPPORT_CONCURRENT_TRACE);
+		this.defaultSupportConcurrentTrace = Activator.getDefault().getPreferenceStore()
+				.getString(SUPPORT_CONCURRENT_TRACE);
 		this.defaultRecordSnapshot = Activator.getDefault().getPreferenceStore().getString(RECORD_SNAPSHORT);
 		this.defaultRunWithDebugMode = Activator.getDefault().getPreferenceStore().getString(RUN_WITH_DEBUG_MODE);
-		this.defaultAdvancedDetailInspector = Activator.getDefault().getPreferenceStore().getString(APPLY_ADVANCE_INSPECTOR);
+		this.defaultAdvancedDetailInspector = Activator.getDefault().getPreferenceStore()
+				.getString(APPLY_ADVANCE_INSPECTOR);
 		this.defaultStepLimit = getStepLimit();
 		this.defaultRunTest = Activator.getDefault().getPreferenceStore().getString(RUN_TEST);
 		this.defaultVariableLayer = getVariableValue();
 		this.defaultJava7HomePath = Activator.getDefault().getPreferenceStore().getString(JAVA7HOME_PATH);
-		this.defaultApplyRecodingOptimization = Activator.getDefault().getPreferenceStore().getString(RECORDING_OPTIMIZATION);
-		this.defaultEnableMethodSplitting = Activator.getDefault().getPreferenceStore().getBoolean(REQUIRE_METHOD_SPLITTING);
+		this.defaultApplyRecodingOptimization = Activator.getDefault().getPreferenceStore()
+				.getString(RECORDING_OPTIMIZATION);
+		this.defaultEnableMethodSplitting = Activator.getDefault().getPreferenceStore()
+				.getBoolean(REQUIRE_METHOD_SPLITTING);
 		this.defaultRunWithDebugMode = Activator.getDefault().getPreferenceStore().getString(RUN_WITH_DEBUG_MODE);
 	}
 
@@ -66,11 +69,11 @@ public class MicrobatPreference extends PreferencePage implements
 	public static String getVariableValue() {
 		return Activator.getDefault().getPreferenceStore().getString(VARIABLE_LAYER);
 	}
-	
+
 	public static String getValue(String key) {
 		return Activator.getDefault().getPreferenceStore().getString(key);
 	}
-	
+
 	public static final String TARGET_PORJECT = "targetProjectName";
 	public static final String CLASS_NAME = "className";
 	public static final String LINE_NUMBER = "lineNumber";
@@ -86,7 +89,7 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String REQUIRE_METHOD_SPLITTING = "enableMethodSplitting";
 	public static final String SUPPORT_CONCURRENT_TRACE = "supportConcurrentTrace";
 	public static final String RUN_WITH_DEBUG_MODE = "runWithDebugMode";
-	
+
 	private Combo projectCombo;
 	private Text lanuchClassText;
 	private Text testMethodText;
@@ -102,7 +105,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Button runWithDebugModeButton;
 	private Button enableMethodSplittingButton;
 	private Text java7HomePathText;
-	
+
 	private String defaultTargetProject = "";
 	private String defaultLanuchClass = "";
 	private String defaultTestMethod = "";
@@ -118,43 +121,43 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultApplyRecodingOptimization;
 	private String defaultRunWithDebugMode = "false";
 	private boolean defaultEnableMethodSplitting;
-	
+
 	@Override
 	protected Control createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
-		
+
 		composite.setLayout(layout);
-		
+
 		Label projectLabel = new Label(composite, SWT.NONE);
 		projectLabel.setText("Target Project");
-		
+
 		projectCombo = new Combo(composite, SWT.BORDER);
 		projectCombo.setItems(getProjectsInWorkspace());
 		projectCombo.setText(this.defaultTargetProject);
 		GridData comboData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		comboData.horizontalSpan = 2;
 		projectCombo.setLayoutData(comboData);
-		
+
 		createSettingGroup(composite);
 		createSeedStatementGroup(composite);
-		
+
 		return composite;
 	}
-	
-	private void createSettingGroup(Composite parent){
+
+	private void createSettingGroup(Composite parent) {
 		Group settingGroup = new Group(parent, SWT.NONE);
 		settingGroup.setText("Settings");
 		GridData seedStatementGroupData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		seedStatementGroupData.horizontalSpan = 3;
 		settingGroup.setLayoutData(seedStatementGroupData);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
-		
+
 		settingGroup.setLayout(layout);
-		
+
 		Label java7HomeLabel = new Label(settingGroup, SWT.NONE);
 		java7HomeLabel.setText("Java Home Path: ");
 		java7HomePathText = new Text(settingGroup, SWT.BORDER);
@@ -163,7 +166,7 @@ public class MicrobatPreference extends PreferencePage implements
 		GridData javaHomeTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		javaHomeTextData.horizontalSpan = 2;
 		java7HomePathText.setLayoutData(javaHomeTextData);
-		
+
 		Label stepLimitLabel = new Label(settingGroup, SWT.NONE);
 		stepLimitLabel.setText("Step Limit: ");
 		stepLimitText = new Text(settingGroup, SWT.BORDER);
@@ -171,7 +174,7 @@ public class MicrobatPreference extends PreferencePage implements
 		GridData stepLimitTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		stepLimitTextData.horizontalSpan = 2;
 		stepLimitText.setLayoutData(stepLimitTextData);
-		
+
 		Label variableLayerLabel = new Label(settingGroup, SWT.NONE);
 		variableLayerLabel.setText("Variable Layer: ");
 		variableLayerText = new Text(settingGroup, SWT.BORDER);
@@ -179,8 +182,9 @@ public class MicrobatPreference extends PreferencePage implements
 		GridData variableLayerTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		variableLayerTextData.horizontalSpan = 2;
 		variableLayerText.setLayoutData(variableLayerTextData);
-		variableLayerText.setToolTipText("how many layers of variable children does the debugger need to retrieve, -1 means infinite.");
-		
+		variableLayerText.setToolTipText(
+				"how many layers of variable children does the debugger need to retrieve, -1 means infinite.");
+
 		supportConcurrentTraceButton = new Button(settingGroup, SWT.CHECK);
 		supportConcurrentTraceButton.setText("Support concurrent trace");
 		GridData supportConcurrentTraceButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
@@ -188,7 +192,7 @@ public class MicrobatPreference extends PreferencePage implements
 		supportConcurrentTraceButton.setLayoutData(supportConcurrentTraceButtonData);
 		boolean supportConcurrentTraceSelected = this.defaultSupportConcurrentTrace.equals("true");
 		supportConcurrentTraceButton.setSelection(supportConcurrentTraceSelected);
-		
+
 		recordSnapshotButton = new Button(settingGroup, SWT.CHECK);
 		recordSnapshotButton.setText("Record snapshot");
 		GridData recordButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
@@ -196,7 +200,7 @@ public class MicrobatPreference extends PreferencePage implements
 		recordSnapshotButton.setLayoutData(recordButtonData);
 		boolean recordSnapshotSelected = this.defaultRecordSnapshot.equals("true");
 		recordSnapshotButton.setSelection(recordSnapshotSelected);
-		
+
 		runWithDebugModeButton = new Button(settingGroup, SWT.CHECK);
 		runWithDebugModeButton.setText("Run with debug mode");
 		GridData runWithDebugModeButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
@@ -204,7 +208,7 @@ public class MicrobatPreference extends PreferencePage implements
 		runWithDebugModeButton.setLayoutData(runWithDebugModeButtonData);
 		boolean runWithDebugModeButtonSelected = this.defaultRunWithDebugMode.equals("true");
 		runWithDebugModeButton.setSelection(runWithDebugModeButtonSelected);
-		
+
 		advancedDetailInspectorButton = new Button(settingGroup, SWT.CHECK);
 		advancedDetailInspectorButton.setText("Apply advanced detail inspection");
 		GridData advanceInspectorButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
@@ -212,7 +216,7 @@ public class MicrobatPreference extends PreferencePage implements
 		advancedDetailInspectorButton.setLayoutData(advanceInspectorButtonData);
 		boolean advanceInspectorSelected = this.defaultAdvancedDetailInspector.equals("true");
 		advancedDetailInspectorButton.setSelection(advanceInspectorSelected);
-		
+
 		recordingOptimizationButton = new Button(settingGroup, SWT.CHECK);
 		recordingOptimizationButton.setText("Apply trace recording optimization for interested library code");
 		GridData recordingOptimizationButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
@@ -220,23 +224,23 @@ public class MicrobatPreference extends PreferencePage implements
 		recordingOptimizationButton.setLayoutData(recordingOptimizationButtonData);
 		boolean recordingOptimizationSelected = this.defaultApplyRecodingOptimization.equals("true");
 		recordingOptimizationButton.setSelection(recordingOptimizationSelected);
-		
+
 		enableMethodSplittingButton = SWTFactory.createCheckbox(settingGroup, "Enable method splitting function", 2);
 		enableMethodSplittingButton.setSelection(this.defaultEnableMethodSplitting);
 	}
-	
-	private void createSeedStatementGroup(Composite parent){
+
+	private void createSeedStatementGroup(Composite parent) {
 		Group seedStatementGroup = new Group(parent, SWT.NONE);
 		seedStatementGroup.setText("Seed statement");
 		GridData seedStatementGroupData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		seedStatementGroupData.horizontalSpan = 3;
 		seedStatementGroup.setLayoutData(seedStatementGroupData);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
-		
+
 		seedStatementGroup.setLayout(layout);
-		
+
 		runTestButton = new Button(seedStatementGroup, SWT.CHECK);
 		runTestButton.setText("is to run JUnit test?");
 		GridData runTestButtonDataButtonData = new GridData(SWT.FILL, SWT.FILL, true, false);
@@ -244,7 +248,7 @@ public class MicrobatPreference extends PreferencePage implements
 		runTestButton.setLayoutData(runTestButtonDataButtonData);
 		boolean runTestSelected = this.defaultRunTest.equals("true");
 		runTestButton.setSelection(runTestSelected);
-		
+
 		Label lanuchClassLabel = new Label(seedStatementGroup, SWT.NONE);
 		lanuchClassLabel.setText("Lanuch Class: ");
 		lanuchClassText = new Text(seedStatementGroup, SWT.BORDER);
@@ -252,7 +256,7 @@ public class MicrobatPreference extends PreferencePage implements
 		GridData lanuchClassTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		lanuchClassTextData.horizontalSpan = 2;
 		lanuchClassText.setLayoutData(lanuchClassTextData);
-		
+
 		Label testMethodLabel = new Label(seedStatementGroup, SWT.NONE);
 		testMethodLabel.setText("Test Method: ");
 		testMethodText = new Text(seedStatementGroup, SWT.BORDER);
@@ -260,7 +264,7 @@ public class MicrobatPreference extends PreferencePage implements
 		GridData testMethoDataData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		testMethoDataData.horizontalSpan = 2;
 		testMethodText.setLayoutData(testMethoDataData);
-		
+
 //		Label classNameLabel = new Label(seedStatementGroup, SWT.NONE);
 //		classNameLabel.setText("Class Name: ");
 //		classNameText = new Text(seedStatementGroup, SWT.BORDER);
@@ -276,10 +280,10 @@ public class MicrobatPreference extends PreferencePage implements
 //		GridData lineNumTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
 //		lineNumTextData.horizontalSpan = 2;
 //		lineNumberText.setLayoutData(lineNumTextData);
-		
+
 	}
-	
-	public boolean performOk(){
+
+	public boolean performOk() {
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode("microbat.preference");
 		preferences.put(TARGET_PORJECT, this.projectCombo.getText());
 		preferences.put(LANUCH_CLASS, this.lanuchClassText.getText());
@@ -296,30 +300,37 @@ public class MicrobatPreference extends PreferencePage implements
 		preferences.putBoolean(REQUIRE_METHOD_SPLITTING, this.enableMethodSplittingButton.getSelection());
 		preferences.put(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
 		preferences.put(RUN_WITH_DEBUG_MODE, String.valueOf(this.runWithDebugModeButton.getSelection()));
-		
+
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(LANUCH_CLASS, this.lanuchClassText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(TEST_METHOD, this.testMethodText.getText());
 //		Activator.getDefault().getPreferenceStore().putValue(CLASS_NAME, this.classNameText.getText());
 //		Activator.getDefault().getPreferenceStore().putValue(LINE_NUMBER, this.lineNumberText.getText());
-		Activator.getDefault().getPreferenceStore().putValue(RECORD_SNAPSHORT, String.valueOf(this.recordSnapshotButton.getSelection()));
-		Activator.getDefault().getPreferenceStore().putValue(APPLY_ADVANCE_INSPECTOR, String.valueOf(this.advancedDetailInspectorButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(RECORD_SNAPSHORT,
+				String.valueOf(this.recordSnapshotButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(APPLY_ADVANCE_INSPECTOR,
+				String.valueOf(this.advancedDetailInspectorButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(STEP_LIMIT, this.stepLimitText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(VARIABLE_LAYER, this.variableLayerText.getText());
-		Activator.getDefault().getPreferenceStore().putValue(RUN_TEST, String.valueOf(this.runTestButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(RUN_TEST,
+				String.valueOf(this.runTestButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(JAVA7HOME_PATH, this.java7HomePathText.getText());
-		Activator.getDefault().getPreferenceStore().putValue(RECORDING_OPTIMIZATION, String.valueOf(this.recordingOptimizationButton.getSelection()));
-		Activator.getDefault().getPreferenceStore().putValue(REQUIRE_METHOD_SPLITTING, String.valueOf(this.enableMethodSplittingButton.getSelection()));
-		Activator.getDefault().getPreferenceStore().putValue(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
-		Activator.getDefault().getPreferenceStore().putValue(RUN_WITH_DEBUG_MODE, String.valueOf(this.runWithDebugModeButton.getSelection()));
-		
+		Activator.getDefault().getPreferenceStore().putValue(RECORDING_OPTIMIZATION,
+				String.valueOf(this.recordingOptimizationButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(REQUIRE_METHOD_SPLITTING,
+				String.valueOf(this.enableMethodSplittingButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(SUPPORT_CONCURRENT_TRACE,
+				String.valueOf(this.supportConcurrentTraceButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(RUN_WITH_DEBUG_MODE,
+				String.valueOf(this.runWithDebugModeButton.getSelection()));
+
 		confirmChanges();
-		
+
 		return true;
-		
+
 	}
-	
-	private void confirmChanges(){
+
+	private void confirmChanges() {
 		Settings.projectName = this.projectCombo.getText();
 		Settings.launchClass = this.lanuchClassText.getText();
 		Settings.testMethod = this.testMethodText.getText();
@@ -334,17 +345,17 @@ public class MicrobatPreference extends PreferencePage implements
 		Settings.supportConcurrentTrace = this.supportConcurrentTraceButton.getSelection();
 		Settings.isRunWtihDebugMode = this.runWithDebugModeButton.getSelection();
 	}
-	
-	private String[] getProjectsInWorkspace(){
+
+	private String[] getProjectsInWorkspace() {
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
 		IProject[] projects = root.getProjects();
-		
+
 		String[] projectStrings = new String[projects.length];
-		for(int i=0; i<projects.length; i++){
+		for (int i = 0; i < projects.length; i++) {
 			projectStrings[i] = projects[i].getName();
 		}
-		
+
 		return projectStrings;
 	}
 
