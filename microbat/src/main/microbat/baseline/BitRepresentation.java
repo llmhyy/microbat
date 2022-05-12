@@ -13,6 +13,13 @@ public class BitRepresentation {
 		this.cardinality = 0;
 	}
 	
+	public BitRepresentation clone() {
+		BitRepresentation result = new BitRepresentation(this.size);
+		result.representation = representation.clone();
+		result.cardinality = cardinality;
+		return result;
+	}
+	
 	public void and(BitRepresentation other) {
 		int padding = this.size - other.size;
 		if (padding < 0)

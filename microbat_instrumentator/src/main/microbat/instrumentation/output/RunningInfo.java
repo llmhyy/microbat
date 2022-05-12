@@ -45,7 +45,9 @@ public class RunningInfo {
 		InputStream stream = null;
 		try {
 			// TODO: Use a variable path for serialized object
-			HashMap<Integer, SerializableLineInfo> opcodeTable = readSerializedOpcodes("C:\\Users\\Siang\\AppData\\Local\\Temp\\serialize.tmp");
+//			HashMap<Integer, SerializableLineInfo> opcodeTable = readSerializedOpcodes("C:\\Users\\Siang\\AppData\\Local\\Temp\\serialize.tmp");
+//			System.out.println(opcodeTable);
+			HashMap<Integer, SerializableLineInfo> opcodeTable = null;
 			stream = new FileInputStream(execTraceFile);
 			reader = new TraceOutputReader(new BufferedInputStream(stream), execTraceFile.getParent(), opcodeTable);
 			String header = reader.readString();

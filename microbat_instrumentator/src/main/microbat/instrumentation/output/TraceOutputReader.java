@@ -100,14 +100,14 @@ public class TraceOutputReader extends OutputReader {
 		for (int i = 0; i < size; i++) {
 			TraceNode step = allSteps.get(i);
 			step.setBreakPoint(locationList.get(readVarInt()));
-			SerializableLineInfo lineInfo = opcodeTable.get(step.getBreakPoint().hashCode());
-			if (lineInfo != null) {
-				step.setInstructions(lineInfo.getInstructions());
-				step.setStackVariables(lineInfo.getLocalVars());
-				step.setConstPool(lineInfo.getConstPool());
-			} else {
-				step.setInstructions(null);
-			}
+//			SerializableLineInfo lineInfo = opcodeTable.get(step.getBreakPoint().hashCode());
+//			if (lineInfo != null) {
+//				step.setInstructions(lineInfo.getInstructions());
+//				step.setStackVariables(lineInfo.getLocalVars());
+//				step.setConstPool(lineInfo.getConstPool());
+//			} else {
+//				step.setInstructions(null);
+//			}
 			step.setTimestamp(readLong());
 			TraceNode controlDominator = readNode(allSteps);
 			step.setControlDominator(controlDominator);

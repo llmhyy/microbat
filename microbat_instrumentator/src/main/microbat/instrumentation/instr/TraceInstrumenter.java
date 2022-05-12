@@ -253,8 +253,8 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 //			if (lineInfo.hasNoInstrumentation()) {
 			// Store the instructions into the HashMap
 			//TODO: Fix breakpoint so it is exactly the same as in the traceNode
-			BreakPoint bp = new BreakPoint(classGen.getClassName(), classGen.getClassName() + "#" + method.getName(), lineInfo.getLine());
-			instructionTable.put(bp.hashCode(), lineInfo.getSerializable());
+//			BreakPoint bp = new BreakPoint(classGen.getClassName(), classGen.getClassName() + "#" + method.getName(), lineInfo.getLine());
+//			instructionTable.put(bp.hashCode(), lineInfo.getSerializable());
 			
 			injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getLine(), lineInfo.getLineNumberInsn(),
 					classNameVar, methodSigVar, lineInfo.hasExceptionTarget(), lineInfo.getReadWriteInsnTotal(false),

@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.apache.bcel.generic.InstructionHandle;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -23,6 +24,7 @@ import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
 import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
+import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
@@ -98,6 +100,9 @@ public class TraceNode implements HasProbability{
 	private List<InstructionHandle> instructions;
 	private String[] stackVariables;
 	private HashMap<Integer, ConstWrapper> constPool;
+	
+	private ASTNode astNodes;
+	private HashMap<String, String> readVarMap;
 	
 	private transient double sliceBreakerProbability = 0;
 	
@@ -1202,5 +1207,40 @@ public class TraceNode implements HasProbability{
 	
 	public HashMap<Integer, ConstWrapper> getConstPool() {
 		return this.constPool;
+	}
+	
+	public void setAstNode(ASTNode nodes) {
+		this.astNodes = nodes;
+	}
+	
+	public ASTNode getAstNode() {
+		return this.astNodes;
+	}
+	
+	public HashMap<String, String> getReadMap() {
+		if (this.readVarMap == null) {
+			this.readVarMap = new HashMap<>();
+			for (VarValue v : this.readVariables) {
+				if (v instanceof PrimitiveValue) {
+					readVarMap.put(v.getVarName(), v.getStringValue());
+				} else {
+					readVarMap.putAll(getPrimitiveMap(v, ""));
+				}
+			}
+		}
+		return this.readVarMap;
+	}
+	
+	private HashMap<String, String> getPrimitiveMap(VarValue v, String name) {
+		HashMap<String, String> result = new HashMap<>();
+		name = name + v.getVarName() + ".";
+		for (VarValue child : v.getChildren()) {
+			if (child instanceof PrimitiveValue) {
+				result.put(name + child.getVarName(), child.getStringValue());
+			} else {
+				result.putAll(getPrimitiveMap(child, name));
+			}
+		}
+		return result;
 	}
 }

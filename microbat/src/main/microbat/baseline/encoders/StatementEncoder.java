@@ -1,6 +1,7 @@
 package microbat.baseline.encoders;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import microbat.baseline.Configs;
@@ -16,12 +17,17 @@ public class StatementEncoder {
 	private HashMap<BreakPoint, Integer> instOccurence = new HashMap<>();
 	private HashMap<BreakPoint, Integer> instInSlice = new HashMap<>();
 	private HashMap<String, Integer> sliceInFunc = new HashMap<>();
+	private HashSet<String> faultyVars = new HashSet<>();
 	private boolean populated = false;
 	private int sliceSize = 0;
 	
 	public StatementEncoder(Trace trace, List<TraceNode> slice) {
 		this.trace = trace;
 		this.slice = slice;
+		TraceNode last = slice.get(slice.size() - 1);
+		for (VarValue v : last.getReadVariables()) {
+			faultyVars.add(v.getVarName());
+		}
 	}
 	
 	public boolean encode() {
@@ -34,7 +40,7 @@ public class StatementEncoder {
 	
 	private boolean encode(TraceNode tn) {
 		boolean hasChange = false;
-		double prob = structureConstraint(tn) * varToStatementConstraint(tn);
+		double prob = structureConstraint(tn) * varToStatementConstraint(tn) * Math.log10((1+ nameConstraint(tn)) * 10);
 		if (Math.abs(tn.getProbability() - prob) > 0.01) {
 			hasChange = true;
 		}
@@ -91,15 +97,14 @@ public class StatementEncoder {
 	}
 	
 	private double nameConstraint(TraceNode node) {
-		/*
-		 * in the intial project, they trained three different classification
-		 * model to calculate the probability. in our case, we will be using
-		 * a simple max edit distance to calculate the probability
-		 * 
-		 * since we are implementing Java, it might be wiser to look at the return
-		 * type to determine
-		 */
-		return 0.0;
+		double score = 0.0;
+		for (VarValue v : node.getWrittenVariables()) {
+			String varName = v.getVarName();
+			for (String fVarName : this.faultyVars) {
+				score = Math.max(editDistance(varName, fVarName), score);
+			}
+		}
+		return score;
 	}
 	
 	private double varToStatementConstraint(TraceNode tn) {
@@ -141,4 +146,46 @@ public class StatementEncoder {
 	private double sigma2(double x) {
 		return 0.5 + 0.5 * (2 * Configs.HIGH - 1) * x;
 	}
+	
+	private static double editDistance(String s1, String s2) {
+        /* implements OSA Damerau-Levenshtein distance */
+        // add padding in front
+        s1 = " " + s1;
+        s2 = " " + s2;
+
+        char[] a1 = s1.toCharArray();
+        char[] a2 = s2.toCharArray();
+
+        // initialize the array
+        int[][] distanceMatrix = new int[a1.length][a2.length];
+        for (int i = 0; i < distanceMatrix.length; i++)
+            distanceMatrix[i][0] = i;
+        for (int i = 0; i < distanceMatrix[0].length; i++)
+            distanceMatrix[0][i] = i;
+
+        for (int i = 1; i < distanceMatrix.length; i++) {
+            for (int j = 1; j < distanceMatrix[0].length; j++) {
+                int cost = a1[i] == a2[j] ? 0 : 1;
+                distanceMatrix[i][j] = minimum(distanceMatrix[i-1][j] + 1, 
+                                                  distanceMatrix[i][j-1] + 1,
+                                                  distanceMatrix[i-1][j-1] + cost);
+                if (i > 1 && j > 1 && a1[i] == a2[j - 1] && a1[i -1] == a2[j]) {
+                    distanceMatrix[i][j] = minimum(distanceMatrix[i][j],
+                                                   distanceMatrix[i-2][j-2] + 1);
+                }
+            }
+        }
+        int editDistance = distanceMatrix[s1.length() - 1][s2.length() - 1];
+        double lenSum = (double) (s1.length() - 1 + s2.length() - 1);
+        double similarity =  lenSum - editDistance;
+        return similarity / lenSum;
+    }
+	
+    private static int minimum (int a, int... b) {
+        int min = a;
+        for (int i : b) {
+            min = min < i ? min : i;
+        }
+        return min;
+    }
 }

@@ -271,7 +271,7 @@ public class Trace {
 		String varID = Variable.truncateSimpleID(writtenVar.getVarID());
 		String headID = Variable.truncateSimpleID(writtenVar.getAliasVarID());
 		
-		for(int i=startNode.getOrder()+1; i>=this.getExecutionList().size(); i++) {
+		for(int i=startNode.getOrder()+1; i <= this.getExecutionList().size(); i++) {
 			TraceNode node = this.getTraceNode(i);
 			for(VarValue readVar: node.getReadVariables()) {
 				
