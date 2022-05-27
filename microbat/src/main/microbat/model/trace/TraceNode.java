@@ -1,5 +1,8 @@
 package microbat.model.trace;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1242,5 +1245,21 @@ public class TraceNode implements HasProbability{
 			}
 		}
 		return result;
+	}
+	
+	/**
+	 * Get the code statement of this trace node
+	 * @return Code statement
+	 */
+	public String getCodeStatement() {
+		final int lineNo = this.getLineNumber();
+		final String filePath = this.getBreakPoint().getFullJavaFilePath();
+		String statement = null;
+		try {
+			statement = Files.readAllLines(Paths.get(filePath)).get(lineNo-1);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return statement;
 	}
 }

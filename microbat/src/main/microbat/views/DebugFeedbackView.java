@@ -1245,4 +1245,58 @@ public class DebugFeedbackView extends ViewPart {
 //	}
 //	return false;
 //}
+	
+	/**
+	 * Update the feedback view based on the given feedback. Created by David
+	 * @param feedback Feedback that the update referencing to.
+	 */
+	public void updateFeedbackView(UserFeedback feedback) {
+		
+		// Un-check all the feedback first
+		this.yesButton.setSelection(false);
+		this.noButton.setSelection(false);
+		this.unclearButton.setSelection(false);
+		this.wrongPathButton.setSelection(false);
+		this.uncheckAllVar();
+		
+		switch(feedback.getFeedbackType()) {
+		case UserFeedback.CORRECT:
+			this.yesButton.setSelection(true);
+			return;
+		case UserFeedback.UNCLEAR:
+			this.unclearButton.setSelection(true);
+			return;
+		case UserFeedback.WRONG_PATH:
+			this.wrongPathButton.setSelection(true);
+			return;
+		case UserFeedback.WRONG_VARIABLE_VALUE:
+			this.noButton.setSelection(true);
+			
+			// Check the wrong variable element in the tree
+			ChosenVariableOption option = feedback.getOption();
+			VarValue wrongVar = option.getReadVar();
+			this.readVariableTreeViewer.setChecked(wrongVar, true);
+			return;
+			
+		default:
+			break;
+		}
+	}
+	
+	public UserFeedback getFeedback() {
+		return this.feedback;
+	}
+	
+	/**
+	 * Un-check all the variable in the read variable tree and write variable tree
+	 */
+	private void uncheckAllVar() {
+		for (Object element : this.readVariableTreeViewer.getCheckedElements()) {
+			this.readVariableTreeViewer.setChecked(element, false);
+		}
+		
+		for (Object element : this.writtenVariableTreeViewer.getCheckedElements()) {
+			this.writtenVariableTreeViewer.setChecked(element, false);
+		}
+	}
 }

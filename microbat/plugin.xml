@@ -83,6 +83,11 @@
             name="Start Debugging">
       </command>
       <command
+            defaultHandler="microbat.handler.AutoDebugHandler"
+            id="microbat.command.autoDebug"
+            name="Start Auto Debug">
+      </command>
+      <command
             defaultHandler="microbat.evaluation.handler.EvaluationAllHandler"
             id="microbat.command.evaluateAll"
             name="Run Evaluation for All">
@@ -207,6 +212,12 @@
                   label="Start Debug"
                   style="push">
             </command>
+            <command
+                  commandId="microbat.command.autoDebug"
+                  icon="icons/sample.png"
+                  label="Start Auto Debug"
+                  style="push">
+            </command>
          </toolbar>
       </menuContribution>
       <menuContribution
@@ -244,6 +255,81 @@
                style="push"
                tooltip="search the nearest trace step with regard to current step">
          </command>
+      </menuContribution>
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="microbat.menus.sampleMenu"
+               label="Sample Menu"
+               mnemonic="M">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  id="microbat.menus.sampleCommand"
+                  mnemonic="S">
+            </command>
+         </menu>
+      </menuContribution>
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="microbat.toolbars.sampleToolbar">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  icon="icons/sample.png"
+                  id="microbat.toolbars.sampleCommand"
+                  tooltip="Say hello world">
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="microbat.menus.sampleMenu"
+               label="Sample Menu"
+               mnemonic="M">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  id="microbat.menus.sampleCommand"
+                  mnemonic="S">
+            </command>
+         </menu>
+      </menuContribution>
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="microbat.toolbars.sampleToolbar">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  icon="icons/sample.png"
+                  id="microbat.toolbars.sampleCommand"
+                  tooltip="Say hello world">
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="microbat.menus.sampleMenu"
+               label="Sample Menu"
+               mnemonic="M">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  id="microbat.menus.sampleCommand"
+                  mnemonic="S">
+            </command>
+         </menu>
+      </menuContribution>
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="microbat.toolbars.sampleToolbar">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  icon="icons/sample.png"
+                  id="microbat.toolbars.sampleCommand"
+                  tooltip="Say hello world">
+            </command>
+         </toolbar>
       </menuContribution>
    </extension>
    <extension

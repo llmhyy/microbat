@@ -15,6 +15,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -24,6 +25,8 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import microbat.Activator;
 import microbat.util.SWTFactory;
 import microbat.util.Settings;
+
+import microbat.autofeedback.AutoFeedbackMethods;
 
 public class MicrobatPreference extends PreferencePage implements
 		IWorkbenchPreferencePage {
@@ -86,6 +89,7 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String REQUIRE_METHOD_SPLITTING = "enableMethodSplitting";
 	public static final String SUPPORT_CONCURRENT_TRACE = "supportConcurrentTrace";
 	public static final String RUN_WITH_DEBUG_MODE = "runWithDebugMode";
+	public static final String AUTO_FEEDBACK_METHOD = "autoFeedbackMethod";
 	
 	private Combo projectCombo;
 	private Text lanuchClassText;
@@ -102,6 +106,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Button runWithDebugModeButton;
 	private Button enableMethodSplittingButton;
 	private Text java7HomePathText;
+	private Combo autoFeedbackCombo;
 	
 	private String defaultTargetProject = "";
 	private String defaultLanuchClass = "";
@@ -118,6 +123,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultApplyRecodingOptimization;
 	private String defaultRunWithDebugMode = "false";
 	private boolean defaultEnableMethodSplitting;
+	private int defaultAutoFeedbackMethod = AutoFeedbackMethods.RANDOM.ordinal();
 	
 	@Override
 	protected Control createContents(Composite parent) {
@@ -139,6 +145,7 @@ public class MicrobatPreference extends PreferencePage implements
 		
 		createSettingGroup(composite);
 		createSeedStatementGroup(composite);
+		createAutoFeedbackSettingGroup(composite);
 		
 		return composite;
 	}
@@ -279,6 +286,34 @@ public class MicrobatPreference extends PreferencePage implements
 		
 	}
 	
+	// Added for auto-feedback
+	// Modified by David
+	private void createAutoFeedbackSettingGroup(Composite parent) {
+		Group autoFeedbackGroup = new Group(parent, SWT.NONE);
+		autoFeedbackGroup.setText("Auto Feedback Methods");
+		
+		GridData autoFeedbackGroupData = new GridData(SWT.FILL, SWT.FILL, true, true);
+		autoFeedbackGroupData.horizontalSpan = 3;
+		autoFeedbackGroup.setLayoutData(autoFeedbackGroupData);
+		
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 3;
+		
+		autoFeedbackGroup.setLayout(layout);
+		
+		Label methodLabel = new Label(autoFeedbackGroup, SWT.NONE);
+		methodLabel.setText("Method: ");
+		
+		AutoFeedbackMethods[] methods = AutoFeedbackMethods.values();
+		String[] methodsName = new String[methods.length];
+		for(int i=0; i<methods.length; i++) {
+			methodsName[i] = methods[i].name();
+		}
+		this.autoFeedbackCombo = new Combo(autoFeedbackGroup, SWT.DROP_DOWN);
+		this.autoFeedbackCombo.setItems(methodsName);
+		this.autoFeedbackCombo.select(this.defaultAutoFeedbackMethod);
+	}
+	
 	public boolean performOk(){
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode("microbat.preference");
 		preferences.put(TARGET_PORJECT, this.projectCombo.getText());
@@ -296,6 +331,7 @@ public class MicrobatPreference extends PreferencePage implements
 		preferences.putBoolean(REQUIRE_METHOD_SPLITTING, this.enableMethodSplittingButton.getSelection());
 		preferences.put(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
 		preferences.put(RUN_WITH_DEBUG_MODE, String.valueOf(this.runWithDebugModeButton.getSelection()));
+		preferences.put(AUTO_FEEDBACK_METHOD, this.autoFeedbackCombo.getText());
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(LANUCH_CLASS, this.lanuchClassText.getText());
@@ -312,7 +348,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Activator.getDefault().getPreferenceStore().putValue(REQUIRE_METHOD_SPLITTING, String.valueOf(this.enableMethodSplittingButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(RUN_WITH_DEBUG_MODE, String.valueOf(this.runWithDebugModeButton.getSelection()));
-		
+		Activator.getDefault().getPreferenceStore().putValue(AUTO_FEEDBACK_METHOD, this.autoFeedbackCombo.getText());
 		confirmChanges();
 		
 		return true;
@@ -333,6 +369,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Settings.applyLibraryOptimization = this.recordingOptimizationButton.getSelection();
 		Settings.supportConcurrentTrace = this.supportConcurrentTraceButton.getSelection();
 		Settings.isRunWtihDebugMode = this.runWithDebugModeButton.getSelection();
+		Settings.autoFeedbackMethod = this.autoFeedbackCombo.getText();
 	}
 	
 	private String[] getProjectsInWorkspace(){
