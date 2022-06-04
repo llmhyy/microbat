@@ -31,13 +31,15 @@ public class Premain {
 		long agentPreStartup = System.currentTimeMillis();
 		installBootstrap(inst);
 		CommandLine cmd = CommandLine.parse(agentArgs);
+		AgentFactory.cmd = cmd;
+		
 		Class<?>[] retransformableClasses = getRetransformableClasses(inst);
 		
 		debug("start instrumentation...");
 		agentPreStartup = System.currentTimeMillis() - agentPreStartup;
 		System.out.println("Vm start up time: " + vmStartupTime);
 		System.out.println("Agent start up time: " + agentPreStartup);
-		Agent agent = new Agent(cmd, inst);
+		Agent agent = AgentFactory.createAgent(cmd, inst);
 		agent.startup(vmStartupTime, agentPreStartup);
 		inst.addTransformer(agent.getTransformer(), true);
 		inst.addTransformer(new TestRunnerTranformer());

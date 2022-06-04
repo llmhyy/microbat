@@ -5,9 +5,6 @@ import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.instrumentation.AgentParams.LogType;
-import microbat.instrumentation.cfgcoverage.CoverageAgent;
-import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
 import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.instrumentation.runtime.ExecutionTracer;
 import microbat.instrumentation.runtime.IExecutionTracer;
@@ -24,27 +21,53 @@ import microbat.instrumentation.runtime.IExecutionTracer;
  *   
  *   
  */
-public class Agent {
-	private static IAgent agent;
+public abstract class Agent {
+//	private static IAgent agent;
 	private static String programMsg = "";
 	private volatile static Boolean shutdowned = false;
 	private static int numberOfThread = 1;
 	private static Instrumentation instrumentation;
 	
-	public Agent(CommandLine cmd, Instrumentation inst) {
+	
+	public abstract void startup0(long vmStartupTime, long agentPreStartup);
+
+	public abstract void shutdown() throws Exception;
+
+	public abstract void startTest(String junitClass, String junitMethod);
+
+	public abstract void finishTest(String junitClass, String junitMethod);
+
+	public abstract ClassFileTransformer getTransformer0();
+
+	public abstract void retransformBootstrapClasses(Instrumentation instrumentation, Class<?>[] retransformableClasses)
+			throws Exception;
+
+	public abstract void exitTest(String testResultMsg, String junitClass, String junitMethod, long threadId);
+
+	public abstract boolean isInstrumentationActive0();
+	
+//	public Agent(CommandLine cmd, Instrumentation inst) {
+//		instrumentation = inst;
+//		if (cmd.getBoolean(CoverageAgentParams.OPT_IS_COUNT_COVERAGE, false)) {
+//			agent = new CoverageAgent(cmd);
+//		} else if (cmd.getBoolean(AgentParams.OPT_PRECHECK, false)) {
+//			agent = new PrecheckAgent(cmd, instrumentation);
+//		} else {
+//			agent = new TraceAgent(cmd);
+//		}
+//		AgentLogger.setup(LogType.valuesOf(cmd.getStringList(AgentParams.OPT_LOG)));
+//	}
+	
+	public Instrumentation getInstrumentation() {
+		return instrumentation;
+	}
+
+	public void setInstrumentation(Instrumentation inst) {
 		instrumentation = inst;
-		if (cmd.getBoolean(CoverageAgentParams.OPT_IS_COUNT_COVERAGE, false)) {
-			agent = new CoverageAgent(cmd);
-		} else if (cmd.getBoolean(AgentParams.OPT_PRECHECK, false)) {
-			agent = new PrecheckAgent(cmd, instrumentation);
-		} else {
-			agent = new TraceAgent(cmd);
-		}
-		AgentLogger.setup(LogType.valuesOf(cmd.getStringList(AgentParams.OPT_LOG)));
 	}
 
 	public void startup(long vmStartupTime, long agentPreStartup) {
-		agent.startup(vmStartupTime, agentPreStartup);
+		startup0(vmStartupTime, agentPreStartup);
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
@@ -105,6 +128,7 @@ public class Agent {
 	}
 	
 	public static void _exitTest(String testResultMsg, String junitClass, String junitMethod, Long threadId) {
+		Agent agent = AgentFactory.createAgent(AgentFactory.cmd, instrumentation);
 		agent.exitTest(testResultMsg, junitClass, junitMethod, threadId);
 	}
 	
@@ -116,7 +140,8 @@ public class Agent {
 		synchronized (shutdowned) {
 			try {
 				if (!shutdowned) {
-					instrumentation.removeTransformer(agent.getTransformer());
+					Agent agent = AgentFactory.createAgent(AgentFactory.cmd, instrumentation);
+					instrumentation.removeTransformer(agent.getTransformer0());
 					Class<?>[] retransformableClasses = getRetransformableClasses(instrumentation);
 					if (retransformableClasses != null) {
 						instrumentation.retransformClasses(retransformableClasses);
@@ -157,6 +182,7 @@ public class Agent {
 
 	public static void _startTest(String junitClass, String junitMethod) {
 		try {
+			Agent agent = AgentFactory.createAgent(AgentFactory.cmd, instrumentation);
 			agent.startTest(junitClass, junitMethod);
 		} catch (Throwable e) {
 			AgentLogger.error(e);
@@ -165,6 +191,7 @@ public class Agent {
 	
 	public static void _finishTest(String junitClass, String junitMethod) {
 		try {
+			Agent agent = AgentFactory.createAgent(AgentFactory.cmd, instrumentation);
 			agent.finishTest(junitClass, junitMethod);
 		} catch (Throwable e) {
 			AgentLogger.error(e);
@@ -177,21 +204,6 @@ public class Agent {
 
 	public static void _onStartThread() {
 		if (!shutdowned) {
-//			boolean isCalledFromApp = false;
-//			StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-//			boolean threadStartReached = false;
-//			for (StackTraceElement ste : stackTrace) {
-//				if ("java.lang.Thread".equals(ste.getClassName()) 
-//						&& "start".equals(ste.getMethodName())) {
-//					threadStartReached = true;
-//				} else if (threadStartReached) {
-//					isCalledFromApp = FilterChecker.isAppClazz(ste.getClassName());
-//					break;
-//				}
-//			}
-//			if (isCalledFromApp) {
-//				numberOfThread++;
-//			}
 			numberOfThread++;
 		}
 	}
@@ -201,18 +213,20 @@ public class Agent {
 	}
 
 	public ClassFileTransformer getTransformer() {
-		return agent.getTransformer();
+		return getTransformer0();
 	}
 
 	public void retransformClasses(Class<?>[] retransformableClasses) throws Exception {
+		Agent agent = AgentFactory.createAgent(AgentFactory.cmd, instrumentation);
 		agent.retransformBootstrapClasses(instrumentation, retransformableClasses);
 	}
 
 	public static boolean isInstrumentationActive() {
-		return agent.isInstrumentationActive();
+		Agent agent = AgentFactory.createAgent(AgentFactory.cmd, instrumentation);
+		return agent.isInstrumentationActive0();
 	}
 	
-	public static IAgent getAgent() {
-		return agent;
-	}
+//	public static IAgent getAgent() {
+//		return agent;
+//	}
 }

@@ -14,20 +14,19 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.sql.Recorder;
-import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class TraceAgent implements IAgent {
+public class TraceAgent extends Agent {
 	private AgentParams agentParams;
-	private StopTimer timer;
+//	private StopTimer timer;
 
 	public TraceAgent(CommandLine cmd) {
 		this.agentParams = AgentParams.initFrom(cmd);
 	}
 
-	public void startup(long vmStartupTime, long agentPreStartup) {
-		timer = new StopTimer("Trace Construction");
-		timer.newPoint("Execution");
+	public void startup0(long vmStartupTime, long agentPreStartup) {
+//		timer = new StopTimer("Trace Construction");
+//		timer.newPoint("Execution");
 		/* init filter */
 		AppJavaClassPath appPath = agentParams.initAppClassPath();
 		GlobalFilterChecker.setup(appPath, agentParams.getIncludesExpression(), agentParams.getExcludesExpression());
@@ -50,7 +49,7 @@ public class TraceAgent implements IAgent {
 		ExecutionTracer.shutdown();
 		/* collect trace & store */
 		AgentLogger.debug("Building trace dependencies ...");
-		timer.newPoint("Building trace dependencies");
+//		timer.newPoint("Building trace dependencies");
 		// FIXME -mutithread LINYUN [3]
 		// LLT: only trace of main thread is recorded.
 		List<IExecutionTracer> tracers = ExecutionTracer.getAllThreadStore();
@@ -70,9 +69,9 @@ public class TraceAgent implements IAgent {
 			traceList.add(trace);
 		}
 
-		timer.newPoint("Saving trace");
+//		timer.newPoint("Saving trace");
 		Recorder.create(agentParams).store(traceList);
-		AgentLogger.debug(timer.getResultString());
+//		AgentLogger.debug(timer.getResultString());
 	}
 
 	//FIXME this method can be handled in an asynchronized way
@@ -193,7 +192,7 @@ public class TraceAgent implements IAgent {
 	}
 
 	@Override
-	public TraceTransformer getTransformer() {
+	public TraceTransformer getTransformer0() {
 		return new TraceTransformer(agentParams);
 	}
 
@@ -209,7 +208,7 @@ public class TraceAgent implements IAgent {
 	}
 
 	@Override
-	public boolean isInstrumentationActive() {
+	public boolean isInstrumentationActive0() {
 		return !ExecutionTracer.isShutdown();
 	}
 }
