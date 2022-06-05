@@ -198,8 +198,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	}
 	
 	/**
-	 * 
-	 * isEntry means either main() or run() (e.g, thread)
+	 * @param isEntry means either main() or run() (e.g, thread)
 	 * 
 	 * @return whether method is changed
 	 */
