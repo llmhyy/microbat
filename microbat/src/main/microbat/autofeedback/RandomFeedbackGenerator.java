@@ -75,7 +75,7 @@ public final class RandomFeedbackGenerator extends FeedbackGenerator {
 	 * @return True if the statement is control incorrect
 	 */
 	private boolean guessIsControlIncorrect() {
-		return Math.random() > 0.9;
+		return Math.random() > 0.5;
 	}
 
 }

@@ -21,7 +21,7 @@ public class UserFeedback {
 	}
 	
 	public UserFeedback(){}
-
+	
 	public ChosenVariableOption getOption() {
 		return option;
 	}

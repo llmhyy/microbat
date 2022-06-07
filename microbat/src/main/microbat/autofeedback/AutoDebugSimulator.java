@@ -1,5 +1,8 @@
 package microbat.autofeedback;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.swt.widgets.Display;
 
 import microbat.model.trace.Trace;
@@ -19,18 +22,28 @@ public class AutoDebugSimulator {
 	
 	private AutoFeedbackMethods selectedMethod;
 	
-	final private int sleepTime = 500;
+	private TraceView traceView;
 	
-	public AutoDebugSimulator(Trace trace, AutoFeedbackMethods method) {
-		this.trace = trace;
+	private List<NodeFeedbackPair> feedbacksRecord;
+	
+	final private int sleepTime = 1000;
+	
+	public AutoDebugSimulator(TraceView traceView, AutoFeedbackMethods method) {
+		this.trace = traceView.getTrace();
+		this.traceView = traceView;
 		this.selectedMethod = method;
 		this.feedbackGenerator = FeedbackGenerator.getFeedbackGenerator(trace, selectedMethod);
+		this.feedbacksRecord = new ArrayList<>();
 	}
 	
 	/**
 	 * Begin the auto debugging process. It will update the trace view and the feedback view as the debugging process.
+	 * @return Root cause node. Can be null.
 	 */
-	public void simulateDebugProcess() {
+	public TraceNode simulateDebugProcess() {
+		
+		// Clear the feedback record
+		this.feedbacksRecord.clear();
 		
 		// Begin with the latest node
 		TraceNode currentNode = this.trace.getLatestNode();
@@ -60,14 +73,18 @@ public class AutoDebugSimulator {
 			}
 			
 			while(!rootCauseFound) {
+				
 				// Note that the feedback can be null (when NAIVE method is selected)
 				UserFeedback feedback = this.feedbackGenerator.giveFeedback(currentNode);
+				
 				if(feedback == null) {
-					return;
+					return rootCauseNode;
 				}
 				
-				// If the current node is correct, then it is very likely that there
-				// is an incorrect operation in previous node
+				this.feedbacksRecord.add(new NodeFeedbackPair(currentNode, feedback));
+				
+				// If the current node is correct, then it is very likely that root cause node
+				// is the previous node
 				if (feedback.getFeedbackType() == UserFeedback.CORRECT) {
 					rootCauseNode = prevNode;
 					rootCauseFound = true;
@@ -100,7 +117,11 @@ public class AutoDebugSimulator {
 		this.feedbackGenerator.notifyEnd();
 		this.updateTraceView(rootCauseNode);
 		System.out.println("The root cause is found to be " + rootCauseNode.getOrder());
-		return;
+		return rootCauseNode;
+	}
+	
+	public List<NodeFeedbackPair> getFeedbackRecord() {
+		return this.feedbacksRecord;
 	}
 	
 	private void updateFeedbackView(UserFeedback feedback) {
@@ -126,7 +147,6 @@ public class AutoDebugSimulator {
 		Display.getDefault().asyncExec(new Runnable() {
 		    @Override
 		    public void run() {
-		    	TraceView traceView = MicroBatViews.getTraceView();
 				traceView.jumpToNode(trace, node.getOrder(), true);
 				try {
 					Thread.sleep(sleepTime);

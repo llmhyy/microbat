@@ -43,7 +43,7 @@ public class AutoDebugHandler extends AbstractHandler {
 			Job job = new Job("Preparing for auto debugging...") {
 				@Override
 				protected IStatus run(IProgressMonitor monitor) {
-					AutoDebugSimulator simulator = new AutoDebugSimulator(trace, selectedMethod);
+					AutoDebugSimulator simulator = new AutoDebugSimulator(traceView, selectedMethod);
 					simulator.simulateDebugProcess();
 					return Status.OK_STATUS;
 				}

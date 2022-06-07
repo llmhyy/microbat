@@ -34,6 +34,8 @@ public abstract class FeedbackGenerator {
 	 */
 	protected UserFeedback feedbackFromView;
 	
+	protected boolean isVerbal;
+	
 	/**
 	 * Get the correspondence feedback generator based on the selected method
 	 * @param trace
@@ -59,6 +61,15 @@ public abstract class FeedbackGenerator {
 		this.trace = trace;
 		this.selectedMethod = method;
 		this.feedbackFromView = null;
+		this.isVerbal = true;
+	}
+	
+	/**
+	 * Set verbal to true will allow debug message to print out
+	 * @param verbal True then debug message is printed out
+	 */
+	public void setVerbal(boolean verbal) {
+		this.isVerbal = verbal;
 	}
 	
 	/**
@@ -150,6 +161,10 @@ public abstract class FeedbackGenerator {
 	}
 	
 	protected void printFeedbackMessage(TraceNode node, UserFeedback feedback) {
+		if (!this.isVerbal) {
+			return;
+		}
+		
 		switch(feedback.getFeedbackType()) {
 		case UserFeedback.CORRECT:
 			System.out.println(this.selectedMethod.name() + ": This trace node " + node.getOrder() + " is correct.");

@@ -88,32 +88,4 @@ public final class MLFeedbackGenerator extends FeedbackGenerator {
 	public void notifyEnd() {
 		this.client.endServer();
 	}
-	
-	/**
-	 * Pair of trace node and the corresponding user feedback
-	 * @author David
-	 */
-	private class NodeFeedbackPair {
-		
-		private TraceNode node;
-		private UserFeedback feedback;
-		
-		public NodeFeedbackPair() {
-			this.node = null;
-			this.feedback = null;
-		}
-		
-		public NodeFeedbackPair(TraceNode node, UserFeedback feedback) {
-			this.node = node;
-			this.feedback = feedback;
-		}
-		
-		public TraceNode getNode() {
-			return this.node;
-		}
-		
-		public UserFeedback getFeedback() {
-			return this.feedback;
-		}
-	}
 }

@@ -38,6 +38,14 @@ public class StepVectorizer {
 		// System.out.println("Number of variable = " + this.variableSet.size());
 
 	}
+	
+	public int getVarIndex(VarValue var) {
+		if (this.variableSet.containsKey(var.getVarID())) {
+			return this.variableSet.get(var.getVarID());
+		} else {
+			return -1;
+		}
+	}
 
 	public StepVector vectorize(int order) {
 
@@ -123,7 +131,7 @@ public class StepVectorizer {
 		File csvFile = FileUtils.getFileCreateIfNotExist(path);
 		String headers = Stream.of("id", "isThrowingException", "isInsideLoop", "isInsideIf", "isCondition",
 				"readVariables", "writeVariables", "stepOverNext", "stepInNext", "stepOverPrev", "stepOverPrev",
-				"controlDominators", "dataDominators").collect(Collectors.joining(","));
+				"controlDominators", "dataDominators", "traceLength").collect(Collectors.joining(","));
 		try (PrintWriter pw = new PrintWriter(csvFile)) {
 			pw.println(headers);
 			for (int i = 0; i < this.trace.getExecutionList().size(); i++) {
