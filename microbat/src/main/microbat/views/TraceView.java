@@ -65,9 +65,6 @@ import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 
-import microbat.autofeedback.AutoFeedbackGenerator;
-import microbat.autofeedback.AutoFeedbackMethods;
-
 public class TraceView extends ViewPart {
 
 	protected List<Trace> traceList;
@@ -423,32 +420,6 @@ public class TraceView extends ViewPart {
 		return action;
 	}
 	
-	protected Action createAutoFeedbackAction() {
-		Action action = new Action() {
-			public void run() {
-				// Method Checking
-				AutoFeedbackGenerator generator = new AutoFeedbackGenerator();
-				System.out.println("Auto Feedback Method: " + generator.getMethod().name());
-				
-				// If no trace node is selected
-				if (listViewer.getSelection().isEmpty()) {
-					return;
-				}
-				
-				// Generate feedback based on selected trace node
-				if(listViewer.getSelection() instanceof IStructuredSelection) {
-					IStructuredSelection selection = (IStructuredSelection) listViewer.getSelection();
-					TraceNode node = (TraceNode) selection.getFirstElement();
-					generator.giveFeedback(node, getTrace());
-				}
-			}
-			public String getText() {
-				return "Get Auto-Feedback";
-			}
-		};
-		return action;
-	}
-	
 	protected MenuManager menuMgr = new MenuManager("#PopupMenu");
 	protected void appendMenuForTraceStep() {
 		menuMgr.setRemoveAllWhenShown(true);
@@ -457,8 +428,6 @@ public class TraceView extends ViewPart {
 			public void menuAboutToShow(IMenuManager manager) {
 				Action action = createForSearchAction();
 				menuMgr.add(action);
-				Action autoFeedbackAction = createAutoFeedbackAction();
-				menuMgr.add(autoFeedbackAction);
 			}
 		});
 		

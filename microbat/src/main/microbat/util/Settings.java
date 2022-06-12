@@ -82,7 +82,6 @@ public class Settings {
 				String runWithDebugModeString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RUN_WITH_DEBUG_MODE);
 				isRunWtihDebugMode = runWithDebugModeString.equals("true");
 				
-				autoFeedbackMethod = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.AUTO_FEEDBACK_METHOD);
 			}
 			catch(Exception e){
 				e.printStackTrace();

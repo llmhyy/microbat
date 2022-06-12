@@ -83,11 +83,6 @@
             name="Start Debugging">
       </command>
       <command
-            defaultHandler="microbat.handler.AutoDebugHandler"
-            id="microbat.command.autoDebug"
-            name="Start Auto Debug">
-      </command>
-      <command
             defaultHandler="microbat.evaluation.handler.EvaluationAllHandler"
             id="microbat.command.evaluateAll"
             name="Run Evaluation for All">
@@ -210,12 +205,6 @@
                   commandId="microbat.command.startDebug"
                   icon="icons/microbat.png"
                   label="Start Debug"
-                  style="push">
-            </command>
-            <command
-                  commandId="microbat.command.autoDebug"
-                  icon="icons/sample.png"
-                  label="Start Auto Debug"
                   style="push">
             </command>
          </toolbar>
