@@ -8,6 +8,7 @@ import microbat.model.trace.ConstWrapper;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.recommendation.UserFeedback;
 import microbat.util.JavaUtil;
 
 import java.util.ArrayList;
@@ -50,9 +51,13 @@ public class ProbabilityEncoder {
 		 *  the probability encode (i.e. when re-running without
 		 *  previous run information)
 		 */
-		this.matchInstruction();
+		this.matchInstructions();
 		this.preEncode();
 		this.setupFlag = true;
+	}
+	
+	public void setFlag(boolean setupFlag) {
+		this.setupFlag = setupFlag;
 	}
 	
 	public void encode() {
@@ -109,6 +114,46 @@ public class ProbabilityEncoder {
 		return probabilities.peek();
 	}
 	
+	/**
+	 * Update probability based on the feedback.
+	 * @param node Trace node that the feedback referring to.
+	 * @param feedback User Feedback
+	 */
+	public void updateProbability(TraceNode node, UserFeedback feedback) {
+		switch (feedback.getFeedbackType()) {
+		case UserFeedback.UNCLEAR:
+			break;
+		case UserFeedback.CORRECT:
+			this.updateNode(node, Configs.HIGH);
+			break;
+		case UserFeedback.WRONG_PATH:
+			node.getControlDominator().setPredProb(Configs.LOW);
+			this.updateNode(node, Configs.UNCERTAIN);
+			break;
+		case UserFeedback.WRONG_VARIABLE_VALUE:
+			node.setProbability(Configs.LOW);
+			feedback.getOption().getReadVar().setProbability(Configs.LOW);
+			break;
+		default:
+			break;
+		}
+	}
+	
+	/**
+	 * Update the probability of all factor of given node
+	 * @param node Trace node to be updated
+	 * @param prob New probability
+	 */
+	private void updateNode(TraceNode node, double prob) {
+		node.setProbability(prob);
+		for (VarValue readVar : node.getReadVariables()) {
+			readVar.setProbability(prob);
+		}
+		for (VarValue writeVar : node.getWrittenVariables()) {
+			writeVar.setProbability(prob);
+		}
+	}
+	
 	private void populatePriorityQueue() {
 		probabilities = new PriorityQueue<>(new Comparator<TraceNode>() {
 			@Override
@@ -150,72 +195,72 @@ public class ProbabilityEncoder {
 		}
 	}
 	
-	private void matchInstruction() {
-		HashMap<String, HashMap<Integer, ASTNode>> store = new HashMap<>();
-		for (TraceNode tn: executionList) {
-			BreakPoint breakpoint = tn.getBreakPoint();
-			String sourceFile = breakpoint.getFullJavaFilePath();
-			
-			if (!store.containsKey(sourceFile)) {
-				store.put(sourceFile, new HashMap<>());
-				CompilationUnit cu = JavaUtil.findCompiltionUnitBySourcePath(sourceFile, 
-						breakpoint.getDeclaringCompilationUnitName());
-				cu.accept(new ASTVisitor() {
-					private HashMap<Integer, ASTNode> specificStore = store.get(sourceFile);
-					private int getLineNumber(ASTNode node) {
-						return cu.getLineNumber(node.getStartPosition());
-					}
-					
-					private void storeNode (int line, ASTNode node) {
-						if (!specificStore.containsKey(line)) {
-							specificStore.put(line, node);
-						}
-					}
-					
-					private void wrapperVisit(ASTNode node) {
-						int lineNumber = getLineNumber(node);
-						storeNode(lineNumber, node);
-					}
-					
-					public void preVisit(ASTNode node) {
-						wrapperVisit(node);
-					}
-					
-//					public boolean visit(ArrayAccess node) {
-//						return wrapperVisit(node);
+//	private void matchInstruction() {
+//		HashMap<String, HashMap<Integer, ASTNode>> store = new HashMap<>();
+//		for (TraceNode tn: executionList) {
+//			BreakPoint breakpoint = tn.getBreakPoint();
+//			String sourceFile = breakpoint.getFullJavaFilePath();
+//			
+//			if (!store.containsKey(sourceFile)) {
+//				store.put(sourceFile, new HashMap<>());
+//				CompilationUnit cu = JavaUtil.findCompiltionUnitBySourcePath(sourceFile, 
+//						breakpoint.getDeclaringCompilationUnitName());
+//				cu.accept(new ASTVisitor() {
+//					private HashMap<Integer, ASTNode> specificStore = store.get(sourceFile);
+//					private int getLineNumber(ASTNode node) {
+//						return cu.getLineNumber(node.getStartPosition());
 //					}
 //					
-//					public boolean visit(Assignment node) {
-//						return wrapperVisit(node);
+//					private void storeNode (int line, ASTNode node) {
+//						if (!specificStore.containsKey(line)) {
+//							specificStore.put(line, node);
+//						}
 //					}
 //					
-//					public boolean visit(ConditionalExpression node) {
-//						return wrapperVisit(node);
+//					private void wrapperVisit(ASTNode node) {
+//						int lineNumber = getLineNumber(node);
+//						storeNode(lineNumber, node);
 //					}
 //					
-//					public boolean visit(FieldAccess node) {
-//						return wrapperVisit(node);
+//					public void preVisit(ASTNode node) {
+//						wrapperVisit(node);
 //					}
 //					
-//					public boolean visit(IfStatement node) {
-//						return wrapperVisit(node);
-//					}
-//					
-//					public boolean visit(MethodInvocation node) {
-//						return wrapperVisit(node);
-//					}
-//					
-//					public boolean visit(InfixExpression node) {
-//						return wrapperVisit(node);
-//					}
-				});
-
-			}
-
-			ASTNode node = store.get(sourceFile).getOrDefault(breakpoint.getLineNumber(), null);
-			tn.setAstNode(node);
-		}
-	}
+////					public boolean visit(ArrayAccess node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(Assignment node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(ConditionalExpression node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(FieldAccess node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(IfStatement node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(MethodInvocation node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(InfixExpression node) {
+////						return wrapperVisit(node);
+////					}
+//				});
+//
+//			}
+//
+//			ASTNode node = store.get(sourceFile).get(breakpoint.getLineNumber());
+//			tn.setAstNode(node);
+//		}
+//	}
 	
 	private void preEncode() {
 		/* 
@@ -224,11 +269,10 @@ public class ProbabilityEncoder {
 		 * 2. set all output variable to be LOW
 		*/
 		
-		
 		for (int i = 0; i < executionList.size(); i++) {
 			TraceNode tn = executionList.get(i);
-			tn.setProbability(Configs.UNCERTAIN);
-			
+			tn.setProbability(Configs.HIGH); // Initial probability should be high
+			tn.setPredProb(Configs.UNCERTAIN);
 			for (VarValue v : tn.getReadVariables()) {
 				// Set initial read variable to HIGH
 				v.setProbability(i == 0 ? Configs.HIGH : Configs.UNCERTAIN);
@@ -263,7 +307,12 @@ public class ProbabilityEncoder {
 		});
 		
 		List<TraceNode> visitedNodes = new ArrayList<>();
-		toVisit.addIgnoreNull(trace.getLatestNode());
+		
+		TraceNode latestNode = trace.getLatestNode();
+		if (latestNode.getCodeStatement().equals("}")) {
+			latestNode = trace.getTraceNode(trace.size() - 2);
+		}
+		toVisit.addIgnoreNull(latestNode);
 		
 		while (toVisit.size() > 0) {
 			TraceNode node = toVisit.poll();
@@ -279,6 +328,7 @@ public class ProbabilityEncoder {
 		for (int i = visitedNodes.size(); i > 0; i--) {
 			result.add(visitedNodes.get(i-1));
 		}
+		
 		return result;
 	}
 }

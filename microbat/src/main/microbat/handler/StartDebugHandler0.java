@@ -60,12 +60,10 @@ public class StartDebugHandler0 extends AbstractHandler {
 				DebugFeedbackView view = MicroBatViews.getDebugFeedbackView();
 				view.clear();
 			}
-			
 		});
 	}
 	
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		
 		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		if (Settings.isRunTest) {

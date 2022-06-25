@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.apache.bcel.generic.ArrayInstruction;
@@ -27,6 +28,8 @@ import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import microbat.baseline.BitRepresentation;
 import microbat.baseline.Configs;
@@ -61,22 +64,41 @@ public class VariableEncoder {
 		return hasChange;
 	}
 	
-	private boolean encode(TraceNode tn) {
+	private boolean encode(TraceNode node) {
+		
+		System.out.println("-------------------------------------------");
+		System.out.println("Encoding trace node: " + node.getOrder());
 		boolean hasChange = false;
-//		System.out.println(tn.getOrder());
-//		System.out.println(tn.getInstructions());
-
-		int readLength = tn.getReadVariables().size();
-		int writeLength = tn.getWrittenVariables().size();
+		
+		// Skip the inefficient trace node
+		if (node.getCodeStatement().equals("}")) {
+			return hasChange;
+		}
+		
+		int readLength = node.getReadVariables().size();
+		int writeLength = node.getWrittenVariables().size();
 		int totalVariableLength = readLength + writeLength;
+		
+		TraceNode controlDominator = node.getControlDominator();
+		boolean haveControlDominator = controlDominator != null;
+		if (haveControlDominator) {
+			totalVariableLength += 1;
+		}
+		
+//		System.out.println("readLength = " + readLength);
+//		System.out.println("writeLength = " + writeLength);
+//		System.out.println("totalLength = " + totalVariableLength);
+		
 		if (totalVariableLength > 30) {
-			// TODO: might want to reconsider
+			// skip when there are more than 30 variables
 			return hasChange; 
 		}
 		
-		List<Constraint> constraints = getAstConstraints(tn);
-		List<Constraint> priorConstraints = getPriorConstraints(tn);
-		constraints.addAll(priorConstraints);
+		// Generate constraints for target trace node: A1, A2, A3
+		List<Constraint> constraints = this.genConstraints(node);
+//		for (Constraint constraint : constraints) {
+//			System.out.println(constraint);
+//		}
 		int maxInt = 1 << totalVariableLength; 
 		
 		HashMap<Integer, Double> memoization = new HashMap<>();
@@ -92,24 +114,50 @@ public class VariableEncoder {
 		
 		for (int i = 0; i < totalVariableLength; i++) {
 			List<Integer> numbers = getNumbers(totalVariableLength, i);
-			VarValue var;
-			if (i < readLength)
-				var = tn.getReadVariables().get(i);
-			else
-				var = tn.getWrittenVariables().get(i - readLength);
-			double sum = 0;
-			for (int number : numbers) {
-				sum += memoization.get(number);
+			
+			if (i < readLength + writeLength) {
+				// Update variable probability
+				VarValue var;
+				if (i < readLength)
+					var = node.getReadVariables().get(i);
+				else
+					var = node.getWrittenVariables().get(i - readLength);
+				double sum = 0;
+				for (int number : numbers) {
+					sum += memoization.get(number);
+				}
+				double prob = sum / denominator;
+				if (Math.abs(var.getProbability() - prob) > 0.01) {
+					hasChange = true;
+				}
+				var.setProbability(prob);
+			} else {
+				// Update predicate probability
+				double sum = 0;
+				for (int number : numbers) {
+					sum += memoization.get(number);
+				}
+				double prob = sum / denominator;
+				if (Math.abs(controlDominator.getPredProb() - prob) > 0.01) {
+					hasChange = true;
+				}
+				controlDominator.setPredProb(prob);
 			}
-			double prob = sum / denominator;
-			if (Math.abs(var.getProbability() - prob) > 0.01) {
-				hasChange = true;
-//				System.out.println("Prev prob: " + var.getProbability() + " | Current prob: " + prob);
-			}
-			var.setProbability(prob);
 		}
 		System.gc();
 		return hasChange;
+	}
+	
+	/**
+	 * Generate all constraints for given trace node
+	 * @param node Target trace node to generate constraints
+	 * @return All constraints that based on given trace node
+	 */
+	private List<Constraint> genConstraints(TraceNode node) {
+		List<Constraint> constraints = new ArrayList<>();
+		constraints.addAll(this.getAstConstraints(node));
+		constraints.addAll(this.getPriorConstraints(node));
+		return constraints;
 	}
 	
 	private List<Integer> getNumbers(int length, int bitPos) {
@@ -134,15 +182,26 @@ public class VariableEncoder {
 		return result;
 	}
 	
-	/* 
-	 * Get a list of constraints for a specific variable
+	/**
+	 * Get all the constraints (A1, A2, A3) for given trace node
+	 * @param node Target trace node
+	 * @return List of correspondence constraints
 	 */
-	private List<Constraint> getAstConstraints(TraceNode tn) {
+	private List<Constraint> getAstConstraints(TraceNode node) {
+		
 		List<Constraint> constraints = new ArrayList<>();
 		
-		int readLength = tn.getReadVariables().size();
-		int writeLength = tn.getWrittenVariables().size();
+		int readLength = node.getReadVariables().size();
+		int writeLength = node.getWrittenVariables().size();
 		int totalLength = readLength + writeLength;
+		
+		TraceNode controlDominator = node.getControlDominator();
+		boolean haveControlDominator = controlDominator != null;
+		
+		if (haveControlDominator) {
+			System.out.println("Have control Dominator");
+			totalLength += 1;
+		}
 		
 		/*
 		 * For written variables (A1), it is always high
@@ -154,7 +213,11 @@ public class VariableEncoder {
 			BitRepresentation variablesIncluded = new BitRepresentation(totalLength);
 			variablesIncluded.set(0, readLength);
 			variablesIncluded.set(i + readLength);
-			Constraint constraint = new Constraint(variablesIncluded, i + readLength, Configs.HIGH);
+			if (haveControlDominator) {
+				variablesIncluded.set(readLength + writeLength);
+			}
+			
+			Constraint constraint = new Constraint(variablesIncluded, i + readLength, Configs.HIGH, ConstraintType.DEFINE);
 			constraints.add(constraint);
 		}
 		
@@ -164,112 +227,137 @@ public class VariableEncoder {
 		 * follows the rule of A2. We will use the ASTNode to
 		 * derive which rule it is.
 		 */
-		System.out.println(tn.getOrder() + "(" + tn.getAstNode().getNodeType() + ")");
-		System.out.println(tn.getReadMap());
-		HashMap<String, Double> scoreTable = new HashMap<>();
-		Stack<Double> probStack = new Stack<>();
-		probStack.push(Configs.HIGH);
-		getProbability(tn.getAstNode(), scoreTable, probStack);
-		System.out.println(scoreTable);
+		PropagationCalculator calculator = new PropagationCalculator();
+		ASTNode astNode = node.getAstNode();
+		int readVarIdx = 0;
+		for (VarValue readVar : node.getReadVariables()) {
+			double propProb = calculator.calProb(astNode, readVar);
+			BitRepresentation variableIncluded = new BitRepresentation(totalLength);
+			variableIncluded.set(0 + totalLength - 1);
+			Constraint constraint = new Constraint(variableIncluded, readVarIdx, propProb, ConstraintType.USE);
+			constraints.add(constraint);
+			readVarIdx++;
+		}
 		
+//		HashMap<String, Double> scoreTable = new HashMap<>();
+//		Stack<Double> probStack = new Stack<>();
+//		probStack.push(Configs.HIGH);
+//		getProbability(node.getAstNode(), scoreTable, probStack);
+
+//		System.out.println(scoreTable);
+		
+		// Get A3 constraints if the given node have control dominator
+		if (haveControlDominator) {
+			BitRepresentation variablesIncluded = new BitRepresentation(totalLength);
+			variablesIncluded.set(0, totalLength);
+			Constraint constraint = new Constraint(variablesIncluded, readLength + writeLength, Configs.HIGH, ConstraintType.PREDICATE);
+			constraints.add(constraint);
+		}
 		return constraints;
 	}
 	
-	private void getProbability(ASTNode node, HashMap<String, Double> scoreTable, Stack<Double> probStack) {
-		if (node == null)
-			return;
-		switch(node.getNodeType()) {
-		case ASTNode.IF_STATEMENT:
-			System.out.println(node);
-			IfStatement ifNode = (IfStatement) node;
-			getProbability(ifNode.getExpression(), scoreTable, probStack);
-			break;
-		case ASTNode.INFIX_EXPRESSION:
-			InfixExpression infixExp = (InfixExpression) node;
-			// cannot use switch here as it is not an enum
-			if (infixExp.getOperator() == InfixExpression.Operator.EQUALS ||
-					infixExp.getOperator() == InfixExpression.Operator.TIMES ||
-					infixExp.getOperator() == InfixExpression.Operator.DIVIDE ||
-					infixExp.getOperator() == InfixExpression.Operator.PLUS ||
-					infixExp.getOperator() == InfixExpression.Operator.MINUS ||
-					infixExp.getOperator() == InfixExpression.Operator.CONDITIONAL_AND) {
-				
-				probStack.push(Configs.HIGH);
-			} else {
-				probStack.push(Configs.UNCERTAIN);
-			}
-			getProbability(infixExp.getLeftOperand(), scoreTable, probStack);
-			getProbability(infixExp.getRightOperand(), scoreTable, probStack);
-			probStack.pop(); // remove what is added
-			break;
-		case ASTNode.METHOD_INVOCATION:
-			// not handled at the moment
-			break;
-		case ASTNode.ARRAY_ACCESS:
-			ArrayAccess aAccess = (ArrayAccess) node;
-			// calculate tau using index
-			Expression indexNode = aAccess.getIndex();
-			System.out.println(indexNode);
-			
-			int index;
-			switch(indexNode.getNodeType()) {
-			case ASTNode.INFIX_EXPRESSION:
-				break;
-			case ASTNode.NUMBER_LITERAL:
-				NumberLiteral nl = (NumberLiteral) indexNode;
-				index = Integer.parseInt(nl.getToken());
-				break;
-			default:
-				throw new IllegalArgumentException();
-			}
-			// add tau to stack
-			// process array
-			System.out.println(aAccess.getArray());
-			
-			break;
-		case ASTNode.SIMPLE_NAME:
-			// variables
-			SimpleName var = (SimpleName) node;
-			System.out.println(var.getFullyQualifiedName());
-			scoreTable.put(var.getFullyQualifiedName(), probStack.peek());
-			break;
-		case ASTNode.NUMBER_LITERAL:
-		case ASTNode.NULL_LITERAL:
-		case ASTNode.CHARACTER_LITERAL:
-			System.out.print("Skipping... ");
-			System.out.println(node);
-			break;
-		default:
-			break;
-		}
-	}
+//	private void getProbability(ASTNode node, HashMap<String, Double> scoreTable, Stack<Double> probStack) {
+//		if (node == null)
+//			return;
+//		switch(node.getNodeType()) {
+//		case ASTNode.IF_STATEMENT:
+//			// System.out.println(node);
+//			IfStatement ifNode = (IfStatement) node;
+//			getProbability(ifNode.getExpression(), scoreTable, probStack);
+//			break;
+//		case ASTNode.INFIX_EXPRESSION:
+//			// infix expression is the operation between two operands: A+B
+//			InfixExpression infixExp = (InfixExpression) node;
+//			// cannot use switch here as it is not an enum
+//			if (infixExp.getOperator() == InfixExpression.Operator.EQUALS ||
+//					infixExp.getOperator() == InfixExpression.Operator.TIMES ||
+//					infixExp.getOperator() == InfixExpression.Operator.DIVIDE ||
+//					infixExp.getOperator() == InfixExpression.Operator.PLUS ||
+//					infixExp.getOperator() == InfixExpression.Operator.MINUS ||
+//					infixExp.getOperator() == InfixExpression.Operator.CONDITIONAL_AND) {
+//				
+//				probStack.push(Configs.HIGH);
+//			} else {
+//				probStack.push(Configs.UNCERTAIN);
+//			}
+//			getProbability(infixExp.getLeftOperand(), scoreTable, probStack);
+//			getProbability(infixExp.getRightOperand(), scoreTable, probStack);
+//			probStack.pop(); // remove what is added
+//			break;
+//		case ASTNode.METHOD_INVOCATION:
+//			// not handled at the moment
+//			break;
+//		case ASTNode.ARRAY_ACCESS:
+//			ArrayAccess aAccess = (ArrayAccess) node;
+//			// calculate tau using index
+//			Expression indexNode = aAccess.getIndex();
+//			// System.out.println(indexNode);
+//			
+//			int index;
+//			switch(indexNode.getNodeType()) {
+//			case ASTNode.INFIX_EXPRESSION:
+//				break;
+//			case ASTNode.NUMBER_LITERAL:
+//				NumberLiteral nl = (NumberLiteral) indexNode;
+//				index = Integer.parseInt(nl.getToken());
+//				break;
+//			default:
+//				throw new IllegalArgumentException();
+//			}
+//			// add tau to stack
+//			// process array
+//			// System.out.println(aAccess.getArray());
+//			
+//			break;
+//		case ASTNode.SIMPLE_NAME:
+//			// variables
+//			SimpleName var = (SimpleName) node;
+//			// System.out.println(var.getFullyQualifiedName());
+//			scoreTable.put(var.getFullyQualifiedName(), probStack.peek());
+//			break;
+//		case ASTNode.NUMBER_LITERAL:
+//		case ASTNode.NULL_LITERAL:
+//		case ASTNode.CHARACTER_LITERAL:
+////			System.out.print("Skipping... ");
+////			System.out.println(node);
+//			break;
+//		default:
+//			break;
+//		}
+//	}
 	
-	private boolean isEqual(Expression a, Expression b, HashMap<String, String> varTable) {
-		// compares whether two expressions are equal
-		System.out.println(a.resolveConstantExpressionValue());
-		System.out.println(b.resolveConstantExpressionValue());
-		return false;
-	}
-	
-	private List<Constraint> getPriorConstraints(TraceNode tn) {
+	private List<Constraint> getPriorConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
-		int readLength = tn.getReadVariables().size();
-		int writeLength = tn.getWrittenVariables().size();
+		int readLength = node.getReadVariables().size();
+		int writeLength = node.getWrittenVariables().size();
 		int totalLength = readLength + writeLength;
+		
+		// Predicate prior constraint
+		TraceNode controlDominator = node.getControlDominator();
+		if (controlDominator != null) {
+			totalLength += 1;
+			
+			BitRepresentation bitRep = new BitRepresentation(totalLength);
+			int index = readLength + writeLength;
+			bitRep.set(index);
+			
+			Constraint constraint = new Constraint(bitRep, index, controlDominator.getPredProb(), ConstraintType.PRIOR);
+			constraints.add(constraint);
+		}
 		
 		// Handle the probability passed down from the previous node
 		for (int i = 0; i < readLength; i++) {
-			VarValue v = tn.getReadVariables().get(i);
-			TraceNode prev = trace.findDataDependency(tn, v);
-			if (prev == null)
+			VarValue readVar = node.getReadVariables().get(i);
+			TraceNode dataDominator = trace.findDataDependency(node, readVar);
+			if (dataDominator == null)
 				continue;
-			for (VarValue pv : prev.getWrittenVariables()) {
+			for (VarValue prevVar : dataDominator.getWrittenVariables()) {
 				// only handle if the probability is not uncertain
-				if (pv.equals(v) && pv.getProbability() != Configs.UNCERTAIN) {
+				if (prevVar.equals(readVar) && prevVar.getProbability() != Configs.UNCERTAIN) {
 					BitRepresentation br = new BitRepresentation(totalLength);
 					br.set(i);
 					
-					Constraint constraint = new Constraint(br, i, pv.getProbability());
+					Constraint constraint = new Constraint(br, i, prevVar.getProbability(), ConstraintType.PRIOR);
 					constraints.add(constraint);
 					break;
 				}
@@ -277,18 +365,18 @@ public class VariableEncoder {
 		}
 		
 		for (int i = 0; i < writeLength ; i++) {
-			VarValue v = tn.getWrittenVariables().get(i);
+			VarValue writeVar = node.getWrittenVariables().get(i);
 			int pos = i + readLength;
-			List<TraceNode> nextNodes = trace.findDataDependentee(tn, v);
-			if (nextNodes.size() == 0)
+			List<TraceNode> dataDependentees = trace.findDataDependentee(node, writeVar);
+			if (dataDependentees.size() == 0)
 				continue;
-			for (TraceNode nextNode : nextNodes) {
-				for (VarValue nv : nextNode.getReadVariables()) {
-					if (nv.equals(v) && nv.getProbability() != Configs.UNCERTAIN) {
+			for (TraceNode nextNode : dataDependentees) {
+				for (VarValue nextVar : nextNode.getReadVariables()) {
+					if (nextVar.equals(writeVar) && nextVar.getProbability() != Configs.UNCERTAIN) {
 						BitRepresentation br = new BitRepresentation(totalLength);
 						br.set(pos);
 
-						Constraint constraint = new Constraint(br, pos, nv.getProbability());
+						Constraint constraint = new Constraint(br, pos, nextVar.getProbability(), ConstraintType.PRIOR);
 						constraints.add(constraint);
 						break;
 					}
@@ -296,109 +384,6 @@ public class VariableEncoder {
 			}
 		}
 		
-		return constraints;
-	}
-	
-	private List<Constraint> getConstraints(TraceNode tn) {
-		List<Constraint> constraints = new ArrayList<>();
-		int readLength = tn.getReadVariables().size();
-		int writeLength = tn.getWrittenVariables().size();
-		int totalVariableLength = readLength + writeLength;
-		/*
-		 * For written variables (A1):
-		 * It is always high unless the read variables are
-		 * all right but it is wrong. We will assume that
-		 * all written variables have the same probability
-		 */
-		for (int i = 0; i < writeLength; i++) {
-			/* A write variable will use all the read variables but not any
-			 * of the other write variables
-			 * TODO: Handle cases where it is int x = (y++) + z;
-			 */
-			BitRepresentation variablesIncluded = new BitRepresentation(totalVariableLength);
-			variablesIncluded.set(0, readLength);
-			variablesIncluded.set(i + readLength);
-			Constraint constraint = new Constraint(variablesIncluded, i + readLength, Configs.HIGH);
-			constraints.add(constraint);
-		}
-		
-		Stack<String> runtimeStack = new Stack<>();
-		String[] localVarStack = tn.getStackVariables();
-		HashMap<String, ConstraintType> variableMapping = new HashMap<>();
-		
-		for (InstructionHandle ih: tn.getInstructions()) {
-			/*
-			 * We will find the most "impactful" instruction here for each variable
-			 */
-			Instruction instruction = ih.getInstruction();
-			if (instruction instanceof LoadInstruction) {
-				LoadInstruction li = (LoadInstruction) instruction;
-				int varIndex = li.getIndex();
-				if (varIndex < localVarStack.length) {
-					runtimeStack.push(localVarStack[varIndex]);
-				} else {
-					/* TODO: For now, there are some variables that
-					 * are missing from the stack. We will need to see
-					 * why that is the case and fix it. We will assume
-					 * that it is a null variable for now
-					 */
-					runtimeStack.push(null);
-				}
-			} else if (instruction instanceof DREM || instruction instanceof FREM ||
-					instruction instanceof IREM || instruction instanceof LREM ||
-					instruction instanceof IOR || instruction instanceof ISHR ||
-					instruction instanceof IUSHR || instruction instanceof LSHR ||
-					instruction instanceof LUSHR) {
-				String var1 = runtimeStack.pop();
-				String var2 = runtimeStack.pop();
-				variableMapping.put(var1, ConstraintType.MOD);
-				variableMapping.put(var2, ConstraintType.MOD);
-			} else if (instruction instanceof ArrayInstruction && 
-					instruction.getClass().getSimpleName().toUpperCase().contains("LOAD")) {
-				String index = runtimeStack.pop();
-				String var = runtimeStack.pop();
-				variableMapping.put(var, ConstraintType.REFERENCE);
-			}
-		}
-		
-		
-		/*
-		 * For read variables, it is more complicated depending on the
-		 * computation rules mentioned in the second section
-		 */
-		for (int i = 0; i < readLength; i++) {
-			/*
-			 * A use variable will affect all the write variables
-			 * TODO: Should we classify them as individual constraints or 
-			 * one big constraint?
-			 */
-			BitRepresentation variablesIncluded = new BitRepresentation(totalVariableLength);
-			// all variables are involved for use statement
-			variablesIncluded.set(0, totalVariableLength);
-			
-			// Get the constraint type based on the mapping done previously
-			VarValue var = tn.getReadVariables().get(i);
-			Constraint constraint;
-			if (variableMapping.containsKey(var.getVarName())) {
-				ConstraintType ct = variableMapping.get(var.getVarName());
-				switch (ct) {
-				case REFERENCE:
-					// TODO: Store the number of variables with same field
-					int n = 1;
-					double probability = Constraint.tau(n);
-					constraint = new Constraint(variablesIncluded, i, probability);
-					break;
-				case MOD:
-					constraint = new Constraint(variablesIncluded, i, 0.5);
-					break;
-				default:
-					constraint = new Constraint(variablesIncluded, i, Configs.HIGH);
-				}
-			} else {
-				constraint = new Constraint(variablesIncluded, i, Configs.HIGH);
-			}
-			constraints.add(constraint);
-		}
 		return constraints;
 	}
 }

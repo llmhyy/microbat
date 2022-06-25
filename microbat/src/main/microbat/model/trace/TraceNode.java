@@ -109,7 +109,15 @@ public class TraceNode implements HasProbability{
 	
 	private transient double sliceBreakerProbability = 0;
 	
-	private double probability = Configs.UNCERTAIN;
+	/**
+	 * It is the probability of correctness as a node
+	 */
+	private double probability = Configs.HIGH;
+	
+	/**
+	 * It is the probability of correctness as a predicate
+	 */
+	private double pred_probability = Configs.UNCERTAIN;
 	
 	/**
 	 * the first element of the pair is the read variable list, the second element is the 
@@ -1256,10 +1264,18 @@ public class TraceNode implements HasProbability{
 		final String filePath = this.getBreakPoint().getFullJavaFilePath();
 		String statement = null;
 		try {
-			statement = Files.readAllLines(Paths.get(filePath)).get(lineNo-1);
+			statement = Files.readAllLines(Paths.get(filePath)).get(lineNo-1).strip();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return statement;
+	}
+	
+	public double getPredProb() {
+		return this.pred_probability;
+	}
+	
+	public void setPredProb(double predProbability) {
+		this.pred_probability = predProbability;
 	}
 }

@@ -40,6 +40,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import microbat.algorithm.graphdiff.GraphDiff;
+import microbat.baseline.encoders.ProbabilityEncoder;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;
@@ -390,7 +391,12 @@ public class DebugFeedbackView extends ViewPart {
 		valueColumn.setAlignment(SWT.LEFT);
 		valueColumn.setText("Variable Value");
 		valueColumn.setWidth(300);
-
+		
+		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
+		probColumn.setAlignment(SWT.LEFT);
+		probColumn.setText("Probability");
+		probColumn.setWidth(100);
+		
 		return new CheckboxTreeViewer(tree);
 //		this.stateTreeViewer = new CheckboxTreeViewer(tree);
 //		if(type.equals(INPUT)){
@@ -544,6 +550,11 @@ public class DebugFeedbackView extends ViewPart {
 		submitButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
 		submitButton.addMouseListener(new FeedbackSubmitListener());
 		
+		Button baselineButton = new Button(feedbackGroup, SWT.NONE);
+		baselineButton.setText("Baseline");
+		baselineButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		baselineButton.addMouseListener(new BaselineButtonListener());
+		
 		bugTypeInferenceButton = new Button(feedbackGroup, SWT.NONE);
 		bugTypeInferenceButton.setText("Infer type!");
 		bugTypeInferenceButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
@@ -582,6 +593,83 @@ public class DebugFeedbackView extends ViewPart {
 		}
 	}
 	
+	class BaselineButtonListener implements MouseListener {
+
+		private void openChooseFeedbackDialog(){
+			MessageBox box = new MessageBox(PlatformUI.getWorkbench()
+					.getDisplay().getActiveShell());
+			box.setMessage("Please tell me whether this step is correct or not!");
+			box.open();
+		}
+		
+		private void openWrongVariableDialog(){
+			MessageBox box = new MessageBox(PlatformUI.getWorkbench()
+					.getDisplay().getActiveShell());
+			box.setMessage("Please select a variable");
+			box.open();
+		}
+		
+		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
+//			TraceView view = MicroBatViews.getTraceView();
+			getTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
+//			getConcurrentTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
+		}
+		
+		@Override
+		public void mouseDoubleClick(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseDown(MouseEvent e) {
+			if (feedback == null) {
+				openChooseFeedbackDialog();
+			} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)
+					&& feedback.getOption()==null) {
+				openWrongVariableDialog();
+			}
+			else {
+				final Trace trace = getTraceView().getCurrentTrace();
+//				final Trace trace = getConcurrentTraceView().getCurTrace();
+				
+				Job job = new Job("searching for suspicious step...") {
+					@Override
+					protected IStatus run(IProgressMonitor monitor) {
+						
+						ProbabilityEncoder encoder = new ProbabilityEncoder(trace);
+						encoder.setFlag(true);
+						
+						UserFeedback feedback = getFeedback();
+						encoder.updateProbability(currentNode, feedback);
+						
+						System.out.println("Current Node: " + currentNode.getOrder());
+						System.out.println("Feedback: " + feedback);
+						encoder.encode();
+						
+						TraceNode errorNode = encoder.getMostErroneousNode();
+						System.out.println("Error Node: " + errorNode.getOrder());
+						Display.getDefault().asyncExec(new Runnable(){
+							@Override
+							public void run() {
+								jumpToNode(trace, errorNode);	
+							}
+						});
+						
+						return Status.OK_STATUS;
+					}
+				};
+				job.schedule();
+			}
+		}
+
+		@Override
+		public void mouseUp(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
 	class FeedbackSubmitListener implements MouseListener{
 		public void mouseUp(MouseEvent e) {}
 		public void mouseDoubleClick(MouseEvent e) {}
@@ -1141,6 +1229,8 @@ public class DebugFeedbackView extends ViewPart {
 						return value + (" aliasID:" + aliasVarID);
 					}
 					return value;
+				case 3:
+					return String.format("%.2f", varValue.getProbability());
 				}
 			}
 			

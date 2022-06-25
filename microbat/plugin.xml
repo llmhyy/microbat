@@ -132,6 +132,16 @@
             id="microbat.command.RestoreTrace"
             name="Restore Trace">
       </command>
+      <command
+            defaultHandler="microbat.handler.BaselineHandler"
+            id="microbat.baseline"
+            name="Baseline">
+      </command>
+      <command
+            defaultHandler="microbat.handler.TestHandler"
+            id="microbat.testing"
+            name="Testing Microbat">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -205,6 +215,17 @@
                   commandId="microbat.command.startDebug"
                   icon="icons/microbat.png"
                   label="Start Debug"
+                  style="push">
+            </command>
+            <command
+                  commandId="microbat.baseline"
+                  icon="icons/check_mark.png"
+                  label="baseline"
+                  style="push">
+            </command>
+            <command
+                  commandId="microbat.testing"
+                  icon="icons/question_mark.png"
                   style="push">
             </command>
          </toolbar>
