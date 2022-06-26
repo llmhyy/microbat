@@ -51,7 +51,7 @@ public class ProbabilityEncoder {
 		 *  the probability encode (i.e. when re-running without
 		 *  previous run information)
 		 */
-		this.matchInstructions();
+		this.matchInstruction();
 		this.preEncode();
 		this.setupFlag = true;
 	}
@@ -195,72 +195,72 @@ public class ProbabilityEncoder {
 		}
 	}
 	
-//	private void matchInstruction() {
-//		HashMap<String, HashMap<Integer, ASTNode>> store = new HashMap<>();
-//		for (TraceNode tn: executionList) {
-//			BreakPoint breakpoint = tn.getBreakPoint();
-//			String sourceFile = breakpoint.getFullJavaFilePath();
-//			
-//			if (!store.containsKey(sourceFile)) {
-//				store.put(sourceFile, new HashMap<>());
-//				CompilationUnit cu = JavaUtil.findCompiltionUnitBySourcePath(sourceFile, 
-//						breakpoint.getDeclaringCompilationUnitName());
-//				cu.accept(new ASTVisitor() {
-//					private HashMap<Integer, ASTNode> specificStore = store.get(sourceFile);
-//					private int getLineNumber(ASTNode node) {
-//						return cu.getLineNumber(node.getStartPosition());
+	private void matchInstruction() {
+		HashMap<String, HashMap<Integer, ASTNode>> store = new HashMap<>();
+		for (TraceNode tn: executionList) {
+			BreakPoint breakpoint = tn.getBreakPoint();
+			String sourceFile = breakpoint.getFullJavaFilePath();
+			
+			if (!store.containsKey(sourceFile)) {
+				store.put(sourceFile, new HashMap<>());
+				CompilationUnit cu = JavaUtil.findCompiltionUnitBySourcePath(sourceFile, 
+						breakpoint.getDeclaringCompilationUnitName());
+				cu.accept(new ASTVisitor() {
+					private HashMap<Integer, ASTNode> specificStore = store.get(sourceFile);
+					private int getLineNumber(ASTNode node) {
+						return cu.getLineNumber(node.getStartPosition());
+					}
+					
+					private void storeNode (int line, ASTNode node) {
+						if (!specificStore.containsKey(line)) {
+							specificStore.put(line, node);
+						}
+					}
+					
+					private void wrapperVisit(ASTNode node) {
+						int lineNumber = getLineNumber(node);
+						storeNode(lineNumber, node);
+					}
+					
+					public void preVisit(ASTNode node) {
+						wrapperVisit(node);
+					}
+					
+//					public boolean visit(ArrayAccess node) {
+//						return wrapperVisit(node);
 //					}
 //					
-//					private void storeNode (int line, ASTNode node) {
-//						if (!specificStore.containsKey(line)) {
-//							specificStore.put(line, node);
-//						}
+//					public boolean visit(Assignment node) {
+//						return wrapperVisit(node);
 //					}
 //					
-//					private void wrapperVisit(ASTNode node) {
-//						int lineNumber = getLineNumber(node);
-//						storeNode(lineNumber, node);
+//					public boolean visit(ConditionalExpression node) {
+//						return wrapperVisit(node);
 //					}
 //					
-//					public void preVisit(ASTNode node) {
-//						wrapperVisit(node);
+//					public boolean visit(FieldAccess node) {
+//						return wrapperVisit(node);
 //					}
 //					
-////					public boolean visit(ArrayAccess node) {
-////						return wrapperVisit(node);
-////					}
-////					
-////					public boolean visit(Assignment node) {
-////						return wrapperVisit(node);
-////					}
-////					
-////					public boolean visit(ConditionalExpression node) {
-////						return wrapperVisit(node);
-////					}
-////					
-////					public boolean visit(FieldAccess node) {
-////						return wrapperVisit(node);
-////					}
-////					
-////					public boolean visit(IfStatement node) {
-////						return wrapperVisit(node);
-////					}
-////					
-////					public boolean visit(MethodInvocation node) {
-////						return wrapperVisit(node);
-////					}
-////					
-////					public boolean visit(InfixExpression node) {
-////						return wrapperVisit(node);
-////					}
-//				});
-//
-//			}
-//
-//			ASTNode node = store.get(sourceFile).get(breakpoint.getLineNumber());
-//			tn.setAstNode(node);
-//		}
-//	}
+//					public boolean visit(IfStatement node) {
+//						return wrapperVisit(node);
+//					}
+//					
+//					public boolean visit(MethodInvocation node) {
+//						return wrapperVisit(node);
+//					}
+//					
+//					public boolean visit(InfixExpression node) {
+//						return wrapperVisit(node);
+//					}
+				});
+
+			}
+
+			ASTNode node = store.get(sourceFile).get(breakpoint.getLineNumber());
+			tn.setAstNode(node);
+		}
+	}
 	
 	private void preEncode() {
 		/* 

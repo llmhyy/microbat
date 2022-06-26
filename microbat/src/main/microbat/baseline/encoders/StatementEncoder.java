@@ -200,6 +200,72 @@ public class StatementEncoder {
 		return constraints;
 	}
 	
+	private List<Constraint> genPriorConstraints(TraceNode node) {
+		List<Constraint> constraints = new ArrayList<>();
+		
+		final int readLen = node.getReadVariables().size();
+		final int writeLen = node.getWrittenVariables().size();
+		
+		final int writeStartIdx = readLen == 0 ? 0 : readLen - 1;
+		
+		// Also include the conclusion statement
+		int totalLen = readLen + writeLen + 1;
+		
+		// Handle pred constraint
+		TraceNode controlDominator = node.getControlDominator();
+		if (controlDominator != null) {
+			totalLen++;
+			
+			BitRepresentation bitRep = new BitRepresentation(totalLen);
+			final int predIdx = totalLen - 2;
+			Constraint constarint = new StatementConstraint(bitRep, predIdx, controlDominator.getPredProb(), ConstraintType.PRIOR, writeStartIdx);
+			constraints.add(constarint);
+		}
+		
+		// Handle read variables prior constraints
+		for (int i=0; i<readLen; i++) {
+			VarValue readVar = node.getReadVariables().get(i);
+			TraceNode dataDominator = trace.findDataDependency(node, readVar);
+			if (dataDominator == null) {
+				continue;
+			}
+			
+			for (VarValue prevVar : dataDominator.getWrittenVariables()) {
+				// Only handle if the probability is not uncertain
+				if (prevVar.equals(readVar) && prevVar.getProbability() != Configs.UNCERTAIN) {
+					BitRepresentation br = new BitRepresentation(totalLen);
+					br.set(i);
+					Constraint constraint = new StatementConstraint(br, i, prevVar.getProbability(), ConstraintType.PRIOR, writeStartIdx);
+					constraints.add(constraint);
+					break;
+				}
+			}
+		}
+		
+		// Handle write variables prior constraints
+		for (int i = 0; i<writeLen; ++i) {
+			VarValue writeVar = node.getWrittenVariables().get(i);
+			int pos = i+readLen;
+			List<TraceNode> dataDependentees = trace.findDataDependentee(node, writeVar);
+			if (dataDependentees.size() == 0) {
+				continue;
+			}
+			
+			for (TraceNode nextNode : dataDependentees) {
+				for (VarValue nextVar : nextNode.getReadVariables()) {
+					if (nextVar.equals(writeVar) && nextVar.getProbability() != Configs.UNCERTAIN) {
+						BitRepresentation br = new BitRepresentation(totalLen);
+						br.set(pos);
+						
+						Constraint constraint = new StatementConstraint(br, pos, nextVar.getProbability(), ConstraintType.PRIOR, writeStartIdx);
+						constraints.add(constraint);
+						break;
+					}
+				}
+			}
+		}
+		return constraints;
+	}
 	private void populateCount() {
 		for (TraceNode tn : trace.getExecutionList()) {
 			BreakPoint bp = tn.getBreakPoint();
