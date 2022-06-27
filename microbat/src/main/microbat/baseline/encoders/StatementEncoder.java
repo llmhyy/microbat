@@ -63,8 +63,13 @@ public class StatementEncoder {
 		for (int i=0; i<maxInt; ++i) {
 			double product = 1;
 			for (Constraint constraint : constraints) {
+				if (tn.getOrder() == 9) {
+					System.out.println(constraint);
+					System.out.println(constraint.getProbability(i));
+				}
 				product *= constraint.getProbability(i);
 			}
+		
 			memoization.put(i, product);
 			denominator += product;
 		}
@@ -78,6 +83,7 @@ public class StatementEncoder {
 		if (Math.abs(tn.getProbability() - prob) > 0.01) {
 			hasChange = true;
 		}
+
 		tn.setProbability(prob);
 		return hasChange;
 	}
@@ -109,6 +115,7 @@ public class StatementEncoder {
 		constraints.addAll(this.genVarToStatConstraints(node));
 //		constraints.addAll(this.genStructureConstraints(node));
 //		constraints.addAll(this.genNamingConstraints(node));
+		constraints.addAll(this.genPriorConstraints(node));
 		return constraints;
 	}
 	
@@ -218,6 +225,7 @@ public class StatementEncoder {
 			
 			BitRepresentation bitRep = new BitRepresentation(totalLen);
 			final int predIdx = totalLen - 2;
+			bitRep.set(predIdx);
 			Constraint constarint = new StatementConstraint(bitRep, predIdx, controlDominator.getPredProb(), ConstraintType.PRIOR, writeStartIdx);
 			constraints.add(constarint);
 		}

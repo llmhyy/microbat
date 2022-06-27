@@ -14,9 +14,9 @@ public class StatementConstraint extends Constraint {
 		this.writeVarIdx = writeVarIdx;
 		
 		int size = variablesIncluded.size();
-		this.nameIdx = size - 2;
-		this.strucIdx = size - 3;
-		this.predIdx = size - 4;
+//		this.nameIdx = size - 2;
+//		this.strucIdx = size - 3;
+		this.predIdx = size - 2;
 	}
 	
 	@Override
@@ -81,8 +81,8 @@ public class StatementConstraint extends Constraint {
 			break;
 		case VAR_TO_STAT_2:
 			/*
-			 * For A2, the invalid case is that, when there are write variable is wrong and
-			 * at least one of the read variable is wrong, the statement is wrong. 
+			 * For A2, the invalid case is that, when the control dominator is correct and 
+			 * there are write variable is wrong and at least one of the read variable is wrong, the statement is wrong. 
 			 * All the other cases are valid.
 			 */
 			for (int conclusionIndex : this.conclusionIndexes) {
@@ -102,14 +102,20 @@ public class StatementConstraint extends Constraint {
 					}
 				}
 				
-				if (haveWrongWriteVar && haveWrongReadVar) {
-					if (binValue.get(conclusionIndex)) {
-						prob = this.probability;
-					} else {
-						prob =1 - this.probability;
-					}
-				} else {
+				boolean haveCorrectControlDom = binValue.get(this.predIdx);
+				
+				if (!haveCorrectControlDom) {
 					prob = this.probability;
+				} else {
+					if (haveWrongWriteVar && haveWrongReadVar) {
+						if (binValue.get(conclusionIndex)) {
+							prob = this.probability;
+						} else {
+							prob =1 - this.probability;
+						}
+					} else {
+						prob = this.probability;
+					}
 				}
 			}
 			break;
@@ -135,15 +141,21 @@ public class StatementConstraint extends Constraint {
 					}
 				}
 				
-				if (!haveWrongReadVar && haveWrongWriteVar) {
-					if (binValue.get(conclusionIdx)) {
-						prob =  1 - this.probability;
+				boolean haveCorrectControlDom = binValue.get(this.predIdx);
+				if (!haveCorrectControlDom) {
+					prob = this.probability;
+				} else {
+					if (!haveWrongReadVar && haveWrongWriteVar) {
+						if (binValue.get(conclusionIdx)) {
+							prob =  1 - this.probability;
+						} else {
+							prob = this.probability;
+						}
 					} else {
 						prob = this.probability;
 					}
-				} else {
-					prob = this.probability;
 				}
+				
 			}
 			
 			break;

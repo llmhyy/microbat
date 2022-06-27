@@ -650,10 +650,15 @@ public class ConcurrentTraceView extends TraceView {
 				long duration = node.calulcateDuration();
 				
 				double prob = node.getProbability();
+				double predProb = -1.0;
+				TraceNode controlDominator = node.getControlDominator();
+				if (controlDominator != null) {
+					predProb = controlDominator.getPredProb();
+				}
 				// TODO it is better to parse method name as well.
 				// String message = className + "." + methodName + "(...): line " + lineNumber + "probability: " + prob;
 				String message = order + ". "
-						+ MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration, prob);
+						+ MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration, prob, predProb);
 				return message;
 
 			}
