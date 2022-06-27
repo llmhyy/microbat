@@ -42,6 +42,12 @@ import microbat.util.PrimitiveUtils;
 import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
+/**
+ * The class is used to record  
+ * 
+ * @author Yun Lin
+ *
+ */
 public class ExecutionTracer implements IExecutionTracer, ITracer {
 	private static ExecutionTracerStore rtStore = new ExecutionTracerStore();
 
@@ -56,6 +62,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	private Trace trace;
 
 	private MethodCallStack methodCallStack;
+	
+	/**
+	 * indicate whether the execution of the thread should be recorded 
+	 */
 	private TrackingDelegate trackingDelegate;
 
 	public static void setExpectedSteps(int expectedSteps) {

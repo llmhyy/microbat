@@ -1,5 +1,10 @@
 package microbat.instrumentation.instr;
 
+/**
+ * All events (i.e., in the form of new methods) instrumented into target code
+ * @author Yun Lin
+ *
+ */
 public enum TracerMethods {
 	AFTER_INVOKE(true, "microbat/instrumentation/runtime/IExecutionTracer", "_afterInvoke", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Z)V", 8),
 	GET_TRACER(false, "microbat/instrumentation/runtime/ExecutionTracer", "_getTracer", "(ZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)Lmicrobat/instrumentation/runtime/IExecutionTracer;", 9),
