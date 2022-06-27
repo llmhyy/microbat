@@ -12,7 +12,7 @@ public interface IExecutionTracer {
 
 	public void _hitVoidReturn(int line, String className, String methodSignature);
 
-	public void _hitLine(int line, String className, String methodSignature, int numOfReadVars, int numOfWrittenVars);
+	public void _hitLine(int line, String className, String methodSignature, int numOfReadVars, int numOfWrittenVars, String bytecode);
 	
 	public void _hitExeptionTarget(int line, String className, String methodSignature);
 

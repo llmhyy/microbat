@@ -648,11 +648,11 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	}
 
 	public void hitLine(int line, String className, String methodSignature) {
-		_hitLine(line, className, methodSignature, -1, -1);
+		_hitLine(line, className, methodSignature, -1, -1, null);
 	}
 
 	@Override
-	public void _hitLine(int line, String className, String methodSignature, int numOfReadVars, int numOfWrittenVars) {
+	public void _hitLine(int line, String className, String methodSignature, int numOfReadVars, int numOfWrittenVars, String bytecode) {
 		boolean isLocked = trackingDelegate.isUntrack();
 		trackingDelegate.untrack();
 		try {
@@ -680,7 +680,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 
 			BreakPoint bkp = new BreakPoint(className, methodSignature, line);
 			long timestamp = System.currentTimeMillis();
-			TraceNode currentNode = new TraceNode(bkp, null, order, trace, numOfReadVars, numOfWrittenVars, timestamp);
+			TraceNode currentNode = new TraceNode(bkp, null, order, trace, numOfReadVars, numOfWrittenVars, timestamp, bytecode);
 
 			trace.addTraceNode(currentNode);
 			AgentLogger.printProgress(order);

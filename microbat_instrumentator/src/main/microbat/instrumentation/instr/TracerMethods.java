@@ -11,7 +11,7 @@ public enum TracerMethods {
 	HIT_EXEPTION_TARGET(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitExeptionTarget", "(ILjava/lang/String;Ljava/lang/String;)V", 4),
 	HIT_INVOKE(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitInvoke", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 10),
 	HIT_INVOKE_STATIC(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitInvokeStatic", "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 9),
-	HIT_LINE(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitLine", "(ILjava/lang/String;Ljava/lang/String;II)V", 6),
+	HIT_LINE(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitLine", "(ILjava/lang/String;Ljava/lang/String;IILjava/lang/String;)V", 7),
 	HIT_METHOD_END(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitMethodEnd", "(ILjava/lang/String;Ljava/lang/String;)V", 4),
 	HIT_RETURN(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitReturn", "(Ljava/lang/Object;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V", 6),
 	HIT_VOID_RETURN(true, "microbat/instrumentation/runtime/IExecutionTracer", "_hitVoidReturn", "(ILjava/lang/String;Ljava/lang/String;)V", 4),

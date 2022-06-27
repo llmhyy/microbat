@@ -977,6 +977,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		if (!isExceptionTarget) {
 			newInsns.append(new PUSH(constPool, readVars));
 			newInsns.append(new PUSH(constPool, writtenVars));
+			newInsns.append(new PUSH(constPool, lineNumberInsn.getInstruction().toString()));
 		}
 		appendTracerMethodInvoke(newInsns, tracerMethod, constPool);
 		insertInsnHandler(insnList, newInsns, lineNumberInsn);

@@ -15,7 +15,7 @@ public class LazyTraceNode extends TraceNode{
 			int order, 
 			Trace trace, 
 			Function<TraceNode, Pair<List<VarValue>, List<VarValue>>> supplier) {
-		super(breakPoint, programState, order, trace);
+		super(breakPoint, programState, order, trace, null);
 		this.supplier = supplier;
 	}
 	

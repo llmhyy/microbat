@@ -92,6 +92,8 @@ public class TraceNode{
 	
 	private long timestamp;
 	
+	private String bytecode;
+	
 	private transient double sliceBreakerProbability = 0;
 	
 	/**
@@ -99,12 +101,13 @@ public class TraceNode{
 	 * written variable list.
 	 */
 	
-	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
+	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		super();
 		this.breakPoint = breakPoint;
 		this.programState = programState;
 		this.order = order;
 		this.trace = trace;
+		this.bytecode = bytecode;
 	}
 	
 	// TODO: change all this.access to this.get()
@@ -1138,6 +1141,14 @@ public class TraceNode{
 
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public String getBytecode() {
+		return bytecode;
+	}
+
+	public void setBytecode(String bytecode) {
+		this.bytecode = bytecode;
 	}
 
 //	public List<VarValue> getHiddenReadVariables() {
