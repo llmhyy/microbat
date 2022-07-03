@@ -43,11 +43,11 @@ public class ClassLoaderInstrumenter extends TraceInstrumenter {
 		LocalVariableGen tracerVar = methodGen.addLocalVariable(TRACER_VAR_NAME, Type.getType(IExecutionTracer.class),
 				insnList.getStart(), insnList.getEnd());
 		injectCodeTracerHitLine(insnList, constPool, tracerVar, ENTER_MARKER, insnList.getStart(), classNameVar,
-				methodSigVar, false, 0, 0);
+				methodSigVar, false, 0, 0, null);
 		List<InstructionHandle> returnInsns = extractReturnInstructions(insnList);
 		for (InstructionHandle returnInsnHandler : returnInsns) {
 			injectCodeTracerHitLine(insnList, constPool, tracerVar, EXIT_MARKER, returnInsnHandler, classNameVar,
-					methodSigVar, false, 0, 0);
+					methodSigVar, false, 0, 0, null);
 		}
 		
 		injectCodeInitTracer(methodGen, constPool, -1, -1, isAppClass, classNameVar,

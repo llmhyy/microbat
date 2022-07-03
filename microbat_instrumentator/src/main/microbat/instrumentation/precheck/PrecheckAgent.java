@@ -1,15 +1,16 @@
-package microbat.instrumentation;
+package microbat.instrumentation.precheck;
 
 import java.lang.instrument.Instrumentation;
 import java.util.List;
 
+import microbat.instrumentation.Agent;
+import microbat.instrumentation.AgentLogger;
+import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.CommandLine;
 import microbat.instrumentation.filter.GlobalFilterChecker;
 import microbat.instrumentation.instr.SystemClassTransformer;
-import microbat.instrumentation.precheck.PrecheckInfo;
-import microbat.instrumentation.precheck.PrecheckTransformer;
-import microbat.instrumentation.precheck.TraceMeasurement;
 
-public class PrecheckAgent implements IAgent {
+public class PrecheckAgent extends Agent{
 	private AgentParams agentParams;
 	private PrecheckTransformer precheckTransformer;
 	private Instrumentation instrumentation;
@@ -20,7 +21,7 @@ public class PrecheckAgent implements IAgent {
 		this.instrumentation = instrumentation;
 	}
 	
-	public void startup(long vmStartupTime, long agentPreStartup) {
+	public void startup0(long vmStartupTime, long agentPreStartup) {
 		GlobalFilterChecker.setup(agentParams.initAppClassPath(), agentParams.getIncludesExpression(),
 				agentParams.getExcludesExpression());
 		TraceMeasurement.setStepLimit(agentParams.getStepLimit());
@@ -39,7 +40,7 @@ public class PrecheckAgent implements IAgent {
 		}
 	}
 
-	public PrecheckTransformer getTransformer() {
+	public PrecheckTransformer getTransformer0() {
 		return precheckTransformer;
 	}
 
@@ -68,7 +69,7 @@ public class PrecheckAgent implements IAgent {
 	}
 
 	@Override
-	public boolean isInstrumentationActive() {
+	public boolean isInstrumentationActive0() {
 		return true;
 	}
 }

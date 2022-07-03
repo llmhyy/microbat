@@ -15,6 +15,8 @@ public class LockedThreads {
 	/**
 	 * The first dimension is for thread id (long type), and the second dimension is for its state (i.e., tracking or untracking)
 	 * 
+	 * the array length is initialized as 10, it can increase when the number of the threads grows. See {@link LockedThreads#increaseSize()}
+	 * 
 	 * If a thread is in the state of TRACKING, all the relevant steps will be recorded (by invoking {@code ExecutionTracer}).
 	 * Otherwise, no step will be recorded (by invoking {@code EmptyTracer})
 	 */

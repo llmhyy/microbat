@@ -133,7 +133,7 @@ public class MysqlTraceRetriever extends DbService {
 		int total = countNumberOfRows(rs);
 		List<TraceNode> allSteps = new ArrayList<>(total);
 		for (int i = 0; i < total; i++) {
-			allSteps.add(new TraceNode(null, null, i + 1, trace));
+			allSteps.add(new TraceNode(null, null, i + 1, trace, null));
 		}
 		Map<Integer, TraceNode> locationIdMap = new HashMap<>();
 		while (rs.next()) {

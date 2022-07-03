@@ -69,7 +69,13 @@ public class IResourceUtils {
 			 * is "../Eclipse.app/Contents/MacOS/eclipse", So we fisrt locate
 			 * "../Eclipse.app/Contents/" from eclipse.launcher, and see as root dir
 			 */
-			dirRoot = new File(eclipseExecutablePath).getParentFile().getParentFile();
+			int index = eclipseExecutablePath.indexOf("Eclipse.app/Contents");
+			String dirRootString = eclipseExecutablePath.substring(0, index + "Eclipse.app/Contents".length());
+			dirRoot = new File(dirRootString);
+			
+			//dirRoot = new File(eclipseExecutablePath).getParentFile().getParentFile();
+			
+			
 			ECLIPSE_ROOT_DIR = dirRoot.getAbsolutePath() + File.separator + "Eclipse";
 			DROPINS_DIR = ECLIPSE_ROOT_DIR + File.separator + "dropins";
 

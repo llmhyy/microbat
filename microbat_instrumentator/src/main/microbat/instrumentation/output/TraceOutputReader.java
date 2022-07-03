@@ -94,7 +94,7 @@ public class TraceOutputReader extends OutputReader {
 		int size = readVarInt();
 		List<TraceNode> allSteps = new ArrayList<>(size);
 		for (int i = 0; i < size; i++) {
-			TraceNode node = new TraceNode(null, null, i + 1, trace);
+			TraceNode node = new TraceNode(null, null, i + 1, trace, null);
 			allSteps.add(node);
 		}
 		for (int i = 0; i < size; i++) {
@@ -139,6 +139,7 @@ public class TraceOutputReader extends OutputReader {
 				loopParent.addLoopChild(step);
 			}
 			step.setException(readBoolean());
+			step.setBytecode(readString());
 		}
 		readRWVarValues(allSteps, false);
 		readRWVarValues(allSteps, true);

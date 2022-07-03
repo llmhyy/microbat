@@ -205,8 +205,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	}
 	
 	/**
-	 * 
-	 * isEntry means either main() or run() (e.g, thread)
+	 * @param isEntry means either main() or run() (e.g, thread)
 	 * 
 	 * @return whether method is changed
 	 */
@@ -258,7 +257,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 			
 			injectCodeTracerHitLine(insnList, constPool, tracerVar, lineInfo.getLine(), lineInfo.getLineNumberInsn(),
 					classNameVar, methodSigVar, lineInfo.hasExceptionTarget(), lineInfo.getReadWriteInsnTotal(false),
-					lineInfo.getReadWriteInsnTotal(true));
+					lineInfo.getReadWriteInsnTotal(true), lineInfo);
 //			}
 			for (RWInstructionInfo rwInsnInfo : rwInsns) {
 				InstructionList newInsns = null;
@@ -979,7 +978,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 
 	protected void injectCodeTracerHitLine(InstructionList insnList, ConstantPoolGen constPool,
 			LocalVariableGen tracerVar, int line, InstructionHandle lineNumberInsn, LocalVariableGen classNameVar,
-			LocalVariableGen methodSigVar, boolean isExceptionTarget, int readVars, int writtenVars) {
+			LocalVariableGen methodSigVar, boolean isExceptionTarget, int readVars, int writtenVars, LineInstructionInfo lineInfo) {
 		TracerMethods tracerMethod = isExceptionTarget ? TracerMethods.HIT_EXEPTION_TARGET : TracerMethods.HIT_LINE;
 		InstructionList newInsns = new InstructionList();
 		newInsns.append(new ALOAD(tracerVar.getIndex()));
@@ -989,6 +988,18 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		if (!isExceptionTarget) {
 			newInsns.append(new PUSH(constPool, readVars));
 			newInsns.append(new PUSH(constPool, writtenVars));
+			
+			if(lineInfo == null) {
+				newInsns.append(new PUSH(constPool, lineNumberInsn.getInstruction().toString()));				
+			}
+			else {
+				StringBuffer buffer = new StringBuffer();
+				for(InstructionHandle handle: lineInfo.getInstructionsOnLine()) {
+					buffer.append(handle.getInstruction().toString() + ":");
+				}
+				newInsns.append(new PUSH(constPool, buffer.toString()));	
+			}
+			
 		}
 		appendTracerMethodInvoke(newInsns, tracerMethod, constPool);
 		insertInsnHandler(insnList, newInsns, lineNumberInsn);

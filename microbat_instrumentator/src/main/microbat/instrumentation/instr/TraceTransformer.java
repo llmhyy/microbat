@@ -9,7 +9,7 @@ import microbat.instrumentation.filter.GlobalFilterChecker;
 
 /**
  * 
- * @author lyly
+ * @author Yun Lin
  *
  */
 public class TraceTransformer extends AbstractTransformer implements ClassFileTransformer {

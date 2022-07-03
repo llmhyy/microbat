@@ -8,7 +8,6 @@ import java.lang.instrument.Instrumentation;
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentLogger;
 import microbat.instrumentation.CommandLine;
-import microbat.instrumentation.IAgent;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams.CoverageCollectionType;
 import microbat.instrumentation.cfgcoverage.graph.CoverageGraphConstructor;
 import microbat.instrumentation.cfgcoverage.graph.CoverageSFlowGraph;
@@ -22,12 +21,12 @@ import microbat.instrumentation.filter.GlobalFilterChecker;
 import sav.common.core.utils.StopTimer;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class CoverageAgent implements IAgent {
+public class CoverageAgent extends Agent {
 	private CoverageAgentParams agentParams;
 	private CoverageInstrumenter instrumenter;
 	private CoverageTransformer coverageTransformer;
 	private StopTimer timer;
-	private ICoverageTracerHandler tracerHandler;
+	private static ICoverageTracerHandler tracerHandler;
 	
 	public CoverageAgent(CommandLine cmd) {
 		this.agentParams = new CoverageAgentParams(cmd);
@@ -44,7 +43,7 @@ public class CoverageAgent implements IAgent {
 	}
 
 	@Override
-	public void startup(long vmStartupTime, long agentPreStartup) {
+	public void startup0(long vmStartupTime, long agentPreStartup) {
 		timer = new AgentStopTimer("Tracing program for coverage", vmStartupTime, agentPreStartup);
 		timer.newPoint("initGraph");
 		AppJavaClassPath appClasspath = agentParams.initAppClasspath();
@@ -74,8 +73,8 @@ public class CoverageAgent implements IAgent {
 	public static void _storeCoverage(OutputStream outStream, Boolean reset) {
 		try {
 			AgentLogger.debug("Saving coverage...");
-			CoverageAgent coverageAgent = (CoverageAgent) Agent.getAgent();
-			CoverageOutput coverageOutput = coverageAgent.tracerHandler.getCoverageOutput();
+//			CoverageAgent coverageAgent = (CoverageAgent) Agent.getAgent();
+			CoverageOutput coverageOutput = tracerHandler.getCoverageOutput();
 			@SuppressWarnings("resource")
 			CoverageOutputWriter coverageOutputWriter = new CoverageOutputWriter(outStream);
 			synchronized (coverageOutput.getCoverageGraph()) {
@@ -83,7 +82,7 @@ public class CoverageAgent implements IAgent {
 				coverageOutputWriter.writeInputData(coverageOutput.getInputData());
 				coverageOutputWriter.flush();
 				if (reset) {
-					coverageAgent.tracerHandler.reset();
+					tracerHandler.reset();
 				}
 			}
 		} catch (IOException e) {
@@ -118,7 +117,7 @@ public class CoverageAgent implements IAgent {
 	}
 	
 	@Override
-	public ClassFileTransformer getTransformer() {
+	public ClassFileTransformer getTransformer0() {
 		return coverageTransformer;
 	}
 
@@ -129,7 +128,7 @@ public class CoverageAgent implements IAgent {
 	}
 
 	@Override
-	public boolean isInstrumentationActive() {
+	public boolean isInstrumentationActive0() {
 		return true;
 	}
 

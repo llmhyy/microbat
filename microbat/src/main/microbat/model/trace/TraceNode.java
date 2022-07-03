@@ -1,8 +1,5 @@
 package microbat.model.trace;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,27 +9,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import org.apache.bcel.generic.InstructionHandle;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
-import microbat.baseline.Configs;
-import microbat.baseline.HasProbability;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
 import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
-import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 
-public class TraceNode implements HasProbability{
+public class TraceNode{
 	
 	public final static int STEP_CORRECT = 0;
 	public final static int STEP_INCORRECT = 1;
@@ -100,12 +92,7 @@ public class TraceNode implements HasProbability{
 	
 	private long timestamp;
 	
-	private List<InstructionHandle> instructions;
-	private String[] stackVariables;
-	private HashMap<Integer, ConstWrapper> constPool;
-	
-	private ASTNode astNodes;
-	private HashMap<String, String> readVarMap;
+	private String bytecode;
 	
 	private transient double sliceBreakerProbability = 0;
 	
@@ -124,12 +111,13 @@ public class TraceNode implements HasProbability{
 	 * written variable list.
 	 */
 	
-	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
+	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		super();
 		this.breakPoint = breakPoint;
 		this.programState = programState;
 		this.order = order;
 		this.trace = trace;
+		this.bytecode = bytecode;
 	}
 	
 	// TODO: change all this.access to this.get()
@@ -1163,6 +1151,14 @@ public class TraceNode implements HasProbability{
 
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public String getBytecode() {
+		return bytecode;
+	}
+
+	public void setBytecode(String bytecode) {
+		this.bytecode = bytecode;
 	}
 
 //	public List<VarValue> getHiddenReadVariables() {

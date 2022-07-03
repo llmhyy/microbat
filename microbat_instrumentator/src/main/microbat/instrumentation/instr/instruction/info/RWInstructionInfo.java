@@ -6,6 +6,12 @@ import org.apache.bcel.generic.InstructionHandle;
 
 import sav.common.core.utils.SignatureUtils;
 
+/**
+ * see the extraction behavior in {@link LineInstructionInfo#extractRWInstructions(String, boolean)}
+ * 
+ * @author Yun Lin
+ *
+ */
 public class RWInstructionInfo {
 	private InstructionHandle instructionHandler;
 	private int line;

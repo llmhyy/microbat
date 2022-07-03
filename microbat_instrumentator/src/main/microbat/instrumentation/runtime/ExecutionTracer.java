@@ -42,6 +42,12 @@ import microbat.util.PrimitiveUtils;
 import sav.common.core.utils.SignatureUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
+/**
+ * The class is used to record  
+ * 
+ * @author Yun Lin
+ *
+ */
 public class ExecutionTracer implements IExecutionTracer, ITracer {
 	private static ExecutionTracerStore rtStore = new ExecutionTracerStore();
 
@@ -56,6 +62,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	private Trace trace;
 
 	private MethodCallStack methodCallStack;
+	
+	/**
+	 * indicate whether the execution of the thread should be recorded 
+	 */
 	private TrackingDelegate trackingDelegate;
 
 	public static void setExpectedSteps(int expectedSteps) {
@@ -638,11 +648,11 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 	}
 
 	public void hitLine(int line, String className, String methodSignature) {
-		_hitLine(line, className, methodSignature, -1, -1);
+		_hitLine(line, className, methodSignature, -1, -1, null);
 	}
 
 	@Override
-	public void _hitLine(int line, String className, String methodSignature, int numOfReadVars, int numOfWrittenVars) {
+	public void _hitLine(int line, String className, String methodSignature, int numOfReadVars, int numOfWrittenVars, String bytecode) {
 		boolean isLocked = trackingDelegate.isUntrack();
 		trackingDelegate.untrack();
 		try {
@@ -670,7 +680,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 
 			BreakPoint bkp = new BreakPoint(className, methodSignature, line);
 			long timestamp = System.currentTimeMillis();
-			TraceNode currentNode = new TraceNode(bkp, null, order, trace, numOfReadVars, numOfWrittenVars, timestamp);
+			TraceNode currentNode = new TraceNode(bkp, null, order, trace, numOfReadVars, numOfWrittenVars, timestamp, bytecode);
 
 			trace.addTraceNode(currentNode);
 			AgentLogger.printProgress(order);

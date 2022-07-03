@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.bcel.generic.InstructionHandle;
-
 import microbat.instrumentation.runtime.InvokingDetail;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
@@ -94,16 +92,14 @@ public class TraceNode{
 	
 	private long timestamp;
 	
-	private List<InstructionHandle> instructions;
-	private String[] stackVariables;
-	private HashMap<Integer, ConstWrapper> constPool;
+	private String bytecode;
 	
-	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace) {
-		this(breakPoint, programState, order, trace, -1, -1, System.currentTimeMillis());
+	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
+		this(breakPoint, programState, order, trace, -1, -1, System.currentTimeMillis(), bytecode);
 	}
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace,
-			int initReadVarsSize, int initWrittenVarsSize, long timestamp) {
+			int initReadVarsSize, int initWrittenVarsSize, long timestamp, String bytecode) {
 		this.breakPoint = breakPoint;
 		this.order = order;
 		this.trace = trace;
@@ -119,6 +115,7 @@ public class TraceNode{
 			writtenVariables = new ArrayList<>();
 		}
 		this.timestamp = timestamp;
+		this.bytecode = bytecode;
 	}
 	
 	public String getMethodSign() {
@@ -999,35 +996,12 @@ public class TraceNode{
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
-	
-	public void setInstructions(List<InstructionHandle> instructions) {
-		this.instructions = new ArrayList<>(instructions);
+
+	public String getBytecode() {
+		return bytecode;
 	}
-	
-	public List<InstructionHandle> getInstructions() {
-		return this.instructions;
-	}
-	
-	public void setStackVariables(String[] stackVariables) {
-		this.stackVariables = stackVariables;
-	}
-	
-	public String getStackVariable(int i) {
-		if (i >= this.stackVariables.length) {
-			return null;
-		}
-		return stackVariables[i];
-	}
-	
-	public String[] getStackVariables() {
-		return this.stackVariables;
-	}
-	
-	public void setConstPool(HashMap<Integer, ConstWrapper> constPool) {
-		this.constPool = constPool;
-	}
-	
-	public HashMap<Integer, ConstWrapper> getConstPool() {
-		return this.constPool;
+
+	public void setBytecode(String bytecode) {
+		this.bytecode = bytecode;
 	}
 }

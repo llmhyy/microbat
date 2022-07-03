@@ -2205,7 +2205,7 @@ public class ProgramExecutor extends Executor {
 
 	private TraceNode recordTrace(BreakPoint bkp, BreakPointValue bkpVal) {
 		int order = trace.size() + 1;
-		TraceNode node = new TraceNode(bkp, bkpVal, order, trace);
+		TraceNode node = new TraceNode(bkp, bkpVal, order, trace, null);
 
 		TraceNode stepInPrevious = null;
 		if (order >= 2) {
