@@ -69,6 +69,10 @@ public class LineInstructionInfo {
 			}
 		}
 	}
+	
+	public List<InstructionHandle> getInstructionsOnLine(){
+		return lineInsns;
+	}
 
 	private List<InstructionHandle> extractExitInsns(CFG cfg, List<InstructionHandle> lineInsns) {
 		List<InstructionHandle> list = new ArrayList<>();
