@@ -51,7 +51,7 @@ public class ProbabilityEncoder {
 		 *  the probability encode (i.e. when re-running without
 		 *  previous run information)
 		 */
-		this.matchInstruction();
+		// this.matchInstruction();
 		this.preEncode();
 		this.setupFlag = true;
 	}
@@ -164,103 +164,103 @@ public class ProbabilityEncoder {
 		probabilities.addAll(executionList);
 	}
 	
-	private void matchInstructions() {
-		for (TraceNode tn : this.trace.getExecutionList()) {
-//			HashMap<Integer, ConstWrapper> constPool = tn.getConstPool();
-//			for (VarValue v : tn.getReadVariables()) {
-//				System.out.println(v.getAllDescedentChildren());
+//	private void matchInstructions() {
+//		for (TraceNode tn : this.trace.getExecutionList()) {
+////			HashMap<Integer, ConstWrapper> constPool = tn.getConstPool();
+////			for (VarValue v : tn.getReadVariables()) {
+////				System.out.println(v.getAllDescedentChildren());
+////			}
+//			List<InstructionHandle> instructions = tn.getInstructions();
+//			int i = 0;
+//			if (invocationTable.containsKey(tn.getBreakPoint())) {
+//				// TODO: Handle case for static methods
+//				i = invocationTable.get(tn.getBreakPoint());
 //			}
-			List<InstructionHandle> instructions = tn.getInstructions();
-			int i = 0;
-			if (invocationTable.containsKey(tn.getBreakPoint())) {
-				// TODO: Handle case for static methods
-				i = invocationTable.get(tn.getBreakPoint());
-			}
-			List<InstructionHandle> tracedInstructions = new ArrayList<>();
-			for (; i < instructions.size(); i++) {
-				InstructionHandle ih = instructions.get(i);
-				tracedInstructions.add(ih);
-//				if (ih.getInstruction() instanceof CPInstruction) {
-//					ConstWrapper c = constPool.get(((CPInstruction) ih.getInstruction()).getIndex());
-//					System.out.print(c);
+//			List<InstructionHandle> tracedInstructions = new ArrayList<>();
+//			for (; i < instructions.size(); i++) {
+//				InstructionHandle ih = instructions.get(i);
+//				tracedInstructions.add(ih);
+////				if (ih.getInstruction() instanceof CPInstruction) {
+////					ConstWrapper c = constPool.get(((CPInstruction) ih.getInstruction()).getIndex());
+////					System.out.print(c);
+////				}
+//				if (ih.getInstruction() instanceof InvokeInstruction && tn.getInvocationChildren().size() > 0) {
+//					this.invocationTable.put(tn.getBreakPoint(), i+1);
+//					break;
 //				}
-				if (ih.getInstruction() instanceof InvokeInstruction && tn.getInvocationChildren().size() > 0) {
-					this.invocationTable.put(tn.getBreakPoint(), i+1);
-					break;
-				}
-			}
-			tn.setInstructions(tracedInstructions);
-			System.out.println(tn.getOrder());
-			System.out.println(tn.getInstructions());
-		}
-	}
-	
-	private void matchInstruction() {
-		HashMap<String, HashMap<Integer, ASTNode>> store = new HashMap<>();
-		for (TraceNode tn: executionList) {
-			BreakPoint breakpoint = tn.getBreakPoint();
-			String sourceFile = breakpoint.getFullJavaFilePath();
-			
-			if (!store.containsKey(sourceFile)) {
-				store.put(sourceFile, new HashMap<>());
-				CompilationUnit cu = JavaUtil.findCompiltionUnitBySourcePath(sourceFile, 
-						breakpoint.getDeclaringCompilationUnitName());
-				cu.accept(new ASTVisitor() {
-					private HashMap<Integer, ASTNode> specificStore = store.get(sourceFile);
-					private int getLineNumber(ASTNode node) {
-						return cu.getLineNumber(node.getStartPosition());
-					}
-					
-					private void storeNode (int line, ASTNode node) {
-						if (!specificStore.containsKey(line)) {
-							specificStore.put(line, node);
-						}
-					}
-					
-					private void wrapperVisit(ASTNode node) {
-						int lineNumber = getLineNumber(node);
-						storeNode(lineNumber, node);
-					}
-					
-					public void preVisit(ASTNode node) {
-						wrapperVisit(node);
-					}
-					
-//					public boolean visit(ArrayAccess node) {
-//						return wrapperVisit(node);
+//			}
+//			tn.setInstructions(tracedInstructions);
+//			System.out.println(tn.getOrder());
+//			System.out.println(tn.getInstructions());
+//		}
+//	}
+//	
+//	private void matchInstruction() {
+//		HashMap<String, HashMap<Integer, ASTNode>> store = new HashMap<>();
+//		for (TraceNode tn: executionList) {
+//			BreakPoint breakpoint = tn.getBreakPoint();
+//			String sourceFile = breakpoint.getFullJavaFilePath();
+//			
+//			if (!store.containsKey(sourceFile)) {
+//				store.put(sourceFile, new HashMap<>());
+//				CompilationUnit cu = JavaUtil.findCompiltionUnitBySourcePath(sourceFile, 
+//						breakpoint.getDeclaringCompilationUnitName());
+//				cu.accept(new ASTVisitor() {
+//					private HashMap<Integer, ASTNode> specificStore = store.get(sourceFile);
+//					private int getLineNumber(ASTNode node) {
+//						return cu.getLineNumber(node.getStartPosition());
 //					}
 //					
-//					public boolean visit(Assignment node) {
-//						return wrapperVisit(node);
+//					private void storeNode (int line, ASTNode node) {
+//						if (!specificStore.containsKey(line)) {
+//							specificStore.put(line, node);
+//						}
 //					}
 //					
-//					public boolean visit(ConditionalExpression node) {
-//						return wrapperVisit(node);
+//					private void wrapperVisit(ASTNode node) {
+//						int lineNumber = getLineNumber(node);
+//						storeNode(lineNumber, node);
 //					}
 //					
-//					public boolean visit(FieldAccess node) {
-//						return wrapperVisit(node);
+//					public void preVisit(ASTNode node) {
+//						wrapperVisit(node);
 //					}
 //					
-//					public boolean visit(IfStatement node) {
-//						return wrapperVisit(node);
-//					}
-//					
-//					public boolean visit(MethodInvocation node) {
-//						return wrapperVisit(node);
-//					}
-//					
-//					public boolean visit(InfixExpression node) {
-//						return wrapperVisit(node);
-//					}
-				});
-
-			}
-
-			ASTNode node = store.get(sourceFile).get(breakpoint.getLineNumber());
-			tn.setAstNode(node);
-		}
-	}
+////					public boolean visit(ArrayAccess node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(Assignment node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(ConditionalExpression node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(FieldAccess node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(IfStatement node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(MethodInvocation node) {
+////						return wrapperVisit(node);
+////					}
+////					
+////					public boolean visit(InfixExpression node) {
+////						return wrapperVisit(node);
+////					}
+//				});
+//
+//			}
+//
+//			ASTNode node = store.get(sourceFile).get(breakpoint.getLineNumber());
+//			tn.setAstNode(node);
+//		}
+//	}
 	
 	private void preEncode() {
 		/* 

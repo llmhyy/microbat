@@ -1,5 +1,8 @@
 package microbat.model.trace;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,11 +18,13 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
+import microbat.baseline.Configs;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
 import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
+import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
@@ -1185,58 +1190,58 @@ public class TraceNode{
 		return this.probability;
 	}
 	
-	public void setInstructions(List<InstructionHandle> instructions) {
-		this.instructions = new ArrayList<>(instructions);
-	}
-	
-	public List<InstructionHandle> getInstructions() {
-		return this.instructions;
-	}
-	
-	public void setStackVariables(String[] stackVariables) {
-		this.stackVariables = stackVariables;
-	}
-	
-	public String getStackVariable(int i) {
-		if (i >= this.stackVariables.length) {
-			return null;
-		}
-		return stackVariables[i];
-	}
-	
-	public String[] getStackVariables() {
-		return this.stackVariables;
-	}
-	
-	public void setConstPool(HashMap<Integer, ConstWrapper> constPool) {
-		this.constPool = constPool;
-	}
-	
-	public HashMap<Integer, ConstWrapper> getConstPool() {
-		return this.constPool;
-	}
-	
-	public void setAstNode(ASTNode nodes) {
-		this.astNodes = nodes;
-	}
-	
-	public ASTNode getAstNode() {
-		return this.astNodes;
-	}
-	
-	public HashMap<String, String> getReadMap() {
-		if (this.readVarMap == null) {
-			this.readVarMap = new HashMap<>();
-			for (VarValue v : this.readVariables) {
-				if (v instanceof PrimitiveValue) {
-					readVarMap.put(v.getVarName(), v.getStringValue());
-				} else {
-					readVarMap.putAll(getPrimitiveMap(v, ""));
-				}
-			}
-		}
-		return this.readVarMap;
-	}
+//	public void setInstructions(List<InstructionHandle> instructions) {
+//		this.instructions = new ArrayList<>(instructions);
+//	}
+//	
+//	public List<InstructionHandle> getInstructions() {
+//		return this.instructions;
+//	}
+//	
+//	public void setStackVariables(String[] stackVariables) {
+//		this.stackVariables = stackVariables;
+//	}
+//	
+//	public String getStackVariable(int i) {
+//		if (i >= this.stackVariables.length) {
+//			return null;
+//		}
+//		return stackVariables[i];
+//	}
+//	
+//	public String[] getStackVariables() {
+//		return this.stackVariables;
+//	}
+//	
+//	public void setConstPool(HashMap<Integer, ConstWrapper> constPool) {
+//		this.constPool = constPool;
+//	}
+//	
+//	public HashMap<Integer, ConstWrapper> getConstPool() {
+//		return this.constPool;
+//	}
+//	
+//	public void setAstNode(ASTNode nodes) {
+//		this.astNodes = nodes;
+//	}
+//	
+//	public ASTNode getAstNode() {
+//		return this.astNodes;
+//	}
+//	
+//	public HashMap<String, String> getReadMap() {
+//		if (this.readVarMap == null) {
+//			this.readVarMap = new HashMap<>();
+//			for (VarValue v : this.readVariables) {
+//				if (v instanceof PrimitiveValue) {
+//					readVarMap.put(v.getVarName(), v.getStringValue());
+//				} else {
+//					readVarMap.putAll(getPrimitiveMap(v, ""));
+//				}
+//			}
+//		}
+//		return this.readVarMap;
+//	}
 	
 	private HashMap<String, String> getPrimitiveMap(VarValue v, String name) {
 		HashMap<String, String> result = new HashMap<>();

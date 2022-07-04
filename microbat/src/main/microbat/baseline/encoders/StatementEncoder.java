@@ -7,9 +7,12 @@ import java.util.List;
 
 import microbat.baseline.BitRepresentation;
 import microbat.baseline.Configs;
+import microbat.baseline.bytecode.ByteCodeList;
 import microbat.baseline.constraints.Constraint;
-import microbat.baseline.constraints.ConstraintType;
-import microbat.baseline.constraints.StatementConstraint;
+import microbat.baseline.constraints.PriorConstraint;
+import microbat.baseline.constraints.StatementConstraintA1;
+import microbat.baseline.constraints.StatementConstraintA2;
+import microbat.baseline.constraints.StatementConstraintA3;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -43,9 +46,14 @@ public class StatementEncoder {
 	}
 	
 	private boolean encode(TraceNode tn) {
+		
+		System.out.println("--------------------------------------------");
+		ByteCodeList byteCodeExecuted = new ByteCodeList(tn.getBytecode());
+		System.out.println("Tracenode: " + tn.getOrder() + " bytecode: " + byteCodeExecuted);
 		boolean hasChange = false;
 		// double prob = calStructureProb(tn) * varToStatementConstraint(tn) * Math.log10((1+ nameConstraint(tn)) * 10);
-//		double prob = varToStatementConstraint(tn);
+		// double prob = varToStatementConstraint(tn);
+	
 		int totalLen = tn.getReadVariables().size() + tn.getWrittenVariables().size() + 1;
 		if (tn.getControlDominator() != null) {
 			totalLen += 1;
@@ -56,36 +64,48 @@ public class StatementEncoder {
 		}
 		
 		List<Constraint> constraints = this.genConstraints(tn);
-		int maxInt = 1 << totalLen;
+
+		final int conclusionIdx = totalLen - 1;
 		
-		HashMap<Integer, Double> memoization = new HashMap<>();
-		double denominator = 0;
-		for (int i=0; i<maxInt; ++i) {
-			double product = 1;
-			for (Constraint constraint : constraints) {
-				if (tn.getOrder() == 9) {
-					System.out.println(constraint);
-					System.out.println(constraint.getProbability(i));
-				}
-				product *= constraint.getProbability(i);
-			}
-		
-			memoization.put(i, product);
-			denominator += product;
-		}
-		
-		double sum = 0;
-		for (int i : this.getNumbers(totalLen, totalLen-1)) {
-			sum += memoization.get(i);
-		}
-		double prob = sum / denominator;
-		
+		InferenceModel model = new InferenceModel(constraints);
+		// model.printTable();
+		double prob = model.getProbability(conclusionIdx);
 		if (Math.abs(tn.getProbability() - prob) > 0.01) {
 			hasChange = true;
 		}
 
 		tn.setProbability(prob);
 		return hasChange;
+		
+//		this.printTable(constraints, totalLen);
+//		
+//		HashMap<Integer, Double> memoization = new HashMap<>();
+//		double denominator = 0;
+//		for (int i=0; i<maxInt; ++i) {
+//			double product = 1;
+//			for (Constraint constraint : constraints) {
+////				
+////				System.out.println(constraint);
+////				System.out.println(BitRepresentation.parse(i, totalLen) + " = " + constraint.getProbability(i));
+////				
+//				product *= constraint.getProbability(i);
+//			}
+//		
+//			memoization.put(i, product);
+//			denominator += product;
+//		}
+//		
+//		double sum = 0;
+//		for (int i : this.getNumbers(totalLen, totalLen-1)) {
+//			sum += memoization.get(i);
+//		}
+//		double prob = sum / denominator;
+//		if (Math.abs(tn.getProbability() - prob) > 0.01) {
+//			hasChange = true;
+//		}
+//
+//		tn.setProbability(prob);
+//		return hasChange;
 	}
 	
 	private List<Integer> getNumbers(int length, int bitPos) {
@@ -146,23 +166,35 @@ public class StatementEncoder {
 		}
 		variableIncluded.set(conclusionIdx);	// Include conclusion statement
 		
-		final int writeStartIdx = readLen == 0 ? 0 : readLen - 1;
+		final int writeStartIdx = readLen == 0 ? 0 : readLen;
+		
 		// Variable to statement constraint A1
-		Constraint constraintA1 = new StatementConstraint(variableIncluded, conclusionIdx, Configs.HIGH, ConstraintType.VAR_TO_STAT_1, writeStartIdx);
+		Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, haveControlDominator);
 		constraints.add(constraintA1);
 		
 		// Variable to statement constraint A2
-		Constraint constraintA2 = new StatementConstraint(variableIncluded, conclusionIdx, Configs.HIGH, ConstraintType.VAR_TO_STAT_2, writeStartIdx);
+		Constraint constraintA2 = new StatementConstraintA2(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, haveControlDominator);
 		constraints.add(constraintA2);
 		
 		// Variable to statement constraint A3
-		Constraint constraintA3 = new StatementConstraint(variableIncluded, conclusionIdx, Configs.HIGH, ConstraintType.VAR_TO_STAT_3, writeStartIdx);
+		Constraint constraintA3 = new StatementConstraintA3(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, haveControlDominator);
 		constraints.add(constraintA3);
 		
 		// Variable to statement constraint A
 		return constraints;
 	}
 	
+	private void printTable(List<Constraint> constraints, int totalLen) {
+		final int size = 1 << totalLen;
+		for (int i = 0; i<size; ++i) {
+			BitRepresentation bitRep = BitRepresentation.parse(i, totalLen);
+			System.out.print(bitRep + "\t");
+			for (Constraint constraint : constraints) {
+				System.out.print(String.format("%.4f", constraint.getProbability(i)) + "\t");
+			}
+			System.out.println();
+		}
+	}
 	private List<Constraint> genStructureConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		
@@ -187,17 +219,17 @@ public class StatementEncoder {
 		variableIncluded.set(conclusionIdx);
 		
 		// Create forward and backward constraint
-		Constraint constraint_forward = new StatementConstraint(variableIncluded, conclusionIdx, Configs.HIGH, ConstraintType.PROG_STRUCTURE, readLen - 1);
-		Constraint constraint_backward = new StatementConstraint(variableIncluded, structureIdx, Configs.HIGH, ConstraintType.PROG_STRUCTURE, readLen - 1);
-		constraints.add(constraint_forward);
-		constraints.add(constraint_backward);
+//		Constraint constraint_forward = new StatementConstraint(variableIncluded, conclusionIdx, Configs.HIGH, ConstraintType.PROG_STRUCTURE, readLen - 1);
+//		Constraint constraint_backward = new StatementConstraint(variableIncluded, structureIdx, Configs.HIGH, ConstraintType.PROG_STRUCTURE, readLen - 1);
+//		constraints.add(constraint_forward);
+//		constraints.add(constraint_backward);
 		
 		// Create prior constraint
 		final double prob = this.calStructureProb(node);
 		BitRepresentation varBit = new BitRepresentation(totalLen);
 		varBit.set(structureIdx);
-		Constraint priorConstraint = new StatementConstraint(varBit, structureIdx, prob, ConstraintType.PRIOR, readLen - 1);
-		constraints.add(priorConstraint);
+//		Constraint priorConstraint = new StatementConstraint(varBit, structureIdx, prob, ConstraintType.PRIOR, readLen - 1);
+//		constraints.add(priorConstraint);
 		
 		return constraints;
 	}
@@ -213,65 +245,45 @@ public class StatementEncoder {
 		final int readLen = node.getReadVariables().size();
 		final int writeLen = node.getWrittenVariables().size();
 		
-		final int writeStartIdx = readLen == 0 ? 0 : readLen - 1;
-		
 		// Also include the conclusion statement
 		int totalLen = readLen + writeLen + 1;
-		
-		// Handle pred constraint
 		TraceNode controlDominator = node.getControlDominator();
+		
+		/*
+		 * Must put this statement before predIdx and bit representation
+		 */
 		if (controlDominator != null) {
 			totalLen++;
-			
-			BitRepresentation bitRep = new BitRepresentation(totalLen);
-			final int predIdx = totalLen - 2;
-			bitRep.set(predIdx);
-			Constraint constarint = new StatementConstraint(bitRep, predIdx, controlDominator.getPredProb(), ConstraintType.PRIOR, writeStartIdx);
-			constraints.add(constarint);
 		}
+		final int predIdx = controlDominator != null ? totalLen - 2 : -1;
 		
 		// Handle read variables prior constraints
 		for (int i=0; i<readLen; i++) {
 			VarValue readVar = node.getReadVariables().get(i);
-			TraceNode dataDominator = trace.findDataDependency(node, readVar);
-			if (dataDominator == null) {
-				continue;
-			}
-			
-			for (VarValue prevVar : dataDominator.getWrittenVariables()) {
-				// Only handle if the probability is not uncertain
-				if (prevVar.equals(readVar) && prevVar.getProbability() != Configs.UNCERTAIN) {
-					BitRepresentation br = new BitRepresentation(totalLen);
-					br.set(i);
-					Constraint constraint = new StatementConstraint(br, i, prevVar.getProbability(), ConstraintType.PRIOR, writeStartIdx);
-					constraints.add(constraint);
-					break;
-				}
-			}
+			BitRepresentation br = new BitRepresentation(totalLen);
+			br.set(i);
+			Constraint constraint = new PriorConstraint(br, i, readVar.getProbability(true));
+			constraints.add(constraint);
 		}
 		
 		// Handle write variables prior constraints
 		for (int i = 0; i<writeLen; ++i) {
 			VarValue writeVar = node.getWrittenVariables().get(i);
-			int pos = i+readLen;
-			List<TraceNode> dataDependentees = trace.findDataDependentee(node, writeVar);
-			if (dataDependentees.size() == 0) {
-				continue;
-			}
-			
-			for (TraceNode nextNode : dataDependentees) {
-				for (VarValue nextVar : nextNode.getReadVariables()) {
-					if (nextVar.equals(writeVar) && nextVar.getProbability() != Configs.UNCERTAIN) {
-						BitRepresentation br = new BitRepresentation(totalLen);
-						br.set(pos);
-						
-						Constraint constraint = new StatementConstraint(br, pos, nextVar.getProbability(), ConstraintType.PRIOR, writeStartIdx);
-						constraints.add(constraint);
-						break;
-					}
-				}
-			}
+			final int pos = i+readLen;
+			BitRepresentation br = new BitRepresentation(totalLen);
+			br.set(pos);
+			Constraint constraint = new PriorConstraint(br, pos, writeVar.getProbability(true));
+			constraints.add(constraint);
 		}
+		
+		// Handle control dominator constraint
+		if (controlDominator != null) {
+			BitRepresentation bitRep = new BitRepresentation(totalLen);
+			bitRep.set(predIdx);
+			Constraint constarint = new PriorConstraint(bitRep, predIdx, controlDominator.getProbability());
+			constraints.add(constarint);
+		}
+				
 		return constraints;
 	}
 	private void populateCount() {

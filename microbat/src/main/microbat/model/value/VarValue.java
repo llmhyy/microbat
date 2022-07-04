@@ -496,6 +496,14 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 		return this.probability;
 	}
 	
+	public double getProbability(boolean rounding) {
+		if (rounding) {
+			return this.getProbability() > 0.3 ? Configs.HIGH : Configs.LOW;
+		} else {
+			return this.getProbability();
+		}
+	}
+	
 	public void setProbability(double probability) {
 		this.probability = probability;
 	}

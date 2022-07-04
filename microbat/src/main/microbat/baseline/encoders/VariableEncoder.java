@@ -34,7 +34,8 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import microbat.baseline.BitRepresentation;
 import microbat.baseline.Configs;
 import microbat.baseline.constraints.Constraint;
-import microbat.baseline.constraints.ConstraintType;
+import microbat.baseline.constraints.PriorConstraint;
+import microbat.baseline.constraints.VariableConstraint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -65,9 +66,6 @@ public class VariableEncoder {
 	}
 	
 	private boolean encode(TraceNode node) {
-		
-		System.out.println("-------------------------------------------");
-		System.out.println("Encoding trace node: " + node.getOrder());
 		boolean hasChange = false;
 		
 		// Skip the inefficient trace node
@@ -85,69 +83,92 @@ public class VariableEncoder {
 			totalVariableLength += 1;
 		}
 		
-//		System.out.println("readLength = " + readLength);
-//		System.out.println("writeLength = " + writeLength);
-//		System.out.println("totalLength = " + totalVariableLength);
-		
+		// skip when there are more than 30 variables
 		if (totalVariableLength > 30) {
-			// skip when there are more than 30 variables
 			return hasChange; 
 		}
 		
 		// Generate constraints for target trace node: A1, A2, A3
 		List<Constraint> constraints = this.genConstraints(node);
-//		for (Constraint constraint : constraints) {
-//			System.out.println(constraint);
-//		}
-		int maxInt = 1 << totalVariableLength; 
 		
-		HashMap<Integer, Double> memoization = new HashMap<>();
-		double denominator = 0;
-		for (int i = 0; i < maxInt; i++) {
-			double product = 1; 
-			for (Constraint c: constraints) {
-				product *= c.getProbability(i);
+		InferenceModel model = new InferenceModel(constraints);
+		for (int i=0; i<totalVariableLength; ++i) {
+			VarValue var = null;
+			if (i<readLength) {
+				// Update read variables probability
+				var = node.getReadVariables().get(i);
+			} else if (i < readLength + writeLength) {
+				// Update write variables probability
+				var = node.getWrittenVariables().get(i-readLength);
 			}
-			memoization.put(i, product);
-			denominator += product;
-		}
-		
-		for (int i = 0; i < totalVariableLength; i++) {
-			List<Integer> numbers = getNumbers(totalVariableLength, i);
 			
-			if (i < readLength + writeLength) {
-				// Update variable probability
-				VarValue var;
-				if (i < readLength)
-					var = node.getReadVariables().get(i);
-				else
-					var = node.getWrittenVariables().get(i - readLength);
-				double sum = 0;
-				for (int number : numbers) {
-					sum += memoization.get(number);
-				}
-				double prob = sum / denominator;
+			// We do not update control dominator probability
+			if (var == null) {
+				continue;
+			}
+			
+			double prob = model.getProbability(i);
+			if (prob != -1) {
 				if (Math.abs(var.getProbability() - prob) > 0.01) {
 					hasChange = true;
 				}
 				var.setProbability(prob);
 			} else {
-				// Update predicate probability
-				double sum = 0;
-				for (int number : numbers) {
-					sum += memoization.get(number);
-				}
-				double prob = sum / denominator;
-				if (Math.abs(controlDominator.getPredProb() - prob) > 0.01) {
-					hasChange = true;
-				}
-				controlDominator.setPredProb(prob);
+				System.out.println("TraceNode: " + node.getOrder() + " don't have constraints or have invalid constraints");
 			}
 		}
+		
 		System.gc();
 		return hasChange;
+		
+		
+//		int maxInt = 1 << totalVariableLength; 
+//		
+//		HashMap<Integer, Double> memoization = new HashMap<>();
+//		double denominator = 0;
+//		for (int i = 0; i < maxInt; i++) {
+//			double product = 1; 
+//			for (Constraint c: constraints) {
+//				product *= c.getProbability(i);
+//			}
+//			memoization.put(i, product);
+//			denominator += product;
+//		}
+//		
+//		for (int i = 0; i < totalVariableLength; i++) {
+//			List<Integer> numbers = getNumbers(totalVariableLength, i);
+//			
+//			if (i < readLength + writeLength) {
+//				// Update variable probability
+//				VarValue var;
+//				if (i < readLength)
+//					var = node.getReadVariables().get(i);
+//				else
+//					var = node.getWrittenVariables().get(i - readLength);
+//				double sum = 0;
+//				for (int number : numbers) {
+//					sum += memoization.get(number);
+//				}
+//				double prob = sum / denominator;
+//				if (Math.abs(var.getProbability() - prob) > 0.01) {
+//					hasChange = true;
+//				}
+//				var.setProbability(prob);
+//			} else {
+//				// Update predicate probability
+////				double sum = 0;
+////				for (int number : numbers) {
+////					sum += memoization.get(number);
+////				}
+////				double prob = sum / denominator;
+////				if (Math.abs(controlDominator.getPredProb() - prob) > 0.01) {
+////					hasChange = true;
+////				}
+////				controlDominator.setPredProb(prob);
+//			}
+//		}
 	}
-	
+
 	/**
 	 * Generate all constraints for given trace node
 	 * @param node Target trace node to generate constraints
@@ -155,53 +176,22 @@ public class VariableEncoder {
 	 */
 	private List<Constraint> genConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
-		constraints.addAll(this.getAstConstraints(node));
-		constraints.addAll(this.getPriorConstraints(node));
+		constraints.addAll(this.genVarConstraints(node));
+		constraints.addAll(this.genPriorConstraints(node));
 		return constraints;
 	}
 	
-	private List<Integer> getNumbers(int length, int bitPos) {
-		/*
-		 * bitPos is 0-indexed
-		 */
-		List<Integer> result = new ArrayList<>(1 << length);
-		int numBitLeft = bitPos;
-		int numBitRight = length - (numBitLeft + 1);
-		int value = 1 << numBitRight;
-		List<Integer> tempResult = new ArrayList<>(value);
-		for (int i = 0; i < value; i++) {
-			tempResult.add(value + i);
-		}
-		
-		int maxLeft = 1 << numBitLeft;
-		for (int i = 0; i < maxLeft; i++) {
-			int temp = i << (numBitRight + 1);
-			for (int j : tempResult)
-				result.add(j + temp);
-		}
-		return result;
-	}
-	
-	/**
-	 * Get all the constraints (A1, A2, A3) for given trace node
-	 * @param node Target trace node
-	 * @return List of correspondence constraints
-	 */
-	private List<Constraint> getAstConstraints(TraceNode node) {
-		
+	private List<Constraint> genVarConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		
-		int readLength = node.getReadVariables().size();
-		int writeLength = node.getWrittenVariables().size();
-		int totalLength = readLength + writeLength;
+		final int readLen = node.getReadVariables().size();
+		final int writeLen = node.getWrittenVariables().size();
 		
-		TraceNode controlDominator = node.getControlDominator();
-		boolean haveControlDominator = controlDominator != null;
+		boolean haveControlDom = node.getControlDominator() != null;
+		final int totalLen = haveControlDom ? readLen + writeLen : readLen + writeLen + 1;
 		
-		if (haveControlDominator) {
-			System.out.println("Have control Dominator");
-			totalLength += 1;
-		}
+		// Index of control dominator is set to be the last bit if exists. Otherwise, it is set to be -1
+		final int predIdx = haveControlDom ? totalLen - 1 : -1;
 		
 		/*
 		 * For written variables (A1), it is always high
@@ -209,35 +199,169 @@ public class VariableEncoder {
 		 * written variable is wrong. We will assume that
 		 * all written variables are independent from one another
 		 */
-		for (int i = 0; i < writeLength; i++){
-			BitRepresentation variablesIncluded = new BitRepresentation(totalLength);
-			variablesIncluded.set(0, readLength);
-			variablesIncluded.set(i + readLength);
-			if (haveControlDominator) {
-				variablesIncluded.set(readLength + writeLength);
+		for (int idx=0; idx<writeLen; idx++) {
+			final int writeIdx = idx + readLen;	// Index of target write variable
+			
+			BitRepresentation varsIncluded = new BitRepresentation(totalLen);
+			varsIncluded.set(0, readLen);		// All read variables are included
+			varsIncluded.set(writeIdx);			// Include one particular write variable
+			
+			if (haveControlDom) {
+				varsIncluded.set(predIdx);		// Include control dominator
 			}
 			
-			Constraint constraint = new Constraint(variablesIncluded, i + readLength, Configs.HIGH, ConstraintType.DEFINE);
+			Constraint constraint = new VariableConstraint(varsIncluded, writeIdx, Configs.HIGH);
 			constraints.add(constraint);
 		}
 		
 		/*
-		 * We will handle all the read constraints here, which
-		 * is more complicated than that of the written, and
-		 * follows the rule of A2. We will use the ASTNode to
-		 * derive which rule it is.
+		 * For read variable (A2), the only invalid case is that,
+		 * all the variable and control dominator except for that
+		 * target read variable is correct, but the target read
+		 * variable is wrong.
+		 * 
+		 * The propagation probability depends on the statement
 		 */
-		PropagationCalculator calculator = new PropagationCalculator();
-		ASTNode astNode = node.getAstNode();
-		int readVarIdx = 0;
-		for (VarValue readVar : node.getReadVariables()) {
-			double propProb = calculator.calProb(astNode, readVar);
-			BitRepresentation variableIncluded = new BitRepresentation(totalLength);
-			variableIncluded.set(0 + totalLength - 1);
-			Constraint constraint = new Constraint(variableIncluded, readVarIdx, propProb, ConstraintType.USE);
-			constraints.add(constraint);
-			readVarIdx++;
+		
+		for (int readIdx=0; readIdx<readLen; readIdx++) {
+			BitRepresentation varsIncluded = new BitRepresentation(totalLen);
+			varsIncluded.set(0, totalLen); 		// Include all variable and control dominator
+
 		}
+		
+		/*
+		 * For control dominator (A3), the only invalid case is that,
+		 * all the write and read variable are correct but the control
+		 * dominator is not correct
+		 */
+		if (haveControlDom) {
+			BitRepresentation varsIncluded = new BitRepresentation(totalLen);
+			varsIncluded.set(0, totalLen);		// Include all variable and control dominator
+			Constraint constraint = new VariableConstraint(varsIncluded, predIdx, Configs.HIGH);
+			constraints.add(constraint);
+		}
+		
+		return constraints;
+	}
+	
+	private List<Constraint> genPriorConstraints(TraceNode node) {
+		List<Constraint> constraints = new ArrayList<>();
+		int readLength = node.getReadVariables().size();
+		int writeLength = node.getWrittenVariables().size();
+		int totalLength = readLength + writeLength;
+		
+		// Predicate prior constraint
+		TraceNode controlDominator = node.getControlDominator();
+		if (controlDominator != null) {
+			totalLength += 1;
+		}
+		
+		// Handle the probability passed down from the previous node
+		for (int i = 0; i < readLength; i++) {
+			VarValue readVar = node.getReadVariables().get(i);
+			TraceNode dataDominator = trace.findDataDependency(node, readVar);
+			if (dataDominator == null)
+				continue;
+			for (VarValue prevVar : dataDominator.getWrittenVariables()) {
+				if (prevVar.equals(readVar)) {
+					BitRepresentation br = new BitRepresentation(totalLength);
+					br.set(i);
+					
+					Constraint constraint = new PriorConstraint(br, i, prevVar.getProbability());
+					constraints.add(constraint);
+					break;
+				}
+			}
+		}
+		
+		for (int i = 0; i < writeLength ; i++) {
+			VarValue writeVar = node.getWrittenVariables().get(i);
+			int pos = i + readLength;
+			List<TraceNode> dataDependentees = trace.findDataDependentee(node, writeVar);
+			if (dataDependentees.size() == 0)
+				continue;
+			for (TraceNode nextNode : dataDependentees) {
+				for (VarValue nextVar : nextNode.getReadVariables()) {
+					if (nextVar.equals(writeVar)) {
+						BitRepresentation br = new BitRepresentation(totalLength);
+						br.set(pos);
+
+						Constraint constraint = new PriorConstraint(br, pos, nextVar.getProbability());
+						constraints.add(constraint);
+						break;
+					}
+				}
+			}
+		}
+		
+		if (controlDominator != null) {
+			BitRepresentation bitRep = new BitRepresentation(totalLength);
+			int index = readLength + writeLength;
+			bitRep.set(index);
+			
+			Constraint constraint = new PriorConstraint(bitRep, index, controlDominator.getProbability());
+			constraints.add(constraint);
+		}
+		
+		return constraints;
+	}
+	
+//	/**
+//	 * Get all the constraints (A1, A2, A3) for given trace node
+//	 * @param node Target trace node
+//	 * @return List of correspondence constraints
+//	 */
+//	private List<Constraint> getAstConstraints(TraceNode node) {
+//		
+//		List<Constraint> constraints = new ArrayList<>();
+//		
+//		int readLength = node.getReadVariables().size();
+//		int writeLength = node.getWrittenVariables().size();
+//		int totalLength = readLength + writeLength;
+//		
+//		TraceNode controlDominator = node.getControlDominator();
+//		boolean haveControlDominator = controlDominator != null;
+//		
+//		if (haveControlDominator) {
+//			System.out.println("Have control Dominator");
+//			totalLength += 1;
+//		}
+//		
+//		/*
+//		 * For written variables (A1), it is always high
+//		 * unless the read variable are all true, while the
+//		 * written variable is wrong. We will assume that
+//		 * all written variables are independent from one another
+//		 */
+//		for (int i = 0; i < writeLength; i++){
+//			BitRepresentation variablesIncluded = new BitRepresentation(totalLength);
+//			variablesIncluded.set(0, readLength);
+//			variablesIncluded.set(i + readLength);
+//			if (haveControlDominator) {
+//				variablesIncluded.set(readLength + writeLength);
+//			}
+//			
+//			Constraint constraint = new Constraint(variablesIncluded, i + readLength, Configs.HIGH, ConstraintType.DEFINE);
+//			constraints.add(constraint);
+//		}
+//		
+//		/*
+//		 * We will handle all the read constraints here, which
+//		 * is more complicated than that of the written, and
+//		 * follows the rule of A2. We will use the ASTNode to
+//		 * derive which rule it is.
+//		 */
+//		PropagationCalculator calculator = new PropagationCalculator();
+//		ASTNode astNode = node.getAstNode();
+//		int readVarIdx = 0;
+//		for (VarValue readVar : node.getReadVariables()) {
+//			double propProb = calculator.calProb(astNode, readVar);
+//			BitRepresentation variableIncluded = new BitRepresentation(totalLength);
+//			variableIncluded.set(0 + totalLength - 1);
+//			Constraint constraint = new Constraint(variableIncluded, readVarIdx, propProb, ConstraintType.USE);
+//			constraints.add(constraint);
+//			readVarIdx++;
+//		}
 		
 //		HashMap<String, Double> scoreTable = new HashMap<>();
 //		Stack<Double> probStack = new Stack<>();
@@ -247,14 +371,14 @@ public class VariableEncoder {
 //		System.out.println(scoreTable);
 		
 		// Get A3 constraints if the given node have control dominator
-		if (haveControlDominator) {
-			BitRepresentation variablesIncluded = new BitRepresentation(totalLength);
-			variablesIncluded.set(0, totalLength);
-			Constraint constraint = new Constraint(variablesIncluded, readLength + writeLength, Configs.HIGH, ConstraintType.PREDICATE);
-			constraints.add(constraint);
-		}
-		return constraints;
-	}
+//		if (haveControlDominator) {
+//			BitRepresentation variablesIncluded = new BitRepresentation(totalLength);
+//			variablesIncluded.set(0, totalLength);
+//			Constraint constraint = new Constraint(variablesIncluded, readLength + writeLength, Configs.HIGH, ConstraintType.PREDICATE);
+//			constraints.add(constraint);
+//		}
+//		return constraints;
+//	}
 	
 //	private void getProbability(ASTNode node, HashMap<String, Double> scoreTable, Stack<Double> probStack) {
 //		if (node == null)
@@ -325,65 +449,4 @@ public class VariableEncoder {
 //			break;
 //		}
 //	}
-	
-	private List<Constraint> getPriorConstraints(TraceNode node) {
-		List<Constraint> constraints = new ArrayList<>();
-		int readLength = node.getReadVariables().size();
-		int writeLength = node.getWrittenVariables().size();
-		int totalLength = readLength + writeLength;
-		
-		// Predicate prior constraint
-		TraceNode controlDominator = node.getControlDominator();
-		if (controlDominator != null) {
-			totalLength += 1;
-			
-			BitRepresentation bitRep = new BitRepresentation(totalLength);
-			int index = readLength + writeLength;
-			bitRep.set(index);
-			
-			Constraint constraint = new Constraint(bitRep, index, controlDominator.getPredProb(), ConstraintType.PRIOR);
-			constraints.add(constraint);
-		}
-		
-		// Handle the probability passed down from the previous node
-		for (int i = 0; i < readLength; i++) {
-			VarValue readVar = node.getReadVariables().get(i);
-			TraceNode dataDominator = trace.findDataDependency(node, readVar);
-			if (dataDominator == null)
-				continue;
-			for (VarValue prevVar : dataDominator.getWrittenVariables()) {
-				// only handle if the probability is not uncertain
-				if (prevVar.equals(readVar) && prevVar.getProbability() != Configs.UNCERTAIN) {
-					BitRepresentation br = new BitRepresentation(totalLength);
-					br.set(i);
-					
-					Constraint constraint = new Constraint(br, i, prevVar.getProbability(), ConstraintType.PRIOR);
-					constraints.add(constraint);
-					break;
-				}
-			}
-		}
-		
-		for (int i = 0; i < writeLength ; i++) {
-			VarValue writeVar = node.getWrittenVariables().get(i);
-			int pos = i + readLength;
-			List<TraceNode> dataDependentees = trace.findDataDependentee(node, writeVar);
-			if (dataDependentees.size() == 0)
-				continue;
-			for (TraceNode nextNode : dataDependentees) {
-				for (VarValue nextVar : nextNode.getReadVariables()) {
-					if (nextVar.equals(writeVar) && nextVar.getProbability() != Configs.UNCERTAIN) {
-						BitRepresentation br = new BitRepresentation(totalLength);
-						br.set(pos);
-
-						Constraint constraint = new Constraint(br, pos, nextVar.getProbability(), ConstraintType.PRIOR);
-						constraints.add(constraint);
-						break;
-					}
-				}
-			}
-		}
-		
-		return constraints;
-	}
 }
