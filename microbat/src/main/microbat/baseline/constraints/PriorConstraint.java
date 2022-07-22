@@ -1,5 +1,8 @@
 package microbat.baseline.constraints;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import microbat.baseline.BitRepresentation;
 
 /**
@@ -8,11 +11,18 @@ import microbat.baseline.BitRepresentation;
  *
  */
 public class PriorConstraint extends Constraint {
+	
+	private static int count = 0;
 
 	public PriorConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability) {
-		super(varsIncluded, conclusionIndex, propProbability, "PRIOR_CONSTRAINT");
+		super(varsIncluded, conclusionIndex, propProbability, PriorConstraint.genID());
+	}
+	
+	public PriorConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, String varID) {
+		super(varsIncluded, conclusionIndex, propProbability, PriorConstraint.genID());
 	}
 
+	
 	@Override
 	protected double calProbability(int caseNo) {
 		BitRepresentation binValue = BitRepresentation.parse(caseNo, this.varsIncluded.size());
@@ -28,5 +38,9 @@ public class PriorConstraint extends Constraint {
 	@Override
 	public String toString() {
 		return "Prior Constraint " + super.toString();
+	}
+	
+	private static String genID() {
+		return "PC_" + PriorConstraint.count++;
 	}
 }

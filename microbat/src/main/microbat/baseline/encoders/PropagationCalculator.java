@@ -1,14 +1,13 @@
 package microbat.baseline.encoders;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.InfixExpression;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+import java.util.Map;
 
 import microbat.baseline.Configs;
+import microbat.baseline.bytecode.ByteCode;
+import microbat.baseline.bytecode.ByteCodeList;
+import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
 /**
@@ -19,84 +18,99 @@ import microbat.model.value.VarValue;
  */
 public class PropagationCalculator {
 	
-	public double calProb(ASTNode node, VarValue var) {
-		double propagationProb = -1;
-		// System.out.println("Handling: " + node);
-		switch (node.getNodeType()) {
-		case ASTNode.VARIABLE_DECLARATION_STATEMENT:
-			VariableDeclarationStatement varDeclaraStat = (VariableDeclarationStatement) node;
-			propagationProb = this.handleVarDeclaraStat(varDeclaraStat, var);
-			break;
-		case ASTNode.INFIX_EXPRESSION:
-			InfixExpression infixExp = (InfixExpression) node;
-			propagationProb = this.handleInfixExp(infixExp, var);
-			break;
-		default:
-			propagationProb = Configs.UNCERTAIN;
-			System.out.println("AST Node Type not handled: " + this.getASTNodeTypeName(node));
-		}
-		return propagationProb;
+//	private List<VarValue> usedArraies;
+//	private Map<String, Integer> classCount;
+	
+	private List<String> primitiveTypes;
+	
+	public PropagationCalculator() {
+		this.primitiveTypes = new ArrayList<>();
+		primitiveTypes.add("byte");
+		primitiveTypes.add("short");
+		primitiveTypes.add("int");
+		primitiveTypes.add("long");
+		primitiveTypes.add("float");
+		primitiveTypes.add("double");
+		primitiveTypes.add("char");
+		primitiveTypes.add("boolean");
 	}
 	
 	/**
-	 * Handle infix expression.
-	 * Probability depends on the operator
-	 * @param infixExp Infix expression
+	 * Calculate the propagation probability based on the statement type and target variable
+	 * @param node Target trace node
 	 * @param var Target variable
 	 * @return Propagation probability
 	 */
-	private double handleInfixExp(InfixExpression infixExp, VarValue var) {
-		double prob = -1;
+	public double calPropProb(TraceNode node, VarValue var) {
 		
-		InfixExpression.Operator operator = infixExp.getOperator();
-		if (operator == InfixExpression.Operator.EQUALS || operator == InfixExpression.Operator.TIMES ||
-		    operator == InfixExpression.Operator.DIVIDE || operator == InfixExpression.Operator.PLUS ||
-		    operator == InfixExpression.Operator.MINUS || operator == InfixExpression.Operator.CONDITIONAL_AND)
-			// One to one operator
-			prob = Configs.HIGH;
-		else if (operator == InfixExpression.Operator.REMAINDER) {
-			
+		ByteCodeList executedByteCode = new ByteCodeList(node.getBytecode());
+		
+		// For one to one statement, directly return High regardless of target variable
+		if (executedByteCode.isOneToOne()) {
+			return Configs.HIGH;
 		}
+		
+		double prob = Configs.HIGH;
+		
+		/*
+		 * By now, we don't have way to calculate the propagation probability
+		 * for array access and the attribute access statement.
+		 * 
+		 * Here is how we handle array access by now, for the array variable and
+		 * the accessing index, we assume it to be UNCERTAIN
+		 * 
+		 * Here is how we handle class attribute access by now. For the class
+		 * variable, we assume it to be UNCERTAIN
+		 */
+		
+		
+		for (ByteCode byteCode : executedByteCode) {
+			if (byteCode.isManyToOne()) {
+				System.out.println("byteCode is many to one");
+				prob *= Configs.UNCERTAIN;
+			} else if (byteCode.isArrayAccess() && this.isArray(var)) {
+				System.out.println("byteCode is array access");
+				prob *= Configs.UNCERTAIN;
+			} else if (byteCode.isAttrAccess() && this.isSelfDefinedClass(var)) {
+				System.out.println("byteCode is attribute access");
+				prob *= Configs.UNCERTAIN;
+			} 
+			else if (byteCode.isFuncCall() && this.isSelfDefinedClass(var)) {
+				System.out.println("byteCode is function call");
+				prob *= Configs.UNCERTAIN;
+			}
+		}
+		
 		return prob;
 	}
-
+	
 	/**
-	 * Handle Variable declaration statement.
-	 * Initializer needed to be analysis to determine is it one to one or not.
-	 * @param varDeclaraStat Variable declaration statement
-	 * @param var Target read variable
-	 * @return Propagation probability
+	 * Check is the give variable an array
+	 * 
+	 * The type name of array contain the string "[]"
+	 * @param var Variable to test
+	 * @return True if the variable is an array. False otherwise
 	 */
-	private double handleVarDeclaraStat(VariableDeclarationStatement varDeclaraStat, VarValue var) {
-		// Variable declaration statement is not enough to defined as one to one
-		// It depends on the initializer expression is one to one or not
-		@SuppressWarnings("unchecked") List<VariableDeclarationFragment> fragments = varDeclaraStat.fragments();
-		
-		double propagationProb = -1;
-		// Usually, there should be only one fragment
-		if (fragments.size() > 1) {
-			System.out.println("Variable Encoder Unhandle case: fragments have size more than one");
-			return propagationProb;
-		}
-		
-		for (VariableDeclarationFragment fragment : fragments) {
-			System.out.println(fragment);
-			Expression initializer = fragment.getInitializer();
-			propagationProb = this.calProb(initializer, var);
-		} 
-		
-		return propagationProb;
+	private boolean isArray(VarValue var) {
+		return var.getType().contains("[]");
 	}
 	
-	private boolean sameVar(String name, VarValue var) {
-		return false;
-	}
 	/**
-	 * Helper function to check the type of AST node. Mainly for debug purpose
-	 * @param astNode AST Node to check
-	 * @return Name of the type
+	 * Check is the given variable a self defined class
+	 * 
+	 * Self defined class is not primitive type and is not an array
+	 * @param var Variable to test
+	 * @return True if the variable is self defined class. False otherwise
 	 */
-	public String getASTNodeTypeName(ASTNode astNode) {
-		return ASTNode.nodeClassForType(astNode.getNodeType()).getName();
-	} 
+	private boolean isSelfDefinedClass(VarValue var) {
+		if (this.primitiveTypes.contains(var.getType())) {
+			return false;
+		}
+		
+		if (this.isArray(var)) {
+			return false;
+		}
+		
+		return true;
+	}
 }

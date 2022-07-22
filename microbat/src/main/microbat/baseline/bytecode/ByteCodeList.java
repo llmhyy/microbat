@@ -12,13 +12,16 @@ import java.util.List;
  */
 public class ByteCodeList implements Iterable<ByteCode> {
 
+	/**
+	 * List of byteCode executed by target trace node
+	 */
 	private List<ByteCode> byteCodeExecuted;
 	
 	public ByteCodeList(final String statements) {
 		this.byteCodeExecuted = new ArrayList<>();
 		
 		if (statements != "") {
-			List<String> tokens = Arrays.asList(statements.split(","));
+			List<String> tokens = Arrays.asList(statements.split(":"));
 			for (String token : tokens) {
 				this.byteCodeExecuted.add(new ByteCode(token));
 			}
@@ -37,6 +40,10 @@ public class ByteCodeList implements Iterable<ByteCode> {
 		return this.byteCodeExecuted.isEmpty();
 	}
 	
+	/**
+	 * The statement is one to one when all the byteCode executed are one to one.
+	 * @return True if the statement is one to one. False otherwise.
+	 */
 	public boolean isOneToOne() {
 		for (ByteCode byteCode : this.byteCodeExecuted) {
 			if (!byteCode.isOneToOne()) {

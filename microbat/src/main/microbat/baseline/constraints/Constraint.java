@@ -1,10 +1,15 @@
 package microbat.baseline.constraints;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 import microbat.baseline.BitRepresentation;
+import microbat.baseline.factorgraph.VarIDConverter;
+import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 
 /**
  * Abstract super of all kind of constraints used in the probability inference model
@@ -32,7 +37,18 @@ public abstract class Constraint {
 	 */
 	protected double propProbability;
 	
-	private final String name;
+	protected final String constraintID;
+	
+	protected int controlDomOrder;
+	
+	protected List<String> readVarIDs;
+	
+	protected List<String> writeVarIDs;
+	
+	public static final int NaN = -1;
+	
+	public static final String controlDomPre = "CD_";
+	
 	
 	/**
 	 * Constructor
@@ -40,12 +56,17 @@ public abstract class Constraint {
 	 * @param conclusionIndexes The list of index of conclusion variable
 	 * @param propProbability Propagation probability of this constraint
 	 */
-	public Constraint(BitRepresentation varsIncluded, Collection<Integer> conclusionIndexes, double propProbability, String name) {
-		this.name = name;
+	public Constraint(BitRepresentation varsIncluded, Collection<Integer> conclusionIndexes, double propProbability, String constraintID) {
+		this.constraintID = constraintID;
 		this.varsIncluded = varsIncluded;
 		this.conclusionIndexes = new HashSet<>(conclusionIndexes);
 		this.memoTable = new HashMap<>();
 		this.propProbability = propProbability;
+		this.controlDomOrder = Constraint.NaN;
+		
+		this.readVarIDs = new ArrayList<>();
+		this.writeVarIDs = new ArrayList<>();
+		
 	}
 	
 	/**
@@ -55,12 +76,17 @@ public abstract class Constraint {
 	 * @param propProbability Propagation probability of this constraint
 	 */
 	public Constraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, String name) {
-		this.name = name;
+		this.constraintID = name;
 		this.varsIncluded = varsIncluded;
 		this.conclusionIndexes = new HashSet<>();
 		this.conclusionIndexes.add(conclusionIndex); // conclusionIndex is the index of write variable
 		this.memoTable = new HashMap<>();
 		this.propProbability = propProbability;
+		this.controlDomOrder = Constraint.NaN;
+		
+		this.readVarIDs = new ArrayList<>();
+		this.writeVarIDs = new ArrayList<>();
+		
 	}
 	
 	/**
@@ -70,11 +96,11 @@ public abstract class Constraint {
 	 * @return Result probability
 	 */
 	public double getProbability(final int caseNo) {
-		if (this.memoTable.containsKey(caseNo)){
-			return this.memoTable.get(caseNo);
-		}
+//		if (this.memoTable.containsKey(caseNo)){
+//			return this.memoTable.get(caseNo);
+//		}
 		double prob = this.calProbability(caseNo);
-		this.memoTable.put(caseNo, prob);
+//		this.memoTable.put(caseNo, prob);
 		return prob;
 	}
 	
@@ -86,20 +112,112 @@ public abstract class Constraint {
 		return this.varsIncluded.size();
 	}
 	
+	public void addReadVarID(final String varID) {
+		this.readVarIDs.add(varID);
+	}
+	
+	public void addWriteVarID(final String varID) {
+		this.writeVarIDs.add(varID);
+	}
+	
+	public List<String> getReadVarIDs() {
+		return this.readVarIDs;
+	}
+	
+	public int getReadVarCount() {
+		return this.readVarIDs.size();
+	}
+	
+	public List<String> getWriteVarIDs() {
+		return this.writeVarIDs;
+	}
+	
+	public int getWriteVarCount() {
+		return this.writeVarIDs.size();
+	}
+	
+	public List<String> getInvolvedVarIDs() {
+		List<String> varIDs = new ArrayList<>();
+		varIDs.addAll(this.readVarIDs);
+		varIDs.addAll(this.writeVarIDs);
+		return varIDs;
+	}
+	
+	public List<String> getInvolvedPredIDs() {
+		List<String> ids = new ArrayList<>();
+		ids.addAll(this.getInvolvedVarIDs());
+		
+		if (this.haveControlDom()) {
+			ids.add(this.genControlDomID());
+		}
+		return ids;
+	}
+	
+	protected String genControlDomID() {
+		if (this.haveControlDom()) {
+			return Constraint.controlDomPre + this.getControlDomOrder();
+		} else {
+			return null;
+		}
+	}
+	
+	public static boolean isControlDomID(final String id) {
+		return id.startsWith(Constraint.controlDomPre);
+	}
+	
+	public static int extractNodeOrderFromCDID(final String id) {
+		return Integer.valueOf(id.replace(Constraint.controlDomPre, ""));
+	}
+	
+	public void setVarsID(TraceNode node) {
+		for (VarValue readVar : node.getReadVariables()) {
+			this.readVarIDs.add(readVar.getVarID());
+		}
+		for (VarValue writeVar : node.getWrittenVariables()) {
+			this.readVarIDs.add(writeVar.getVarID());
+		}
+		
+		TraceNode controlDom = node.getControlDominator();
+		if (controlDom != null) {
+			this.setControlDomOrder(controlDom.getOrder());
+		}
+	}
+	
+	public int getVarCount() {
+		return this.readVarIDs.size() + this.writeVarIDs.size();
+	}
+	
+	// This function have to be override in Statement Constraint
+	public int getPredicateCount() {
+		return this.haveControlDom() ? this.getVarCount() + 1 : this.getVarCount();
+	}
+	
+	public void setControlDomOrder(final int order) {
+		this.controlDomOrder = order;
+	}
+	
+	public int getControlDomOrder() {
+		return this.controlDomOrder;
+	}
+	
+	public boolean haveControlDom() {
+		return this.controlDomOrder != Constraint.NaN;
+	}
+	
+	public String getConstraintID() {
+		return this.constraintID;
+	}
+	
+	public HashSet<Integer> getConclusionIdxes() {
+		return this.conclusionIndexes;
+	}
+	
 	/**
 	 * Calculate the result probability based on the given case number
 	 * @param caseNo Case number
 	 * @return Result probability
 	 */
 	abstract protected double calProbability(final int caseNo);
-	
-	/**
-	 * Get the name of the constraint.
-	 * @return Name of the constraint.
-	 */
-	public String getName() {
-		return this.name;
-	};
 	
 	@Override
 	public String toString() {

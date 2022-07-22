@@ -40,7 +40,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	 */
 	protected boolean isRoot = false;
 	
-	protected double probability = Configs.UNCERTAIN;
+	protected double probability = -1;
 	
 	public static final int NOT_NULL_VAL = 1;
 	
@@ -49,6 +49,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	protected VarValue(boolean isRoot, Variable variable) {
 		this.isRoot = isRoot;
 		this.variable = variable;
+		this.probability = -1;
 		
 	}
 	

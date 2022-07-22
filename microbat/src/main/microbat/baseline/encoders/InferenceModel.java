@@ -6,6 +6,7 @@ import java.util.List;
 
 import microbat.baseline.BitRepresentation;
 import microbat.baseline.constraints.Constraint;
+import microbat.baseline.constraints.PriorConstraint;
 
 /**
  * Probability inference model is used to calculate the probability correctness based on different cases
@@ -22,6 +23,8 @@ public class InferenceModel {
 		
 		if (!this.constraints.isEmpty()) {
 			this.varsCount = this.constraints.get(0).getVarsCount();
+		} else {
+			this.varsCount = 0;
 		}
 	}
 	
@@ -38,23 +41,44 @@ public class InferenceModel {
 		
 		final int maxInt = 1 << this.varsCount;
 		
+//		System.out.println("targetIdx: " + targetIdx);
 		// Store the calculate result in memory table to avoid redundant calculation
 		HashMap<Integer, Double> memoTable = new HashMap<>();
 		double denominator = 0;
 		for (int caseNo=0; caseNo<maxInt; caseNo++) {
 			double product = 1;
+//			String message = "";
 			for (Constraint constraint : this.constraints) {
+				
+				// We should ignore the prior constraint for the target variable
+//				if (constraint instanceof PriorConstraint) {
+//					boolean skip = false;
+//					for (int conclusIdx : constraint.getConclusionIdxes()) {
+//						if (conclusIdx == targetIdx) {
+//							// System.out.println("Skip constraint: " + constraint);
+//							skip = true;
+//						}
+//					}
+//					
+//					if (skip) continue;
+//				} 
+				
+//				message += constraint.getProbability(caseNo) + " * ";
 				product *= constraint.getProbability(caseNo);
 			}
+//			System.out.println("cal: " + product + " = " + message);
 			memoTable.put(caseNo, product);
 			denominator += product;
 		}
 		
 		double sum = 0;
+//		System.out.println("targetIdx: " + targetIdx + " nums: " + this.getCorrespondenceCaseNo(targetIdx));
+//		String message = "";
 		for (int caseNo: this.getCorrespondenceCaseNo(targetIdx)) {
 			sum += memoTable.get(caseNo);
+//			message += memoTable.get(caseNo) + " * ";
 		}
-		
+//		System.out.println("sum = " + sum + " = " + message);
 		return sum / denominator;
 	}
 	
@@ -62,9 +86,14 @@ public class InferenceModel {
 	 * Print the probability inference table for debug purposes
 	 */
 	public void printTable() {
+		if (this.constraints.isEmpty()) {
+			System.out.println("There are no constraints");
+			return;
+		}
+		
 		final int maxInt = 1 << this.varsCount;
 		for (Constraint constraint : this.constraints) {
-			System.out.print(constraint.getName() + " ");
+			System.out.println(constraint);
 		}
 		System.out.println();
 		for (int caseNo = 0; caseNo < maxInt; caseNo++) {

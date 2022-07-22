@@ -10,15 +10,17 @@ import microbat.baseline.BitRepresentation;
  *
  */
 public class StatementConstraintA3 extends StatementConstraint {
-
+	
+	private static int count = 0;
+	
 	public StatementConstraintA3(BitRepresentation varsIncluded, int conclusionIndex, double propProbability,
-			int writeVarStarintIdx, boolean haveControlDom) {
-		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, "STAT_A3_CONSTRAINT", haveControlDom);
+			int writeVarStarintIdx, int statementOrder, int controlDomOrder) {
+		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA3.genID(), statementOrder, controlDomOrder);
 	}
 
 	public StatementConstraintA3(BitRepresentation varsIncluded, int conclusionIndex, double propProbability,
-			int writeVarStarintIdx) {
-		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, "STAT_A3_CONSTRAINT");
+			int writeVarStarintIdx, int statementOrder) {
+		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA3.genID(), statementOrder);
 	}
 	
 	@Override
@@ -38,7 +40,7 @@ public class StatementConstraintA3 extends StatementConstraint {
 			 * If the control dominator is wrong, then we can directly say that this statement is correct
 			 */
 			
-			if (this.haveControlDom) {
+			if (this.haveControlDom()) {
 				boolean correctControlDom = binValue.get(this.predIdx);
 				if (!correctControlDom) {
 					prob = this.propProbability;
@@ -63,5 +65,9 @@ public class StatementConstraintA3 extends StatementConstraint {
 	@Override
 	public String toString() {
 		return "Stat constraint A3 " + super.toString();
+	}
+	
+	private static String genID() {
+		return "SC_A3_" + StatementConstraintA3.count++;
 	}
 }

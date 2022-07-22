@@ -1,5 +1,7 @@
 package microbat.baseline.constraints;
 
+import java.util.List;
+
 import microbat.baseline.BitRepresentation;
 
 /**
@@ -11,13 +13,15 @@ import microbat.baseline.BitRepresentation;
  */
 public class StatementConstraintA1 extends StatementConstraint {
 	
-	public StatementConstraintA1(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx) {
-		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, "STAT_A1_CONSTRAINT");
+	private static int count = 0;
+	
+	public StatementConstraintA1(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, int statementOrder) {
+		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA1.genID(), statementOrder);
 
 	}
 	
-	public StatementConstraintA1(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, boolean haveControlDom) {
-		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, "STAT_A1_CONSTRAINT", haveControlDom);
+	public StatementConstraintA1(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, int statementOrder, int controlDomOrder) {
+		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA1.genID(), statementOrder, controlDomOrder);
 	}
 	
 	@Override
@@ -44,5 +48,9 @@ public class StatementConstraintA1 extends StatementConstraint {
 	@Override
 	public String toString() {
 		return "Stat Constraint A1 " + super.toString();
+	}
+	
+	private static String genID() {
+		return "SC_A1_" + StatementConstraintA1.count++;
 	}
 }

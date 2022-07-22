@@ -583,12 +583,11 @@ public class TraceView extends ViewPart {
 				long duration = node.calulcateDuration();
 				
 				double prob = node.getProbability();
-				double predProb = -1.0;
+				int predProb = -1;
 				TraceNode controlDominator = node.getControlDominator();
 				if (controlDominator != null) {
-					predProb = controlDominator.getPredProb();
+					predProb = controlDominator.getOrder();
 				}
-				
 				
 				// TODO it is better to parse method name as well.
 				// String message = className + "." + methodName + "(...): line " + lineNumber + "probability: " + prob;

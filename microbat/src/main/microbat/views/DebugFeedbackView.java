@@ -40,6 +40,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import microbat.algorithm.graphdiff.GraphDiff;
+import microbat.baseline.encoders.NodeFeedbackPair;
 import microbat.baseline.encoders.ProbabilityEncoder;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
@@ -555,6 +556,11 @@ public class DebugFeedbackView extends ViewPart {
 		baselineButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
 		baselineButton.addMouseListener(new BaselineButtonListener());
 		
+		Button testingButton = new Button(feedbackGroup, SWT.NONE);
+		testingButton.setText("Testing");
+		testingButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		testingButton.addMouseListener(new TestingButtonListener());
+		
 		bugTypeInferenceButton = new Button(feedbackGroup, SWT.NONE);
 		bugTypeInferenceButton.setText("Infer type!");
 		bugTypeInferenceButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
@@ -593,6 +599,58 @@ public class DebugFeedbackView extends ViewPart {
 		}
 	}
 	
+	class TestingButtonListener implements MouseListener {
+
+		@Override
+		public void mouseDoubleClick(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseDown(MouseEvent e) {
+			final Trace trace = getTraceView().getCurrentTrace();
+//			final Trace trace = getConcurrentTraceView().getCurTrace();
+			
+			Job job = new Job("searching for suspicious step...") {
+				
+				private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
+//					TraceView view = MicroBatViews.getTraceView();
+					getTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
+//					getConcurrentTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
+				}
+				
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					
+					ProbabilityEncoder encoder = new ProbabilityEncoder(trace);
+					encoder.setFlag(true);
+
+					encoder.encode();
+					
+					TraceNode errorNode = encoder.getMostErroneousNode();
+					System.out.println("Error Node: " + errorNode.getOrder());
+					Display.getDefault().asyncExec(new Runnable(){
+						@Override
+						public void run() {
+							jumpToNode(trace, errorNode);	
+						}
+					});
+					
+					return Status.OK_STATUS;
+				}
+			};
+			job.schedule();
+			
+		}
+
+		@Override
+		public void mouseUp(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
 	class BaselineButtonListener implements MouseListener {
 
 		private void openChooseFeedbackDialog(){
@@ -641,14 +699,15 @@ public class DebugFeedbackView extends ViewPart {
 						encoder.setFlag(true);
 						
 						UserFeedback feedback = getFeedback();
-						encoder.updateProbability(currentNode, feedback);
+						NodeFeedbackPair pair = new NodeFeedbackPair(currentNode, feedback);
+						ProbabilityEncoder.addFeedback(pair);
 						
 						System.out.println("Current Node: " + currentNode.getOrder());
 						System.out.println("Feedback: " + feedback);
 						encoder.encode();
 						
 						TraceNode errorNode = encoder.getMostErroneousNode();
-						System.out.println("Error Node: " + errorNode.getOrder());
+						System.out.println("Detected error Node: " + errorNode.getOrder());
 						Display.getDefault().asyncExec(new Runnable(){
 							@Override
 							public void run() {

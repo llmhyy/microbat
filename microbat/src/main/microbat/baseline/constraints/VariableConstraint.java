@@ -1,26 +1,31 @@
 package microbat.baseline.constraints;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import microbat.baseline.BitRepresentation;
+import microbat.model.trace.TraceNode;
 
 /**
  * Variable constraint
  * If all other variable in the same constraint are correct, then
  * the remaining variable is likely to be correct
- * @author Siang Hwee
+ * @author Siang Hwee, David
  *
  */
 public class VariableConstraint extends Constraint {
 	
+	private static int count = 0;
+	
 	public VariableConstraint(BitRepresentation varsIncluded, Collection<Integer> conclusionIndexes, double propProbability) {
-		super(varsIncluded, conclusionIndexes, propProbability, "VAR_CONSTRAINT");
+		super(varsIncluded, conclusionIndexes, propProbability, VariableConstraint.genID());
 	}
 	
 	public VariableConstraint(BitRepresentation varsIncluded, int conclusionIdx, double propProbability) {
-		super(varsIncluded, conclusionIdx, propProbability, "VAR_CONSTRAINT");
+		super(varsIncluded, conclusionIdx, propProbability, VariableConstraint.genID());
 	}
-
+	
 	@Override
 	protected double calProbability(int caseNo) {
 		BitRepresentation binValue = BitRepresentation.parse(caseNo, this.varsIncluded.size());
@@ -53,5 +58,9 @@ public class VariableConstraint extends Constraint {
 	@Override
 	public String toString() {
 		return "Var Constraint " + super.toString();
+	}
+	
+	private static String genID() {
+		return "VC_" + VariableConstraint.count++;
 	}
 }

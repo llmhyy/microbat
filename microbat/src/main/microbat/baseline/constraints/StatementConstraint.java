@@ -1,6 +1,7 @@
 package microbat.baseline.constraints;
 
 import microbat.baseline.BitRepresentation;
+import microbat.model.trace.TraceNode;
 
 /**
  * Abstract class for different kind of statement constraints
@@ -15,16 +16,15 @@ public abstract class StatementConstraint extends Constraint {
 	protected int writeVarStartingIdx;
 	
 	/**
-	 * True if this constraint consider the control dominator
-	 */
-	protected boolean haveControlDom;
-	
-	/**
 	 * Index of control dominator. If this constraint do not consider
 	 * control dominator, it will be -1. Other wise, it should be
 	 * bit.size() - 2, which is the second last bit
 	 */
 	protected int predIdx;
+	
+	protected int statementOrder;
+	
+	protected final String statIDPre = "S_";
 	
 	/*
 	 * Since we do not consider the structure constraint and
@@ -33,21 +33,43 @@ public abstract class StatementConstraint extends Constraint {
 	protected int strucIdx;
 	protected int nameIdx;
 	
-	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String name) {
-		this(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, name, false);
+	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String constraintID, int statementOrder) {
+		this(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, constraintID, statementOrder, Constraint.NaN);
 	}
 	
-	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String name, boolean haveControlDom) {
+	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String name, int statementOrder, int controlDomOrder) {
 		super(varsIncluded, conclusionIndex, propProbability, name);
 		this.writeVarStartingIdx = writeVarStarintIdx;
-		this.haveControlDom = haveControlDom;
-		if (this.haveControlDom) {
+		this.setControlDomOrder(controlDomOrder);
+		
+		if (this.haveControlDom()) {
 			this.predIdx = this.varsIncluded.size() - 2;
 		} else {
-			this.predIdx = -1;
+			this.predIdx = Constraint.NaN;
 		}
-		this.strucIdx = -1;
-		this.nameIdx = -1;
+		this.strucIdx = Constraint.NaN;
+		this.nameIdx = Constraint.NaN;
+		this.statementOrder = statementOrder;
+	}
+	
+	public void setStatementOrder(final int order) {
+		this.statementOrder = order;
+	}
+	
+	public int getStatementOrder() {
+		return this.statementOrder;
+	}
+	
+	protected String genStatID() {
+		return StatementConstraint.controlDomPre + this.statementOrder;
+	}
+	
+	public static boolean isStatID(final String id) {
+		return id.startsWith(StatementConstraint.controlDomPre);
+	}
+	
+	public static int extractStatOrderFromID(final String id) {
+		return Integer.valueOf(id.replace(StatementConstraint.controlDomPre, ""));
 	}
 	
 	/**
@@ -60,7 +82,7 @@ public abstract class StatementConstraint extends Constraint {
 		
 		boolean haveWrongWriteVar = false;
 		// Note that the last index of write variable depends on control dominator exist or not
-		final int stopIdx = this.haveControlDom ? this.predIdx : this.varsIncluded.size() - 1;
+		final int stopIdx = this.haveControlDom() ? this.predIdx : this.varsIncluded.size() - 1;
 		for (int idx = this.writeVarStartingIdx; idx < stopIdx; idx++) {
 			if (!binValue.get(idx)) {
 				haveWrongWriteVar = true;
@@ -99,6 +121,11 @@ public abstract class StatementConstraint extends Constraint {
 		BitRepresentation binValue = BitRepresentation.parse(caseNo, this.varsIncluded.size());
 		binValue.and(this.varsIncluded);
 		return binValue;
+	}
+	
+	@Override
+	public int getPredicateCount() {
+		return this.haveControlDom() ? this.getVarCount() + 2 : this.getVarCount() + 1;
 	}
 
 }

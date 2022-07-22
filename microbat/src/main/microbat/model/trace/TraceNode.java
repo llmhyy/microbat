@@ -104,12 +104,12 @@ public class TraceNode{
 	/**
 	 * It is the probability of correctness as a node
 	 */
-	private double probability = Configs.HIGH;
+	private double probability = -1;
 	
 	/**
 	 * It is the probability of correctness as a predicate
 	 */
-	private double pred_probability = Configs.UNCERTAIN;
+	private double pred_probability = -1;
 	
 	/**
 	 * the first element of the pair is the read variable list, the second element is the 
