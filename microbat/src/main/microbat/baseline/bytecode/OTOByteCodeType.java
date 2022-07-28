@@ -4,10 +4,12 @@ import java.util.stream.Stream;
 
 public enum OTOByteCodeType implements ByteCodeType {
 	IADD(96),			// Add two integer
-	ISUB(63),			// Subtract two integer
+	ISUB(100),			// Subtract two integer
 	IDIV(108),			// Divide two integer
 	
 	IINC(132),			// Increment integer
+	
+	IFEQ(153),			// If the value equal to zero
 	
 	ALOAD(25),			// Load load address
 	ALOAD_0(42),		// Load 1st local address
@@ -47,6 +49,8 @@ public enum OTOByteCodeType implements ByteCodeType {
 	GOTO_W(200),		// Goto another instruction
 	
 	NEW(187),			// Create a new object
+	
+	ARRAYLENGH(190),	// Load array length
 	
 	BIPUSH(16),			// Push a byte onto stack as integer value
 	IRETURN(172),		// Return integer

@@ -1,8 +1,5 @@
 package microbat.baseline.constraints;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import microbat.baseline.BitRepresentation;
 
 /**

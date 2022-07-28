@@ -5,7 +5,10 @@ import microbat.baseline.UniquePriorityQueue;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
+import microbat.model.variable.LocalVar;
+import microbat.model.variable.Variable;
 import microbat.recommendation.UserFeedback;
 
 import java.util.ArrayList;
@@ -17,44 +20,40 @@ import java.util.PriorityQueue;
 
 
 public class ProbabilityEncoder {
-	private HashMap<BreakPoint, Integer> invocationTable;
+	
+	public static final String CONDITION_RESULT_ID_PRE = "CR_";
+	public static final String CONDITION_RESULT_NAME_PRE = "ConditionResult_";
+	
 	private Trace trace;
 	private List<TraceNode> executionList;
 	private PriorityQueue<TraceNode> probabilities;
 	private boolean setupFlag = false;
-	
-//	private final int maxItr;
-	
+
 	private static List<NodeFeedbackPair> userFeedbacks = new ArrayList<>();
 	
 	private List<VarValue> outputVars;
 	private List<VarValue> inputVars;
 	
+	private int predCount;
+	
 	public ProbabilityEncoder(Trace trace) {
 		System.out.println("Initialize Probability Encoder");
+		this.predCount = 0;
+		
 		this.trace = trace;
 		// we will only operate on a slice of the program to save time
-		this.executionList = slice(trace);
-//		System.out.print("slice: ");
-//		for (TraceNode node : this.executionList) {
-//			System.out.print(node.getOrder() + " ");
-//		}
-//		System.out.println();
-//		List<TraceNode> slice = new ArrayList<>();
-//		for (int order = 5; order <= 6; order++) {
-//			slice.add(this.trace.getTraceNode(order));
-//		}
-//		this.executionList = slice;
-		// this.executionList = this.trace.getExecutionList();
-		this.invocationTable = new HashMap<>();
+//		this.executionList = slice(trace);
+		this.executionList = trace.getExecutionList();
+		System.out.print("slice:");
+		for (TraceNode node : this.executionList) {
+			System.out.print(node.getOrder() + ",");
+		}
+		System.out.println();
 		
+		this.modifyVarID(this.executionList);
 		this.inputVars = this.getInputVariables(executionList);
 		this.outputVars = this.getOutputVariables(executionList);
 		
-		this.modifyVarID();
-		
-		// Maximum iteration allowed if the variable probability do not converge
-//		this.maxItr = 10;
 	}
 	
 	public void setup() {
@@ -64,8 +63,10 @@ public class ProbabilityEncoder {
 		 *  previous run information)
 		 */
 		// this.matchInstruction();
-		this.preEncode();
+//		this.preEncode();
 		ProbabilityEncoder.clearFeedbacks();
+//		this.modifyVarID(trace.getExecutionList());
+		this.modifyConditionResult(trace.getExecutionList());
 		this.setupFlag = true;
 	}
 	
@@ -82,31 +83,14 @@ public class ProbabilityEncoder {
 		
 		VariableEncoder varEncoder = new VariableEncoder(trace, executionList, this.inputVars, this.outputVars);
 		varEncoder.setFeedbacks(ProbabilityEncoder.userFeedbacks);
-		varEncoder.encode();
 		
+		long startTime = System.currentTimeMillis();
+		varEncoder.encode();
 		new StatementEncoder(trace, executionList).encode();
-//		System.out.println("Start encoding probabilities");
-//		// Encode variable until there is no change to var probabilities
-//		boolean hasChange = false;
-//		int count = 1;
-//		do {
-//			probabilities = null;
-//			long start = System.currentTimeMillis();
-//			hasChange = new VariableEncoder2(trace, executionList, this.outputVars, this.inputVars).encode();
-//			long end = System.currentTimeMillis();
-//			System.out.println("Iteration " + (count++) + ": " + (end - start) + "ms");
-//			try {
-//				// just to allow other operations to take place
-//				Thread.sleep(100);
-//			} catch (InterruptedException e) {
-//				System.err.println("Attempt to interrupt sleeping thread");
-//			}
-////			break;
-//		} while(hasChange && count <= this.maxItr);
-//		
-//		// Use the probabilities from var to derive statement probability
-//		new StatementEncoder(trace, executionList).encode();
-//		System.out.println("Finish encoding probabilities");
+		long endTime = System.currentTimeMillis();
+		
+		long executionTime = Math.floorDiv(endTime - startTime, 1000);
+		System.out.println("Execution Time: " + executionTime + "s");
 	}
 	
 	private List<VarValue> getInputVariables(List<TraceNode> executionList) {
@@ -116,7 +100,7 @@ public class ProbabilityEncoder {
 				if (readVar.getVarName().contains("input")) {
 					boolean alreadyInside = false;
 					for (VarValue input : inputVars) {
-						if (input.getVarName().equals(input.getVarName())) {
+						if (readVar.getVarID().equals(input.getVarID())) {
 							alreadyInside = true;
 						}
 					}
@@ -190,10 +174,10 @@ public class ProbabilityEncoder {
 		return probabilities.peek();
 	}
 	
-	private void modifyVarID() {
+	private void modifyVarID(List<TraceNode> executionList) {
 		Map<String, String> mapping = new HashMap<>();
-		for (TraceNode node : this.executionList) {
-			System.out.println("chekcing: " + node.getOrder());
+		for (TraceNode node : executionList) {
+
 			for (VarValue readVar : node.getReadVariables()) {
 				String varID = readVar.getVarID();
 				if (!mapping.containsKey(varID)) {
@@ -207,7 +191,6 @@ public class ProbabilityEncoder {
 			for (VarValue writeVar : node.getWrittenVariables()) {
 				String varID = writeVar.getVarID();
 				if (mapping.containsKey(varID)) {
-					System.out.println("has Change");
 					String newID = writeVar.getVarID() + "-" + node.getOrder();
 					mapping.put(varID, newID);
 					
@@ -215,43 +198,8 @@ public class ProbabilityEncoder {
 				}
 			}
 		}
+		this.predCount = mapping.size();
 	}
-	
-	/**
-	 * Update probability based on the feedback.
-	 * @param node Trace node that the feedback referring to.
-	 * @param feedback User Feedback
-	 */
-//	public void updateProbability(TraceNode node, UserFeedback feedback) {
-//		switch (feedback.getFeedbackType()) {
-//		case UserFeedback.UNCLEAR:
-//			break;
-//		case UserFeedback.CORRECT:
-//			this.updateNode(node, Configs.HIGH);
-//			break;
-//		case UserFeedback.WRONG_PATH:
-//			node.getControlDominator().setProbability(Configs.LOW);
-//			this.updateNode(node, Configs.UNCERTAIN);
-//			break;
-//		case UserFeedback.WRONG_VARIABLE_VALUE:
-////			node.setProbability(Configs.LOW);
-//			feedback.getOption().getReadVar().setProbability(Configs.LOW);
-//			break;
-//		default:
-//			break;
-//		}
-//	}
-	
-	/**
-	 * Update the probability of all factor of given node
-	 * @param node Trace node to be updated
-	 * @param prob New probability
-	 */
-//	private void updateNode(TraceNode node, double prob) {
-//		node.setProbability(prob);
-//		this.setProb(node.getReadVariables(), prob);
-//		this.setProb(node.getWrittenVariables(), prob);
-//	}
 	
 	private void populatePriorityQueue() {
 		probabilities = new PriorityQueue<>(new Comparator<TraceNode>() {
@@ -261,98 +209,6 @@ public class ProbabilityEncoder {
 			}
 		});
 		probabilities.addAll(executionList);
-	}
-	
-	/**
-	 * Initialize the correctness probability of variable and statement
-	 */
-	private void preEncode() {
-//		boolean finishSettingInput = false;
-//		for (int order=0; order<this.executionList.size(); ++order) {
-//			
-//			TraceNode node = this.executionList.get(order);
-//			node.setProbability(Configs.HIGH);
-//			node.setPredProb(Configs.HIGH);
-//			
-//			// Set the input (read variable in first node) to be High
-//			if (!finishSettingInput) {
-//				if (node.getReadVariables().isEmpty()) {
-//					this.setProb(node.getWrittenVariables(), Configs.UNCERTAIN);
-//					continue;
-//				} else {
-//					this.setProb(node.getWrittenVariables(), Configs.UNCERTAIN);
-//					this.setProb(node.getReadVariables(), Configs.HIGH);
-//
-//					finishSettingInput = true;
-//					continue;
-//				}
-//			}
-//		
-//			// Set the other variable to be Uncertain
-//			this.setProb(node.getWrittenVariables(), Configs.UNCERTAIN);
-//			this.setProb(node.getReadVariables(), Configs.UNCERTAIN);
-//		}
-//		
-//		// Set the output (write variables in last trace node) to be Low
-//		for (int order=this.executionList.size()-1; order > 0; order--) {
-//			
-//			TraceNode node = this.executionList.get(order);
-//			if (!node.getWrittenVariables().isEmpty()) {
-//				// Don't use setProb here because setProb only change probability when the probility is not set before
-//				for (VarValue writeVar : node.getWrittenVariables()) {
-//					writeVar.setProbability(Configs.LOW);
-//				}
-//				break;
-//			}
-//			
-//		}
-		
-		for (TraceNode node : this.trace.getExecutionList()) {
-			node.setProbability(Configs.UNCERTAIN);
-			for (VarValue readVar : node.getReadVariables()) {
-				if (this.inputVars.contains(readVar)) {
-					readVar.setProbability(Configs.HIGH);
-				} else {
-					readVar.setProbability(Configs.UNCERTAIN);
-				}
-			}
-			for (VarValue writeVar : node.getWrittenVariables()) {
-				if (this.outputVars.contains(writeVar)) {
-					writeVar.setProbability(Configs.LOW);
-				} else {
-					writeVar.setProbability(Configs.UNCERTAIN);
-				}
-			}
-		}
-		for (TraceNode node : this.executionList) {
-			System.out.println("Init node: " + node.getOrder());
-			for (VarValue readVar : node.getReadVariables()) {
-				System.out.println("Init readVar : " + readVar.getVarName() + " with prob = " + readVar.getProbability());
-			}
-			for (VarValue writeVar : node.getWrittenVariables()) {
-				System.out.println("Init writeVar: " + writeVar.getVarName() + " with prob = " + writeVar.getProbability());
-			}
-		}
-	}
-	
-//	private void setProb(List<VarValue> vars, double prob) {
-//		for (VarValue var : vars) {
-//			if (var.getProbability() == 0) {
-//				var.setProbability(prob);
-//			}
-//		}
-//	}
-	
-	private void printVarExhaustively(VarValue v, int n) {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < n; i++) {
-			sb.append(' ');
-		}
-		sb.append(v.toString());
-		System.out.println(sb.toString());
-		for (VarValue child : v.getChildren()) {
-			printVarExhaustively(child, n + 2);
-		}
 	}
 	
 	/**
@@ -393,6 +249,169 @@ public class ProbabilityEncoder {
 		
 		return result;
 	}
+	
+	private void modifyConditionResult(List<TraceNode> executionList) {
+		TraceNode branchNode = null;
+		
+		for (TraceNode node : executionList) {
+			if (node.isBranch()) {
+				if (branchNode != null) {
+					this.addConditionResult(branchNode, node.getLineNumber() == branchNode.getLineNumber()+1);
+				}
+				branchNode = node;
+				
+			} else if (branchNode != null) {
+				this.addConditionResult(branchNode, node.getLineNumber() == branchNode.getLineNumber()+1);
+				branchNode = null;
+			}
+		}
+	}
+	
+	private void addConditionResult(TraceNode node, boolean isResultTrue) {
+		final String type = "boolean";
+		final String varID = this.genConditionResultID(node.getOrder());
+		final String varName = this.genConditionResultName(node.getOrder());
+		Variable variable = new LocalVar(varName, type, "", node.getLineNumber());
+		VarValue conditionResult = new PrimitiveValue(isResultTrue?"1":"0", true, variable);
+		conditionResult.setVarID(varID);
+		node.addWrittenVariable(conditionResult);
+	}
+	
+	private String genConditionResultName(final int order) {
+		return ProbabilityEncoder.CONDITION_RESULT_NAME_PRE + order;
+	}
+	
+	private String genConditionResultID(final int order) {
+		return ProbabilityEncoder.CONDITION_RESULT_ID_PRE + order;
+	}
+	
+	/**
+	 * Update probability based on the feedback.
+	 * @param node Trace node that the feedback referring to.
+	 * @param feedback User Feedback
+	 */
+//	public void updateProbability(TraceNode node, UserFeedback feedback) {
+//		switch (feedback.getFeedbackType()) {
+//		case UserFeedback.UNCLEAR:
+//			break;
+//		case UserFeedback.CORRECT:
+//			this.updateNode(node, Configs.HIGH);
+//			break;
+//		case UserFeedback.WRONG_PATH:
+//			node.getControlDominator().setProbability(Configs.LOW);
+//			this.updateNode(node, Configs.UNCERTAIN);
+//			break;
+//		case UserFeedback.WRONG_VARIABLE_VALUE:
+////			node.setProbability(Configs.LOW);
+//			feedback.getOption().getReadVar().setProbability(Configs.LOW);
+//			break;
+//		default:
+//			break;
+//		}
+//	}
+	
+	/**
+	 * Update the probability of all factor of given node
+	 * @param node Trace node to be updated
+	 * @param prob New probability
+	 */
+//	private void updateNode(TraceNode node, double prob) {
+//		node.setProbability(prob);
+//		this.setProb(node.getReadVariables(), prob);
+//		this.setProb(node.getWrittenVariables(), prob);
+//	}
+	
+	/**
+	 * Initialize the correctness probability of variable and statement
+	 */
+//	private void preEncode() {
+//		boolean finishSettingInput = false;
+//		for (int order=0; order<this.executionList.size(); ++order) {
+//			
+//			TraceNode node = this.executionList.get(order);
+//			node.setProbability(Configs.HIGH);
+//			node.setPredProb(Configs.HIGH);
+//			
+//			// Set the input (read variable in first node) to be High
+//			if (!finishSettingInput) {
+//				if (node.getReadVariables().isEmpty()) {
+//					this.setProb(node.getWrittenVariables(), Configs.UNCERTAIN);
+//					continue;
+//				} else {
+//					this.setProb(node.getWrittenVariables(), Configs.UNCERTAIN);
+//					this.setProb(node.getReadVariables(), Configs.HIGH);
+//
+//					finishSettingInput = true;
+//					continue;
+//				}
+//			}
+//		
+//			// Set the other variable to be Uncertain
+//			this.setProb(node.getWrittenVariables(), Configs.UNCERTAIN);
+//			this.setProb(node.getReadVariables(), Configs.UNCERTAIN);
+//		}
+//		
+//		// Set the output (write variables in last trace node) to be Low
+//		for (int order=this.executionList.size()-1; order > 0; order--) {
+//			
+//			TraceNode node = this.executionList.get(order);
+//			if (!node.getWrittenVariables().isEmpty()) {
+//				// Don't use setProb here because setProb only change probability when the probility is not set before
+//				for (VarValue writeVar : node.getWrittenVariables()) {
+//					writeVar.setProbability(Configs.LOW);
+//				}
+//				break;
+//			}
+//			
+//		}
+//		
+//		for (TraceNode node : this.trace.getExecutionList()) {
+//			node.setProbability(Configs.UNCERTAIN);
+//			for (VarValue readVar : node.getReadVariables()) {
+//				if (this.inputVars.contains(readVar)) {
+//					readVar.setProbability(Configs.HIGH);
+//				} else {
+//					readVar.setProbability(Configs.UNCERTAIN);
+//				}
+//			}
+//			for (VarValue writeVar : node.getWrittenVariables()) {
+//				if (this.outputVars.contains(writeVar)) {
+//					writeVar.setProbability(Configs.LOW);
+//				} else {
+//					writeVar.setProbability(Configs.UNCERTAIN);
+//				}
+//			}
+//		}
+//		for (TraceNode node : this.executionList) {
+//			System.out.println("Init node: " + node.getOrder());
+//			for (VarValue readVar : node.getReadVariables()) {
+//				System.out.println("Init readVar : " + readVar.getVarName() + " with prob = " + readVar.getProbability());
+//			}
+//			for (VarValue writeVar : node.getWrittenVariables()) {
+//				System.out.println("Init writeVar: " + writeVar.getVarName() + " with prob = " + writeVar.getProbability());
+//			}
+//		}
+//	}
+	
+//	private void setProb(List<VarValue> vars, double prob) {
+//		for (VarValue var : vars) {
+//			if (var.getProbability() == 0) {
+//				var.setProbability(prob);
+//			}
+//		}
+//	}
+	
+//	private void printVarExhaustively(VarValue v, int n) {
+//		StringBuilder sb = new StringBuilder();
+//		for (int i = 0; i < n; i++) {
+//			sb.append(' ');
+//		}
+//		sb.append(v.toString());
+//		System.out.println(sb.toString());
+//		for (VarValue child : v.getChildren()) {
+//			printVarExhaustively(child, n + 2);
+//		}
+//	}
 	
 //	private void matchInstructions() {
 //	for (TraceNode tn : this.trace.getExecutionList()) {

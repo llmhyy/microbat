@@ -3,6 +3,9 @@ package microbat.baseline.encoders;
 import java.util.ArrayList;
 import java.util.List;
 
+import microbat.baseline.BitRepresentation;
+import microbat.baseline.constraints.Constraint;
+import microbat.baseline.constraints.PriorConstraint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -49,6 +52,29 @@ public abstract class Encoder {
 	}
 	
 	protected boolean isSkippable(TraceNode node) {
-		return this.countReadVars(node) == 0 || this.countWriteVars(node) == 0;
+		return this.countPredicates(node) <= 1;
+	}
+	
+	protected VarValue getControlDomValue(TraceNode controlDom) {
+		for (VarValue writeVar : controlDom.getWrittenVariables()) {
+			if (writeVar.getVarID().startsWith(ProbabilityEncoder.CONDITION_RESULT_ID_PRE)) {
+				return writeVar;
+			}
+		}
+		return null;
+	}
+	
+	protected Constraint genPriorConstraint(VarValue var, double prob) {
+		
+		BitRepresentation varsIncluded = new BitRepresentation(1);
+		varsIncluded.set(0);
+		
+		Constraint constraint = new PriorConstraint(varsIncluded, 0, prob);
+		
+		// When it is prior constraint, it doesn't matter if the id is read or write or control dominator variable
+		// So let just add it to read variable id list
+		constraint.addReadVarID(var.getVarID());
+		
+		return constraint;
 	}
 }

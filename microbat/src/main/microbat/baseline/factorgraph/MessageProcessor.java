@@ -91,7 +91,6 @@ public class MessageProcessor {
 		
 		String[] tokens = msg.split(this.DELIMITER_2);
 		for (String token : tokens) {
-			System.out.println("token = " + token );
 			String[] str_pair = token.split(this.DELIMITER_1);
 			
 			String predID = IDConverter.graphID2VarID(str_pair[0]);

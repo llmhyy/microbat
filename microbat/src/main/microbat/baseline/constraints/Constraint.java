@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import microbat.baseline.BitRepresentation;
+import microbat.baseline.encoders.ProbabilityEncoder;
 import microbat.baseline.factorgraph.VarIDConverter;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -39,7 +40,9 @@ public abstract class Constraint {
 	
 	protected final String constraintID;
 	
-	protected int controlDomOrder;
+//	protected int controlDomOrder;
+	
+	protected String controlDomID;
 	
 	protected List<String> readVarIDs;
 	
@@ -62,8 +65,8 @@ public abstract class Constraint {
 		this.conclusionIndexes = new HashSet<>(conclusionIndexes);
 		this.memoTable = new HashMap<>();
 		this.propProbability = propProbability;
-		this.controlDomOrder = Constraint.NaN;
-		
+//		this.controlDomOrder = Constraint.NaN;
+		this.controlDomID = "";
 		this.readVarIDs = new ArrayList<>();
 		this.writeVarIDs = new ArrayList<>();
 		
@@ -82,7 +85,7 @@ public abstract class Constraint {
 		this.conclusionIndexes.add(conclusionIndex); // conclusionIndex is the index of write variable
 		this.memoTable = new HashMap<>();
 		this.propProbability = propProbability;
-		this.controlDomOrder = Constraint.NaN;
+		this.controlDomID = "";
 		
 		this.readVarIDs = new ArrayList<>();
 		this.writeVarIDs = new ArrayList<>();
@@ -155,7 +158,8 @@ public abstract class Constraint {
 	
 	protected String genControlDomID() {
 		if (this.haveControlDom()) {
-			return Constraint.controlDomPre + this.getControlDomOrder();
+//			return Constraint.controlDomPre + this.getControlDomOrder();
+			return this.controlDomID;
 		} else {
 			return null;
 		}
@@ -178,8 +182,16 @@ public abstract class Constraint {
 		}
 		
 		TraceNode controlDom = node.getControlDominator();
+//		if (controlDom != null) {
+//			this.setControlDomOrder(controlDom.getOrder());
+//		}
 		if (controlDom != null) {
-			this.setControlDomOrder(controlDom.getOrder());
+			for (VarValue writeVar : controlDom.getWrittenVariables()) {
+				if (writeVar.getVarID().startsWith(ProbabilityEncoder.CONDITION_RESULT_ID_PRE)) {
+					this.setControlDomID(writeVar.getVarID());
+					break;
+				}
+			}
 		}
 	}
 	
@@ -192,17 +204,29 @@ public abstract class Constraint {
 		return this.haveControlDom() ? this.getVarCount() + 1 : this.getVarCount();
 	}
 	
-	public void setControlDomOrder(final int order) {
-		this.controlDomOrder = order;
+	public void setControlDomID(final String controlDomID) {
+		this.controlDomID = controlDomID;
 	}
 	
-	public int getControlDomOrder() {
-		return this.controlDomOrder;
+	public String getControlDomID() {
+		return this.controlDomID;
 	}
 	
 	public boolean haveControlDom() {
-		return this.controlDomOrder != Constraint.NaN;
+		return this.controlDomID != "";
 	}
+	
+//	public void setControlDomOrder(final int order) {
+//		this.controlDomOrder = order;
+//	}
+//	
+//	public int getControlDomOrder() {
+//		return this.controlDomOrder;
+//	}
+//	
+//	public boolean haveControlDom() {
+//		return this.controlDomOrder != Constraint.NaN;
+//	}
 	
 	public String getConstraintID() {
 		return this.constraintID;

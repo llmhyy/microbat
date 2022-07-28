@@ -10,7 +10,8 @@ import java.util.stream.Stream;
 public enum ArrayByteCodeType implements ByteCodeType{
 	IASTORE(79),		// Store value into array
 	IALOAD(46),			// Load value from array
-	ARRAYLENGH(190)		// Load array length
+
+	POP(87),			// Pop the value out of stack
 	;
 
 	private final int opCode;

@@ -14,8 +14,8 @@ public class StatementConstraintA3 extends StatementConstraint {
 	private static int count = 0;
 	
 	public StatementConstraintA3(BitRepresentation varsIncluded, int conclusionIndex, double propProbability,
-			int writeVarStarintIdx, int statementOrder, int controlDomOrder) {
-		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA3.genID(), statementOrder, controlDomOrder);
+			int writeVarStarintIdx, int statementOrder, String controlDomID) {
+		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA3.genID(), statementOrder, controlDomID);
 	}
 
 	public StatementConstraintA3(BitRepresentation varsIncluded, int conclusionIndex, double propProbability,

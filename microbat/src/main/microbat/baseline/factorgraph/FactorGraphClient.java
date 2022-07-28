@@ -76,7 +76,6 @@ public class FactorGraphClient {
 			this.writer.close();
 			this.socket.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -92,6 +91,8 @@ public class FactorGraphClient {
 	private byte[] request(byte[] graphInput, byte[] factorInput) throws Exception {
 		if (this.isReady()) {
 			try {
+				System.out.println("Client: graphInput size: " + graphInput.length + " factorInput size: " + factorInput.length);
+				
 				this.writer.write(graphInput);
 				Thread.sleep(this.SLEEP_TIME);
 				this.writer.write(factorInput);

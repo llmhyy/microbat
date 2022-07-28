@@ -103,7 +103,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Button runWithDebugModeButton;
 	private Button enableMethodSplittingButton;
 	private Text java7HomePathText;
-	private Combo autoFeedbackCombo;
+//	private Combo autoFeedbackCombo;
 	
 	private String defaultTargetProject = "";
 	private String defaultLanuchClass = "";
@@ -334,7 +334,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Settings.applyLibraryOptimization = this.recordingOptimizationButton.getSelection();
 		Settings.supportConcurrentTrace = this.supportConcurrentTraceButton.getSelection();
 		Settings.isRunWtihDebugMode = this.runWithDebugModeButton.getSelection();
-		Settings.autoFeedbackMethod = this.autoFeedbackCombo.getText();
+//		Settings.autoFeedbackMethod = this.autoFeedbackCombo.getText();
 	}
 	
 	private String[] getProjectsInWorkspace(){

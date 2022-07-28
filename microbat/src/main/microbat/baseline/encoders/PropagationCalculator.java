@@ -66,22 +66,22 @@ public class PropagationCalculator {
 		
 		for (ByteCode byteCode : executedByteCode) {
 			if (byteCode.isManyToOne()) {
-				System.out.println("byteCode is many to one");
+//				System.out.println("byteCode is many to one");
 				prob *= Configs.UNCERTAIN;
 			} else if (byteCode.isArrayAccess() && this.isArray(var)) {
-				System.out.println("byteCode is array access");
+//				System.out.println("byteCode is array access");
 				prob *= Configs.UNCERTAIN;
 			} else if (byteCode.isAttrAccess() && this.isSelfDefinedClass(var)) {
-				System.out.println("byteCode is attribute access");
+//				System.out.println("byteCode is attribute access");
 				prob *= Configs.UNCERTAIN;
 			} 
 			else if (byteCode.isFuncCall() && this.isSelfDefinedClass(var)) {
-				System.out.println("byteCode is function call");
+//				System.out.println("byteCode is function call");
 				prob *= Configs.UNCERTAIN;
 			}
 		}
 		
-		return prob;
+		return Configs.HIGH;
 	}
 	
 	/**

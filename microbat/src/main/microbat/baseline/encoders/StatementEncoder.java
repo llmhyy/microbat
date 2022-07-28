@@ -27,8 +27,10 @@ public class StatementEncoder extends Encoder{
 //	private boolean populated = false;
 //	private int sliceSize = 0;
 	
+	private int constraintsCount;
 	public StatementEncoder(Trace trace, List<TraceNode> executionList) {
 		super(trace, executionList);
+		this.constraintsCount = 0;
 //		this.trace = trace;
 //		this.slice = slice;
 //		TraceNode last = slice.get(slice.size() - 1);
@@ -43,6 +45,7 @@ public class StatementEncoder extends Encoder{
 		for (TraceNode tn : executionList) {
 			this.encode(tn);
 		}
+		System.out.println("Statement Encoder: " + this.constraintsCount + " constraints");
 	}
 	
 	@Override
@@ -52,7 +55,7 @@ public class StatementEncoder extends Encoder{
 	
 	@Override 
 	protected boolean isSkippable(TraceNode node) {
-		return node.isBranch() || this.countPredicates(node) > 30;
+		return this.countPredicates(node) > 30;
 	}
 	
 	private void encode(TraceNode tn) {
@@ -61,25 +64,30 @@ public class StatementEncoder extends Encoder{
 			return;
 		}
 		
+		if (this.countPredicates(tn) <= 1) {
+			this.handleNonConstraintNode(tn);
+			return;
+		}
+		
 		final int totalLen = this.countPredicates(tn);
 		
 		// Special case that when there only one variable involved, then the
 		// probability of correctness will the same as the variable
-		if (totalLen == 2) {
-			if (this.countWriteVars(tn) == 1) {
-				for (VarValue writeVar : tn.getWrittenVariables()) {
-					tn.setProbability(writeVar.getProbability());
-				}
-			} else if (this.countReadVars(tn) == 1) {
-				for (VarValue readVar : tn.getWrittenVariables()) {
-					tn.setProbability(readVar.getProbability());
-				}
-			}
-			return;
-		}
+//		if (totalLen == 2) {
+//			if (this.countWriteVars(tn) == 1) {
+//				for (VarValue writeVar : tn.getWrittenVariables()) {
+//					tn.setProbability(writeVar.getProbability());
+//				}
+//			} else if (this.countReadVars(tn) == 1) {
+//				for (VarValue readVar : tn.getWrittenVariables()) {
+//					tn.setProbability(readVar.getProbability());
+//				}
+//			}
+//			return;
+//		}
 		
 		List<Constraint> constraints = this.genConstraints(tn);
-
+		this.constraintsCount += constraints.size();
 		final int conclusionIdx = totalLen - 1;
 		
 		InferenceModel model = new InferenceModel(constraints);
@@ -92,6 +100,17 @@ public class StatementEncoder extends Encoder{
 		tn.setProbability(prob);
 	}
 
+	private void handleNonConstraintNode(TraceNode node) {
+		List<VarValue> vars = this.countReadVars(node) == 0 ? node.getWrittenVariables() : node.getReadVariables();
+		double avgProb = 0;
+		for (VarValue var : vars) {
+			avgProb += var.getProbability();
+		}
+		avgProb /= vars.size();
+		
+		node.setProbability(avgProb);
+	}
+	
 	private List<Constraint> genConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		constraints.addAll(this.genVarToStatConstraints(node));
@@ -132,17 +151,24 @@ public class StatementEncoder extends Encoder{
 		final int writeStartIdx = readLen == 0 ? 0 : readLen;
 		
 		final int statementOrder = node.getOrder();
-		final int controlDomOrder = haveControlDominator ? controlDominator.getOrder() : Constraint.NaN;
+		
+		String controlDomID = "";
+		if (haveControlDominator) {
+			VarValue controlDomValue = this.getControlDomValue(controlDominator);
+			controlDomID = controlDomValue.getVarID();
+		}
+		
+//		final int controlDomOrder = haveControlDominator ? controlDominator.getOrder() : Constraint.NaN;
 		// Variable to statement constraint A1
-		Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomOrder);
+		Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
 		constraints.add(constraintA1);
 		
 		// Variable to statement constraint A2
-		Constraint constraintA2 = new StatementConstraintA2(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomOrder);
+		Constraint constraintA2 = new StatementConstraintA2(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
 		constraints.add(constraintA2);
 		
 		// Variable to statement constraint A3
-		Constraint constraintA3 = new StatementConstraintA3(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomOrder);
+		Constraint constraintA3 = new StatementConstraintA3(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
 		constraints.add(constraintA3);
 		
 		// Variable to statement constraint A
@@ -190,10 +216,11 @@ public class StatementEncoder extends Encoder{
 		if (controlDominator != null) {
 			BitRepresentation bitRep = new BitRepresentation(totalLen);
 			bitRep.set(predIdx);
-			Constraint constarint = new PriorConstraint(bitRep, predIdx, controlDominator.getProbability());
+			VarValue controlDomValue = this.getControlDomValue(controlDominator);
+			Constraint constarint = new PriorConstraint(bitRep, predIdx, controlDomValue.getProbability());
 			constraints.add(constarint);
 		}
-				
+
 		return constraints;
 	}
 	

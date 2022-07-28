@@ -19,8 +19,8 @@ public class StatementConstraintA2 extends StatementConstraint {
 	}
 	
 	public StatementConstraintA2(BitRepresentation varsIncluded, int conclusionIndex, double propProbability,
-			int writeVarStarintIdx, int statementOrder, int controlDomOrder) {
-		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA2.genID(), statementOrder, controlDomOrder);
+			int writeVarStarintIdx, int statementOrder, String controlDomID) {
+		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA2.genID(), statementOrder, controlDomID);
 	}
 	
 	@Override

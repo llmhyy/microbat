@@ -158,7 +158,6 @@ public class StartDebugHandler extends AbstractHandler {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
 		return null;
 	}
 

@@ -25,20 +25,31 @@ public class VariableEncoder extends Encoder {
 	
 	private List<NodeFeedbackPair> userFeedbacks;
 	
+	private List<VarValue> involvedArrays;
+	
 	public VariableEncoder(Trace trace, List<TraceNode> executionList, List<VarValue> inputVars, List<VarValue> outputVars) {
 		super(trace, executionList);
 		
 		this.inputVars = inputVars;
 		this.outputVars = outputVars;
 		
+		for (VarValue inputVar : this.inputVars) {
+			System.out.println("InputVar:" + inputVar.getVarID());
+		}
+		for (VarValue outputVar : this.outputVars) {
+			System.out.println("OutputVar: " + outputVar.getVarID());
+		}
+		
 		this.propCalculator = new PropagationCalculator();
 		
 		this.userFeedbacks = new ArrayList<>();
+		this.involvedArrays = new ArrayList<>();
 	}
 	
 	public void encode() {
 		List<Constraint> constraints = this.genConstraints();
 		
+		System.out.println("Variable Encoder: " + constraints.size() + " constraints.");
 		FactorGraphClient client = new FactorGraphClient();
 		MessageProcessor msgProcessor = new MessageProcessor();
 		
@@ -47,7 +58,7 @@ public class VariableEncoder extends Encoder {
 		
 		try {
 			String response = client.requestBP(graphMsg, factorMsg);
-			System.out.println("response: " + response);
+//			System.out.println("response: " + response);
 			
 			Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
 			for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
@@ -74,6 +85,10 @@ public class VariableEncoder extends Encoder {
 	
 	public void setFeedbacks(List<NodeFeedbackPair> userFeedbacks) {
 		this.userFeedbacks = userFeedbacks;
+	}
+	
+	public void setInvolvedArrays(List<VarValue> arrays) {
+		this.involvedArrays = arrays;
 	}
 	
 	protected List<Constraint> genConstraints() {
@@ -118,6 +133,8 @@ public class VariableEncoder extends Encoder {
 			constraints.add(constraint);
 		}
 		
+//		System.out.println("TraceNode: " + node.getOrder());
+//		System.out.println("ByteCode: " + node.getBytecode());
 		// A2 Constraint
 		for (int readIdx=0; readIdx<readLen; readIdx++) {
 			BitRepresentation varsIncluded = new BitRepresentation(totalLen);
@@ -146,6 +163,17 @@ public class VariableEncoder extends Encoder {
 			constraints.add(constraint);
 		}
 		
+//		MessageProcessor msgProcessor = new MessageProcessor();
+//		System.out.println("TraceNode: " + node.getOrder());
+//		for (Constraint constraint : constraints) {
+//			System.out.println(constraint);
+//		}
+//		String graphMsg = msgProcessor.buildGraphMsg(constraints);
+//		String factorMsg = msgProcessor.buildFactorMsg(constraints);
+//		
+//		System.out.println("graphMsg: " + graphMsg);
+//		System.out.println("factorMsg: " + factorMsg);
+		
 		return constraints;
 	}
 	
@@ -156,76 +184,80 @@ public class VariableEncoder extends Encoder {
 		
 		// Set input to HIGH
 		for (VarValue inputVar : this.inputVars) {
-			BitRepresentation varsIncluded = new BitRepresentation(totalLen);
-			varsIncluded.set(0);
-			
-			Constraint constraint = new PriorConstraint(varsIncluded, 0, Configs.HIGH);
-			constraint.addReadVarID(inputVar.getVarID());
-
-			constraints.add(constraint);
+			constraints.add(this.genPriorConstraint(inputVar, Configs.HIGH));
 		}
 		
 		// Set output to LOW
 		for (VarValue outputVar : this.outputVars) {
-			BitRepresentation varsIncluded = new BitRepresentation(totalLen);
-			varsIncluded.set(0);
-			
-			Constraint constraint = new PriorConstraint(varsIncluded, 0, Configs.LOW);
-			constraint.addWriteVarID(outputVar.getVarID());
-			
-			constraints.add(constraint);
+			constraints.add(this.genPriorConstraint(outputVar, Configs.LOW));
 		}
 		
+		// Set the childrens
+		for (TraceNode node : this.executionList) {
+			for (VarValue readVar : node.getReadVariables()) {
+				for (VarValue parent : readVar.getParents()) {
+					for (VarValue inputVar : this.inputVars) {
+						if (parent.getVarID().equals(inputVar.getAliasVarID())) {
+							constraints.add(this.genPriorConstraint(readVar, Configs.HIGH));
+						}
+					}
+				}
+			}
+			for (VarValue writeVar : node.getWrittenVariables()) {
+				for (VarValue parent : writeVar.getParents()) {
+					for (VarValue outputVar : this.outputVars) {
+						if (parent.getVarID().equals(outputVar.getAliasVarID())) {
+							constraints.add(this.genPriorConstraint(writeVar, Configs.LOW));
+						}
+					}
+				}
+			}
+		}
+		
+		
 		// Convert user feedbacks to constraints
+		System.out.println("Feedbacks Count: " + this.userFeedbacks.size());
 		for (NodeFeedbackPair feedbackPair : this.userFeedbacks) {
-			System.out.println("Have feedbacks ------------------");
 			TraceNode node = feedbackPair.getNode();
 			UserFeedback feedback = feedbackPair.getFeedback();
 			
 			if (feedback.getFeedbackType() == UserFeedback.CORRECT) {
 				// Add constraint to all read and write variable to HIGH
 				for (VarValue readVar : node.getReadVariables()) {
-					BitRepresentation varsIncluded = new BitRepresentation(totalLen);
-					varsIncluded.set(0);
-					
-					Constraint constraint = new PriorConstraint(varsIncluded, 0, Configs.HIGH);
-					constraint.addReadVarID(readVar.getVarID());
-					
-					constraints.add(constraint);
+					constraints.add(this.genPriorConstraint(readVar, Configs.HIGH));
 				}
 				for (VarValue writeVar : node.getWrittenVariables()) {
-					BitRepresentation varsIncluded = new BitRepresentation(totalLen);
-					varsIncluded.set(0);
-					
-					Constraint constraint = new PriorConstraint(varsIncluded, 0, Configs.HIGH);
-					constraint.addWriteVarID(writeVar.getVarID());
-					
-					constraints.add(constraint);
+					constraints.add(this.genPriorConstraint(writeVar, Configs.HIGH));
 				}
 			} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
 				// Add constraint to target variable to LOW
 				for (VarValue wrongVar : feedback.getOption().getIncludedWrongVars()) {
-					BitRepresentation varsIncluded = new BitRepresentation(totalLen);
-					varsIncluded.set(0);
-					
-					Constraint constraint = new PriorConstraint(varsIncluded, 0, Configs.LOW);
-					constraint.addReadVarID(wrongVar.getVarID());
-					
-					constraints.add(constraint);
+					constraints.add(this.genPriorConstraint(wrongVar, Configs.LOW));
+				}
+				
+				// Also, since the target variable is wrong, then the write variable must be wrong as well
+				for (VarValue writeVar : node.getWrittenVariables()) {
+					constraints.add(this.genPriorConstraint(writeVar, Configs.LOW));
 				}
 			} else if (feedback.getFeedbackType() == UserFeedback.WRONG_PATH) {
 				// Add constraint to control dominator to LOW
 				TraceNode controlDom = node.getControlDominator();
-				
-				BitRepresentation varsIncluded = new BitRepresentation(totalLen);
-				varsIncluded.set(0);
-				
-				Constraint constraint = new PriorConstraint(varsIncluded, 0, Configs.LOW);
-				constraint.setControlDomOrder(controlDom.getOrder());
-				
-				constraints.add(constraint);
+				VarValue controlDomValue = this.getControlDomValue(controlDom);
+
+				constraints.add(this.genPriorConstraint(controlDomValue, Configs.LOW));
 			}
 		}
+		
+//		MessageProcessor msgProcessor = new MessageProcessor();
+//		System.out.println("Variable Encoder: Generating prior constraints");
+//		for (Constraint constraint : constraints) {
+//			System.out.println(constraint);
+//		}
+//		String graphMsg = msgProcessor.buildGraphMsg(constraints);
+//		String factorMsg = msgProcessor.buildFactorMsg(constraints);
+//		
+//		System.out.println("graphMsg: " + graphMsg);
+//		System.out.println("factorMsg: " + factorMsg);
 		
 		return constraints;
 	}

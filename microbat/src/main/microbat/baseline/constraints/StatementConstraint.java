@@ -1,5 +1,8 @@
 package microbat.baseline.constraints;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import microbat.baseline.BitRepresentation;
 import microbat.model.trace.TraceNode;
 
@@ -24,7 +27,7 @@ public abstract class StatementConstraint extends Constraint {
 	
 	protected int statementOrder;
 	
-	protected final String statIDPre = "S_";
+	protected static final String statIDPre = "S_";
 	
 	/*
 	 * Since we do not consider the structure constraint and
@@ -34,14 +37,15 @@ public abstract class StatementConstraint extends Constraint {
 	protected int nameIdx;
 	
 	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String constraintID, int statementOrder) {
-		this(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, constraintID, statementOrder, Constraint.NaN);
+//		this(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, constraintID, statementOrder, Constraint.NaN);
+		this(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, constraintID, statementOrder, "");
 	}
 	
-	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String name, int statementOrder, int controlDomOrder) {
+	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String name, int statementOrder, String controlDomID) {
 		super(varsIncluded, conclusionIndex, propProbability, name);
 		this.writeVarStartingIdx = writeVarStarintIdx;
-		this.setControlDomOrder(controlDomOrder);
-		
+//		this.setControlDomOrder(controlDomOrder);
+		this.setControlDomID(controlDomID);
 		if (this.haveControlDom()) {
 			this.predIdx = this.varsIncluded.size() - 2;
 		} else {
@@ -50,6 +54,14 @@ public abstract class StatementConstraint extends Constraint {
 		this.strucIdx = Constraint.NaN;
 		this.nameIdx = Constraint.NaN;
 		this.statementOrder = statementOrder;
+	}
+	
+	@Override
+	public List<String> getInvolvedPredIDs() {
+		List<String> ids = new ArrayList<>();
+		ids.addAll(super.getInvolvedPredIDs());
+		ids.add(this.genStatID());
+		return ids;
 	}
 	
 	public void setStatementOrder(final int order) {
@@ -61,15 +73,15 @@ public abstract class StatementConstraint extends Constraint {
 	}
 	
 	protected String genStatID() {
-		return StatementConstraint.controlDomPre + this.statementOrder;
+		return StatementConstraint.statIDPre + this.statementOrder;
 	}
 	
 	public static boolean isStatID(final String id) {
-		return id.startsWith(StatementConstraint.controlDomPre);
+		return id.startsWith(StatementConstraint.statIDPre);
 	}
 	
 	public static int extractStatOrderFromID(final String id) {
-		return Integer.valueOf(id.replace(StatementConstraint.controlDomPre, ""));
+		return Integer.valueOf(id.replace(StatementConstraint.statIDPre, ""));
 	}
 	
 	/**

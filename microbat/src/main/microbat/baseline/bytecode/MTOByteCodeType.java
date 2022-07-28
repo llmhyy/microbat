@@ -5,6 +5,8 @@ import java.util.stream.Stream;
 public enum MTOByteCodeType implements ByteCodeType {
 	IFLE(158),			// If less than or equal to 
 	IF_ICMPLT(161),		// If less than
+	IF_ICMPNE(160),		// If not equal
+	IF_ICMPGE(162),		// If value 1 is greater than value 2
 	
 	IFNE(154),			// If value is not zero
 		
