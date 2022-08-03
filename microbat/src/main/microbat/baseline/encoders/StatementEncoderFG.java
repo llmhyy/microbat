@@ -20,9 +20,9 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.UserFeedback;
 
-public class StatementEncoder0 extends Encoder {
+public class StatementEncoderFG extends Encoder {
 	
-	public StatementEncoder0(Trace trace, List<TraceNode> executionList) {
+	public StatementEncoderFG(Trace trace, List<TraceNode> executionList) {
 		super(trace, executionList);
 	}
 
@@ -65,6 +65,7 @@ public class StatementEncoder0 extends Encoder {
 		String factorMsg = msgProcessor.buildFactorMsg(constraints);
 		
 		try {
+			client.conntectServer();
 			String response = client.requestBP(graphMsg, factorMsg);
 			
 			Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
@@ -87,11 +88,6 @@ public class StatementEncoder0 extends Encoder {
 	@Override
 	protected int countPredicates(TraceNode node) {
 		return super.countPredicates(node) + 1;
-	}
-	
-	@Override
-	protected boolean isSkippable(TraceNode node) {
-		return node.isBranch() || this.countPredicates(node) > 30;
 	}
 	
 	protected List<Constraint> genConstraints(TraceNode node) {

@@ -34,6 +34,7 @@ public abstract class Encoder {
 					vars.add(writeVar);
 				}
 			}
+			
 		}
 		return vars;
 	}
@@ -51,8 +52,19 @@ public abstract class Encoder {
 		return node.getControlDominator() == null ? varCount : varCount + 1;
 	}
 	
+	/**
+	 * Determine should we skip the current node when generating constraints
+	 * Condition:
+	 * 1. We will not consider the node if the number of predicate is smaller than 2,
+	 *    because no constraints can be generated in this case
+	 * 2. We will not consider the node if the number of predicate is larger than 30,
+	 *    because it is too expensive to calculate
+	 * @param node Target node
+	 * @return
+	 */
 	protected boolean isSkippable(TraceNode node) {
-		return this.countPredicates(node) <= 1;
+		return this.countPredicates(node) <= 1 || this.countPredicates(node) > 30;
+//		return this.countPredicates(node) > 30;
 	}
 	
 	protected VarValue getControlDomValue(TraceNode controlDom) {

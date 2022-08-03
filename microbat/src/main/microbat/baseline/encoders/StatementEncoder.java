@@ -17,6 +17,11 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
+/**
+ * Statement encoder is used to calculate the probability of correctness of statement instance (trace node)
+ * @author David, Siang Hwee
+ *
+ */
 public class StatementEncoder extends Encoder{
 //	private Trace trace;
 //	private List<TraceNode> slice;
@@ -27,7 +32,16 @@ public class StatementEncoder extends Encoder{
 //	private boolean populated = false;
 //	private int sliceSize = 0;
 	
+	/**
+	 * Total number umber of constraints involved
+	 */
 	private int constraintsCount;
+	
+	/**
+	 * Constructor
+	 * @param trace Complete trace of testing program
+	 * @param executionList Sliced trace
+	 */
 	public StatementEncoder(Trace trace, List<TraceNode> executionList) {
 		super(trace, executionList);
 		this.constraintsCount = 0;
@@ -39,6 +53,9 @@ public class StatementEncoder extends Encoder{
 //		}
 	}
 	
+	/**
+	 * Calculate the probability of correctness of all trace node in sliced trace
+	 */
 	@Override
 	public void encode() {
 //		boolean hasChange = false;
@@ -50,29 +67,42 @@ public class StatementEncoder extends Encoder{
 	
 	@Override
 	protected int countPredicates(TraceNode node) {
+		// For statement encoder, we will consider the statement as well
 		return super.countPredicates(node)+1;
 	}
 	
-	@Override 
-	protected boolean isSkippable(TraceNode node) {
-		return this.countPredicates(node) > 30;
-	}
+//	@Override 
+//	protected boolean isSkippable(TraceNode node) {
+//		/*
+//		 * For statement encoder, we will still handle the case
+//		 * that the number predicate is smaller than 2
+//		 */
+//		return this.countPredicates(node) > 30;
+//	}
 	
+	@Override
+	protected boolean isSkippable(TraceNode node) {
+		return this.countPredicates(node) >= 30;
+	}
+	/**
+	 * Calculate the probability of correctness of given trace node
+	 * @param tn Target trace node
+	 */
 	private void encode(TraceNode tn) {
 
 		if (this.isSkippable(tn)) {
 			return;
 		}
 		
-		if (this.countPredicates(tn) <= 1) {
-			this.handleNonConstraintNode(tn);
-			return;
-		}
+//		if (this.countPredicates(tn) <= 1) {
+//			this.handleNonConstraintNode(tn);
+//			return;
+//		}
 		
 		final int totalLen = this.countPredicates(tn);
 		
-		// Special case that when there only one variable involved, then the
-		// probability of correctness will the same as the variable
+//		Special case that when there only one variable involved, then the
+//		probability of correctness will the same as the variable
 //		if (totalLen == 2) {
 //			if (this.countWriteVars(tn) == 1) {
 //				for (VarValue writeVar : tn.getWrittenVariables()) {
@@ -100,17 +130,24 @@ public class StatementEncoder extends Encoder{
 		tn.setProbability(prob);
 	}
 
-	private void handleNonConstraintNode(TraceNode node) {
-		List<VarValue> vars = this.countReadVars(node) == 0 ? node.getWrittenVariables() : node.getReadVariables();
-		double avgProb = 0;
-		for (VarValue var : vars) {
-			avgProb += var.getProbability();
-		}
-		avgProb /= vars.size();
-		
-		node.setProbability(avgProb);
-	}
+//	private void handleNonConstraintNode(TraceNode node) {
+//		List<VarValue> vars = this.countReadVars(node) == 0 ? node.getWrittenVariables() : node.getReadVariables();
+//		
+//		TraceNode
+//		double avgProb = 0;
+//		for (VarValue var : vars) {
+//			avgProb += var.getProbability();
+//		}
+//		avgProb /= vars.size();
+//		
+//		node.setProbability(avgProb);
+//	}
 	
+	/**
+	 * Generate constraints for given trace node
+	 * @param node Target TraceNode
+	 * @return List of constraints
+	 */
 	private List<Constraint> genConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		constraints.addAll(this.genVarToStatConstraints(node));
@@ -120,25 +157,24 @@ public class StatementEncoder extends Encoder{
 		return constraints;
 	}
 	
+	/**
+	 * Generate variable to statement constraint of given node
+	 * @param node Target trace node
+	 * @return List of constraints
+	 */
 	private List<Constraint> genVarToStatConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		
 		final int readLen = this.countReadVars(node);
 		final int writeLen = this.countWriteVars(node);
-		
-		// Also include structure factor, naming factor and the statement conclusion
-		// Also include statement conclusion
-		int totalLen = readLen + writeLen + 1;
+		final int totalLen = this.countPredicates(node);
 		
 		// Check control dominator exist or not
 		TraceNode controlDominator = node.getControlDominator();
 		boolean haveControlDominator = controlDominator != null;
-		if (haveControlDominator) {
-			totalLen++;
-		}
-		
+
+		// Index of statement in bit representation
 		final int conclusionIdx = totalLen - 1;
-		
 		
 		// Constraint A1, A2, A3 include the same variable
 		BitRepresentation variableIncluded = new BitRepresentation(totalLen);
@@ -148,17 +184,19 @@ public class StatementEncoder extends Encoder{
 		}
 		variableIncluded.set(conclusionIdx);	// Include conclusion statement
 		
+		// Index of starting write variable in the bit representation
 		final int writeStartIdx = readLen == 0 ? 0 : readLen;
 		
+		// Order of current node
 		final int statementOrder = node.getOrder();
 		
+		// Get the ID of control dominator variable if exists
 		String controlDomID = "";
 		if (haveControlDominator) {
 			VarValue controlDomValue = this.getControlDomValue(controlDominator);
 			controlDomID = controlDomValue.getVarID();
 		}
 		
-//		final int controlDomOrder = haveControlDominator ? controlDominator.getOrder() : Constraint.NaN;
 		// Variable to statement constraint A1
 		Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
 		constraints.add(constraintA1);
@@ -175,22 +213,21 @@ public class StatementEncoder extends Encoder{
 		return constraints;
 	}
 	
+	/**
+	 * Generate prior constraints of given node
+	 * @param node Target trace node
+	 * @return List of constraints
+	 */
 	private List<Constraint> genPriorConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		
-		final int readLen = node.getReadVariables().size();
-		final int writeLen = node.getWrittenVariables().size();
+		final int readLen = this.countReadVars(node);
+		final int writeLen = this.countWriteVars(node);
+		final int totalLen = this.countPredicates(node);
 		
-		// Also include the conclusion statement
-		int totalLen = readLen + writeLen + 1;
 		TraceNode controlDominator = node.getControlDominator();
 		
-		/*
-		 * Must put this statement before predIdx and bit representation
-		 */
-		if (controlDominator != null) {
-			totalLen++;
-		}
+		// Index of control dominator in bit representation
 		final int predIdx = controlDominator != null ? totalLen - 2 : -1;
 		
 		// Handle read variables prior constraints

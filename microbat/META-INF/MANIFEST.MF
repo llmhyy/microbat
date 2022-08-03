@@ -39,7 +39,9 @@ Bundle-ClassPath: .,
  lib/asm-util-6.0.jar,
  lib/mysql-connector-java-5.1.44-bin.jar,
  lib/sqlite-jdbc-3.32.3.2.jar,
- lib/instrumentator.jar
+ lib/instrumentator.jar,
+ lib/trace-diff-0.0.1-SNAPSHOT.jar,
+ lib/java-mutation-framework-0.0.1-SNAPSHOT.jar
 Export-Package: microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,org.eclipse.ui.plugin",
  microbat.agent,
  microbat.algorithm.graphdiff;uses:="microbat.model.value",

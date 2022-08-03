@@ -16,6 +16,11 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.UserFeedback;
 
+/**
+ * Variable encoder calculate the probability of correctness of variables
+ * @author David, Siang Hwee
+ *
+ */
 public class VariableEncoder extends Encoder {
 	
 	private List<VarValue> inputVars;
@@ -27,6 +32,13 @@ public class VariableEncoder extends Encoder {
 	
 	private List<VarValue> involvedArrays;
 	
+	/**
+	 * Constructor
+	 * @param trace Complete trace for testing program
+	 * @param executionList Sliced execution list
+	 * @param inputVars List of input variables
+	 * @param outputVars List of output variables
+	 */
 	public VariableEncoder(Trace trace, List<TraceNode> executionList, List<VarValue> inputVars, List<VarValue> outputVars) {
 		super(trace, executionList);
 		
@@ -46,34 +58,50 @@ public class VariableEncoder extends Encoder {
 		this.involvedArrays = new ArrayList<>();
 	}
 	
+	/**
+	 * Calculate the variable probability. It will undergo the following process:
+	 * 1. Generate all the constraints involved
+	 * 2. Run sum product algorithm on python server to calculate variable probability
+	 * 3. Assign calculated probability to each variable
+	 */
 	public void encode() {
+		
+		// Generate all constraints
 		List<Constraint> constraints = this.genConstraints();
-		
 		System.out.println("Variable Encoder: " + constraints.size() + " constraints.");
-		FactorGraphClient client = new FactorGraphClient();
-		MessageProcessor msgProcessor = new MessageProcessor();
 		
+		// Request the python server to run sum product algorithm
+		FactorGraphClient client = new FactorGraphClient();
+		
+		MessageProcessor msgProcessor = new MessageProcessor();
 		String graphMsg = msgProcessor.buildGraphMsg(constraints);
 		String factorMsg = msgProcessor.buildFactorMsg(constraints);
 		
 		try {
-			String response = client.requestBP(graphMsg, factorMsg);
-//			System.out.println("response: " + response);
+			client.conntectServer();
 			
+			// Response contain the probability of each variable
+			String response = client.requestBP(graphMsg, factorMsg);
+			
+			// Assign calculate probability to corresponding variable
 			Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
 			for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
 				String predID = pair.getKey();
 				Double prob = pair.getValue();
 				
-				if (Constraint.isControlDomID(predID)) {
-					int nodeOrder = Constraint.extractNodeOrderFromCDID(predID);
-					TraceNode node = this.trace.getTraceNode(nodeOrder);
-					node.setProbability(prob);
-				} else {
-					for (VarValue var : this.getVarByID(predID)) {
-						var.setProbability(prob);
-					}
+				for (VarValue var : this.getVarByID(predID)) {
+					var.setProbability(prob);
 				}
+//				if (Constraint.isControlDomID(predID)) {
+//					System.out.println("have predID ==========");
+//					int nodeOrder = Constraint.extractNodeOrderFromCDID(predID);
+//					TraceNode node = this.trace.getTraceNode(nodeOrder);
+//					node.setProbability(prob);
+//				} else {
+//					for (VarValue var : this.getVarByID(predID)) {
+//						var.setProbability(prob);
+//					}
+//				}
 			}
 		} catch (Exception e) {
 			System.out.println("Error when communicating with server");
@@ -91,6 +119,10 @@ public class VariableEncoder extends Encoder {
 		this.involvedArrays = arrays;
 	}
 	
+	/**
+	 * Generate all involved constraints
+	 * @return List of constraints
+	 */
 	protected List<Constraint> genConstraints() {
 		List<Constraint> constraints = new ArrayList<>();
 		for (TraceNode node : this.executionList) {
@@ -100,6 +132,11 @@ public class VariableEncoder extends Encoder {
 		return constraints;
 	}
 	
+	/**
+	 * Generate variable constraints of given trace node
+	 * @param node Target trace node
+	 * @return List of variable constraints
+	 */
 	private List<Constraint> genVarConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		
@@ -135,11 +172,13 @@ public class VariableEncoder extends Encoder {
 		
 //		System.out.println("TraceNode: " + node.getOrder());
 //		System.out.println("ByteCode: " + node.getBytecode());
+		
 		// A2 Constraint
 		for (int readIdx=0; readIdx<readLen; readIdx++) {
 			BitRepresentation varsIncluded = new BitRepresentation(totalLen);
 			varsIncluded.set(0, totalLen);
 			
+			// Calculate the propagation probability
 			double propProb = Configs.HIGH;
 			if (node.getBytecode() != "") {
 				VarValue readVar = node.getReadVariables().get(readIdx);
@@ -177,11 +216,15 @@ public class VariableEncoder extends Encoder {
 		return constraints;
 	}
 	
+	/**
+	 * Generate all the prior constraints, which included
+	 * 1. Input and Output constraints (including their child)
+	 * 2. Feedback from users
+	 * @return List of prior constraint
+	 */
 	private List<Constraint> genPriorConstraints() {
 		List<Constraint> constraints = new ArrayList<>();
-		
-		final int totalLen = 1;
-		
+
 		// Set input to HIGH
 		for (VarValue inputVar : this.inputVars) {
 			constraints.add(this.genPriorConstraint(inputVar, Configs.HIGH));
@@ -192,7 +235,7 @@ public class VariableEncoder extends Encoder {
 			constraints.add(this.genPriorConstraint(outputVar, Configs.LOW));
 		}
 		
-		// Set the childrens
+		// Set up for children
 		for (TraceNode node : this.executionList) {
 			for (VarValue readVar : node.getReadVariables()) {
 				for (VarValue parent : readVar.getParents()) {
@@ -215,7 +258,7 @@ public class VariableEncoder extends Encoder {
 		}
 		
 		
-		// Convert user feedbacks to constraints
+		// Convert user feedbacks to prior constraints
 		System.out.println("Feedbacks Count: " + this.userFeedbacks.size());
 		for (NodeFeedbackPair feedbackPair : this.userFeedbacks) {
 			TraceNode node = feedbackPair.getNode();
@@ -243,7 +286,6 @@ public class VariableEncoder extends Encoder {
 				// Add constraint to control dominator to LOW
 				TraceNode controlDom = node.getControlDominator();
 				VarValue controlDomValue = this.getControlDomValue(controlDom);
-
 				constraints.add(this.genPriorConstraint(controlDomValue, Configs.LOW));
 			}
 		}

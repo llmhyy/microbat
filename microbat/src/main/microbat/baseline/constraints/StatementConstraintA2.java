@@ -39,7 +39,7 @@ public class StatementConstraintA2 extends StatementConstraint {
 			 * there are write variable is wrong and at least one of the read variable is wrong, the statement is wrong. 
 			 * All the other cases are valid.
 			 * 
-			 * If the control dominator is wrong, then we can directly say that this statement is correct
+			 * If the control dominator is wrong, then we can directly say that this constraint is correct
 			 */
 			
 			if (this.haveControlDom()) {

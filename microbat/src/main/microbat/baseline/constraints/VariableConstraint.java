@@ -9,8 +9,6 @@ import microbat.model.trace.TraceNode;
 
 /**
  * Variable constraint
- * If all other variable in the same constraint are correct, then
- * the remaining variable is likely to be correct
  * @author Siang Hwee, David
  *
  */
@@ -28,6 +26,14 @@ public class VariableConstraint extends Constraint {
 	
 	@Override
 	protected double calProbability(int caseNo) {
+		
+		/*
+		 *  The constraint will only be invalid when
+		 *  all the other variable is correct, but the
+		 *  conclusion index is wrong. All the other
+		 *  case mean that the constraint is valid
+		 */
+		
 		BitRepresentation binValue = BitRepresentation.parse(caseNo, this.varsIncluded.size());
 		binValue.and(this.varsIncluded);
 		int numVarsIncluded = this.varsIncluded.getCardinality();
@@ -37,6 +43,7 @@ public class VariableConstraint extends Constraint {
 			for (Integer index : conclusionIndexes) {
 				if (binValue.get(index))
 					continue;
+				
 				// one of the conclusion index is false
 				numFalse -= 1;
 				if (numFalse == 0) {

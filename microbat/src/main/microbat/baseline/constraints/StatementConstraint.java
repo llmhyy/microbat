@@ -25,8 +25,14 @@ public abstract class StatementConstraint extends Constraint {
 	 */
 	protected int predIdx;
 	
+	/**
+	 * Order of the trace node
+	 */
 	protected int statementOrder;
 	
+	/**
+	 * Prefix of the statement constraint ID
+	 */
 	protected static final String statIDPre = "S_";
 	
 	/*
@@ -58,6 +64,10 @@ public abstract class StatementConstraint extends Constraint {
 	
 	@Override
 	public List<String> getInvolvedPredIDs() {
+		/**
+		 * For statement encoder, we need to
+		 * consider the statement predicate
+		 */
 		List<String> ids = new ArrayList<>();
 		ids.addAll(super.getInvolvedPredIDs());
 		ids.add(this.genStatID());
@@ -72,6 +82,10 @@ public abstract class StatementConstraint extends Constraint {
 		return this.statementOrder;
 	}
 	
+	/**
+	 * Generate statement constraint ID
+	 * @return Statement constraint ID
+	 */
 	protected String genStatID() {
 		return StatementConstraint.statIDPre + this.statementOrder;
 	}
@@ -137,7 +151,11 @@ public abstract class StatementConstraint extends Constraint {
 	
 	@Override
 	public int getPredicateCount() {
-		return this.haveControlDom() ? this.getVarCount() + 2 : this.getVarCount() + 1;
+		/*
+		 * For statement constraint, we need to
+		 * consider the statement predicate 
+		 */
+		return super.getPredicateCount() + 1;
 	}
 
 }

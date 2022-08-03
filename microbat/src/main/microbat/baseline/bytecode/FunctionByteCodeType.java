@@ -2,6 +2,11 @@ package microbat.baseline.bytecode;
 
 import java.util.stream.Stream;
 
+/**
+ * Byte code that calling a function
+ * @author David
+ *
+ */
 public enum FunctionByteCodeType implements ByteCodeType {
 	INVOKEDYNAMIC(186),		// Call dynamic method
 	INVOKEINTERFACE(185),	// Call interface method
@@ -19,7 +24,6 @@ public enum FunctionByteCodeType implements ByteCodeType {
 	
 	@Override
 	public int getOpCode() {
-		// TODO Auto-generated method stub
 		return this.opCode;
 	}
 

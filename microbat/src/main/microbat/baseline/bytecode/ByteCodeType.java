@@ -1,11 +1,7 @@
 package microbat.baseline.bytecode;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public interface ByteCodeType {	
-	
-	
+
 	public int getOpCode();
 	
 	/**
@@ -35,7 +31,7 @@ public interface ByteCodeType {
 			return FunctionByteCodeType.parseType(opCode);
 		}
 		
-		System.out.println("Opcode: " + opCode + " is not handled");
+//		System.out.println("Opcode: " + opCode + " is not handled");
 		return null;
 	}
 }

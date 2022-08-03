@@ -33,8 +33,12 @@ public class StatementConstraintA1 extends StatementConstraint {
 		int numTrue = binValue.getCardinality();
 		int numFalse = numVarsIncluded - numTrue;
 		
-		// For A1, the only invalid case is that all the predicate are correct but
-		// the conclusion is wrong
+		/*
+		 * For A1, the only invalid case is that all the
+		 * predicates are correct but the conclusion is
+		 * wrong
+		 */
+
 		for (int conclusionIndex : this.conclusionIndexes) {
 			if (numFalse == 1 && !binValue.get(conclusionIndex)) {
 				prob = 1 - this.propProbability;

@@ -38,19 +38,29 @@ public abstract class Constraint {
 	 */
 	protected double propProbability;
 	
+	/**
+	 * ID of this constraint
+	 */
 	protected final String constraintID;
 	
-//	protected int controlDomOrder;
-	
+	/**
+	 * ID of control dominator variable (The condition result of control dominator node)
+	 */
 	protected String controlDomID;
 	
+	/**
+	 * List of ID of read variables. Used when constructing the factor graph in python
+	 */
 	protected List<String> readVarIDs;
 	
+	/**
+	 * List of ID of written variables. Uses when constructing the factor graph in python
+	 */
 	protected List<String> writeVarIDs;
 	
 	public static final int NaN = -1;
-	
-	public static final String controlDomPre = "CD_";
+
+//	public static final String controlDomPre = "CD_";
 	
 	
 	/**
@@ -99,11 +109,11 @@ public abstract class Constraint {
 	 * @return Result probability
 	 */
 	public double getProbability(final int caseNo) {
-//		if (this.memoTable.containsKey(caseNo)){
-//			return this.memoTable.get(caseNo);
-//		}
+		if (this.memoTable.containsKey(caseNo)){
+			return this.memoTable.get(caseNo);
+		}
 		double prob = this.calProbability(caseNo);
-//		this.memoTable.put(caseNo, prob);
+		this.memoTable.put(caseNo, prob);
 		return prob;
 	}
 	
@@ -139,6 +149,11 @@ public abstract class Constraint {
 		return this.writeVarIDs.size();
 	}
 	
+	/**
+	 * Get the ID of all involved variable.
+	 * Note that it does not include the control dominator variable
+	 * @return List of variable ID
+	 */
 	public List<String> getInvolvedVarIDs() {
 		List<String> varIDs = new ArrayList<>();
 		varIDs.addAll(this.readVarIDs);
@@ -146,33 +161,43 @@ public abstract class Constraint {
 		return varIDs;
 	}
 	
+	/**
+	 * Get the ID of all involved predicates.
+	 * This method must be override by statement constraint
+	 * because it have extra predicates
+	 * @return List of predicates ID
+	 */
 	public List<String> getInvolvedPredIDs() {
 		List<String> ids = new ArrayList<>();
 		ids.addAll(this.getInvolvedVarIDs());
 		
 		if (this.haveControlDom()) {
-			ids.add(this.genControlDomID());
+			ids.add(this.controlDomID);
 		}
 		return ids;
 	}
 	
-	protected String genControlDomID() {
-		if (this.haveControlDom()) {
-//			return Constraint.controlDomPre + this.getControlDomOrder();
-			return this.controlDomID;
-		} else {
-			return null;
-		}
-	}
+//	protected String genControlDomID() {
+//		if (this.haveControlDom()) {
+////			return Constraint.controlDomPre + this.getControlDomOrder();
+//			return this.controlDomID;
+//		} else {
+//			return null;
+//		}
+//	}
 	
-	public static boolean isControlDomID(final String id) {
-		return id.startsWith(Constraint.controlDomPre);
-	}
+//	public static boolean isControlDomID(final String id) {
+//		return id.startsWith(Constraint.controlDomPre);
+//	}
+//	
+//	public static int extractNodeOrderFromCDID(final String id) {
+//		return Integer.valueOf(id.replace(Constraint.controlDomPre, ""));
+//	}
 	
-	public static int extractNodeOrderFromCDID(final String id) {
-		return Integer.valueOf(id.replace(Constraint.controlDomPre, ""));
-	}
-	
+	/**
+	 * Add all the predicates ID of node into record
+	 * @param node Target trace node
+	 */
 	public void setVarsID(TraceNode node) {
 		for (VarValue readVar : node.getReadVariables()) {
 			this.readVarIDs.add(readVar.getVarID());
@@ -182,9 +207,6 @@ public abstract class Constraint {
 		}
 		
 		TraceNode controlDom = node.getControlDominator();
-//		if (controlDom != null) {
-//			this.setControlDomOrder(controlDom.getOrder());
-//		}
 		if (controlDom != null) {
 			for (VarValue writeVar : controlDom.getWrittenVariables()) {
 				if (writeVar.getVarID().startsWith(ProbabilityEncoder.CONDITION_RESULT_ID_PRE)) {
@@ -199,7 +221,12 @@ public abstract class Constraint {
 		return this.readVarIDs.size() + this.writeVarIDs.size();
 	}
 	
-	// This function have to be override in Statement Constraint
+	/**
+	 * Count the number of predicates involved in this constraint
+	 * This method must be override by statement encoder because
+	 * it has different way to count the predicate.
+	 * @return Number of predicates
+	 */
 	public int getPredicateCount() {
 		return this.haveControlDom() ? this.getVarCount() + 1 : this.getVarCount();
 	}

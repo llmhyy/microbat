@@ -5,7 +5,6 @@ import microbat.baseline.BitRepresentation;
 /**
  * Prior constraint represent how likely the conclusion variable is correct
  * @author David
- *
  */
 public class PriorConstraint extends Constraint {
 	
@@ -19,9 +18,15 @@ public class PriorConstraint extends Constraint {
 		super(varsIncluded, conclusionIndex, propProbability, PriorConstraint.genID());
 	}
 
-	
 	@Override
 	protected double calProbability(int caseNo) {
+		
+		/*
+		 * The probability directly depends on whether
+		 * the conclusion predicate is true or false
+		 * in the given case number
+		 */
+		
 		BitRepresentation binValue = BitRepresentation.parse(caseNo, this.varsIncluded.size());
 		binValue.and(this.varsIncluded);
 		

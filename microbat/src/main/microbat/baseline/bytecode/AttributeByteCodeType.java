@@ -2,11 +2,18 @@ package microbat.baseline.bytecode;
 
 import java.util.stream.Stream;
 
+/**
+ * Byte code that access the class attributes
+ * @author David
+ *
+ */
 public enum AttributeByteCodeType implements ByteCodeType {
 	PUTFIELD(181),		// Assign value into class member
 	PUTSTATIC(179),		// Assign value into class static member
 	GETFIELD(180),		// Get class member
 	GETSTATIC(178),		// Get class static member
+	
+	ARRAYLENGH(190),	// Load array length
 	;
 	
 	private final int opCode;
@@ -17,7 +24,6 @@ public enum AttributeByteCodeType implements ByteCodeType {
 	
 	@Override
 	public int getOpCode() {
-		// TODO Auto-generated method stub
 		return this.opCode;
 	}
 

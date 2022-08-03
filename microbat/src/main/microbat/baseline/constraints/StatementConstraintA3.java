@@ -37,7 +37,7 @@ public class StatementConstraintA3 extends StatementConstraint {
 			 * For A3, the invalid case is that when there are at least one write variable
 			 * is wrong and all the read variable is correct, the statement is still correct.
 			 * 			 
-			 * If the control dominator is wrong, then we can directly say that this statement is correct
+			 * If the control dominator is wrong, then we can directly say that this constraint is correct
 			 */
 			
 			if (this.haveControlDom()) {

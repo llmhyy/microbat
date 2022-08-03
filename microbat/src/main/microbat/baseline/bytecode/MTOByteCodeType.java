@@ -2,6 +2,11 @@ package microbat.baseline.bytecode;
 
 import java.util.stream.Stream;
 
+/**
+ * Byte code that is many to one
+ * @author David
+ *
+ */
 public enum MTOByteCodeType implements ByteCodeType {
 	IFLE(158),			// If less than or equal to 
 	IF_ICMPLT(161),		// If less than

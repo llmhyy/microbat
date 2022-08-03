@@ -1,31 +1,52 @@
 package microbat.handler;
 
+import java.util.List;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.swt.widgets.Display;
 
+import jmutation.MutationFramework;
+import jmutation.model.MutationResult;
+import jmutation.model.Project;
 import microbat.baseline.encoders.ProbabilityEncoder;
 import microbat.model.trace.Trace;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
+import tracediff.TraceDiff;
+import tracediff.model.PairList;
+import tracediff.model.TraceNodePair;
 
 public class TestHandler extends AbstractHandler {
 	
 	TraceView traceView = null;
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		MutationFramework mutationFramework = new MutationFramework();
+		TraceDiff traceDiff = new TraceDiff();
 		
-		this.setup();
-		if (this.traceView != null) {
-			Trace trace = this.traceView.getTrace();
+		mutationFramework.setProjectPath("C:/Users/arkwa/git/java-mutation-framework/sample/math_70");
+		mutationFramework.setDropInsDir("C:/Users/arkwa/git/java-mutation-framework/lib");
+		
+		List<MutationResult> mutationResults = mutationFramework.startMutationFramework();
+		for (MutationResult mutationResult : mutationResults) {
+			Project mutatedProject = mutationResult.getMutatedProject();
+			Project originalProject = mutationResult.getOriginalProject();
 			
-			ProbabilityEncoder encoder = new ProbabilityEncoder(trace);
-			encoder.setup();
-			encoder.encode();
-		} else {
-			System.out.println("TraceView is null");
+			System.out.println("mutatedProject: " + mutatedProject.getSrcPath());
+			System.out.println("originalProject: " + originalProject.getSrcPath());
+			
+			PairList pairList = TraceDiff.getTraceAlignment("src/main/java", "src/main/test",
+                    mutatedProject.getRoot().getAbsolutePath(), originalProject.getRoot().getAbsolutePath(),
+                    mutationResult.getMutatedTrace(), mutationResult.getOriginalTrace());
+			
+			List<TraceNodePair> pairL = pairList.getPairList();
+			for (TraceNodePair pair : pairL) {
+				System.out.println("Before node: " + pair.getBeforeNode().getOrder() + " After node: " + pair.getAfterNode().getOrder());
+			}
 		}
+		
 		return null;
 	}
 	

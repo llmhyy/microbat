@@ -3,7 +3,7 @@ package microbat.baseline.bytecode;
 import java.util.stream.Stream;
 
 /**
- * Array Access ByteCode
+ * Container Access ByteCode
  * @author David
  *
  */

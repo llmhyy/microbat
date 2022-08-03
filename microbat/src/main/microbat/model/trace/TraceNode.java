@@ -101,6 +101,7 @@ public class TraceNode{
 	
 	private transient double sliceBreakerProbability = 0;
 	
+	
 	/**
 	 * It is the probability of correctness as a node
 	 */

@@ -10,6 +10,7 @@ import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.recommendation.UserFeedback;
+import tracediff.TraceDiff;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,86 +19,169 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import jmutation.MutationFramework;
 
+/**
+ * Probability Encoder follow the procedure in ICSE18 paper
+ * It will first calculate probability of correctness of variable using sum-product algorithm,
+ * and then calculate of correctness of each statement by brute force
+ * @author David, Siang Hwee 
+ *
+ */
 public class ProbabilityEncoder {
 	
+	/*
+	 * Prefix of condition result ID
+	 */
 	public static final String CONDITION_RESULT_ID_PRE = "CR_";
+	
+	/*
+	 * Prefix of condition result variable name
+	 */
 	public static final String CONDITION_RESULT_NAME_PRE = "ConditionResult_";
 	
+	/**
+	 * The complete trace of execution of buggy program
+	 */
 	private Trace trace;
+	
+	/**
+	 * Trace after dynamic slicing based on the output variable
+	 */
 	private List<TraceNode> executionList;
+	
+	/**
+	 * List of trace node ordered by probability of correctness
+	 */
 	private PriorityQueue<TraceNode> probabilities;
+	
+	/**
+	 * True if the environment has already been set up
+	 */
 	private boolean setupFlag = false;
 
+	/**
+	 * List of user feedback on correspondence node
+	 */
 	private static List<NodeFeedbackPair> userFeedbacks = new ArrayList<>();
 	
+	/**
+	 * Output variables of the program, which assumed to be wrong
+	 */
 	private List<VarValue> outputVars;
+	
+	/**
+	 * Input variables of the program, which assume to be correct
+	 */
 	private List<VarValue> inputVars;
 	
-	private int predCount;
-	
+	/**
+	 * Constructor
+	 * @param trace Trace of testing program
+	 */
 	public ProbabilityEncoder(Trace trace) {
-		System.out.println("Initialize Probability Encoder");
-		this.predCount = 0;
-		
+
 		this.trace = trace;
-		// we will only operate on a slice of the program to save time
-//		this.executionList = slice(trace);
-		this.executionList = trace.getExecutionList();
-		System.out.print("slice:");
-		for (TraceNode node : this.executionList) {
-			System.out.print(node.getOrder() + ",");
-		}
-		System.out.println();
 		
-		this.modifyVarID(this.executionList);
+		// we will only operate on a slice of the program to save time
+		this.executionList = slice(trace);
+		
+//		for (TraceNode node : this.executionList) {
+//			System.out.println("Node: " + node.getOrder());
+//			if (node.getConditionResult() != null) {
+//				System.out.println("Have condition result");
+//			}
+//		} 
+//		System.out.print("slice:");
+//		for (TraceNode node : this.executionList) {
+//			System.out.print(node.getOrder() + ",");
+//		}
+//		System.out.println();
+		
+		this.removeThisVar(executionList);
+
+		// Solve the problem of same variable ID after re-definition
+		this.changeRedefinitionID(this.executionList);
+		
+		// Determine the input and output variables
 		this.inputVars = this.getInputVariables(executionList);
 		this.outputVars = this.getOutputVariables(executionList);
 		
 	}
 	
+	/**
+	 * Do pre-processing on the given trace:
+	 * 1. Clear all the feedbacks
+	 * 2. Add the condition result for branch node
+	 * 
+	 * This method should only be called when resetting the probability encoder
+	 * because it will clean up the previous run information
+	 */
 	public void setup() {
-		/*
-		 *  this method should only be called when resetting
-		 *  the probability encode (i.e. when re-running without
-		 *  previous run information)
-		 */
 		// this.matchInstruction();
 //		this.preEncode();
 		ProbabilityEncoder.clearFeedbacks();
+
+		this.addConditionResult(trace.getExecutionList());
 //		this.modifyVarID(trace.getExecutionList());
-		this.modifyConditionResult(trace.getExecutionList());
 		this.setupFlag = true;
 	}
 	
+	/**
+	 * Set the set up flag
+	 * @param setupFlag Set to True if the probability encoder do not need to be reset
+	 */
 	public void setFlag(boolean setupFlag) {
 		this.setupFlag = setupFlag;
 	}
 	
+	/**
+	 * Calculate the probability of the variable and statements
+	 */
 	public void encode() {
-		// on encoding the probabilities will change
+		
 		if (!setupFlag) {
 			setup();
 			return;
 		}
 		
 		VariableEncoder varEncoder = new VariableEncoder(trace, executionList, this.inputVars, this.outputVars);
+		
+		// Include all the previous users feedback
 		varEncoder.setFeedbacks(ProbabilityEncoder.userFeedbacks);
 		
 		long startTime = System.currentTimeMillis();
-		varEncoder.encode();
+		
+		// Calculate the probability for variables
+		varEncoder.encode();	
+		
+		// Calculate the probability for statements
 		new StatementEncoder(trace, executionList).encode();
+		
 		long endTime = System.currentTimeMillis();
 		
 		long executionTime = Math.floorDiv(endTime - startTime, 1000);
 		System.out.println("Execution Time: " + executionTime + "s");
 	}
 	
+	/**
+	 * Determine the input variables by brute force
+	 * 
+	 * Input variables are defined to be the read variables with the name contain "input"
+	 * @param executionList The execution trace of program
+	 * @return List of input variables
+	 */
 	private List<VarValue> getInputVariables(List<TraceNode> executionList) {
 		List<VarValue> inputVars = new ArrayList<>();
 		for (TraceNode node : this.executionList) {
 			for (VarValue readVar : node.getReadVariables()) {
-				if (readVar.getVarName().contains("input")) {
+				if (readVar.getVarName().contains("input") ||
+					readVar.getVarName().contains("index") ||
+					readVar.getVarName().contains("out") ||
+					readVar.getVarName().contains("lookupMap") ||
+					readVar.getVarName().contains("longest") ||
+					readVar.getVarName().contains("shortest") ||
+					readVar.getVarID().equals("org/apache/commons/lang3/text/translate/LookupTranslator{75,83}i-1")) {
 					boolean alreadyInside = false;
 					for (VarValue input : inputVars) {
 						if (readVar.getVarID().equals(input.getVarID())) {
@@ -113,6 +197,13 @@ public class ProbabilityEncoder {
 		return inputVars;
 	}
 	
+	/**
+	 * Determine the output variables by brute force
+	 * 
+	 * Output variables are defined to be the last written variable
+	 * @param executionList
+	 * @return
+	 */
 	private List<VarValue> getOutputVariables(List<TraceNode> executionList) {
 		List<VarValue> outputVars = new ArrayList<>();
 		for (int order=executionList.size()-1; order > 0; order--) {
@@ -127,6 +218,10 @@ public class ProbabilityEncoder {
 		return outputVars;
 	}
 	
+	/**
+	 * Add the users feedback 
+	 * @param newFeedback Feedback of corresponding node
+	 */
 	public static void addFeedback(NodeFeedbackPair newFeedback) {
 		// Check is the node already have feedback. If yes, update feedback
 		boolean found = false;
@@ -142,10 +237,17 @@ public class ProbabilityEncoder {
 		}
 	}
 	
+	/**
+	 * Remove all previous feedbacks. The function is used when resetting the probability encoder
+	 */
 	public static void clearFeedbacks() {
 		ProbabilityEncoder.userFeedbacks.clear();
 	}
 	
+	/**
+	 * Access all the previous user feedbacks
+	 * @return Previous user feedbacks
+	 */
 	public static int getFeedbackCount() {
 		return ProbabilityEncoder.userFeedbacks.size();
 	}
@@ -168,13 +270,36 @@ public class ProbabilityEncoder {
 		}
 	}
 	
+	/**
+	 * Get the trace node with the highest probability to be wrong
+	 * @return Predicted wrong node
+	 */
 	public TraceNode getMostErroneousNode() {
-		if (probabilities == null)
-			populatePriorityQueue();
-		return probabilities.peek();
+//		if (probabilities == null)
+//			populatePriorityQueue();
+//		return probabilities.peek();
+		
+		TraceNode errorNode = this.executionList.get(0);
+		for(TraceNode node : this.executionList) {
+			if (node.getProbability() <= errorNode.getProbability()) {
+				errorNode = node;
+			}
+		}
+		return errorNode;
 	}
 	
-	private void modifyVarID(List<TraceNode> executionList) {
+	public List<TraceNode> getSlicedExecutionList() {
+		return this.executionList;
+	}
+	
+	/**
+	 * Change the ID of variable that has been redefined so that they are consider to be different variable.
+	 * This function is called when setting up the probability encoder
+	 * 
+	 * The new ID for redefined variable are the origin ID followed by the trace node order where they are redefined.
+	 * @param executionList Execution trace of testing program
+	 */
+	private void changeRedefinitionID(List<TraceNode> executionList) {
 		Map<String, String> mapping = new HashMap<>();
 		for (TraceNode node : executionList) {
 
@@ -198,7 +323,6 @@ public class ProbabilityEncoder {
 				}
 			}
 		}
-		this.predCount = mapping.size();
 	}
 	
 	private void populatePriorityQueue() {
@@ -211,46 +335,108 @@ public class ProbabilityEncoder {
 		probabilities.addAll(executionList);
 	}
 	
-	/**
-	 * Perform dynamic slicing so that we only consider the data dependents of the wrong variable
-	 * @param trace Complete trace
-	 * @return sliced execution list
-	 */
-	private static List<TraceNode> slice(Trace trace) {
-		UniquePriorityQueue<TraceNode> toVisit = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
-			@Override
-			public int compare(TraceNode t1, TraceNode t2) {
-				return t2.getOrder() - t1.getOrder();
+	private void removeThisVar(List<TraceNode> executionList) {
+		for (TraceNode node : executionList) {
+			List<Integer> thisIdxes = new ArrayList<>();
+			for (int idx=0; idx < node.getReadVariables().size(); ++idx) {
+				VarValue readVar = node.getReadVariables().get(idx);
+				if (readVar.getVarName().equals("this")) {
+					thisIdxes.add(idx);
+				}
 			}
-		});
-		
-		List<TraceNode> visitedNodes = new ArrayList<>();
-		
-		TraceNode latestNode = trace.getLatestNode();
-		if (latestNode.getCodeStatement().equals("}")) {
-			latestNode = trace.getTraceNode(trace.size() - 1);
+			List<VarValue> readVars = node.getReadVariables();
+			for (int thisIdx : thisIdxes) {
+				readVars.remove(thisIdx);
+			}
+			node.setReadVariables(readVars);
+			
+			thisIdxes.clear();
+			for (int idx=0; idx<node.getWrittenVariables().size(); ++idx) {
+				VarValue writeVar = node.getWrittenVariables().get(idx);
+				if (writeVar.getVarName().equals("this")) {
+					thisIdxes.add(idx);
+				}
+			}
+			List<VarValue> writeVars = node.getWrittenVariables();
+			for (int thisIdx : thisIdxes) {
+				writeVars.remove(thisIdx);
+			}
+			node.setWrittenVariables(writeVars);
 		}
-		toVisit.addIgnoreNull(latestNode);
-		
-		while (toVisit.size() > 0) {
-			TraceNode node = toVisit.poll();
-			if (node == null)
-				continue; // has already been visited
-			for (VarValue v : node.getReadVariables())
-				toVisit.addIgnoreNull(trace.findDataDependency(node, v));
-			toVisit.addIgnoreNull(node.getControlDominator());
-			visitedNodes.add(node);
-		}
-		
-		List<TraceNode> result = new ArrayList<>(visitedNodes.size());
-		for (int i = visitedNodes.size(); i > 0; i--) {
-			result.add(visitedNodes.get(i-1));
-		}
-		
-		return result;
 	}
+	// Temporary implementation for slice
+	// Should use another one when control dependency problem is fixed
+	private List<TraceNode> slice(Trace trace) {
+		List<TraceNode> executionList = new ArrayList<>();
+		for (TraceNode node : trace.getExecutionList()) {
+			if (node.getCodeStatement().equals("}")) {
+				continue;
+			}
+			
+//			if (node.getOrder() <= 21) {
+//				continue;
+//			}
+//			
+//			if (node.getOrder() == 25) {
+//				node.setControlDominator(null);
+//			}
+			executionList.add(node);
+		}
+		return executionList;
+	}
+//	/**
+//	 * Perform dynamic slicing so that we only consider the data dependents of the wrong variable
+//	 * @param trace Complete trace
+//	 * @return sliced execution list
+//	 */
+//	private static List<TraceNode> slice(Trace trace) {
+//		UniquePriorityQueue<TraceNode> toVisit = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
+//			@Override
+//			public int compare(TraceNode t1, TraceNode t2) {
+//				return t2.getOrder() - t1.getOrder();
+//			}
+//		});
+//		
+//		List<TraceNode> visitedNodes = new ArrayList<>();
+//		
+//		TraceNode latestNode = trace.getLatestNode();
+//		if (latestNode.getCodeStatement().equals("}")) {
+//			latestNode = trace.getTraceNode(trace.size() - 1);
+//		}
+//		toVisit.addIgnoreNull(latestNode);
+//		
+//		while (toVisit.size() > 0) {
+//			TraceNode node = toVisit.poll();
+//			if (node == null)
+//				continue; // has already been visited
+//			for (VarValue v : node.getReadVariables())
+//				toVisit.addIgnoreNull(trace.findDataDependency(node, v));
+//			toVisit.addIgnoreNull(node.getControlDominator());
+//			visitedNodes.add(node);
+//		}
+//		
+//		List<TraceNode> result = new ArrayList<>(visitedNodes.size());
+//		for (int i = visitedNodes.size(); i > 0; i--) {
+//			result.add(visitedNodes.get(i-1));
+//		}
+//		
+//		return result;
+//	}
 	
-	private void modifyConditionResult(List<TraceNode> executionList) {
+	/**
+	 * Current microbat miss the condition result for each condition trace node.
+	 * This function will add them back.
+	 * 
+	 * Currently, this function just naively define the result of condition by looking
+	 * at the line number of next execution trace node.
+	 * 
+	 * If the line number is exactly the next line of the program, then the condition
+	 * result will be True
+	 * 
+	 * If the trace skip the next line, then the condition result will be False
+	 * @param executionList
+	 */
+	private void addConditionResult(List<TraceNode> executionList) {
 		TraceNode branchNode = null;
 		
 		for (TraceNode node : executionList) {
@@ -267,6 +453,7 @@ public class ProbabilityEncoder {
 		}
 	}
 	
+	// Helper function that add condition result
 	private void addConditionResult(TraceNode node, boolean isResultTrue) {
 		final String type = "boolean";
 		final String varID = this.genConditionResultID(node.getOrder());
@@ -277,10 +464,26 @@ public class ProbabilityEncoder {
 		node.addWrittenVariable(conditionResult);
 	}
 	
+	/**
+	 * Generate the condition result variable name
+	 * 
+	 * The name follow the pattern: prefix + trace node order
+	 * 
+	 * @param order Trace node order of the condition
+	 * @return Name of the condition result variable
+	 */
 	private String genConditionResultName(final int order) {
 		return ProbabilityEncoder.CONDITION_RESULT_NAME_PRE + order;
 	}
 	
+	/**
+	 * Generate the condition result variable ID
+	 * 
+	 * The ID follow the pattern: prefix + trace node order
+	 * 
+	 * @param order Trace node order of the condition
+	 * @return ID of the condition result variable
+	 */
 	private String genConditionResultID(final int order) {
 		return ProbabilityEncoder.CONDITION_RESULT_ID_PRE + order;
 	}
