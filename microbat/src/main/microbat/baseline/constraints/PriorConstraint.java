@@ -45,4 +45,8 @@ public class PriorConstraint extends Constraint {
 	private static String genID() {
 		return "PC_" + PriorConstraint.count++;
 	}
+	
+	public static void resetID() {
+		PriorConstraint.count = 0;
+	}
 }

@@ -275,6 +275,13 @@ public abstract class Constraint {
 		return "Variables map: " + this.varsIncluded + " Conclusions: " + this.conclusionIndexes + "(" + this.propProbability + ")"; 
 	}
 	
+	public static void resetID() {
+		VariableConstraint.resetID();
+		PriorConstraint.resetID();
+		
+		StatementConstraint.resetID();
+	}
+	
 //	public double getProbability(int bin) {
 //	if (memoTable.containsKey(bin))
 //		return memoTable.get(bin);

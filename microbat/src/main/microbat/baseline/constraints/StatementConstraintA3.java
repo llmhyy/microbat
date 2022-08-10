@@ -70,4 +70,8 @@ public class StatementConstraintA3 extends StatementConstraint {
 	private static String genID() {
 		return "SC_A3_" + StatementConstraintA3.count++;
 	}
+	
+	public static void resetID() {
+		StatementConstraintA3.count = 0;
+	}
 }

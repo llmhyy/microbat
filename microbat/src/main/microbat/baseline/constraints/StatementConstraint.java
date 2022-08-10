@@ -158,4 +158,9 @@ public abstract class StatementConstraint extends Constraint {
 		return super.getPredicateCount() + 1;
 	}
 
+	public static void resetID() {
+		StatementConstraintA1.resetID();
+		StatementConstraintA2.resetID();
+		StatementConstraintA3.resetID();
+	}
 }

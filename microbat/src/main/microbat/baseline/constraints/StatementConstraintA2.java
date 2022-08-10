@@ -71,4 +71,8 @@ public class StatementConstraintA2 extends StatementConstraint {
 	private static String genID() {
 		return "SC_A2_" + StatementConstraintA2.count++;
 	}
+	
+	public static void resetID() {
+		StatementConstraintA2.count = 0;
+	}
 }

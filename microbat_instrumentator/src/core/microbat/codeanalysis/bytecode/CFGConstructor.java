@@ -164,11 +164,10 @@ public class CFGConstructor {
 		Boolean isChange = true;
 		int iteration = 0;
 		while(isChange){
-			isChange = false;
 			iteration++;
 			Set<BlockNode> visitedBlocks = new HashSet<>();
 			for(BlockNode exitNode: bGraph.getExitNodeList()){
-				propagatePostDominator(postDominanceMap, exitNode, isChange, visitedBlocks);
+				isChange = propagatePostDominator(postDominanceMap, exitNode, visitedBlocks);
 			}
 		}
 		
@@ -194,9 +193,35 @@ public class CFGConstructor {
 		
 //		System.currentTimeMillis();
 	}
-
-	private void propagatePostDominator(Map<BlockNode, Set<BlockNode>> postDominanceMap, BlockNode node, 
-			Boolean isChange, Set<BlockNode> visitedBlocks) {
+	
+//	private void propagatePostDominator(Map<BlockNode, Set<BlockNode>> postDominanceMap, BlockNode node, 
+//			Boolean isChange, Set<BlockNode> visitedBlocks) {
+//		visitedBlocks.add(node);
+//		
+//		Set<BlockNode> intersetion = findIntersetedPostDominator(node.getChildren(), postDominanceMap);
+//		Set<BlockNode> postDominatorSet = postDominanceMap.get(node);
+//		
+//		for(BlockNode newNode: intersetion){
+//			if(!postDominatorSet.contains(newNode)){
+//				postDominatorSet.add(newNode);
+//				isChange = true;
+//			}
+//		}
+//		postDominanceMap.put(node, postDominatorSet);
+//		
+//		for(BlockNode parent: node.getParents()){
+//			if(!visitedBlocks.contains(parent)){
+//				propagatePostDominator(postDominanceMap, parent, isChange, visitedBlocks);				
+//			}
+//		}
+//	}
+	
+	// Modify by David
+	// Fix the bug that isChange cannot be returned properly.
+	// The original version of propagatePostDominator method is at above
+	private boolean propagatePostDominator(Map<BlockNode, Set<BlockNode>> postDominanceMap, BlockNode node, 
+			Set<BlockNode> visitedBlocks) {
+		boolean isChange = false;
 		visitedBlocks.add(node);
 		
 		Set<BlockNode> intersetion = findIntersetedPostDominator(node.getChildren(), postDominanceMap);
@@ -212,9 +237,11 @@ public class CFGConstructor {
 		
 		for(BlockNode parent: node.getParents()){
 			if(!visitedBlocks.contains(parent)){
-				propagatePostDominator(postDominanceMap, parent, isChange, visitedBlocks);				
+				isChange = isChange || propagatePostDominator(postDominanceMap, parent, visitedBlocks);				
 			}
 		}
+		
+		return isChange;
 	}
 
 	private Set<BlockNode> findIntersetedPostDominator(List<BlockNode> children,
@@ -275,15 +302,17 @@ public class CFGConstructor {
 				}
 			}
 		}
-		
 	}
 
 	private boolean isChildPostDominateBranchNode(CFGNode child, CFGNode branchNode, BlockGraph bGraph) {
 		BlockNode childBlock = child.getBlockNode();
 		BlockNode branchBlock = branchNode.getBlockNode();
 		
-		Set<BlockNode> postDominators = bGraph.getPostDominanceMap().get(childBlock);
+//		Set<BlockNode> postDominators = bGraph.getPostDominanceMap().get(childBlock);
+//		
+//		return postDominators.contains(branchBlock);
 		
-		return postDominators.contains(branchBlock);
+		Set<BlockNode> postDominators = bGraph.getPostDominanceMap().get(branchBlock);
+		return postDominators.contains(childBlock);
 	}
 }

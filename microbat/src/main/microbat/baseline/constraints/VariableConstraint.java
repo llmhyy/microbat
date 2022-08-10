@@ -70,4 +70,8 @@ public class VariableConstraint extends Constraint {
 	private static String genID() {
 		return "VC_" + VariableConstraint.count++;
 	}
+	
+	public static void resetID() {
+		VariableConstraint.count = 0;
+	}
 }

@@ -2,6 +2,9 @@ package microbat.baseline.encoders;
 
 import microbat.baseline.Configs;
 import microbat.baseline.UniquePriorityQueue;
+import microbat.baseline.constraints.Constraint;
+import microbat.baseline.constraints.PriorConstraint;
+import microbat.baseline.constraints.VariableConstraint;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -86,27 +89,8 @@ public class ProbabilityEncoder {
 		// we will only operate on a slice of the program to save time
 		this.executionList = slice(trace);
 		
-//		for (TraceNode node : this.executionList) {
-//			System.out.println("Node: " + node.getOrder());
-//			if (node.getConditionResult() != null) {
-//				System.out.println("Have condition result");
-//			}
-//		} 
-//		System.out.print("slice:");
-//		for (TraceNode node : this.executionList) {
-//			System.out.print(node.getOrder() + ",");
-//		}
-//		System.out.println();
-		
-		this.removeThisVar(executionList);
-
-		// Solve the problem of same variable ID after re-definition
-		this.changeRedefinitionID(this.executionList);
-		
-		// Determine the input and output variables
-		this.inputVars = this.getInputVariables(executionList);
-		this.outputVars = this.getOutputVariables(executionList);
-		
+		this.outputVars = null;
+		this.inputVars = null;
 	}
 	
 	/**
@@ -118,12 +102,21 @@ public class ProbabilityEncoder {
 	 * because it will clean up the previous run information
 	 */
 	public void setup() {
-		// this.matchInstruction();
-//		this.preEncode();
+		// Clear all previous feedbacks
 		ProbabilityEncoder.clearFeedbacks();
 
+		// Remove this variable
+		this.removeThisVar(executionList);
+
+		// Solve the problem of same variable ID after re-definition
+		this.changeRedefinitionID(this.executionList);
+		
+		// Add condition result as control predicate
 		this.addConditionResult(trace.getExecutionList());
-//		this.modifyVarID(trace.getExecutionList());
+
+		// Reset ID of all kind of constraint
+		Constraint.resetID();
+		
 		this.setupFlag = true;
 	}
 	
@@ -143,6 +136,15 @@ public class ProbabilityEncoder {
 		if (!setupFlag) {
 			setup();
 			return;
+		}
+		
+		/*
+		 * If no information about input and output, then we will
+		 * determine it in default way, which is not recommended.
+		 */
+		if (this.inputVars == null || this.outputVars == null) {
+			this.inputVars = this.extractDefaultInputVariables(this.executionList);
+			this.outputVars = this.extractDefaultOutputVariables(this.executionList);
 		}
 		
 		VariableEncoder varEncoder = new VariableEncoder(trace, executionList, this.inputVars, this.outputVars);
@@ -171,17 +173,11 @@ public class ProbabilityEncoder {
 	 * @param executionList The execution trace of program
 	 * @return List of input variables
 	 */
-	private List<VarValue> getInputVariables(List<TraceNode> executionList) {
+	private List<VarValue> extractDefaultInputVariables(List<TraceNode> executionList) {
 		List<VarValue> inputVars = new ArrayList<>();
 		for (TraceNode node : this.executionList) {
 			for (VarValue readVar : node.getReadVariables()) {
-				if (readVar.getVarName().contains("input") ||
-					readVar.getVarName().contains("index") ||
-					readVar.getVarName().contains("out") ||
-					readVar.getVarName().contains("lookupMap") ||
-					readVar.getVarName().contains("longest") ||
-					readVar.getVarName().contains("shortest") ||
-					readVar.getVarID().equals("org/apache/commons/lang3/text/translate/LookupTranslator{75,83}i-1")) {
+				if (readVar.getVarName().contains("input")) {
 					boolean alreadyInside = false;
 					for (VarValue input : inputVars) {
 						if (readVar.getVarID().equals(input.getVarID())) {
@@ -204,7 +200,7 @@ public class ProbabilityEncoder {
 	 * @param executionList
 	 * @return
 	 */
-	private List<VarValue> getOutputVariables(List<TraceNode> executionList) {
+	private List<VarValue> extractDefaultOutputVariables(List<TraceNode> executionList) {
 		List<VarValue> outputVars = new ArrayList<>();
 		for (int order=executionList.size()-1; order > 0; order--) {
 			TraceNode node = this.executionList.get(order);
@@ -245,11 +241,19 @@ public class ProbabilityEncoder {
 	}
 	
 	/**
-	 * Access all the previous user feedbacks
-	 * @return Previous user feedbacks
+	 * Get the number of feedbacks used
+	 * @return Number of feedbacks
 	 */
 	public static int getFeedbackCount() {
 		return ProbabilityEncoder.userFeedbacks.size();
+	}
+	
+	/**
+	 * Access all the feedback of corresponding node
+	 * @return List of node-feedback pair
+	 */
+	public static List<NodeFeedbackPair> getFeedbacks() {
+		return ProbabilityEncoder.userFeedbacks;
 	}
 	
 	public void printProbability() {
@@ -290,6 +294,22 @@ public class ProbabilityEncoder {
 	
 	public List<TraceNode> getSlicedExecutionList() {
 		return this.executionList;
+	}
+	
+	public void setInputVars(List<VarValue> inputs) {
+		this.inputVars = inputs;
+	}
+	
+	public void setOutputVars(List<VarValue> outputs) {
+		this.outputVars = outputs;
+	}
+	
+	public List<VarValue> getInputVars() {
+		return this.inputVars;
+	}
+	
+	public List<VarValue> getOutputVars() {
+		return this.outputVars;
 	}
 	
 	/**
@@ -364,64 +384,45 @@ public class ProbabilityEncoder {
 			node.setWrittenVariables(writeVars);
 		}
 	}
-	// Temporary implementation for slice
-	// Should use another one when control dependency problem is fixed
-	private List<TraceNode> slice(Trace trace) {
-		List<TraceNode> executionList = new ArrayList<>();
-		for (TraceNode node : trace.getExecutionList()) {
-			if (node.getCodeStatement().equals("}")) {
-				continue;
+	
+	/**
+	 * Perform dynamic slicing so that we only consider the data dependents of the wrong variable
+	 * @param trace Complete trace
+	 * @return sliced execution list
+	 */
+	private static List<TraceNode> slice(Trace trace) {
+		UniquePriorityQueue<TraceNode> toVisit = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
+			@Override
+			public int compare(TraceNode t1, TraceNode t2) {
+				return t2.getOrder() - t1.getOrder();
 			}
-			
-//			if (node.getOrder() <= 21) {
-//				continue;
-//			}
-//			
-//			if (node.getOrder() == 25) {
-//				node.setControlDominator(null);
-//			}
-			executionList.add(node);
+		});
+		
+		List<TraceNode> visitedNodes = new ArrayList<>();
+		
+		TraceNode latestNode = trace.getLatestNode();
+		if (latestNode.getCodeStatement().equals("}")) {
+			latestNode = trace.getTraceNode(trace.size() - 1);
 		}
-		return executionList;
+		toVisit.addIgnoreNull(latestNode);
+		
+		while (toVisit.size() > 0) {
+			TraceNode node = toVisit.poll();
+			if (node == null)
+				continue; // has already been visited
+			for (VarValue v : node.getReadVariables())
+				toVisit.addIgnoreNull(trace.findDataDependency(node, v));
+			toVisit.addIgnoreNull(node.getControlDominator());
+			visitedNodes.add(node);
+		}
+		
+		List<TraceNode> result = new ArrayList<>(visitedNodes.size());
+		for (int i = visitedNodes.size(); i > 0; i--) {
+			result.add(visitedNodes.get(i-1));
+		}
+		
+		return result;
 	}
-//	/**
-//	 * Perform dynamic slicing so that we only consider the data dependents of the wrong variable
-//	 * @param trace Complete trace
-//	 * @return sliced execution list
-//	 */
-//	private static List<TraceNode> slice(Trace trace) {
-//		UniquePriorityQueue<TraceNode> toVisit = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
-//			@Override
-//			public int compare(TraceNode t1, TraceNode t2) {
-//				return t2.getOrder() - t1.getOrder();
-//			}
-//		});
-//		
-//		List<TraceNode> visitedNodes = new ArrayList<>();
-//		
-//		TraceNode latestNode = trace.getLatestNode();
-//		if (latestNode.getCodeStatement().equals("}")) {
-//			latestNode = trace.getTraceNode(trace.size() - 1);
-//		}
-//		toVisit.addIgnoreNull(latestNode);
-//		
-//		while (toVisit.size() > 0) {
-//			TraceNode node = toVisit.poll();
-//			if (node == null)
-//				continue; // has already been visited
-//			for (VarValue v : node.getReadVariables())
-//				toVisit.addIgnoreNull(trace.findDataDependency(node, v));
-//			toVisit.addIgnoreNull(node.getControlDominator());
-//			visitedNodes.add(node);
-//		}
-//		
-//		List<TraceNode> result = new ArrayList<>(visitedNodes.size());
-//		for (int i = visitedNodes.size(); i > 0; i--) {
-//			result.add(visitedNodes.get(i-1));
-//		}
-//		
-//		return result;
-//	}
 	
 	/**
 	 * Current microbat miss the condition result for each condition trace node.

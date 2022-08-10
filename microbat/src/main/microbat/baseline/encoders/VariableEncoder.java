@@ -32,6 +32,8 @@ public class VariableEncoder extends Encoder {
 	
 	private List<VarValue> involvedArrays;
 	
+	private boolean duplicateIDFixed;
+	
 	/**
 	 * Constructor
 	 * @param trace Complete trace for testing program
@@ -56,6 +58,8 @@ public class VariableEncoder extends Encoder {
 		
 		this.userFeedbacks = new ArrayList<>();
 		this.involvedArrays = new ArrayList<>();
+		
+		this.construntVarIDMap();
 	}
 	
 	/**
@@ -83,6 +87,7 @@ public class VariableEncoder extends Encoder {
 			// Response contain the probability of each variable
 			String response = client.requestBP(graphMsg, factorMsg);
 			
+			System.out.println("response: " + response);
 			// Assign calculate probability to corresponding variable
 			Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
 			for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
@@ -92,16 +97,6 @@ public class VariableEncoder extends Encoder {
 				for (VarValue var : this.getVarByID(predID)) {
 					var.setProbability(prob);
 				}
-//				if (Constraint.isControlDomID(predID)) {
-//					System.out.println("have predID ==========");
-//					int nodeOrder = Constraint.extractNodeOrderFromCDID(predID);
-//					TraceNode node = this.trace.getTraceNode(nodeOrder);
-//					node.setProbability(prob);
-//				} else {
-//					for (VarValue var : this.getVarByID(predID)) {
-//						var.setProbability(prob);
-//					}
-//				}
 			}
 		} catch (Exception e) {
 			System.out.println("Error when communicating with server");

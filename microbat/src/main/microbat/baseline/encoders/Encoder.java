@@ -1,7 +1,9 @@
 package microbat.baseline.encoders;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import microbat.baseline.BitRepresentation;
 import microbat.baseline.constraints.Constraint;
@@ -14,30 +16,34 @@ public abstract class Encoder {
 	protected Trace trace;
 	protected List<TraceNode> executionList;
 	
+	protected Map<String, List<VarValue>> varIDMap;
+	
 	public Encoder(Trace trace, List<TraceNode> executionList) {
 		this.trace = trace;
 		this.executionList = executionList;
+		
+		this.varIDMap = new HashMap<>();
 	}
 	
 	abstract public void encode();
 	
-	protected List<VarValue> getVarByID(final String varID) {
-		List<VarValue> vars = new ArrayList<>();
-		for (TraceNode node : this.executionList) {
-			for (VarValue readVar : node.getReadVariables()) {
-				if (readVar.getVarID().equals(varID)) {
-					vars.add(readVar);
-				}
-			}
-			for (VarValue writeVar : node.getWrittenVariables()) {
-				if (writeVar.getVarID().equals(varID)) {
-					vars.add(writeVar);
-				}
-			}
-			
-		}
-		return vars;
-	}
+//	protected List<VarValue> getVarByID(final String varID) {
+//		List<VarValue> vars = new ArrayList<>();
+//		for (TraceNode node : this.executionList) {
+//			for (VarValue readVar : node.getReadVariables()) {
+//				if (readVar.getVarID().equals(varID)) {
+//					vars.add(readVar);
+//				}
+//			}
+//			for (VarValue writeVar : node.getWrittenVariables()) {
+//				if (writeVar.getVarID().equals(varID)) {
+//					vars.add(writeVar);
+//				}
+//			}
+//			
+//		}
+//		return vars;
+//	}
 	
 	protected int countReadVars(TraceNode node) {
 		return node.getReadVariables().size();
@@ -55,16 +61,22 @@ public abstract class Encoder {
 	/**
 	 * Determine should we skip the current node when generating constraints
 	 * Condition:
-	 * 1. We will not consider the node if the number of predicate is smaller than 2,
-	 *    because no constraints can be generated in this case
-	 * 2. We will not consider the node if the number of predicate is larger than 30,
-	 *    because it is too expensive to calculate
+	 * 1) We will not consider the node if the number of predicate is smaller than 2,
+	 *    because no constraint can be generated in this case.
+	 * 2) We will not consider the node if the number of predicate is larger than 30,
+	 *    because it is too expensive to calculate.
 	 * @param node Target node
-	 * @return
+	 * @return True if node can be skipped. False otherwise
 	 */
 	protected boolean isSkippable(TraceNode node) {
-		return this.countPredicates(node) <= 1 || this.countPredicates(node) > 30;
+		return this.countPredicates(node) <= 1 || this.countPredicates(node) > 30 ||
+			   (this.countReadVars(node) == 0 && !this.hasControlDom(node) ||
+			   (this.countWriteVars(node) == 0 && !this.hasControlDom(node)));
 //		return this.countPredicates(node) > 30;
+	}
+	
+	protected boolean hasControlDom(TraceNode node) {
+		return node.getControlDominator() != null;
 	}
 	
 	protected VarValue getControlDomValue(TraceNode controlDom) {
@@ -88,5 +100,61 @@ public abstract class Encoder {
 		constraint.addReadVarID(var.getVarID());
 		
 		return constraint;
+	}
+	
+	/**
+	 * Build a mapping between variable ID and variable
+	 * 
+	 * This method assume that the duplicated variable ID
+	 * problem is fixed.
+	 */
+	protected void construntVarIDMap() {
+		for (TraceNode node : this.executionList) {
+			for (VarValue readVar : node.getReadVariables()) {
+				this.addVarIDPair(readVar.getVarID(), readVar);
+			}
+			
+			for (VarValue writeVar : node.getWrittenVariables()) {
+				this.addVarIDPair(writeVar.getVarID(), writeVar);
+			}
+		}
+	}
+	
+	// Helper function to construct the var id map.
+	private void addVarIDPair(String varID, VarValue var) {
+		if (this.varIDMap.containsKey(varID)) {
+			this.varIDMap.get(varID).add(var);
+		} else {
+			List<VarValue> vars = new ArrayList<>();
+			vars.add(var);
+			this.varIDMap.put(varID, vars);
+		}
+	}
+	
+	protected List<VarValue> getVarByID_default(final String varID) {
+		List<VarValue> vars = new ArrayList<>();
+		for (TraceNode node : this.executionList) {
+			for (VarValue readVar : node.getReadVariables()) {
+				if (readVar.getVarID().equals(varID)) {
+					vars.add(readVar);
+				}
+			}
+			for (VarValue writeVar : node.getWrittenVariables()) {
+				if (writeVar.getVarID().equals(varID)) {
+					vars.add(writeVar);
+				}
+			}
+			
+		}
+		return vars;
+	}
+	
+	/**
+	 * Get all the variable that match the given ID
+	 * @param varID ID of target variable
+	 * @return List of variable that match the ID
+	 */
+	protected List<VarValue> getVarByID(final String varID) {
+		return this.varIDMap.getOrDefault(varID, this.getVarByID_default(varID));
 	}
 }
