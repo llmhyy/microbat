@@ -16,11 +16,17 @@ import microbat.recommendation.UserFeedback;
 import tracediff.TraceDiff;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Set;
 
 import jmutation.MutationFramework;
 
@@ -87,8 +93,8 @@ public class ProbabilityEncoder {
 		this.trace = trace;
 		
 		// we will only operate on a slice of the program to save time
-		this.executionList = slice(trace);
-		
+//		this.executionList = slice(trace);
+		this.executionList = null;
 		this.outputVars = null;
 		this.inputVars = null;
 	}
@@ -102,6 +108,20 @@ public class ProbabilityEncoder {
 	 * because it will clean up the previous run information
 	 */
 	public void setup() {
+		
+		/*
+		 * If no information about input and output, then we will
+		 * determine it in default way, which is not recommended.
+		 */
+		if (this.inputVars == null || this.outputVars == null) {
+			this.inputVars = this.extractDefaultInputVariables(this.trace.getExecutionList());
+			this.outputVars = this.extractDefaultOutputVariables(this.trace.getExecutionList());
+		}
+		
+		if (this.executionList == null) {
+			this.executionList = this.dynamicSlicing(this.trace, this.outputVars);
+		}
+		
 		// Clear all previous feedbacks
 		ProbabilityEncoder.clearFeedbacks();
 
@@ -138,15 +158,6 @@ public class ProbabilityEncoder {
 			return;
 		}
 		
-		/*
-		 * If no information about input and output, then we will
-		 * determine it in default way, which is not recommended.
-		 */
-		if (this.inputVars == null || this.outputVars == null) {
-			this.inputVars = this.extractDefaultInputVariables(this.executionList);
-			this.outputVars = this.extractDefaultOutputVariables(this.executionList);
-		}
-		
 		VariableEncoder varEncoder = new VariableEncoder(trace, executionList, this.inputVars, this.outputVars);
 		
 		// Include all the previous users feedback
@@ -175,7 +186,7 @@ public class ProbabilityEncoder {
 	 */
 	private List<VarValue> extractDefaultInputVariables(List<TraceNode> executionList) {
 		List<VarValue> inputVars = new ArrayList<>();
-		for (TraceNode node : this.executionList) {
+		for (TraceNode node : executionList) {
 			for (VarValue readVar : node.getReadVariables()) {
 				if (readVar.getVarName().contains("input")) {
 					boolean alreadyInside = false;
@@ -203,7 +214,7 @@ public class ProbabilityEncoder {
 	private List<VarValue> extractDefaultOutputVariables(List<TraceNode> executionList) {
 		List<VarValue> outputVars = new ArrayList<>();
 		for (int order=executionList.size()-1; order > 0; order--) {
-			TraceNode node = this.executionList.get(order);
+			TraceNode node = executionList.get(order);
 			if (!node.getWrittenVariables().isEmpty()) {
 				for (VarValue writeVar : node.getWrittenVariables()) {
 					outputVars.add(writeVar);
@@ -421,6 +432,73 @@ public class ProbabilityEncoder {
 			result.add(visitedNodes.get(i-1));
 		}
 		
+		return result;
+	}
+	
+	/**
+	 * Perform dynamic slicing based on the outputs variables 
+	 * @param outputs Output variables for the testing program
+	 * @return Execution list after dynamic slicing
+	 */
+	private List<TraceNode> dynamicSlicing(Trace trace, List<VarValue> outputs) {
+
+		/*
+		 * Get trace node that contain the output variable and store them into 
+		 * toVisit Node list
+		 * 
+		 * In case that there are multiple trace node that contain the same output variable,
+		 * we only consider the last one. (Since the other will be included during dynamic
+		 * slicing
+		 */
+		Queue<TraceNode> toVisitNodes = new LinkedList<>();
+		List<VarValue> outputsCopy = new ArrayList<>();
+		outputsCopy.addAll(outputs);
+		// Search in reversed order because output usually appear at the end
+		for (int order = trace.getLatestNode().getOrder(); order>=1; order--) {
+			TraceNode node = trace.getTraceNode(order);
+			List<VarValue> vars = node.getReadVariables();
+			vars.addAll(node.getWrittenVariables());
+			
+			Iterator<VarValue> iter = outputsCopy.iterator();
+			while(iter.hasNext()) {
+				VarValue output = iter.next();
+				if (vars.contains(output)) {
+					toVisitNodes.add(node);
+					iter.remove();
+				}
+			}
+			// Case that all the output trace node is found
+			if (outputsCopy.isEmpty()) {
+				break;
+			}
+		}
+		
+		// Perform dynamic slicing base starting from output trace node
+		// Just like doing breath first search
+		Set<TraceNode> slicingSet = new HashSet<>();
+		while (!toVisitNodes.isEmpty()) {
+			TraceNode node = toVisitNodes.poll();
+			for (VarValue readVar : node.getReadVariables()) {
+				TraceNode dataDom = trace.findDataDependency(node, readVar);
+				if (dataDom != null) {
+					toVisitNodes.add(dataDom);
+				}
+			}
+			TraceNode controlDom = node.getControlDominator();
+			if (controlDom != null) {
+				toVisitNodes.add(controlDom);
+			}
+			
+			slicingSet.add(node);
+		}
+		
+		List<TraceNode> result = new ArrayList<>(slicingSet);
+		Collections.sort(result, new Comparator<TraceNode>() {
+			@Override
+			public int compare(TraceNode node1, TraceNode node2) {
+				return node1.getOrder() - node2.getOrder();
+			}
+		});
 		return result;
 	}
 	
