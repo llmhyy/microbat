@@ -456,7 +456,8 @@ public class ProbabilityEncoder {
 		// Search in reversed order because output usually appear at the end
 		for (int order = trace.getLatestNode().getOrder(); order>=1; order--) {
 			TraceNode node = trace.getTraceNode(order);
-			List<VarValue> vars = node.getReadVariables();
+			List<VarValue> vars = new ArrayList<>();
+			vars.addAll(node.getReadVariables());
 			vars.addAll(node.getWrittenVariables());
 			
 			Iterator<VarValue> iter = outputsCopy.iterator();
