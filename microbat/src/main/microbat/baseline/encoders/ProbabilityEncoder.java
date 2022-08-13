@@ -129,6 +129,7 @@ public class ProbabilityEncoder {
 		this.removeThisVar(executionList);
 
 		// Solve the problem of same variable ID after re-definition
+		this.changeArrayElementID(this.executionList);
 		this.changeRedefinitionID(this.executionList);
 		
 		// Add condition result as control predicate
@@ -152,6 +153,19 @@ public class ProbabilityEncoder {
 	 * Calculate the probability of the variable and statements
 	 */
 	public void encode() {
+		
+		/*
+		 * If no information about input and output, then we will
+		 * determine it in default way, which is not recommended.
+		 */
+		if (this.inputVars == null || this.outputVars == null) {
+			this.inputVars = this.extractDefaultInputVariables(this.trace.getExecutionList());
+			this.outputVars = this.extractDefaultOutputVariables(this.trace.getExecutionList());
+		}
+		
+		if (this.executionList == null) {
+			this.executionList = this.dynamicSlicing(this.trace, this.outputVars);
+		}
 		
 		if (!setupFlag) {
 			setup();
@@ -354,6 +368,36 @@ public class ProbabilityEncoder {
 				}
 			}
 		}
+	}
+	
+	private void changeArrayElementID(List<TraceNode> executionList) {
+		Map<String, String> addressMap = new HashMap<>();
+		for (TraceNode node : executionList) {
+			List<VarValue> vars = new ArrayList<>();
+			vars.addAll(node.getReadVariables());
+			vars.addAll(node.getWrittenVariables());
+			for (VarValue var : vars) {
+				if (!var.getChildren().isEmpty()) {
+					addressMap.put(var.getAliasVarID(), var.getVarID());
+				}
+			}
+		}
+		
+		for (TraceNode node : executionList) {
+			List<VarValue> vars = new ArrayList<>();
+			vars.addAll(node.getReadVariables());
+			vars.addAll(node.getWrittenVariables());
+			for (VarValue var : vars) {
+				if (!var.getParents().isEmpty()) {
+					String address = this.extractAddressFromElementID(var.getVarID());
+					var.setVarID(addressMap.get(address));
+				}
+			}
+		}
+	}
+	
+	private String extractAddressFromElementID(final String id) {
+		return id.substring(0, id.indexOf('['));
 	}
 	
 	private void populatePriorityQueue() {
