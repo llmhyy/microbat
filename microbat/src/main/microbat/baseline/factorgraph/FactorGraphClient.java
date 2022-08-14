@@ -92,19 +92,12 @@ public class FactorGraphClient {
 	 * @return String response from the server
 	 * @throws Exception Throw when server does not response or have wrong response
 	 */
-	public String requestBP(final String graphStruct, final String factors) throws Exception {
+	public String requestBP(final String graphStruct, final String factors) {
 		byte[] graphInput = this.strToByte(graphStruct);
 		byte[] factorInput = this.strToByte(factors);
 		
 		byte[] response = this.request(graphInput, factorInput);
-		if (response == null) {
-			throw new Exception("Server return null value");
-		}
-		
 		String responst_str = this.byteToStr(response);
-		if (this.isErrorResponse(responst_str)) {
-			throw new Exception("Server return error response");
-		}
 		
 		return responst_str;
 	}
@@ -146,7 +139,7 @@ public class FactorGraphClient {
 	 * @return Response from server in byte
 	 * @throws Exception When failed to connect the server
 	 */
-	private byte[] request(byte[] graphInput, byte[] factorInput) throws Exception {
+	private byte[] request(byte[] graphInput, byte[] factorInput) {
 		if (this.isReady()) {
 			try {
 				System.out.println("Client: graphInput size: " + graphInput.length + " factorInput size: " + factorInput.length);
@@ -165,7 +158,10 @@ public class FactorGraphClient {
 				this.writer.write(factorInput);
 				
 				byte[] response = new byte[this.BUFFER_SIZE];
-				this.reader.read(response);
+				int integer = this.reader.read(response);
+				if (integer == -1) {
+					throw new RuntimeException("No response from server");
+				}
 				
 				return response;
 			} catch (IOException e) {
@@ -176,7 +172,7 @@ public class FactorGraphClient {
 				e.printStackTrace();
 			}
 		} else {
-			throw new Exception("Socket is not ready");
+			throw new RuntimeException("Socket is not ready");
 		}
 		return null;
 	}
@@ -191,9 +187,5 @@ public class FactorGraphClient {
 	
 	private boolean isReady() {
 		return this.socket != null && this.writer != null && this.reader != null;
-	}
-	
-	private boolean isErrorResponse(final String response) {
-		return response == null || response == "";
 	}
 }

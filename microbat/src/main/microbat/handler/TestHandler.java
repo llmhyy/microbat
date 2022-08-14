@@ -29,6 +29,8 @@ public class TestHandler extends AbstractHandler {
 		
 		mutationFramework.setProjectPath("C:/Users/arkwa/git/java-mutation-framework/sample/math_70");
 		mutationFramework.setDropInsDir("C:/Users/arkwa/git/java-mutation-framework/lib");
+
+		MutationResult result = mutationFramework.startMutationFramework();
 		
 //		List<MutationResult> mutationResults = mutationFramework.startMutationFramework();
 //		for (MutationResult mutationResult : mutationResults) {

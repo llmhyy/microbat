@@ -81,29 +81,24 @@ public class VariableEncoder extends Encoder {
 		String graphMsg = msgProcessor.buildGraphMsg(constraints);
 		String factorMsg = msgProcessor.buildFactorMsg(constraints);
 		
-		try {
-			client.conntectServer();
+		client.conntectServer();
+		
+		// Response contain the probability of each variable
+		String response = client.requestBP(graphMsg, factorMsg);
+		
+		System.out.println("response: " + response);
+		// Assign calculate probability to corresponding variable
+		Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
+		for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
+			String predID = pair.getKey();
+			Double prob = pair.getValue();
 			
-			// Response contain the probability of each variable
-			String response = client.requestBP(graphMsg, factorMsg);
-			
-			System.out.println("response: " + response);
-			// Assign calculate probability to corresponding variable
-			Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
-			for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
-				String predID = pair.getKey();
-				Double prob = pair.getValue();
-				
-				for (VarValue var : this.getVarByID(predID)) {
-					var.setProbability(prob);
-				}
+			for (VarValue var : this.getVarByID(predID)) {
+				var.setProbability(prob);
 			}
-		} catch (Exception e) {
-			System.out.println("Error when communicating with server");
-			e.printStackTrace();
-		} finally {
-			client.disconnectServer();
 		}
+		
+		client.disconnectServer();
 	}
 	
 	public void setFeedbacks(List<NodeFeedbackPair> userFeedbacks) {
