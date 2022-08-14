@@ -390,13 +390,18 @@ public class ProbabilityEncoder {
 			for (VarValue var : vars) {
 				if (!var.getParents().isEmpty()) {
 					String address = this.extractAddressFromElementID(var.getVarID());
-					var.setVarID(addressMap.get(address));
+					if (address != null) {
+						var.setVarID(addressMap.get(address));
+					}
 				}
 			}
 		}
 	}
 	
 	private String extractAddressFromElementID(final String id) {
+		if (id.indexOf('[')==-1) {
+			return null;
+		}
 		return id.substring(0, id.indexOf('['));
 	}
 	
