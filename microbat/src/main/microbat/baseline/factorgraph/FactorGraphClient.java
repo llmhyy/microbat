@@ -167,8 +167,7 @@ public class FactorGraphClient {
 			} catch (IOException e) {
 				System.out.println("Error: Fail to send or receive data from model server.");
 				e.printStackTrace();
-			} catch (Exception e) {
-				System.out.println("Faile to sleep");
+			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		} else {

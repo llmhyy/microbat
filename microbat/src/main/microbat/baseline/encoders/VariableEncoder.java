@@ -30,10 +30,6 @@ public class VariableEncoder extends Encoder {
 	
 	private List<NodeFeedbackPair> userFeedbacks;
 	
-	private List<VarValue> involvedArrays;
-	
-	private boolean duplicateIDFixed;
-	
 	/**
 	 * Constructor
 	 * @param trace Complete trace for testing program
@@ -57,7 +53,6 @@ public class VariableEncoder extends Encoder {
 		this.propCalculator = new PropagationCalculator();
 		
 		this.userFeedbacks = new ArrayList<>();
-		this.involvedArrays = new ArrayList<>();
 		
 		this.construntVarIDMap();
 	}
@@ -103,10 +98,6 @@ public class VariableEncoder extends Encoder {
 	
 	public void setFeedbacks(List<NodeFeedbackPair> userFeedbacks) {
 		this.userFeedbacks = userFeedbacks;
-	}
-	
-	public void setInvolvedArrays(List<VarValue> arrays) {
-		this.involvedArrays = arrays;
 	}
 	
 	/**

@@ -118,6 +118,9 @@ public class ProbabilityEncoder {
 			this.outputVars = this.extractDefaultOutputVariables(this.trace.getExecutionList());
 		}
 		
+		// [Important] This method must be called before dynamic slicing
+		this.fillMethodCallVariables(trace, trace.getExecutionList());
+		
 		if (this.executionList == null) {
 			this.executionList = this.dynamicSlicing(this.trace, this.outputVars);
 		}
@@ -127,7 +130,7 @@ public class ProbabilityEncoder {
 
 		// Remove this variable
 		this.removeThisVar(executionList);
-
+		
 		// Solve the problem of same variable ID after re-definition
 		this.changeArrayElementID(this.executionList);
 		this.changeRedefinitionID(this.executionList);
@@ -163,6 +166,9 @@ public class ProbabilityEncoder {
 			this.outputVars = this.extractDefaultOutputVariables(this.trace.getExecutionList());
 		}
 		
+		// [Important] This method must be called before dynamic slicing
+		this.fillMethodCallVariables(trace, trace.getExecutionList());
+				
 		if (this.executionList == null) {
 			this.executionList = this.dynamicSlicing(this.trace, this.outputVars);
 		}
@@ -615,6 +621,72 @@ public class ProbabilityEncoder {
 	 */
 	private String genConditionResultID(final int order) {
 		return ProbabilityEncoder.CONDITION_RESULT_ID_PRE + order;
+	}
+	
+	/**
+	 * This method is used to fix the error that the instrumentator failed
+	 * to recognized the write variable in method call statement
+	 * @param trace Trace of target program
+	 * @param executionList Execution list of target program
+	 */
+	private void fillMethodCallVariables(Trace trace, List<TraceNode> executionList) {
+		for (TraceNode node : executionList) {
+			
+			// We only focus on method call node
+			if (node.getInvocationChildren().isEmpty()) {
+				continue;
+			}
+			
+			// We only focus on the case that instrumentator failed to recognized the writen variable
+			if (!node.getReadVariables().isEmpty() && node.getWrittenVariables().isEmpty()) {
+				
+				// Deep copy the required parameters of the method call
+				List<VarValue> parameters = new ArrayList<>();
+				parameters.addAll(node.getReadVariables());
+				
+				// Try to find the read variable whose data dominator is out of scope of the method
+				Set<Integer> childrenOrder = new HashSet<>();
+				for (TraceNode childNode : node.getInvocationChildren()) {
+					childrenOrder.add(childNode.getOrder());
+					
+					for (VarValue readVar : childNode.getReadVariables()) {
+						TraceNode dataDominator = trace.findDataDependency(childNode, readVar);
+						if (dataDominator != null) {
+							/*
+							 * If the data dominator is out of scope, that mean
+							 * it may be the parameter of the method.
+							 */
+							if (!childrenOrder.contains(dataDominator.getOrder())) {
+								
+								// We need to make sure that the variables are correspondence.
+								for (VarValue writeVar : dataDominator.getWrittenVariables()) {
+									
+									// Double check the data dependency relation
+									if (!writeVar.getType().equals(readVar.getType())) {
+										continue;
+									}
+
+									if (trace.findDataDependentee(dataDominator, writeVar).contains(childNode)) {
+										for (int idx=0; idx<parameters.size(); idx++) {
+											/*
+											 * If the data dominator is one of the parameter of method,
+											 * then add the variable into the method call.
+											 */
+											VarValue parameter = parameters.get(idx);
+											if (parameter.equals(writeVar)) {
+												node.addWrittenVariable(readVar);
+												parameters.remove(idx);
+												break;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	/**
