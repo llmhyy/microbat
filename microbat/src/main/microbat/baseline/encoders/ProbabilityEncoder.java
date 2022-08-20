@@ -68,6 +68,8 @@ public class ProbabilityEncoder {
 	 * True if the environment has already been set up
 	 */
 	private boolean setupFlag = false;
+	
+	private boolean fillFlag = false;
 
 	/**
 	 * List of user feedback on correspondence node
@@ -119,7 +121,9 @@ public class ProbabilityEncoder {
 		}
 		
 		// [Important] This method must be called before dynamic slicing
-		this.fillMethodCallVariables(trace, trace.getExecutionList());
+		if (!this.fillFlag) {
+			this.fillMethodCallVariables(trace, trace.getExecutionList());
+		}
 		
 		if (this.executionList == null) {
 			this.executionList = this.dynamicSlicing(this.trace, this.outputVars);
@@ -167,7 +171,10 @@ public class ProbabilityEncoder {
 		}
 		
 		// [Important] This method must be called before dynamic slicing
-		this.fillMethodCallVariables(trace, trace.getExecutionList());
+		if (!this.fillFlag) {
+			this.fillMethodCallVariables(trace, trace.getExecutionList());
+		}
+		
 				
 		if (this.executionList == null) {
 			this.executionList = this.dynamicSlicing(this.trace, this.outputVars);
@@ -668,6 +675,7 @@ public class ProbabilityEncoder {
 								// We need to make sure that the variables are correspondence.
 								for (VarValue writeVar : dataDominator.getWrittenVariables()) {
 									
+									boolean added = false;
 									// Double check the data dependency relation
 									if (!writeVar.getType().equals(readVar.getType())) {
 										continue;
@@ -683,9 +691,14 @@ public class ProbabilityEncoder {
 											if (parameter.equals(writeVar)) {
 												node.addWrittenVariable(readVar);
 												parameters.remove(idx);
+												added = true;
 												break;
 											}
 										}
+									}
+									
+									if (added) {
+										break;
 									}
 								}
 							}
@@ -694,8 +707,13 @@ public class ProbabilityEncoder {
 				}
 			}
 		}
+		
+		this.fillFlag = true;
 	}
 	
+	public void setFillFlag(boolean flag) {
+		this.fillFlag = flag;
+	}
 	/**
 	 * Update probability based on the feedback.
 	 * @param node Trace node that the feedback referring to.

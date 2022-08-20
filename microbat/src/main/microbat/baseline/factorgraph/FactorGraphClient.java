@@ -167,7 +167,8 @@ public class FactorGraphClient {
 			} catch (IOException e) {
 				System.out.println("Error: Fail to send or receive data from model server.");
 				e.printStackTrace();
-			} catch (InterruptedException e) {
+			} 
+			catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		} else {
