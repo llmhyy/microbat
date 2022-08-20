@@ -505,7 +505,14 @@ public class ProbabilityEncoder {
 		 * we only consider the last one. (Since the other will be included during dynamic
 		 * slicing
 		 */
-		Queue<TraceNode> toVisitNodes = new LinkedList<>();
+		
+		UniquePriorityQueue<TraceNode> toVisitNodes = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
+			@Override
+			public int compare(TraceNode t1, TraceNode t2) {
+				return t2.getOrder() - t1.getOrder();
+			}
+		});
+		
 		List<VarValue> outputsCopy = new ArrayList<>();
 		outputsCopy.addAll(outputs);
 		// Search in reversed order because output usually appear at the end
