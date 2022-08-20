@@ -126,7 +126,7 @@ public class ProbabilityEncoder {
 		}
 		
 		if (this.executionList == null) {
-			this.executionList = this.dynamicSlicing(this.trace, this.outputVars);
+			this.executionList = this.dynamicSlicing(this.trace, this.outputVars, this.inputVars);
 		}
 		
 		// Clear all previous feedbacks
@@ -177,7 +177,7 @@ public class ProbabilityEncoder {
 		
 				
 		if (this.executionList == null) {
-			this.executionList = this.dynamicSlicing(this.trace, this.outputVars);
+			this.executionList = this.dynamicSlicing(this.trace, this.outputVars, this.inputVars);
 		}
 		
 		if (!setupFlag) {
@@ -498,20 +498,44 @@ public class ProbabilityEncoder {
 	}
 	
 	/**
-	 * Perform dynamic slicing based on the outputs variables 
+	 * Perform dynamic slicing based on the outputs variables
+	 * until it reach the inputs.
+	 * 
 	 * @param outputs Output variables for the testing program
+	 * @param inputs Input variables for the testing program
 	 * @return Execution list after dynamic slicing
 	 */
-	private List<TraceNode> dynamicSlicing(Trace trace, List<VarValue> outputs) {
+	private List<TraceNode> dynamicSlicing(Trace trace, List<VarValue> outputs, List<VarValue> inputs) {
 
 		/*
-		 * Get trace node that contain the output variable and store them into 
-		 * toVisit Node list
+		 * Get trace node that contain the output variable or input variables and store them into 
+		 * toVisit Node list and destination list respectively
 		 * 
 		 * In case that there are multiple trace node that contain the same output variable,
 		 * we only consider the last one. (Since the other will be included during dynamic
 		 * slicing
+		 * 
 		 */
+		
+		Set<TraceNode> destinationNodes = new HashSet<>();
+		List<VarValue> inputs_copy = new ArrayList<>();
+		inputs_copy.addAll(inputs);
+		for (TraceNode node : trace.getExecutionList()) {
+			Iterator<VarValue> iter = inputs_copy.iterator();
+			while(iter.hasNext()) {
+				VarValue input = iter.next();
+				if (node.isReadVariablesContains(input.getVarID()) ||
+					node.isWrittenVariablesContains(input.getVarID())) {
+					destinationNodes.add(node);
+					iter.remove();
+				}
+			}
+			
+			// Early stopping: when all input has been found
+			if (inputs_copy.isEmpty()) {
+				break;
+			}
+		}
 		
 		UniquePriorityQueue<TraceNode> toVisitNodes = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
 			@Override
@@ -525,19 +549,19 @@ public class ProbabilityEncoder {
 		// Search in reversed order because output usually appear at the end
 		for (int order = trace.getLatestNode().getOrder(); order>=1; order--) {
 			TraceNode node = trace.getTraceNode(order);
-			List<VarValue> vars = new ArrayList<>();
-			vars.addAll(node.getReadVariables());
-			vars.addAll(node.getWrittenVariables());
-			
+
+			// Store to visit node
 			Iterator<VarValue> iter = outputsCopy.iterator();
 			while(iter.hasNext()) {
 				VarValue output = iter.next();
-				if (vars.contains(output)) {
+				if (node.isReadVariablesContains(output.getVarID()) ||
+					node.isWrittenVariablesContains(output.getVarID())) {
 					toVisitNodes.add(node);
 					iter.remove();
 				}
 			}
-			// Case that all the output trace node is found
+			
+			// Early stopping: when all output has been found
 			if (outputsCopy.isEmpty()) {
 				break;
 			}
@@ -548,6 +572,12 @@ public class ProbabilityEncoder {
 		Set<TraceNode> slicingSet = new HashSet<>();
 		while (!toVisitNodes.isEmpty()) {
 			TraceNode node = toVisitNodes.poll();
+			
+			// Stop when it reach the input node
+			if (destinationNodes.contains(node)) {
+				continue;
+			}
+			
 			for (VarValue readVar : node.getReadVariables()) {
 				TraceNode dataDom = trace.findDataDependency(node, readVar);
 				if (dataDom != null) {
