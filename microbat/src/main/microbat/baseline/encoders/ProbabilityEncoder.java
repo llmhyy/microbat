@@ -400,14 +400,33 @@ public class ProbabilityEncoder {
 			List<VarValue> vars = new ArrayList<>();
 			vars.addAll(node.getReadVariables());
 			vars.addAll(node.getWrittenVariables());
+			
+			boolean hasChange = false;
 			for (VarValue var : vars) {
 				if (!var.getParents().isEmpty()) {
 					String address = this.extractAddressFromElementID(var.getVarID());
 					if (address != null && addressMap.get(address) != null) {
 						var.setVarID(addressMap.get(address));
+						hasChange = true;
 					}
 				}
 			}
+			
+			if (hasChange) {
+				// Remove the variable that have the same ID
+				Iterator<VarValue> iter = node.getReadVariables().iterator();
+				Set<String> IDs = new HashSet<>();
+				while(iter.hasNext()) {
+					VarValue var = iter.next();
+					if (IDs.contains(var.getVarID())) {
+						iter.remove();
+					} else {
+						IDs.add(var.getVarID());
+					}
+				}
+			}
+			
+			
 		}
 	}
 	

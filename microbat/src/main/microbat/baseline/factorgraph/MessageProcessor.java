@@ -84,7 +84,7 @@ public class MessageProcessor {
 		for (Constraint constraint : constraints) {
 			strBuilder.append(constraint.getConstraintID());
 			strBuilder.append(this.DELIMITER_2);
-			
+
 			for (String predID : constraint.getInvolvedPredIDs()) {
 				String convertedID = IDConverter.varID2GraphID(predID);
 				strBuilder.append(convertedID);
@@ -105,6 +105,8 @@ public class MessageProcessor {
 			// Remove the last delimiter
 			strBuilder.deleteCharAt(strBuilder.length()-1);
 			strBuilder.append(this.DELIMITER_2);
+			
+			
 		}
 		
 		// Remove the last delimiter
