@@ -148,7 +148,7 @@ public class StatementEncoder extends Encoder{
 	 * @param node Target TraceNode
 	 * @return List of constraints
 	 */
-	private List<Constraint> genConstraints(TraceNode node) {
+	protected List<Constraint> genConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		constraints.addAll(this.genVarToStatConstraints(node));
 //		constraints.addAll(this.genStructureConstraints(node));
@@ -162,7 +162,7 @@ public class StatementEncoder extends Encoder{
 	 * @param node Target trace node
 	 * @return List of constraints
 	 */
-	private List<Constraint> genVarToStatConstraints(TraceNode node) {
+	protected List<Constraint> genVarToStatConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		
 		final int readLen = this.countReadVars(node);
@@ -199,14 +199,17 @@ public class StatementEncoder extends Encoder{
 		
 		// Variable to statement constraint A1
 		Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
+		constraintA1.setVarsID(node);
 		constraints.add(constraintA1);
 		
 		// Variable to statement constraint A2
 		Constraint constraintA2 = new StatementConstraintA2(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
+		constraintA2.setVarsID(node);
 		constraints.add(constraintA2);
 		
 		// Variable to statement constraint A3
 		Constraint constraintA3 = new StatementConstraintA3(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
+		constraintA3.setVarsID(node);
 		constraints.add(constraintA3);
 		
 		// Variable to statement constraint A
@@ -218,7 +221,7 @@ public class StatementEncoder extends Encoder{
 	 * @param node Target trace node
 	 * @return List of constraints
 	 */
-	private List<Constraint> genPriorConstraints(TraceNode node) {
+	protected List<Constraint> genPriorConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		
 		final int readLen = this.countReadVars(node);

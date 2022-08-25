@@ -197,6 +197,7 @@ public class ProbabilityEncoder {
 		
 		// Calculate the probability for statements
 		new StatementEncoder(trace, executionList).encode();
+//		new StatementEncoderFG(trace, executionList).encode();
 		
 		long endTime = System.currentTimeMillis();
 		
@@ -437,15 +438,15 @@ public class ProbabilityEncoder {
 		return id.substring(0, id.indexOf('['));
 	}
 	
-	private void populatePriorityQueue() {
-		probabilities = new PriorityQueue<>(new Comparator<TraceNode>() {
-			@Override
-			public int compare(TraceNode t1, TraceNode t2) {
-				return Double.compare(t1.getProbability(), t2.getProbability());
-			}
-		});
-		probabilities.addAll(executionList);
-	}
+//	private void populatePriorityQueue() {
+//		probabilities = new PriorityQueue<>(new Comparator<TraceNode>() {
+//			@Override
+//			public int compare(TraceNode t1, TraceNode t2) {
+//				return Double.compare(t1.getProbability(), t2.getProbability());
+//			}
+//		});
+//		probabilities.addAll(executionList);
+//	}
 	
 	private void removeThisVar(List<TraceNode> executionList) {
 		for (TraceNode node : executionList) {
@@ -477,44 +478,44 @@ public class ProbabilityEncoder {
 		}
 	}
 	
-	/**
-	 * Perform dynamic slicing so that we only consider the data dependents of the wrong variable
-	 * @param trace Complete trace
-	 * @return sliced execution list
-	 */
-	private static List<TraceNode> slice(Trace trace) {
-		UniquePriorityQueue<TraceNode> toVisit = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
-			@Override
-			public int compare(TraceNode t1, TraceNode t2) {
-				return t2.getOrder() - t1.getOrder();
-			}
-		});
-		
-		List<TraceNode> visitedNodes = new ArrayList<>();
-		
-		TraceNode latestNode = trace.getLatestNode();
-		if (latestNode.getCodeStatement().equals("}")) {
-			latestNode = trace.getTraceNode(trace.size() - 1);
-		}
-		toVisit.addIgnoreNull(latestNode);
-		
-		while (toVisit.size() > 0) {
-			TraceNode node = toVisit.poll();
-			if (node == null)
-				continue; // has already been visited
-			for (VarValue v : node.getReadVariables())
-				toVisit.addIgnoreNull(trace.findDataDependency(node, v));
-			toVisit.addIgnoreNull(node.getControlDominator());
-			visitedNodes.add(node);
-		}
-		
-		List<TraceNode> result = new ArrayList<>(visitedNodes.size());
-		for (int i = visitedNodes.size(); i > 0; i--) {
-			result.add(visitedNodes.get(i-1));
-		}
-		
-		return result;
-	}
+//	/**
+//	 * Perform dynamic slicing so that we only consider the data dependents of the wrong variable
+//	 * @param trace Complete trace
+//	 * @return sliced execution list
+//	 */
+//	private static List<TraceNode> slice(Trace trace) {
+//		UniquePriorityQueue<TraceNode> toVisit = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
+//			@Override
+//			public int compare(TraceNode t1, TraceNode t2) {
+//				return t2.getOrder() - t1.getOrder();
+//			}
+//		});
+//		
+//		List<TraceNode> visitedNodes = new ArrayList<>();
+//		
+//		TraceNode latestNode = trace.getLatestNode();
+//		if (latestNode.getCodeStatement().equals("}")) {
+//			latestNode = trace.getTraceNode(trace.size() - 1);
+//		}
+//		toVisit.addIgnoreNull(latestNode);
+//		
+//		while (toVisit.size() > 0) {
+//			TraceNode node = toVisit.poll();
+//			if (node == null)
+//				continue; // has already been visited
+//			for (VarValue v : node.getReadVariables())
+//				toVisit.addIgnoreNull(trace.findDataDependency(node, v));
+//			toVisit.addIgnoreNull(node.getControlDominator());
+//			visitedNodes.add(node);
+//		}
+//		
+//		List<TraceNode> result = new ArrayList<>(visitedNodes.size());
+//		for (int i = visitedNodes.size(); i > 0; i--) {
+//			result.add(visitedNodes.get(i-1));
+//		}
+//		
+//		return result;
+//	}
 	
 	/**
 	 * Perform dynamic slicing based on the outputs variables
