@@ -20,14 +20,16 @@ public class MessageProcessor {
 	
 	private final String DELIMITER_1;
 	private final String DELIMITER_2;
+	private final String MUL_SIGN;
 	
 	public MessageProcessor() {
-		this(",", "&");
+		this(",", "&", "*");
 	}
 	
-	public MessageProcessor(String delimiter_1, String delimiter_2) {
+	public MessageProcessor(String delimiter_1, String delimiter_2, String mul_sign) {
 		this.DELIMITER_1 = delimiter_1;
 		this.DELIMITER_2 = delimiter_2;
+		this.MUL_SIGN = mul_sign;
 	}
 	
 	public String getDelimieter_1() {
@@ -97,13 +99,28 @@ public class MessageProcessor {
 			final int totalLen = constraint.getPredicateCount();
 			final int maxCase = 1 << totalLen;
 			
-			for (int caseNo=0; caseNo < maxCase; caseNo++) {
+			double prevProb = constraint.getProbability(0);
+			int count = 1;
+			for (int caseNo=1; caseNo < maxCase; caseNo++) {
 				double prob = constraint.getProbability(caseNo);
-				strBuilder.append(prob);
-				strBuilder.append(this.DELIMITER_1);
+				if (prob == prevProb) {
+					count += 1;
+				} else {
+					strBuilder.append(prevProb);
+					strBuilder.append(this.MUL_SIGN);
+					strBuilder.append(count);
+					strBuilder.append(this.DELIMITER_1);
+					prevProb = prob;
+					count = 1;
+				}
 			}
+			
+			strBuilder.append(prevProb);
+			strBuilder.append(this.MUL_SIGN);
+			strBuilder.append(count);
 			// Remove the last delimiter
-			strBuilder.deleteCharAt(strBuilder.length()-1);
+//			strBuilder.deleteCharAt(strBuilder.length()-1);
+			
 			strBuilder.append(this.DELIMITER_2);
 			
 			

@@ -30,8 +30,8 @@ public class VarIDConverter {
 		 */
 		this.replacementMap = new HashMap<>();
 		this.replacementMap.put(",", "@");
-		this.replacementMap.put("(", "^");
-		this.replacementMap.put(")", "*");
+		this.replacementMap.put("(", "<");
+		this.replacementMap.put(")", ">");
 	}
 	
 	/**
