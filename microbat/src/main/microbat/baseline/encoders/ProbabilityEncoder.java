@@ -196,8 +196,8 @@ public class ProbabilityEncoder {
 		varEncoder.encode();	
 		
 		// Calculate the probability for statements
-		new StatementEncoder(trace, executionList).encode();
-//		new StatementEncoderFG(trace, executionList).encode();
+//		new StatementEncoder(trace, executionList).encode();
+		new StatementEncoderFG(trace, executionList).encode();
 		
 		long endTime = System.currentTimeMillis();
 		
@@ -595,6 +595,7 @@ public class ProbabilityEncoder {
 			
 			// Stop when it reach the input node
 			if (destinationNodes.contains(node)) {
+				slicingSet.add(node);
 				continue;
 			}
 			
