@@ -197,21 +197,45 @@ public class StatementEncoder extends Encoder{
 			controlDomID = controlDomValue.getVarID();
 		}
 		
-		// Variable to statement constraint A1
-		Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
-		constraintA1.setVarsID(node);
-		constraints.add(constraintA1);
-		
-		// Variable to statement constraint A2
-		Constraint constraintA2 = new StatementConstraintA2(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
-		constraintA2.setVarsID(node);
-		constraints.add(constraintA2);
-		
-		// Variable to statement constraint A3
-		Constraint constraintA3 = new StatementConstraintA3(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
-		constraintA3.setVarsID(node);
-		constraints.add(constraintA3);
-		
+		/*
+		 * Consider the following special cases
+		 * 1. Trace Node only have written variable
+		 * 2. Trace Node only have read variable
+		 * 3. Trace Node only have control dominator
+		 * 
+		 * Then the statement correctness will only
+		 * depends on the predicate it has (only have
+		 * one constraint)
+		 * 
+		 * Note that the case that node does not have anything
+		 * does not exist, because this kind of node will not
+		 * be included during the dynamic slicing
+		 */
+		if ((readLen == 0 && writeLen == 0) || // 3rd case
+			(readLen == 0 && writeLen != 0) || // 1st case
+			(readLen != 0 && writeLen == 0)) { // 2nd case
+			
+			Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
+			constraintA1.setVarsID(node);
+			constraints.add(constraintA1);
+		} else {
+			
+			// Variable to statement constraint A1
+			Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
+			constraintA1.setVarsID(node);
+			constraints.add(constraintA1);
+			
+			// Variable to statement constraint A2
+			Constraint constraintA2 = new StatementConstraintA2(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
+			constraintA2.setVarsID(node);
+			constraints.add(constraintA2);
+			
+			// Variable to statement constraint A3
+			Constraint constraintA3 = new StatementConstraintA3(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
+			constraintA3.setVarsID(node);
+			constraints.add(constraintA3);
+		}
+
 		// Variable to statement constraint A
 		return constraints;
 	}
