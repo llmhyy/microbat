@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import microbat.baseline.BitRepresentation;
 import microbat.baseline.Configs;
@@ -23,14 +24,6 @@ import microbat.model.value.VarValue;
  *
  */
 public class StatementEncoder extends Encoder{
-//	private Trace trace;
-//	private List<TraceNode> slice;
-//	private HashMap<BreakPoint, Integer> instOccurence = new HashMap<>();
-//	private HashMap<BreakPoint, Integer> instInSlice = new HashMap<>();
-//	private HashMap<String, Integer> sliceInFunc = new HashMap<>();
-//	private HashSet<String> faultyVars = new HashSet<>();
-//	private boolean populated = false;
-//	private int sliceSize = 0;
 	
 	/**
 	 * Total number umber of constraints involved
@@ -45,12 +38,6 @@ public class StatementEncoder extends Encoder{
 	public StatementEncoder(Trace trace, List<TraceNode> executionList) {
 		super(trace, executionList);
 		this.constraintsCount = 0;
-//		this.trace = trace;
-//		this.slice = slice;
-//		TraceNode last = slice.get(slice.size() - 1);
-//		for (VarValue v : last.getReadVariables()) {
-//			faultyVars.add(v.getVarName());
-//		}
 	}
 	
 	/**
@@ -71,19 +58,11 @@ public class StatementEncoder extends Encoder{
 		return super.countPredicates(node)+1;
 	}
 	
-//	@Override 
-//	protected boolean isSkippable(TraceNode node) {
-//		/*
-//		 * For statement encoder, we will still handle the case
-//		 * that the number predicate is smaller than 2
-//		 */
-//		return this.countPredicates(node) > 30;
-//	}
-	
 	@Override
 	protected boolean isSkippable(TraceNode node) {
 		return this.countPredicates(node) >= 30;
 	}
+	
 	/**
 	 * Calculate the probability of correctness of given trace node
 	 * @param tn Target trace node
@@ -94,27 +73,7 @@ public class StatementEncoder extends Encoder{
 			return;
 		}
 		
-//		if (this.countPredicates(tn) <= 1) {
-//			this.handleNonConstraintNode(tn);
-//			return;
-//		}
-		
 		final int totalLen = this.countPredicates(tn);
-		
-//		Special case that when there only one variable involved, then the
-//		probability of correctness will the same as the variable
-//		if (totalLen == 2) {
-//			if (this.countWriteVars(tn) == 1) {
-//				for (VarValue writeVar : tn.getWrittenVariables()) {
-//					tn.setProbability(writeVar.getProbability());
-//				}
-//			} else if (this.countReadVars(tn) == 1) {
-//				for (VarValue readVar : tn.getWrittenVariables()) {
-//					tn.setProbability(readVar.getProbability());
-//				}
-//			}
-//			return;
-//		}
 		
 		List<Constraint> constraints = this.genConstraints(tn);
 		this.constraintsCount += constraints.size();
@@ -123,26 +82,22 @@ public class StatementEncoder extends Encoder{
 		InferenceModel model = new InferenceModel(constraints);
 		// model.printTable();
 		double prob = model.getProbability(conclusionIdx);
-//		if (Math.abs(tn.getProbability() - prob) > 0.01) {
-//			hasChange = true;
-//		}
 
 		tn.setProbability(prob);
 	}
-
-//	private void handleNonConstraintNode(TraceNode node) {
-//		List<VarValue> vars = this.countReadVars(node) == 0 ? node.getWrittenVariables() : node.getReadVariables();
-//		
-//		TraceNode
-//		double avgProb = 0;
-//		for (VarValue var : vars) {
-//			avgProb += var.getProbability();
-//		}
-//		avgProb /= vars.size();
-//		
-//		node.setProbability(avgProb);
-//	}
 	
+	/**
+	 * Generate all the constraints of execution list
+	 * @return List of constraints
+	 */
+	protected List<Constraint> genConstraints() {
+		List<Constraint> constraints = new ArrayList<>();
+		for (TraceNode node : this.executionList) {
+			constraints.addAll(this.genVarToStatConstraints(node));
+		}
+		
+		return constraints;
+	}
 	/**
 	 * Generate constraints for given trace node
 	 * @param node Target TraceNode

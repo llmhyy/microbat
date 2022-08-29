@@ -28,41 +28,44 @@ public class StatementEncoderFG extends StatementEncoder {
 
 	@Override
 	public void encode() {
-		List<Constraint> constraints = new ArrayList<>();
-		for (TraceNode node : this.executionList) {
-
-			if (this.isSkippable(node)) {
-				continue;
-			}
-
-			constraints.addAll(this.genVarToStatConstraints(node));
-			constraints.addAll(this.genPriorConstraints(node));
-		}
 		
 		FactorGraphClient client = new FactorGraphClient();
 		MessageProcessor msgProcessor = new MessageProcessor();
 		
-		String graphMsg = msgProcessor.buildGraphMsg(constraints);
-		String factorMsg = msgProcessor.buildFactorMsg(constraints);
-		
 		try {
-			client.conntectServer();
-			String response = client.requestBP(graphMsg, factorMsg);
-			
-			Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
-			for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
-				String predID = pair.getKey();
-				Double prob = pair.getValue();
-				if (StatementConstraint.isStatID(predID)) {
-					int nodeOrder = StatementConstraint.extractStatOrderFromID(predID);
-					TraceNode node = this.trace.getTraceNode(nodeOrder);
-					node.setProbability(prob);
+			for (TraceNode node : this.executionList) {
+				if (this.isSkippable(node)) {
+					continue;
 				}
+				
+				List<Constraint> constraints = new ArrayList<>();
+				constraints.addAll(this.genVarToStatConstraints(node));
+				constraints.addAll(this.genPriorConstraints(node));
+				
+				String graphMsg = msgProcessor.buildGraphMsg(constraints);
+				String factorMsg = msgProcessor.buildFactorMsg(constraints);
+				
+				client.conntectServer();
+				String response = client.requestBP(graphMsg, factorMsg);
+				
+				Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
+				for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
+					String predID = pair.getKey();
+					Double prob = pair.getValue();
+					if (StatementConstraint.isStatID(predID)) {
+						int nodeOrder = StatementConstraint.extractStatOrderFromID(predID);
+						if (nodeOrder == node.getOrder()) {
+							node.setProbability(prob);
+						}
+					}
+				}
+				client.disconnectServer();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
 			client.disconnectServer();
+		} finally {
+//			client.disconnectServer();
 		}
 	}
 	
