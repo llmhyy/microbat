@@ -65,6 +65,9 @@ public abstract class Encoder {
 	 *    because no constraint can be generated in this case.
 	 * 2) We will not consider the node if the number of predicate is larger than 30,
 	 *    because it is too expensive to calculate.
+	 * 3) We will not consider the node if the node do not have control dominator while
+	 * 	  there are no read or written variables, because reasonable constraint can be
+	 * 	  formed.
 	 * @param node Target node
 	 * @return True if node can be skipped. False otherwise
 	 */

@@ -59,6 +59,8 @@ public abstract class Constraint {
 	protected List<String> writeVarIDs;
 	
 	public static final int NaN = -1;
+	
+	private int order = -1;
 
 //	public static final String controlDomPre = "CD_";
 	
@@ -79,7 +81,6 @@ public abstract class Constraint {
 		this.controlDomID = "";
 		this.readVarIDs = new ArrayList<>();
 		this.writeVarIDs = new ArrayList<>();
-		
 	}
 	
 	/**
@@ -215,10 +216,20 @@ public abstract class Constraint {
 				}
 			}
 		}
+		
+		this.order = node.getOrder();
 	}
 	
 	public int getVarCount() {
 		return this.readVarIDs.size() + this.writeVarIDs.size();
+	}
+	
+	public void setOrder(int order) {
+		this.order = order;
+	}
+	
+	public int getOrder() {
+		return this.order;
 	}
 	
 	/**

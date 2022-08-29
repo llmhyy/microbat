@@ -157,19 +157,25 @@ public class VariableEncoder extends Encoder {
 		// A2 Constraint
 		for (int readIdx=0; readIdx<readLen; readIdx++) {
 			BitRepresentation varsIncluded = new BitRepresentation(totalLen);
-			varsIncluded.set(0, totalLen);
 			
-			// Calculate the propagation probability
-			double propProb = Configs.HIGH;
-			if (node.getBytecode() != "") {
-				VarValue readVar = node.getReadVariables().get(readIdx);
-				propProb = this.propCalculator.calPropProb(node, readVar);
+			for (int offset=0; offset<writeLen; offset++) {
+				final int writeIdx = readLen + offset;
+				varsIncluded.set(0, readLen);
+				varsIncluded.set(writeIdx);
+			
+				// Calculate the propagation probability
+				double propProb = Configs.HIGH;
+				if (node.getBytecode() != "") {
+					VarValue readVar = node.getReadVariables().get(readIdx);
+					propProb = this.propCalculator.calPropProb(node, readVar);
+				}
+				
+				Constraint constraint = new VariableConstraint(varsIncluded, readIdx, propProb);
+				constraint.setVarsID(node);
+				
+				constraints.add(constraint);
 			}
 			
-			Constraint constraint = new VariableConstraint(varsIncluded, readIdx, propProb);
-			constraint.setVarsID(node);
-			
-			constraints.add(constraint);
 		}
 		
 		// A3 Constraint

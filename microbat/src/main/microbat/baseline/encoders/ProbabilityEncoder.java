@@ -425,6 +425,17 @@ public class ProbabilityEncoder {
 						IDs.add(var.getVarID());
 					}
 				}
+				
+				iter = node.getWrittenVariables().iterator();
+				IDs.clear();
+				while(iter.hasNext()) {
+					VarValue var = iter.next();
+					if (IDs.contains(var.getVarID())) {
+						iter.remove();
+					} else {
+						IDs.add(var.getVarID());
+					}
+				}
 			}
 			
 			

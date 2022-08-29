@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import microbat.baseline.constraints.Constraint;
+import microbat.baseline.constraints.StatementConstraint;
 
 /**
  * MessageProcessor are used to encode/decode the messages
@@ -54,6 +55,7 @@ public class MessageProcessor {
 		VarIDConverter IDConverter = new VarIDConverter();
 		
 		for (Constraint constraint : constraints) {
+			
 			strBuilder.append(constraint.getConstraintID());
 			strBuilder.append("(");
 			
@@ -84,6 +86,9 @@ public class MessageProcessor {
 		VarIDConverter IDConverter = new VarIDConverter();
 		
 		for (Constraint constraint : constraints) {
+			
+			strBuilder.append(constraint.getOrder());
+			strBuilder.append(this.DELIMITER_2);
 			strBuilder.append(constraint.getConstraintID());
 			strBuilder.append(this.DELIMITER_2);
 
