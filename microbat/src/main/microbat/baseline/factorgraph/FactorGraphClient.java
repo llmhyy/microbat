@@ -46,6 +46,11 @@ public class FactorGraphClient {
 	 */
 	private final Charset charsets;
 	
+	/**
+	 * MSG_BREAK appear at the end of each message
+	 */
+	private final String MSG_BREAK = "BREAK";
+	
 	private Socket socket;
 	private DataInputStream reader;
 	private DataOutputStream writer;
@@ -59,7 +64,7 @@ public class FactorGraphClient {
 		this.HOST = host;
 		this.PORT = port;
 		this.END_MSG = "END";
-		this.SLEEP_TIME = 50;
+		this.SLEEP_TIME = 25;
 		this.BUFFER_SIZE = (int) Math.pow(2, 20);
 		this.charsets = StandardCharsets.UTF_8;
 	}
@@ -95,6 +100,10 @@ public class FactorGraphClient {
 	public String requestBP(final String graphStruct, final String factors) {
 		byte[] graphInput = this.strToByte(graphStruct);
 		byte[] factorInput = this.strToByte(factors);
+		
+		if (graphInput.length >= this.BUFFER_SIZE || factorInput.length >= this.BUFFER_SIZE) {
+			throw new RuntimeException("Message Exceed Max Buffer Size");
+		}
 		
 		byte[] response = this.request(graphInput, factorInput);
 		String responst_str = this.byteToStr(response);
@@ -141,6 +150,7 @@ public class FactorGraphClient {
 	 */
 	private byte[] request(byte[] graphInput, byte[] factorInput) {
 		if (this.isReady()) {
+			final byte[] msgBreak = this.strToByte(this.MSG_BREAK);
 			try {
 				System.out.println("Client: graphInput size: " + graphInput.length + " factorInput size: " + factorInput.length);
 				
@@ -155,7 +165,11 @@ public class FactorGraphClient {
 				// Sleep for a while to ensure the next message can be send properly.
 				Thread.sleep(this.SLEEP_TIME);
 				
+				this.writer.write(msgBreak);
+				Thread.sleep(this.SLEEP_TIME);
 				this.writer.write(factorInput);
+				Thread.sleep(this.SLEEP_TIME);
+				this.writer.write(msgBreak);
 				
 				byte[] response = new byte[this.BUFFER_SIZE];
 				int integer = this.reader.read(response);
