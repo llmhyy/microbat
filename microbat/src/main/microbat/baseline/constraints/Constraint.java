@@ -196,17 +196,20 @@ public abstract class Constraint {
 //	}
 	
 	/**
-	 * Add all the predicates ID of node into record
+	 * Add all the involved predicates ID of node into record
 	 * @param node Target trace node
 	 */
 	public void setVarsID(TraceNode node) {
+		
 		for (VarValue readVar : node.getReadVariables()) {
-			this.readVarIDs.add(readVar.getVarID());
-		}
-		for (VarValue writeVar : node.getWrittenVariables()) {
-			this.readVarIDs.add(writeVar.getVarID());
+			this.addReadVarID(readVar.getVarID());
 		}
 		
+		for (VarValue wirteVar : node.getWrittenVariables()) {
+			this.addWriteVarID(wirteVar.getVarID());
+		}
+		
+		// We assume that the control dominator is included when it exists
 		TraceNode controlDom = node.getControlDominator();
 		if (controlDom != null) {
 			for (VarValue writeVar : controlDom.getWrittenVariables()) {
@@ -217,7 +220,7 @@ public abstract class Constraint {
 			}
 		}
 		
-		this.order = node.getOrder();
+		this.setOrder(node.getOrder());
 	}
 	
 	public int getVarCount() {

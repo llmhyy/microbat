@@ -100,6 +100,8 @@ public abstract class StatementConstraint extends Constraint {
 	
 	/**
 	 * Check is there are any wrong write variable in the given case number
+	 * 
+	 * If there are no written variable, then it will return False
 	 * @param caseNo case number
 	 * @return True if there are any wrong write variable. False otherwise.
 	 */
@@ -120,6 +122,8 @@ public abstract class StatementConstraint extends Constraint {
 	
 	/**
 	 * Check is there are any wrong read variable in the given case number
+	 * 
+	 * If there are no wrong read variable, then it will return false
 	 * @param caseNo case number
 	 * @return True if there are any wrong read variable. False otherwise.
 	 */

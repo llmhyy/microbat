@@ -81,7 +81,6 @@ public class VariableEncoder extends Encoder {
 		// Response contain the probability of each variable
 		String response = client.requestBP(graphMsg, factorMsg);
 		
-		System.out.println("response: " + response);
 		// Assign calculate probability to corresponding variable
 		Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
 		for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
@@ -113,6 +112,26 @@ public class VariableEncoder extends Encoder {
 		return constraints;
 	}
 	
+	@Override
+	protected int countPredicates(TraceNode node) {
+		int varCount = this.countReadVars(node) + this.countWriteVars(node);
+		return node.getControlDominator() == null ? varCount : varCount+1;
+	}
+	
+//	private void setVarIDs(Constraint constraint, TraceNode node, final int writeIdx) {
+//		for (VarValue readVar : node.getReadVariables()) {
+//			constraint.addReadVarID(readVar.getVarID());
+//		}
+//		
+//		VarValue writeVar = node.getWrittenVariables().get(writeIdx);
+//		constraint.addWriteVarID(writeVar.getVarID());
+//		
+//		if (node.getControlDominator() != null) {
+//			VarValue controlDomValue = this.getControlDomValue(node);
+//			constraint.setControlDomID(controlDomValue.getVarID());
+//		}
+//	}
+	
 	/**
 	 * Generate variable constraints of given trace node
 	 * @param node Target trace node
@@ -127,27 +146,36 @@ public class VariableEncoder extends Encoder {
 		
 		final int readLen = this.countReadVars(node);
 		final int writeLen = this.countWriteVars(node);
-		final int totalLen = this.countPredicates(node);
+//		final int totalLen = this.countPredicates(node);
 		
 		final TraceNode controlDom = node.getControlDominator();
 		final boolean haveControlDom = controlDom != null;
 		
-		final int predIdx = haveControlDom ? totalLen-1 : -1;
+//		final int predIdx = haveControlDom ? totalLen-1 : -1;
 		
 		// A1 Constraint
 		for (int idx=0; idx<writeLen; idx++) {
 			final int writeIdx = idx + readLen;
-			
+			final int totalLen = haveControlDom ? readLen + 2 : readLen + 1;
+			final int predIdx = haveControlDom ? totalLen - 1 : -1;
 			BitRepresentation varsIncluded = new BitRepresentation(totalLen);
-			varsIncluded.set(0, readLen);
-			varsIncluded.set(writeIdx);
+			varsIncluded.set(0, totalLen);
 			
-			if (haveControlDom) {
-				varsIncluded.set(predIdx);
+			// Since there are only one write variable, then the conclusion index should the one right after the read variable
+			Constraint constraint = new VariableConstraint(varsIncluded, readLen, Configs.HIGH);
+			
+			// Set variables IDs
+			for (int readIdx=0; readIdx<readLen; readIdx++) {
+				VarValue readVar = node.getReadVariables().get(readIdx);
+				constraint.addReadVarID(readVar.getVarID());
 			}
-			
-			Constraint constraint = new VariableConstraint(varsIncluded, writeIdx, Configs.HIGH);
-			constraint.setVarsID(node);
+			VarValue writeVar = node.getWrittenVariables().get(idx);
+			constraint.addWriteVarID(writeVar.getVarID());
+			if (haveControlDom) {
+				VarValue controlDomValue = this.getControlDomValue(controlDom);
+				constraint.setControlDomID(controlDomValue.getVarID());
+			}
+			constraint.setOrder(node.getOrder());
 			constraints.add(constraint);
 		}
 		
@@ -156,37 +184,50 @@ public class VariableEncoder extends Encoder {
 		
 		// A2 Constraint
 		for (int readIdx=0; readIdx<readLen; readIdx++) {
+			
+			final int totalLen = this.countPredicates(node);
+			final int predIdx = haveControlDom ? totalLen - 2 : totalLen - 1;
+
 			BitRepresentation varsIncluded = new BitRepresentation(totalLen);
-			
-			for (int offset=0; offset<writeLen; offset++) {
-				final int writeIdx = readLen + offset;
-				varsIncluded.set(0, readLen);
-				varsIncluded.set(writeIdx);
-			
-				// Calculate the propagation probability
-				double propProb = Configs.HIGH;
-				if (node.getBytecode() != "") {
-					VarValue readVar = node.getReadVariables().get(readIdx);
-					propProb = this.propCalculator.calPropProb(node, readVar);
-				}
-				
-				Constraint constraint = new VariableConstraint(varsIncluded, readIdx, propProb);
-				constraint.setVarsID(node);
-				
-				constraints.add(constraint);
+			varsIncluded.set(0, totalLen);
+		
+			// Calculate the propagation probability
+			double propProb = Configs.HIGH;
+			if (node.getBytecode() != "") {
+				VarValue readVar = node.getReadVariables().get(readIdx);
+				propProb = this.propCalculator.calPropProb(node, readVar);
 			}
+			
+			Constraint constraint = new VariableConstraint(varsIncluded, readIdx, propProb);
+			constraint.setVarsID(node);
+			constraints.add(constraint);
 			
 		}
 		
 		// A3 Constraint
 		if (haveControlDom) {
+			
+			final int totalLen = this.countPredicates(node);
+			final int predIdx = haveControlDom ? totalLen - 2 : totalLen - 1;
+			
 			BitRepresentation varsIncluded = new BitRepresentation(totalLen);
 			varsIncluded.set(0, totalLen);
 			
 			Constraint constraint = new VariableConstraint(varsIncluded, predIdx, Configs.HIGH);
 			constraint.setVarsID(node);
-			
 			constraints.add(constraint);
+//			for (int offset = 0; offset<writeLen; offset++) {
+//				BitRepresentation varsIncluded = new BitRepresentation(totalLen);
+//				final int writeIdx = readLen + offset;
+//				
+//				varsIncluded.set(0, readLen);
+//				varsIncluded.set(writeIdx);
+//				varsIncluded.set(predIdx);
+//				
+//				Constraint constraint = new VariableConstraint(varsIncluded, predIdx, Configs.HIGH);
+//				this.setVarIDs(constraint, node, offset);
+//				constraints.add(constraint);
+//			}
 		}
 		
 //		MessageProcessor msgProcessor = new MessageProcessor();

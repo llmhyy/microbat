@@ -101,7 +101,6 @@ public abstract class Encoder {
 		// When it is prior constraint, it doesn't matter if the id is read or write or control dominator variable
 		// So let just add it to read variable id list
 		constraint.addReadVarID(var.getVarID());
-		
 		return constraint;
 	}
 	

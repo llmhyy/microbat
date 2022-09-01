@@ -13,6 +13,7 @@ import microbat.baseline.constraints.PriorConstraint;
 import microbat.baseline.constraints.StatementConstraintA1;
 import microbat.baseline.constraints.StatementConstraintA2;
 import microbat.baseline.constraints.StatementConstraintA3;
+import microbat.baseline.constraints.StatementConstraintA4;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -106,8 +107,6 @@ public class StatementEncoder extends Encoder{
 	protected List<Constraint> genConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		constraints.addAll(this.genVarToStatConstraints(node));
-//		constraints.addAll(this.genStructureConstraints(node));
-//		constraints.addAll(this.genNamingConstraints(node));
 		constraints.addAll(this.genPriorConstraints(node));
 		return constraints;
 	}
@@ -166,13 +165,16 @@ public class StatementEncoder extends Encoder{
 		 * does not exist, because this kind of node will not
 		 * be included during the dynamic slicing
 		 */
-		if ((readLen == 0 && writeLen == 0) || // 3rd case
-			(readLen == 0 && writeLen != 0) || // 1st case
-			(readLen != 0 && writeLen == 0)) { // 2nd case
+		if ((readLen == 0 && writeLen == 0)) { // 3rd case
 			
 			Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
 			constraintA1.setVarsID(node);
 			constraints.add(constraintA1);
+			
+		} else if ((readLen == 0 && writeLen != 0) ||(readLen != 0 && writeLen == 0)) { // 1st and 2nd case
+			
+			constraints.addAll(this.genSpecialCaseConstraints(node));
+					
 		} else {
 			
 			// Variable to statement constraint A1
@@ -243,6 +245,78 @@ public class StatementEncoder extends Encoder{
 		return constraints;
 	}
 	
+	protected List<Constraint> genSpecialCaseConstraints(TraceNode node) {
+		List<Constraint> constraints = new ArrayList<>();
+		
+		final int readLen = this.countReadVars(node);
+		final int writeLen = this.countWriteVars(node);
+		final int totalLen = this.countPredicates(node);
+		
+		// Check control dominator exist or not
+		TraceNode controlDominator = node.getControlDominator();
+		boolean haveControlDominator = controlDominator != null;
+		
+		// Index of statement in bit representation
+		final int conclusionIdx = totalLen - 1;
+		
+		// Constraint A1, A2, A3 include the same variable
+		BitRepresentation variableIncluded = new BitRepresentation(totalLen);
+		variableIncluded.set(0, readLen + writeLen);	// Include all read and write variables
+		if (haveControlDominator) {
+			variableIncluded.set(totalLen - 2);	// Include control dominator if exist
+		}
+		variableIncluded.set(conclusionIdx);	// Include conclusion statement
+		
+		// Index of starting write variable in the bit representation
+		final int writeStartIdx = readLen == 0 ? 0 : readLen;
+		
+		// Order of current node
+		final int statementOrder = node.getOrder();
+		
+		// Get the ID of control dominator variable if exists
+		String controlDomID = "";
+		if (haveControlDominator) {
+			VarValue controlDomValue = this.getControlDomValue(controlDominator);
+			controlDomID = controlDomValue.getVarID();
+		}
+
+		Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
+		constraintA1.setVarsID(node);
+		constraints.add(constraintA1);
+		
+		for (int readIdx=0; readIdx<readLen; readIdx++) {
+			BitRepresentation br = new BitRepresentation(totalLen);
+			br.set(readIdx);
+			br.set(conclusionIdx);
+			if (haveControlDominator) {
+				br.set(totalLen-2);
+			}
+			
+			Constraint constraint = new StatementConstraintA4(br, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
+			constraint.setVarsID(node);
+			constraint.setOrder(statementOrder);
+			constraints.add(constraint);
+		}
+		
+		for (int offset=0; offset<writeLen; offset++) {
+			final int writeIdx = readLen + offset;
+			BitRepresentation br = new BitRepresentation(totalLen);
+			br.set(writeIdx);
+			br.set(conclusionIdx);
+			if (haveControlDominator) {
+				br.set(totalLen-2);
+			}
+			
+			Constraint constraint = new StatementConstraintA4(br, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
+			constraint.setVarsID(node);
+			constraint.setOrder(statementOrder);
+			constraints.add(constraint);
+		}
+		
+		return constraints;
+	}
+	
+
 //	private void printTable(List<Constraint> constraints, int totalLen) {
 //		final int size = 1 << totalLen;
 //		for (int i = 0; i<size; ++i) {
