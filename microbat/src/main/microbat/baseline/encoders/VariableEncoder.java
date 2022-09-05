@@ -302,9 +302,8 @@ public class VariableEncoder extends Encoder {
 				}
 			} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
 				// Add constraint to target variable to LOW
-				for (VarValue wrongVar : feedback.getOption().getIncludedWrongVars()) {
-					constraints.add(this.genPriorConstraint(wrongVar, Configs.LOW));
-				}
+				VarValue wrongVar = feedback.getOption().getReadVar();
+				constraints.add(this.genPriorConstraint(wrongVar, Configs.LOW));
 				
 				// Also, since the target variable is wrong, then the write variable must be wrong as well
 				for (VarValue writeVar : node.getWrittenVariables()) {
