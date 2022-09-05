@@ -133,7 +133,7 @@ public class ProbabilityEncoder {
 		ProbabilityEncoder.clearFeedbacks();
 
 		// Remove this variable
-		this.removeThisVar(executionList);
+//		this.removeThisVar(executionList);
 		
 		// Solve the problem of same variable ID after re-definition
 		this.changeArrayElementID(this.executionList);
@@ -401,7 +401,7 @@ public class ProbabilityEncoder {
 			List<VarValue> vars = new ArrayList<>();
 			vars.addAll(node.getReadVariables());
 			vars.addAll(node.getWrittenVariables());
-			
+
 			boolean hasChange = false;
 			for (VarValue var : vars) {
 				if (!var.getParents().isEmpty()) {
@@ -707,7 +707,7 @@ public class ProbabilityEncoder {
 	 */
 	private void fillMethodCallVariables(Trace trace, List<TraceNode> executionList) {
 		for (TraceNode node : executionList) {
-			
+
 			// We only focus on method call node
 			if (node.getInvocationChildren().isEmpty()) {
 				continue;
