@@ -605,10 +605,10 @@ public class ProbabilityEncoder {
 			TraceNode node = toVisitNodes.poll();
 			
 			// Stop when it reach the input node
-			if (destinationNodes.contains(node)) {
-				slicingSet.add(node);
-				continue;
-			}
+//			if (destinationNodes.contains(node)) {
+//				slicingSet.add(node);
+//				continue;
+//			}
 			
 			for (VarValue readVar : node.getReadVariables()) {
 				TraceNode dataDom = trace.findDataDependency(node, readVar);
