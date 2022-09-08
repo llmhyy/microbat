@@ -300,6 +300,12 @@ public class VariableEncoder extends Encoder {
 				for (VarValue writeVar : node.getWrittenVariables()) {
 					constraints.add(this.genPriorConstraint(writeVar, Configs.HIGH));
 				}
+				
+				TraceNode controlDominator = node.getControlDominator();
+				if (controlDominator != null) {
+					VarValue controlDomValue = this.getControlDomValue(controlDominator);
+					constraints.add(this.genPriorConstraint(controlDomValue, Configs.HIGH));
+				}
 			} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
 				// Add constraint to target variable to LOW
 				VarValue wrongVar = feedback.getOption().getReadVar();

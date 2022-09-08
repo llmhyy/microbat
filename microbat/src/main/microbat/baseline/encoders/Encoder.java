@@ -82,6 +82,11 @@ public abstract class Encoder {
 		return node.getControlDominator() != null;
 	}
 	
+	/**
+	 * Get the branch decision variable in the given trace node
+	 * @param controlDom Control Dominator Node
+	 * @return Branch dicision variable
+	 */
 	protected VarValue getControlDomValue(TraceNode controlDom) {
 		for (VarValue writeVar : controlDom.getWrittenVariables()) {
 			if (writeVar.getVarID().startsWith(ProbabilityEncoder.CONDITION_RESULT_ID_PRE)) {

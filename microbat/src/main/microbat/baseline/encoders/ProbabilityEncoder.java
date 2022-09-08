@@ -122,7 +122,7 @@ public class ProbabilityEncoder {
 		
 		// [Important] This method must be called before dynamic slicing
 		if (!this.fillFlag) {
-			this.fillMethodCallVariables(trace, trace.getExecutionList());
+//			this.fillMethodCallVariables(trace, trace.getExecutionList());
 		}
 		
 		if (this.executionList == null) {
