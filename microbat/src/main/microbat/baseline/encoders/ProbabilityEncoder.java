@@ -127,6 +127,7 @@ public class ProbabilityEncoder {
 		
 		if (this.executionList == null) {
 			this.executionList = this.dynamicSlicing(this.trace, this.outputVars, this.inputVars);
+//			this.executionList = this.trace.getExecutionList();
 		}
 		
 		// Clear all previous feedbacks
@@ -361,7 +362,7 @@ public class ProbabilityEncoder {
 	private void changeRedefinitionID(List<TraceNode> executionList) {
 		Map<String, String> mapping = new HashMap<>();
 		for (TraceNode node : executionList) {
-
+			
 			for (VarValue readVar : node.getReadVariables()) {
 				String varID = readVar.getVarID();
 				if (!mapping.containsKey(varID)) {
@@ -413,7 +414,7 @@ public class ProbabilityEncoder {
 				}
 			}
 			
-			if (hasChange) {
+			if (true) {
 				// Remove the variable that have the same ID
 				Iterator<VarValue> iter = node.getReadVariables().iterator();
 				Set<String> IDs = new HashSet<>();

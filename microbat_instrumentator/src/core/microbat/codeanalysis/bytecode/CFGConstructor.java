@@ -224,7 +224,8 @@ public class CFGConstructor {
 		boolean isChange = false;
 		visitedBlocks.add(node);
 		
-		Set<BlockNode> intersetion = findIntersetedPostDominator(node.getChildren(), postDominanceMap);
+//		Set<BlockNode> intersetion = findIntersetedPostDominator(node.getChildren(), postDominanceMap);
+		Set<BlockNode> intersetion = findIntersetedPostDominator(node, postDominanceMap);
 		Set<BlockNode> postDominatorSet = postDominanceMap.get(node);
 		
 		for(BlockNode newNode: intersetion){
@@ -272,7 +273,46 @@ public class CFGConstructor {
 			
 			return set;
 		}
-		
+	}
+	
+	private Set<BlockNode> findIntersetedPostDominator(BlockNode node, Map<BlockNode, Set<BlockNode>> postDominanceMap) {
+		List<BlockNode> children = node.getChildren();
+		if(children.isEmpty()){
+			return new HashSet<>();
+		}
+		else if(children.size()==1){
+			BlockNode child = children.get(0);
+			return postDominanceMap.get(child);
+		}
+		else{
+			
+			/**
+			 * We need to consider the case of cycle
+			 * cause by looping.
+			 */
+			Set<BlockNode> set = new HashSet<>();
+			int childIdx = 0;
+			for (;childIdx<children.size(); childIdx++) {
+				BlockNode child = children.get(childIdx);
+				Set<BlockNode> tempStartingPoint = postDominanceMap.get(child);
+				if (!tempStartingPoint.contains(node)) {
+					// Must use deep copy here
+					set.addAll(tempStartingPoint);
+					break;
+				}
+			}
+
+			// Find intersection
+			for (; childIdx<children.size(); childIdx++) {
+				BlockNode otherChild = children.get(childIdx);
+				Set<BlockNode> candidateSet = postDominanceMap.get(otherChild);
+				if (!candidateSet.contains(node)) {
+					set.retainAll(candidateSet);
+				}
+			}
+			
+			return set;
+		}
 	}
 	
 	/**
