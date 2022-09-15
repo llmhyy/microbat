@@ -32,7 +32,7 @@ In Eclipse, you can import the projects from Git.
    You may also check the `readme` in `java-mutation-framework` for more information
 
 3. Prepare python server
-   - Open `./Belief-Propagation/BP_Server.ipynb` using jupyter notebook
+   - Open `microbat\microbat\BP_Server\BP_Server.ipynb` using jupyter notebook
    - Run all the cell in `BP_Server.ipynb` to set up the server
 
 ## Configuration
@@ -109,3 +109,7 @@ After all the configuration is set, you can test the baseline using the testing 
       <img src="./images/feedback.png" width="400"/>
       </p>
 7. Repeat the steps until the root cause is found. Or, after giving 20 feedbacks, the program will stop and claim that root cause cannot be found. Plase note the it takes time to wait for belief propagation to converge.
+
+## Reference
+
+The implementation of the Belief Propagation is modified from [Belief Propagation](https://github.com/krashkov/Belief-Propagation.git)
