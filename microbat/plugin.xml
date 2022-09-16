@@ -142,6 +142,11 @@
             id="microbat.testing"
             name="Testing Microbat">
       </command>
+      <command
+            defaultHandler="microbat.handler.MutationHandler"
+            id="microbat.mutate"
+            name="Mutate Trace">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -221,6 +226,11 @@
                   commandId="microbat.baseline"
                   icon="icons/check_mark.png"
                   label="baseline"
+                  style="push">
+            </command>
+            <command
+                  commandId="microbat.mutate"
+                  icon="icons/cross_mark.png"
                   style="push">
             </command>
             <command

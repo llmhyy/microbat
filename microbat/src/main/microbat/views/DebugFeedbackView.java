@@ -45,6 +45,7 @@ import microbat.baseline.encoders.ProbabilityEncoder;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;
+import microbat.handler.BaselineHandler;
 import microbat.handler.CheckingState;
 import microbat.model.BreakPointValue;
 import microbat.model.trace.Trace;
@@ -556,11 +557,31 @@ public class DebugFeedbackView extends ViewPart {
 		baselineButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
 		baselineButton.addMouseListener(new BaselineButtonListener());
 		
-		Button testingButton = new Button(feedbackGroup, SWT.NONE);
-		testingButton.setText("Testing");
-		testingButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
-		testingButton.addMouseListener(new TestingButtonListener());
+		Button inputButton = new Button(feedbackGroup, SWT.NONE);
+		inputButton.setText("Inputs");
+		inputButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		inputButton.addMouseListener(new AddInputsListener());
 		
+		Button outputButton = new Button(feedbackGroup, SWT.NONE);
+		outputButton.setText("Outputs");
+		outputButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		outputButton.addMouseListener(new AddOutputsListener());
+		
+		Button clearIOButton = new Button(feedbackGroup, SWT.NONE);
+		clearIOButton.setText("clear IO");
+		clearIOButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		clearIOButton.addMouseListener(new ClearVarsListener());
+		
+		Button printIOButton = new Button(feedbackGroup, SWT.NONE);
+		printIOButton.setText("IO");
+		printIOButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		printIOButton.addMouseListener(new ShowIOListener());
+		
+		Button rootCauseFoundButton = new Button(feedbackGroup, SWT.NONE);
+		rootCauseFoundButton.setText("Root Cause");
+		rootCauseFoundButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		rootCauseFoundButton.addMouseListener(new RootCauseFoundListener());
+				
 		bugTypeInferenceButton = new Button(feedbackGroup, SWT.NONE);
 		bugTypeInferenceButton.setText("Infer type!");
 		bugTypeInferenceButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
@@ -652,26 +673,6 @@ public class DebugFeedbackView extends ViewPart {
 		
 	}
 	class BaselineButtonListener implements MouseListener {
-
-		private void openChooseFeedbackDialog(){
-			MessageBox box = new MessageBox(PlatformUI.getWorkbench()
-					.getDisplay().getActiveShell());
-			box.setMessage("Please tell me whether this step is correct or not!");
-			box.open();
-		}
-		
-		private void openWrongVariableDialog(){
-			MessageBox box = new MessageBox(PlatformUI.getWorkbench()
-					.getDisplay().getActiveShell());
-			box.setMessage("Please select a variable");
-			box.open();
-		}
-		
-		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
-//			TraceView view = MicroBatViews.getTraceView();
-			getTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
-//			getConcurrentTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
-		}
 		
 		@Override
 		public void mouseDoubleClick(MouseEvent e) {
@@ -681,45 +682,30 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			if (feedback == null) {
-				openChooseFeedbackDialog();
-			} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)
-					&& feedback.getOption()==null) {
-				openWrongVariableDialog();
-			}
-			else {
-				final Trace trace = getTraceView().getCurrentTrace();
-//				final Trace trace = getConcurrentTraceView().getCurTrace();
+			UserFeedback feedback = new UserFeedback();
+			if (yesButton.getSelection()) {
+				feedback.setFeedbackType(UserFeedback.CORRECT);
+			} else if (wrongPathButton.getSelection()) {
+				feedback.setFeedbackType(UserFeedback.WRONG_PATH);
+			} else {
+				feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+				List<VarValue> selectedReadVars = getSelectedReadVars();
+				List<VarValue> selectedWriteVars = getSelectedWriteVars();
+				if (selectedReadVars.isEmpty() && selectedWriteVars.isEmpty()) {
+					throw new RuntimeException("No selected variables");
+				}
+				VarValue selectedReadVar = null;
+				if (!selectedReadVars.isEmpty()) {
+					selectedReadVar = selectedReadVars.get(0);
+				}
 				
-				Job job = new Job("searching for suspicious step...") {
-					@Override
-					protected IStatus run(IProgressMonitor monitor) {
-						
-						ProbabilityEncoder encoder = new ProbabilityEncoder(trace);
-						encoder.setFlag(true);
-						
-						UserFeedback feedback = getFeedback();
-						NodeFeedbackPair pair = new NodeFeedbackPair(currentNode, feedback);
-						ProbabilityEncoder.addFeedback(pair);
-						
-						System.out.println("Current Node: " + currentNode.getOrder());
-						System.out.println("Feedback: " + feedback);
-						encoder.encode();
-						
-						TraceNode errorNode = encoder.getMostErroneousNode();
-						System.out.println("Detected error Node: " + errorNode.getOrder());
-						Display.getDefault().asyncExec(new Runnable(){
-							@Override
-							public void run() {
-								jumpToNode(trace, errorNode);	
-							}
-						});
-						
-						return Status.OK_STATUS;
-					}
-				};
-				job.schedule();
+				VarValue selectedWriteVar = null;
+				if (!selectedWriteVars.isEmpty()) {
+					selectedReadVar = selectedWriteVars.get(0);
+				}
+				feedback.setOption(new ChosenVariableOption(selectedReadVar, selectedWriteVar));
 			}
+			BaselineHandler.setManualFeedback(feedback, currentNode);
 		}
 
 		@Override
@@ -727,8 +713,8 @@ public class DebugFeedbackView extends ViewPart {
 			// TODO Auto-generated method stub
 			
 		}
-		
 	}
+	
 	class FeedbackSubmitListener implements MouseListener{
 		public void mouseUp(MouseEvent e) {}
 		public void mouseDoubleClick(MouseEvent e) {}
@@ -1448,4 +1434,113 @@ public class DebugFeedbackView extends ViewPart {
 			this.writtenVariableTreeViewer.setChecked(element, false);
 		}
 	}
+	
+	private List<VarValue> getSelectedVars() {
+		List<VarValue> vars = new ArrayList<>();
+		vars.addAll(this.getSelectedReadVars());
+		vars.addAll(this.getSelectedWriteVars());
+		return vars;
+	}
+
+	private List<VarValue> getSelectedReadVars() {
+		List<VarValue> vars = new ArrayList<>();
+		
+		Object[] readObjList = this.readVariableTreeViewer.getCheckedElements();
+		for (Object object : readObjList) {
+			if (object instanceof VarValue) {
+				VarValue input = (VarValue) object;
+				vars.add(input);
+			}
+		}
+		
+		return vars;
+	}
+	
+	private List<VarValue> getSelectedWriteVars() {
+		List<VarValue> vars = new ArrayList<>();
+		Object[] writeObjList = this.writtenVariableTreeViewer.getCheckedElements();
+		for (Object object : writeObjList) {
+			if (object instanceof VarValue) {
+				VarValue output = (VarValue) object;
+				vars.add(output);
+			}
+		}
+		return vars;
+	}
+	
+	private class AddOutputsListener implements MouseListener {
+
+		@Override
+		public void mouseDoubleClick(MouseEvent e) {}
+
+		@Override
+		public void mouseDown(MouseEvent e) {
+			List<VarValue> outputs = getSelectedVars();
+			BaselineHandler.addOutpus(outputs);
+		}
+
+		@Override
+		public void mouseUp(MouseEvent e) {}
+	}
+	
+	private class AddInputsListener implements MouseListener {
+
+		@Override
+		public void mouseDoubleClick(MouseEvent e) {}
+
+		@Override
+		public void mouseDown(MouseEvent e) {
+			List<VarValue> inputs = getSelectedVars();
+			BaselineHandler.addInputs(inputs);
+		}
+
+		@Override
+		public void mouseUp(MouseEvent e) {}
+	}
+	
+	private class ClearVarsListener implements MouseListener {
+
+		@Override
+		public void mouseDoubleClick(MouseEvent e) {}
+
+		@Override
+		public void mouseDown(MouseEvent e) {
+			BaselineHandler.clearIO();
+		}
+
+		@Override
+		public void mouseUp(MouseEvent e) {	}
+		
+	}
+	
+	private class ShowIOListener implements MouseListener {
+
+		@Override
+		public void mouseDoubleClick(MouseEvent e) {}
+
+		@Override
+		public void mouseDown(MouseEvent e) {
+			BaselineHandler.printIO();
+		}
+
+		@Override
+		public void mouseUp(MouseEvent e) {	}
+		
+	}
+	
+	private class RootCauseFoundListener implements MouseListener {
+
+		@Override
+		public void mouseDoubleClick(MouseEvent e) {}
+
+		@Override
+		public void mouseDown(MouseEvent e) {
+			BaselineHandler.setRootCauseFound(true);
+		}
+
+		@Override
+		public void mouseUp(MouseEvent e) {}
+		
+	}
+	
 }
