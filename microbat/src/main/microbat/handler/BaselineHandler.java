@@ -83,7 +83,7 @@ public class BaselineHandler extends AbstractHandler {
 					}
 				
 					if (BaselineHandler.rootCauseFound) {
-						printReport(BaselineHandler.testCaseMethod, noOfFeedbacks);
+						printReport(noOfFeedbacks);
 						break;
 					}
 					
@@ -128,9 +128,8 @@ public class BaselineHandler extends AbstractHandler {
 		BaselineHandler.rootCauseFound = false;
 	}
 	
-	private void printReport(final String testCaseMethod, final int noOfFeedbacks) {
+	private void printReport(final int noOfFeedbacks) {
 		System.out.println("---------------------------------");
-		System.out.println("Debug Report: Test Case Method Name: " + testCaseMethod);
 		System.out.println("Number of feedbacks: " + noOfFeedbacks);
 		System.out.println("---------------------------------");
 	}

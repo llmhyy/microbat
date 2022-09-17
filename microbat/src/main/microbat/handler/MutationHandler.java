@@ -86,7 +86,6 @@ public class MutationHandler extends AbstractHandler{
 				
 				return Status.OK_STATUS;
 			}
-			
 		};
 		
 		job.schedule();
