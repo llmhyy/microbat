@@ -67,7 +67,7 @@ In order to use the mutation framework, you need to the following steps:
 
    In `java-mutation-framework\sampleMicrobatConfig.json`, you need to verify the java home path. If the path is not valid, please change the path to the  `JAVA 8` folder eg. `C:\\Program Files\\Java\\jdk1.8.0_202`.
 
-   <p align="center"><img src="./microbat/images/java_home.png" width="300"></p>
+   <p align="center"><img src="./microbat/image/java_home.png" width="300"></p>
 
    You may also check the `readme` in `java-mutation-framework` for more information
 
@@ -168,5 +168,10 @@ The following are the step by step guideline for debugging using belief propagat
 
     <p align="center":><img src="./microbat/image/feedback.png" width=300></p>
     After giving the feedback, please wait for the next result and give the feedback again if needed.
+
+### Reference
+
+- Debugging with Intelligence via Probabilistic Inference [link](https://dl.acm.org/doi/abs/10.1145/3180155.3180237)
+- Our implementation of belief propagation is based on [krashkov](https://github.com/krashkov/Belief-Propagation.git)
 
 
