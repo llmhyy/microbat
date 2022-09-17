@@ -18,8 +18,11 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.mutation.MutationAgent;
 import microbat.preference.MicrobatPreference;
+import microbat.util.MicroBatUtil;
+import microbat.util.Settings;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
+import sav.strategies.dto.AppJavaClassPath;
 
 public class MutationHandler extends AbstractHandler{
 
@@ -41,15 +44,27 @@ public class MutationHandler extends AbstractHandler{
 				}
 
 				// Access mutation setting
-				final String projectPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.PROJECT_PATH);
+				boolean useTestCaseID = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.USE_TEST_CASE_ID).equals("true");
+				String projectPath = "";
+				if (useTestCaseID) {
+					projectPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.PROJECT_PATH);
+				} else {
+					projectPath = MicroBatUtil.getProjectPath(Settings.projectName);
+				}
+				
+//				final String projectPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.PROJECT_PATH);
 				final String dropInDir = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.DROP_IN_FOLDER_MICROBAT);
 				final String microbatConfigPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.CONFIG_PATH_MICROBAT);
-				final String testCaseID_str = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.TEST_CASE_ID_MICROBAT);
-				final int testCaseID = Integer.parseInt(testCaseID_str);
-				
+
 				// Perform mutation
 				MutationAgent mutationAgent = new MutationAgent(projectPath, dropInDir, microbatConfigPath);
-				mutationAgent.setTestCaseID(testCaseID);
+				if (useTestCaseID) {
+					final String testCaseID_str = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.TEST_CASE_ID_MICROBAT);
+					final int testCaseID = Integer.parseInt(testCaseID_str);
+					mutationAgent.setTestCaseID(testCaseID);
+				} else {
+					mutationAgent.setTestCaseInfo(Settings.launchClass, Settings.testMethod);
+				}
 				mutationAgent.startMutation();
 				
 				updateView(mutationAgent.getBuggyTrace());

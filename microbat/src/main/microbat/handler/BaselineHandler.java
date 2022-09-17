@@ -34,7 +34,6 @@ public class BaselineHandler extends AbstractHandler {
 	
 	private static boolean rootCauseFound = false;
 	private static String testCaseMethod = "";
-	
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {

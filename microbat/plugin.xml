@@ -223,14 +223,14 @@
                   style="push">
             </command>
             <command
-                  commandId="microbat.baseline"
-                  icon="icons/check_mark.png"
-                  label="baseline"
+                  commandId="microbat.mutate"
+                  icon="icons/cross_mark.png"
                   style="push">
             </command>
             <command
-                  commandId="microbat.mutate"
-                  icon="icons/cross_mark.png"
+                  commandId="microbat.baseline"
+                  icon="icons/check_mark.png"
+                  label="baseline"
                   style="push">
             </command>
             <command

@@ -34,6 +34,8 @@ public class MutationAgent {
 	protected List<VarValue> outputs = new ArrayList<>();
 	
 	protected int testCaseID = -1;
+	protected String testCaseClass = null;
+	protected String testCaseMethodName = null;
 	protected int seed = 1;
 	
 	public MutationAgent(String projectPath, String dropInDir, String microbatConfigPath) {
@@ -58,7 +60,17 @@ public class MutationAgent {
 		mutationFramework.setMaxNumberOfMutations(maxMutation);
 		mutationFramework.toggleStrongMutations(true);
 		
-		this.testCase = mutationFramework.getTestCases().get(this.testCaseID);
+		if (this.testCaseID>=0) {
+			this.testCase = mutationFramework.getTestCases().get(this.testCaseID);
+		} else {
+			final String qualifiedName = String.format("%s#%s", this.testCaseClass, this.testCaseMethodName);
+			for (TestCase testCase : mutationFramework.getTestCases()) {
+				if (testCase.qualifiedName().equals(qualifiedName)) {
+					this.testCase = testCase;
+					break;
+				}
+			}
+		}
 		mutationFramework.setTestCase(testCase);
 		
 		// Mutate project until it fail the test case
@@ -123,7 +135,7 @@ public class MutationAgent {
 	}
 	
 	public boolean isReady() {
-		return this.testCaseID>=0;
+		return this.testCaseID>=0 || (this.testCaseClass != null && this.testCaseMethodName != null);
 	}
 	
 	public void reset() {
@@ -140,6 +152,11 @@ public class MutationAgent {
 	
 	public void setTestCaseID(int testCaseID) {
 		this.testCaseID = testCaseID;
+	}
+	
+	public void setTestCaseInfo(final String testCaseClass, final String testCaseMethodName) {
+		this.testCaseClass = testCaseClass;
+		this.testCaseMethodName = testCaseMethodName;
 	}
 	
 	public String genErrorMsg(final String msg) {
