@@ -44,6 +44,12 @@ public class MutationAgent {
 		this.microbatConfigPath = microbatConfigPath;
 	}
 	
+	public MutationAgent(String projectPath) {
+		this.projectPath = projectPath;
+		this.dropInDir = null;
+		this.microbatConfigPath = null;
+	}
+	
 	public void startMutation() {
 		
 		if (!isReady()) {
@@ -55,8 +61,8 @@ public class MutationAgent {
 		
 		MutationFramework mutationFramework = new MutationFramework();
 		mutationFramework.setProjectPath(projectPath);
-		mutationFramework.setDropInsDir(dropInDir);
-		mutationFramework.setMicrobatConfigPath(microbatConfigPath);
+//		mutationFramework.setDropInsDir(dropInDir);
+//		mutationFramework.setMicrobatConfigPath(microbatConfigPath);
 		mutationFramework.setMaxNumberOfMutations(maxMutation);
 		mutationFramework.toggleStrongMutations(true);
 		

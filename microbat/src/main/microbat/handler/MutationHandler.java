@@ -45,19 +45,19 @@ public class MutationHandler extends AbstractHandler{
 
 				// Access mutation setting
 				boolean useTestCaseID = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.USE_TEST_CASE_ID).equals("true");
-				String projectPath = "";
-				if (useTestCaseID) {
-					projectPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.PROJECT_PATH);
-				} else {
-					projectPath = MicroBatUtil.getProjectPath(Settings.projectName);
-				}
+				String projectPath = MicroBatUtil.getProjectPath(Settings.projectName);
+//				if (useTestCaseID) {
+//					projectPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.PROJECT_PATH);
+//				} else {
+//					projectPath = MicroBatUtil.getProjectPath(Settings.projectName);
+//				}
 				
 //				final String projectPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.PROJECT_PATH);
-				final String dropInDir = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.DROP_IN_FOLDER_MICROBAT);
-				final String microbatConfigPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.CONFIG_PATH_MICROBAT);
+//				final String dropInDir = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.DROP_IN_FOLDER_MICROBAT);
+//				final String microbatConfigPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.CONFIG_PATH_MICROBAT);
 
 				// Perform mutation
-				MutationAgent mutationAgent = new MutationAgent(projectPath, dropInDir, microbatConfigPath);
+				MutationAgent mutationAgent = new MutationAgent(projectPath);
 				if (useTestCaseID) {
 					final String testCaseID_str = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.TEST_CASE_ID_MICROBAT);
 					final int testCaseID = Integer.parseInt(testCaseID_str);

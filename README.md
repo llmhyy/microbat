@@ -61,15 +61,17 @@ Mutation Framework will mutate an originally correct trace into a buggy trace su
 
 In order to use the mutation framework, you need to the following steps:
 
-1. Download the [Java Mutation Framework](https://github.com/llmhyy/java-mutation-framework.git). Check is the following folder/file exist in the downloaded project:
-   1. `java-mutation-framework\sample\`
-   2. `java-mutation-framework\sampleMicrobatConfig.json`
+1. Install `Java Mutation Framework`
 
-   In `java-mutation-framework\sampleMicrobatConfig.json`, you need to verify the java home path. If the path is not valid, please change the path to the  `JAVA 8` folder eg. `C:\\Program Files\\Java\\jdk1.8.0_202`.
+    1. Git clone the [Java Mutation Framework](https://github.com/llmhyy/java-mutation-framework.git).
 
-   <p align="center"><img src="./microbat/image/java_home.png" width="300"></p>
+    2. Inside the `Java Mutation Framework`, run `./scripts/setup.bat`
 
-   You may also check the `readme` in `java-mutation-framework` for more information
+    3. Enter `%USERPROFILE%\lib\resources\java-mutation-framework\microbatConfig.json` file and modify java_home argument to the path to `Java 8`
+
+      <p align="center"><img src="./microbat/image/java_home.png" width="300"></p>
+
+    You may also check the `readme` in `java-mutation-framework` for more information
 
 2. In the `Microbat Preference` (`Window` -> `Preferences` -> `Microbat Debugging`), setup the required parameters:
 
@@ -78,12 +80,10 @@ In order to use the mutation framework, you need to the following steps:
   - `Target Project`: The project that you are going to test.
   - `Launch Class`: The testing class that the test case belong to.
   - `Test Method`: Name of the test case method. Notice that the bracket is not needed.
-  - `Drop In Folder`: Absolute path to the library that `Java Mutation Framework` is using. You can find the `lib` folder in the downloaded `Java Mutation Framework` with the following path `java-mutation-framework\\lib`. Notice that you need to change it to absolute path.
-  - `Config Path`: Absolute path to the config `json` file. You can find it in the downloaded `Java Mutation Framework` with the following path `java-mutation-framework\\sampleMicrobatConfig.json`. Notice that you need to change it to absolute path.
 
 #### Explaination
 
-  `Target Project`, `Launch Class`, and `Test Method` are used to identify the target test case that you are going to test on. `Drop In Folder` and `Config Path` are the configuration used for `Java Mutation Framework`.
+  `Target Project`, `Launch Class`, and `Test Method` are used to identify the target test case that you are going to test on.
 
 #### Optional Setting
   
@@ -91,7 +91,6 @@ In order to use the mutation framework, you need to the following steps:
 
   To use it, you need to setup the following parameter:
   - Check the `Use Test Case ID`
-  - `Project Path`: Absolute path to the target project.
   - `Test ID`: Test ID of target test case
 
 ### How To Run
