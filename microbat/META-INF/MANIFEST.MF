@@ -44,7 +44,9 @@ Bundle-ClassPath: .,
  lib/trace-model-1.0-SNAPSHOT.jar,
  lib/test-io-0.0.1-SNAPSHOT-jar-with-dependencies.jar,
  lib/java-mutation-framework-0.0.1-SNAPSHOT-jar-with-dependencies.jar
-Export-Package: microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,org.eclipse.ui.plugin",
+Export-Package: jmutation.model,
+ jmutation.model.project,
+ microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,org.eclipse.ui.plugin",
  microbat.agent,
  microbat.algorithm.graphdiff;uses:="microbat.model.value",
  microbat.baseline,
@@ -149,6 +151,7 @@ Export-Package: microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,or
    sav.strategies.dto",
  microbat.model.value;uses:="microbat.model.variable",
  microbat.model.variable,
+ microbat.mutation,
  microbat.perspectives;uses:="org.eclipse.ui",
  microbat.preference;
   uses:="org.eclipse.ui,
@@ -193,5 +196,9 @@ Export-Package: microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,or
    org.eclipse.ui.part",
  org.apache.bcel;uses:="org.apache.bcel.classfile,org.apache.bcel.util",
  org.apache.bcel.classfile,
- org.apache.bcel.generic
+ org.apache.bcel.generic,
+ testio,
+ testio.model,
+ tracediff,
+ tracediff.model
 Import-Package: microbat.trace

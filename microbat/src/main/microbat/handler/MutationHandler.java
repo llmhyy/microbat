@@ -44,8 +44,11 @@ public class MutationHandler extends AbstractHandler{
 				}
 
 				// Access mutation setting
-				boolean useTestCaseID = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.USE_TEST_CASE_ID).equals("true");
-				String projectPath = MicroBatUtil.getProjectPath(Settings.projectName);
+				final boolean useTestCaseID = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.USE_TEST_CASE_ID).equals("true");
+				final String projectPath = MicroBatUtil.getProjectPath(Settings.projectName);
+				final String java_path = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.JAVA7HOME_PATH);
+				final int stepLimit = Settings.stepLimit;
+				
 //				if (useTestCaseID) {
 //					projectPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.PROJECT_PATH);
 //				} else {
@@ -57,7 +60,7 @@ public class MutationHandler extends AbstractHandler{
 //				final String microbatConfigPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.CONFIG_PATH_MICROBAT);
 
 				// Perform mutation
-				MutationAgent mutationAgent = new MutationAgent(projectPath);
+				MutationAgent mutationAgent = new MutationAgent(projectPath, java_path, stepLimit);
 				if (useTestCaseID) {
 					final String testCaseID_str = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.TEST_CASE_ID_MICROBAT);
 					final int testCaseID = Integer.parseInt(testCaseID_str);

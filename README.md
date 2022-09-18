@@ -67,10 +67,6 @@ In order to use the mutation framework, you need to the following steps:
 
     2. Inside the `Java Mutation Framework`, run `./scripts/setup.bat`
 
-    3. Enter `%USERPROFILE%\lib\resources\java-mutation-framework\microbatConfig.json` file and modify java_home argument to the path to `Java 8`
-
-      <p align="center"><img src="./microbat/image/java_home.png" width="300"></p>
-
     You may also check the `readme` in `java-mutation-framework` for more information
 
 2. In the `Microbat Preference` (`Window` -> `Preferences` -> `Microbat Debugging`), setup the required parameters:
@@ -78,9 +74,11 @@ In order to use the mutation framework, you need to the following steps:
   <p align="center":><img src="./microbat/image/preference.png" width=500></p>
 
   - `Target Project`: The project that you are going to test.
+  - `Java Home Path`: Absolute path to `JAVA 8`
+  - `Step Limit`: Set a reasonable step limit. 300000 is recommended
   - `Launch Class`: The testing class that the test case belong to.
   - `Test Method`: Name of the test case method. Notice that the bracket is not needed.
-
+  
 #### Explaination
 
   `Target Project`, `Launch Class`, and `Test Method` are used to identify the target test case that you are going to test on.
