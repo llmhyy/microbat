@@ -1266,7 +1266,7 @@ public class TraceNode{
 		final String filePath = this.getBreakPoint().getFullJavaFilePath();
 		String statement = null;
 		try {
-			statement = Files.readAllLines(Paths.get(filePath)).get(lineNo-1).strip();
+			statement = Files.readAllLines(Paths.get(filePath)).get(lineNo-1);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

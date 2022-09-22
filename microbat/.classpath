@@ -4,9 +4,6 @@
 	<classpathentry excluding="resources/" kind="src" path="src/test"/>
 	<classpathentry kind="src" path="src/evaluation"/>
 	<classpathentry kind="src" path="src/behavior"/>
-	<classpathentry exported="true" kind="lib" path="lib/java-mutation-framework-0.0.1-SNAPSHOT-jar-with-dependencies.jar" sourcepath="/java-mutation-framework"/>
-	<classpathentry exported="true" kind="lib" path="lib/test-io-0.0.1-SNAPSHOT-jar-with-dependencies.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/trace-model-1.0-SNAPSHOT.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/mysql-connector-java-5.1.44-bin.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/asm-util-6.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/asm-tree-6.0.jar"/>
@@ -28,6 +25,5 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/sqlite-jdbc-3.32.3.2.jar"/>
-	<classpathentry kind="lib" path="lib/trace-diff-0.0.1-SNAPSHOT-jar-with-dependencies.jar" sourcepath="/trace-diff"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

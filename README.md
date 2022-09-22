@@ -53,50 +53,6 @@ Then we can use the following configuration to have the trace of a junit method.
   <img src="/microbat/image/junit-trace.png" width="700" align="center">
 </p>
 
-## Run with Mutation Framework
-
-Mutation Framework will mutate an originally correct trace into a buggy trace such that the trace will failed the target test case.
-
-### Settings
-
-In order to use the mutation framework, you need to the following steps:
-
-1. Install `Java Mutation Framework`
-
-    1. Git clone the [Java Mutation Framework](https://github.com/llmhyy/java-mutation-framework.git).
-
-    2. Inside the `Java Mutation Framework`, run `./scripts/setup.bat`
-
-    You may also check the `readme` in `java-mutation-framework` for more information
-
-2. In the `Microbat Preference` (`Window` -> `Preferences` -> `Microbat Debugging`), setup the required parameters:
-
-  <p align="center":><img src="./microbat/image/preference.png" width=500></p>
-
-  - `Target Project`: The project that you are going to test.
-  - `Java Home Path`: Absolute path to `JAVA 8`
-  - `Step Limit`: Set a reasonable step limit. 300000 is recommended
-  - `Launch Class`: The testing class that the test case belong to.
-  - `Test Method`: Name of the test case method. Notice that the bracket is not needed.
-  
-#### Explaination
-
-  `Target Project`, `Launch Class`, and `Test Method` are used to identify the target test case that you are going to test on.
-
-#### Optional Setting
-  
-  Instead of using `Launch Class` and `Test Method`, you can also use the `Test ID` to find out your interested test case. `Test ID` is just the order of the test case. For example, `Test ID: 0` mean the first test case of the target project.
-
-  To use it, you need to setup the following parameter:
-  - Check the `Use Test Case ID`
-  - `Test ID`: Test ID of target test case
-
-### How To Run
-
-After setting up the configuration, you can click the `red cross button` in the tool bar to mutation the target test case.
-
-<p align="center":><img src="./microbat/image/run_mutation.png" width=300></p>
-
 ## Run with Belief Propagation
 
 Microbat can now debug using belief prapagation technique. To know more about the belief propgation technique, please refer to paper `Debugging with Intelligence via Probabilistic Inference`.

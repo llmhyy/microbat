@@ -134,7 +134,7 @@ public class ProbabilityEncoder {
 		ProbabilityEncoder.clearFeedbacks();
 
 		// Remove this variable
-//		this.removeThisVar(executionList);
+		this.removeThisVar(executionList);
 		
 		// Solve the problem of same variable ID after re-definition
 		this.changeArrayElementID(this.executionList);
