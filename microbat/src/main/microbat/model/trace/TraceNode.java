@@ -101,7 +101,6 @@ public class TraceNode{
 	
 	private transient double sliceBreakerProbability = 0;
 	
-	
 	/**
 	 * It is the probability of correctness as a node
 	 */
@@ -111,6 +110,11 @@ public class TraceNode{
 	 * It is the probability of correctness as a predicate
 	 */
 	private double pred_probability = -1;
+	
+	/**
+	 * True if the trace node throwing an Exception
+	 */
+	private boolean isThrowingException = false;
 	
 	/**
 	 * the first element of the pair is the read variable list, the second element is the 
@@ -1279,5 +1283,23 @@ public class TraceNode{
 	
 	public void setPredProb(double predProbability) {
 		this.pred_probability = predProbability;
+	}
+	
+	/**
+	 * Check is this node is throwing exception.
+	 * 
+	 * This method will check the bytecode of this trace node contain
+	 * the throwing bytecode "athrow" or not
+	 * 
+	 * If the parameter bytecode is null, it will throw runtime error
+	 * 
+	 * @return True if this node is throwing exception.
+	 */
+	public boolean isThrowingException() {
+		if (this.bytecode == null) {
+			throw new RuntimeException("TraceNode: " + this.order + " has null bytecode");
+		}
+		
+		return this.bytecode.contains("athrow");
 	}
 }
