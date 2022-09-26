@@ -112,11 +112,6 @@ public class TraceNode{
 	private double pred_probability = -1;
 	
 	/**
-	 * True if the trace node throwing an Exception
-	 */
-	private boolean isThrowingException = false;
-	
-	/**
 	 * the first element of the pair is the read variable list, the second element is the 
 	 * written variable list.
 	 */

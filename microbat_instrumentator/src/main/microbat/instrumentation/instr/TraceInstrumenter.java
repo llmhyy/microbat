@@ -269,7 +269,7 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 				} else if (rwInsnInfo instanceof LocalVarInstructionInfo) {
 					if (rwInsnInfo.getInstruction() instanceof IINC) {
 						newInsns = getInjectCodeTracerIINC(constPool, tracerVar,
-								(LocalVarInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
+								(LocalVarInstructionInfo) rwInsnInfo, classNameVar, methodSigVar, methodGen.isStatic());
 					} else {
 						newInsns = getInjectCodeTracerRWLocalVar(constPool, tracerVar,
 								(LocalVarInstructionInfo) rwInsnInfo, classNameVar, methodSigVar);
@@ -868,10 +868,10 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 	}
 	
 	private InstructionList getInjectCodeTracerIINC(ConstantPoolGen constPool, LocalVariableGen tracerVar,
-			LocalVarInstructionInfo insnInfo, LocalVariableGen classNameVar, LocalVariableGen methodSigVar) {
+			LocalVarInstructionInfo insnInfo, LocalVariableGen classNameVar, LocalVariableGen methodSigVar, boolean isStatic) {
 		IINC insn = (IINC) insnInfo.getInstruction();
-		// ignore reference to self
-		if (insn.getIndex() == 0) {
+		// ignore reference to self if it the method is non-static
+		if (insn.getIndex() == 0 && !isStatic) {
 			return null;
 		}
 		InstructionList newInsns = new InstructionList();
