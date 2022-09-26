@@ -1,19 +1,13 @@
 package microbat.baseline.encoders;
 
-import microbat.baseline.Configs;
 import microbat.baseline.UniquePriorityQueue;
 import microbat.baseline.constraints.Constraint;
-import microbat.baseline.constraints.PriorConstraint;
-import microbat.baseline.constraints.VariableConstraint;
-import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
-import microbat.recommendation.UserFeedback;
-import tracediff.TraceDiff;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,14 +15,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
 
-import jmutation.MutationFramework;
 
 /**
  * Probability Encoder follow the procedure in ICSE18 paper
@@ -581,7 +572,12 @@ public class ProbabilityEncoder {
 		// Search in reversed order because output usually appear at the end
 		for (int order = trace.getLatestNode().getOrder(); order>=1; order--) {
 			TraceNode node = trace.getTraceNode(order);
-
+			
+			// The throwing exception is not considered
+			if (node.isThrowingException()) {
+				continue;
+			}
+			
 			// Store to visit node
 			Iterator<VarValue> iter = outputsCopy.iterator();
 			while(iter.hasNext()) {
