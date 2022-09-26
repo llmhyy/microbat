@@ -663,7 +663,13 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			}
 			TraceNode latestNode = trace.getLatestNode();
 			if (latestNode != null && latestNode.getBreakPoint().getClassCanonicalName().equals(className)
-					&& latestNode.getBreakPoint().getLineNumber() == line || bytecode == null) {
+					&& latestNode.getBreakPoint().getLineNumber() == line) {
+				
+				// Add the bytecode if it is missing
+				if (latestNode.getBytecode() == null) {
+					latestNode.setBytecode(bytecode);
+				}
+				
 				trackingDelegate.track(isLocked);
 				return;
 			}
