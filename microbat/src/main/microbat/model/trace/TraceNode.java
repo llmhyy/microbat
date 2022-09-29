@@ -107,11 +107,6 @@ public class TraceNode{
 	private double probability = -1;
 	
 	/**
-	 * It is the probability of correctness as a predicate
-	 */
-	private double pred_probability = -1;
-	
-	/**
 	 * the first element of the pair is the read variable list, the second element is the 
 	 * written variable list.
 	 */
@@ -1272,13 +1267,6 @@ public class TraceNode{
 		return statement;
 	}
 	
-	public double getPredProb() {
-		return this.pred_probability;
-	}
-	
-	public void setPredProb(double predProbability) {
-		this.pred_probability = predProbability;
-	}
 	
 	/**
 	 * Check is this node is throwing exception.

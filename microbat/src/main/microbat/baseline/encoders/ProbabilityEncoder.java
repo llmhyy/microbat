@@ -4,7 +4,9 @@ import microbat.baseline.UniquePriorityQueue;
 import microbat.baseline.constraints.Constraint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.ArrayValue;
 import microbat.model.value.PrimitiveValue;
+import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
@@ -128,7 +130,8 @@ public class ProbabilityEncoder {
 		this.removeThisVar(executionList);
 		
 		// Solve the problem of same variable ID after re-definition
-		this.changeArrayElementID(this.executionList);
+		this.unifyArrayElementID(this.executionList);
+//		this.unifyRefVarID(executionList);
 		this.changeRedefinitionID(this.executionList);
 		
 		// Add condition result as control predicate
@@ -164,10 +167,9 @@ public class ProbabilityEncoder {
 		
 		// [Important] This method must be called before dynamic slicing
 		if (!this.fillFlag) {
-			this.fillMethodCallVariables(trace, trace.getExecutionList());
+//			this.fillMethodCallVariables(trace, trace.getExecutionList());
 		}
-		
-				
+	
 		if (this.executionList == null) {
 			this.executionList = this.dynamicSlicing(this.trace, this.outputVars, this.inputVars);
 		}
@@ -376,61 +378,66 @@ public class ProbabilityEncoder {
 		}
 	}
 	
-	private void changeArrayElementID(List<TraceNode> executionList) {
+	/**
+	 * Change all the array element id the same as their parent.
+	 * 
+	 * The purpose is to simplify the factor graph
+	 * 
+	 * @param executionList Execution list of testing program
+	 */
+	private void unifyArrayElementID(List<TraceNode> executionList) {
 		Map<String, String> addressMap = new HashMap<>();
 		for (TraceNode node : executionList) {
 			List<VarValue> vars = new ArrayList<>();
 			vars.addAll(node.getReadVariables());
 			vars.addAll(node.getWrittenVariables());
+			
+			// Store the address (alias id) for every parent variable
 			for (VarValue var : vars) {
-				if (!var.getChildren().isEmpty()) {
+				if (!var.getChildren().isEmpty() || addressMap.containsKey(var.getAliasVarID())) {
 					addressMap.put(var.getAliasVarID(), var.getVarID());
 				}
 			}
-		}
-		
-		for (TraceNode node : executionList) {
-			List<VarValue> vars = new ArrayList<>();
-			vars.addAll(node.getReadVariables());
-			vars.addAll(node.getWrittenVariables());
-
-			boolean hasChange = false;
+			
+			// If the children have the same address as their parent, then change the
+			// children id the same as their parent
 			for (VarValue var : vars) {
 				if (!var.getParents().isEmpty()) {
 					String address = this.extractAddressFromElementID(var.getVarID());
 					if (address != null && addressMap.get(address) != null) {
 						var.setVarID(addressMap.get(address));
-						hasChange = true;
+					}
+				}
+			}
+		}
+	}
+	
+	private void unifyRefVarID(List<TraceNode> executionList) {
+		Map<String, String> addressMap = new HashMap<>();
+		for (TraceNode node : executionList) {
+			List<VarValue> vars = new ArrayList<>();
+			vars.addAll(node.getReadVariables());
+			vars.addAll(node.getWrittenVariables());
+			
+			for (VarValue var : vars) {
+				if (var instanceof ArrayValue) {
+					continue;
+				} else if (var instanceof ReferenceValue) {
+					if (!addressMap.containsKey(var.getAliasVarID())) {
+						addressMap.put(var.getAliasVarID(), var.getVarID());
 					}
 				}
 			}
 			
-			if (true) {
-				// Remove the variable that have the same ID
-				Iterator<VarValue> iter = node.getReadVariables().iterator();
-				Set<String> IDs = new HashSet<>();
-				while(iter.hasNext()) {
-					VarValue var = iter.next();
-					if (IDs.contains(var.getVarID())) {
-						iter.remove();
-					} else {
-						IDs.add(var.getVarID());
-					}
-				}
-				
-				iter = node.getWrittenVariables().iterator();
-				IDs.clear();
-				while(iter.hasNext()) {
-					VarValue var = iter.next();
-					if (IDs.contains(var.getVarID())) {
-						iter.remove();
-					} else {
-						IDs.add(var.getVarID());
+			for (VarValue var : vars) {
+				if (var instanceof ArrayValue) {
+					continue;
+				} else if (var instanceof ReferenceValue) {
+					if (addressMap.containsKey(var.getAliasVarID())) {
+						var.setVarID(addressMap.get(var.getAliasVarID()));
 					}
 				}
 			}
-			
-			
 		}
 	}
 	

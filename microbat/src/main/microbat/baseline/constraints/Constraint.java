@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import microbat.baseline.BitRepresentation;
 import microbat.baseline.encoders.ProbabilityEncoder;
@@ -51,12 +52,12 @@ public abstract class Constraint {
 	/**
 	 * List of ID of read variables. Used when constructing the factor graph in python
 	 */
-	protected List<String> readVarIDs;
+	protected Set<String> readVarIDs;
 	
 	/**
 	 * List of ID of written variables. Uses when constructing the factor graph in python
 	 */
-	protected List<String> writeVarIDs;
+	protected Set<String> writeVarIDs;
 	
 	public static final int NaN = -1;
 	
@@ -79,8 +80,8 @@ public abstract class Constraint {
 		this.propProbability = propProbability;
 //		this.controlDomOrder = Constraint.NaN;
 		this.controlDomID = "";
-		this.readVarIDs = new ArrayList<>();
-		this.writeVarIDs = new ArrayList<>();
+		this.readVarIDs = new HashSet<>();
+		this.writeVarIDs = new HashSet<>();
 	}
 	
 	/**
@@ -98,8 +99,8 @@ public abstract class Constraint {
 		this.propProbability = propProbability;
 		this.controlDomID = "";
 		
-		this.readVarIDs = new ArrayList<>();
-		this.writeVarIDs = new ArrayList<>();
+		this.readVarIDs = new HashSet<>();
+		this.writeVarIDs = new HashSet<>();
 		
 	}
 	
@@ -134,7 +135,7 @@ public abstract class Constraint {
 		this.writeVarIDs.add(varID);
 	}
 	
-	public List<String> getReadVarIDs() {
+	public Set<String> getReadVarIDs() {
 		return this.readVarIDs;
 	}
 	
@@ -142,7 +143,7 @@ public abstract class Constraint {
 		return this.readVarIDs.size();
 	}
 	
-	public List<String> getWriteVarIDs() {
+	public Set<String> getWriteVarIDs() {
 		return this.writeVarIDs;
 	}
 	
