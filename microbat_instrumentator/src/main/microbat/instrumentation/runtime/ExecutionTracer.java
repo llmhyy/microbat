@@ -332,7 +332,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				}
 
 				VarValue value = appendVarValue(params[i], var, null);
-				if(value instanceof PrimitiveValue && !(value instanceof StringValue)) {
+//				if(value instanceof PrimitiveValue && !(value instanceof StringValue)) {
+//					addRWriteValue(caller, value, true);					
+//				}
+				if((value instanceof PrimitiveValue || value instanceof ArrayValue) && !(value instanceof StringValue)) {
 					addRWriteValue(caller, value, true);					
 				}
 			}
