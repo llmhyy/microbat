@@ -5,9 +5,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import microbat.baseline.BitRepresentation;
 import microbat.baseline.encoders.ProbabilityEncoder;
 import microbat.baseline.factorgraph.VarIDConverter;
 import microbat.model.trace.TraceNode;
@@ -15,7 +15,7 @@ import microbat.model.value.VarValue;
 
 /**
  * Abstract super of all kind of constraints used in the probability inference model
- * @author Siang Hwee
+ * @author David, Siang Hwee
  */
 public abstract class Constraint {
 	
@@ -27,13 +27,8 @@ public abstract class Constraint {
 	/**
 	 * The list of index of conclusion variable
 	 */
-	protected HashSet<Integer> conclusionIndexes;
-	
-	/**
-	 * Store the result probability of different case number in memory table to avoid repeated calculation.
-	 */
-	protected HashMap<Integer, Double> memoTable;
-	
+	protected Set<Integer> conclusionIndexes = new HashSet<>();
+
 	/**
 	 * Propagation probability of this constraint
 	 */
@@ -45,26 +40,58 @@ public abstract class Constraint {
 	protected final String constraintID;
 	
 	/**
+	 * Store the result probability of different case number in memory table to avoid repeated calculation.
+	 */
+	protected Map<Integer, Double> memoTable = new HashMap<>();	
+	
+	/**
 	 * ID of control dominator variable (The condition result of control dominator node)
 	 */
-	protected String controlDomID;
+	protected String controlDomID = "";
 	
 	/**
 	 * List of ID of read variables. Used when constructing the factor graph in python
 	 */
-	protected Set<String> readVarIDs;
+	protected List<String> readVarIDs = new ArrayList<>();
 	
 	/**
 	 * List of ID of written variables. Uses when constructing the factor graph in python
 	 */
-	protected Set<String> writeVarIDs;
+	protected List<String> writeVarIDs  = new ArrayList<>();
+	
+	protected final int maxCaseNo;
 	
 	public static final int NaN = -1;
 	
 	private int order = -1;
 
 //	public static final String controlDomPre = "CD_";
+
+	public Constraint(TraceNode node, Collection<Integer> conclusionIdxes, double probProbability, String constraintID) {
+		TraceNode copiedTraceNode = Constraint.removeDupVars(node);
+		if (Constraint.countPreds(copiedTraceNode) >= 30) {
+			throw new WrongConstraintConditionException("By now, constraint will not handle the case that predicates is more than 30 because it is too expensive to calculate");
+		}
+		this.varsIncluded = this.genBitRepresentation(copiedTraceNode);
+		this.conclusionIndexes = new HashSet<>(conclusionIdxes);
+		this.propProbability = probProbability;
+		this.constraintID = constraintID;
+		this.order = node.getOrder();
+		this.maxCaseNo = 1 << this.getBitLength();
+	}
 	
+	public Constraint(TraceNode node, int conclusionIdx, double probProbability, String constraintID) {
+		TraceNode copiedTraceNode = Constraint.removeDupVars(node);
+		if (Constraint.countPreds(copiedTraceNode) >= 30) {
+			throw new WrongConstraintConditionException("By now, constraint will not handle the case that predicates is more than 30 because it is too expensive to calculate");
+		}
+		this.varsIncluded = this.genBitRepresentation(copiedTraceNode);
+		this.conclusionIndexes.add(conclusionIdx);
+		this.propProbability = probProbability;
+		this.constraintID = constraintID;
+		this.order = node.getOrder();
+		this.maxCaseNo = 1 << this.getBitLength();
+	}
 	
 	/**
 	 * Constructor
@@ -72,17 +99,12 @@ public abstract class Constraint {
 	 * @param conclusionIndexes The list of index of conclusion variable
 	 * @param propProbability Propagation probability of this constraint
 	 */
-	public Constraint(BitRepresentation varsIncluded, Collection<Integer> conclusionIndexes, double propProbability, String constraintID) {
-		this.constraintID = constraintID;
-		this.varsIncluded = varsIncluded;
-		this.conclusionIndexes = new HashSet<>(conclusionIndexes);
-		this.memoTable = new HashMap<>();
-		this.propProbability = propProbability;
-//		this.controlDomOrder = Constraint.NaN;
-		this.controlDomID = "";
-		this.readVarIDs = new HashSet<>();
-		this.writeVarIDs = new HashSet<>();
-	}
+//	public Constraint(BitRepresentation varsIncluded, Collection<Integer> conclusionIndexes, double propProbability, String constraintID) {
+//		this.constraintID = constraintID;
+//		this.varsIncluded = varsIncluded;
+//		this.conclusionIndexes = new HashSet<>(conclusionIndexes);
+//		this.propProbability = propProbability;
+//	}
 	
 	/**
 	 * Constructor
@@ -90,19 +112,13 @@ public abstract class Constraint {
 	 * @param conclusionIndex Index of conclusion variable
 	 * @param propProbability Propagation probability of this constraint
 	 */
-	public Constraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, String name) {
-		this.constraintID = name;
-		this.varsIncluded = varsIncluded;
-		this.conclusionIndexes = new HashSet<>();
-		this.conclusionIndexes.add(conclusionIndex); // conclusionIndex is the index of write variable
-		this.memoTable = new HashMap<>();
-		this.propProbability = propProbability;
-		this.controlDomID = "";
-		
-		this.readVarIDs = new HashSet<>();
-		this.writeVarIDs = new HashSet<>();
-		
-	}
+//	public Constraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, String name) {
+//		this.constraintID = name;
+//		this.varsIncluded = varsIncluded;
+//		this.conclusionIndexes = new HashSet<>();
+//		this.conclusionIndexes.add(conclusionIndex); // conclusionIndex is the index of write variable
+//		this.propProbability = propProbability;
+//	}
 	
 	/**
 	 * Get the result probability based on the given case number.
@@ -111,6 +127,10 @@ public abstract class Constraint {
 	 * @return Result probability
 	 */
 	public double getProbability(final int caseNo) {
+		
+		if (caseNo < 0 || caseNo >= this.maxCaseNo) {
+			throw new IllegalArgumentException("TraceNode: " + this.getOrder() + " caseNo: " + caseNo + "exceed the limit: " + this.maxCaseNo);
+		}
 		if (this.memoTable.containsKey(caseNo)){
 			return this.memoTable.get(caseNo);
 		}
@@ -120,22 +140,26 @@ public abstract class Constraint {
 	}
 	
 	/**
-	 * Get the number of variables or statement involved in this constraints
-	 * @return Number of variables or statement
+	 * Get the length of bit representation of this constraint
+	 * @return Length of big representation
 	 */
-	public int getVarsCount() {
+	public int getBitLength() {
 		return this.varsIncluded.size();
 	}
 	
 	public void addReadVarID(final String varID) {
-		this.readVarIDs.add(varID);
+		if (!this.readVarIDs.contains(varID)) {
+			this.readVarIDs.add(varID);
+		}
 	}
 	
 	public void addWriteVarID(final String varID) {
-		this.writeVarIDs.add(varID);
+		if (!this.readVarIDs.contains(varID)) {
+			this.writeVarIDs.add(varID);
+		}
 	}
 	
-	public Set<String> getReadVarIDs() {
+	public List<String> getReadVarIDs() {
 		return this.readVarIDs;
 	}
 	
@@ -143,7 +167,7 @@ public abstract class Constraint {
 		return this.readVarIDs.size();
 	}
 	
-	public Set<String> getWriteVarIDs() {
+	public List<String> getWriteVarIDs() {
 		return this.writeVarIDs;
 	}
 	
@@ -179,23 +203,6 @@ public abstract class Constraint {
 		return ids;
 	}
 	
-//	protected String genControlDomID() {
-//		if (this.haveControlDom()) {
-////			return Constraint.controlDomPre + this.getControlDomOrder();
-//			return this.controlDomID;
-//		} else {
-//			return null;
-//		}
-//	}
-	
-//	public static boolean isControlDomID(final String id) {
-//		return id.startsWith(Constraint.controlDomPre);
-//	}
-//	
-//	public static int extractNodeOrderFromCDID(final String id) {
-//		return Integer.valueOf(id.replace(Constraint.controlDomPre, ""));
-//	}
-	
 	/**
 	 * Add all the involved predicates ID of node into record
 	 * @param node Target trace node
@@ -220,8 +227,6 @@ public abstract class Constraint {
 				}
 			}
 		}
-		
-		this.setOrder(node.getOrder());
 	}
 	
 	public int getVarCount() {
@@ -258,24 +263,20 @@ public abstract class Constraint {
 		return this.controlDomID != "";
 	}
 	
-//	public void setControlDomOrder(final int order) {
-//		this.controlDomOrder = order;
-//	}
-//	
-//	public int getControlDomOrder() {
-//		return this.controlDomOrder;
-//	}
-//	
-//	public boolean haveControlDom() {
-//		return this.controlDomOrder != Constraint.NaN;
-//	}
-	
 	public String getConstraintID() {
 		return this.constraintID;
 	}
 	
-	public HashSet<Integer> getConclusionIdxes() {
+	public Set<Integer> getConclusionIdxes() {
 		return this.conclusionIndexes;
+	}
+	
+	/**
+	 * Get the maximum case number for this constraint
+	 * @return Maximum case number
+	 */
+	public int getMaxCaseNo() {
+		return this.maxCaseNo;
 	}
 	
 	/**
@@ -285,6 +286,83 @@ public abstract class Constraint {
 	 */
 	abstract protected double calProbability(final int caseNo);
 	
+	/**
+	 * Generate the bit representation based on the type of constraint
+	 * @param node Target trace node for bit representation
+	 * @return Generated bit representation
+	 */
+	abstract protected BitRepresentation genBitRepresentation(TraceNode node);
+	
+	/**
+	 * Helper function to determine the index of variable in the bit representation
+	 * @param node Trace node that is going to be represented
+	 * @param var Target variable
+	 * @return Index of target variable in bit representation
+	 * @throws IllegalArgumentException if target variable is not contained by given trace node
+	 */
+	protected static int getBitIndex(TraceNode node, VarValue var) {
+		int index = -1;
+		
+		if (node.isReadVariablesContains(var.getVarID())) {
+			index = node.getReadVariables().indexOf(var);
+		} else if (node.isWrittenVariablesContains(var.getVarID())) {
+			index = node.getReadVariables().size() + node.getWrittenVariables().indexOf(var);
+		}
+		
+		if (index == -1) {
+			throw new WrongConstraintConditionException("Trace Node: " + node.getOrder() + " do not contraint variable: " + var.getVarID());
+		}
+		
+		return index;
+	}
+	
+	/**
+	 * Remove all the duplicated variable in given node.
+	 * 
+	 * This method will deep copy the variable such that the original node will node be affected.
+	 * 
+	 * @param node Node to be copied
+	 * @return New trace node will all the duplicated variable is removed.
+	 */
+	protected static TraceNode removeDupVars(final TraceNode node) {
+		TraceNode newNode = new TraceNode(node.getBreakPoint(), node.getProgramState(), node.getOrder(), node.getTrace(), node.getBytecode());
+		newNode.setControlDominator(node.getControlDominator());
+		
+		// We do not use set for removing duplicate variable
+		// because we want to maintain the order
+		
+		List<VarValue> newReadVars = new ArrayList<>();
+		for (VarValue readVar : node.getReadVariables()) {
+			if (!newReadVars.contains(readVar)) {
+				newReadVars.add(readVar);
+			}
+		}
+		newNode.setReadVariables(newReadVars);
+		
+		List<VarValue> newWrittenVars = new ArrayList<>();
+		for (VarValue writeVar : node.getWrittenVariables()) {
+			if (!newWrittenVars.contains(writeVar)) {
+				newWrittenVars.add(writeVar);
+			}
+		}
+		newNode.setWrittenVariables(newWrittenVars);
+
+		return newNode;
+	}
+	
+	protected static int countReadVars(TraceNode node) {
+		return node.getReadVariables().size();
+	}
+	
+	protected static int countWrittenVars(TraceNode node) {
+		return node.getWrittenVariables().size();
+	}
+	
+	protected static int countPreds(TraceNode node) {
+		int varCount = Constraint.countReadVars(node) + Constraint.countWrittenVars(node);
+		return node.getControlDominator() == null ? varCount : varCount + 1;
+	}
+	
 	@Override
 	public String toString() {
 		return "Variables map: " + this.varsIncluded + " Conclusions: " + this.conclusionIndexes + "(" + this.propProbability + ")"; 
@@ -293,91 +371,6 @@ public abstract class Constraint {
 	public static void resetID() {
 		VariableConstraint.resetID();
 		PriorConstraint.resetID();
-		
 		StatementConstraint.resetID();
 	}
-	
-//	public double getProbability(int bin) {
-//	if (memoTable.containsKey(bin))
-//		return memoTable.get(bin);
-//	double prob = getProb(bin);
-//	memoTable.put(bin, prob);
-//	return prob;
-//}
 }
-//public class Constraint{
-//	protected BitRepresentation variablesIncluded;
-//	protected HashSet<Integer> conclusionIndexes;
-//	protected double probability;
-//	protected HashMap<Integer, Double> memoTable = new HashMap<>();
-//	protected ConstraintType constraintType;
-//	
-//	public Constraint(BitRepresentation variablesIncluded, Collection<Integer> conclusionIndexes, double probability) {
-//		this.variablesIncluded = variablesIncluded;
-//		this.conclusionIndexes = new HashSet<>(conclusionIndexes);
-//		this.probability = probability;
-//	}
-//	
-//	/**
-//	 * Constructor of Constraint
-//	 * @param variablesIncluded Bit representation of variables included
-//	 * @param conclusionIndex Index of the conclusion variable
-//	 * @param probability propagate probability
-//	 * @param type Type of this constraint
-//	 */
-//	public Constraint(BitRepresentation variablesIncluded, int conclusionIndex, double probability, ConstraintType type) {
-//		this.variablesIncluded = variablesIncluded;
-//		this.conclusionIndexes = new HashSet<>();
-//		this.conclusionIndexes.add(conclusionIndex); // conclusionIndex is the index of write variable
-//		this.probability = probability;
-//		this.constraintType = type;
-//	}
-//	
-//	public double getProbability(int bin) {
-//		if (memoTable.containsKey(bin))
-//			return memoTable.get(bin);
-//		double prob = getProb(bin);
-//		memoTable.put(bin, prob);
-//		return prob;
-//	}
-//	
-//	public void setType(ConstraintType type) {
-//		this.constraintType = type;
-//	}
-//	
-//	protected double getProb(int bin) {
-//		BitRepresentation binValue = BitRepresentation.parse(bin, variablesIncluded.size());
-//		binValue.and(variablesIncluded);
-//		int numVarsIncluded = variablesIncluded.getCardinality();
-//		int numTrue = binValue.getCardinality();
-//		int numFalse = numVarsIncluded - numTrue;
-//		if (numFalse <= conclusionIndexes.size() ) {
-//			for (Integer index : conclusionIndexes) {
-//				if (binValue.get(index))
-//					continue;
-//				// one of the conclusion index is false
-//				numFalse -= 1;
-//				if (numFalse == 0) {
-//					// all the false values are the written var
-//					// early termination
-//					return 1 - this.probability;
-//				}
-//			}
-//		}
-//		
-//		/*
-//		 *  if the number of vars that are false is more than the number of conclusion index
-//		 *  we know that at least one of the non-conclusion var is wrong and thus this statement
-//		 *  is veraciously true 
-//		 */
-//		return this.probability;
-//	}
-//	
-//	public String toString() {
-//		return this.constraintType.name() + " Variables map: " + variablesIncluded + " Conclusions: " + conclusionIndexes + "(" + probability + ")"; 
-//	}
-//
-//	public static double tau(int n) {
-//		return 0.5 + 0.5 * (2 * Configs.HIGH - 1) * (1/n);
-//	}
-//}

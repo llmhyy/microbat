@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import microbat.baseline.BitRepresentation;
+import microbat.baseline.constraints.BitRepresentation;
 import microbat.baseline.constraints.Constraint;
 import microbat.baseline.constraints.PriorConstraint;
 import microbat.model.trace.Trace;
@@ -96,18 +96,18 @@ public abstract class Encoder {
 		return null;
 	}
 	
-	protected Constraint genPriorConstraint(VarValue var, double prob) {
-		
-		BitRepresentation varsIncluded = new BitRepresentation(1);
-		varsIncluded.set(0);
-		
-		Constraint constraint = new PriorConstraint(varsIncluded, 0, prob);
-		
-		// When it is prior constraint, it doesn't matter if the id is read or write or control dominator variable
-		// So let just add it to read variable id list
-		constraint.addReadVarID(var.getVarID());
-		return constraint;
-	}
+//	protected Constraint genPriorConstraint(VarValue var, double prob) {
+//		
+//		BitRepresentation varsIncluded = new BitRepresentation(1);
+//		varsIncluded.set(0);
+//		
+//		Constraint constraint = new PriorConstraint(varsIncluded, 0, prob);
+//		
+//		// When it is prior constraint, it doesn't matter if the id is read or write or control dominator variable
+//		// So let just add it to read variable id list
+//		constraint.addReadVarID(var.getVarID());
+//		return constraint;
+//	}
 	
 	/**
 	 * Build a mapping between variable ID and variable

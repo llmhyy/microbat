@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import microbat.baseline.BitRepresentation;
-import microbat.baseline.Configs;
+import microbat.baseline.constraints.BitRepresentation;
+import microbat.baseline.constraints.PropagationProbability;
 import microbat.baseline.constraints.Constraint;
 import microbat.baseline.constraints.PriorConstraint;
 import microbat.baseline.constraints.StatementConstraintA1;
@@ -165,33 +165,33 @@ public class StatementEncoder extends Encoder{
 		 * does not exist, because this kind of node will not
 		 * be included during the dynamic slicing
 		 */
-		if ((readLen == 0 && writeLen == 0)) { // 3rd case
-			
-			Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
-			constraintA1.setVarsID(node);
-			constraints.add(constraintA1);
-			
-		} else if ((readLen == 0 && writeLen != 0) ||(readLen != 0 && writeLen == 0)) { // 1st and 2nd case
-			
-			constraints.addAll(this.genSpecialCaseConstraints(node));
-					
-		} else {
-			
-			// Variable to statement constraint A1
-			Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
-			constraintA1.setVarsID(node);
-			constraints.add(constraintA1);
-			
-			// Variable to statement constraint A2
-			Constraint constraintA2 = new StatementConstraintA2(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
-			constraintA2.setVarsID(node);
-			constraints.add(constraintA2);
-			
-			// Variable to statement constraint A3
-			Constraint constraintA3 = new StatementConstraintA3(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
-			constraintA3.setVarsID(node);
-			constraints.add(constraintA3);
-		}
+//		if ((readLen == 0 && writeLen == 0)) { // 3rd case
+//			
+//			Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, PropagationProbability.HIGH, writeStartIdx, statementOrder, controlDomID);
+//			constraintA1.setVarsID(node);
+//			constraints.add(constraintA1);
+//			
+//		} else if ((readLen == 0 && writeLen != 0) ||(readLen != 0 && writeLen == 0)) { // 1st and 2nd case
+//			
+//			constraints.addAll(this.genSpecialCaseConstraints(node));
+//					
+//		} else {
+//			
+//			// Variable to statement constraint A1
+//			Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, PropagationProbability.HIGH, writeStartIdx, statementOrder, controlDomID);
+//			constraintA1.setVarsID(node);
+//			constraints.add(constraintA1);
+//			
+//			// Variable to statement constraint A2
+//			Constraint constraintA2 = new StatementConstraintA2(variableIncluded, conclusionIdx, PropagationProbability.HIGH, writeStartIdx, statementOrder, controlDomID);
+//			constraintA2.setVarsID(node);
+//			constraints.add(constraintA2);
+//			
+//			// Variable to statement constraint A3
+//			Constraint constraintA3 = new StatementConstraintA3(variableIncluded, conclusionIdx, PropagationProbability.HIGH, writeStartIdx, statementOrder, controlDomID);
+//			constraintA3.setVarsID(node);
+//			constraints.add(constraintA3);
+//		}
 
 		// Variable to statement constraint A
 		return constraints;
@@ -205,42 +205,42 @@ public class StatementEncoder extends Encoder{
 	protected List<Constraint> genPriorConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		
-		final int readLen = this.countReadVars(node);
-		final int writeLen = this.countWriteVars(node);
-		final int totalLen = this.countPredicates(node);
-		
-		TraceNode controlDominator = node.getControlDominator();
-		
-		// Index of control dominator in bit representation
-		final int predIdx = controlDominator != null ? totalLen - 2 : -1;
-		
-		// Handle read variables prior constraints
-		for (int i=0; i<readLen; i++) {
-			VarValue readVar = node.getReadVariables().get(i);
-			BitRepresentation br = new BitRepresentation(totalLen);
-			br.set(i);
-			Constraint constraint = new PriorConstraint(br, i, readVar.getProbability());
-			constraints.add(constraint);
-		}
-		
-		// Handle write variables prior constraints
-		for (int i = 0; i<writeLen; ++i) {
-			VarValue writeVar = node.getWrittenVariables().get(i);
-			final int pos = i+readLen;
-			BitRepresentation br = new BitRepresentation(totalLen);
-			br.set(pos);
-			Constraint constraint = new PriorConstraint(br, pos, writeVar.getProbability());
-			constraints.add(constraint);
-		}
-		
-		// Handle control dominator constraint
-		if (controlDominator != null) {
-			BitRepresentation bitRep = new BitRepresentation(totalLen);
-			bitRep.set(predIdx);
-			VarValue controlDomValue = this.getControlDomValue(controlDominator);
-			Constraint constarint = new PriorConstraint(bitRep, predIdx, controlDomValue.getProbability());
-			constraints.add(constarint);
-		}
+//		final int readLen = this.countReadVars(node);
+//		final int writeLen = this.countWriteVars(node);
+//		final int totalLen = this.countPredicates(node);
+//		
+//		TraceNode controlDominator = node.getControlDominator();
+//		
+//		// Index of control dominator in bit representation
+//		final int predIdx = controlDominator != null ? totalLen - 2 : -1;
+//		
+//		// Handle read variables prior constraints
+//		for (int i=0; i<readLen; i++) {
+//			VarValue readVar = node.getReadVariables().get(i);
+//			BitRepresentation br = new BitRepresentation(totalLen);
+//			br.set(i);
+//			Constraint constraint = new PriorConstraint(br, i, readVar.getProbability());
+//			constraints.add(constraint);
+//		}
+//		
+//		// Handle write variables prior constraints
+//		for (int i = 0; i<writeLen; ++i) {
+//			VarValue writeVar = node.getWrittenVariables().get(i);
+//			final int pos = i+readLen;
+//			BitRepresentation br = new BitRepresentation(totalLen);
+//			br.set(pos);
+//			Constraint constraint = new PriorConstraint(br, pos, writeVar.getProbability());
+//			constraints.add(constraint);
+//		}
+//		
+//		// Handle control dominator constraint
+//		if (controlDominator != null) {
+//			BitRepresentation bitRep = new BitRepresentation(totalLen);
+//			bitRep.set(predIdx);
+//			VarValue controlDomValue = this.getControlDomValue(controlDominator);
+//			Constraint constarint = new PriorConstraint(bitRep, predIdx, controlDomValue.getProbability());
+//			constraints.add(constarint);
+//		}
 
 		return constraints;
 	}
@@ -248,70 +248,70 @@ public class StatementEncoder extends Encoder{
 	protected List<Constraint> genSpecialCaseConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		
-		final int readLen = this.countReadVars(node);
-		final int writeLen = this.countWriteVars(node);
-		final int totalLen = this.countPredicates(node);
-		
-		// Check control dominator exist or not
-		TraceNode controlDominator = node.getControlDominator();
-		boolean haveControlDominator = controlDominator != null;
-		
-		// Index of statement in bit representation
-		final int conclusionIdx = totalLen - 1;
-		
-		// Constraint A1, A2, A3 include the same variable
-		BitRepresentation variableIncluded = new BitRepresentation(totalLen);
-		variableIncluded.set(0, readLen + writeLen);	// Include all read and write variables
-		if (haveControlDominator) {
-			variableIncluded.set(totalLen - 2);	// Include control dominator if exist
-		}
-		variableIncluded.set(conclusionIdx);	// Include conclusion statement
-		
-		// Index of starting write variable in the bit representation
-		final int writeStartIdx = readLen == 0 ? 0 : readLen;
-		
-		// Order of current node
-		final int statementOrder = node.getOrder();
-		
-		// Get the ID of control dominator variable if exists
-		String controlDomID = "";
-		if (haveControlDominator) {
-			VarValue controlDomValue = this.getControlDomValue(controlDominator);
-			controlDomID = controlDomValue.getVarID();
-		}
-
-		Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
-		constraintA1.setVarsID(node);
-		constraints.add(constraintA1);
-		
-		for (int readIdx=0; readIdx<readLen; readIdx++) {
-			BitRepresentation br = new BitRepresentation(totalLen);
-			br.set(readIdx);
-			br.set(conclusionIdx);
-			if (haveControlDominator) {
-				br.set(totalLen-2);
-			}
-			
-			Constraint constraint = new StatementConstraintA4(br, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
-			constraint.setVarsID(node);
-			constraint.setOrder(statementOrder);
-			constraints.add(constraint);
-		}
-		
-		for (int offset=0; offset<writeLen; offset++) {
-			final int writeIdx = readLen + offset;
-			BitRepresentation br = new BitRepresentation(totalLen);
-			br.set(writeIdx);
-			br.set(conclusionIdx);
-			if (haveControlDominator) {
-				br.set(totalLen-2);
-			}
-			
-			Constraint constraint = new StatementConstraintA4(br, conclusionIdx, Configs.HIGH, writeStartIdx, statementOrder, controlDomID);
-			constraint.setVarsID(node);
-			constraint.setOrder(statementOrder);
-			constraints.add(constraint);
-		}
+//		final int readLen = this.countReadVars(node);
+//		final int writeLen = this.countWriteVars(node);
+//		final int totalLen = this.countPredicates(node);
+//		
+//		// Check control dominator exist or not
+//		TraceNode controlDominator = node.getControlDominator();
+//		boolean haveControlDominator = controlDominator != null;
+//		
+//		// Index of statement in bit representation
+//		final int conclusionIdx = totalLen - 1;
+//		
+//		// Constraint A1, A2, A3 include the same variable
+//		BitRepresentation variableIncluded = new BitRepresentation(totalLen);
+//		variableIncluded.set(0, readLen + writeLen);	// Include all read and write variables
+//		if (haveControlDominator) {
+//			variableIncluded.set(totalLen - 2);	// Include control dominator if exist
+//		}
+//		variableIncluded.set(conclusionIdx);	// Include conclusion statement
+//		
+//		// Index of starting write variable in the bit representation
+//		final int writeStartIdx = readLen == 0 ? 0 : readLen;
+//		
+//		// Order of current node
+//		final int statementOrder = node.getOrder();
+//		
+//		// Get the ID of control dominator variable if exists
+//		String controlDomID = "";
+//		if (haveControlDominator) {
+//			VarValue controlDomValue = this.getControlDomValue(controlDominator);
+//			controlDomID = controlDomValue.getVarID();
+//		}
+//
+//		Constraint constraintA1 = new StatementConstraintA1(variableIncluded, conclusionIdx, PropagationProbability.HIGH, writeStartIdx, statementOrder, controlDomID);
+//		constraintA1.setVarsID(node);
+//		constraints.add(constraintA1);
+//		
+//		for (int readIdx=0; readIdx<readLen; readIdx++) {
+//			BitRepresentation br = new BitRepresentation(totalLen);
+//			br.set(readIdx);
+//			br.set(conclusionIdx);
+//			if (haveControlDominator) {
+//				br.set(totalLen-2);
+//			}
+//			
+//			Constraint constraint = new StatementConstraintA4(br, conclusionIdx, PropagationProbability.HIGH, writeStartIdx, statementOrder, controlDomID);
+//			constraint.setVarsID(node);
+//			constraint.setOrder(statementOrder);
+//			constraints.add(constraint);
+//		}
+//		
+//		for (int offset=0; offset<writeLen; offset++) {
+//			final int writeIdx = readLen + offset;
+//			BitRepresentation br = new BitRepresentation(totalLen);
+//			br.set(writeIdx);
+//			br.set(conclusionIdx);
+//			if (haveControlDominator) {
+//				br.set(totalLen-2);
+//			}
+//			
+//			Constraint constraint = new StatementConstraintA4(br, conclusionIdx, PropagationProbability.HIGH, writeStartIdx, statementOrder, controlDomID);
+//			constraint.setVarsID(node);
+//			constraint.setOrder(statementOrder);
+//			constraints.add(constraint);
+//		}
 		
 		return constraints;
 	}

@@ -1,6 +1,7 @@
 package microbat.baseline.constraints;
 
-import microbat.baseline.BitRepresentation;
+import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 
 /**
  * Prior constraint represent how likely the conclusion variable is correct
@@ -9,14 +10,25 @@ import microbat.baseline.BitRepresentation;
 public class PriorConstraint extends Constraint {
 	
 	private static int count = 0;
-
-	public PriorConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability) {
-		super(varsIncluded, conclusionIndex, propProbability, PriorConstraint.genID());
+	
+	/**
+	 * Constructor
+	 * @param node	Target node
+	 * @param var	Target variable
+	 * @param probProbability Propagation probability
+	 */
+	public PriorConstraint(VarValue var, double probProbability) {
+		super(new TraceNode(null, null, -1, null, null), 0, probProbability, PriorConstraint.genID());
+		this.addReadVarID(var.getVarID());
 	}
 	
-	public PriorConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, String varID) {
-		super(varsIncluded, conclusionIndex, propProbability, PriorConstraint.genID());
-	}
+//	public PriorConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability) {
+//		super(varsIncluded, conclusionIndex, propProbability, PriorConstraint.genID());
+//	}
+//	
+//	public PriorConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, String varID) {
+//		super(varsIncluded, conclusionIndex, propProbability, PriorConstraint.genID());
+//	}
 
 	@Override
 	protected double calProbability(int caseNo) {
@@ -48,5 +60,13 @@ public class PriorConstraint extends Constraint {
 	
 	public static void resetID() {
 		PriorConstraint.count = 0;
+	}
+
+	@Override
+	protected BitRepresentation genBitRepresentation(TraceNode node) {
+		// Trace node is unused
+		BitRepresentation bitRepresentation = new BitRepresentation(1);
+		bitRepresentation.set(0);
+		return bitRepresentation;
 	}
 }

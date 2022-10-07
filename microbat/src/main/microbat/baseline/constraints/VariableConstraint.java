@@ -4,25 +4,34 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import microbat.baseline.BitRepresentation;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 
 /**
  * Variable constraint
  * @author Siang Hwee, David
  *
  */
-public class VariableConstraint extends Constraint {
+public abstract class VariableConstraint extends Constraint {
+//	
+//	private static int count = 0;
 	
-	private static int count = 0;
-	
-	public VariableConstraint(BitRepresentation varsIncluded, Collection<Integer> conclusionIndexes, double propProbability) {
-		super(varsIncluded, conclusionIndexes, propProbability, VariableConstraint.genID());
+	public VariableConstraint(TraceNode node, int conclusionIdx, double propProbability, String constraintID) {
+		super(node, conclusionIdx, propProbability, constraintID);
 	}
+
 	
-	public VariableConstraint(BitRepresentation varsIncluded, int conclusionIdx, double propProbability) {
-		super(varsIncluded, conclusionIdx, propProbability, VariableConstraint.genID());
-	}
+//	public VariableConstraint(TraceNode node, VarValue conclusionVar, double propProbability) {
+//		super(node, conclusionVar, propProbability, VariableConstraint.genID());
+//	}
+//	
+//	public VariableConstraint(BitRepresentation varsIncluded, Collection<Integer> conclusionIndexes, double propProbability) {
+//		super(varsIncluded, conclusionIndexes, propProbability, VariableConstraint.genID());
+//	}
+//	
+//	public VariableConstraint(BitRepresentation varsIncluded, int conclusionIdx, double propProbability) {
+//		super(varsIncluded, conclusionIdx, propProbability, VariableConstraint.genID());
+//	}
 	
 	@Override
 	protected double calProbability(int caseNo) {
@@ -61,17 +70,10 @@ public class VariableConstraint extends Constraint {
 		 */
 		return this.propProbability;
 	}
-	
-	@Override
-	public String toString() {
-		return "Var Constraint " + super.toString();
-	}
-	
-	private static String genID() {
-		return "VC_" + VariableConstraint.count++;
-	}
-	
+
 	public static void resetID() {
-		VariableConstraint.count = 0;
+		VariableConstraintA1.resetID();
+		VariableConstraintA2.resetID();
+		VariableConstraintA3.resetID();
 	}
 }

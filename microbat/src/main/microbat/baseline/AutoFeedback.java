@@ -2,6 +2,7 @@ package microbat.baseline;
 
 import java.util.List;
 
+import microbat.baseline.constraints.PropagationProbability;
 import microbat.evaluation.model.TraceNodePair;
 import microbat.model.trace.Trace;
 import microbat.model.value.VarValue;
@@ -14,7 +15,7 @@ public class AutoFeedback {
 	public boolean feedback(Trace buggyTrace, TraceNodePair pair) {
 		if (pair.isExactSame()) {
 			// not the right node
-			pair.getOriginalNode().setProbability(Configs.HIGH);
+			pair.getOriginalNode().setProbability(PropagationProbability.HIGH);
 			return false;
 		} else {
 			List<VarValue> wrongRead = pair.findSingleWrongReadVar(buggyTrace);
@@ -25,7 +26,7 @@ public class AutoFeedback {
 			List<VarValue> wrongWrite = pair.findSingleWrongWrittenVarID(buggyTrace);
 			wrongRead.addAll(wrongWrite);
 			for (VarValue v : wrongWrite) {
-				v.setProbability(Configs.HIGH);
+				v.setProbability(PropagationProbability.HIGH);
 			}
 			return false;
 		}

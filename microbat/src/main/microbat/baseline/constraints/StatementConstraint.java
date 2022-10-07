@@ -3,8 +3,9 @@ package microbat.baseline.constraints;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.baseline.BitRepresentation;
+import microbat.baseline.encoders.ProbabilityEncoder;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 
 /**
  * Abstract class for different kind of statement constraints
@@ -26,11 +27,6 @@ public abstract class StatementConstraint extends Constraint {
 	protected int predIdx;
 	
 	/**
-	 * Order of the trace node
-	 */
-	protected int statementOrder;
-	
-	/**
 	 * Prefix of the statement constraint ID
 	 */
 	protected static final String statIDPre = "S_";
@@ -42,25 +38,34 @@ public abstract class StatementConstraint extends Constraint {
 	protected int strucIdx;
 	protected int nameIdx;
 	
-	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String constraintID, int statementOrder) {
-//		this(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, constraintID, statementOrder, Constraint.NaN);
-		this(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, constraintID, statementOrder, "");
-	}
-	
-	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String name, int statementOrder, String controlDomID) {
-		super(varsIncluded, conclusionIndex, propProbability, name);
-		this.writeVarStartingIdx = writeVarStarintIdx;
-//		this.setControlDomOrder(controlDomOrder);
-		this.setControlDomID(controlDomID);
-		if (this.haveControlDom()) {
-			this.predIdx = this.varsIncluded.size() - 2;
-		} else {
-			this.predIdx = Constraint.NaN;
-		}
+	public StatementConstraint(TraceNode node, double propProbability, String constriantID, int writeVarStartIdx) {
+		super(node, Constraint.countPreds(node), propProbability, constriantID);
+		this.writeVarStartingIdx = writeVarStartIdx;
+		boolean haveControlDom = node.getControlDominator() != null;
+		this.predIdx = haveControlDom ? this.varsIncluded.size() - 2 : Constraint.NaN;
 		this.strucIdx = Constraint.NaN;
 		this.nameIdx = Constraint.NaN;
-		this.statementOrder = statementOrder;
 	}
+	
+//	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String constraintID, int statementOrder) {
+////		this(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, constraintID, statementOrder, Constraint.NaN);
+//		this(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, constraintID, statementOrder, "");
+//	}
+//	
+//	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String name, int statementOrder, String controlDomID) {
+//		super(varsIncluded, conclusionIndex, propProbability, name);
+//		this.writeVarStartingIdx = writeVarStarintIdx;
+////		this.setControlDomOrder(controlDomOrder);
+//		this.setControlDomID(controlDomID);
+//		if (this.haveControlDom()) {
+//			this.predIdx = this.varsIncluded.size() - 2;
+//		} else {
+//			this.predIdx = Constraint.NaN;
+//		}
+//		this.strucIdx = Constraint.NaN;
+//		this.nameIdx = Constraint.NaN;
+//		this.statementOrder = statementOrder;
+//	}
 	
 	@Override
 	public List<String> getInvolvedPredIDs() {
@@ -74,20 +79,12 @@ public abstract class StatementConstraint extends Constraint {
 		return ids;
 	}
 	
-	public void setStatementOrder(final int order) {
-		this.statementOrder = order;
-	}
-	
-	public int getStatementOrder() {
-		return this.statementOrder;
-	}
-	
 	/**
 	 * Generate statement constraint ID
 	 * @return Statement constraint ID
 	 */
 	protected String genStatID() {
-		return StatementConstraint.statIDPre + this.statementOrder;
+		return StatementConstraint.statIDPre + this.getOrder();
 	}
 	
 	public static boolean isStatID(final String id) {
@@ -161,10 +158,29 @@ public abstract class StatementConstraint extends Constraint {
 		 */
 		return super.getPredicateCount() + 1;
 	}
+	
+	@Override
+	protected BitRepresentation genBitRepresentation(TraceNode node) {
+		final int totalLen = Constraint.countPreds(node)+1;
+		BitRepresentation bitRepresentation = new BitRepresentation(totalLen);
+		bitRepresentation.set(0, totalLen);
+		return bitRepresentation;
+	}
 
 	public static void resetID() {
 		StatementConstraintA1.resetID();
 		StatementConstraintA2.resetID();
 		StatementConstraintA3.resetID();
+		StatementConstraintA4.resetID();
+		StatementConstraintA5.resetID();
+	}
+	
+	public static VarValue getControlDomVar(TraceNode node) {
+		for (VarValue writeVar : node.getWrittenVariables()) {
+			if (writeVar.getVarID().startsWith(ProbabilityEncoder.CONDITION_RESULT_ID_PRE)) {
+				return writeVar;
+			}
+		}
+		return null;
 	}
 }

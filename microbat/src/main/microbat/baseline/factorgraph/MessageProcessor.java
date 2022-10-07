@@ -101,8 +101,7 @@ public class MessageProcessor {
 			strBuilder.deleteCharAt(strBuilder.length()-1);
 			strBuilder.append(this.DELIMITER_2);
 			
-			final int totalLen = constraint.getPredicateCount();
-			final int maxCase = 1 << totalLen;
+			final int maxCase = constraint.getMaxCaseNo();
 			
 			double prevProb = constraint.getProbability(0);
 			int count = 1;
@@ -111,7 +110,7 @@ public class MessageProcessor {
 				if (prob == prevProb) {
 					count += 1;
 				} else {
-					strBuilder.append(prevProb);
+					strBuilder.append(String.format("%.2f", prevProb));
 					strBuilder.append(this.MUL_SIGN);
 					strBuilder.append(count);
 					strBuilder.append(this.DELIMITER_1);
@@ -120,7 +119,7 @@ public class MessageProcessor {
 				}
 			}
 			
-			strBuilder.append(prevProb);
+			strBuilder.append(String.format("%.2f", prevProb));
 			strBuilder.append(this.MUL_SIGN);
 			strBuilder.append(count);
 			// Remove the last delimiter

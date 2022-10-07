@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import microbat.baseline.BitRepresentation;
+import microbat.baseline.constraints.BitRepresentation;
 import microbat.baseline.constraints.Constraint;
 import microbat.baseline.constraints.PriorConstraint;
 
@@ -22,7 +22,7 @@ public class InferenceModel {
 		this.constraints = constraints;
 		
 		if (!this.constraints.isEmpty()) {
-			this.varsCount = this.constraints.get(0).getVarsCount();
+			this.varsCount = this.constraints.get(0).getVarCount();
 		} else {
 			this.varsCount = 0;
 		}
@@ -116,9 +116,9 @@ public class InferenceModel {
 			return false;
 		}
 		
-		final int varsCount = this.constraints.get(0).getVarsCount();
+		final int varsCount = this.constraints.get(0).getVarCount();
 		for (Constraint constraint : this.constraints) {
-			if (constraint.getVarsCount() != varsCount) {
+			if (constraint.getVarCount() != varsCount) {
 				return false;
 			}
 		}

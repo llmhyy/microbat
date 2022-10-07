@@ -2,12 +2,17 @@ package microbat.baseline.constraints;
 
 import java.util.List;
 
-import microbat.baseline.BitRepresentation;
+import microbat.model.trace.TraceNode;
 
 /**
  * Statement constraint A1
+ * 
  * If all the involved variable are correct as well as the control dominator,
- * then the trace node is likely to be correct
+ * then the trace node is likely to be correct.
+ * 
+ * Condition:
+ * The node should have both read and written variables.
+ * 
  * @author David
  *
  */
@@ -15,14 +20,24 @@ public class StatementConstraintA1 extends StatementConstraint {
 	
 	private static int count = 0;
 	
-	public StatementConstraintA1(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, int statementOrder) {
-		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA1.genID(), statementOrder);
-
+	public StatementConstraintA1(TraceNode node, double propProbability) {
+		super(node, propProbability, StatementConstraintA1.genID(), StatementConstraintA1.getWriteStartIndex(node));
+		
+		if (Constraint.countReadVars(node) == 0 || Constraint.countWrittenVars(node) == 0) {
+			throw new WrongConstraintConditionException("Node: " + node.getOrder() + " do not have both read and written variable. Cannot construct Statement Constraint A1");
+		}
+		
+		this.setVarsID(node);
 	}
 	
-	public StatementConstraintA1(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, int statementOrder, String controlDomID) {
-		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA1.genID(), statementOrder, controlDomID);
-	}
+//	public StatementConstraintA1(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, int statementOrder) {
+//		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA1.genID(), statementOrder);
+//
+//	}
+//	
+//	public StatementConstraintA1(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, int statementOrder, String controlDomID) {
+//		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA1.genID(), statementOrder, controlDomID);
+//	}
 	
 	@Override
 	protected double calProbability(int caseNo) {
@@ -49,13 +64,24 @@ public class StatementConstraintA1 extends StatementConstraint {
 		return prob;
 	}
 	
+	private static int getWriteStartIndex(TraceNode node) {
+		final int readLen = Constraint.countReadVars(node);
+		final int writeLen = Constraint.countWrittenVars(node);
+		
+		if (readLen == 0 && writeLen == 0) {
+			return Constraint.countPreds(node) + 1;
+		} else {
+			return readLen;
+		}
+	}
+	
 	@Override
 	public String toString() {
 		return "Stat Constraint A1 " + super.toString();
 	}
 	
 	private static String genID() {
-		return "SC_A1_" + StatementConstraintA1.count++;
+		return "SC1_" + StatementConstraintA1.count++;
 	}
 	
 	public static void resetID() {

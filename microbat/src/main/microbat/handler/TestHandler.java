@@ -7,30 +7,26 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.swt.widgets.Display;
 
-import jmutation.MutationFramework;
-import jmutation.model.MutationResult;
-import jmutation.model.Project;
+
 import microbat.baseline.encoders.ProbabilityEncoder;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
-import tracediff.TraceDiff;
-import tracediff.model.PairList;
-import tracediff.model.TraceNodePair;
+
 
 public class TestHandler extends AbstractHandler {
 	
 	TraceView traceView = null;
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		MutationFramework mutationFramework = new MutationFramework();
-		TraceDiff traceDiff = new TraceDiff();
-		
-		mutationFramework.setProjectPath("C:/Users/arkwa/git/java-mutation-framework/sample/math_70");
-		mutationFramework.setDropInsDir("C:/Users/arkwa/git/java-mutation-framework/lib");
-
-		MutationResult result = mutationFramework.startMutationFramework();
+//		MutationFramework mutationFramework = new MutationFramework();
+//		TraceDiff traceDiff = new TraceDiff();
+//		
+//		mutationFramework.setProjectPath("C:/Users/arkwa/git/java-mutation-framework/sample/math_70");
+//		mutationFramework.setDropInsDir("C:/Users/arkwa/git/java-mutation-framework/lib");
+//
+//		MutationResult result = mutationFramework.startMutationFramework();
 		
 //		List<MutationResult> mutationResults = mutationFramework.startMutationFramework();
 //		for (MutationResult mutationResult : mutationResults) {
