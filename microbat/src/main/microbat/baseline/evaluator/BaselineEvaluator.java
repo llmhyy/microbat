@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import microbat.baseline.encoders.NodeFeedbackPair;
-import microbat.baseline.encoders.BeliefPropagation;
+import microbat.baseline.encoders.PropabilityInference;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 
@@ -13,7 +13,7 @@ public class BaselineEvaluator {
 	private Trace buggyTrace;
 	private Trace correctTrace;
 	
-	private BeliefPropagation encoder;
+	private PropabilityInference encoder;
 	
 	private final double exporeRatio = 0.5;
 	
@@ -21,7 +21,7 @@ public class BaselineEvaluator {
 		this.buggyTrace = buggyTrace;
 		this.correctTrace = correctTrace;
 		
-		this.encoder = new BeliefPropagation(buggyTrace);
+		this.encoder = new PropabilityInference(buggyTrace);
 	}
 	
 	/**

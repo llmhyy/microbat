@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
 import microbat.agent.TraceAgentRunner;
-import microbat.baseline.encoders.BeliefPropagation;
+import microbat.baseline.encoders.PropabilityInference;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.AgentParams.LogType;
 import microbat.instrumentation.filter.CodeRangeEntry;

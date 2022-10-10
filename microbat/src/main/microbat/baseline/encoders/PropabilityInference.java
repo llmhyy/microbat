@@ -30,7 +30,7 @@ import java.util.Set;
  * @author David, Siang Hwee 
  *
  */
-public class BeliefPropagation {
+public class PropabilityInference {
 	
 	/*
 	 * Prefix of condition result ID
@@ -76,7 +76,7 @@ public class BeliefPropagation {
 	 * Constructor
 	 * @param trace Trace of testing program
 	 */
-	public BeliefPropagation(Trace trace) {
+	public PropabilityInference(Trace trace) {
 		this.trace = trace;
 	}
 	
@@ -107,7 +107,7 @@ public class BeliefPropagation {
 		}
 		
 		// Clear all previous feedbacks
-		BeliefPropagation.clearFeedbacks();
+		PropabilityInference.clearFeedbacks();
 
 		// Remove this variable
 		this.removeThisVar(executionList);
@@ -147,7 +147,7 @@ public class BeliefPropagation {
 		VariableEncoderFG varEncoder = new VariableEncoderFG(this.trace, this.executionList, this.inputVars, this.outputVars);
 		
 		// Include all the previous users feedback
-		varEncoder.setFeedbacks(BeliefPropagation.userFeedbacks);
+		varEncoder.setFeedbacks(PropabilityInference.userFeedbacks);
 		
 		long startTime = System.currentTimeMillis();
 		
@@ -170,7 +170,7 @@ public class BeliefPropagation {
 	public static void addFeedback(NodeFeedbackPair newFeedback) {
 		// Check is the node already have feedback. If yes, update feedback
 		boolean found = false;
-		for (NodeFeedbackPair pair : BeliefPropagation.userFeedbacks) {
+		for (NodeFeedbackPair pair : PropabilityInference.userFeedbacks) {
 			if (pair.reviewingSameNode(newFeedback)) {
 				pair.setFeedback(newFeedback.getFeedback());
 				found = true;
@@ -178,7 +178,7 @@ public class BeliefPropagation {
 			}
 		}
 		if (!found) {
-			BeliefPropagation.userFeedbacks.add(newFeedback);
+			PropabilityInference.userFeedbacks.add(newFeedback);
 		}
 	}
 	
@@ -186,7 +186,7 @@ public class BeliefPropagation {
 	 * Remove all previous feedbacks. The function is used when resetting the probability encoder
 	 */
 	public static void clearFeedbacks() {
-		BeliefPropagation.userFeedbacks.clear();
+		PropabilityInference.userFeedbacks.clear();
 	}
 	
 	/**
@@ -194,7 +194,7 @@ public class BeliefPropagation {
 	 * @return Number of feedbacks
 	 */
 	public static int getFeedbackCount() {
-		return BeliefPropagation.userFeedbacks.size();
+		return PropabilityInference.userFeedbacks.size();
 	}
 	
 	/**
@@ -202,7 +202,7 @@ public class BeliefPropagation {
 	 * @return List of node-feedback pair
 	 */
 	public static List<NodeFeedbackPair> getFeedbacks() {
-		return BeliefPropagation.userFeedbacks;
+		return PropabilityInference.userFeedbacks;
 	}
 	
 	/**
@@ -536,7 +536,7 @@ public class BeliefPropagation {
 	 * @return Name of the condition result variable
 	 */
 	private String genConditionResultName(final int order) {
-		return BeliefPropagation.CONDITION_RESULT_NAME_PRE + order;
+		return PropabilityInference.CONDITION_RESULT_NAME_PRE + order;
 	}
 	
 	/**
@@ -548,6 +548,6 @@ public class BeliefPropagation {
 	 * @return ID of the condition result variable
 	 */
 	private String genConditionResultID(final int order) {
-		return BeliefPropagation.CONDITION_RESULT_ID_PRE + order;
+		return PropabilityInference.CONDITION_RESULT_ID_PRE + order;
 	}
 }

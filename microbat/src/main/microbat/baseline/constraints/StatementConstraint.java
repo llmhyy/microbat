@@ -3,7 +3,7 @@ package microbat.baseline.constraints;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.baseline.encoders.BeliefPropagation;
+import microbat.baseline.encoders.PropabilityInference;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
@@ -177,7 +177,7 @@ public abstract class StatementConstraint extends Constraint {
 	
 	public static VarValue getControlDomVar(TraceNode node) {
 		for (VarValue writeVar : node.getWrittenVariables()) {
-			if (writeVar.getVarID().startsWith(BeliefPropagation.CONDITION_RESULT_ID_PRE)) {
+			if (writeVar.getVarID().startsWith(PropabilityInference.CONDITION_RESULT_ID_PRE)) {
 				return writeVar;
 			}
 		}
