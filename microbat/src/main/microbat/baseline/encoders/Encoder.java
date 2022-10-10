@@ -89,7 +89,7 @@ public abstract class Encoder {
 	 */
 	protected VarValue getControlDomValue(TraceNode controlDom) {
 		for (VarValue writeVar : controlDom.getWrittenVariables()) {
-			if (writeVar.getVarID().startsWith(ProbabilityEncoder.CONDITION_RESULT_ID_PRE)) {
+			if (writeVar.getVarID().startsWith(BeliefPropagation.CONDITION_RESULT_ID_PRE)) {
 				return writeVar;
 			}
 		}

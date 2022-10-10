@@ -8,7 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import microbat.baseline.encoders.ProbabilityEncoder;
+import microbat.baseline.encoders.BeliefPropagation;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
@@ -56,9 +56,9 @@ public class StatementConstraintA6Test {
 		this.controlDom = new TraceNode(null, null, 1, null, "");
 
 		final String type = "boolean";
-		final String varName = ProbabilityEncoder.CONDITION_RESULT_NAME_PRE + this.controlDom.getOrder();
+		final String varName = BeliefPropagation.CONDITION_RESULT_NAME_PRE + this.controlDom.getOrder();
 
-		this.controlDomValueID = ProbabilityEncoder.CONDITION_RESULT_ID_PRE + this.controlDom.getOrder();
+		this.controlDomValueID = BeliefPropagation.CONDITION_RESULT_ID_PRE + this.controlDom.getOrder();
 
 		Variable variable = new LocalVar(varName, type, "", 1);
 		VarValue conditionResult = new PrimitiveValue("1", true, variable);

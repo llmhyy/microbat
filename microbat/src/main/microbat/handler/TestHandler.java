@@ -8,7 +8,7 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.swt.widgets.Display;
 
 
-import microbat.baseline.encoders.ProbabilityEncoder;
+import microbat.baseline.encoders.BeliefPropagation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.views.MicroBatViews;

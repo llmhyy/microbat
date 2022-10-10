@@ -41,7 +41,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.baseline.encoders.NodeFeedbackPair;
-import microbat.baseline.encoders.ProbabilityEncoder;
+import microbat.baseline.encoders.BeliefPropagation;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;
@@ -644,7 +644,7 @@ public class DebugFeedbackView extends ViewPart {
 				@Override
 				protected IStatus run(IProgressMonitor monitor) {
 					
-					ProbabilityEncoder encoder = new ProbabilityEncoder(trace);
+					BeliefPropagation encoder = new BeliefPropagation(trace);
 					encoder.setFlag(true);
 
 					encoder.encode();
