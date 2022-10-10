@@ -3,8 +3,8 @@ package microbat.baseline.evaluator;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.baseline.encoders.NodeFeedbackPair;
-import microbat.baseline.encoders.PropabilityInference;
+import microbat.baseline.beliefpropagation.NodeFeedbackPair;
+import microbat.baseline.beliefpropagation.PropabilityInference;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 

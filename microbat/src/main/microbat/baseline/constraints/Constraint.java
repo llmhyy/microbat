@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import microbat.baseline.encoders.PropabilityInference;
+import microbat.baseline.beliefpropagation.PropabilityInference;
 import microbat.baseline.factorgraph.VarIDConverter;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -127,7 +127,6 @@ public abstract class Constraint {
 	 * @return Result probability
 	 */
 	public double getProbability(final int caseNo) {
-		
 		if (caseNo < 0 || caseNo >= this.maxCaseNo) {
 			throw new IllegalArgumentException("TraceNode: " + this.getOrder() + " caseNo: " + caseNo + "exceed the limit: " + this.maxCaseNo);
 		}
@@ -350,17 +349,55 @@ public abstract class Constraint {
 		return newNode;
 	}
 	
-	protected static int countReadVars(TraceNode node) {
+	/**
+	 * Count number of read variables of given node
+	 * @param node Target node
+	 * @return Number of read variables
+	 */
+	public static int countReadVars(TraceNode node) {
 		return node.getReadVariables().size();
 	}
 	
-	protected static int countWrittenVars(TraceNode node) {
+	/**
+	 * Count number of written variables of given node
+	 * @param node Target node
+	 * @return	Number of written variables
+	 */
+	public static int countWrittenVars(TraceNode node) {
 		return node.getWrittenVariables().size();
 	}
 	
-	protected static int countPreds(TraceNode node) {
+	/**
+	 * Count number of predicates involved with target node
+	 * @param node Target Node
+	 * @return Number of predicates
+	 */
+	public static int countPreds(TraceNode node) {
 		int varCount = Constraint.countReadVars(node) + Constraint.countWrittenVars(node);
 		return node.getControlDominator() == null ? varCount : varCount + 1;
+	}
+	
+	/**
+	 * Count number of predicates for statement constraint 
+	 * @param node Target node
+	 * @return Number of predicates
+	 */
+	public static int countStatementPreds(TraceNode node) {
+		return Constraint.countPreds(node) + 1;
+	}
+	
+	/**
+	 * Extract the control dominator variable of the given control dominator
+	 * @param controlDom Target control dominator
+	 * @return Control dominator variable. Null if it does not exist.
+	 */
+	public static VarValue extractControlDomVar(TraceNode controlDom) {
+		for (VarValue writeVar : controlDom.getWrittenVariables()) {
+			if (writeVar.getVarID().startsWith(PropabilityInference.CONDITION_RESULT_ID_PRE)) {
+				return writeVar;
+			}
+		}
+		return null;
 	}
 	
 	@Override
@@ -368,6 +405,9 @@ public abstract class Constraint {
 		return "Variables map: " + this.varsIncluded + " Conclusions: " + this.conclusionIndexes + "(" + this.propProbability + ")"; 
 	}
 	
+	/**
+	 * Reset the id of all constraints
+	 */
 	public static void resetID() {
 		VariableConstraint.resetID();
 		PriorConstraint.resetID();

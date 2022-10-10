@@ -1,4 +1,4 @@
-package microbat.baseline.encoders;
+package microbat.baseline.beliefpropagation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,14 +54,8 @@ public class StatementEncoder extends Encoder{
 	}
 	
 	@Override
-	protected int countPredicates(TraceNode node) {
-		// For statement encoder, we will consider the statement as well
-		return super.countPredicates(node)+1;
-	}
-	
-	@Override
 	protected boolean isSkippable(TraceNode node) {
-		return this.countPredicates(node) >= 30;
+		return Constraint.countPreds(node) >= 30;
 	}
 	
 	/**
@@ -74,7 +68,7 @@ public class StatementEncoder extends Encoder{
 			return;
 		}
 		
-		final int totalLen = this.countPredicates(tn);
+		final int totalLen = Constraint.countPreds(tn);
 		
 		List<Constraint> constraints = this.genConstraints(tn);
 		this.constraintsCount += constraints.size();
@@ -119,9 +113,9 @@ public class StatementEncoder extends Encoder{
 	protected List<Constraint> genVarToStatConstraints(TraceNode node) {
 		List<Constraint> constraints = new ArrayList<>();
 		
-		final int readLen = this.countReadVars(node);
-		final int writeLen = this.countWriteVars(node);
-		final int totalLen = this.countPredicates(node);
+		final int readLen = Constraint.countReadVars(node);
+		final int writeLen = Constraint.countWrittenVars(node);
+		final int totalLen = Constraint.countPreds(node);
 		
 		// Check control dominator exist or not
 		TraceNode controlDominator = node.getControlDominator();
@@ -147,7 +141,7 @@ public class StatementEncoder extends Encoder{
 		// Get the ID of control dominator variable if exists
 		String controlDomID = "";
 		if (haveControlDominator) {
-			VarValue controlDomValue = this.getControlDomValue(controlDominator);
+			VarValue controlDomValue = Constraint.extractControlDomVar(controlDominator);
 			controlDomID = controlDomValue.getVarID();
 		}
 		

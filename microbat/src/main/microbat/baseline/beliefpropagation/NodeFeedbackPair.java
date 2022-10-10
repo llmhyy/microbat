@@ -1,8 +1,13 @@
-package microbat.baseline.encoders;
+package microbat.baseline.beliefpropagation;
 
 import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;
 
+/**
+ * Pair of node and correspondence user feedback
+ * @author David
+ *
+ */
 public class NodeFeedbackPair {
 	
 	private TraceNode node;

@@ -45,7 +45,7 @@ Export-Package:
  microbat.agent,
  microbat.algorithm.graphdiff;uses:="microbat.model.value",
  microbat.baseline,
- microbat.baseline.encoders,
+ microbat.baseline.beliefpropagation,
  microbat.behavior,
  microbat.breakpoint,
  microbat.codeanalysis.ast;uses:="org.eclipse.jdt.core.dom,microbat.model,sav.strategies.dto",

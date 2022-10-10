@@ -1,4 +1,4 @@
-package microbat.baseline.encoders;
+package microbat.baseline.beliefpropagation;
 
 import microbat.baseline.UniquePriorityQueue;
 import microbat.baseline.constraints.Constraint;

@@ -1,4 +1,4 @@
-package microbat.baseline.encoders;
+package microbat.baseline.beliefpropagation;
 
 import java.util.ArrayList;
 import java.util.List;

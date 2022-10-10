@@ -40,8 +40,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import microbat.algorithm.graphdiff.GraphDiff;
-import microbat.baseline.encoders.NodeFeedbackPair;
-import microbat.baseline.encoders.PropabilityInference;
+import microbat.baseline.beliefpropagation.NodeFeedbackPair;
+import microbat.baseline.beliefpropagation.PropabilityInference;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;

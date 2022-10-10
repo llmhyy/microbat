@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import microbat.baseline.encoders.PropabilityInference;
+import microbat.baseline.beliefpropagation.PropabilityInference;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;

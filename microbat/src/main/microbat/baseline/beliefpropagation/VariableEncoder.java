@@ -1,4 +1,4 @@
-package microbat.baseline.encoders;
+package microbat.baseline.beliefpropagation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,13 +21,16 @@ import microbat.recommendation.UserFeedback;
 
 /**
  * Variable encoder calculate the probability of correctness of variables
- * @author David
+ * @author David, Siang Hwee
  *
  */
-public class VariableEncoderFG extends Encoder {
+public class VariableEncoder extends Encoder {
 	
 	private List<VarValue> inputVars;
 	private List<VarValue> outputVars;
+	
+	private PropagationCalculator propCalculator;
+	
 	private List<NodeFeedbackPair> userFeedbacks;
 	
 	/**
@@ -37,11 +40,23 @@ public class VariableEncoderFG extends Encoder {
 	 * @param inputVars List of input variables
 	 * @param outputVars List of output variables
 	 */
-	public VariableEncoderFG(Trace trace, List<TraceNode> executionList, List<VarValue> inputVars, List<VarValue> outputVars) {
+	public VariableEncoder(Trace trace, List<TraceNode> executionList, List<VarValue> inputVars, List<VarValue> outputVars) {
 		super(trace, executionList);
+		
 		this.inputVars = inputVars;
 		this.outputVars = outputVars;
+		
+		for (VarValue inputVar : this.inputVars) {
+			System.out.println("InputVar:" + inputVar.getVarID());
+		}
+		for (VarValue outputVar : this.outputVars) {
+			System.out.println("OutputVar: " + outputVar.getVarID());
+		}
+		
+		this.propCalculator = new PropagationCalculator();
+		
 		this.userFeedbacks = new ArrayList<>();
+		
 		this.construntVarIDMap();
 	}
 	
@@ -100,12 +115,6 @@ public class VariableEncoderFG extends Encoder {
 		return constraints;
 	}
 	
-	@Override
-	protected int countPredicates(TraceNode node) {
-		int varCount = this.countReadVars(node) + this.countWriteVars(node);
-		return node.getControlDominator() == null ? varCount : varCount+1;
-	}
-	
 //	private void setVarIDs(Constraint constraint, TraceNode node, final int writeIdx) {
 //		for (VarValue readVar : node.getReadVariables()) {
 //			constraint.addReadVarID(readVar.getVarID());
@@ -132,8 +141,8 @@ public class VariableEncoderFG extends Encoder {
 			return constraints;
 		}
 		
-		final int readLen = this.countReadVars(node);
-		final int writeLen = this.countWriteVars(node);
+		final int readLen = Constraint.countReadVars(node);
+		final int writeLen = Constraint.countWrittenVars(node);
 //		final int totalLen = this.countPredicates(node);
 		
 		final TraceNode controlDom = node.getControlDominator();
@@ -319,7 +328,7 @@ public class VariableEncoderFG extends Encoder {
 				
 				TraceNode controlDominator = node.getControlDominator();
 				if (controlDominator != null) {
-					VarValue controlDomValue = this.getControlDomValue(controlDominator);
+					VarValue controlDomValue = Constraint.extractControlDomVar(controlDominator);
 					Constraint constraint = new PriorConstraint(controlDomValue, PropagationProbability.HIGH);
 					constraints.add(constraint);
 //					constraints.add(this.genPriorConstraint(controlDomValue, PropagationProbability.HIGH));
@@ -339,7 +348,7 @@ public class VariableEncoderFG extends Encoder {
 			} else if (feedback.getFeedbackType() == UserFeedback.WRONG_PATH) {
 				// Add constraint to control dominator to LOW
 				TraceNode controlDom = node.getControlDominator();
-				VarValue controlDomValue = this.getControlDomValue(controlDom);
+				VarValue controlDomValue = Constraint.extractControlDomVar(controlDom);
 				Constraint constraint = new PriorConstraint(controlDomValue, PropagationProbability.LOW);
 				constraints.add(constraint);
 //				constraints.add(this.genPriorConstraint(controlDomValue, PropagationProbability.LOW));

@@ -12,8 +12,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 
-import microbat.baseline.encoders.NodeFeedbackPair;
-import microbat.baseline.encoders.PropabilityInference;
+import microbat.baseline.beliefpropagation.NodeFeedbackPair;
+import microbat.baseline.beliefpropagation.PropabilityInference;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;

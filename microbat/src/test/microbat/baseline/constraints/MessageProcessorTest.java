@@ -9,7 +9,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import microbat.baseline.encoders.PropabilityInference;
+import microbat.baseline.beliefpropagation.PropabilityInference;
 import microbat.baseline.factorgraph.MessageProcessor;
 import microbat.baseline.factorgraph.VarIDConverter;
 import microbat.model.trace.TraceNode;
