@@ -100,6 +100,9 @@ public class VariableConstraintA2 extends VariableConstraint {
 	
 	@Override
 	protected int defineConclusionIdx(TraceNode node) {
+		// We leave the job for defining the conclusion index
+		// to _defineConclusionIdx, such that the exception
+		// case for 0R0W0P is properly handled.
 		return -1;
 	}
 	

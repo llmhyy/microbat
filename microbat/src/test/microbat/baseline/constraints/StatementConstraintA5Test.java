@@ -294,5 +294,61 @@ public class StatementConstraintA5Test {
 			assertEquals(expected[caseNo], constraint.getProbability(caseNo), 0.01);
 		}
 	}
+	
+	@Test
+	public void test2R0W0P() {
+		this.node.addReadVariable(this.readVar1);
+		this.node.addReadVariable(this.readVar2);
+		
+		Constraint constraint = new StatementConstraintA5(this.node, this.readVar1, this.propagationProbability);
+		
+		// Test bit size
+		assertEquals(2, constraint.getBitLength());
+		
+		// Test conclusion index
+		assertEquals(1, constraint.getConclusionIdx());
+		
+		// Test count
+		assertEquals(2, constraint.getPredicateCount());
+		
+		// Test probability
+		double[] expected = new double[] {0.95, 0.95, 0.05, 0.95};
+		
+		final int totalLen = constraint.getPredicateCount();
+		final int maxCase = 1 << totalLen;
+		
+		for (int caseNo=0; caseNo<maxCase; caseNo++) {
+			assertEquals(expected[caseNo], constraint.getProbability(caseNo), 0.01);
+		}
+	}
+	
+	@Test
+	public void test0R2W0P() {
+		this.node.addWrittenVariable(this.writeVar1);
+		this.node.addWrittenVariable(this.writeVar2);
+		
+		Constraint constraint = new StatementConstraintA5(this.node, this.writeVar1, this.propagationProbability);
+		
+		// Test bit size
+		assertEquals(2, constraint.getBitLength());
+		
+		// Test conclusion index
+		assertEquals(1, constraint.getConclusionIdx());
+		
+		// Test count
+		assertEquals(2, constraint.getPredicateCount());
+		
+		// Test probability
+		double[] expected = new double[] {0.95, 0.95, 0.05, 0.95};
+		
+		final int totalLen = constraint.getPredicateCount();
+		final int maxCase = 1 << totalLen;
+		
+		for (int caseNo=0; caseNo<maxCase; caseNo++) {
+			assertEquals(expected[caseNo], constraint.getProbability(caseNo), 0.01);
+		}
+	}
+	
+	
 
 }
