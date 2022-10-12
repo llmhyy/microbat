@@ -13,25 +13,36 @@ import microbat.model.value.VarValue;
  *
  */
 public abstract class VariableConstraint extends Constraint {
-//	
-//	private static int count = 0;
 	
-	public VariableConstraint(TraceNode node, int conclusionIdx, double propProbability, String constraintID) {
-		super(node, conclusionIdx, propProbability, constraintID);
+	/**
+	 * Constructor
+	 * @param node	Target node
+	 * @param propProbability Propagation probability
+	 * @param constraintID Constraint ID
+	 */
+	public VariableConstraint(TraceNode node, double propProbability, String constraintID) {
+		super(node, propProbability, constraintID);
 	}
-
 	
-//	public VariableConstraint(TraceNode node, VarValue conclusionVar, double propProbability) {
-//		super(node, conclusionVar, propProbability, VariableConstraint.genID());
-//	}
-//	
-//	public VariableConstraint(BitRepresentation varsIncluded, Collection<Integer> conclusionIndexes, double propProbability) {
-//		super(varsIncluded, conclusionIndexes, propProbability, VariableConstraint.genID());
-//	}
-//	
-//	public VariableConstraint(BitRepresentation varsIncluded, int conclusionIdx, double propProbability) {
-//		super(varsIncluded, conclusionIdx, propProbability, VariableConstraint.genID());
-//	}
+	/**
+	 * Constructor
+	 * @param bitRepresentation Bit representation of this constraint
+	 * @param conclusionIdx Index of conclusion variable
+	 * @param propProbability Propagation probability
+	 * @param constraintID Constraint ID
+	 * @param order Order of target node that this constraint based on
+	 */
+	public VariableConstraint(BitRepresentation bitRepresentation, int conclusionIdx, double propProbability, String constraintID, int order) {
+		super(bitRepresentation, conclusionIdx, propProbability, constraintID, order);
+	}
+	
+	/**
+	 * Deep Copy Constructor
+	 * @param constraint Other constraint
+	 */
+	public VariableConstraint(VariableConstraint constraint) {
+		super(constraint);
+	}
 	
 	@Override
 	protected double calProbability(int caseNo) {
@@ -43,22 +54,16 @@ public abstract class VariableConstraint extends Constraint {
 		 *  case mean that the constraint is valid
 		 */
 		
-		BitRepresentation binValue = BitRepresentation.parse(caseNo, this.varsIncluded.size());
-		binValue.and(this.varsIncluded);
-		int numVarsIncluded = this.varsIncluded.getCardinality();
+		BitRepresentation binValue = BitRepresentation.parse(caseNo, this.bitRepresentation.size());
+		binValue.and(this.bitRepresentation);
+		int numVarsIncluded = this.bitRepresentation.getCardinality();
 		int numTrue = binValue.getCardinality();
 		int numFalse = numVarsIncluded - numTrue;
-		if (numFalse <= conclusionIndexes.size() ) {
-			for (Integer index : conclusionIndexes) {
-				if (binValue.get(index))
-					continue;
-				
-				// one of the conclusion index is false
+		if (numFalse <= 1) {
+			if (!binValue.get(this.conclusionIdx)) {
 				numFalse -= 1;
 				if (numFalse == 0) {
-					// all the false values are the written var
-					// early termination
-					return 1 - this.propProbability;
+					return 1-this.propProbability;
 				}
 			}
 		}

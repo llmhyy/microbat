@@ -144,8 +144,7 @@ public class VariableConstraintA1Test {
 		assertEquals(2, constraint.getBitLength());
 		
 		// Test conclusion indexes
-		assertEquals(1, constraint.getConclusionIdxes().size());
-		assertTrue(constraint.getConclusionIdxes().contains(0));
+		assertEquals(0, constraint.getConclusionIdx());
 		
 		// Test count
 		assertEquals(2, constraint.getPredicateCount());
@@ -172,8 +171,7 @@ public class VariableConstraintA1Test {
 		assertEquals(2, constraint.getBitLength());
 		
 		// Test conclusion indexes
-		assertEquals(1, constraint.getConclusionIdxes().size());
-		assertTrue(constraint.getConclusionIdxes().contains(1));
+		assertEquals(1, constraint.getConclusionIdx());
 		
 		// Test count
 		assertEquals(2, constraint.getPredicateCount());
@@ -201,8 +199,7 @@ public class VariableConstraintA1Test {
 		assertEquals(3, constraint.getBitLength());
 		
 		// Test conclusion indexes
-		assertEquals(1, constraint.getConclusionIdxes().size());
-		assertTrue(constraint.getConclusionIdxes().contains(2));
+		assertEquals(2, constraint.getConclusionIdx());
 		
 		// Test count
 		assertEquals(3, constraint.getPredicateCount());
@@ -230,8 +227,7 @@ public class VariableConstraintA1Test {
 		assertEquals(3, constraint.getBitLength());
 		
 		// Test conclusion indexes
-		assertEquals(1, constraint.getConclusionIdxes().size());
-		assertTrue(constraint.getConclusionIdxes().contains(1));
+		assertEquals(1, constraint.getConclusionIdx());
 		
 		// Test count
 		assertEquals(3, constraint.getPredicateCount());
@@ -260,8 +256,7 @@ public class VariableConstraintA1Test {
 		assertEquals(4, constraint.getBitLength());
 		
 		// Test conclusion indexes
-		assertEquals(1, constraint.getConclusionIdxes().size());
-		assertTrue(constraint.getConclusionIdxes().contains(2));
+		assertEquals(2, constraint.getConclusionIdx());
 		
 		// Test count
 		assertEquals(4, constraint.getPredicateCount());
@@ -305,8 +300,7 @@ public class VariableConstraintA1Test {
 		assertEquals(2, constraint.getBitLength());
 		
 		// Test conclusion indexes
-		assertEquals(1, constraint.getConclusionIdxes().size());
-		assertTrue(constraint.getConclusionIdxes().contains(1));
+		assertEquals(1, constraint.getConclusionIdx());
 		
 		// Test count
 		assertEquals(2, constraint.getPredicateCount());

@@ -174,8 +174,7 @@ public class VariableConstraintA3Test {
 		assertEquals(3, constraint.getBitLength());
 		
 		// Test conclusion indexes
-		assertEquals(1, constraint.getConclusionIdxes().size());
-		assertTrue(constraint.getConclusionIdxes().contains(2));
+		assertEquals(2, constraint.getConclusionIdx());
 		
 		// Test count
 		assertEquals(3, constraint.getPredicateCount());
@@ -203,8 +202,7 @@ public class VariableConstraintA3Test {
 		assertEquals(3, constraint.getBitLength());
 		
 		// Test conclusion indexes
-		assertEquals(1, constraint.getConclusionIdxes().size());
-		assertTrue(constraint.getConclusionIdxes().contains(2));
+		assertEquals(2, constraint.getConclusionIdx());
 		
 		// Test count
 		assertEquals(3, constraint.getPredicateCount());
@@ -232,8 +230,7 @@ public class VariableConstraintA3Test {
 		assertEquals(3, constraint.getBitLength());
 		
 		// Test conclusion indexes
-		assertEquals(1, constraint.getConclusionIdxes().size());
-		assertTrue(constraint.getConclusionIdxes().contains(2));
+		assertEquals(2, constraint.getConclusionIdx());
 		
 		// Test count
 		assertEquals(3, constraint.getPredicateCount());
@@ -262,8 +259,7 @@ public class VariableConstraintA3Test {
 		assertEquals(4, constraint.getBitLength());
 		
 		// Test conclusion indexes
-		assertEquals(1, constraint.getConclusionIdxes().size());
-		assertTrue(constraint.getConclusionIdxes().contains(3));
+		assertEquals(3, constraint.getConclusionIdx());
 		
 		// Test count
 		assertEquals(4, constraint.getPredicateCount());

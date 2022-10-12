@@ -7,8 +7,8 @@ import microbat.model.trace.TraceNode;
 /**
  * Statement constraint A1
  * 
- * If all the involved variable are correct as well as the control dominator,
- * then the trace node is likely to be correct.
+ * If all the involved predicate,
+ * then the trace node will be correct.
  * 
  * Condition:
  * The node should have both read and written variables.
@@ -18,10 +18,18 @@ import microbat.model.trace.TraceNode;
  */
 public class StatementConstraintA1 extends StatementConstraint {
 	
+	/**
+	 * Number of StatementConstraintA1 generated
+	 */
 	private static int count = 0;
 	
+	/**
+	 * Constructor
+	 * @param node Trace node
+	 * @param propProbability Propagation probability
+	 */
 	public StatementConstraintA1(TraceNode node, double propProbability) {
-		super(node, propProbability, StatementConstraintA1.genID(), StatementConstraintA1.getWriteStartIndex(node));
+		super(node, propProbability, StatementConstraintA1.genID());
 		
 		if (Constraint.countReadVars(node) == 0 || Constraint.countWrittenVars(node) == 0) {
 			throw new WrongConstraintConditionException("Node: " + node.getOrder() + " do not have both read and written variable. Cannot construct Statement Constraint A1");
@@ -30,21 +38,34 @@ public class StatementConstraintA1 extends StatementConstraint {
 		this.setVarsID(node);
 	}
 	
-//	public StatementConstraintA1(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, int statementOrder) {
-//		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA1.genID(), statementOrder);
-//
-//	}
-//	
-//	public StatementConstraintA1(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, int statementOrder, String controlDomID) {
-//		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA1.genID(), statementOrder, controlDomID);
-//	}
+	/**
+	 * Constructor
+	 * @param varsIncluded Bit representation of this constraint
+	 * @param conclusionIdx Index of conclusion variable
+	 * @param propProbability Propagation probability
+	 * @param constraintID Constraint ID
+	 * @param order Order of trace node that this constraint based on
+	 * @param writeVarStartIdx Index of bit that start to represent written variable
+	 * @param predIdx Index of control dominator
+	 */
+	public StatementConstraintA1(BitRepresentation varsIncluded, int conclusionIdx, double propProbability, int order, int writeVarStarintIdx, int predIdx) {
+		super(varsIncluded, conclusionIdx, propProbability, StatementConstraintA1.genID(), order, writeVarStarintIdx, predIdx);
+	}
+	
+	/**
+	 * Deep Copy Constructor
+	 * @param constraint Other constraint
+	 */
+	public StatementConstraintA1(StatementConstraintA1 constraint) {
+		super(constraint);
+	}
 	
 	@Override
 	protected double calProbability(int caseNo) {
 		BitRepresentation binValue = this.filter(caseNo);
 		double prob = -1;
 		
-		int numVarsIncluded = this.varsIncluded.getCardinality();
+		int numVarsIncluded = this.bitRepresentation.getCardinality();
 		int numTrue = binValue.getCardinality();
 		int numFalse = numVarsIncluded - numTrue;
 		
@@ -54,17 +75,17 @@ public class StatementConstraintA1 extends StatementConstraint {
 		 * wrong
 		 */
 
-		for (int conclusionIndex : this.conclusionIndexes) {
-			if (numFalse == 1 && !binValue.get(conclusionIndex)) {
-				prob = 1 - this.propProbability;
-			} else {
-				prob = this.propProbability;
-			}
+		if (numFalse == 1 && !binValue.get(this.conclusionIdx)) {
+			prob = 1 - this.propProbability;
+		} else {
+			prob = this.propProbability;
 		}
+		
 		return prob;
 	}
 	
-	private static int getWriteStartIndex(TraceNode node) {
+	@Override
+	protected int defineWriteStartIdx(TraceNode node) {
 		final int readLen = Constraint.countReadVars(node);
 		final int writeLen = Constraint.countWrittenVars(node);
 		
@@ -87,4 +108,6 @@ public class StatementConstraintA1 extends StatementConstraint {
 	public static void resetID() {
 		StatementConstraintA1.count = 0;
 	}
+
+
 }

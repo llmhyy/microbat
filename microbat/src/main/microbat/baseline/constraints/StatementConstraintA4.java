@@ -17,10 +17,19 @@ import microbat.model.value.VarValue;
  */
 public class StatementConstraintA4 extends StatementConstraint {
 
+	/**
+	 * Number of StatementConstraintA4 generated
+	 */
 	private static int count = 0;
 	
+	/**
+	 * Constructor
+	 * @param node Target trace node
+	 * @param var Target variable
+	 * @param propProbability Propagation probability
+	 */
 	public StatementConstraintA4(TraceNode node, VarValue var, double propProbability) {
-		super(node, propProbability, StatementConstraintA4.genID(), StatementConstraintA4.getWriteStartIndex(node));
+		super(node, propProbability, StatementConstraintA4.genID());
 		
 		if (Constraint.countReadVars(node)==0 && Constraint.countWrittenVars(node)==0) {
 			throw new WrongConstraintConditionException("Node: " + node.getOrder() + " do not have any read or written variables to construct the Statement Constraint A4");
@@ -36,21 +45,31 @@ public class StatementConstraintA4 extends StatementConstraint {
 		
 		this.addReadVarID(var.getVarID());
 		if (node.getControlDominator() != null) {
-			this.setControlDomID(StatementConstraint.getControlDomVar(node.getControlDominator()).getVarID());
+			this.setControlDomID(Constraint.extractControlDomVar(node.getControlDominator()).getVarID());
 		}
-		
-		this.conclusionIndexes.clear();
-		this.conclusionIndexes.add(node.getControlDominator() != null ? 2 : 1);
 	}
 	
-//	public StatementConstraintA4(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, int statementOrder) {
-//		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA4.genID(), statementOrder);
-//
-//	}
-//	
-//	public StatementConstraintA4(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, int statementOrder, String controlDomID) {
-//		super(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, StatementConstraintA4.genID(), statementOrder, controlDomID);
-//	}
+	/**
+	 * Constructor
+	 * @param varsIncluded Bit representation of this constraint
+	 * @param conclusionIdx Index of conclusion variable
+	 * @param propProbability Propagation probability
+	 * @param constraintID Constraint ID
+	 * @param order Order of trace node that this constraint based on
+	 * @param writeVarStartIdx Index of bit that start to represent written variable
+	 * @param predIdx Index of control dominator
+	 */
+	public StatementConstraintA4(BitRepresentation varsIncluded, int conclusionIdx, double propProbability, int order, int writeVarStarintIdx, int predIdx) {
+		super(varsIncluded, conclusionIdx, propProbability, StatementConstraintA4.genID(), order, writeVarStarintIdx, predIdx);
+	}
+	
+	/**
+	 * Deep Copy Constructor
+	 * @param constraint Other constraint
+	 */
+	public StatementConstraintA4(StatementConstraintA4 constraint) {
+		super(constraint);
+	}
 	
 	@Override
 	protected double calProbability(int caseNo) {
@@ -62,29 +81,28 @@ public class StatementConstraintA4 extends StatementConstraint {
 		 * that the control dominator is correct, when there are wrong
 		 * read/written variable, the statement is still correct.
 		 */
-		for (int conclusionIndex : this.conclusionIndexes) {
-			boolean haveWrongWriteVar = this.checkWrongWriteVars(caseNo);
-			boolean haveWrongReadVar = this.checkWrongReadVars(caseNo);
-			
-			if (this.haveControlDom()) {
-				boolean correctControlDom = binValue.get(this.predIdx);
-				if (!correctControlDom) {
-					prob = this.propProbability;
-					return prob;
-				}
-			}
-			
-			if (haveWrongWriteVar || haveWrongReadVar) {
-				if (binValue.get(conclusionIndex)) {
-					prob = 1 - this.propProbability;
-				} else {
-					prob = this.propProbability;
-				}
-			} else {
+		
+		boolean haveWrongWriteVar = this.checkWrongWriteVars(caseNo);
+		boolean haveWrongReadVar = this.checkWrongReadVars(caseNo);
+		
+		if (this.haveControlDom()) {
+			boolean correctControlDom = binValue.get(this.predIdx);
+			if (!correctControlDom) {
 				prob = this.propProbability;
+				return prob;
 			}
 		}
 		
+		if (haveWrongWriteVar || haveWrongReadVar) {
+			if (binValue.get(this.conclusionIdx)) {
+				prob = 1 - this.propProbability;
+			} else {
+				prob = this.propProbability;
+			}
+		} else {
+			prob = this.propProbability;
+		}
+
 		return prob;
 	}
 	
@@ -96,7 +114,13 @@ public class StatementConstraintA4 extends StatementConstraint {
 		return bitRepresentation;
 	}
 	
-	private static int getWriteStartIndex(TraceNode node) {
+	@Override
+	protected int defineConclusionIdx(TraceNode node) {
+		return node.getControlDominator() != null ? 2 : 1;
+	}
+	
+	@Override
+	protected int defineWriteStartIdx(TraceNode node) {
 		final int totalLen = node.getControlDominator() != null ? 3 : 2;
 		final int writeLen = Constraint.countWrittenVars(node);
 		return writeLen == 0 ? totalLen-1 : 0;
@@ -114,5 +138,7 @@ public class StatementConstraintA4 extends StatementConstraint {
 	public static void resetID() {
 		StatementConstraintA4.count = 0;
 	}
+
+
 
 }

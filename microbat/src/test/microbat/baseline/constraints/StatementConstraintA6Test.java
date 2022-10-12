@@ -147,8 +147,7 @@ public class StatementConstraintA6Test {
 		assertEquals(2, constraint.getBitLength());
 		
 		// Test conclusion indexes
-		assertEquals(1, constraint.getConclusionIdxes().size());
-		assertTrue(constraint.getConclusionIdxes().contains(1));
+		assertEquals(1, constraint.getConclusionIdx());
 		
 		// Test count
 		assertEquals(2, constraint.getPredicateCount());

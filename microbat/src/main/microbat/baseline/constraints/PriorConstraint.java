@@ -9,6 +9,9 @@ import microbat.model.value.VarValue;
  */
 public class PriorConstraint extends Constraint {
 	
+	/**
+	 * Number of PriorConstraint generated
+	 */
 	private static int count = 0;
 	
 	/**
@@ -18,17 +21,25 @@ public class PriorConstraint extends Constraint {
 	 * @param probProbability Propagation probability
 	 */
 	public PriorConstraint(VarValue var, double probProbability) {
-		super(new TraceNode(null, null, -1, null, null), 0, probProbability, PriorConstraint.genID());
+		super(new TraceNode(null, null, -1, null, null), probProbability, PriorConstraint.genID());
 		this.addReadVarID(var.getVarID());
 	}
 	
-//	public PriorConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability) {
-//		super(varsIncluded, conclusionIndex, propProbability, PriorConstraint.genID());
-//	}
-//	
-//	public PriorConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, String varID) {
-//		super(varsIncluded, conclusionIndex, propProbability, PriorConstraint.genID());
-//	}
+	/**
+	 * Constructor
+	 * @param propProbability Propagation probability
+	 */
+	public PriorConstraint(double propProbability) {
+		super(new BitRepresentation(1), 0, propProbability, PriorConstraint.genID(), -1);
+	}
+	
+	/**
+	 * Deep Copy Constructor
+	 * @param constraint Other constraint
+	 */
+	public PriorConstraint(PriorConstraint constraint) {
+		super(constraint);
+	}
 
 	@Override
 	protected double calProbability(int caseNo) {
@@ -39,15 +50,24 @@ public class PriorConstraint extends Constraint {
 		 * in the given case number
 		 */
 		
-		BitRepresentation binValue = BitRepresentation.parse(caseNo, this.varsIncluded.size());
-		binValue.and(this.varsIncluded);
-		
-		double prob = 0.0;
-		for (int conclusionIdx : this.conclusionIndexes) {
-			prob = binValue.get(conclusionIdx) ? this.propProbability : 1 - this.propProbability;
-		}
-		return prob;
+		BitRepresentation binValue = BitRepresentation.parse(caseNo, this.bitRepresentation.size());
+		binValue.and(this.bitRepresentation);
+		return binValue.get(this.conclusionIdx) ? this.propProbability : 1-this.propProbability;
 	}
+	
+	@Override
+	protected BitRepresentation genBitRepresentation(TraceNode node) {
+		// Trace node is unused
+		BitRepresentation bitRepresentation = new BitRepresentation(1);
+		bitRepresentation.set(0);
+		return bitRepresentation;
+	}
+
+	@Override
+	protected int defineConclusionIdx(TraceNode node) {
+		// Trace node is unused
+		return 0;
+	}	
 	
 	@Override
 	public String toString() {
@@ -62,11 +82,5 @@ public class PriorConstraint extends Constraint {
 		PriorConstraint.count = 0;
 	}
 
-	@Override
-	protected BitRepresentation genBitRepresentation(TraceNode node) {
-		// Trace node is unused
-		BitRepresentation bitRepresentation = new BitRepresentation(1);
-		bitRepresentation.set(0);
-		return bitRepresentation;
-	}
+
 }

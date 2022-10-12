@@ -38,34 +38,80 @@ public abstract class StatementConstraint extends Constraint {
 	protected int strucIdx;
 	protected int nameIdx;
 	
-	public StatementConstraint(TraceNode node, double propProbability, String constriantID, int writeVarStartIdx) {
-		super(node, Constraint.countPreds(node), propProbability, constriantID);
-		this.writeVarStartingIdx = writeVarStartIdx;
+	/**
+	 * Constructor 
+	 * @param node Trace node
+	 * @param propProbability Propagation probability
+	 * @param constriantID Constraint ID
+	 * @param writeVarStartIdx Index of bit which start to represent written variable
+	 */
+	public StatementConstraint(TraceNode node, double propProbability, String constriantID) {
+		super(node, propProbability, constriantID);
+		this.writeVarStartingIdx = this.defineWriteStartIdx(node);
 		boolean haveControlDom = node.getControlDominator() != null;
-		this.predIdx = haveControlDom ? this.varsIncluded.size() - 2 : Constraint.NaN;
+		this.predIdx = haveControlDom ? this.bitRepresentation.size() - 2 : Constraint.NaN;
 		this.strucIdx = Constraint.NaN;
 		this.nameIdx = Constraint.NaN;
 	}
 	
-//	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String constraintID, int statementOrder) {
-////		this(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, constraintID, statementOrder, Constraint.NaN);
-//		this(varsIncluded, conclusionIndex, propProbability, writeVarStarintIdx, constraintID, statementOrder, "");
-//	}
-//	
-//	public StatementConstraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, int writeVarStarintIdx, String name, int statementOrder, String controlDomID) {
-//		super(varsIncluded, conclusionIndex, propProbability, name);
-//		this.writeVarStartingIdx = writeVarStarintIdx;
-////		this.setControlDomOrder(controlDomOrder);
-//		this.setControlDomID(controlDomID);
-//		if (this.haveControlDom()) {
-//			this.predIdx = this.varsIncluded.size() - 2;
-//		} else {
-//			this.predIdx = Constraint.NaN;
-//		}
-//		this.strucIdx = Constraint.NaN;
-//		this.nameIdx = Constraint.NaN;
-//		this.statementOrder = statementOrder;
-//	}
+	/**
+	 * Constructor
+	 * @param bitRepresentation Bit representation of constraint
+	 * @param conclusionIdx Index of conclusion variable
+	 * @param propProbability Propagation probability
+	 * @param constraintID Constraint ID
+	 * @param order Order of trace node that this constraint based on
+	 * @param writeVarStartIdx Index of bit that start to represent written variable
+	 * @param predIdx Index of control dominator
+	 * @param strucIdx Index of structure predicate
+	 * @param nameIdx Index of name predicate
+	 */
+	public StatementConstraint(BitRepresentation bitRepresentation, int conclusionIdx, double propProbability, 
+			String constraintID, int order, int writeVarStartIdx, int predIdx, int strucIdx, int nameIdx) {
+		super(bitRepresentation, conclusionIdx, propProbability, constraintID, order);
+		this.writeVarStartingIdx = writeVarStartIdx;
+		this.predIdx = predIdx;
+		this.strucIdx = strucIdx;
+		this.nameIdx = nameIdx;
+	}
+	
+	/**
+	 * Constructor
+	 * @param bitRepresentation Bit representation of constraint
+	 * @param conclusionIdx Index of conclusion variable
+	 * @param propProbability Propagation probability
+	 * @param constraintID Constraint ID
+	 * @param order Order of trace node that this constraint based on
+	 * @param writeVarStartIdx Index of bit that start to represent written variable
+	 * @param predIdx Index of control dominator
+	 */
+	public StatementConstraint(BitRepresentation bitRepresentation, int conclusionIdx, double propProbability, String constraintID, int order, int writeVarStartIdx, int predIdx) {
+		this(bitRepresentation, conclusionIdx, propProbability, constraintID, order, writeVarStartIdx, predIdx, Constraint.NaN, Constraint.NaN);
+	}
+	
+	/**
+	 * Deep Copy Constructor
+	 * @param constraint Other constraint
+	 */
+	public StatementConstraint(StatementConstraint constraint) {
+		super(constraint);
+		this.writeVarStartingIdx = constraint.writeVarStartingIdx;
+		this.predIdx = constraint.predIdx;
+		this.strucIdx = constraint.strucIdx;
+		this.nameIdx = constraint.nameIdx;
+	}
+	
+	/**
+	 * Define the index that start represent the written variable.
+	 * 
+	 * Since different kind of statement constraint have different
+	 * way to define the starting index. So that it need to be
+	 * implemented by child class.
+	 * 
+	 * @param node Target trace node
+	 * @return Index that start represent the written variable
+	 */
+	abstract protected int defineWriteStartIdx(TraceNode node);
 	
 	@Override
 	public List<String> getInvolvedPredIDs() {
@@ -79,6 +125,11 @@ public abstract class StatementConstraint extends Constraint {
 		return ids;
 	}
 	
+	@Override
+	protected int defineConclusionIdx(TraceNode node) {
+		return Constraint.countPreds(node);
+	}
+	
 	/**
 	 * Generate statement constraint ID
 	 * @return Statement constraint ID
@@ -87,10 +138,22 @@ public abstract class StatementConstraint extends Constraint {
 		return StatementConstraint.statIDPre + this.getOrder();
 	}
 	
+	/**
+	 * Check is the given ID a statement id
+	 * @param id String to check
+	 * @return True if the given ID is a statement ID
+	 */
 	public static boolean isStatID(final String id) {
 		return id.startsWith(StatementConstraint.statIDPre);
 	}
 	
+	/**
+	 * Statement ID contain the node order information, this
+	 * method will extract the node order from the ID
+	 * 
+	 * @param id Target ID
+	 * @return Trace node order obtained from the ID
+	 */
 	public static int extractStatOrderFromID(final String id) {
 		return Integer.valueOf(id.replace(StatementConstraint.statIDPre, ""));
 	}
@@ -107,7 +170,7 @@ public abstract class StatementConstraint extends Constraint {
 		
 		boolean haveWrongWriteVar = false;
 		// Note that the last index of write variable depends on control dominator exist or not
-		final int stopIdx = this.haveControlDom() ? this.predIdx : this.varsIncluded.size() - 1;
+		final int stopIdx = this.haveControlDom() ? this.predIdx : this.bitRepresentation.size() - 1;
 		for (int idx = this.writeVarStartingIdx; idx < stopIdx; idx++) {
 			if (!binValue.get(idx)) {
 				haveWrongWriteVar = true;
@@ -145,8 +208,8 @@ public abstract class StatementConstraint extends Constraint {
 	 * @return Bit representation of related variables
 	 */
 	protected BitRepresentation filter(final int caseNo) {
-		BitRepresentation binValue = BitRepresentation.parse(caseNo, this.varsIncluded.size());
-		binValue.and(this.varsIncluded);
+		BitRepresentation binValue = BitRepresentation.parse(caseNo, this.bitRepresentation.size());
+		binValue.and(this.bitRepresentation);
 		return binValue;
 	}
 	
@@ -167,20 +230,14 @@ public abstract class StatementConstraint extends Constraint {
 		return bitRepresentation;
 	}
 
+	/**
+	 * Reset all the statement constraint count
+	 */
 	public static void resetID() {
 		StatementConstraintA1.resetID();
 		StatementConstraintA2.resetID();
 		StatementConstraintA3.resetID();
 		StatementConstraintA4.resetID();
 		StatementConstraintA5.resetID();
-	}
-	
-	public static VarValue getControlDomVar(TraceNode node) {
-		for (VarValue writeVar : node.getWrittenVariables()) {
-			if (writeVar.getVarID().startsWith(PropabilityInference.CONDITION_RESULT_ID_PRE)) {
-				return writeVar;
-			}
-		}
-		return null;
 	}
 }

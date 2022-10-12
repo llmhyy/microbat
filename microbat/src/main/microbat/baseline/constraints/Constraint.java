@@ -22,12 +22,12 @@ public abstract class Constraint {
 	/**
 	 * Bit representation of which variables are involved in this constraint
 	 */
-	protected BitRepresentation varsIncluded; 
+	protected BitRepresentation bitRepresentation; 
 	
 	/**
-	 * The list of index of conclusion variable
+	 * The index of conclusion variable
 	 */
-	protected Set<Integer> conclusionIndexes = new HashSet<>();
+	protected int conclusionIdx;
 
 	/**
 	 * Propagation probability of this constraint
@@ -59,34 +59,36 @@ public abstract class Constraint {
 	 */
 	protected List<String> writeVarIDs  = new ArrayList<>();
 	
+	/**
+	 * Maximum number of combination of status for this constraint
+	 */
 	protected final int maxCaseNo;
 	
+	/**
+	 * Indicate some index is not avaiable
+	 */
 	public static final int NaN = -1;
 	
+	/**
+	 * Order of trace node that this constraint is based
+	 */
 	private int order = -1;
-
-//	public static final String controlDomPre = "CD_";
-
-	public Constraint(TraceNode node, Collection<Integer> conclusionIdxes, double probProbability, String constraintID) {
-		TraceNode copiedTraceNode = Constraint.removeDupVars(node);
-		if (Constraint.countPreds(copiedTraceNode) >= 30) {
-			throw new WrongConstraintConditionException("By now, constraint will not handle the case that predicates is more than 30 because it is too expensive to calculate");
-		}
-		this.varsIncluded = this.genBitRepresentation(copiedTraceNode);
-		this.conclusionIndexes = new HashSet<>(conclusionIdxes);
-		this.propProbability = probProbability;
-		this.constraintID = constraintID;
-		this.order = node.getOrder();
-		this.maxCaseNo = 1 << this.getBitLength();
-	}
 	
-	public Constraint(TraceNode node, int conclusionIdx, double probProbability, String constraintID) {
+	/**
+	 * Constructor
+	 * @param node Target node that this constraint is based on
+	 * @param conclusionIdx Index of conclusion variable in bit representation
+	 * @param probProbability Propagation probability of this constraint
+	 * @param constraintID ID of this constraint
+	 */
+	public Constraint(TraceNode node, double probProbability, String constraintID) {
 		TraceNode copiedTraceNode = Constraint.removeDupVars(node);
+		
 		if (Constraint.countPreds(copiedTraceNode) >= 30) {
 			throw new WrongConstraintConditionException("By now, constraint will not handle the case that predicates is more than 30 because it is too expensive to calculate");
 		}
-		this.varsIncluded = this.genBitRepresentation(copiedTraceNode);
-		this.conclusionIndexes.add(conclusionIdx);
+		this.bitRepresentation = this.genBitRepresentation(copiedTraceNode);
+		this.conclusionIdx = this.defineConclusionIdx(copiedTraceNode);
 		this.propProbability = probProbability;
 		this.constraintID = constraintID;
 		this.order = node.getOrder();
@@ -95,30 +97,66 @@ public abstract class Constraint {
 	
 	/**
 	 * Constructor
-	 * @param varsIncluded Bit representation of which variables are involved in this constraint
-	 * @param conclusionIndexes The list of index of conclusion variable
-	 * @param propProbability Propagation probability of this constraint
+	 * @param varsIncluded Bit representation of variable included of this constraint
+	 * @param conclusionIdx Index of conclusion variable in bit representation
+	 * @param propProbability Propagation probability
+	 * @param constraintID Id of this constraint
+	 * @param order Order of trace node this constraint based on
 	 */
-//	public Constraint(BitRepresentation varsIncluded, Collection<Integer> conclusionIndexes, double propProbability, String constraintID) {
-//		this.constraintID = constraintID;
-//		this.varsIncluded = varsIncluded;
-//		this.conclusionIndexes = new HashSet<>(conclusionIndexes);
-//		this.propProbability = propProbability;
-//	}
+	public Constraint(BitRepresentation varsIncluded, int conclusionIdx, double propProbability, String constraintID, int order) {
+		this.bitRepresentation = varsIncluded;
+		this.constraintID = constraintID;
+		this.conclusionIdx = conclusionIdx;
+		this.propProbability = propProbability;
+		this.order = order;
+		this.maxCaseNo = 1 << this.getBitLength();
+	}
 	
 	/**
-	 * Constructor
-	 * @param varsIncluded Bit representation of which variables are involved in this constraint
-	 * @param conclusionIndex Index of conclusion variable
-	 * @param propProbability Propagation probability of this constraint
+	 * Deep Copy Constructor
+	 * @param constraint Other constraint
 	 */
-//	public Constraint(BitRepresentation varsIncluded, int conclusionIndex, double propProbability, String name) {
-//		this.constraintID = name;
-//		this.varsIncluded = varsIncluded;
-//		this.conclusionIndexes = new HashSet<>();
-//		this.conclusionIndexes.add(conclusionIndex); // conclusionIndex is the index of write variable
-//		this.propProbability = propProbability;
-//	}
+	public Constraint(Constraint constraint) {
+		this.bitRepresentation = constraint.bitRepresentation.clone();
+		this.conclusionIdx = constraint.conclusionIdx;
+		this.constraintID = constraint.constraintID;
+		this.propProbability = constraint.propProbability;
+		this.order = constraint.order;
+		this.maxCaseNo = constraint.maxCaseNo;
+		this.readVarIDs.addAll(constraint.readVarIDs);
+		this.writeVarIDs.addAll(constraint.writeVarIDs);
+	}
+	
+	/**
+	 * Calculate the result probability based on the given case number.
+	 * 
+	 * Different kind of constraint have different way to calculate the
+	 * probability, so that it is need to be implemented by child classes.
+	 * 
+	 * @param caseNo Case number
+	 * @return Result probability
+	 */
+	abstract protected double calProbability(final int caseNo);
+	
+	/**
+	 * Generate the bit representation based on the type of constraint
+	 * 
+	 * Different kind of constraint have different way to generate the
+	 * bit representation, so that it is needed to be implemented by child classes.
+	 * 
+	 * @param node Target trace node for bit representation
+	 * @return Generated bit representation
+	 */
+	abstract protected BitRepresentation genBitRepresentation(TraceNode node);
+	
+	/**
+	 * Define the index of conclusion variable in bit representation
+	 * 
+	 * Different kind of constraint have different way to define the
+	 * conclusion index, so that it is needed to be implemented by child classes.
+	 * @return
+	 */
+	abstract protected int defineConclusionIdx(TraceNode node);
 	
 	/**
 	 * Get the result probability based on the given case number.
@@ -143,7 +181,7 @@ public abstract class Constraint {
 	 * @return Length of big representation
 	 */
 	public int getBitLength() {
-		return this.varsIncluded.size();
+		return this.bitRepresentation.size();
 	}
 	
 	public void addReadVarID(final String varID) {
@@ -217,14 +255,8 @@ public abstract class Constraint {
 		}
 		
 		// We assume that the control dominator is included when it exists
-		TraceNode controlDom = node.getControlDominator();
-		if (controlDom != null) {
-			for (VarValue writeVar : controlDom.getWrittenVariables()) {
-				if (writeVar.getVarID().startsWith(PropabilityInference.CONDITION_RESULT_ID_PRE)) {
-					this.setControlDomID(writeVar.getVarID());
-					break;
-				}
-			}
+		if (node.getControlDominator() != null) {
+			this.setControlDomID(Constraint.extractControlDomVar(node.getControlDominator()).getVarID());
 		}
 	}
 	
@@ -266,8 +298,8 @@ public abstract class Constraint {
 		return this.constraintID;
 	}
 	
-	public Set<Integer> getConclusionIdxes() {
-		return this.conclusionIndexes;
+	public int getConclusionIdx() {
+		return this.conclusionIdx;
 	}
 	
 	/**
@@ -277,20 +309,6 @@ public abstract class Constraint {
 	public int getMaxCaseNo() {
 		return this.maxCaseNo;
 	}
-	
-	/**
-	 * Calculate the result probability based on the given case number
-	 * @param caseNo Case number
-	 * @return Result probability
-	 */
-	abstract protected double calProbability(final int caseNo);
-	
-	/**
-	 * Generate the bit representation based on the type of constraint
-	 * @param node Target trace node for bit representation
-	 * @return Generated bit representation
-	 */
-	abstract protected BitRepresentation genBitRepresentation(TraceNode node);
 	
 	/**
 	 * Helper function to determine the index of variable in the bit representation
@@ -402,7 +420,7 @@ public abstract class Constraint {
 	
 	@Override
 	public String toString() {
-		return "Variables map: " + this.varsIncluded + " Conclusions: " + this.conclusionIndexes + "(" + this.propProbability + ")"; 
+		return "Variables map: " + this.bitRepresentation + " Conclusions: " + this.conclusionIdx + "(" + this.propProbability + ")"; 
 	}
 	
 	/**
