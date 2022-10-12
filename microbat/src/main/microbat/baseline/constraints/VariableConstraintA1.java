@@ -37,7 +37,7 @@ public class VariableConstraintA1 extends VariableConstraint {
 		}
 		
 		if (Constraint.countReadVars(node) == 0 && node.getControlDominator() == null) {
-			throw new WrongConstraintConditionException("Cannot form Variable Constraint A1 without any read variables and control dominator");
+			throw new WrongConstraintConditionException("Cannot form Variable Constraint A1 without any read variables and control dominator for node: " + node.getOrder());
 		}
 		
 		// Cannot use setVarID method here because we will only consider one written variable here

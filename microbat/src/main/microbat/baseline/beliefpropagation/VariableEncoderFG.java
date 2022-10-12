@@ -50,6 +50,7 @@ public class VariableEncoderFG extends Encoder {
 	 * 2. Run sum product algorithm on python server to calculate variable probability
 	 * 3. Assign calculated probability to each variable
 	 */
+	@Override
 	public void encode() {
 		
 		// Generate all constraints
@@ -115,20 +116,41 @@ public class VariableEncoderFG extends Encoder {
 			return constraints;
 		}
 		
-		// Generate variable constraint A1
-		for (VarValue writeVar : node.getWrittenVariables()) {
-			Constraint constraint = new VariableConstraintA1(node, writeVar, PropagationProbability.HIGH);
-			constraints.add(constraint);
+		/**
+		 * Generate variable constraint A1 if the node contain 
+		 * written variable and fulfill one of the following condition:
+		 * 1. Contain at least one read variable
+		 * 2. Contain control dominator
+		 */
+		if (Constraint.countReadVars(node) != 0 || node.getControlDominator() != null) {
+			for (VarValue writeVar : node.getWrittenVariables()) {
+				Constraint constraint = new VariableConstraintA1(node, writeVar, PropagationProbability.HIGH);
+				constraints.add(constraint);
+			}			
 		}
 
-		// Generate variable constraint A2
-		for (VarValue readVar : node.getReadVariables()) {
-			Constraint constraint = new VariableConstraintA2(node, readVar, PropagationProbability.HIGH);
-			constraints.add(constraint);
+		/**
+		 * Generate variable constraint A2 if the node contain
+		 * read variable and fulfill one of the following condition:
+		 * 1. Contain at least one written variable
+		 * 2. Contain control dominator
+		 */
+		if (Constraint.countWrittenVars(node) != 0 || node.getControlDominator() != null) {
+			for (VarValue readVar : node.getReadVariables()) {
+				Constraint constraint = new VariableConstraintA2(node, readVar, PropagationProbability.HIGH);
+				constraints.add(constraint);
+			}
 		}
+
 		
 		// Generate variable constraint A3 if control dominator exist
-		if (node.getControlDominator() != null) {
+		/**
+		 * Generate variable constraint A3 if control dominator
+		 * exist and fulfill one of the following condition:
+		 * 1. Contain any read variables
+		 * 2. Contain any written variables
+		 */
+		if (node.getControlDominator() != null && (Constraint.countReadVars(node) + Constraint.countWrittenVars(node) > 0)) {
 			Constraint constraint = new VariableConstraintA3(node, PropagationProbability.HIGH);
 			constraints.add(constraint);
 		}

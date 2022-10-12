@@ -56,11 +56,14 @@ public abstract class Encoder {
 	/**
 	 * We will not consider the target node with more than 30 predicates
 	 * because it will be too expensive too calculate
+	 * 
+	 * We will not consider the target node with no predicates.
+	 * 
 	 * @param node Target node
 	 * @return True if the node will not be considered. False otherwise.
 	 */
 	protected boolean isSkippable(TraceNode node) {
-		return Constraint.countPreds(node) >= 30;
+		return Constraint.countPreds(node) >= 30 || Constraint.countPreds(node) == 0;
 	}
 	
 	
