@@ -221,7 +221,7 @@ public class MicroBatUtil {
 		String sourceFolderPath = IResourceUtils.getAbsolutePathOsStr(uri);
 		int lastIndexOfDot = cName.lastIndexOf(".");
 		if (lastIndexOfDot != -1) {
-			cName = cName.substring(0, cName.lastIndexOf(".")).replace(".", File.separator);
+			cName = cName.substring(0, lastIndexOfDot).replace(".", File.separator);
 		}
 		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName) - 1);
 		return sourceFolderPath;
