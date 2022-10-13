@@ -219,7 +219,10 @@ public class MicroBatUtil {
 		ICompilationUnit unit = JavaUtil.findICompilationUnitInProject(cName, projectName);
 		IPath uri = unit.getResource().getFullPath();
 		String sourceFolderPath = IResourceUtils.getAbsolutePathOsStr(uri);
-		cName = cName.substring(0, cName.lastIndexOf(".")).replace(".", File.separator);
+		int lastIndexOfDot = cName.lastIndexOf(".");
+		if (lastIndexOfDot != -1) {
+			cName = cName.substring(0, cName.lastIndexOf(".")).replace(".", File.separator);
+		}
 		sourceFolderPath = sourceFolderPath.substring(0, sourceFolderPath.indexOf(cName) - 1);
 		return sourceFolderPath;
 	}
