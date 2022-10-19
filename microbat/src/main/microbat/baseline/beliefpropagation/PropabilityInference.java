@@ -228,11 +228,16 @@ public class PropabilityInference {
 	
 	/**
 	 * Get the trace node with the highest probability to be wrong
+	 * 
+	 * It will ignore the last node in list, which is assumed to be
+	 * error node.
+	 * 
 	 * @return Predicted wrong node
 	 */
 	public TraceNode getMostErroneousNode() {
 		TraceNode errorNode = this.executionList.get(0);
-		for(TraceNode node : this.executionList) {
+		for (int i=1; i<this.executionList.size()-1; i++) {
+			TraceNode node = this.executionList.get(i);
 			if (node.getProbability() <= errorNode.getProbability()) {
 				errorNode = node;
 			}

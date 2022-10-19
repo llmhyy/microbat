@@ -155,4 +155,19 @@ public class StatementEncoderFG extends Encoder {
 		
 		return constraints;
 	}
+	
+	@Override
+	protected boolean isSkippable(TraceNode node) {
+		if (super.isSkippable(node)) {
+			return true;
+		}
+		
+		// Statement encoder will not encode the last node
+		// which is assumed to be error node
+		if (node.equals(this.executionList.get(this.executionList.size()-1))) {
+			return true;
+		}
+		
+		return false;
+	}
 }
