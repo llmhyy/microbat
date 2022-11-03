@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import microbat.baseline.constraints.PropagationProbability;
 import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
 /**
@@ -24,10 +24,25 @@ import microbat.model.value.VarValue;
  */
 public class StepwisePropagator {
 	
+	/**
+	 * Execution trace of target program
+	 */
 	private Trace trace;
 	
+	/**
+	 * List of input variables which assumed to be correct
+	 */
 	private List<VarValue> inputs = new ArrayList<>();
+	
+	/**
+	 * List of ouptut variables which assumed to be wrong
+	 */
 	private List<VarValue> outputs = new ArrayList<>();
+	
+	/**
+	 * List of executed trace node after dynamic slicing
+	 */
+	private List<TraceNode> slicedTrace = new ArrayList<>();
 	
 	/**
 	 * Constructor
@@ -65,17 +80,24 @@ public class StepwisePropagator {
 		this.outputs.addAll(outputs);
 	}
 	
+	/**
+	 * Propagation the correctness probability
+	 * step by step
+	 */
 	public void propagate() {
-		
+		this.init();
 	}
 	
 	/**
 	 * Initialize the inputs and outputs
 	 * probability
 	 */
-	public void init() {
+	private void init() {
 		for (VarValue input : this.inputs) {
-			input.setProbability(PropagationProbability.HIGH);
+			input.setProbability(PropProbability.HIGH);
+		}
+		for (VarValue output : this.outputs) {
+			output.setProbability(PropProbability.LOW);
 		}
 	}
 

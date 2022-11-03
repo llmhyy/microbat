@@ -47,6 +47,7 @@ import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;
 import microbat.handler.BaselineHandler;
 import microbat.handler.CheckingState;
+import microbat.handler.StepwisePropagationHandler;
 import microbat.model.BreakPointValue;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -1477,6 +1478,7 @@ public class DebugFeedbackView extends ViewPart {
 		public void mouseDown(MouseEvent e) {
 			List<VarValue> outputs = getSelectedVars();
 			BaselineHandler.addOutpus(outputs);
+			StepwisePropagationHandler.addOutpus(outputs);
 		}
 
 		@Override
@@ -1492,6 +1494,7 @@ public class DebugFeedbackView extends ViewPart {
 		public void mouseDown(MouseEvent e) {
 			List<VarValue> inputs = getSelectedVars();
 			BaselineHandler.addInputs(inputs);
+			StepwisePropagationHandler.addInputs(inputs);
 		}
 
 		@Override

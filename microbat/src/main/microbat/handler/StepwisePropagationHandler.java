@@ -46,14 +46,10 @@ public class StepwisePropagationHandler extends AbstractHandler {
 				// Check is the IO ready
 				if (!StepwisePropagationHandler.isIOReady()) {
 					System.out.println("Please provide the inputs and the outputs");
-					while (!StepwisePropagationHandler.isIOReady()) {
-						try {
-							Thread.sleep(200);
-						} catch (InterruptedException e) {
-							
-						}
-					}
+					return Status.OK_STATUS;
 				}
+				
+				
 				System.out.println("Propagation Start");
 				return Status.OK_STATUS;
 			}
