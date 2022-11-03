@@ -40,8 +40,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import microbat.algorithm.graphdiff.GraphDiff;
-import microbat.baseline.beliefpropagation.NodeFeedbackPair;
-import microbat.baseline.beliefpropagation.PropabilityInference;
+import microbat.baseline.probpropagation.NodeFeedbackPair;
+import microbat.baseline.probpropagation.BeliefPropagation;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;
@@ -644,7 +644,7 @@ public class DebugFeedbackView extends ViewPart {
 				@Override
 				protected IStatus run(IProgressMonitor monitor) {
 					
-					PropabilityInference encoder = new PropabilityInference(trace);
+					BeliefPropagation encoder = new BeliefPropagation(trace);
 					encoder.setFlag(true);
 
 					encoder.encode();

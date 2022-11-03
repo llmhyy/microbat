@@ -12,8 +12,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 
-import microbat.baseline.beliefpropagation.NodeFeedbackPair;
-import microbat.baseline.beliefpropagation.PropabilityInference;
+import microbat.baseline.probpropagation.NodeFeedbackPair;
+import microbat.baseline.probpropagation.BeliefPropagation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -53,7 +53,7 @@ public class BaselineHandler extends AbstractHandler {
 				Trace trace = traceView.getTrace();
 				
 				// Setup the probability encoder
-				PropabilityInference encoder = new PropabilityInference(trace);
+				BeliefPropagation encoder = new BeliefPropagation(trace);
 				encoder.setInputVars(BaselineHandler.inputs);
 				encoder.setOutputVars(BaselineHandler.outputs);
 				encoder.setup();
@@ -93,7 +93,7 @@ public class BaselineHandler extends AbstractHandler {
 					NodeFeedbackPair nodeFeedbackPair = new NodeFeedbackPair(feedbackNode, feedback);
 					BaselineHandler.resetManualFeedback();
 					
-					PropabilityInference.addFeedback(nodeFeedbackPair);;
+					BeliefPropagation.addFeedback(nodeFeedbackPair);;
 					noOfFeedbacks += 1;
 				}
 

@@ -1,6 +1,6 @@
 package microbat.baseline.constraints;
 
-import microbat.baseline.beliefpropagation.PropabilityInference;
+import microbat.baseline.probpropagation.BeliefPropagation;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
@@ -50,7 +50,7 @@ public class VariableConstraintA1 extends VariableConstraint {
 		TraceNode controlDom = node.getControlDominator();
 		if (controlDom != null) {
 			for (VarValue writeVar : controlDom.getWrittenVariables()) {
-				if (writeVar.getVarID().startsWith(PropabilityInference.CONDITION_RESULT_ID_PRE)) {
+				if (writeVar.getVarID().startsWith(BeliefPropagation.CONDITION_RESULT_ID_PRE)) {
 					this.setControlDomID(writeVar.getVarID());
 					break;
 				}

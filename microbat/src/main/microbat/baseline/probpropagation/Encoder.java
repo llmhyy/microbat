@@ -1,4 +1,4 @@
-package microbat.baseline.beliefpropagation;
+package microbat.baseline.probpropagation;
 
 import java.util.ArrayList;
 import java.util.HashMap;

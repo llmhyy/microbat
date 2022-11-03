@@ -3,7 +3,7 @@ package microbat.baseline.constraints;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.baseline.beliefpropagation.PropabilityInference;
+import microbat.baseline.probpropagation.BeliefPropagation;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 

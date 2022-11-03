@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import microbat.baseline.beliefpropagation.PropabilityInference;
 import microbat.baseline.factorgraph.VarIDConverter;
+import microbat.baseline.probpropagation.BeliefPropagation;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
@@ -411,7 +411,7 @@ public abstract class Constraint {
 	 */
 	public static VarValue extractControlDomVar(TraceNode controlDom) {
 		for (VarValue writeVar : controlDom.getWrittenVariables()) {
-			if (writeVar.getVarID().startsWith(PropabilityInference.CONDITION_RESULT_ID_PRE)) {
+			if (writeVar.getVarID().startsWith(BeliefPropagation.CONDITION_RESULT_ID_PRE)) {
 				return writeVar;
 			}
 		}

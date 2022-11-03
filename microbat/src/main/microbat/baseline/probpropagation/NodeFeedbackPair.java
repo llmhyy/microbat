@@ -1,4 +1,4 @@
-package microbat.baseline.beliefpropagation;
+package microbat.baseline.probpropagation;
 
 import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;
