@@ -12,6 +12,7 @@ import org.junit.Test;
 import microbat.baseline.factorgraph.MessageProcessor;
 import microbat.baseline.factorgraph.VarIDConverter;
 import microbat.baseline.probpropagation.BeliefPropagation;
+import microbat.baseline.probpropagation.PropProbability;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
@@ -71,7 +72,7 @@ public class MessageProcessorTest {
 		conditionResult.setVarID(this.controlDomValueID);
 		this.controlDom.addWrittenVariable(conditionResult);
 		
-		this.propagationProbability = PropagationProbability.HIGH;
+		this.propagationProbability = PropProbability.HIGH;
 		this.statementID = "S_2";
 		
 		this.converter = new VarIDConverter();

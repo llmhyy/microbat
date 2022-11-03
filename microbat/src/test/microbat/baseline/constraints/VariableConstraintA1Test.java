@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import microbat.baseline.probpropagation.BeliefPropagation;
+import microbat.baseline.probpropagation.PropProbability;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
@@ -69,9 +70,9 @@ public class VariableConstraintA1Test {
 		this.node.addWrittenVariable(writeVar1);
 		this.node.addReadVariable(readVar1);
 		
-		VariableConstraintA1 constraint1 = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
-		VariableConstraintA1 constraint2 = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
-		VariableConstraintA1 constraint3 = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		VariableConstraintA1 constraint1 = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
+		VariableConstraintA1 constraint2 = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
+		VariableConstraintA1 constraint3 = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 		
 		assertEquals("VC1_0", constraint1.getConstraintID());
 		assertEquals("VC1_1", constraint2.getConstraintID());
@@ -80,28 +81,28 @@ public class VariableConstraintA1Test {
 	
 	@Test(expected=WrongConstraintConditionException.class)
 	public void test0R0W0P() {
-		VariableConstraintA1 constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		VariableConstraintA1 constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 	}
 	
 	@Test(expected=WrongConstraintConditionException.class)
 	public void testUnMatchWrittenVariable() {
 		this.node.addWrittenVariable(this.writeVar1);
 		this.node.addReadVariable(this.readVar1);
-		VariableConstraintA1 constraint = new VariableConstraintA1(this.node, this.writeVar2, PropagationProbability.HIGH);
+		VariableConstraintA1 constraint = new VariableConstraintA1(this.node, this.writeVar2, PropProbability.HIGH);
 	}
 	
 	@Test(expected=WrongConstraintConditionException.class)
 	public void testMissingReadVars() {
 		this.node.addWrittenVariable(this.writeVar1);
 		this.node.addControlDominatee(this.controlDom);
-		VariableConstraintA1 constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		VariableConstraintA1 constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 	}
 	
 	@Test
 	public void testControlDominator() {
 		this.node.addWrittenVariable(this.writeVar1);
 		this.node.setControlDominator(this.controlDom);
-		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 		
 		assertTrue(constraint.haveControlDom());
 		assertEquals(this.controlDomValueID, constraint.getControlDomID());
@@ -113,7 +114,7 @@ public class VariableConstraintA1Test {
 		this.node.addReadVariable(this.readVar2);
 		this.node.addWrittenVariable(this.writeVar1);
 		this.node.setControlDominator(this.controlDom);
-		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 		
 		List<String> predIDs = constraint.getInvolvedPredIDs();
 		assertEquals(this.readVar1.getVarID(), predIDs.get(0));
@@ -129,7 +130,7 @@ public class VariableConstraintA1Test {
 		this.node.addWrittenVariable(this.writeVar1);
 		this.node.addWrittenVariable(this.writeVar2);
 		this.node.setControlDominator(this.controlDom);
-		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 		
 		assertEquals(2, constraint.getOrder());
 	}
@@ -138,7 +139,7 @@ public class VariableConstraintA1Test {
 	public void test0R1W1P() {
 		this.node.addWrittenVariable(this.writeVar1);
 		this.node.setControlDominator(this.controlDom);
-		VariableConstraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		VariableConstraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 		
 		// Test bit size
 		assertEquals(2, constraint.getBitLength());
@@ -165,7 +166,7 @@ public class VariableConstraintA1Test {
 		this.node.addReadVariable(this.readVar1);
 		this.node.addWrittenVariable(this.writeVar1);
 		
-		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 		
 		// Test bit size
 		assertEquals(2, constraint.getBitLength());
@@ -193,7 +194,7 @@ public class VariableConstraintA1Test {
 		this.node.addReadVariable(this.readVar2);
 		this.node.addWrittenVariable(this.writeVar1);
 		
-		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 		
 		// Test bit size
 		assertEquals(3, constraint.getBitLength());
@@ -221,7 +222,7 @@ public class VariableConstraintA1Test {
 		this.node.addWrittenVariable(this.writeVar1);
 		this.node.setControlDominator(this.controlDom);
 		
-		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 		
 		// Test bit size
 		assertEquals(3, constraint.getBitLength());
@@ -250,7 +251,7 @@ public class VariableConstraintA1Test {
 		this.node.addWrittenVariable(this.writeVar1);
 		this.node.setControlDominator(this.controlDom);
 		
-		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 		
 		// Test bit size
 		assertEquals(4, constraint.getBitLength());
@@ -278,7 +279,7 @@ public class VariableConstraintA1Test {
 		this.node.addWrittenVariable(this.writeVar1);
 		this.node.addReadVariable(this.readVar1);
 		
-		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 		
 		assertEquals(2, constraint.getBitLength());
 		assertEquals(2, constraint.getPredicateCount());
@@ -294,7 +295,7 @@ public class VariableConstraintA1Test {
 		this.node.addWrittenVariable(this.writeVar2);
 		this.node.addReadVariable(this.readVar1);
 		
-		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropagationProbability.HIGH);
+		Constraint constraint = new VariableConstraintA1(this.node, this.writeVar1, PropProbability.HIGH);
 		
 		// Test bit size
 		assertEquals(2, constraint.getBitLength());
@@ -321,7 +322,7 @@ public class VariableConstraintA1Test {
 		this.node.addReadVariable(this.readVar1);
 		this.node.addWrittenVariable(this.writeVar1);
 		
-		Constraint constraint = new VariableConstraintA2(this.node, this.readVar1, PropagationProbability.HIGH);
+		Constraint constraint = new VariableConstraintA2(this.node, this.readVar1, PropProbability.HIGH);
 		
 		constraint.getProbability(4);
 	}

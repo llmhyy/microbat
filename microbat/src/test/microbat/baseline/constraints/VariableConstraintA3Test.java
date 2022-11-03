@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import microbat.baseline.probpropagation.BeliefPropagation;
+import microbat.baseline.probpropagation.PropProbability;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
@@ -64,7 +65,7 @@ public class VariableConstraintA3Test {
 		conditionResult.setVarID(this.controlDomValueID);
 		this.controlDom.addWrittenVariable(conditionResult);
 		
-		this.propagationProbability = PropagationProbability.HIGH;
+		this.propagationProbability = PropProbability.HIGH;
 	}
 	
 	@After

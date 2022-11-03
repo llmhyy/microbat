@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
-import microbat.baseline.constraints.PropagationProbability;
+import microbat.baseline.probpropagation.PropProbability;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;

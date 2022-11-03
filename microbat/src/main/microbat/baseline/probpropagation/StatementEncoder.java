@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import microbat.baseline.constraints.BitRepresentation;
-import microbat.baseline.constraints.PropagationProbability;
 import microbat.baseline.constraints.Constraint;
 import microbat.baseline.constraints.PriorConstraint;
 import microbat.baseline.constraints.StatementConstraintA1;

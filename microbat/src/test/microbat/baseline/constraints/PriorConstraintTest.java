@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import microbat.baseline.probpropagation.PropProbability;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
@@ -24,7 +25,7 @@ public class PriorConstraintTest {
 		var1.setVarID(var1ID);
 		this.readVar1 = new PrimitiveValue("1", true, var1);
 		
-		this.propagationProbability = PropagationProbability.HIGH;
+		this.propagationProbability = PropProbability.HIGH;
 	}
 	
 
