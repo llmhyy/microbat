@@ -389,7 +389,7 @@ public class MicrobatPreference extends PreferencePage implements
 	
 	private void createMutationSeetingGroup(Composite parent) {
 		Group mutationGroup = new Group(parent, SWT.NONE);
-		mutationGroup.setText("Mutation Setting");
+		mutationGroup.setText("Select Test Case By ID");
 		
 		GridData mutationGroupData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		mutationGroupData.horizontalSpan = 3;

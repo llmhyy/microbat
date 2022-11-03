@@ -23,6 +23,20 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.UserFeedback;
 
+/**
+ * StatementEncoderFG is used to calculated the 
+ * correctness probability for the statement
+ * 
+ * It will use the belief propagation approach to
+ * speed up the process
+ * 
+ * If error occur when calculating the probability
+ * of particular statement, it will set the probability
+ * to 2.0
+ * 
+ * @author David
+ *
+ */
 public class StatementEncoderFG extends Encoder {
 	
 	public StatementEncoderFG(Trace trace, List<TraceNode> executionList) {
@@ -35,12 +49,12 @@ public class StatementEncoderFG extends Encoder {
 		FactorGraphClient client = new FactorGraphClient();
 		MessageProcessor msgProcessor = new MessageProcessor();
 		
-		try {
-			for (TraceNode node : this.executionList) {
-				if (this.isSkippable(node)) {
-					continue;
-				}
-				
+		for (TraceNode node : this.executionList) {
+			if (this.isSkippable(node)) {
+				continue;
+			}
+			
+			try {
 				List<Constraint> constraints = new ArrayList<>();
 				constraints.addAll(this.genVarToStatConstraints(node));
 				constraints.addAll(this.genPriorConstraints(node));
@@ -62,13 +76,12 @@ public class StatementEncoderFG extends Encoder {
 						}
 					}
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				node.setProbability(2.0);
+			} finally {
 				client.disconnectServer();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			client.disconnectServer();
-		} finally {
-//			client.disconnectServer();
 		}
 	}
 	
