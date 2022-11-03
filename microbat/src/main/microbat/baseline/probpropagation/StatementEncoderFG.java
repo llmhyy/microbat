@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import microbat.baseline.constraints.BitRepresentation;
-import microbat.baseline.constraints.PropagationProbability;
 import microbat.baseline.constraints.Constraint;
 import microbat.baseline.constraints.PriorConstraint;
 import microbat.baseline.constraints.StatementConstraint;
@@ -108,33 +107,33 @@ public class StatementEncoderFG extends Encoder {
 		 */
 		
 		if ((readLen == 0 && writeLen == 0)) { // 3rd case
-			Constraint constraint = new StatementConstraintA6(node, PropagationProbability.HIGH);
+			Constraint constraint = new StatementConstraintA6(node, PropProbability.HIGH);
 			constraints.add(constraint);
 		} else if ((readLen == 0 && writeLen != 0) ||(readLen != 0 && writeLen == 0)) { // 2nd case
 
 			for (VarValue readVar : node.getReadVariables()) {
-				Constraint constrainA4 = new StatementConstraintA4(node, readVar, PropagationProbability.HIGH);
+				Constraint constrainA4 = new StatementConstraintA4(node, readVar, PropProbability.HIGH);
 				constraints.add(constrainA4);
-				Constraint constraintA5 = new StatementConstraintA5(node, readVar, PropagationProbability.HIGH);
+				Constraint constraintA5 = new StatementConstraintA5(node, readVar, PropProbability.HIGH);
 				constraints.add(constraintA5);
 			}
 			
 			for (VarValue writeVar : node.getWrittenVariables()) {
-				Constraint constrainA4 = new StatementConstraintA4(node, writeVar, PropagationProbability.HIGH);
+				Constraint constrainA4 = new StatementConstraintA4(node, writeVar, PropProbability.HIGH);
 				constraints.add(constrainA4);
-				Constraint constraintA5 = new StatementConstraintA5(node, writeVar, PropagationProbability.HIGH);
+				Constraint constraintA5 = new StatementConstraintA5(node, writeVar, PropProbability.HIGH);
 				constraints.add(constraintA5);
 			}
 			
 		} else { // 1st case
 
-			Constraint constraintA1 = new StatementConstraintA1(node, PropagationProbability.HIGH);
+			Constraint constraintA1 = new StatementConstraintA1(node, PropProbability.HIGH);
 			constraints.add(constraintA1);
 			
-			Constraint constraintA2 = new StatementConstraintA2(node, PropagationProbability.HIGH);
+			Constraint constraintA2 = new StatementConstraintA2(node, PropProbability.HIGH);
 			constraints.add(constraintA2);
 			
-			Constraint constraintA3 = new StatementConstraintA3(node, PropagationProbability.HIGH);
+			Constraint constraintA3 = new StatementConstraintA3(node, PropProbability.HIGH);
 			constraints.add(constraintA3);
 		}
 		

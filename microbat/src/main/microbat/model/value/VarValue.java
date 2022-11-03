@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import microbat.baseline.HasProbability;
-import microbat.baseline.constraints.PropagationProbability;
+import microbat.baseline.probpropagation.PropProbability;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
@@ -499,7 +499,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	
 	public double getProbability(boolean rounding) {
 		if (rounding) {
-			return this.getProbability() > 0.3 ? PropagationProbability.HIGH : PropagationProbability.LOW;
+			return this.getProbability() > 0.3 ? PropProbability.HIGH : PropProbability.LOW;
 		} else {
 			return this.getProbability();
 		}

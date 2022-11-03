@@ -6,7 +6,6 @@ import java.util.Map;
 
 import microbat.baseline.bytecode.ByteCode;
 import microbat.baseline.bytecode.ByteCodeList;
-import microbat.baseline.constraints.PropagationProbability;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
@@ -47,10 +46,10 @@ public class PropagationCalculator {
 		
 		// For one to one statement, directly return High regardless of target variable
 		if (executedByteCode.isOneToOne()) {
-			return PropagationProbability.HIGH;
+			return PropProbability.HIGH;
 		}
 		
-		double prob = PropagationProbability.HIGH;
+		double prob = PropProbability.HIGH;
 		
 		/*
 		 * By now, we don't have way to calculate the propagation probability
@@ -67,21 +66,21 @@ public class PropagationCalculator {
 		for (ByteCode byteCode : executedByteCode) {
 			if (byteCode.isManyToOne()) {
 //				System.out.println("byteCode is many to one");
-				prob *= PropagationProbability.UNCERTAIN;
+				prob *= PropProbability.UNCERTAIN;
 			} else if (byteCode.isArrayAccess() && this.isArray(var)) {
 //				System.out.println("byteCode is array access");
-				prob *= PropagationProbability.UNCERTAIN;
+				prob *= PropProbability.UNCERTAIN;
 			} else if (byteCode.isAttrAccess() && this.isSelfDefinedClass(var)) {
 //				System.out.println("byteCode is attribute access");
-				prob *= PropagationProbability.UNCERTAIN;
+				prob *= PropProbability.UNCERTAIN;
 			} 
 			else if (byteCode.isFuncCall() && this.isSelfDefinedClass(var)) {
 //				System.out.println("byteCode is function call");
-				prob *= PropagationProbability.UNCERTAIN;
+				prob *= PropProbability.UNCERTAIN;
 			}
 		}
 		
-		return PropagationProbability.HIGH;
+		return PropProbability.HIGH;
 	}
 	
 	/**

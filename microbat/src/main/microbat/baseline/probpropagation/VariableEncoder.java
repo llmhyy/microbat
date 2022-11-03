@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import microbat.baseline.constraints.BitRepresentation;
-import microbat.baseline.constraints.PropagationProbability;
 import microbat.baseline.constraints.Constraint;
 import microbat.baseline.constraints.PriorConstraint;
 import microbat.baseline.constraints.VariableConstraint;
@@ -177,7 +176,7 @@ public class VariableEncoder extends Encoder {
 //		}
 		
 		for (VarValue writeVar : node.getWrittenVariables()) {
-			Constraint constraint = new VariableConstraintA1(node, writeVar, PropagationProbability.HIGH);
+			Constraint constraint = new VariableConstraintA1(node, writeVar, PropProbability.HIGH);
 			constraints.add(constraint);
 		}
 		
@@ -207,12 +206,12 @@ public class VariableEncoder extends Encoder {
 //		}
 		
 		for (VarValue readVar : node.getReadVariables()) {
-			Constraint constraint = new VariableConstraintA2(node, readVar, PropagationProbability.HIGH);
+			Constraint constraint = new VariableConstraintA2(node, readVar, PropProbability.HIGH);
 			constraints.add(constraint);
 		}
 		
 		if (haveControlDom) {
-			Constraint constraint = new VariableConstraintA3(node, PropagationProbability.HIGH);
+			Constraint constraint = new VariableConstraintA3(node, PropProbability.HIGH);
 			constraints.add(constraint);
 		}
 		
@@ -267,12 +266,12 @@ public class VariableEncoder extends Encoder {
 
 		// Set input to HIGH
 		for (VarValue inputVar : this.inputVars) {
-			Constraint constraint = new PriorConstraint(inputVar, PropagationProbability.HIGH);
+			Constraint constraint = new PriorConstraint(inputVar, PropProbability.HIGH);
 			constraints.add(constraint);
 		}
 		
 		for (VarValue outputVar : this.outputVars) {
-			Constraint constraint = new PriorConstraint(outputVar, PropagationProbability.LOW);
+			Constraint constraint = new PriorConstraint(outputVar, PropProbability.LOW);
 			constraints.add(constraint);
 		}
 //		for (VarValue inputVar : this.inputVars) {
@@ -316,12 +315,12 @@ public class VariableEncoder extends Encoder {
 			if (feedback.getFeedbackType() == UserFeedback.CORRECT) {
 				// Add constraint to all read and write variable to HIGH
 				for (VarValue readVar : node.getReadVariables()) {
-					Constraint constraint = new PriorConstraint(readVar, PropagationProbability.HIGH);
+					Constraint constraint = new PriorConstraint(readVar, PropProbability.HIGH);
 					constraints.add(constraint);
 //					constraints.add(this.genPriorConstraint(readVar, PropagationProbability.HIGH));
 				}
 				for (VarValue writeVar : node.getWrittenVariables()) {
-					Constraint constraint = new PriorConstraint(writeVar, PropagationProbability.HIGH);
+					Constraint constraint = new PriorConstraint(writeVar, PropProbability.HIGH);
 					constraints.add(constraint);
 //					constraints.add(this.genPriorConstraint(writeVar, PropagationProbability.HIGH));
 				}
@@ -329,7 +328,7 @@ public class VariableEncoder extends Encoder {
 				TraceNode controlDominator = node.getControlDominator();
 				if (controlDominator != null) {
 					VarValue controlDomValue = Constraint.extractControlDomVar(controlDominator);
-					Constraint constraint = new PriorConstraint(controlDomValue, PropagationProbability.HIGH);
+					Constraint constraint = new PriorConstraint(controlDomValue, PropProbability.HIGH);
 					constraints.add(constraint);
 //					constraints.add(this.genPriorConstraint(controlDomValue, PropagationProbability.HIGH));
 				}
@@ -337,11 +336,11 @@ public class VariableEncoder extends Encoder {
 				// Add constraint to target variable to LOW
 				VarValue wrongVar = feedback.getOption().getReadVar();
 //				constraints.add(this.genPriorConstraint(wrongVar, PropagationProbability.LOW));
-				constraints.add(new PriorConstraint(wrongVar, PropagationProbability.LOW));
+				constraints.add(new PriorConstraint(wrongVar, PropProbability.LOW));
 				
 				// Also, since the target variable is wrong, then the write variable must be wrong as well
 				for (VarValue writeVar : node.getWrittenVariables()) {
-					Constraint constraint = new PriorConstraint(writeVar, PropagationProbability.LOW);
+					Constraint constraint = new PriorConstraint(writeVar, PropProbability.LOW);
 //					constraints.add(this.genPriorConstraint(writeVar, PropagationProbability.LOW));
 					constraints.add(constraint);
 				}
@@ -349,7 +348,7 @@ public class VariableEncoder extends Encoder {
 				// Add constraint to control dominator to LOW
 				TraceNode controlDom = node.getControlDominator();
 				VarValue controlDomValue = Constraint.extractControlDomVar(controlDom);
-				Constraint constraint = new PriorConstraint(controlDomValue, PropagationProbability.LOW);
+				Constraint constraint = new PriorConstraint(controlDomValue, PropProbability.LOW);
 				constraints.add(constraint);
 //				constraints.add(this.genPriorConstraint(controlDomValue, PropagationProbability.LOW));
 			}

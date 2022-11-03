@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import microbat.baseline.constraints.BitRepresentation;
-import microbat.baseline.constraints.PropagationProbability;
 import microbat.baseline.constraints.Constraint;
 import microbat.baseline.constraints.PriorConstraint;
 import microbat.baseline.constraints.VariableConstraint;
@@ -124,7 +123,7 @@ public class VariableEncoderFG extends Encoder {
 		 */
 		if (Constraint.countReadVars(node) != 0 || node.getControlDominator() != null) {
 			for (VarValue writeVar : node.getWrittenVariables()) {
-				Constraint constraint = new VariableConstraintA1(node, writeVar, PropagationProbability.HIGH);
+				Constraint constraint = new VariableConstraintA1(node, writeVar, PropProbability.HIGH);
 				constraints.add(constraint);
 			}			
 		}
@@ -137,7 +136,7 @@ public class VariableEncoderFG extends Encoder {
 		 */
 		if (Constraint.countWrittenVars(node) != 0 || node.getControlDominator() != null) {
 			for (VarValue readVar : node.getReadVariables()) {
-				Constraint constraint = new VariableConstraintA2(node, readVar, PropagationProbability.HIGH);
+				Constraint constraint = new VariableConstraintA2(node, readVar, PropProbability.HIGH);
 				constraints.add(constraint);
 			}
 		}
@@ -151,7 +150,7 @@ public class VariableEncoderFG extends Encoder {
 		 * 2. Contain any written variables
 		 */
 		if (node.getControlDominator() != null && (Constraint.countReadVars(node) + Constraint.countWrittenVars(node) > 0)) {
-			Constraint constraint = new VariableConstraintA3(node, PropagationProbability.HIGH);
+			Constraint constraint = new VariableConstraintA3(node, PropProbability.HIGH);
 			constraints.add(constraint);
 		}
 
@@ -169,13 +168,13 @@ public class VariableEncoderFG extends Encoder {
 
 		// Generate constraint for input variables
 		for (VarValue inputVar : this.inputVars) {
-			Constraint constraint = new PriorConstraint(inputVar, PropagationProbability.HIGH);
+			Constraint constraint = new PriorConstraint(inputVar, PropProbability.HIGH);
 			constraints.add(constraint);
 		}
 		
 		// Generate constraint for output variables
 		for (VarValue outputVar : this.outputVars) {
-			Constraint constraint = new PriorConstraint(outputVar, PropagationProbability.LOW);
+			Constraint constraint = new PriorConstraint(outputVar, PropProbability.LOW);
 			constraints.add(constraint);
 		}
 
@@ -195,19 +194,19 @@ public class VariableEncoderFG extends Encoder {
 				 */
 				
 				for (VarValue readVar : node.getReadVariables()) {
-					Constraint constraint = new PriorConstraint(readVar, PropagationProbability.HIGH);
+					Constraint constraint = new PriorConstraint(readVar, PropProbability.HIGH);
 					constraints.add(constraint);
 				}
 				
 				for (VarValue writeVar : node.getWrittenVariables()) {
-					Constraint constraint = new PriorConstraint(writeVar, PropagationProbability.HIGH);
+					Constraint constraint = new PriorConstraint(writeVar, PropProbability.HIGH);
 					constraints.add(constraint);
 				}
 				
 				TraceNode controlDominator = node.getControlDominator();
 				if (controlDominator != null) {
 					VarValue controlDomValue = Constraint.extractControlDomVar(controlDominator);
-					Constraint constraint = new PriorConstraint(controlDomValue, PropagationProbability.HIGH);
+					Constraint constraint = new PriorConstraint(controlDomValue, PropProbability.HIGH);
 					constraints.add(constraint);
 				}
 				
@@ -221,10 +220,10 @@ public class VariableEncoderFG extends Encoder {
 				 */
 				
 				VarValue wrongVar = feedback.getOption().getReadVar();
-				constraints.add(new PriorConstraint(wrongVar, PropagationProbability.LOW));
+				constraints.add(new PriorConstraint(wrongVar, PropProbability.LOW));
 				
 				for (VarValue writeVar : node.getWrittenVariables()) {
-					Constraint constraint = new PriorConstraint(writeVar, PropagationProbability.LOW);
+					Constraint constraint = new PriorConstraint(writeVar, PropProbability.LOW);
 					constraints.add(constraint);
 				}
 				
@@ -238,7 +237,7 @@ public class VariableEncoderFG extends Encoder {
 				
 				TraceNode controlDom = node.getControlDominator();
 				VarValue controlDomValue = Constraint.extractControlDomVar(controlDom);
-				Constraint constraint = new PriorConstraint(controlDomValue, PropagationProbability.LOW);
+				Constraint constraint = new PriorConstraint(controlDomValue, PropProbability.LOW);
 				constraints.add(constraint);
 			}
 		}

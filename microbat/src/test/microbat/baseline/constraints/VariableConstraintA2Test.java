@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import microbat.baseline.probpropagation.BeliefPropagation;
+import microbat.baseline.probpropagation.PropProbability;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
@@ -63,7 +64,7 @@ public class VariableConstraintA2Test {
 		conditionResult.setVarID(this.controlDomValueID);
 		this.controlDom.addWrittenVariable(conditionResult);
 		
-		this.propagationProbability = PropagationProbability.HIGH;
+		this.propagationProbability = PropProbability.HIGH;
 		
 		Constraint.resetID();
 	}
@@ -73,9 +74,9 @@ public class VariableConstraintA2Test {
 		this.node.addWrittenVariable(writeVar1);
 		this.node.addReadVariable(readVar1);
 		
-		Constraint constraint1 = new VariableConstraintA2(this.node, this.readVar1, PropagationProbability.HIGH);
-		Constraint constraint2 = new VariableConstraintA2(this.node, this.readVar1, PropagationProbability.HIGH);
-		Constraint constraint3 = new VariableConstraintA2(this.node, this.readVar1, PropagationProbability.HIGH);
+		Constraint constraint1 = new VariableConstraintA2(this.node, this.readVar1, PropProbability.HIGH);
+		Constraint constraint2 = new VariableConstraintA2(this.node, this.readVar1, PropProbability.HIGH);
+		Constraint constraint3 = new VariableConstraintA2(this.node, this.readVar1, PropProbability.HIGH);
 		
 		assertEquals("VC2_0", constraint1.getConstraintID());
 		assertEquals("VC2_1", constraint2.getConstraintID());
