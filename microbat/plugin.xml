@@ -142,6 +142,11 @@
             id="microbat.testing"
             name="Testing Microbat">
       </command>
+      <command
+            defaultHandler="microbat.handler.StepwisePropagationHandler"
+            id="microbat.stepwisePropagation"
+            name="Stepwise Probability Propagation">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -226,6 +231,12 @@
             <command
                   commandId="microbat.testing"
                   icon="icons/question_mark.png"
+                  style="push">
+            </command>
+            <command
+                  commandId="microbat.stepwisePropagation"
+                  icon="icons/releng_gears.gif"
+                  label="stepwisePropagation"
                   style="push">
             </command>
          </toolbar>
