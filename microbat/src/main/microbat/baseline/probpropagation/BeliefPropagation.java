@@ -1,6 +1,5 @@
 package microbat.baseline.probpropagation;
 
-import microbat.baseline.UniquePriorityQueue;
 import microbat.baseline.constraints.Constraint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -10,6 +9,8 @@ import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
+import microbat.util.TraceUtil;
+import microbat.util.UniquePriorityQueue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -103,7 +104,7 @@ public class BeliefPropagation {
 		
 		// Dynamic slicing based on output variables
 		if (this.executionList == null) {
-			this.executionList = this.dynamicSlicing(this.trace, this.outputVars);
+			this.executionList = TraceUtil.dyanmicSlice(this.trace, this.outputVars);
 		}
 		
 		// Clear all previous feedbacks
