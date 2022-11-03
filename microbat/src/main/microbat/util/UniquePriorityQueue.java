@@ -1,4 +1,4 @@
-package microbat.baseline;
+package microbat.util;
 
 import java.util.Comparator;
 import java.util.HashSet;
