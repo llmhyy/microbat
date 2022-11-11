@@ -1,6 +1,7 @@
 package microbat.handler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -18,16 +19,17 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.UserFeedback;
+import microbat.views.DebugFeedbackView;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
 
-public class BaselineHandler extends AbstractHandler {
+public class BaselineHandler extends AbstractHandler implements RequireIO {
 
 	TraceView traceView = null;
 //	UserFeedback userFeedback = null;
 	
-	public static List<VarValue> inputs = null;
-	public static List<VarValue> outputs = null;
+	private List<VarValue> inputs = new ArrayList<>();
+	private List<VarValue> outputs = new ArrayList<>();
 	
 	private static UserFeedback manualFeedback = null;
 	private static TraceNode feedbackNode = null;
@@ -35,6 +37,8 @@ public class BaselineHandler extends AbstractHandler {
 	private static boolean rootCauseFound = false;
 	private static String testCaseMethod = "";
 
+	private static boolean registeredFlag = false;
+	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		
@@ -42,10 +46,21 @@ public class BaselineHandler extends AbstractHandler {
 
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				
+				if (!registeredFlag) {
+					registerHandler();
+					return Status.OK_STATUS;
+				}
+				
 				setup();
+				
 				if (traceView == null) {
 					System.out.println("traceView is null");
-					return null;
+					return Status.OK_STATUS;
+				}
+				
+				if (!isReady()) {
+					return Status.OK_STATUS;
 				}
 				
 				int noOfFeedbacks = 0;
@@ -54,8 +69,8 @@ public class BaselineHandler extends AbstractHandler {
 				
 				// Setup the probability encoder
 				BeliefPropagation encoder = new BeliefPropagation(trace);
-				encoder.setInputVars(BaselineHandler.inputs);
-				encoder.setOutputVars(BaselineHandler.outputs);
+				encoder.setInputVars(inputs);
+				encoder.setOutputVars(outputs);
 				encoder.setup();
 				
 				while (!BaselineHandler.rootCauseFound) {
@@ -126,6 +141,16 @@ public class BaselineHandler extends AbstractHandler {
 		});
 		
 		BaselineHandler.rootCauseFound = false;
+		DebugFeedbackView.registerHandler(this);
+	}
+	
+	public void registerHandler() {
+		DebugFeedbackView.registerHandler(this);
+		BaselineHandler.registeredFlag = true;
+		
+		System.out.println();
+		System.out.println("BaselineHandler is registered to buttons");
+		System.out.println("Now please select the inputs and outputs");
 	}
 	
 	private void printReport(final int noOfFeedbacks) {
@@ -144,60 +169,16 @@ public class BaselineHandler extends AbstractHandler {
 		BaselineHandler.feedbackNode = null;
 	}
 	
-	public static void clearData() {
-		BaselineHandler.inputs = null;
-		BaselineHandler.outputs = null;
-	}
-	
-	public static void addInputs(List<VarValue> inputs) {
-		if (BaselineHandler.inputs == null) {
-			BaselineHandler.inputs = new ArrayList<>();
-		}
-		BaselineHandler.inputs.addAll(inputs);
-		
-		for (VarValue input : BaselineHandler.inputs) {
-			System.out.println("BaselineHandler: Selected Inputs: " + input.getVarID());
-		}
-	}
-	
-	public static void printIO() {
-		for (VarValue input : BaselineHandler.inputs) {
-			System.out.println("BaselineHandler: Selected Inputs: " + input.getVarID());
-		}
-		for (VarValue output : BaselineHandler.outputs) {
-			System.out.println("BaselineHandler: Selected Outputs: " + output.getVarID());
-		}
-	}
-	
-	public static void addOutpus(List<VarValue> outputs) {
-		if (BaselineHandler.outputs == null) {
-			BaselineHandler.outputs = new ArrayList<>();
-		}
-		BaselineHandler.outputs.addAll(outputs);
-		
-		for (VarValue output : BaselineHandler.outputs) {
-			System.out.println("BaselineHandler: Selected Outputs: " + output.getVarID());
-		}
-	}
-	
 	public boolean isReady() {
-		if (BaselineHandler.inputs == null || BaselineHandler.outputs == null) {
-			return false;
+		if (this.inputs.isEmpty()) {
+			throw new RuntimeException("No inputs provided");
 		}
 		
-		return !(BaselineHandler.inputs.isEmpty() || BaselineHandler.outputs.isEmpty());
-	}
-	
-	public static void clearIO() {
-		if (BaselineHandler.inputs != null) {
-			BaselineHandler.inputs.clear();
+		if (this.outputs.isEmpty()) {
+			throw new RuntimeException("No outputs provided");
 		}
 		
-		if (BaselineHandler.outputs != null) {
-			BaselineHandler.outputs.clear();
-		}
-		
-		System.out.println("BaselineHandler: Clear IO");
+		return true;
 	}
 	
 	public static boolean isManualFeedbackReady() {
@@ -210,5 +191,41 @@ public class BaselineHandler extends AbstractHandler {
 	
 	public static void setTestCaseMethod(final String testCaseMethod) {
 		BaselineHandler.testCaseMethod = testCaseMethod;
+	}
+
+	@Override
+	public void addInputs(Collection<VarValue> inputs) {
+		this.inputs.addAll(inputs);
+		
+		for (VarValue input : this.inputs) {
+			System.out.println("BaselineHandler: Selected Inputs: " + input.getVarID());
+		}
+	}
+
+	@Override
+	public void addOutputs(Collection<VarValue> outputs) {
+		this.outputs.addAll(outputs);
+		
+		for (VarValue output : this.outputs) {
+			System.out.println("BaselineHandler: Selected outputs: " + output.getVarID());
+		}
+		
+	}
+
+	@Override
+	public void printIO() {
+		for (VarValue input : this.inputs) {
+			System.out.println("BaselineHandler: Selected Inputs: " + input.getVarID());
+		}
+		for (VarValue output : this.outputs) {
+			System.out.println("BaselineHandler: Selected Outputs: " + output.getVarID());
+		}
+	}
+
+	@Override
+	public void clearData() {
+		this.inputs.clear();
+		this.outputs.clear();
+		System.out.println("BaselineHandler: Clear IO");
 	}
 }
