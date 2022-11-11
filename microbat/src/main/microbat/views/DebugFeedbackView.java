@@ -1509,6 +1509,7 @@ public class DebugFeedbackView extends ViewPart {
 		@Override
 		public void mouseDown(MouseEvent e) {
 			BaselineHandler.clearIO();
+			StepwisePropagationHandler.clearData();;
 		}
 
 		@Override
@@ -1523,7 +1524,8 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			BaselineHandler.printIO();
+//			BaselineHandler.printIO();
+			StepwisePropagationHandler.printIO();
 		}
 
 		@Override

@@ -12,6 +12,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 
+import microbat.baseline.probpropagation.StepwisePropagator;
 import microbat.model.value.VarValue;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
@@ -49,8 +50,12 @@ public class StepwisePropagationHandler extends AbstractHandler {
 					return Status.OK_STATUS;
 				}
 				
-				
+				StepwisePropagator propagator = new StepwisePropagator(traceView.getTrace(), inputs, outputs);
+
 				System.out.println("Propagation Start");
+				propagator.propagate();
+				
+				System.out.println("Propagation End");
 				return Status.OK_STATUS;
 			}
 			
