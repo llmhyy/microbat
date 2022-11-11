@@ -115,7 +115,7 @@ public class DebugFeedbackView extends ViewPart {
 	private Button wrongPathButton;
 	private Button bugTypeInferenceButton;
 	
-	private static List<RequireIO> registeredHandler = new ArrayList<>();
+	private static List<RequireIO> registeredHandlers = new ArrayList<>();
 	
 	public DebugFeedbackView() {
 	}
@@ -1479,7 +1479,7 @@ public class DebugFeedbackView extends ViewPart {
 		@Override
 		public void mouseDown(MouseEvent e) {
 			List<VarValue> outputs = getSelectedVars();
-			for (RequireIO handler : DebugFeedbackView.registeredHandler) {
+			for (RequireIO handler : DebugFeedbackView.registeredHandlers) {
 				handler.addOutputs(outputs);
 			}
 		}
@@ -1496,7 +1496,7 @@ public class DebugFeedbackView extends ViewPart {
 		@Override
 		public void mouseDown(MouseEvent e) {
 			List<VarValue> inputs = getSelectedVars();
-			for (RequireIO handler : DebugFeedbackView.registeredHandler) {
+			for (RequireIO handler : DebugFeedbackView.registeredHandlers) {
 				handler.addInputs(inputs);
 			}
 		}
@@ -1512,7 +1512,7 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			for (RequireIO handler : DebugFeedbackView.registeredHandler) {
+			for (RequireIO handler : DebugFeedbackView.registeredHandlers) {
 				handler.clearData();;
 			}
 		}
@@ -1529,7 +1529,7 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			for (RequireIO handler : DebugFeedbackView.registeredHandler) {
+			for (RequireIO handler : DebugFeedbackView.registeredHandlers) {
 				handler.printIO();;
 			}
 		}
@@ -1555,7 +1555,7 @@ public class DebugFeedbackView extends ViewPart {
 	}
 	
 	public static void registerHandler(RequireIO handler) {
-		DebugFeedbackView.registeredHandler.add(handler);
+		DebugFeedbackView.registeredHandlers.add(handler);
 	}
 	
 }
