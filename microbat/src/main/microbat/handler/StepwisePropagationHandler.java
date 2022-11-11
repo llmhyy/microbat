@@ -1,6 +1,7 @@
 package microbat.handler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -14,15 +15,18 @@ import org.eclipse.swt.widgets.Display;
 
 import microbat.baseline.probpropagation.StepwisePropagator;
 import microbat.model.value.VarValue;
+import microbat.views.DebugFeedbackView;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
 
-public class StepwisePropagationHandler extends AbstractHandler {
+public class StepwisePropagationHandler extends AbstractHandler implements RequireIO {
 
 	TraceView traceView = null;
 	
-	private static List<VarValue> inputs = new ArrayList<>();
-	private static List<VarValue> outputs = new ArrayList<>();
+	private List<VarValue> inputs = new ArrayList<>();
+	private List<VarValue> outputs = new ArrayList<>();
+	
+	private static boolean registerFlag = false;
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -30,6 +34,11 @@ public class StepwisePropagationHandler extends AbstractHandler {
 
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				
+				if (!registerFlag) {
+					registerHandler();
+					return Status.OK_STATUS;
+				}
 				
 				setup();
 				
@@ -45,7 +54,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 				}
 				
 				// Check is the IO ready
-				if (!StepwisePropagationHandler.isIOReady()) {
+				if (!isIOReady()) {
 					System.out.println("Please provide the inputs and the outputs");
 					return Status.OK_STATUS;
 				}
@@ -73,36 +82,50 @@ public class StepwisePropagationHandler extends AbstractHandler {
 		});
 	}
 	
-	public static boolean isIOReady() {
-		return !StepwisePropagationHandler.inputs.isEmpty() && !StepwisePropagationHandler.outputs.isEmpty();
+	public boolean isIOReady() {
+		return !this.inputs.isEmpty() && !this.outputs.isEmpty();
 	}
-	
-	public static void clearData() {
-		StepwisePropagationHandler.inputs = null;
-		StepwisePropagationHandler.outputs = null;
+
+	@Override
+	public void registerHandler() {
+		DebugFeedbackView.registerHandler(this);
+		StepwisePropagationHandler.registerFlag = true;
+		
+		System.out.println();
+		System.out.println("StepwisePropagationHandler is now registered to buttons");
+		System.out.println("Please select inputs and outputs");
 	}
-	
-	public static void addInputs(List<VarValue> inputs) {
-		StepwisePropagationHandler.inputs.addAll(inputs);
-		for (VarValue input : StepwisePropagationHandler.inputs) {
+
+	@Override
+	public void addInputs(Collection<VarValue> inputs) {
+		this.inputs.addAll(inputs);
+		for (VarValue input : this.inputs) {
 			System.out.println("StepwisePropagationHandler: Selected Inputs: " + input.getVarID());
 		}
 	}
-	
-	public static void printIO() {
-		for (VarValue input : StepwisePropagationHandler.inputs) {
-			System.out.println("StepwisePropagationHandler: Selected Inputs: " + input.getVarID());
-		}
-		for (VarValue output : StepwisePropagationHandler.outputs) {
+
+	@Override
+	public void addOutputs(Collection<VarValue> outputs) {
+		this.outputs.addAll(outputs);
+		for (VarValue output : this.outputs) {
 			System.out.println("StepwisePropagationHandler: Selected Outputs: " + output.getVarID());
 		}
 	}
-	
-	public static void addOutpus(List<VarValue> outputs) {
-		StepwisePropagationHandler.outputs.addAll(outputs);
-		for (VarValue output : StepwisePropagationHandler.outputs) {
+
+	@Override
+	public void printIO() {
+		for (VarValue input : this.inputs) {
+			System.out.println("StepwisePropagationHandler: Selected Inputs: " + input.getVarID());
+		}
+		for (VarValue output : this.outputs) {
 			System.out.println("StepwisePropagationHandler: Selected Outputs: " + output.getVarID());
 		}
+	}
+
+	@Override
+	public void clearData() {
+		this.inputs = null;
+		this.outputs = null;
 	}
 
 }
