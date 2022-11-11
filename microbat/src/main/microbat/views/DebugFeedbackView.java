@@ -48,6 +48,7 @@ import microbat.behavior.BehaviorReporter;
 import microbat.handler.BaselineHandler;
 import microbat.handler.CheckingState;
 import microbat.handler.StepwisePropagationHandler;
+import microbat.handler.RequireIO;
 import microbat.model.BreakPointValue;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -114,6 +115,8 @@ public class DebugFeedbackView extends ViewPart {
 	private Button unclearButton;
 	private Button wrongPathButton;
 	private Button bugTypeInferenceButton;
+	
+	private static List<RequireIO> registeredHandler = new ArrayList<>();
 	
 	public DebugFeedbackView() {
 	}
@@ -1526,6 +1529,9 @@ public class DebugFeedbackView extends ViewPart {
 		public void mouseDown(MouseEvent e) {
 //			BaselineHandler.printIO();
 			StepwisePropagationHandler.printIO();
+			for (RequireIO handler : DebugFeedbackView.registeredHandler) {
+				handler.printIO();;
+			}
 		}
 
 		@Override
@@ -1546,6 +1552,10 @@ public class DebugFeedbackView extends ViewPart {
 		@Override
 		public void mouseUp(MouseEvent e) {}
 		
+	}
+	
+	public static void registerHandler(RequireIO handler) {
+		DebugFeedbackView.registeredHandler.add(handler);
 	}
 	
 }
