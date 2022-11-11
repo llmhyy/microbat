@@ -1480,8 +1480,9 @@ public class DebugFeedbackView extends ViewPart {
 		@Override
 		public void mouseDown(MouseEvent e) {
 			List<VarValue> outputs = getSelectedVars();
-			BaselineHandler.addOutpus(outputs);
-			StepwisePropagationHandler.addOutpus(outputs);
+			for (RequireIO handler : DebugFeedbackView.registeredHandler) {
+				handler.addOutputs(outputs);
+			}
 		}
 
 		@Override
@@ -1496,8 +1497,9 @@ public class DebugFeedbackView extends ViewPart {
 		@Override
 		public void mouseDown(MouseEvent e) {
 			List<VarValue> inputs = getSelectedVars();
-			BaselineHandler.addInputs(inputs);
-			StepwisePropagationHandler.addInputs(inputs);
+			for (RequireIO handler : DebugFeedbackView.registeredHandler) {
+				handler.addInputs(inputs);
+			}
 		}
 
 		@Override
@@ -1511,8 +1513,9 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			BaselineHandler.clearIO();
-			StepwisePropagationHandler.clearData();;
+			for (RequireIO handler : DebugFeedbackView.registeredHandler) {
+				handler.clearData();
+			}
 		}
 
 		@Override
@@ -1527,10 +1530,8 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-//			BaselineHandler.printIO();
-			StepwisePropagationHandler.printIO();
 			for (RequireIO handler : DebugFeedbackView.registeredHandler) {
-				handler.printIO();;
+				handler.printIO();
 			}
 		}
 
