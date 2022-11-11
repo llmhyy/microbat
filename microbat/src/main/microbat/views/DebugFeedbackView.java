@@ -1512,7 +1512,7 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			for (RequireIO handler : DebugFeedbackView.registeredHandler) {
+			for (RequireIO handler : DebugFeedbackView.registeredHandlers) {
 				handler.clearData();
 			}
 		}
@@ -1529,7 +1529,7 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			for (RequireIO handler : DebugFeedbackView.registeredHandler) {
+			for (RequireIO handler : DebugFeedbackView.registeredHandlers) {
 				handler.printIO();
 			}
 		}
