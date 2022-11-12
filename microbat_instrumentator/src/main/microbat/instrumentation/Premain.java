@@ -24,7 +24,7 @@ import microbat.instrumentation.utils.FileUtils;
 public class Premain {
 	public static final String INSTRUMENTATION_STANTDALONE_JAR = "instrumentator_agent_v02.jar";
 	private static final String SAV_JAR = "sav.commons.simplified.jar";
-	private static boolean testMode = true;
+	private static boolean testMode = false;
 
 	public static void premain(String agentArgs, Instrumentation inst) throws Exception {
 		long vmStartupTime = System.currentTimeMillis() - ManagementFactory.getRuntimeMXBean().getStartTime();
