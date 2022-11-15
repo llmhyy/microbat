@@ -39,16 +39,15 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
+import debuginfo.DebugInfo;
+import debuginfo.NodeFeedbackPair;
 import microbat.algorithm.graphdiff.GraphDiff;
-import microbat.baseline.probpropagation.NodeFeedbackPair;
 import microbat.baseline.probpropagation.BeliefPropagation;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;
 import microbat.handler.BaselineHandler;
 import microbat.handler.CheckingState;
-import microbat.handler.RequireIO;
-import microbat.handler.StepwisePropagationHandler;
 import microbat.model.BreakPointValue;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -115,8 +114,6 @@ public class DebugFeedbackView extends ViewPart {
 	private Button unclearButton;
 	private Button wrongPathButton;
 	private Button bugTypeInferenceButton;
-	
-	private static List<RequireIO> registeredHandlers = new ArrayList<>();
 	
 	public DebugFeedbackView() {
 	}
@@ -1481,9 +1478,7 @@ public class DebugFeedbackView extends ViewPart {
 		@Override
 		public void mouseDown(MouseEvent e) {
 			List<VarValue> outputs = getSelectedVars();
-			for (RequireIO handler : DebugFeedbackView.registeredHandlers) {
-				handler.addOutputs(outputs);
-			}
+			DebugInfo.addOutputs(outputs);
 		}
 
 		@Override
@@ -1498,9 +1493,7 @@ public class DebugFeedbackView extends ViewPart {
 		@Override
 		public void mouseDown(MouseEvent e) {
 			List<VarValue> inputs = getSelectedVars();
-			for (RequireIO handler : DebugFeedbackView.registeredHandlers) {
-				handler.addInputs(inputs);
-			}
+			DebugInfo.addInputs(inputs);
 		}
 
 		@Override
@@ -1514,9 +1507,7 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			for (RequireIO handler : DebugFeedbackView.registeredHandlers) {
-				handler.clearData();
-			}
+			DebugInfo.clearData();
 		}
 
 		@Override
@@ -1531,9 +1522,9 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			for (RequireIO handler : DebugFeedbackView.registeredHandlers) {
-				handler.printIO();
-			}
+
+			DebugInfo.printInputs();
+			DebugInfo.printOutputs();
 		}
 
 		@Override
@@ -1548,16 +1539,12 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			BaselineHandler.setRootCauseFound(true);
+			DebugInfo.setRootCauseFound(true);
 		}
 
 		@Override
 		public void mouseUp(MouseEvent e) {}
 		
-	}
-	
-	public static void registerHandler(RequireIO handler) {
-		DebugFeedbackView.registeredHandlers.add(handler);
 	}
 	
 }

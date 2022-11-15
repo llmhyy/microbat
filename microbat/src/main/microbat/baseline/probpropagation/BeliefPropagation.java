@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import debuginfo.NodeFeedbackPair;
+
 
 /**
  * Belief Propagation follow the procedure in ICSE18 paper

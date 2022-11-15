@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import debuginfo.NodeFeedbackPair;
 import microbat.baseline.constraints.BitRepresentation;
 import microbat.baseline.constraints.Constraint;
 import microbat.baseline.constraints.PriorConstraint;
