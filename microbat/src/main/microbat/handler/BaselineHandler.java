@@ -34,7 +34,7 @@ public class BaselineHandler extends AbstractHandler implements RequireIO {
 	private static UserFeedback manualFeedback = null;
 	private static TraceNode feedbackNode = null;
 	
-	private static boolean rootCauseFound = false;
+	public static boolean rootCauseFound = false;
 	private static String testCaseMethod = "";
 
 	private static boolean registeredFlag = false;

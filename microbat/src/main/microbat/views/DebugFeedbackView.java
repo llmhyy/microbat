@@ -48,6 +48,7 @@ import microbat.behavior.BehaviorReporter;
 import microbat.handler.BaselineHandler;
 import microbat.handler.CheckingState;
 import microbat.handler.RequireIO;
+import microbat.handler.StepwisePropagationHandler;
 import microbat.model.BreakPointValue;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -709,6 +710,7 @@ public class DebugFeedbackView extends ViewPart {
 				feedback.setOption(new ChosenVariableOption(selectedReadVar, selectedWriteVar));
 			}
 			BaselineHandler.setManualFeedback(feedback, currentNode);
+			StepwisePropagationHandler.setManualFeedback(feedback, currentNode);
 		}
 
 		@Override
