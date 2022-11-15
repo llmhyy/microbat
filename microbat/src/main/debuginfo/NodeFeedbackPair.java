@@ -1,4 +1,4 @@
-package microbat.baseline.probpropagation;
+package debuginfo;
 
 import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;

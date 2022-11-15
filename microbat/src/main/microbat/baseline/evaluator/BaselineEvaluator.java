@@ -3,7 +3,7 @@ package microbat.baseline.evaluator;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.baseline.probpropagation.NodeFeedbackPair;
+import debuginfo.NodeFeedbackPair;
 import microbat.baseline.probpropagation.BeliefPropagation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
