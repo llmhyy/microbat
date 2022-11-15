@@ -13,7 +13,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 
-import microbat.baseline.probpropagation.NodeFeedbackPair;
+import debuginfo.DebugInfo;
+import debuginfo.NodeFeedbackPair;
 import microbat.baseline.probpropagation.StepwisePropagator;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -23,17 +24,17 @@ import microbat.views.DebugFeedbackView;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
 
-public class StepwisePropagationHandler extends AbstractHandler implements RequireIO {
+public class StepwisePropagationHandler extends AbstractHandler {
 
 	TraceView traceView = null;
 	
-	private List<VarValue> inputs = new ArrayList<>();
-	private List<VarValue> outputs = new ArrayList<>();
-	
+//	private List<VarValue> inputs = new ArrayList<>();
+//	private List<VarValue> outputs = new ArrayList<>();
+//	
 	private static boolean registerFlag = false;
-	
-	private static UserFeedback manualFeedback = null;
-	private static TraceNode feedbackNode = null;
+//	
+//	private static UserFeedback manualFeedback = null;
+//	private static TraceNode feedbackNode = null;
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -42,10 +43,10 @@ public class StepwisePropagationHandler extends AbstractHandler implements Requi
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				
-				if (!registerFlag) {
-					registerHandler();
-					return Status.OK_STATUS;
-				}
+//				if (!registerFlag) {
+//					registerHandler();
+//					return Status.OK_STATUS;
+//				}
 				
 				setup();
 				
@@ -66,10 +67,12 @@ public class StepwisePropagationHandler extends AbstractHandler implements Requi
 					return Status.OK_STATUS;
 				}
 				
+				List<VarValue> inputs = DebugInfo.getInputs();
+				List<VarValue> outputs = DebugInfo.getOutputs();
 				StepwisePropagator propagator = new StepwisePropagator(traceView.getTrace(), inputs, outputs);
 
 				int feedbackCounts = 0;
-				while(!BaselineHandler.rootCauseFound) {
+				while(!DebugInfo.isRootCauseFound()) {
 					System.out.println("---------------------------------- " + feedbackCounts + " iteration");
 					System.out.println("Propagation Start");
 					propagator.propagate();
@@ -80,25 +83,32 @@ public class StepwisePropagationHandler extends AbstractHandler implements Requi
 					System.out.println("Proposed Root Cause: " + rootCause.getOrder());
 					
 					System.out.println("Please give a feedback");
-					while(!StepwisePropagationHandler.isManualFeedbackReady() && !BaselineHandler.rootCauseFound) {
-						try {
-							Thread.sleep(200);
-						} catch (InterruptedException e) {
-							
-						}
-					}
+					DebugInfo.waitForFeedbackOrRootCause();
 					
-					if (BaselineHandler.rootCauseFound) {
+					if (DebugInfo.isRootCauseFound()) {
 						printReport(feedbackCounts);
 						break;
 					}
+//					while(!StepwisePropagationHandler.isManualFeedbackReady() && !BaselineHandler.rootCauseFound) {
+//						try {
+//							Thread.sleep(200);
+//						} catch (InterruptedException e) {
+//							
+//						}
+//					}
+//					
+//					if (BaselineHandler.rootCauseFound) {
+//						printReport(feedbackCounts);
+//						break;
+//					}
+//					
+//					// Send feedback to stepwise propagator
+//					UserFeedback feedback = StepwisePropagationHandler.manualFeedback;
+//					TraceNode feedbackNode = StepwisePropagationHandler.feedbackNode;
+//					NodeFeedbackPair nodeFeedbackPair = new NodeFeedbackPair(feedbackNode, feedback);
+//					StepwisePropagationHandler.resetManualFeedback();
 					
-					// Send feedback to stepwise propagator
-					UserFeedback feedback = StepwisePropagationHandler.manualFeedback;
-					TraceNode feedbackNode = StepwisePropagationHandler.feedbackNode;
-					NodeFeedbackPair nodeFeedbackPair = new NodeFeedbackPair(feedbackNode, feedback);
-					StepwisePropagationHandler.resetManualFeedback();
-					
+					NodeFeedbackPair nodeFeedbackPair = DebugInfo.getNodeFeedbackPair();
 					propagator.responseToFeedback(nodeFeedbackPair);
 					feedbackCounts +=1;
 				}
@@ -121,7 +131,7 @@ public class StepwisePropagationHandler extends AbstractHandler implements Requi
 	}
 	
 	public boolean isIOReady() {
-		return !this.inputs.isEmpty() && !this.outputs.isEmpty();
+		return !DebugInfo.getInputs().isEmpty() && !DebugInfo.getOutputs().isEmpty();
 	}
 	
 	private void jumpToNode(final TraceNode targetNode) {
@@ -134,61 +144,61 @@ public class StepwisePropagationHandler extends AbstractHandler implements Requi
 		});
 	}
 
-	@Override
-	public void registerHandler() {
-		DebugFeedbackView.registerHandler(this);
-		StepwisePropagationHandler.registerFlag = true;
-		
-		System.out.println();
-		System.out.println("StepwisePropagationHandler is now registered to buttons");
-		System.out.println("Please select inputs and outputs");
-	}
+//	@Override
+//	public void registerHandler() {
+//		DebugFeedbackView.registerHandler(this);
+//		StepwisePropagationHandler.registerFlag = true;
+//		
+//		System.out.println();
+//		System.out.println("StepwisePropagationHandler is now registered to buttons");
+//		System.out.println("Please select inputs and outputs");
+//	}
 
-	@Override
-	public void addInputs(Collection<VarValue> inputs) {
-		this.inputs.addAll(inputs);
-		for (VarValue input : this.inputs) {
-			System.out.println("StepwisePropagationHandler: Selected Inputs: " + input.getVarID());
-		}
-	}
-
-	@Override
-	public void addOutputs(Collection<VarValue> outputs) {
-		this.outputs.addAll(outputs);
-		for (VarValue output : this.outputs) {
-			System.out.println("StepwisePropagationHandler: Selected Outputs: " + output.getVarID());
-		}
-	}
-
-	@Override
-	public void printIO() {
-		for (VarValue input : this.inputs) {
-			System.out.println("StepwisePropagationHandler: Selected Inputs: " + input.getVarID());
-		}
-		for (VarValue output : this.outputs) {
-			System.out.println("StepwisePropagationHandler: Selected Outputs: " + output.getVarID());
-		}
-	}
-
-	@Override
-	public void clearData() {
-		this.inputs = null;
-		this.outputs = null;
-	}
+//	@Override
+//	public void addInputs(Collection<VarValue> inputs) {
+//		this.inputs.addAll(inputs);
+//		for (VarValue input : this.inputs) {
+//			System.out.println("StepwisePropagationHandler: Selected Inputs: " + input.getVarID());
+//		}
+//	}
+//
+//	@Override
+//	public void addOutputs(Collection<VarValue> outputs) {
+//		this.outputs.addAll(outputs);
+//		for (VarValue output : this.outputs) {
+//			System.out.println("StepwisePropagationHandler: Selected Outputs: " + output.getVarID());
+//		}
+//	}
+//
+//	@Override
+//	public void printIO() {
+//		for (VarValue input : this.inputs) {
+//			System.out.println("StepwisePropagationHandler: Selected Inputs: " + input.getVarID());
+//		}
+//		for (VarValue output : this.outputs) {
+//			System.out.println("StepwisePropagationHandler: Selected Outputs: " + output.getVarID());
+//		}
+//	}
+//
+//	@Override
+//	public void clearData() {
+//		this.inputs = null;
+//		this.outputs = null;
+//	}
 	
-	public static boolean isManualFeedbackReady() {
-		return StepwisePropagationHandler.manualFeedback != null && StepwisePropagationHandler.feedbackNode != null;
-	}
-	
-	public static void setManualFeedback(UserFeedback manualFeedback, TraceNode node) {
-		StepwisePropagationHandler.manualFeedback = manualFeedback;
-		StepwisePropagationHandler.feedbackNode = node;
-	}
-	
-	public static void resetManualFeedback() {
-		StepwisePropagationHandler.manualFeedback = null;
-		StepwisePropagationHandler.feedbackNode = null;
-	}
+//	public static boolean isManualFeedbackReady() {
+//		return StepwisePropagationHandler.manualFeedback != null && StepwisePropagationHandler.feedbackNode != null;
+//	}
+//	
+//	public static void setManualFeedback(UserFeedback manualFeedback, TraceNode node) {
+//		StepwisePropagationHandler.manualFeedback = manualFeedback;
+//		StepwisePropagationHandler.feedbackNode = node;
+//	}
+//	
+//	public static void resetManualFeedback() {
+//		StepwisePropagationHandler.manualFeedback = null;
+//		StepwisePropagationHandler.feedbackNode = null;
+//	}
 
 	private void printReport(final int noOfFeedbacks) {
 		System.out.println("---------------------------------");

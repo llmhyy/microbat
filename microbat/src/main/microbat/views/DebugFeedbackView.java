@@ -706,8 +706,7 @@ public class DebugFeedbackView extends ViewPart {
 				}
 				feedback.setOption(new ChosenVariableOption(selectedReadVar, selectedWriteVar));
 			}
-			BaselineHandler.setManualFeedback(feedback, currentNode);
-			StepwisePropagationHandler.setManualFeedback(feedback, currentNode);
+			DebugInfo.addNodeFeedbackPair(currentNode, feedback);
 		}
 
 		@Override
