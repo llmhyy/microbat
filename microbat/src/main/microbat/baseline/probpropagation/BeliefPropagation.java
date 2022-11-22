@@ -118,10 +118,10 @@ public class BeliefPropagation {
 		// Solve the problem of same variable ID after re-definition
 		this.unifyArrayElementID(this.executionList);
 //		this.unifyRefVarID(executionList);
-		this.changeRedefinitionID(this.executionList);
+//		this.changeRedefinitionID(this.executionList);
 		
 		// Add condition result as control predicate
-		this.addConditionResult(trace.getExecutionList());
+//		this.addConditionResult(trace.getExecutionList());
 
 		// Reset ID of all kind of constraint
 		Constraint.resetID();

@@ -41,6 +41,7 @@ Bundle-ClassPath: .,
  lib/sqlite-jdbc-3.32.3.2.jar,
  lib/instrumentator.jar
 Export-Package: 
+ debuginfo,
  microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,org.eclipse.ui.plugin",
  microbat.agent,
  microbat.algorithm.graphdiff;uses:="microbat.model.value",
