@@ -26,6 +26,8 @@ import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
+import microbat.model.variable.LocalVar;
+import microbat.model.variable.Variable;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 
@@ -107,10 +109,17 @@ public class TraceNode{
 	private double probability = -1;
 	
 	/**
-	 * the first element of the pair is the read variable list, the second element is the 
-	 * written variable list.
+	 * Prefix of id of condition result variable. <br><br>
+	 * The id of condition result follow the format: CR_<TraceNode Order>
 	 */
+	public static final String CONDITION_RESULT_ID_PRE = "CR_";
 	
+	/**
+	 * Prefix of variable name of condition result. <br><br>
+	 * The variable name of condition result follow the format: ConditionResult_<TraceNode Order>
+	 */
+	public static final String CONDITION_RESULT_NAME_Pre = "ConditionResult_";
+			
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		super();
 		this.breakPoint = breakPoint;
@@ -130,6 +139,37 @@ public class TraceNode{
 		}		
 		
 		return markedReadVars;
+	}
+	
+	/**
+	 * Add condition result variable into written variable list
+	 * @param condition Value of condition, either true or false
+	 */
+	public void insertConditionResult(boolean condition) {
+		final String type = "boolean";
+		final String varID = TraceNode.CONDITION_RESULT_ID_PRE + this.getOrder();
+		final String varName = TraceNode.CONDITION_RESULT_NAME_Pre + this.getOrder();
+		
+		Variable variable = new LocalVar(varName, type, "", this.getLineNumber());
+		VarValue conditionResult = new PrimitiveValue(condition ? "1" : "0", true, variable);
+		conditionResult.setVarID(varID);
+		
+		this.addWrittenVariable(conditionResult);
+	}
+	
+	/**
+	 * Get the condition result of this trace node.
+	 * @return Condition Result or null if this node is not a branch or cannot find condition result
+	 */
+	public VarValue getConditionResult() {
+		if (this.isBranch()) {
+			for (VarValue writtenVar : this.getWrittenVariables()) {
+				if (writtenVar.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID_PRE)) {
+					return writtenVar;
+				}
+			}
+		}
+		return null;
 	}
 	
 	/**
