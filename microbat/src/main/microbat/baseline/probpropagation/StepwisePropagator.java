@@ -95,7 +95,6 @@ public class StepwisePropagator {
 		this.aggregator = new ProbAggregator();
 		
 		this.slicedTrace = TraceUtil.dyanmicSlice(trace, this.outputs);
-		this.addConditionResult(this.slicedTrace);
 	}
 	
 	/**
