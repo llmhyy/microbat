@@ -25,7 +25,7 @@ public class Settings {
 	public static boolean isRunWtihDebugMode;
 	public static int stepLimit;
 	
-	private static Integer variableLayer;
+	public static Integer variableLayer;
 	
 	/**
 	 * We divide the library code into two categories: the interesting ones (e.g., 
@@ -64,13 +64,20 @@ public class Settings {
 				String isRuntest = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RUN_TEST);
 				isRunTest = isRuntest.equals("true");
 				String limitNumString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.STEP_LIMIT);
-				stepLimit = Integer.valueOf(limitNumString);
+				try {
+					stepLimit = Integer.valueOf(limitNumString);
+				} catch (NumberFormatException e) {
+					stepLimit = 5000;
+				}
 				if(stepLimit == 0){
 					stepLimit = 5000;
 				}
 				String varLayerString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.VARIABLE_LAYER);
-				variableLayer = Integer.valueOf(varLayerString);
-				
+				try {
+					variableLayer = Integer.valueOf(varLayerString);
+				} catch (NumberFormatException e) {
+					variableLayer = 5;
+				}
 				String applyRecordingOptimization = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RECORDING_OPTIMIZATION);
 				applyLibraryOptimization = applyRecordingOptimization.equals("true");
 				
@@ -83,6 +90,21 @@ public class Settings {
 			catch(Exception e){
 				e.printStackTrace();
 			}
+		} else {
+			projectName = "";
+			launchClass = "";
+			testMethod = "";
+			isRecordSnapshot = false;
+			isApplyAdvancedInspector = false;
+			isRunTest = false;
+			stepLimit = 30000;
+			if(stepLimit == 0){
+				stepLimit = 5000;
+			}
+			variableLayer = 5;
+			applyLibraryOptimization = false;
+			supportConcurrentTrace = false;
+			isRunWtihDebugMode = false;
 		}
 	}
 	
