@@ -49,6 +49,7 @@ Export-Package:
  microbat.baseline.probpropagation,
  microbat.behavior,
  microbat.breakpoint,
+ microbat.bytecode,
  microbat.codeanalysis.ast;uses:="org.eclipse.jdt.core.dom,microbat.model,sav.strategies.dto",
  microbat.codeanalysis.bytecode;
   uses:="com.ibm.wala.ipa.callgraph,

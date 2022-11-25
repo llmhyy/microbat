@@ -106,7 +106,7 @@ public class TraceNode{
 	/**
 	 * It is the probability of correctness as a node
 	 */
-	private double probability = -1;
+	private double probability = -1.0;
 	
 	/**
 	 * Prefix of id of condition result variable. <br><br>

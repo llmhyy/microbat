@@ -69,8 +69,8 @@ public class TraceAgent extends Agent {
 
 			constructTrace(trace);
 			
-			this.addConditionResult(trace);
-			this.changeRedefinedVarID(trace);
+			addConditionResult(trace);
+			changeRedefinedVarID(trace);
 			
 			traceList.add(trace);
 		}
@@ -231,7 +231,7 @@ public class TraceAgent extends Agent {
 		for (TraceNode node : trace.getExecutionList()) {
 			if (node.isBranch()) {
 				TraceNode stepOverNext = node.getStepOverNext();
-				boolean conditionResult = node.getLineNumber()+1 == stepOverNext.getLineNumber();
+				boolean conditionResult = stepOverNext == null ? false : node.getLineNumber()+1 == stepOverNext.getLineNumber();
 				node.insertConditionResult(conditionResult);
 			}
 		}
