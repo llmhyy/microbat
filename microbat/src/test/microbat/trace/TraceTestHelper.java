@@ -1,7 +1,12 @@
 package microbat.trace;
 
 import java.io.File;
+import java.util.ArrayList;
 
+import microbat.codeanalysis.runtime.InstrumentationExecutor;
+import microbat.codeanalysis.runtime.StepLimitException;
+import microbat.instrumentation.output.RunningInfo;
+import microbat.model.trace.Trace;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import sav.strategies.dto.AppJavaClassPath;
@@ -47,9 +52,20 @@ public class TraceTestHelper {
 		System.setProperty("eclipse.launcher", System.getenv("ECLIPSE_APP"));
 	}
 	
-	static void setupSettings() {
-		Settings.projectName = "sample0";
-		Settings.launchClass = "sample0.junit4.OperationTest";
+	static void setupSettings(String projectName, String className, String methodName) {		
+		Settings.launchClass = className;
+		Settings.testMethod = methodName;
+		Settings.projectName = projectName;
 		Settings.isRunTest = true;
+	}
+	
+	static Trace createTrace(String projectName, String className, String methodName) throws StepLimitException {
+		setupSettings(projectName, className, methodName);
+		AppJavaClassPath appClassPath = constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
+
+		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
+				".", "trace", new ArrayList<>(), new ArrayList<>());
+		final RunningInfo result = executor.run();
+		return result.getMainTrace();
 	}
 }

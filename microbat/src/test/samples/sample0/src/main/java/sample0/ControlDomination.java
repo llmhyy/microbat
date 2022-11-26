@@ -11,11 +11,13 @@ public class ControlDomination {
         }
         b = 3;
     }
-
+    
+    // TODO: return stmt in if stmt
+    
     public void whileLoopControlDom() {
         int a = 0;
         int b = 0;
-        while (a < 3) {
+        while (a < 2) {
             b += a;
             a++;
         }
@@ -25,7 +27,7 @@ public class ControlDomination {
     public void forLoopControlDom() {
         int a = 0;
         int b = 0;
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
             b += a;
             a++;
         }
