@@ -1,49 +1,28 @@
 package microbat.trace;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
-import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.StepLimitException;
-import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
-import microbat.model.value.ArrayValue;
 import microbat.model.value.VarValue;
-import microbat.util.Settings;
-import sav.strategies.dto.AppJavaClassPath;
 
 public class DataDominatorTraceTest {
+	private static final String TEST_CLASS = "sample0.junit4.DataDominationTest";
 	@BeforeClass
 	public static void beforeClassSetUp() {
 		TraceTestHelper.checkEnvVars();
-		setupSettings();
-	}
-	
-	private static void setupSettings() {
-		TraceTestHelper.setupSettings();
-		Settings.launchClass = "sample0.junit4.DataDominationTest";
 	}
 	
 	@Test
 	public void testArrayDataDom() throws StepLimitException {
-		Settings.testMethod = "testArrayDataDomination";
-		AppJavaClassPath appClassPath = TraceTestHelper.constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
-
-		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
-				".", "trace", new ArrayList<>(), new ArrayList<>());
-		final RunningInfo result = executor.run();
-		Trace mainTrace = result.getMainTrace();
-		assertEquals(13, result.getMainTrace().size());
+		Trace mainTrace = TraceTestHelper.createTrace("sample0", TEST_CLASS, "testArrayDataDomination");
+		assertEquals(12, mainTrace.size());
 		
 		// b dominated by write to arr
-		TraceNode writtenToBNode = mainTrace.getTraceNode(9);
+		TraceNode writtenToBNode = mainTrace.getTraceNode(8);
 		VarValue readIdx1VarVal = null;
 		for (VarValue readVal : writtenToBNode.getReadVariables()) {
 			if (readVal.getType().equals("int")) {
@@ -51,10 +30,10 @@ public class DataDominatorTraceTest {
 				break;
 			}
 		}
-		assertEquals(8, writtenToBNode.getDataDominator(readIdx1VarVal).getOrder());
+		assertEquals(7, writtenToBNode.getDataDominator(readIdx1VarVal).getOrder());
 		
 		// c not dominated by write to arr
-		TraceNode writtenToCNode = mainTrace.getTraceNode(10);
+		TraceNode writtenToCNode = mainTrace.getTraceNode(9);
 		VarValue readIdx0VarVal = null;
 		for (VarValue readVal : writtenToCNode.getReadVariables()) {
 			if (readVal.getType().equals("int")) {
@@ -62,19 +41,13 @@ public class DataDominatorTraceTest {
 				break;
 			}
 		}
-		assertEquals(null, writtenToCNode.getDataDominator(readIdx0VarVal));
+		assertEquals(6, writtenToCNode.getDataDominator(readIdx0VarVal).getOrder());
 	}
 	
 	@Test
 	public void testWhileLoopDataDom() throws StepLimitException {
-		Settings.testMethod = "testWhileLoopDataDomination";
-		AppJavaClassPath appClassPath = TraceTestHelper.constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
-
-		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
-				".", "trace", new ArrayList<>(), new ArrayList<>());
-		final RunningInfo result = executor.run();
-		Trace mainTrace = result.getMainTrace();
-		assertEquals(21, result.getMainTrace().size());
+		Trace mainTrace = TraceTestHelper.createTrace("sample0", TEST_CLASS, "testWhileLoopDataDomination");
+		assertEquals(21, mainTrace.size());
 
 		// b dominated by a in prev loop
 		TraceNode writtenToBNode = mainTrace.getTraceNode(15);
@@ -100,20 +73,14 @@ public class DataDominatorTraceTest {
 	
 	@Test
 	public void testForLoopDataDom() throws StepLimitException {
-		Settings.testMethod = "testForLoopDataDomination";
-		AppJavaClassPath appClassPath = TraceTestHelper.constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
-
-		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
-				".", "trace", new ArrayList<>(), new ArrayList<>());
-		final RunningInfo result = executor.run();
-		Trace mainTrace = result.getMainTrace();
-		assertEquals(21, result.getMainTrace().size());
+		Trace mainTrace = TraceTestHelper.createTrace("sample0", TEST_CLASS, "testForLoopDataDomination");
+		assertEquals(21, mainTrace.size());
 
 		// b dominated by a in prev loop
 		TraceNode writtenToBNode = mainTrace.getTraceNode(15);
 		VarValue readAVarVal = null;
 		for (VarValue readVal : writtenToBNode.getReadVariables()) {
-			if (readVal.getType().equals("int")) {
+			if (readVal.getVarName().equals("a")) {
 				readAVarVal = readVal;
 				break;
 			}
@@ -133,14 +100,8 @@ public class DataDominatorTraceTest {
 	
 	@Test
 	public void testAssignmentDataDom() throws StepLimitException {
-		Settings.testMethod = "testAssignmentDataDomination";
-		AppJavaClassPath appClassPath = TraceTestHelper.constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
-
-		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
-				".", "trace", new ArrayList<>(), new ArrayList<>());
-		final RunningInfo result = executor.run();
-		Trace mainTrace = result.getMainTrace();
-		assertEquals(14, result.getMainTrace().size());
+		Trace mainTrace = TraceTestHelper.createTrace("sample0", TEST_CLASS, "testAssignmentDataDomination");
+		assertEquals(14, mainTrace.size());
 		
 		// c dominated by a
 		TraceNode writtenToCNode = mainTrace.getTraceNode(9);

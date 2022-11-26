@@ -12,6 +12,9 @@ import microbat.util.Settings;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class TraceTestHelper {
+	// Please modify these fields for running JUnit plug-in tests for microbat
+	private static final String JAVA_8_HOME = "C:\\Tools\\Java\\jdk1.8.0_202";
+	private static final String ECLIPSE_EXE = "C:\\Users\\bchenghi\\eclipse\\java-2022-09\\eclipse\\eclipse.exe";
 	
 	static AppJavaClassPath constructClassPaths(String projectPath){
 		AppJavaClassPath appClassPath = new AppJavaClassPath();
@@ -19,8 +22,7 @@ public class TraceTestHelper {
 		// Get path to target in sample
 		String outputPath = projectPath + File.separator + "target"; 
 		
-		String javaHome = System.getenv("JAVA_8_HOME");
-		appClassPath.setJavaHome(javaHome);
+		appClassPath.setJavaHome(JAVA_8_HOME);
 		appClassPath.addClasspath(outputPath);
 		appClassPath.addClasspath(String.join(File.separator, outputPath, "test-classes"));
 		appClassPath.addClasspath(String.join(File.separator, outputPath, "classes"));
@@ -34,22 +36,14 @@ public class TraceTestHelper {
 	}
 	
 	static void checkEnvVars() {
-		String msg = "%s environment variable not yet set. Please specify path to %s in \"Run Configurations -> Environment\".";
-		if (System.getenv("ECLIPSE_APP") == null) {
-			throw new RuntimeException(String.format(msg, "ECLIPSE_APP", "eclipse.exe"));
-		}
-		if (System.getenv("JAVA_8_HOME") == null) {
-			throw new RuntimeException(String.format(msg, "JAVA_8_HOME", "Java 8"));
-		}
-		
-		String doesNotExistMsg = "Path specified in environment variable %s does not exist.";
-		if (!new File(System.getenv("JAVA_8_HOME")).exists()) {
+		String doesNotExistMsg = "Path specified in TraceTestHelper for %s does not exist.";
+		if (!new File(JAVA_8_HOME).exists()) {
 			throw new RuntimeException(String.format(doesNotExistMsg, "JAVA_8_HOME"));
 		}
-		if (!new File(System.getenv("ECLIPSE_APP")).exists()) {
+		if (!new File(ECLIPSE_EXE).exists()) {
 			throw new RuntimeException(String.format(doesNotExistMsg, "ECLIPSE_APP"));
 		}
-		System.setProperty("eclipse.launcher", System.getenv("ECLIPSE_APP"));
+		System.setProperty("eclipse.launcher", ECLIPSE_EXE);
 	}
 	
 	static void setupSettings(String projectName, String className, String methodName) {		
