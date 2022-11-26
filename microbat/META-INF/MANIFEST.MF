@@ -46,9 +46,9 @@ Export-Package:
  microbat.agent,
  microbat.algorithm.graphdiff;uses:="microbat.model.value",
  microbat.baseline,
- microbat.baseline.probpropagation,
  microbat.behavior,
  microbat.breakpoint,
+ microbat.bytecode,
  microbat.codeanalysis.ast;uses:="org.eclipse.jdt.core.dom,microbat.model,sav.strategies.dto",
  microbat.codeanalysis.bytecode;
   uses:="com.ibm.wala.ipa.callgraph,
@@ -155,6 +155,7 @@ Export-Package:
    org.eclipse.swt.widgets,
    org.eclipse.jface.preference,
    org.eclipse.jface.viewers",
+ microbat.probability.BP,
  microbat.recommendation,
  microbat.recommendation.calculator,
  microbat.sql;uses:="microbat.model.trace",

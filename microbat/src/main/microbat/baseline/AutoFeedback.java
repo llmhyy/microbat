@@ -2,10 +2,10 @@ package microbat.baseline;
 
 import java.util.List;
 
-import microbat.baseline.probpropagation.PropProbability;
 import microbat.evaluation.model.TraceNodePair;
 import microbat.model.trace.Trace;
 import microbat.model.value.VarValue;
+import microbat.probability.PropProbability;
 
 public class AutoFeedback {
 	/* 

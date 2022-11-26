@@ -18,7 +18,6 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
-import microbat.baseline.probpropagation.PropProbability;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
@@ -28,6 +27,7 @@ import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
+import microbat.probability.PropProbability;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 
@@ -106,19 +106,19 @@ public class TraceNode{
 	/**
 	 * It is the probability of correctness as a node
 	 */
-	private double probability = -1;
+	private double probability = -1.0;
 	
 	/**
 	 * Prefix of id of condition result variable. <br><br>
 	 * The id of condition result follow the format: CR_<TraceNode Order>
 	 */
-	public static final String CONDITION_RESULT_ID_PRE = "CR_";
+	public static final String CONDITION_RESULT_ID = "CR";
 	
 	/**
 	 * Prefix of variable name of condition result. <br><br>
 	 * The variable name of condition result follow the format: ConditionResult_<TraceNode Order>
 	 */
-	public static final String CONDITION_RESULT_NAME_Pre = "ConditionResult_";
+	public static final String CONDITION_RESULT_NAME = "ConditionResult";
 			
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		super();
@@ -147,8 +147,8 @@ public class TraceNode{
 	 */
 	public void insertConditionResult(boolean condition) {
 		final String type = "boolean";
-		final String varID = TraceNode.CONDITION_RESULT_ID_PRE + this.getOrder();
-		final String varName = TraceNode.CONDITION_RESULT_NAME_Pre + this.getOrder();
+		final String varID = TraceNode.CONDITION_RESULT_ID;
+		final String varName = TraceNode.CONDITION_RESULT_NAME;
 		
 		Variable variable = new LocalVar(varName, type, "", this.getLineNumber());
 		VarValue conditionResult = new PrimitiveValue(condition ? "1" : "0", true, variable);
@@ -164,7 +164,7 @@ public class TraceNode{
 	public VarValue getConditionResult() {
 		if (this.isBranch()) {
 			for (VarValue writtenVar : this.getWrittenVariables()) {
-				if (writtenVar.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID_PRE)) {
+				if (writtenVar.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID)) {
 					return writtenVar;
 				}
 			}
