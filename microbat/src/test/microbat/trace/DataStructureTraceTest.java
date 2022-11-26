@@ -16,21 +16,25 @@ import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class DataStructureTraceTest {
 	@BeforeClass
 	public static void beforeClassSetUp() {
-		checkEnvVars();
+		TraceTestHelper.checkEnvVars();
 		setupSettings();
+	}
+	
+	private static void setupSettings() {
+		TraceTestHelper.setupSettings();
+		Settings.launchClass = "sample0.junit4.DataStructureTest";
 	}
 	
 	@Test
 	public void testArrays() throws StepLimitException {
 		Settings.testMethod = "testRunArray";
-		AppJavaClassPath appClassPath = constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
+		AppJavaClassPath appClassPath = TraceTestHelper.constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
 
 		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
 				".", "trace", new ArrayList<>(), new ArrayList<>());
@@ -82,7 +86,7 @@ public class DataStructureTraceTest {
 	@Test
 	public void testArrayList() throws StepLimitException {
 		Settings.testMethod = "testRunArrayList";
-		AppJavaClassPath appClassPath = constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
+		AppJavaClassPath appClassPath = TraceTestHelper.constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
 
 		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
 				".", "trace", new ArrayList<>(), new ArrayList<>());
@@ -125,7 +129,7 @@ public class DataStructureTraceTest {
 	@Test
 	public void testHashMap() throws StepLimitException {
 		Settings.testMethod = "testRunHashMap";
-		AppJavaClassPath appClassPath = constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
+		AppJavaClassPath appClassPath = TraceTestHelper.constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
 
 		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
 				".", "trace", new ArrayList<>(), new ArrayList<>());
@@ -170,7 +174,7 @@ public class DataStructureTraceTest {
 	@Test
 	public void testHashSet() throws StepLimitException {
 		Settings.testMethod = "testRunHashSet";
-		AppJavaClassPath appClassPath = constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
+		AppJavaClassPath appClassPath = TraceTestHelper.constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
 
 		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath,
 				".", "trace", new ArrayList<>(), new ArrayList<>());
@@ -197,50 +201,5 @@ public class DataStructureTraceTest {
 		TraceNode clearMapNode = mainTrace.getTraceNode(23);
 		assertEquals(0, clearMapNode.getWrittenVariables().size());
 		assertEquals(1, clearMapNode.getReadVariables().size());
-	}
-	
-	private AppJavaClassPath constructClassPaths(String projectPath){
-		AppJavaClassPath appClassPath = new AppJavaClassPath();
-		MicroBatUtil.setSystemJars(appClassPath);
-		// Get path to target in sample
-		String outputPath = projectPath + File.separator + "target"; 
-		
-		String javaHome = System.getenv("JAVA_8_HOME");
-		appClassPath.setJavaHome(javaHome);
-		appClassPath.addClasspath(outputPath);
-		appClassPath.addClasspath(String.join(File.separator, outputPath, "test-classes"));
-		appClassPath.addClasspath(String.join(File.separator, outputPath, "classes"));
-		appClassPath.setWorkingDirectory(projectPath);
-		appClassPath.setLaunchClass("microbat.evaluation.junit.MicroBatTestRunner");
-		appClassPath.setOptionalTestClass(Settings.launchClass);
-		appClassPath.setOptionalTestMethod(Settings.testMethod);
-		appClassPath.setSourceCodePath(String.join(File.separator, projectPath, "src", "main", "java"));
-		appClassPath.setTestCodePath(String.join(File.separator, projectPath, "src", "test", "java"));
-		return appClassPath;
-	}
-	
-	private static void checkEnvVars() {
-		String msg = "%s environment variable not yet set. Please specify path to %s in \"Run Configurations -> Environment\".";
-		if (System.getenv("ECLIPSE_APP") == null) {
-			throw new RuntimeException(String.format(msg, "ECLIPSE_APP", "eclipse.exe"));
-		}
-		if (System.getenv("JAVA_8_HOME") == null) {
-			throw new RuntimeException(String.format(msg, "JAVA_8_HOME", "Java 8"));
-		}
-		
-		String doesNotExistMsg = "Path specified in environment variable %s does not exist.";
-		if (!new File(System.getenv("JAVA_8_HOME")).exists()) {
-			throw new RuntimeException(String.format(doesNotExistMsg, "JAVA_8_HOME"));
-		}
-		if (!new File(System.getenv("ECLIPSE_APP")).exists()) {
-			throw new RuntimeException(String.format(doesNotExistMsg, "ECLIPSE_APP"));
-		}
-		System.setProperty("eclipse.launcher", System.getenv("ECLIPSE_APP"));
-	}
-	
-	private static void setupSettings() {
-		Settings.projectName = "sample0";
-		Settings.launchClass = "sample0.junit4.DataStructureTest";
-		Settings.isRunTest = true;
 	}
 }

@@ -9,6 +9,7 @@ public class ControlDomination {
         } else {
             b = 2;
         }
+        b = 3;
     }
 
     public void whileLoopControlDom() {
@@ -18,6 +19,7 @@ public class ControlDomination {
             b += a;
             a++;
         }
+        b = 0;
     }
 
     public void forLoopControlDom() {
@@ -26,7 +28,7 @@ public class ControlDomination {
         for (int i = 0; i < 3; i++) {
             b += a;
             a++;
-            int c = 0;
         }
+        b = 0;
     }
 }

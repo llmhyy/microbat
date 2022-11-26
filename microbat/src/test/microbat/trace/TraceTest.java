@@ -3,7 +3,6 @@ package microbat.trace;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,7 +21,6 @@ public class TraceTest {
 		boolean isRecordSnapshort;
 		int stepLimit;
 		int referenceFieldLayerInString;
-		
 	}
 	
 	private OriginalSettings originalSettings = new OriginalSettings();
@@ -61,15 +59,14 @@ public class TraceTest {
 	}
 	
 	@Test
-	public void testReadWrttienVariable(){
-		
+	public void testReadWrttienVariable() {
+
 	}
 	
 	@Test
 	public void testCFGConstructor(){
 		
 	}
-	
 	
 	@Test
 	public void testTraceConstruction() {
