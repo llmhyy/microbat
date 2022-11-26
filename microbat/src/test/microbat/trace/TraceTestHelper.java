@@ -16,6 +16,11 @@ public class TraceTestHelper {
 	private static final String JAVA_8_HOME = "C:\\Tools\\Java\\jdk1.8.0_202";
 	private static final String ECLIPSE_EXE = "C:\\Users\\bchenghi\\eclipse\\java-2022-09\\eclipse\\eclipse.exe";
 	
+	/**
+	 * Creates AppJavaClassPath for creating trace
+	 * @param projectPath
+	 * @return
+	 */
 	static AppJavaClassPath constructClassPaths(String projectPath){
 		AppJavaClassPath appClassPath = new AppJavaClassPath();
 		MicroBatUtil.setSystemJars(appClassPath);
@@ -35,6 +40,9 @@ public class TraceTestHelper {
 		return appClassPath;
 	}
 	
+	/**
+	 * Check if fields are set up
+	 */
 	static void checkEnvVars() {
 		String doesNotExistMsg = "Path specified in TraceTestHelper for %s does not exist.";
 		if (!new File(JAVA_8_HOME).exists()) {
@@ -43,16 +51,30 @@ public class TraceTestHelper {
 		if (!new File(ECLIPSE_EXE).exists()) {
 			throw new RuntimeException(String.format(doesNotExistMsg, "ECLIPSE_APP"));
 		}
-		System.setProperty("eclipse.launcher", ECLIPSE_EXE);
 	}
 	
+	/**
+	 * Set up global settings
+	 * @param projectName
+	 * @param className
+	 * @param methodName
+	 */
 	static void setupSettings(String projectName, String className, String methodName) {		
 		Settings.launchClass = className;
 		Settings.testMethod = methodName;
 		Settings.projectName = projectName;
 		Settings.isRunTest = true;
+		System.setProperty("eclipse.launcher", ECLIPSE_EXE);
 	}
 	
+	/**
+	 * Creates a trace given the test class, method and project name
+	 * @param projectName
+	 * @param className
+	 * @param methodName
+	 * @return
+	 * @throws StepLimitException
+	 */
 	static Trace createTrace(String projectName, String className, String methodName) throws StepLimitException {
 		setupSettings(projectName, className, methodName);
 		AppJavaClassPath appClassPath = constructClassPaths(String.join(File.separator, System.getProperty("user.dir"), "src", "test", "samples", "sample0"));
