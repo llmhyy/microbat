@@ -8,10 +8,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import microbat.baseline.probpropagation.PropProbability;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
+import microbat.probability.PropProbability;
+import microbat.probability.BP.constraint.Constraint;
+import microbat.probability.BP.constraint.PriorConstraint;
 
 public class PriorConstraintTest {
 

@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import microbat.probability.BP.constraint.BitRepresentation;
+
 public class BitRepresentationTest {
 
 	private BitRepresentation bitRepresentation;

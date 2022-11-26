@@ -17,12 +17,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import microbat.baseline.HasProbability;
-import microbat.baseline.probpropagation.PropProbability;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
+import microbat.probability.HasProbability;
+import microbat.probability.PropProbability;
 
 /**
  * @author Yun Lin

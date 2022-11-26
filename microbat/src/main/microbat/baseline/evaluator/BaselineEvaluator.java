@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import debuginfo.NodeFeedbackPair;
-import microbat.baseline.probpropagation.BeliefPropagation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.probability.BP.BeliefPropagation;
 
 public class BaselineEvaluator {
 	

@@ -11,12 +11,12 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 
-import microbat.baseline.probpropagation.BeliefPropagation;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.probability.BP.BeliefPropagation;
 import microbat.util.JavaUtil;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
