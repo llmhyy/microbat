@@ -18,6 +18,9 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
+import microbat.bytecode.ByteCode;
+import microbat.bytecode.ByteCodeList;
+import microbat.bytecode.OpcodeType;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
@@ -100,6 +103,7 @@ public class TraceNode{
 	private long timestamp;
 	
 	private String bytecode;
+	private String invokingMethod = "";
 	
 	private transient double sliceBreakerProbability = 0;
 	
@@ -1324,5 +1328,25 @@ public class TraceNode{
 		}
 		
 		return this.bytecode.contains("athrow");
+	}
+	
+	public void setInvokingMethod(final String invokingMethod) {
+		this.invokingMethod = invokingMethod;
+	}
+	
+	public String getInvokingMethod() {
+		return this.invokingMethod;
+	}
+	
+	public boolean isCallingAPI() {
+		ByteCodeList byteCodeList = new ByteCodeList(this.getBytecode());
+		for (ByteCode bytecode : byteCodeList) {
+			if(bytecode.getOpcodeType() == OpcodeType.INVOKE) {
+				if (this.invocationChildren.isEmpty()) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }
