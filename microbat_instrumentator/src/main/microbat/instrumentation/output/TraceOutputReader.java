@@ -140,6 +140,7 @@ public class TraceOutputReader extends OutputReader {
 			}
 			step.setException(readBoolean());
 			step.setBytecode(readString());
+			step.setInvokingMethod(readString());
 		}
 		readRWVarValues(allSteps, false);
 		readRWVarValues(allSteps, true);

@@ -100,6 +100,7 @@ public class TraceNode{
 	private long timestamp;
 	
 	private String bytecode;
+	private String invokingMethod = "";
 	
 	private transient double sliceBreakerProbability = 0;
 	
@@ -1324,5 +1325,13 @@ public class TraceNode{
 		}
 		
 		return this.bytecode.contains("athrow");
+	}
+	
+	public void setInvokingMethod(final String invokingMethod) {
+		this.invokingMethod = invokingMethod;
+	}
+	
+	public String getInvokingMethod() {
+		return this.invokingMethod;
 	}
 }
