@@ -15,10 +15,10 @@ import org.eclipse.swt.widgets.Display;
 
 import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbackPair;
-import microbat.baseline.probpropagation.StepwisePropagator;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.probability.SPP.StepwisePropagator;
 import microbat.recommendation.UserFeedback;
 import microbat.views.DebugFeedbackView;
 import microbat.views.MicroBatViews;

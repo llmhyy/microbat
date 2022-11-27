@@ -1,4 +1,4 @@
-package microbat.baseline.probpropagation;
+package microbat.probability.SPP;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +11,7 @@ import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
+import microbat.probability.PropProbability;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 

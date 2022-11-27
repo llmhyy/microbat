@@ -1,4 +1,4 @@
-package microbat.baseline.probpropagation;
+package microbat.probability.SPP;
 
 import java.util.Collection;
 import java.util.List;
