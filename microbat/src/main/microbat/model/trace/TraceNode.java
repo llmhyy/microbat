@@ -1338,6 +1338,15 @@ public class TraceNode{
 		return this.invokingMethod;
 	}
 	
+	/**
+	 * Check is this node calling API. <br><br>
+	 * 
+	 * This node is calling an API method if:
+	 * 1. It's byte code list contain operation that invoke some method
+	 * 2. This node does not have any invocation children (because
+	 * self-implemented method will have invocation children.
+	 * @return True if the node is calling API. False otherwise.
+	 */
 	public boolean isCallingAPI() {
 		ByteCodeList byteCodeList = new ByteCodeList(this.getBytecode());
 		for (ByteCode bytecode : byteCodeList) {
