@@ -1,7 +1,5 @@
 package microbat.handler;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -19,8 +17,6 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.probability.SPP.StepwisePropagator;
-import microbat.recommendation.UserFeedback;
-import microbat.views.DebugFeedbackView;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
 
@@ -31,7 +27,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 //	private List<VarValue> inputs = new ArrayList<>();
 //	private List<VarValue> outputs = new ArrayList<>();
 //	
-	private static boolean registerFlag = false;
+
 //	
 //	private static UserFeedback manualFeedback = null;
 //	private static TraceNode feedbackNode = null;
@@ -72,10 +68,12 @@ public class StepwisePropagationHandler extends AbstractHandler {
 				StepwisePropagator propagator = new StepwisePropagator(traceView.getTrace(), inputs, outputs);
 
 				int feedbackCounts = 0;
+//				propagator.backPropagate();
+				
 				while(!DebugInfo.isRootCauseFound()) {
 					System.out.println("---------------------------------- " + feedbackCounts + " iteration");
 					System.out.println("Propagation Start");
-					propagator.propagate();
+					propagator.backPropagate();
 					
 					System.out.println("Propagation End");
 					TraceNode rootCause = propagator.proposeRootCause();
@@ -89,24 +87,6 @@ public class StepwisePropagationHandler extends AbstractHandler {
 						printReport(feedbackCounts);
 						break;
 					}
-//					while(!StepwisePropagationHandler.isManualFeedbackReady() && !BaselineHandler.rootCauseFound) {
-//						try {
-//							Thread.sleep(200);
-//						} catch (InterruptedException e) {
-//							
-//						}
-//					}
-//					
-//					if (BaselineHandler.rootCauseFound) {
-//						printReport(feedbackCounts);
-//						break;
-//					}
-//					
-//					// Send feedback to stepwise propagator
-//					UserFeedback feedback = StepwisePropagationHandler.manualFeedback;
-//					TraceNode feedbackNode = StepwisePropagationHandler.feedbackNode;
-//					NodeFeedbackPair nodeFeedbackPair = new NodeFeedbackPair(feedbackNode, feedback);
-//					StepwisePropagationHandler.resetManualFeedback();
 					
 					NodeFeedbackPair nodeFeedbackPair = DebugInfo.getNodeFeedbackPair();
 					propagator.responseToFeedback(nodeFeedbackPair);

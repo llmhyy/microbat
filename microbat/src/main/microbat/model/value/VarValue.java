@@ -42,6 +42,8 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	
 	protected double probability = -1;
 	
+	protected long computationalCost = 0;
+	
 	public static final int NOT_NULL_VAL = 1;
 	
 	public VarValue(){}
@@ -50,6 +52,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 		this.isRoot = isRoot;
 		this.variable = variable;
 		this.probability = -1;
+		this.computationalCost = 0;
 		
 	}
 	
@@ -508,7 +511,14 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	public void setProbability(double probability) {
 		this.probability = probability;
 	}
-
+	
+	public long getComputationalCost() {
+		return this.computationalCost;
+	}
+	
+	public void setComputationalCost(final long cost) {
+		this.computationalCost = cost;
+	}
 	
 //	public abstract VarValue clone();
 }

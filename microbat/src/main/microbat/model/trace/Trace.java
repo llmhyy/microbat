@@ -278,18 +278,21 @@ public class Trace {
 				String rVarID = Variable.truncateSimpleID(readVar.getVarID());
 				String rHeadID = Variable.truncateSimpleID(readVar.getAliasVarID());
 				
-				if(rVarID != null && rVarID.equals(varID)) {
-					consumers.add(node);						
-				}
-				
-				if(rHeadID != null && rHeadID.equals(headID)) {
+				if (readVar.equals(writtenVar)) {
 					consumers.add(node);
 				}
-				
-				VarValue childValue = readVar.findVarValue(varID, headID);
-				if(childValue != null) {
-					consumers.add(node);
-				}
+//				if(rVarID != null && rVarID.equals(varID)) {
+//					consumers.add(node);						
+//				}
+//				
+//				if(rHeadID != null && rHeadID.equals(headID)) {
+//					consumers.add(node);
+//				}
+//				
+//				VarValue childValue = readVar.findVarValue(varID, headID);
+//				if(childValue != null) {
+//					consumers.add(node);
+//				}
 				
 			}
 		}

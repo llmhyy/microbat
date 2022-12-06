@@ -63,15 +63,7 @@ public class StepwisePropagator {
 	 */
 	private double beta = 1.0;
 	
-	/*
-	 * Prefix of condition result ID
-	 */
-	public static final String CONDITION_RESULT_ID_PRE = "CR_";
-	
-	/*
-	 * Prefix of condition result variable name
-	 */
-	public static final String CONDITION_RESULT_NAME_PRE = "ConditionResult_";
+	private List<NodeFeedbackPair> feedbackRecords = new ArrayList<>();
 	
 	
 	/**
@@ -94,7 +86,6 @@ public class StepwisePropagator {
 		this.inputs = inputs;
 		this.outputs = outputs;
 		this.aggregator = new ProbAggregator();
-		
 		this.slicedTrace = TraceUtil.dyanmicSlice(trace, this.outputs);
 	}
 	
@@ -144,7 +135,7 @@ public class StepwisePropagator {
 				continue;
 			}
 			
-			VarValue controlDom = this.getConditionResult(node);
+			VarValue controlDom = node.getConditionResult();
 			if (this.inputs.contains(controlDom) || this.outputs.contains(controlDom)) {
 				continue;
 			}
@@ -158,6 +149,87 @@ public class StepwisePropagator {
 			if (prob != ProbAggregator.NON_PROB) {
 				controlDom.setProbability(prob);
 			}
+		}
+	}
+	
+	public void backPropagate() {
+		this.init();
+		this.computeComputationalCost();
+		for (int order = this.slicedTrace.size()-1; order>=0; order--) {
+			TraceNode node = this.slicedTrace.get(order);
+			if (this.isFeedbackGiven(node)) {
+				continue;
+			}
+			
+			this.passBackwardProp(node);
+			double avgProb = this.aggregator.aggregate(node.getWrittenVariables(), ProbAggregateMethods.AVG);
+			
+//			long minCost = this.slicedTrace.size()+1;
+//			for (VarValue readVar : node.getReadVariables()) {
+//				long cost = readVar.getComputationalCost();
+//				if (cost == 0) {
+//					continue;
+//				}
+//				if (readVar.getComputationalCost() < minCost) {
+//					minCost = readVar.getComputationalCost();
+//				}
+//			}
+//			if (minCost == this.slicedTrace.size()+1) {
+//				minCost = node.getWrittenVariables().get(0).getComputationalCost();
+//			}
+			
+			double gain = (0.95 - avgProb) / node.getWrittenVariables().get(0).getComputationalCost();
+			int totalCost = 0;
+			for (VarValue readVar : node.getReadVariables()) {
+				totalCost += readVar.getComputationalCost();
+			}
+			for (VarValue readVar : node.getReadVariables()) {
+				if (this.outputs.contains(readVar) || this.inputs.contains(readVar)) {
+					continue;
+				}
+				double factor = 1;
+				if (totalCost != 0) {
+					factor = 1- readVar.getComputationalCost() / (double) totalCost;
+				}
+				
+				if (factor == 0) {
+					factor = 1;
+				}
+				readVar.setProbability(avgProb + gain * factor);
+			}
+		}
+	}
+	
+	public void computeComputationalCost() {
+		for (TraceNode node : this.slicedTrace) {
+			
+			for (VarValue readVar : node.getReadVariables()) {
+				final VarValue dataDomVar = this.findDataDomVar(readVar, node);
+				if (dataDomVar != null) {
+					readVar.setComputationalCost(dataDomVar.getComputationalCost());
+				}
+			}
+			
+			long cost = 0;
+			for (VarValue readVar : node.getReadVariables()) {
+				cost += readVar.getComputationalCost();
+			}
+				
+			
+			for (VarValue writtenVar : node.getWrittenVariables()) {
+				writtenVar.setComputationalCost(cost+1);
+			}
+		}
+		
+		for (TraceNode node : this.slicedTrace) {
+			System.out.println("TraceNode: " + node.getOrder());
+			for (VarValue var : node.getReadVariables()) {
+				System.out.println(var.getVarName() + " with cost: " + var.getComputationalCost());
+			}
+			for (VarValue var : node.getWrittenVariables()) {
+				System.out.println(var.getVarName() + " with cost: " + var.getComputationalCost());
+			}
+			System.out.println();
 		}
 	}
 	
@@ -213,10 +285,10 @@ public class StepwisePropagator {
 		
 		TraceNode middleNode = this.slicedTrace.get(forward_ptr);
 		if (forward_ptr == backward_ptr) {
-			this.receiveForwardProp(middleNode);
-			this.receiveBackwardProp(middleNode);
+			this.passForwardProp(middleNode);
+			this.passBackwardProp(middleNode);
 		} else if (forward_ptr > backward_ptr) {
-			this.receiveForwardProp(middleNode);
+			this.passForwardProp(middleNode);
 		}
 	}
 	
@@ -254,14 +326,14 @@ public class StepwisePropagator {
 			} else if (node.getWrittenVariables().isEmpty()) {
 				// Case 3
 				double prob = this.aggregator.aggregate(node.getReadVariables(), ProbAggregateMethods.AVG);
-				drop = PropProbability.HIGH - prob;
+				drop = 1 - prob;
 			} else if (node.getReadVariables().isEmpty()) {
 				// Case 4
 				double prob = this.aggregator.aggregate(node.getWrittenVariables(), ProbAggregateMethods.AVG);
-				drop = PropProbability.HIGH - prob;
+				drop = 1 - prob;
 			} else {
-				double readProb = this.aggregator.aggregate(node.getReadVariables(), ProbAggregateMethods.AVG);
-				double writtenProb = this.aggregator.aggregate(node.getWrittenVariables(), ProbAggregateMethods.AVG);
+				double readProb = this.aggregator.aggregate(node.getReadVariables(), ProbAggregateMethods.MIN);
+				double writtenProb = this.aggregator.aggregate(node.getWrittenVariables(), ProbAggregateMethods.MIN);
 				drop = readProb - writtenProb;
 			}
 			
@@ -288,7 +360,7 @@ public class StepwisePropagator {
 	 * @return Propagated probability
 	 */
 	private double forwardProp(final TraceNode node) {
-		this.receiveForwardProp(node);
+		this.passForwardProp(node);
 		
 		double prob = this.aggregator.aggregate(node.getReadVariables(), ProbAggregateMethods.AVG);
 		if (prob == -1.0) {
@@ -305,7 +377,7 @@ public class StepwisePropagator {
 	 * @return Propagated probability
 	 */
 	private double backwardProp(final TraceNode node) {
-		this.receiveBackwardProp(node);
+		this.passBackwardProp(node);
 		
 		double prob = this.aggregator.aggregate(node.getWrittenVariables(), ProbAggregateMethods.AVG);
 
@@ -325,7 +397,7 @@ public class StepwisePropagator {
 	 * 
 	 * @param node Target trace node
 	 */
-	private void receiveForwardProp(final TraceNode node) {
+	private void passForwardProp(final TraceNode node) {
 		// Receive the correctness propagation
 		for (VarValue readVar : node.getReadVariables()) {
 			
@@ -335,29 +407,39 @@ public class StepwisePropagator {
 				continue;
 			}
 			
-			final String varID = Variable.truncateSimpleID(readVar.getVarID());
-			final String headID = Variable.truncateSimpleID(readVar.getAliasVarID());
-			
-			TraceNode dataDominator = this.trace.findDataDependency(node, readVar);
-			if (dataDominator != null) {
-				for (VarValue writeVar : dataDominator.getWrittenVariables()) {
-					
-					final String wVarID = Variable.truncateSimpleID(writeVar.getVarID());
-					final String wHeadID = Variable.truncateSimpleID(writeVar.getAliasVarID());
-					
-					if(wVarID != null && wVarID.equals(varID)) {
-						readVar.setProbability(writeVar.getProbability());					
-					} else if (wHeadID != null && wHeadID.equals(headID)) {
-						readVar.setProbability(writeVar.getProbability());	
-					} else {
-						VarValue childValue = writeVar.findVarValue(varID, headID);
-						if(childValue != null) {
-							readVar.setProbability(writeVar.getProbability());	
-						}
-					}
-				}
+			VarValue dataDomVar = this.findDataDomVar(readVar, node);
+			if (dataDomVar != null) {
+				readVar.setProbability(dataDomVar.getProbability());
 			}
 		}
+	}
+	
+	private VarValue findDataDomVar(final VarValue var, final TraceNode node) {
+		final String varID = Variable.truncateSimpleID(var.getVarID());
+		final String headID = Variable.truncateSimpleID(var.getAliasVarID());
+		
+		TraceNode dataDominator = this.trace.findDataDependency(node, var);
+		if (dataDominator != null) {
+			for (VarValue writeVar : dataDominator.getWrittenVariables()) {
+				if (writeVar.equals(var)) {
+					return writeVar;
+				}
+//				final String wVarID = Variable.truncateSimpleID(writeVar.getVarID());
+//				final String wHeadID = Variable.truncateSimpleID(writeVar.getAliasVarID());
+//				
+//				if(wVarID != null && wVarID.equals(varID)) {
+//					return writeVar;	
+//				} else if (wHeadID != null && wHeadID.equals(headID)) {
+//					return writeVar;
+//				} else {
+//					VarValue childValue = writeVar.findVarValue(varID, headID);
+//					if(childValue != null) {
+//						return writeVar;
+//					}
+//				}
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -365,11 +447,16 @@ public class StepwisePropagator {
 	 * data dominatees of the written variables in
 	 * given node. <br><br>
 	 * 
+	 * If there are multiple data dominatees, then it will
+	 * choose the maximum one. <br><br>
+	 * 
 	 * The output variable will be directly set to LOW.
+	 * 
+	 * Do nothing if no data dominatees is found
 	 * 
 	 * @param node Target trace node
 	 */
-	private void receiveBackwardProp(final TraceNode node) {
+	private void passBackwardProp(final TraceNode node) {
 		// Receive the wrongness propagation
 		for (VarValue writeVar : node.getWrittenVariables()) {
 			
@@ -379,35 +466,23 @@ public class StepwisePropagator {
 				continue;
 			}
 			
-			final String varID = Variable.truncateSimpleID(writeVar.getVarID());
-			final String headID = Variable.truncateSimpleID(writeVar.getAliasVarID());
-			
 			List<TraceNode> dataDominatees = this.trace.findDataDependentee(node, writeVar);
-			double minProb = 2.0;
+			
+			// Do nothing if no data dominatees is found
+			if (dataDominatees.isEmpty()) {
+				continue;
+			}
+			
+			double maxProb = -1.0;
 			for (TraceNode dataDominate : dataDominatees) {
 				for (VarValue readVar : dataDominate.getReadVariables()) {
-					
-					final String rVarID = Variable.truncateSimpleID(readVar.getVarID());
-					final String rHeadID = Variable.truncateSimpleID(readVar.getAliasVarID());
-					
-					if(rVarID != null && rVarID.equals(varID)) {
+					if (readVar.equals(writeVar)) {
 						final double prob = readVar.getProbability();
-						minProb = Math.min(prob, minProb);
-					} else if (rHeadID != null && rHeadID.equals(headID)) {
-						final double prob = readVar.getProbability();
-						minProb = Math.min(prob, minProb);
-					} else {
-						VarValue childValue = readVar.findVarValue(varID, headID);
-						if(childValue != null) {
-							final double prob = readVar.getProbability();
-							minProb = Math.min(prob, minProb);
-						}
+						maxProb = Math.max(prob, maxProb);
 					}
 				}
 			}
-			if (minProb != 2.0) {
-				writeVar.setProbability(minProb);
-			}
+			writeVar.setProbability(maxProb);
 		}
 	}
 	
@@ -427,18 +502,30 @@ public class StepwisePropagator {
 		for (TraceNode node : this.slicedTrace) {
 			for (VarValue readVar : node.getReadVariables()) {
 				readVar.setProbability(PropProbability.UNCERTAIN);
+				if (this.inputs.contains(readVar)) {
+					readVar.setProbability(PropProbability.HIGH);
+				}
+				if (this.outputs.contains(readVar)) {
+					readVar.setProbability(PropProbability.LOW);
+				}
 			}
 			for (VarValue writeVar : node.getWrittenVariables()) {
 				writeVar.setProbability(PropProbability.UNCERTAIN);
+				if (this.inputs.contains(writeVar)) {
+					writeVar.setProbability(PropProbability.HIGH);
+				}
+				if (this.outputs.contains(writeVar)) {
+					writeVar.setProbability(PropProbability.LOW);
+				}
 			}
 		}
 		
-		for (VarValue input : this.inputs) {
-			input.setProbability(PropProbability.HIGH);
-		}
-		for (VarValue output : this.outputs) {
-			output.setProbability(PropProbability.LOW);
-		}
+//		for (VarValue input : this.inputs) {
+//			input.setProbability(PropProbability.HIGH);
+//		}
+//		for (VarValue output : this.outputs) {
+//			output.setProbability(PropProbability.LOW);
+//		}
 		
 		this.alpha = this.calAlpha(this.slicedTrace.size());
 		this.beta = this.calBeta(this.slicedTrace.size());
@@ -465,81 +552,9 @@ public class StepwisePropagator {
 		return true;
 	}
 	
-	/**
-	 * Current microbat miss the condition result for each condition trace node.
-	 * This function will add them back.
-	 * 
-	 * Currently, this function just naively define the result of condition by looking
-	 * at the line number of next execution trace node.
-	 * 
-	 * If the line number is exactly the next line of the program, then the condition
-	 * result will be True
-	 * 
-	 * If the trace skip the next line, then the condition result will be False
-	 * @param executionList
-	 */
-	private void addConditionResult(List<TraceNode> executionList) {
-		TraceNode branchNode = null;
-		
-		for (TraceNode node : executionList) {
-			if (node.isBranch()) {
-				if (branchNode != null) {
-					this.addConditionResult(branchNode, node.getLineNumber() == branchNode.getLineNumber()+1);
-				}
-				branchNode = node;
-			} else if (branchNode != null) {
-				this.addConditionResult(branchNode, node.getLineNumber() == branchNode.getLineNumber()+1);
-				branchNode = null;
-			}
-		}
-	}
-	
-	// Helper function that add condition result
-	private void addConditionResult(TraceNode node, boolean isResultTrue) {
-		final String type = "boolean";
-		final String varID = this.genConditionResultID(node.getOrder());
-		final String varName = this.genConditionResultName(node.getOrder());
-		Variable variable = new LocalVar(varName, type, "", node.getLineNumber());
-		VarValue conditionResult = new PrimitiveValue(isResultTrue?"1":"0", true, variable);
-		conditionResult.setVarID(varID);
-		node.addWrittenVariable(conditionResult);
-	}
-	
-	/**
-	 * Generate the condition result variable ID
-	 * 
-	 * The ID follow the pattern: prefix + trace node order
-	 * 
-	 * @param order Trace node order of the condition
-	 * @return ID of the condition result variable
-	 */
-	private String genConditionResultID(final int order) {
-		return StepwisePropagator.CONDITION_RESULT_ID_PRE + order;
-	}
-	
-	/**
-	 * Generate the condition result variable name
-	 * 
-	 * The name follow the pattern: prefix + trace node order
-	 * 
-	 * @param order Trace node order of the condition
-	 * @return Name of the condition result variable
-	 */
-	private String genConditionResultName(final int order) {
-		return StepwisePropagator.CONDITION_RESULT_NAME_PRE + order;
-	}
-
-	private VarValue getConditionResult(TraceNode node) {
-		for (VarValue writeVar : node.getWrittenVariables()) {
-			if (writeVar.getVarID().startsWith(StepwisePropagator.CONDITION_RESULT_ID_PRE)) {
-				return writeVar;
-			}
-		}
-		return null;
-	}
-	
 	public void responseToFeedback(NodeFeedbackPair nodeFeedbackPair) {
 		TraceNode node = nodeFeedbackPair.getNode();
+		
 		UserFeedback feedback = nodeFeedbackPair.getFeedback();
 		
 		if (feedback.getFeedbackType() == UserFeedback.CORRECT) {
@@ -547,17 +562,37 @@ public class StepwisePropagator {
 			this.addInputs(node.getWrittenVariables());
 			TraceNode controlDominator = node.getControlDominator();
 			if (controlDominator != null) {
-				VarValue controlDom = this.getConditionResult(controlDominator);
+				VarValue controlDom = controlDominator.getConditionResult();
 				this.inputs.add(controlDom);
 			}
 		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_PATH) {
 			TraceNode controlDominator = node.getControlDominator();
-			VarValue controlDom = this.getConditionResult(controlDominator);
+			VarValue controlDom = controlDominator.getConditionResult();
 			this.outputs.add(controlDom);
 		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
 			VarValue wrongVar = feedback.getOption().getReadVar();
 			this.outputs.add(wrongVar);
+			for (VarValue readVar : node.getReadVariables()) {
+				if (!readVar.equals(wrongVar)) {
+					this.inputs.add(readVar);
+				}
+			}
 			this.addOutputs(node.getWrittenVariables());
 		}
+		
+		this.recordFeedback(nodeFeedbackPair);
+	}
+	
+	private void recordFeedback(final NodeFeedbackPair pair) {
+		this.feedbackRecords.add(pair);
+	}
+	
+	private boolean isFeedbackGiven(final TraceNode node) {
+		for (NodeFeedbackPair pair : this.feedbackRecords) {
+			if (node.equals(pair.getNode())) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
