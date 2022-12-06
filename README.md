@@ -56,3 +56,7 @@ Then we can use the following configuration to have the trace of a junit method.
 ## Run with Belief Propagation
 
 Microbat can now debug using belief prapagation technique. To know more about the belief propgation technique, please refer to the [Git Wiki](https://github.com/llmhyy/microbat/wiki/Debuggin-On-Belief-Propagation) for step-by-step guildline on how to run it.
+
+## Run with Stepwise Propagation
+
+Microbat can now debug using stepwise propagation. To know more about the stepwise propagation, please refer to the [Git Wiki](https://github.com/llmhyy/microbat/wiki/Debugging-on-Stepwise-Propagation) for step-by-step guildline on how to run it.
