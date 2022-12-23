@@ -156,6 +156,7 @@ Export-Package:
    org.eclipse.jface.preference,
    org.eclipse.jface.viewers",
  microbat.probability.BP,
+ microbat.probability.SPP,
  microbat.recommendation,
  microbat.recommendation.calculator,
  microbat.sql;uses:="microbat.model.trace",

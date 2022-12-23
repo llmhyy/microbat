@@ -39,11 +39,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				
-//				if (!registerFlag) {
-//					registerHandler();
-//					return Status.OK_STATUS;
-//				}
-				
+				// Get the trace view
 				setup();
 				
 				System.out.println();
@@ -63,23 +59,33 @@ public class StepwisePropagationHandler extends AbstractHandler {
 					return Status.OK_STATUS;
 				}
 				
+				// Obtain the inputs and outputs from users
 				List<VarValue> inputs = DebugInfo.getInputs();
 				List<VarValue> outputs = DebugInfo.getOutputs();
+				
+				// Set up the propagator that perform propagation
 				StepwisePropagator propagator = new StepwisePropagator(traceView.getTrace(), inputs, outputs);
 
 				int feedbackCounts = 0;
-//				propagator.backPropagate();
 				
+				// Keep doing propagation until the root cause is found
 				while(!DebugInfo.isRootCauseFound()) {
 					System.out.println("---------------------------------- " + feedbackCounts + " iteration");
 					System.out.println("Propagation Start");
+					
+					// Start back propagation
 					propagator.backPropagate();
 					
 					System.out.println("Propagation End");
+					
+					// Get the predicted root cause
 					TraceNode rootCause = propagator.proposeRootCause();
-					jumpToNode(rootCause);
 					System.out.println("Proposed Root Cause: " + rootCause.getOrder());
 					
+					// Visualization
+					jumpToNode(rootCause);
+					
+					// Obtain feedback from user
 					System.out.println("Please give a feedback");
 					DebugInfo.waitForFeedbackOrRootCause();
 					

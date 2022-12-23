@@ -5,6 +5,9 @@ import java.util.Collection;
 import java.util.List;
 
 import debuginfo.NodeFeedbackPair;
+import microbat.bytecode.ByteCode;
+import microbat.bytecode.ByteCodeList;
+import microbat.bytecode.OpcodeType;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.PrimitiveValue;
@@ -12,6 +15,7 @@ import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.probability.PropProbability;
+import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 
@@ -51,7 +55,7 @@ public class StepwisePropagator {
 	 */
 	private List<TraceNode> slicedTrace = null;
 	
-	private ProbAggregator aggregator;
+	private ProbAggregator aggregator = new ProbAggregator();
 	
 	/**
 	 * Correctness Propagation Factor
@@ -65,6 +69,17 @@ public class StepwisePropagator {
 	
 	private List<NodeFeedbackPair> feedbackRecords = new ArrayList<>();
 	
+	private final List<OpcodeType> unmodifiedType = new ArrayList<>();
+	
+	/*
+	 *  Correctness threshold
+	 */
+	private double correctThd = 0.7;
+	
+	/*
+	 * 	Wrongness threshold
+	 */
+	private double wrongThd = 0.3;
 	
 	/**
 	 * Constructor
@@ -87,6 +102,7 @@ public class StepwisePropagator {
 		this.outputs = outputs;
 		this.aggregator = new ProbAggregator();
 		this.slicedTrace = TraceUtil.dyanmicSlice(trace, this.outputs);
+		this.constructUnmodifiedOpcodeType();
 	}
 	
 	/**
@@ -153,56 +169,85 @@ public class StepwisePropagator {
 	}
 	
 	public void backPropagate() {
+		
+		// Initialize the probability
 		this.init();
+		
+		// Calculate computational cost
 		this.computeComputationalCost();
+		
+//		this.buildInputRelation();
+		
+		// Loop the execution list backward
 		for (int order = this.slicedTrace.size()-1; order>=0; order--) {
 			TraceNode node = this.slicedTrace.get(order);
+			
+			// Skip this node if the feedback is already given
 			if (this.isFeedbackGiven(node)) {
+				System.out.println("TraceNode: " + node.getOrder() + " is skipped because feedback is already given");
 				continue;
 			}
 			
+			// Initialize written variables probability
 			this.passBackwardProp(node);
+			
+			// Skip when there are no read variables
+			if (node.getReadVariables().isEmpty() || node.getWrittenVariables().isEmpty()) {
+				System.out.println("TraceNode: " + node.getOrder() + " is skipped because there are no either read or written variable");
+				continue;
+			}
+			
+			// Aggregate written variable probability
 			double avgProb = this.aggregator.aggregate(node.getWrittenVariables(), ProbAggregateMethods.AVG);
 			
-//			long minCost = this.slicedTrace.size()+1;
-//			for (VarValue readVar : node.getReadVariables()) {
-//				long cost = readVar.getComputationalCost();
-//				if (cost == 0) {
-//					continue;
-//				}
-//				if (readVar.getComputationalCost() < minCost) {
-//					minCost = readVar.getComputationalCost();
-//				}
-//			}
-//			if (minCost == this.slicedTrace.size()+1) {
-//				minCost = node.getWrittenVariables().get(0).getComputationalCost();
-//			}
-			
-			double gain = (0.95 - avgProb) / node.getWrittenVariables().get(0).getComputationalCost();
+			// Calculate maximum gain
+			VarValue writtenVar = node.getWrittenVariables().get(0);
+			long cumulativeCost = writtenVar.getComputationalCost();
+			long opCost = this.countModifyOperation(node);
+			double gain = 0;
+			if (cumulativeCost != 0) {
+				gain = (0.95 - avgProb) * (opCost/cumulativeCost);
+			}
+
+			// Calculate total cost
 			int totalCost = 0;
 			for (VarValue readVar : node.getReadVariables()) {
 				totalCost += readVar.getComputationalCost();
 			}
+
 			for (VarValue readVar : node.getReadVariables()) {
+				
+				// Ignore this variable if it is input or output
 				if (this.outputs.contains(readVar) || this.inputs.contains(readVar)) {
 					continue;
 				}
-				double factor = 1;
-				if (totalCost != 0) {
-					factor = 1- readVar.getComputationalCost() / (double) totalCost;
+				
+				if (readVar.isThisVariable()) {
+					readVar.setProbability(PropProbability.HIGH);
+					continue;
 				}
 				
-				if (factor == 0) {
-					factor = 1;
+				double factor = 1;
+				if (totalCost != 0) {
+					if (readVar.getComputationalCost() != totalCost) {
+						factor = 1 - readVar.getComputationalCost() / (double) totalCost;
+					}
 				}
-				readVar.setProbability(avgProb + gain * factor);
+				
+				double prob = avgProb + gain  * factor;
+				readVar.setProbability(prob);
 			}
 		}
 	}
 	
+	/**
+	 * Calculate the computation cost of
+	 * each variables
+	 */
 	public void computeComputationalCost() {
 		for (TraceNode node : this.slicedTrace) {
 			
+			// Inherit the computation cost from data dominator
 			for (VarValue readVar : node.getReadVariables()) {
 				final VarValue dataDomVar = this.findDataDomVar(readVar, node);
 				if (dataDomVar != null) {
@@ -210,27 +255,157 @@ public class StepwisePropagator {
 				}
 			}
 			
-			long cost = 0;
+			/*
+			 * Written variables' computational cost is calculated as
+			 * sum of cost of read variable plus one.
+			 */
+			long cumulatedCost = 0;
 			for (VarValue readVar : node.getReadVariables()) {
-				cost += readVar.getComputationalCost();
+				cumulatedCost += readVar.getComputationalCost();
 			}
-				
+			
+			long cost = this.countModifyOperation(node);
 			
 			for (VarValue writtenVar : node.getWrittenVariables()) {
-				writtenVar.setComputationalCost(cost+1);
+				writtenVar.setComputationalCost(cumulatedCost+cost);
+			}
+		}
+	}
+	
+	private void buildInputRelation() {
+		for (TraceNode node : this.slicedTrace) {
+			boolean readVarRelatedToInput = false;
+			for (VarValue readVar : node.getReadVariables()) {
+				if (this.inputs.contains(readVar)) {
+					readVar.isInputRelated(true);
+					readVarRelatedToInput = true;
+					continue;
+				}
+				
+				VarValue dataDomVar = this.findDataDomVar(readVar, node);
+				if (dataDomVar == null) {
+					readVar.isInputRelated(false);
+				} else {
+					readVar.isInputRelated(dataDomVar.isInputRelated());
+				}
+				
+				if (readVar.isInputRelated()) {
+					readVarRelatedToInput = true;
+				}
+			}
+			
+			for (VarValue writtenVar : node.getWrittenVariables()) {
+				if (this.inputs.contains(writtenVar)) {
+					writtenVar.isInputRelated(true);
+					continue;
+				}
+				writtenVar.isInputRelated(readVarRelatedToInput);
 			}
 		}
 		
 		for (TraceNode node : this.slicedTrace) {
+			System.out.println("--------------------------");
 			System.out.println("TraceNode: " + node.getOrder());
-			for (VarValue var : node.getReadVariables()) {
-				System.out.println(var.getVarName() + " with cost: " + var.getComputationalCost());
+			for(VarValue readVar : node.getReadVariables()) {
+				System.out.println("ReadVar: " + readVar.getVarID() + " related to input: " + readVar.isInputRelated());
 			}
-			for (VarValue var : node.getWrittenVariables()) {
-				System.out.println(var.getVarName() + " with cost: " + var.getComputationalCost());
+			for (VarValue writtenVar : node.getWrittenVariables()) {
+				System.out.println("WrittenVar: " + writtenVar.getVarID() + " related to input: " + writtenVar.isInputRelated());
 			}
 			System.out.println();
 		}
+	}
+	
+	private int countModifyOperation(final TraceNode node) {
+		ByteCodeList byteCodeList = new ByteCodeList(node.getBytecode());
+		int count = 0;
+		for (ByteCode byteCode : byteCodeList) {
+			if (!this.unmodifiedType.contains(byteCode.getOpcodeType())) {
+				count+=1;
+			}
+		}
+		return count;
+	}
+	
+	public UserFeedback giveFeedback(final TraceNode node) {
+		UserFeedback feedback = new UserFeedback();
+		
+		// Check control correctness
+		if (node.getControlDominator() != null) {
+			TraceNode controlDom = node.getControlDominator();
+			VarValue controlDomVar = controlDom.getConditionResult();
+			if (controlDomVar.getProbability() < this.wrongThd) {
+				feedback.setFeedbackType(UserFeedback.WRONG_PATH);
+				return feedback;
+			}
+		}
+		
+		// Handle the case that there are no read and written variables
+		if (node.getWrittenVariables().isEmpty() && node.getReadVariables().isEmpty()) {
+			feedback.setFeedbackType(UserFeedback.UNCLEAR);
+			return feedback;
+		}
+		
+		// Handle the case that there are no read variables
+		if (node.getReadVariables().isEmpty()) {
+			double avgProb = this.aggregator.aggregate(node.getWrittenVariables(), ProbAggregateMethods.AVG);
+			if (avgProb < this.wrongThd) {
+				feedback.setFeedbackType(UserFeedback.ROOTCAUSE);
+			} else {
+				feedback.setFeedbackType(UserFeedback.UNCLEAR);
+			}
+			return feedback;
+		}
+		
+		// Handle the case that there are no written variables
+		if (node.getWrittenVariables().isEmpty()) {
+			VarValue wrongVar = this.getMostSupReadVar(node);
+			if (wrongVar.getProbability() < this.wrongThd) {
+				feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+				feedback.setOption(new ChosenVariableOption(wrongVar, null));
+			} else {
+				feedback.setFeedbackType(UserFeedback.UNCLEAR);
+			}
+			return feedback;
+		}
+		
+		// Check is the node root cause or not
+		double writtenProb = this.aggregator.aggregate(node.getWrittenVariables(), ProbAggregateMethods.MIN);
+		VarValue supVar = this.getMostSupReadVar(node);
+		double readProb = supVar.getProbability();
+		
+		if (writtenProb > this.correctThd) {
+			feedback.setFeedbackType(UserFeedback.UNCLEAR);
+			return feedback;
+		}
+		
+		if (readProb > this.correctThd) {
+			feedback.setFeedbackType(UserFeedback.ROOTCAUSE);
+			return feedback;
+		} else {
+			feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+			feedback.setOption(new ChosenVariableOption(supVar, null));
+			return feedback;
+		}
+	}
+	
+	private VarValue getMostSupReadVar(final TraceNode node) {
+		if (node.getReadVariables().isEmpty()) {
+			throw new IllegalArgumentException("StepwisePropagator: getMostSupReadVar but there are no read variables");
+		}
+		
+		double minProb = 2.0;
+		VarValue supVar = null;
+		
+		for (VarValue readVar : node.getReadVariables()) {
+			double prob = readVar.getProbability();
+			if (prob < minProb) {
+				minProb = prob;
+				supVar = readVar;
+			}
+		}
+		
+		return supVar;
 	}
 	
 	/**
@@ -308,6 +483,11 @@ public class StepwisePropagator {
 		TraceNode rootCause = null;
 		double maxDrop = 0.0;
 		for (TraceNode node : this.slicedTrace) {
+			
+			if (this.isFeedbackGiven(node)) {
+				continue;
+			}
+			
 			/*
 			 * We need to handle:
 			 * 1. Node without any variable
@@ -315,6 +495,8 @@ public class StepwisePropagator {
 			 * 3. Node with only read variables
 			 * 4. Node with only written variables
 			 * 5. Node with both read and written variables
+			 * 
+			 * It will ignore the node that already have feedback
 			 */
 			double drop = 0.0;
 			if (node.getWrittenVariables().isEmpty() && node.getReadVariables().isEmpty() && node.getControlDominator() == null) {
@@ -452,11 +634,12 @@ public class StepwisePropagator {
 	 * 
 	 * The output variable will be directly set to LOW.
 	 * 
-	 * Do nothing if no data dominatees is found
+	 * Set probability into UNCLEAR if no data dominatees is found
 	 * 
 	 * @param node Target trace node
 	 */
 	private void passBackwardProp(final TraceNode node) {
+		
 		// Receive the wrongness propagation
 		for (VarValue writeVar : node.getWrittenVariables()) {
 			
@@ -468,37 +651,66 @@ public class StepwisePropagator {
 			
 			List<TraceNode> dataDominatees = this.trace.findDataDependentee(node, writeVar);
 			
-			// Do nothing if no data dominatees is found
-			if (dataDominatees.isEmpty()) {
-				continue;
-			}
-			
-			double maxProb = -1.0;
-			for (TraceNode dataDominate : dataDominatees) {
-				for (VarValue readVar : dataDominate.getReadVariables()) {
-					if (readVar.equals(writeVar)) {
-						final double prob = readVar.getProbability();
-						maxProb = Math.max(prob, maxProb);
-					}
+			// Remove the node that does not contribute to the result
+			for (int i=0; i<dataDominatees.size(); i++) {
+				TraceNode dataDominatee = dataDominatees.get(i);
+				if (!this.slicedTrace.contains(dataDominatee)) {
+					dataDominatees.remove(i);
+					i -= 1;
 				}
 			}
-			writeVar.setProbability(maxProb);
+			
+			// Do nothing if no data dominatees is found
+			if (dataDominatees.isEmpty()) {
+				writeVar.setProbability(PropProbability.UNCERTAIN);
+			} else {
+				double maxProb = -1.0;
+				for (TraceNode dataDominate : dataDominatees) {
+					for (VarValue readVar : dataDominate.getReadVariables()) {
+						if (readVar.equals(writeVar)) {
+							final double prob = readVar.getProbability();
+							maxProb = Math.max(prob, maxProb);
+						}
+					}
+				}
+				writeVar.setProbability(maxProb);
+			}
+		}
+		
+		if (node.isBranch()) {
+			VarValue conditionResult = node.getConditionResult();
+			
+			if (this.inputs.contains(conditionResult)) {
+				conditionResult.setProbability(PropProbability.HIGH);
+			} else if (this.outputs.contains(conditionResult)) {
+				conditionResult.setProbability(PropProbability.LOW);
+			} else {
+				double avgProb = 0.0;
+				int count = 0;
+				for (TraceNode controlDominatee : node.getControlDominatees()) {
+					if (!this.slicedTrace.contains(controlDominatee)) {
+						continue;
+					}
+					for (VarValue writtenVar : controlDominatee.getWrittenVariables()) {
+						avgProb += writtenVar.getProbability();
+						count += 1;
+					}
+				}
+				avgProb = count == 0 ? PropProbability.UNCERTAIN : avgProb/count;
+				conditionResult.setProbability(avgProb);
+			}
 		}
 	}
 	
 	/**
-	 * Initialization <br><br>
+	 * Initialize the probability of each variables
 	 * 
-	 * Initialize the inputs and outputs
-	 * probability <br><br>
-	 * 
-	 * Perform dynamic slicing <br><br>
-	 * 
-	 * Calculate alpha and beta
+	 * Inputs are set to 0.95. <br>
+	 * Outputs are set to 0.05. <br>
+	 * Others are set to 0.5.
 	 */
 	private void init() {
-	
-//		this.slicedTrace = TraceUtil.dyanmicSlice(this.trace, this.outputs);
+		
 		for (TraceNode node : this.slicedTrace) {
 			for (VarValue readVar : node.getReadVariables()) {
 				readVar.setProbability(PropProbability.UNCERTAIN);
@@ -519,17 +731,9 @@ public class StepwisePropagator {
 				}
 			}
 		}
-		
-//		for (VarValue input : this.inputs) {
-//			input.setProbability(PropProbability.HIGH);
-//		}
-//		for (VarValue output : this.outputs) {
-//			output.setProbability(PropProbability.LOW);
-//		}
-		
-		this.alpha = this.calAlpha(this.slicedTrace.size());
-		this.beta = this.calBeta(this.slicedTrace.size());
-		
+
+//		this.alpha = this.calAlpha(this.slicedTrace.size());
+//		this.beta = this.calBeta(this.slicedTrace.size());
 //		this.addConditionResult(this.slicedTrace);
 	}
 	
@@ -572,12 +776,17 @@ public class StepwisePropagator {
 		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
 			VarValue wrongVar = feedback.getOption().getReadVar();
 			this.outputs.add(wrongVar);
-			for (VarValue readVar : node.getReadVariables()) {
-				if (!readVar.equals(wrongVar)) {
-					this.inputs.add(readVar);
-				}
-			}
+//			for (VarValue readVar : node.getReadVariables()) {
+//				if (!readVar.equals(wrongVar)) {
+//					this.inputs.add(readVar);
+//				}
+//			}
 			this.addOutputs(node.getWrittenVariables());
+			
+			TraceNode controlDom = node.getControlDominator();
+			if (controlDom != null) {
+				this.inputs.add(controlDom.getConditionResult());
+			}
 		}
 		
 		this.recordFeedback(nodeFeedbackPair);
@@ -594,5 +803,14 @@ public class StepwisePropagator {
 			}
 		}
 		return false;
+	}
+	
+	private void constructUnmodifiedOpcodeType() {
+		this.unmodifiedType.add(OpcodeType.LOAD_CONSTANT);
+		this.unmodifiedType.add(OpcodeType.LOAD_FROM_ARRAY);
+		this.unmodifiedType.add(OpcodeType.LOAD_VARIABLE);
+		this.unmodifiedType.add(OpcodeType.STORE_INTO_ARRAY);
+		this.unmodifiedType.add(OpcodeType.STORE_VARIABLE);
+		this.unmodifiedType.add(OpcodeType.RETURN);
 	}
 }

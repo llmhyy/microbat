@@ -100,13 +100,13 @@ public class TraceNode{
 	 * Prefix of id of condition result variable. <br><br>
 	 * The id of condition result follow the format: CR_<TraceNode Order>
 	 */
-	public static final String CONDITION_RESULT_ID = "CR";
+	public static final String CONDITION_RESULT_ID = "CR_";
 	
 	/**
 	 * Prefix of variable name of condition result. <br><br>
 	 * The variable name of condition result follow the format: ConditionResult_<TraceNode Order>
 	 */
-	public static final String CONDITION_RESULT_NAME = "ConditionResult";
+	public static final String CONDITION_RESULT_NAME = "ConditionResult_";
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		this(breakPoint, programState, order, trace, -1, -1, System.currentTimeMillis(), bytecode);
@@ -138,8 +138,8 @@ public class TraceNode{
 	 */
 	public void insertConditionResult(boolean condition) {
 		final String type = "boolean";
-		final String varID = TraceNode.CONDITION_RESULT_ID;
-		final String varName = TraceNode.CONDITION_RESULT_NAME;
+		final String varID = TraceNode.CONDITION_RESULT_ID + this.getOrder();
+		final String varName = TraceNode.CONDITION_RESULT_NAME + this.getOrder();
 		
 		Variable variable = new LocalVar(varName, type, "", this.getLineNumber());
 		VarValue conditionResult = new PrimitiveValue(condition ? "1" : "0", true, variable);

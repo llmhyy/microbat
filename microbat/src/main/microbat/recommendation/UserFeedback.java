@@ -5,6 +5,7 @@ public class UserFeedback {
 	public static final String WRONG_VARIABLE_VALUE = "wrong variable value";
 	public static final String WRONG_PATH = "wrong path";
 	public static final String UNCLEAR = "unclear";
+	public static final String ROOTCAUSE = "root cause";
 	
 	private ChosenVariableOption option;
 	private String feedbackType;

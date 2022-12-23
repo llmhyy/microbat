@@ -44,6 +44,8 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	
 	protected long computationalCost = 0;
 	
+	protected boolean isInputRelated = false;
+	
 	public static final int NOT_NULL_VAL = 1;
 	
 	public VarValue(){}
@@ -431,6 +433,10 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	public boolean isLocalVariable(){
 		return this.variable instanceof LocalVar;
 	}
+	
+	public boolean isThisVariable() {
+		return this.getVarName() == "this" || this.getVarName().startsWith("this$");
+	}
 
 	public boolean isStatic() {
 		if(this.variable instanceof FieldVar){
@@ -518,6 +524,14 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	
 	public void setComputationalCost(final long cost) {
 		this.computationalCost = cost;
+	}
+	
+	public boolean isInputRelated() {
+		return this.isInputRelated;
+	}
+	
+	public void isInputRelated(boolean isInputRelated) {
+		this.isInputRelated = isInputRelated;
 	}
 	
 //	public abstract VarValue clone();
