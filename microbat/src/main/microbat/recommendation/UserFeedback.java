@@ -1,5 +1,7 @@
 package microbat.recommendation;
 
+import microbat.model.value.VarValue;
+
 public class UserFeedback {
 	public static final String CORRECT = "correct";
 	public static final String WRONG_VARIABLE_VALUE = "wrong variable value";
@@ -39,6 +41,30 @@ public class UserFeedback {
 		this.feedbackType = feedbackType;
 	}
 
+	/**
+	 * week_equals only require the feedback type
+	 * and the read variable matches
+	 * @param obj Other object
+	 * @return True if they are week_equals
+	 */
+	public boolean week_equals(Object obj) {
+		if (obj instanceof UserFeedback) {
+			UserFeedback otherFeedback = (UserFeedback) obj;
+			
+			if (!this.feedbackType.equals(otherFeedback.feedbackType)) {
+				return false;
+			}
+			
+			if (this.feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+				VarValue thisVar = this.option.getReadVar();
+				VarValue otherVar = otherFeedback.option.getReadVar();
+				return thisVar.equals(otherVar);
+			} else {
+				return true;
+			}
+		}
+		return false;
+	}
 	@Override
 	public String toString() {
 		if(option != null){
@@ -48,7 +74,7 @@ public class UserFeedback {
 			return "UserFeedback [feedbackType=" + feedbackType + "]";
 		}
 	}
-	
+
 	@Override
 	public boolean equals(Object obj){
 		if(obj instanceof UserFeedback){

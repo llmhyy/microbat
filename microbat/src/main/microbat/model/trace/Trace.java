@@ -931,18 +931,21 @@ public class Trace {
 				String wVarID = Variable.truncateSimpleID(writtenValue.getVarID());
 				String wHeadID = Variable.truncateSimpleID(writtenValue.getAliasVarID());
 				
-				if(wVarID != null && wVarID.equals(varID)) {
-					return node;						
-				}
-				
-				if(wHeadID != null && wHeadID.equals(headID)) {
+				if (varValue.equals(writtenValue)) {
 					return node;
 				}
-				
-				VarValue childValue = writtenValue.findVarValue(varID, headID);
-				if(childValue != null) {
-					return node;
-				}
+//				if(wVarID != null && wVarID.equals(varID)) {
+//					return node;						
+//				}
+//				
+//				if(wHeadID != null && wHeadID.equals(headID)) {
+//					return node;
+//				}
+//				
+//				VarValue childValue = writtenValue.findVarValue(varID, headID);
+//				if(childValue != null) {
+//					return node;
+//				}
 				
 			}
 		}

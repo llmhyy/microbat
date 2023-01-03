@@ -50,6 +50,6 @@ public class NodeFeedbackPair {
 	
 	@Override
 	public String toString() {
-		return this.node + " with feedback " + this.feedback;
+		return "Node: " + this.node.getOrder() + " with feedback " + this.feedback;
 	}
 }

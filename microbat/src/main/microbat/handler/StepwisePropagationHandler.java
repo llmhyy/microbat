@@ -74,7 +74,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 					System.out.println("Propagation Start");
 					
 					// Start back propagation
-					propagator.backPropagate();
+					propagator.backwardPropagate();
 					
 					System.out.println("Propagation End");
 					

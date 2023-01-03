@@ -42,6 +42,9 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	
 	protected double probability = -1;
 	
+	protected double forward_prob = -1;
+	protected double backward_prob = -1;
+	
 	protected long computationalCost = 0;
 	
 	protected boolean isInputRelated = false;
@@ -53,7 +56,6 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	protected VarValue(boolean isRoot, Variable variable) {
 		this.isRoot = isRoot;
 		this.variable = variable;
-		this.probability = -1;
 		this.computationalCost = 0;
 		
 	}
@@ -435,7 +437,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	}
 	
 	public boolean isThisVariable() {
-		return this.getVarName() == "this" || this.getVarName().startsWith("this$");
+		return this.getVarName().equals("this") || this.getVarName().startsWith("this$");
 	}
 
 	public boolean isStatic() {
@@ -532,6 +534,28 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	
 	public void isInputRelated(boolean isInputRelated) {
 		this.isInputRelated = isInputRelated;
+	}
+	
+	public double getForwardProb() {
+		return this.forward_prob;
+	}
+	
+	public void setForwardProb(final double forward_prob) {
+		this.forward_prob = forward_prob;
+	}
+	
+	public double getBackwardProb() {
+		return this.backward_prob;
+	}
+	
+	public void setBackwardProb(final double backward_prob) {
+		this.backward_prob = backward_prob;
+	}
+	
+	public void setAllProbability(final double prob) {
+		this.setProbability(prob);
+		this.setForwardProb(prob);
+		this.setBackwardProb(prob);
 	}
 	
 //	public abstract VarValue clone();
