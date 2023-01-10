@@ -2,7 +2,9 @@ package microbat.probability.SPP;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Stack;
 
 import debuginfo.NodeFeedbackPair;
@@ -143,18 +145,14 @@ public class StepwisePropagator {
 			// Initialize written variables probability
 			this.passBackwardProp(node);
 			
-			// Skip when there are no read variables
+			// Skip when there are no either read or written variables
 			if (node.getReadVariables().isEmpty() || node.getWrittenVariables().isEmpty()) {
 				System.out.println("TraceNode: " + node.getOrder() + " is skipped because there are no either read or written variable");
 				continue;
 			}
 			
 			// Aggregate written variable probability
-			double avgProb = 0.0;
-			for (VarValue writtenVar : node.getWrittenVariables()) {
-				avgProb += writtenVar.getBackwardProb();
-			}
-			avgProb /= node.getWrittenVariables().size();
+			double avgProb = this.aggregator.aggregateBackwardProb(node.getWrittenVariables(), ProbAggregateMethods.AVG);
 			
 			// Calculate maximum gain
 			VarValue writtenVar = node.getWrittenVariables().get(0);
@@ -283,137 +281,499 @@ public class StepwisePropagator {
 		return count;
 	}
 	
-	public List<NodeFeedbackPair> findPathway(final TraceNode startingNode, final TraceNode destinationNode) {
+	public ActionPath findPathway(final TraceNode startNode, final TraceNode endNode) {
 		
-		Stack<NodeFeedbackPair> path = new Stack<>();
+		// Apply greedy algorithm to construct the pathway first
+		ActionPath greedyPath = this.findPathway_Greedy(startNode, endNode);
+		if (greedyPath.canReachRootCause()) {
+			return greedyPath;
+		}
 		
-		TraceNode currentNode = startingNode;
-		TraceNode prevNode = null;
-		while (!currentNode.equals(destinationNode)) {
-			
-			if (currentNode.getOrder()<destinationNode.getOrder()) {
+		// If greedy algorithm fail, then find the shortest path from startNode to endNode
+		ActionPath shortestPath = this.findShortestPath(startNode, endNode);
+		if (shortestPath != null) {
+			return shortestPath;
+		}
+		
+		// If shortest path fail, then just return the greedy path even it doesn't reach the endNode
+		return greedyPath;
+		
+//		// Find all path from start node to end node
+//		List<ActionPath> paths = this.findAllPathway(startNode, endNode);
+//		
+//		// If there are no path to endNode, then give feedback only based on probability
+//		// It will not guarantee to reach the endNode
+//		if (paths.isEmpty()) {
+//			ActionPath path = new ActionPath();
+//			TraceNode currentNode = startNode;
+//			while(currentNode != null) {
+//				if (currentNode.getOrder() <= endNode.getOrder()) {
+//					break;
+//				}
+//				UserFeedback feedback = this.giveFeedback(currentNode);
+//				path.addPair(currentNode, feedback);
+//				currentNode = this.findNextNode(currentNode, feedback);
+//			}
+//			return path;
+//		}
+//		
+//		if (paths.size() == 1) {
+//			return paths.get(0);
+//		}
+//		
+//		TraceNode currentNode = startNode;
+//		int step = 0;
+//		ActionPath selectedPath = null;
+//		while (!currentNode.equals(endNode)) {
+//			final UserFeedback feedback = this.giveFeedback(currentNode);
+//			
+//			if (currentNode.equals(endNode)) {
+//				feedback.setFeedbackType(UserFeedback.ROOTCAUSE);
+//				feedback.setOption(null);
+//			}
+//			
+//			final int step_ = step;
+//			
+//			long matchCount = paths.stream()
+//								   .filter(path -> (path.get(step_).getFeedback().equals(feedback)))
+//								   .count();
+//			
+//			// If no path match the feedback, then just pick the first one
+//			if (matchCount == 0) {
+//				selectedPath = paths.get(0);
+//				break;
+//			} else {
+//				// Remove the path that does not match with feedback
+//				paths.removeIf(path -> (
+//					!path.get(step_).getFeedback().equals(feedback)
+//				));
+//			}
+//			
+//			if (paths.size() == 1) {
+//				selectedPath = paths.get(0);
+//				break;
+//			}
+//			
+//			currentNode = this.findNextNode(currentNode, feedback);
+//			
+//			step += 1;
+//		}
+//		
+//		return selectedPath;
+	}
+	
+	public ActionPath findPathway_Greedy(final TraceNode startNode, final TraceNode endNode) {
+		ActionPath path = new ActionPath();
+		TraceNode currentNode = startNode;
+		while(currentNode != null) {
+			if (currentNode.equals(endNode)) {
+				UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
+				path.addPair(currentNode, feedback);
 				break;
 			}
 			
-			TraceNode controlDom = currentNode.getControlDominator();
-			if (controlDom != null) {
-				
-				if (controlDom.getOrder() < destinationNode.getOrder()) {
-					
-					// Will not give control slicing feedback if the control dom is beyond the destination node
-				} else {
-					VarValue controlDomVar = controlDom.getConditionResult();
-					if (controlDomVar.getProbability() < this.wrongThd) {
-						UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_PATH);
-						NodeFeedbackPair pair = new NodeFeedbackPair(currentNode, feedback);
-						path.add(pair);
-						
-						currentNode = controlDom;
-						continue;
-					}
-				}
-				
-			}
-			
-			if (currentNode.getReadVariables().isEmpty()) {
+			if (currentNode.getOrder() <= endNode.getOrder()) {
 				break;
 			}
 			
-			VarValue mostSubVar = this.getMostSupReadVar(currentNode);
-			ChosenVariableOption option = new ChosenVariableOption(mostSubVar, null);
-			UserFeedback feedback = new UserFeedback(option, UserFeedback.WRONG_VARIABLE_VALUE);
-			NodeFeedbackPair pair = new NodeFeedbackPair(currentNode, feedback);
-			path.add(pair);
-			
-			prevNode = currentNode;
-			currentNode = this.trace.findDataDependency(currentNode, mostSubVar);
-			
-			if (currentNode == null) {
-				UserFeedback unclearFeedback = new UserFeedback(UserFeedback.UNCLEAR);
-				NodeFeedbackPair endPair = new NodeFeedbackPair(prevNode, unclearFeedback);
-				path.add(endPair);
-				break;
-			}
+			UserFeedback feedback = this.giveFeedback(currentNode);
+			path.addPair(currentNode, feedback);
+			currentNode = this.findNextNode(currentNode, feedback);
 		}
-		
-		if (currentNode == null) {
-			return path;
-		}
-		
-		if (currentNode.equals(destinationNode)) {
-			UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
-			NodeFeedbackPair pair = new NodeFeedbackPair(currentNode, feedback);
-			path.add(pair);
-		}
-		
 		return path;
 	}
 	
-	private void findPathway_(final TraceNode startingNode, final TraceNode destinationNode, Stack<NodeFeedbackPair> path) {
-		
-	}
-	
 	public UserFeedback giveFeedback(final TraceNode node) {
+		/*
+		 * Compare the probability of control and data correctness
+		 * Do the slicing based on the lowest one
+		 */
+		
 		UserFeedback feedback = new UserFeedback();
 		
-		// Check control correctness
-		if (node.getControlDominator() != null) {
-			TraceNode controlDom = node.getControlDominator();
-			VarValue controlDomVar = controlDom.getConditionResult();
-			if (controlDomVar.getProbability() < this.wrongThd) {
+		TraceNode controlDom = node.getControlDominator();
+		double controlProb = 2.0;
+		if (controlDom != null) {
+			VarValue conditionResult = controlDom.getConditionResult();
+			
+			// If the condition result is confirmed to be wrong,
+			// then give feedback directly
+			if (this.outputs.contains(conditionResult)) {
 				feedback.setFeedbackType(UserFeedback.WRONG_PATH);
+				return feedback; 
+			}
+			
+			// Ignore if the condition result confirmed to be correct
+			if (!this.inputs.contains(conditionResult)) {
+				controlProb = controlDom.getConditionResult().getProbability();
+			} 
+		}
+		
+		double minReadProb = 2.0;
+		VarValue wrongVar = null;
+		for (VarValue readVar : node.getReadVariables()) {
+			
+			// If the readVar is confirmed to be wrong,
+			// then give feedback directly
+			if (this.outputs.contains(readVar)) {
+				feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+				feedback.setOption(new ChosenVariableOption(readVar, null));
 				return feedback;
 			}
+			
+			// If the readVar is This variable, then ignore
+			if (readVar.isThisVariable()) {
+				continue;
+			}
+			
+			// If the readVar is confirmed to be correct, then ignore
+			if (!this.inputs.contains(readVar)) {
+				double prob = readVar.getProbability();
+				if (prob < minReadProb) {
+					minReadProb = prob;
+					wrongVar = readVar;
+				}
+			}
 		}
 		
-		// Handle the case that there are no read and written variables
-		if (node.getWrittenVariables().isEmpty() && node.getReadVariables().isEmpty()) {
+		// There are no controlDom and readVar
+		if (controlProb == 2.0 && minReadProb == 2.0) {
 			feedback.setFeedbackType(UserFeedback.UNCLEAR);
 			return feedback;
 		}
 		
-		// Handle the case that there are no read variables
-		if (node.getReadVariables().isEmpty()) {
-			double avgProb = this.aggregator.aggregateProb(node.getWrittenVariables(), ProbAggregateMethods.AVG);
-			if (avgProb < this.wrongThd) {
-				feedback.setFeedbackType(UserFeedback.ROOTCAUSE);
-			} else {
-				feedback.setFeedbackType(UserFeedback.UNCLEAR);
-			}
-			return feedback;
-		}
-		
-		// Handle the case that there are no written variables
-		if (node.getWrittenVariables().isEmpty()) {
-			VarValue wrongVar = this.getMostSupReadVar(node);
-			if (wrongVar.getProbability() < this.wrongThd) {
-				feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
-				feedback.setOption(new ChosenVariableOption(wrongVar, null));
-			} else {
-				feedback.setFeedbackType(UserFeedback.UNCLEAR);
-			}
-			return feedback;
-		}
-		
-		// Check is the node root cause or not
-		double writtenProb = this.aggregator.aggregateProb(node.getWrittenVariables(), ProbAggregateMethods.MIN);
-		VarValue supVar = this.getMostSupReadVar(node);
-		double readProb = supVar.getProbability();
-		
-		if (writtenProb > this.correctThd) {
-			feedback.setFeedbackType(UserFeedback.UNCLEAR);
-			return feedback;
-		}
-		
-		if (readProb > this.correctThd) {
-			feedback.setFeedbackType(UserFeedback.ROOTCAUSE);
-			return feedback;
+		if (controlProb <= minReadProb) {
+			feedback.setFeedbackType(UserFeedback.WRONG_PATH);
 		} else {
 			feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
-			feedback.setOption(new ChosenVariableOption(supVar, null));
-			return feedback;
+			feedback.setOption(new ChosenVariableOption(wrongVar, null));
 		}
+		
+		return feedback;
 	}
+	
+	public ActionPath findShortestPath(final TraceNode startNode, final TraceNode endNode) {
+		Queue<ActionPath> paths = new LinkedList<>();
+		ActionPath path = new ActionPath();
+		path.addPair(startNode, null);
+		paths.offer(path);
+		
+		// Start BFS
+		while (!paths.isEmpty()) {
+			path = paths.poll();
+			
+			NodeFeedbackPair pair = path.peek();
+			TraceNode lastNode = pair.getNode();
+			
+			if (lastNode.equals(endNode)) {
+				path.setLastAction(new UserFeedback(UserFeedback.ROOTCAUSE));
+				return path;
+			}
+			
+			if (this.isFeedbackGiven(lastNode)) {
+				// If feedback is given, then directly use the feedback
+				UserFeedback feedback = this.getFeedbackOf(lastNode);
+				path.setLastAction(feedback);
+				
+				ActionPath newPath = new ActionPath(path);
+				TraceNode nextNode = this.findNextNode(lastNode, feedback);
+				newPath.addPair(nextNode, null);
+				paths.offer(newPath);
+				
+				continue;
+			}
+			
+			// Control Slicing
+			TraceNode controlDom = lastNode.getControlDominator();
+			if (controlDom != null) {
+				if (controlDom.getOrder() >= endNode.getOrder()) {
+					path.setLastAction(new UserFeedback(UserFeedback.WRONG_PATH));
+					ActionPath newPath = new ActionPath(path);
+					newPath.addPair(controlDom, null);
+					paths.offer(newPath);
+					path.setLastAction(null);
+				}
+			}
+			
+			// Data Slicing
+			for (VarValue readVar : lastNode.getReadVariables()) {
+
+				// Skip if it is the This variable
+				if (readVar.isThisVariable()) {
+					continue;
+				}
+				
+				UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
+				feedback.setOption(new ChosenVariableOption(readVar, null));
+				path.setLastAction(feedback);
+				ActionPath newPath = new ActionPath(path);
+				path.setLastAction(null);
+				TraceNode nextNode = this.findNextNode(lastNode, feedback);
+				
+				// End this path if there are no nextNode to search
+				if (nextNode == null) {
+					continue;
+				}
+				
+				// End this path if nextNode already beyond the endNode
+				if (nextNode.getOrder() < endNode.getOrder()) {
+					continue;
+				}
+				
+				newPath.addPair(nextNode, null);
+				paths.offer(newPath);
+			}
+		}
+		
+		return null;
+	}
+	
+	public List<ActionPath> findAllPathway(final TraceNode startNode, final TraceNode endNode) {
+		List<ActionPath> output = new ArrayList<>();
+		
+		// Setup for BFS
+		Queue<ActionPath> paths = new LinkedList<>();
+		ActionPath path = new ActionPath();
+		path.addPair(startNode, null);
+		paths.offer(path);
+		
+		// Start BFS
+		while (!paths.isEmpty()) {
+			path = paths.poll();
+			NodeFeedbackPair pair = path.peek();
+			TraceNode lastNode = pair.getNode();
+			
+			if (lastNode.equals(endNode)) {
+				path.setLastAction(new UserFeedback(UserFeedback.ROOTCAUSE));
+				output.add(path);
+				continue;
+			}
+			
+			// Check if there any wrong variable
+			boolean haveWrongVariable = false;
+			for (VarValue readVar : lastNode.getReadVariables()) {
+				if (this.outputs.contains(readVar)) {
+					// If the read variable is said to be wrong, then path will only pass this variable
+					UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
+					feedback.setOption(new ChosenVariableOption(readVar, null));
+					path.setLastAction(feedback);
+					ActionPath newPath = new ActionPath(path);
+					path.setLastAction(null);
+					TraceNode nextNode = this.findNextNode(lastNode, feedback);
+					if (nextNode == null) {
+						continue;
+					}
+					
+					// Skip nextNode if it already beyond the endNode
+					if (nextNode.getOrder() < endNode.getOrder()) {
+						continue;
+					}
+					
+					newPath.addPair(nextNode, null);
+					paths.offer(newPath);
+					
+					haveWrongVariable = true;
+					continue;
+				}
+			}
+			
+			if (haveWrongVariable) {
+				continue;
+			}
+			
+			TraceNode controlDom = lastNode.getControlDominator();
+			if (controlDom != null) {
+				if (controlDom.getOrder() >= endNode.getOrder()) {
+					VarValue controlDomVar = controlDom.getConditionResult();
+					// Skip if the controlDom is correct
+					if (!this.inputs.contains(controlDomVar)) {
+						path.setLastAction(new UserFeedback(UserFeedback.WRONG_PATH));
+						ActionPath newPath = new ActionPath(path);
+						newPath.addPair(controlDom, null);
+						paths.offer(newPath);
+						path.setLastAction(null);
+						
+						// Skip the read variables if the condition is wrong
+						if (this.outputs.contains(controlDomVar)) {
+							continue;
+						}
+					}
+				}
+			}
+			
+			// Search all read variable to go
+			for (VarValue readVar : lastNode.getReadVariables()) {
+				// Skip if the variables are said to be correct
+				if (this.inputs.contains(readVar)) {
+					continue;
+				}
+				
+				// Skip if it is the This variable
+				if (readVar.isThisVariable()) {
+					continue;
+				}
+				
+				UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
+				feedback.setOption(new ChosenVariableOption(readVar, null));
+				path.setLastAction(feedback);
+				ActionPath newPath = new ActionPath(path);
+				path.setLastAction(null);
+				TraceNode nextNode = this.findNextNode(lastNode, feedback);
+				
+				if (nextNode == null) {
+					continue;
+				}
+				
+				if (nextNode.getOrder()<endNode.getOrder()) {
+					continue;
+				}
+				
+				newPath.addPair(nextNode, null);
+				paths.offer(newPath);
+			}
+		}
+		
+		return output;
+	}
+	
+//	public List<NodeFeedbackPair> findPathway(final TraceNode startingNode, final TraceNode destinationNode) {
+//		
+//		Stack<NodeFeedbackPair> path = new Stack<>();
+//		
+//		TraceNode currentNode = startingNode;
+//		TraceNode prevNode = null;
+//		while (!currentNode.equals(destinationNode)) {
+//			
+//			if (currentNode.getOrder()<destinationNode.getOrder()) {
+//				break;
+//			}
+//			
+//			TraceNode controlDom = currentNode.getControlDominator();
+//			if (controlDom != null) {
+//				
+//				if (controlDom.getOrder() < destinationNode.getOrder()) {
+//					
+//					// Will not give control slicing feedback if the control dom is beyond the destination node
+//				} else {
+//					VarValue controlDomVar = controlDom.getConditionResult();
+//					if (controlDomVar.getProbability() < this.wrongThd) {
+//						UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_PATH);
+//						NodeFeedbackPair pair = new NodeFeedbackPair(currentNode, feedback);
+//						path.add(pair);
+//						
+//						currentNode = controlDom;
+//						continue;
+//					}
+//				}
+//				
+//			}
+//			
+//			if (currentNode.getReadVariables().isEmpty()) {
+//				break;
+//			}
+//			
+//			VarValue mostSubVar = this.getMostSupReadVar(currentNode);
+//			ChosenVariableOption option = new ChosenVariableOption(mostSubVar, null);
+//			UserFeedback feedback = new UserFeedback(option, UserFeedback.WRONG_VARIABLE_VALUE);
+//			NodeFeedbackPair pair = new NodeFeedbackPair(currentNode, feedback);
+//			path.add(pair);
+//			
+//			prevNode = currentNode;
+//			currentNode = this.trace.findDataDependency(currentNode, mostSubVar);
+//			
+//			if (currentNode == null) {
+//				UserFeedback unclearFeedback = new UserFeedback(UserFeedback.UNCLEAR);
+//				NodeFeedbackPair endPair = new NodeFeedbackPair(prevNode, unclearFeedback);
+//				path.add(endPair);
+//				break;
+//			}
+//		}
+//		
+//		if (currentNode == null) {
+//			return path;
+//		}
+//		
+//		if (currentNode.equals(destinationNode)) {
+//			UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
+//			NodeFeedbackPair pair = new NodeFeedbackPair(currentNode, feedback);
+//			path.add(pair);
+//		}
+//		
+//		return path;
+//	}
+	
+	private TraceNode findNextNode(final TraceNode node, final UserFeedback feedback) {
+		TraceNode nextNode = null;
+		if (feedback.getFeedbackType() == UserFeedback.WRONG_PATH) {
+			nextNode = node.getControlDominator();
+		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
+			VarValue wrongVar = feedback.getOption().getReadVar();
+			nextNode = this.trace.findDataDependency(node, wrongVar);
+		}
+		return nextNode;
+	}
+	
+//	public UserFeedback giveFeedback(final TraceNode node) {
+//		UserFeedback feedback = new UserFeedback();
+//		
+//		// Check control correctness
+//		if (node.getControlDominator() != null) {
+//			TraceNode controlDom = node.getControlDominator();
+//			VarValue controlDomVar = controlDom.getConditionResult();
+//			if (controlDomVar.getProbability() < this.wrongThd) {
+//				feedback.setFeedbackType(UserFeedback.WRONG_PATH);
+//				return feedback;
+//			}
+//		}
+//		
+//		// Handle the case that there are no read and written variables
+//		if (node.getWrittenVariables().isEmpty() && node.getReadVariables().isEmpty()) {
+//			feedback.setFeedbackType(UserFeedback.UNCLEAR);
+//			return feedback;
+//		}
+//		
+//		// Handle the case that there are no read variables
+//		if (node.getReadVariables().isEmpty()) {
+//			double avgProb = this.aggregator.aggregateProb(node.getWrittenVariables(), ProbAggregateMethods.AVG);
+//			if (avgProb < this.wrongThd) {
+//				feedback.setFeedbackType(UserFeedback.ROOTCAUSE);
+//			} else {
+//				feedback.setFeedbackType(UserFeedback.UNCLEAR);
+//			}
+//			return feedback;
+//		}
+//		
+//		// Handle the case that there are no written variables
+//		if (node.getWrittenVariables().isEmpty()) {
+//			VarValue wrongVar = this.getMostSupReadVar(node);
+//			if (wrongVar.getProbability() < this.wrongThd) {
+//				feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+//				feedback.setOption(new ChosenVariableOption(wrongVar, null));
+//			} else {
+//				feedback.setFeedbackType(UserFeedback.UNCLEAR);
+//			}
+//			return feedback;
+//		}
+//		
+//		// Check is the node root cause or not
+//		double writtenProb = this.aggregator.aggregateProb(node.getWrittenVariables(), ProbAggregateMethods.MIN);
+//		VarValue supVar = this.getMostSupReadVar(node);
+//		double readProb = supVar.getProbability();
+//		
+//		if (writtenProb > this.correctThd) {
+//			feedback.setFeedbackType(UserFeedback.UNCLEAR);
+//			return feedback;
+//		}
+//		
+//		if (readProb > this.correctThd) {
+//			feedback.setFeedbackType(UserFeedback.ROOTCAUSE);
+//			return feedback;
+//		} else {
+//			feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+//			feedback.setOption(new ChosenVariableOption(supVar, null));
+//			return feedback;
+//		}
+//	}
 	
 	private VarValue getMostSupReadVar(final TraceNode node) {
 		if (node.getReadVariables().isEmpty()) {
@@ -437,10 +797,17 @@ public class StepwisePropagator {
 	
 	public void forwardPropagation() {
 		for (TraceNode node : this.slicedTrace) {
+			
+			if (node.getOrder() == 8253) {
+				System.out.println();
+			}
+			
+			// Skip propagation if either read or written variable is missing
 			if (node.getReadVariables().isEmpty() || node.getWrittenVariables().isEmpty()) {
 				continue;
 			}
 			
+			// Pass forward probability 
 			this.passForwardProp(node);
 			
 			// Deep copy the array list
@@ -449,45 +816,42 @@ public class StepwisePropagator {
 			
 			// Ignore this variable
 			readVars.removeIf(element -> (element.isThisVariable()));
-			
 			if (readVars.isEmpty()) {
 				continue;
 			}
 			
 			double avgProb = this.aggregator.aggregateForwardProb(readVars, ProbAggregateMethods.AVG);
-//			double avgProb = 0.0;
-//			for (VarValue readVar : readVars) {
-//				avgProb += readVar.getForwardProb();
-//			}
-//			avgProb /= readVars.size();
 			
-			if (avgProb <= PropProbability.UNCERTAIN) {
-				continue;
-			} else {
-				long minCost = this.outputs.get(0).getComputationalCost();
-				for (int i=1; i<this.outputs.size(); i++) {
-					VarValue output = this.outputs.get(i);
-					final long cost = output.getComputationalCost();
-					if (cost < minCost) {
-						minCost = cost;
-					}
+//			if (avgProb <= PropProbability.UNCERTAIN) {
+//				continue;
+//			} else {
+			
+			// Find the closest wrong variable computational cost 
+			long minCost = this.outputs.get(0).getComputationalCost();
+			for (int i=1; i<this.outputs.size(); i++) {
+				VarValue output = this.outputs.get(i);
+				final long cost = output.getComputationalCost();
+				if (cost < minCost) {
+					minCost = cost;
 				}
-				
-				long writtenCost = node.getWrittenVariables().get(0).getComputationalCost();
-				double loss = (avgProb - 0.5) * ((double) writtenCost / minCost);
-				double prob = avgProb - loss;
-				
-				for (VarValue writtenVar : node.getWrittenVariables()) {
-					if (this.inputs.contains(writtenVar)) {
-						writtenVar.setAllProbability(PropProbability.HIGH);
-					} else if (this.outputs.contains(writtenVar)) {
-						writtenVar.setAllProbability(PropProbability.LOW);
-					} else {
-						writtenVar.setForwardProb(prob);
-					}
-				}
-				
 			}
+			
+			// Calculate forward probability of written variable
+			long writtenCost = node.getWrittenVariables().get(0).getComputationalCost();
+			double loss = (avgProb - 0.05) * ((double) writtenCost / minCost);
+			double prob = avgProb - loss;
+			
+			for (VarValue writtenVar : node.getWrittenVariables()) {
+				if (this.inputs.contains(writtenVar)) {
+					writtenVar.setAllProbability(PropProbability.HIGH);
+				} else if (this.outputs.contains(writtenVar)) {
+					writtenVar.setAllProbability(PropProbability.LOW);
+				} else {
+					writtenVar.setForwardProb(prob);
+				}
+			}
+				
+//			}
 		}
 	}
 	
@@ -529,7 +893,7 @@ public class StepwisePropagator {
 				continue;
 			} else if (node.getWrittenVariables().isEmpty() && node.getReadVariables().isEmpty() && node.getControlDominator() != null) {
 				// Case 2
-				drop = PropProbability.UNCERTAIN - node.getControlDominator().getWrittenVariables().get(0).getProbability();
+				drop = PropProbability.HIGH - node.getControlDominator().getConditionResult().getProbability();
 			} else if (node.getWrittenVariables().isEmpty()) {
 				// Case 3
 				double prob = this.aggregator.aggregateProb(node.getReadVariables(), ProbAggregateMethods.AVG);
@@ -579,9 +943,16 @@ public class StepwisePropagator {
 				continue;
 			}
 			
+			if (this.outputs.contains(readVar)) {
+				readVar.setAllProbability(PropProbability.HIGH);
+				continue;
+			}
+			
 			VarValue dataDomVar = this.findDataDomVar(readVar, node);
 			if (dataDomVar != null) {
 				readVar.setForwardProb(dataDomVar.getForwardProb());
+			} else {
+				readVar.setForwardProb(PropProbability.UNCERTAIN);
 			}
 		}
 	}
@@ -638,6 +1009,7 @@ public class StepwisePropagator {
 			if (dataDominatees.isEmpty()) {
 				writeVar.setBackwardProb(PropProbability.UNCERTAIN);
 			} else {
+				// Pass the largest probability
 				double maxProb = -1.0;
 				for (TraceNode dataDominate : dataDominatees) {
 					for (VarValue readVar : dataDominate.getReadVariables()) {
@@ -651,6 +1023,8 @@ public class StepwisePropagator {
 			}
 		}
 		
+		// Backward probability of condition result is calculated as
+		// average of written variables probability in it's control scope
 		if (node.isBranch()) {
 			VarValue conditionResult = node.getConditionResult();
 			
@@ -768,6 +1142,15 @@ public class StepwisePropagator {
 		return false;
 	}
 	
+	private UserFeedback getFeedbackOf(final TraceNode node) {
+		for (NodeFeedbackPair pair : this.feedbackRecords) {
+			if (node.equals(pair.getNode())) {
+				return pair.getFeedback();
+			}
+		}
+		return null;
+	}
+	 
 	private void constructUnmodifiedOpcodeType() {
 		this.unmodifiedType.add(OpcodeType.LOAD_CONSTANT);
 		this.unmodifiedType.add(OpcodeType.LOAD_FROM_ARRAY);

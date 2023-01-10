@@ -24,8 +24,17 @@ public class DebugInfo {
 	private static NodeFeedbackPair nodeFeedbackPair = null;
 	private static boolean rootCauseFound = false;
 	private static boolean feedbackUpdatedFlag = false;
+	private static boolean stop = false;
 	
 	private final static long SLEEP_TIME = 200;
+	
+	public static boolean isStop() {
+		return DebugInfo.stop;
+	}
+	
+	public static void setStop(boolean stop) {
+		DebugInfo.stop = stop;
+	}
 	
 	/**
 	 * Add the given inputs
@@ -49,6 +58,16 @@ public class DebugInfo {
 	public static void addOutput(VarValue output) {
 		DebugInfo.outputs.add(output);
 		DebugInfo.printOutputs();
+	}
+	
+	public static void waitForFeedbackOrRootCauseOrStop() {
+		while (!DebugInfo.feedbackUpdatedFlag && !DebugInfo.rootCauseFound && !DebugInfo.stop) {
+			try {
+				Thread.sleep(DebugInfo.SLEEP_TIME);
+			} catch (Exception e) {}
+		}
+		DebugInfo.feedbackUpdatedFlag = false;
+		DebugInfo.stop = false;
 	}
 	
 	public static void waitForFeedbackOrRootCause() {
@@ -170,5 +189,7 @@ public class DebugInfo {
 	public static void printNodeFeedbackPairs() {
 		System.out.println("DebugInfo - Given feedbacks: " + DebugInfo.nodeFeedbackPair);
 	}
+	
+	
 	
 }

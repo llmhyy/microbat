@@ -107,6 +107,8 @@ public class TraceNode{
 	
 	private transient double sliceBreakerProbability = 0;
 	
+	private boolean pathVisited = false;
+	
 	/**
 	 * It is the probability of correctness as a node
 	 */
@@ -1357,5 +1359,13 @@ public class TraceNode{
 			}
 		}
 		return false;
+	}
+	
+	public boolean isPathVisited() {
+		return this.pathVisited;
+	}
+	
+	public void setPathVisited(boolean isPathVisisted) {
+		this.pathVisited = isPathVisisted;
 	}
 }

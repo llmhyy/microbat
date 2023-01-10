@@ -18,6 +18,11 @@ public class NodeFeedbackPair {
 		this.feedback = feedback;
 	}
 	
+	public NodeFeedbackPair(final NodeFeedbackPair pair) {
+		this.node = pair.getNode();
+		this.feedback = pair.getFeedback();
+	}
+	
 	public TraceNode getNode() {
 		return this.node;
 	}

@@ -12,6 +12,7 @@ import java.util.Set;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.recommendation.UserFeedback;
 
 /**
  * TraceUtil provides helper function
@@ -113,5 +114,16 @@ public class TraceUtil {
 		});
 		
 		return result;
+	}
+	
+	public static TraceNode findNextNode(final TraceNode node, final UserFeedback feedback, final Trace trace) {
+		TraceNode nextNode = null;
+		if (feedback.getFeedbackType() == UserFeedback.WRONG_PATH) {
+			nextNode = node.getControlDominator();
+		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
+			VarValue wrongVar = feedback.getOption().getReadVar();
+			nextNode = trace.findDataDependency(node, wrongVar);
+		}
+		return nextNode;
 	}
 }
