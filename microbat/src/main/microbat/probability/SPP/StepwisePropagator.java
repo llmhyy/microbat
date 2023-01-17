@@ -937,7 +937,7 @@ public class StepwisePropagator {
 			}
 			
 			if (this.outputs.contains(readVar)) {
-				readVar.setAllProbability(PropProbability.HIGH);
+				readVar.setAllProbability(PropProbability.LOW);
 				continue;
 			}
 			
