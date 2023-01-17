@@ -6,8 +6,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -125,5 +128,36 @@ public class TraceUtil {
 			nextNode = trace.findDataDependency(node, wrongVar);
 		}
 		return nextNode;
+	}
+	
+	/**
+	 * Find all the nodes that affected by the give node using BFS
+	 * @param node Given starting node
+	 * @param trace Trace needed to check the relation
+	 * @return Set of nodes affected by the given node
+	 */
+	public static Set<TraceNode> cropTrace(final TraceNode node, final Trace trace) {
+		Set<TraceNode> croppedTrace = new HashSet<>();
+		croppedTrace.add(node);
+		
+		Queue<TraceNode> toVisitNodes = new LinkedList<>();
+		toVisitNodes.add(node);
+		
+		while(!toVisitNodes.isEmpty()) {
+			TraceNode currentNode = toVisitNodes.poll();
+			
+			List<TraceNode> controlDominatees = currentNode.getControlDominatees();
+			toVisitNodes.addAll(controlDominatees);
+			croppedTrace.addAll(controlDominatees);
+			
+			for (VarValue writtenVar : currentNode.getWrittenVariables()) {
+				List<TraceNode> dataDominatees = trace.findDataDependentee(currentNode, writtenVar);
+				toVisitNodes.addAll(dataDominatees);
+				croppedTrace.addAll(dataDominatees);
+			}
+		}
+		
+		return croppedTrace;
+		
 	}
 }

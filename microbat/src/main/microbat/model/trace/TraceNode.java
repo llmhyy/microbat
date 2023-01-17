@@ -16,6 +16,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
+import debuginfo.NodeFeedbackPair;
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.bytecode.ByteCode;
@@ -31,10 +32,11 @@ import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.probability.PropProbability;
+import microbat.probability.SPP.DijstraNode;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 
-public class TraceNode{
+public class TraceNode implements DijstraNode {
 	
 	public final static int STEP_CORRECT = 0;
 	public final static int STEP_INCORRECT = 1;
@@ -107,8 +109,6 @@ public class TraceNode{
 	
 	private transient double sliceBreakerProbability = 0;
 	
-	private boolean pathVisited = false;
-	
 	/**
 	 * It is the probability of correctness as a node
 	 */
@@ -125,7 +125,13 @@ public class TraceNode{
 	 * The variable name of condition result follow the format: ConditionResult_<TraceNode Order>
 	 */
 	public static final String CONDITION_RESULT_NAME = "ConditionResult_";
-			
+	
+	
+	// Dijstra Node Property
+	protected double distance = Double.MAX_VALUE;
+	protected boolean isVisited = false;
+	protected NodeFeedbackPair prevNode = null;
+	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		super();
 		this.breakPoint = breakPoint;
@@ -1360,12 +1366,52 @@ public class TraceNode{
 		}
 		return false;
 	}
-	
-	public boolean isPathVisited() {
-		return this.pathVisited;
+
+	@Override
+	public double getDistance() {
+		return this.distance;
+	}
+
+	@Override
+	public void setDistance(double distance) {
+		this.distance = Math.min(this.distance, distance);
+	}
+
+//	@Override
+//	public double calProb() {
+//		return (this.getForwardProb() + this.getBackwardProb())/2;
+//	}
+
+	@Override
+	public boolean isVisited() {
+		return this.isVisited;
+	}
+
+	@Override
+	public void setVisisted(boolean isVisited) {
+		this.isVisited = isVisited;
+	}
+
+	@Override
+	public NodeFeedbackPair getPrevAction() {
+		return this.prevNode;
+	}
+
+	@Override
+	public void setPrevAction(NodeFeedbackPair pair) {
+		this.prevNode = pair;
+		
+	}
+
+	@Override
+	public void init(boolean isStartNode) {
+		this.setPrevAction(null);
+		this.setVisisted(false);
+		this.setDistance(isStartNode ? PropProbability.LOW : Double.MAX_VALUE);
 	}
 	
-	public void setPathVisited(boolean isPathVisisted) {
-		this.pathVisited = isPathVisisted;
+	@Override
+	public TraceNode getTraceNode() {
+		return this;
 	}
 }

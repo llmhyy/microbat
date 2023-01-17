@@ -5,12 +5,14 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 
 import debuginfo.NodeFeedbackPair;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
+import microbat.evaluation.model.TraceNodePair;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.PrimitiveValue;
@@ -282,86 +284,59 @@ public class StepwisePropagator {
 	}
 	
 	public ActionPath findPathway(final TraceNode startNode, final TraceNode endNode) {
+		TraceDijstraAlgorithm algorithm = new TraceDijstraAlgorithm(startNode, endNode, this.trace);
+		return algorithm.findShortestPath();
 		
-		// Apply greedy algorithm to construct the pathway first
-		ActionPath greedyPath = this.findPathway_Greedy(startNode, endNode);
-		if (greedyPath.canReachRootCause()) {
-			return greedyPath;
-		}
-		
-		// If greedy algorithm fail, then find the shortest path from startNode to endNode
-		ActionPath shortestPath = this.findShortestPath(startNode, endNode);
-		if (shortestPath != null) {
-			return shortestPath;
-		}
-		
-		// If shortest path fail, then just return the greedy path even it doesn't reach the endNode
-		return greedyPath;
-		
-//		// Find all path from start node to end node
-//		List<ActionPath> paths = this.findAllPathway(startNode, endNode);
+//		Set<TraceNode> croppedTrace = TraceUtil.cropTrace(endNode, trace);
+//		for (TraceNode node : croppedTrace) {
+//			System.out.print("Node: " + node.getOrder() + " ");
+//		}
+//		System.out.println();
 //		
-//		// If there are no path to endNode, then give feedback only based on probability
-//		// It will not guarantee to reach the endNode
-//		if (paths.isEmpty()) {
-//			ActionPath path = new ActionPath();
-//			TraceNode currentNode = startNode;
-//			while(currentNode != null) {
-//				if (currentNode.getOrder() <= endNode.getOrder()) {
-//					break;
-//				}
-//				UserFeedback feedback = this.giveFeedback(currentNode);
-//				path.addPair(currentNode, feedback);
-//				currentNode = this.findNextNode(currentNode, feedback);
-//			}
-//			return path;
+//		// Apply greedy algorithm to construct the pathway first
+//		ActionPath greedyPath = this.findPathway_Greedy(startNode, endNode);
+//		if (greedyPath.canReachRootCause()) {
+//			return greedyPath;
 //		}
 //		
-//		if (paths.size() == 1) {
-//			return paths.get(0);
+//		// If greedy algorithm fail, then find the shortest path from startNode to endNode
+//		ActionPath shortestPath = this.findShortestPath(startNode, endNode);
+//		if (shortestPath != null) {
+//			return shortestPath;
 //		}
 //		
-//		TraceNode currentNode = startNode;
-//		int step = 0;
-//		ActionPath selectedPath = null;
-//		while (!currentNode.equals(endNode)) {
-//			final UserFeedback feedback = this.giveFeedback(currentNode);
-//			
-//			if (currentNode.equals(endNode)) {
-//				feedback.setFeedbackType(UserFeedback.ROOTCAUSE);
-//				feedback.setOption(null);
-//			}
-//			
-//			final int step_ = step;
-//			
-//			long matchCount = paths.stream()
-//								   .filter(path -> (path.get(step_).getFeedback().equals(feedback)))
-//								   .count();
-//			
-//			// If no path match the feedback, then just pick the first one
-//			if (matchCount == 0) {
-//				selectedPath = paths.get(0);
-//				break;
-//			} else {
-//				// Remove the path that does not match with feedback
-//				paths.removeIf(path -> (
-//					!path.get(step_).getFeedback().equals(feedback)
-//				));
-//			}
-//			
-//			if (paths.size() == 1) {
-//				selectedPath = paths.get(0);
-//				break;
-//			}
-//			
-//			currentNode = this.findNextNode(currentNode, feedback);
-//			
-//			step += 1;
-//		}
-//		
-//		return selectedPath;
+//		// If shortest path fail, then just return the greedy path even it doesn't reach the endNode
+//		return greedyPath;
 	}
 	
+//	public ActionPath findPathwayDijstra(final TraceNode startNode, final TraceNode endNode, final Collection<TraceNode> croppedRegion) {
+//		ActionPath path = new ActionPath();
+//		List<NodeFeedbackPair> actions = new ArrayList<>();
+//		
+//		this.dijstra_algo(startNode, endNode, croppedRegion);
+//		
+//		TraceNode currentNode = endNode;
+//		while (currentNode.equals(startNode)) {
+//			NodeFeedbackPair action = this.getActionTo(currentNode);
+//			actions.add(action);
+//			currentNode = action.getNode();
+//		}
+// 		return path;
+//	}
+	
+//	public NodeFeedbackPair getActionTo(final TraceNode node) {
+//		NodeFeedbackPair action = null;
+//		double minDistance = Double.MAX_VALUE;
+//		for (DijstraNode dNode : node.getWrittenVariables()) {
+//			double distance = dNode.getDistance();
+//			if (distance < minDistance) {
+//				minDistance = distance;
+//				action = dNode.getPrevAction();
+//			}
+//		}
+//		return action;
+//	}
+	 
 	public ActionPath findPathway_Greedy(final TraceNode startNode, final TraceNode endNode) {
 		ActionPath path = new ActionPath();
 		TraceNode currentNode = startNode;
@@ -794,6 +769,24 @@ public class StepwisePropagator {
 		return supVar;
 	}
 	
+	private VarValue getMostSupWrittenVar(final TraceNode node) {
+		if (node.getWrittenVariables().isEmpty()) {
+			throw new IllegalArgumentException("StepwisePropagator: getMostSupWrittenVar but there are no written variables");
+		}
+		
+		double minProb = 2.0;
+		VarValue supVar = null;
+		
+		for (VarValue writtenVar : node.getWrittenVariables()) {
+			double prob = writtenVar.getProbability();
+			if (prob < minProb) {
+				minProb = prob;
+				supVar = writtenVar;
+			}
+		}
+		
+		return supVar;
+	}
 	
 	public void forwardPropagation() {
 		for (TraceNode node : this.slicedTrace) {
@@ -893,15 +886,15 @@ public class StepwisePropagator {
 				continue;
 			} else if (node.getWrittenVariables().isEmpty() && node.getReadVariables().isEmpty() && node.getControlDominator() != null) {
 				// Case 2
-				drop = PropProbability.HIGH - node.getControlDominator().getConditionResult().getProbability();
+				drop = PropProbability.UNCERTAIN - node.getControlDominator().getConditionResult().getProbability();
 			} else if (node.getWrittenVariables().isEmpty()) {
 				// Case 3
 				double prob = this.aggregator.aggregateProb(node.getReadVariables(), ProbAggregateMethods.AVG);
-				drop = PropProbability.HIGH - prob;
+				drop = PropProbability.UNCERTAIN - prob;
 			} else if (node.getReadVariables().isEmpty()) {
 				// Case 4
 				double prob = this.aggregator.aggregateProb(node.getWrittenVariables(), ProbAggregateMethods.AVG);
-				drop = PropProbability.HIGH - prob;
+				drop = PropProbability.UNCERTAIN - prob;
 			} else {
 				double readProb = this.aggregator.aggregateForwardProb(node.getReadVariables(), ProbAggregateMethods.MIN);
 				double writtenProb = this.aggregator.aggregateProb(node.getWrittenVariables(), ProbAggregateMethods.MIN);

@@ -17,12 +17,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import debuginfo.NodeFeedbackPair;
+import microbat.model.trace.TraceNode;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.probability.HasProbability;
 import microbat.probability.PropProbability;
+import microbat.probability.SPP.DijstraNode;
 
 /**
  * @author Yun Lin
@@ -41,13 +44,16 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	protected boolean isRoot = false;
 	
 	protected double probability = -1;
-	
 	protected double forward_prob = -1;
 	protected double backward_prob = -1;
 	
 	protected long computationalCost = 0;
-	
 	protected boolean isInputRelated = false;
+	
+	// Dijstra Node property
+	protected double distance = Double.MAX_VALUE;
+	protected boolean isVisited = false;
+	protected NodeFeedbackPair prevNode = null;
 	
 	public static final int NOT_NULL_VAL = 1;
 	
@@ -57,7 +63,6 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 		this.isRoot = isRoot;
 		this.variable = variable;
 		this.computationalCost = 0;
-		
 	}
 	
 	public abstract VarValue clone();
@@ -558,5 +563,37 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 		this.setBackwardProb(prob);
 	}
 	
-//	public abstract VarValue clone();
+	public double getDistance() {
+		return this.distance;
+	}
+	
+	public void setDistance(final double distance) {
+		this.distance = Math.min(this.distance, distance);
+	}
+	
+//	public double calProb() {
+//		return (this.getForwardProb() + this.getBackwardProb())/2;
+//	}
+	
+	public boolean isVisited() {
+		return this.isVisited;
+	}
+	
+	public void setVisisted(final boolean isVisited) {
+		this.isVisited = isVisited;
+	}
+	
+	public NodeFeedbackPair getPrevAction() {
+		return this.prevNode;
+	}
+	
+	public void setPrevAction(final NodeFeedbackPair pair) {
+		this.prevNode = pair;
+	}
+	
+	public void init(boolean isStartNode) {
+		this.setPrevAction(null);
+		this.setVisisted(false);
+		this.setDistance(isStartNode ? PropProbability.LOW : Double.MAX_VALUE);
+	}
 }
