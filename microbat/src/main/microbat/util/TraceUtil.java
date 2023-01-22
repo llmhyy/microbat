@@ -145,15 +145,29 @@ public class TraceUtil {
 		
 		while(!toVisitNodes.isEmpty()) {
 			TraceNode currentNode = toVisitNodes.poll();
+			croppedTrace.add(currentNode);
 			
 			List<TraceNode> controlDominatees = currentNode.getControlDominatees();
+			controlDominatees.removeIf(controlDominatee -> croppedTrace.contains(controlDominatee));
 			toVisitNodes.addAll(controlDominatees);
-			croppedTrace.addAll(controlDominatees);
+			
+			for (TraceNode controlDominatee : controlDominatees) {
+				if (controlDominatee.getOrder() == 417) {
+					System.out.println();
+				}
+			}
+//			croppedTrace.addAll(controlDominatees);
 			
 			for (VarValue writtenVar : currentNode.getWrittenVariables()) {
 				List<TraceNode> dataDominatees = trace.findDataDependentee(currentNode, writtenVar);
+				dataDominatees.removeIf(dataDominatee -> croppedTrace.contains(dataDominatee));
+				for (TraceNode controlDominatee : dataDominatees) {
+					if (controlDominatee.getOrder() == 417) {
+						System.out.println();
+					}
+				}
 				toVisitNodes.addAll(dataDominatees);
-				croppedTrace.addAll(dataDominatees);
+//				croppedTrace.addAll(dataDominatees);
 			}
 		}
 		
