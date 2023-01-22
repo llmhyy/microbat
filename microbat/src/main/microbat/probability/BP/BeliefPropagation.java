@@ -238,14 +238,33 @@ public class BeliefPropagation {
 	 * @return Predicted wrong node
 	 */
 	public TraceNode getMostErroneousNode() {
-		TraceNode errorNode = this.executionList.get(0);
-		for (int i=1; i<this.executionList.size()-1; i++) {
-			TraceNode node = this.executionList.get(i);
-			if (node.getProbability() <= errorNode.getProbability()) {
+		TraceNode errorNode = null;
+		double minProb = 2.0;
+		for (TraceNode node : this.executionList) {
+			if (!this.isFeedbackGiven(node) && node.getProbability() < minProb && node.getProbability() != -1.0) {
+				minProb = node.getProbability();
 				errorNode = node;
 			}
 		}
 		return errorNode;
+//		for (int i=1; i<this.executionList.size()-1; i++) {
+//			TraceNode node = this.executionList.get(i);
+//			if (!this.isFeedbackGiven(errorNode)) {
+//				if (node.getProbability() <= errorNode.getProbability()) {
+//					errorNode = node;
+//				}
+//			}
+//		}
+//		return errorNode;
+	}
+	
+	private boolean isFeedbackGiven(final TraceNode node) {
+		for (NodeFeedbackPair pair : BeliefPropagation.userFeedbacks) {
+			if (node.equals(pair.getNode())) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public List<TraceNode> getSlicedExecutionList() {
