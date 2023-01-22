@@ -62,7 +62,7 @@ public class TraceDijstraAlgorithm {
 			
 			final TraceNode controlDom = node.getControlDominator();
 			if (controlDom != null) {
-				if (this.isInsideRegion(controlDom)) {
+				if (this.isInsideRegion(controlDom) && this.graph.contains(controlDom)) {
 					DijstraNode dNode = (DijstraNode) controlDom;
 					VarValue conditionResult = controlDom.getConditionResult();
 					final double distance = currentNode.getDistance() + this.calProb(conditionResult);
@@ -76,7 +76,7 @@ public class TraceDijstraAlgorithm {
 			
 			for (VarValue readVar : node.getReadVariables()) {
 				TraceNode dataDom = this.trace.findDataDependency(node, readVar);
-				if (this.isInsideRegion(dataDom)) {
+				if (this.isInsideRegion(dataDom) && this.graph.contains(dataDom)) {
 					VarValue dataDomVar = null;
 					for (VarValue writtenVar : dataDom.getWrittenVariables()) {
 						if (writtenVar.equals(readVar)) {
@@ -152,18 +152,22 @@ public class TraceDijstraAlgorithm {
 		Queue<TraceNode> queue = new LinkedList<>();
 		queue.offer(this.startNode);
 		this.graph.add(this.startNode);
+
+		Set<TraceNode> visitedNodes = new HashSet<>();
+		visitedNodes.add(this.startNode);
 		
 		while(!queue.isEmpty()) {
 			TraceNode node = queue.poll();
-
+			visitedNodes.add(node);
+			
 			TraceNode controlDom = node.getControlDominator();
 			if (controlDom != null) {
-				if (this.isInsideRegion(node)) {
+				if (this.isInsideRegion(controlDom)) {
 					DijstraNode controlDNode = (DijstraNode) controlDom;
 					controlDNode.init(false);
 					this.graph.add(controlDNode);
 					
-					if (!queue.contains(controlDom)) {
+					if (!queue.contains(controlDom) && !visitedNodes.contains(controlDom)) {
 						queue.add(controlDom);
 					}
 				} 
@@ -176,7 +180,7 @@ public class TraceDijstraAlgorithm {
 					dNode.init(false);
 					this.graph.add(dataDom);
 					
-					if (!queue.contains(dataDom)) {
+					if (!queue.contains(dataDom) && !visitedNodes.contains(dataDom)) {
 						queue.add(dataDom);
 					}
 				}
