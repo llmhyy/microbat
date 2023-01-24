@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,7 +37,7 @@ import microbat.probability.SPP.DijstraNode;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 
-public class TraceNode implements DijstraNode {
+public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	
 	public final static int STEP_CORRECT = 0;
 	public final static int STEP_INCORRECT = 1;
@@ -1374,7 +1375,7 @@ public class TraceNode implements DijstraNode {
 
 	@Override
 	public void setDistance(double distance) {
-		this.distance = Math.min(this.distance, distance);
+		this.distance = distance;
 	}
 
 //	@Override
@@ -1413,5 +1414,10 @@ public class TraceNode implements DijstraNode {
 	@Override
 	public TraceNode getTraceNode() {
 		return this;
+	}
+
+	@Override
+	public int compare(TraceNode o1, TraceNode o2) {
+		return o1.getOrder() - o2.getOrder();
 	}
 }
