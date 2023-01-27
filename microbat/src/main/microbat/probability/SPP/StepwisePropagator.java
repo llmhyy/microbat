@@ -2,6 +2,7 @@ package microbat.probability.SPP;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -202,7 +203,7 @@ public class StepwisePropagator {
 	 */
 	public void computeComputationalCost() {
 		for (TraceNode node : this.slicedTrace) {
-			
+
 			// Inherit the computation cost from data dominator
 			for (VarValue readVar : node.getReadVariables()) {
 				final VarValue dataDomVar = this.findDataDomVar(readVar, node);
@@ -348,6 +349,27 @@ public class StepwisePropagator {
 			}
 			
 			if (currentNode.getOrder() <= endNode.getOrder()) {
+				break;
+			}
+			
+			UserFeedback feedback = this.giveFeedback(currentNode);
+			path.addPair(currentNode, feedback);
+			currentNode = this.findNextNode(currentNode, feedback);
+		}
+		return path;
+	}
+	
+	public ActionPath findPathway_Greedy(final TraceNode startNode, final TraceNode endNode, final ActionPath initPath) {
+		ActionPath path = new ActionPath(initPath);
+		
+		UserFeedback lastFeedback = path.peek().getFeedback();
+		TraceNode lastNode = path.peek().getNode();
+		
+		TraceNode currentNode = this.findNextNode(lastNode, lastFeedback);
+		while (currentNode != null && currentNode.getOrder() > endNode.getOrder()) {
+			if (currentNode.equals(endNode)) {
+				UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
+				path.addPair(currentNode, feedback);
 				break;
 			}
 			
@@ -789,11 +811,9 @@ public class StepwisePropagator {
 	}
 	
 	public void forwardPropagation() {
+		
+		this.computeMinOutputCost();
 		for (TraceNode node : this.slicedTrace) {
-			
-			if (node.getOrder() == 8253) {
-				System.out.println();
-			}
 			
 			// Skip propagation if either read or written variable is missing
 			if (node.getReadVariables().isEmpty() || node.getWrittenVariables().isEmpty()) {
@@ -814,40 +834,143 @@ public class StepwisePropagator {
 			}
 			
 			double avgProb = this.aggregator.aggregateForwardProb(readVars, ProbAggregateMethods.AVG);
-			
-//			if (avgProb <= PropProbability.UNCERTAIN) {
-//				continue;
-//			} else {
-			
-			// Find the closest wrong variable computational cost 
-			long minCost = this.outputs.get(0).getComputationalCost();
-			for (int i=1; i<this.outputs.size(); i++) {
-				VarValue output = this.outputs.get(i);
-				final long cost = output.getComputationalCost();
-				if (cost < minCost) {
-					minCost = cost;
+			if (avgProb <= PropProbability.LOW) {
+				// No need to continue if the avgProb is already LOW
+				for (VarValue writtenVar : node.getWrittenVariables()) {
+					if (this.inputs.contains(writtenVar)) {
+						writtenVar.setAllProbability(PropProbability.HIGH);
+					} else if (this.outputs.contains(writtenVar)) {
+						writtenVar.setAllProbability(PropProbability.LOW);
+					} else {
+						writtenVar.setForwardProb(avgProb);
+					}
 				}
+				continue;
 			}
 			
-			// Calculate forward probability of written variable
-			long writtenCost = node.getWrittenVariables().get(0).getComputationalCost();
-			double loss = (avgProb - 0.05) * ((double) writtenCost / minCost);
-			double prob = avgProb - loss;
-			
-			for (VarValue writtenVar : node.getWrittenVariables()) {
-				if (this.inputs.contains(writtenVar)) {
-					writtenVar.setAllProbability(PropProbability.HIGH);
-				} else if (this.outputs.contains(writtenVar)) {
-					writtenVar.setAllProbability(PropProbability.LOW);
-				} else {
-					writtenVar.setForwardProb(prob);
+			if (node.isBranch()) {
+				for (VarValue writtenVar : node.getWrittenVariables()) {
+					if (this.outputs.contains(writtenVar)) {
+						writtenVar.setAllProbability(PropProbability.LOW);
+					} else {
+						writtenVar.setForwardProb(avgProb);
+					}
 				}
-			}
+			} else {
+				// Calculate forward probability of written variable
+				long writtenCost = node.getWrittenVariables().get(0).getComputationalCost();
 				
-//			}
+				// Find the closest wrong variable computational cost 
+				long outputCost = node.getMinOutpuCost();
+				
+				double loss = (avgProb - PropProbability.LOW) * ((double) writtenCost / outputCost);
+				double prob = avgProb - loss;
+				if (prob < 0) {
+					System.out.println();
+				}
+				for (VarValue writtenVar : node.getWrittenVariables()) {
+					if (this.inputs.contains(writtenVar)) {
+						writtenVar.setAllProbability(PropProbability.HIGH);
+					} else if (this.outputs.contains(writtenVar)) {
+						writtenVar.setAllProbability(PropProbability.LOW);
+					} else {
+						writtenVar.setForwardProb(prob);
+					}
+				}	
+			}
 		}
 	}
 	
+	private void computeMinOutputCost() {
+		for (TraceNode node : this.slicedTrace) {
+			node.setMinOutputCost(Long.MAX_VALUE);
+		}
+		TraceNode lastNode = this.slicedTrace.get(this.slicedTrace.size()-1);
+		if (!lastNode.getWrittenVariables().isEmpty()) {
+			lastNode.setMinOutputCost(lastNode.getWrittenVariables().get(0).getComputationalCost());
+		} else {
+			lastNode.setMinOutputCost(0);
+		}
+		
+		Queue<TraceNode> toVisitNodes = new LinkedList<>();
+		toVisitNodes.add(lastNode);
+		
+		Set<TraceNode> visitedNodes = new HashSet<>();
+
+		while(!toVisitNodes.isEmpty()) {
+			TraceNode node = toVisitNodes.poll();
+			visitedNodes.add(node);
+			
+			for (VarValue readVar : node.getReadVariables()) {
+				if (this.outputs.contains(readVar)) {
+					node.setMinOutputCost(readVar.getComputationalCost());
+				}
+			}
+			for (VarValue writtenVar : node.getWrittenVariables()) {
+				if (this.outputs.contains(writtenVar)) {
+					node.setMinOutputCost(writtenVar.getComputationalCost());
+				}
+			}
+			
+			final long minOutput = node.getMinOutpuCost();
+			
+			for (VarValue readVar : node.getReadVariables()) {
+				TraceNode dataDom = this.trace.findDataDependency(node, readVar);
+				if (dataDom == null) {
+					continue;
+				}
+				
+				if (visitedNodes.contains(dataDom) && dataDom.getMinOutpuCost() < minOutput) {
+					continue;
+				}
+				
+				if (dataDom.getMinOutpuCost() > minOutput) {
+					dataDom.setMinOutputCost(minOutput);
+				}
+				
+				if (!toVisitNodes.contains(dataDom)) {
+					toVisitNodes.add(dataDom);
+				}
+			}
+		}
+	}
+	
+	private long findOutputCost(final TraceNode startNode) {
+		Queue<TraceNode> toVisitNodes = new LinkedList<>();
+		toVisitNodes.add(startNode);
+		
+		Set<TraceNode> visitedNodes = new HashSet<>();
+		
+		while(!toVisitNodes.isEmpty()) {
+			TraceNode node = toVisitNodes.poll();
+			visitedNodes.add(node);
+			
+			for (VarValue readVar : node.getReadVariables()) {
+				if (this.outputs.contains(readVar)) {
+					return readVar.getComputationalCost();
+				}
+			}
+			for (VarValue writtenVar : node.getWrittenVariables()) {
+				if (this.outputs.contains(writtenVar)) {
+					return writtenVar.getComputationalCost();
+				}
+			}
+			
+			List<TraceNode> controlDominatees = node.getControlDominatees();
+			controlDominatees.removeIf(controlDominatee -> visitedNodes.contains(controlDominatee));
+			controlDominatees.removeIf(controlDominatee -> toVisitNodes.contains(controlDominatee));
+			toVisitNodes.addAll(controlDominatees);
+			
+			for (VarValue writtenVar : node.getWrittenVariables()) {
+				List<TraceNode> dataDominatees = this.trace.findDataDependentee(node, writtenVar);
+				dataDominatees.removeIf(dataDominatee -> visitedNodes.contains(dataDominatee));
+				dataDominatees.removeIf(dataDominatee -> toVisitNodes.contains(dataDominatee));
+				toVisitNodes.addAll(dataDominatees);
+			}
+		}
+		
+		return this.outputs.get(0).getComputationalCost();
+	}
 	
 	/**
 	 * Propose the root cause node. <br><br>

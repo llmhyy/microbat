@@ -106,5 +106,35 @@ public class ActionPath implements Iterable<NodeFeedbackPair>{
 			return false;
 		}
 	}
+	
+	public boolean isFollowing(final ActionPath target) {
+		if (this.getLength() == 0) {
+			return true;
+		}
+		
+		if (this.getLength() > target.getLength()) {
+			return false;
+		}
+		
+		for (int i=0; i<target.getLength(); i++) {
+			final NodeFeedbackPair targetPair = target.get(i);
+			final TraceNode targetNode = targetPair.getNode();
+			final UserFeedback targetFeedback = targetPair.getFeedback();
+			
+			final NodeFeedbackPair pair = this.get(i);
+			final TraceNode node = pair.getNode();
+			final UserFeedback feedback = pair.getFeedback();
+			
+			if(!targetNode.equals(node)) {
+				return false;
+			}
+			
+			if(!targetFeedback.week_equals(feedback)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
 
 }

@@ -133,6 +133,8 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	protected boolean isVisited = false;
 	protected NodeFeedbackPair prevNode = null;
 	
+	protected long minOutputCost = 0;
+	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		super();
 		this.breakPoint = breakPoint;
@@ -1419,5 +1421,13 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	@Override
 	public int compare(TraceNode o1, TraceNode o2) {
 		return o1.getOrder() - o2.getOrder();
+	}
+	
+	public long getMinOutpuCost() {
+		return this.minOutputCost;
+	}
+	
+	public void setMinOutputCost(final long minOutputCost) {
+		this.minOutputCost = minOutputCost;
 	}
 }
