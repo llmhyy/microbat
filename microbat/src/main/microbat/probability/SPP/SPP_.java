@@ -21,6 +21,8 @@ import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.probability.PropProbability;
+import microbat.probability.SPP.pathfinding.ActionPath;
+import microbat.probability.SPP.pathfinding.TraceDijstraAlgorithm;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
@@ -39,7 +41,7 @@ import microbat.util.TraceUtil;
  * @author David
  *
  */
-public class StepwisePropagator {
+public class SPP_ {
 	
 	/**
 	 * Execution trace of target program
@@ -49,12 +51,12 @@ public class StepwisePropagator {
 	/**
 	 * List of input variables which assumed to be correct
 	 */
-	private List<VarValue> inputs = new ArrayList<>();
+	private List<VarValue> correctVars = new ArrayList<>();
 	
 	/**
 	 * List of outputs variables which assumed to be wrong
 	 */
-	private List<VarValue> outputs = new ArrayList<>();
+	private List<VarValue> wrongVars = new ArrayList<>();
 	
 	/**
 	 * List of executed trace node after dynamic slicing
@@ -67,23 +69,12 @@ public class StepwisePropagator {
 	
 	private final List<OpcodeType> unmodifiedType = new ArrayList<>();
 	
-	/*
-	 *  Correctness threshold
-	 */
-	private double correctThd = 0.7;
-	
-	/*
-	 * 	Wrongness threshold
-	 */
-	private double wrongThd = 0.3;
-	
 	/**
 	 * Constructor
 	 * @param trace Execution trace for target program
 	 */
-	public StepwisePropagator(Trace trace) {
+	public SPP_(Trace trace) {
 		this.trace = trace;
-		this.aggregator = new ProbAggregator();
 	}
 	
 	/**
@@ -92,12 +83,12 @@ public class StepwisePropagator {
 	 * @param inputs Input variables which assumed to be correct
 	 * @param outputs Output variables which assumed to be wrong
 	 */
-	public StepwisePropagator(Trace trace, List<VarValue> inputs, List<VarValue> outputs) {
+	public SPP_(Trace trace, List<VarValue> inputs, List<VarValue> outputs) {
 		this.trace = trace;
-		this.inputs = inputs;
-		this.outputs = outputs;
+		this.correctVars = inputs;
+		this.wrongVars = outputs;
 		this.aggregator = new ProbAggregator();
-		this.slicedTrace = TraceUtil.dyanmicSlice(trace, this.outputs);
+		this.slicedTrace = TraceUtil.dyanmicSlice(trace, this.wrongVars);
 		this.constructUnmodifiedOpcodeType();
 	}
 	
@@ -106,7 +97,7 @@ public class StepwisePropagator {
 	 * @param inputs Input variables
 	 */
 	public void addInputs(Collection<VarValue> inputs) {
-		this.inputs.addAll(inputs);
+		this.correctVars.addAll(inputs);
 	}
 	
 	/**
@@ -114,7 +105,7 @@ public class StepwisePropagator {
 	 * @param outputs Output variables
 	 */
 	public void addOutputs(Collection<VarValue> outputs) {
-		this.outputs.addAll(outputs);
+		this.wrongVars.addAll(outputs);
 	}
 
 	/**
@@ -175,7 +166,7 @@ public class StepwisePropagator {
 			for (VarValue readVar : node.getReadVariables()) {
 				
 				// Ignore this variable if it is input or output
-				if (this.outputs.contains(readVar) || this.inputs.contains(readVar)) {
+				if (this.wrongVars.contains(readVar) || this.correctVars.contains(readVar)) {
 					continue;
 				}
 				
@@ -233,7 +224,7 @@ public class StepwisePropagator {
 		for (TraceNode node : this.slicedTrace) {
 			boolean readVarRelatedToInput = false;
 			for (VarValue readVar : node.getReadVariables()) {
-				if (this.inputs.contains(readVar)) {
+				if (this.correctVars.contains(readVar)) {
 					readVar.isInputRelated(true);
 					readVarRelatedToInput = true;
 					continue;
@@ -252,7 +243,7 @@ public class StepwisePropagator {
 			}
 			
 			for (VarValue writtenVar : node.getWrittenVariables()) {
-				if (this.inputs.contains(writtenVar)) {
+				if (this.correctVars.contains(writtenVar)) {
 					writtenVar.isInputRelated(true);
 					continue;
 				}
@@ -395,13 +386,13 @@ public class StepwisePropagator {
 			
 			// If the condition result is confirmed to be wrong,
 			// then give feedback directly
-			if (this.outputs.contains(conditionResult)) {
+			if (this.wrongVars.contains(conditionResult)) {
 				feedback.setFeedbackType(UserFeedback.WRONG_PATH);
 				return feedback; 
 			}
 			
 			// Ignore if the condition result confirmed to be correct
-			if (!this.inputs.contains(conditionResult)) {
+			if (!this.correctVars.contains(conditionResult)) {
 				controlProb = controlDom.getConditionResult().getProbability();
 			} 
 		}
@@ -412,7 +403,7 @@ public class StepwisePropagator {
 			
 			// If the readVar is confirmed to be wrong,
 			// then give feedback directly
-			if (this.outputs.contains(readVar)) {
+			if (this.wrongVars.contains(readVar)) {
 				feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
 				feedback.setOption(new ChosenVariableOption(readVar, null));
 				return feedback;
@@ -424,7 +415,7 @@ public class StepwisePropagator {
 			}
 			
 			// If the readVar is confirmed to be correct, then ignore
-			if (!this.inputs.contains(readVar)) {
+			if (!this.correctVars.contains(readVar)) {
 				double prob = readVar.getProbability();
 				if (prob < minReadProb) {
 					minReadProb = prob;
@@ -549,7 +540,7 @@ public class StepwisePropagator {
 			// Check if there any wrong variable
 			boolean haveWrongVariable = false;
 			for (VarValue readVar : lastNode.getReadVariables()) {
-				if (this.outputs.contains(readVar)) {
+				if (this.wrongVars.contains(readVar)) {
 					// If the read variable is said to be wrong, then path will only pass this variable
 					UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 					feedback.setOption(new ChosenVariableOption(readVar, null));
@@ -583,7 +574,7 @@ public class StepwisePropagator {
 				if (controlDom.getOrder() >= endNode.getOrder()) {
 					VarValue controlDomVar = controlDom.getConditionResult();
 					// Skip if the controlDom is correct
-					if (!this.inputs.contains(controlDomVar)) {
+					if (!this.correctVars.contains(controlDomVar)) {
 						path.setLastAction(new UserFeedback(UserFeedback.WRONG_PATH));
 						ActionPath newPath = new ActionPath(path);
 						newPath.addPair(controlDom, null);
@@ -591,7 +582,7 @@ public class StepwisePropagator {
 						path.setLastAction(null);
 						
 						// Skip the read variables if the condition is wrong
-						if (this.outputs.contains(controlDomVar)) {
+						if (this.wrongVars.contains(controlDomVar)) {
 							continue;
 						}
 					}
@@ -601,7 +592,7 @@ public class StepwisePropagator {
 			// Search all read variable to go
 			for (VarValue readVar : lastNode.getReadVariables()) {
 				// Skip if the variables are said to be correct
-				if (this.inputs.contains(readVar)) {
+				if (this.correctVars.contains(readVar)) {
 					continue;
 				}
 				
@@ -837,9 +828,9 @@ public class StepwisePropagator {
 			if (avgProb <= PropProbability.LOW) {
 				// No need to continue if the avgProb is already LOW
 				for (VarValue writtenVar : node.getWrittenVariables()) {
-					if (this.inputs.contains(writtenVar)) {
+					if (this.correctVars.contains(writtenVar)) {
 						writtenVar.setAllProbability(PropProbability.HIGH);
-					} else if (this.outputs.contains(writtenVar)) {
+					} else if (this.wrongVars.contains(writtenVar)) {
 						writtenVar.setAllProbability(PropProbability.LOW);
 					} else {
 						writtenVar.setForwardProb(avgProb);
@@ -850,7 +841,7 @@ public class StepwisePropagator {
 			
 			if (node.isBranch()) {
 				for (VarValue writtenVar : node.getWrittenVariables()) {
-					if (this.outputs.contains(writtenVar)) {
+					if (this.wrongVars.contains(writtenVar)) {
 						writtenVar.setAllProbability(PropProbability.LOW);
 					} else {
 						writtenVar.setForwardProb(avgProb);
@@ -869,9 +860,9 @@ public class StepwisePropagator {
 					System.out.println();
 				}
 				for (VarValue writtenVar : node.getWrittenVariables()) {
-					if (this.inputs.contains(writtenVar)) {
+					if (this.correctVars.contains(writtenVar)) {
 						writtenVar.setAllProbability(PropProbability.HIGH);
-					} else if (this.outputs.contains(writtenVar)) {
+					} else if (this.wrongVars.contains(writtenVar)) {
 						writtenVar.setAllProbability(PropProbability.LOW);
 					} else {
 						writtenVar.setForwardProb(prob);
@@ -902,12 +893,12 @@ public class StepwisePropagator {
 			visitedNodes.add(node);
 			
 			for (VarValue readVar : node.getReadVariables()) {
-				if (this.outputs.contains(readVar)) {
+				if (this.wrongVars.contains(readVar)) {
 					node.setMinOutputCost(readVar.getComputationalCost());
 				}
 			}
 			for (VarValue writtenVar : node.getWrittenVariables()) {
-				if (this.outputs.contains(writtenVar)) {
+				if (this.wrongVars.contains(writtenVar)) {
 					node.setMinOutputCost(writtenVar.getComputationalCost());
 				}
 			}
@@ -946,12 +937,12 @@ public class StepwisePropagator {
 			visitedNodes.add(node);
 			
 			for (VarValue readVar : node.getReadVariables()) {
-				if (this.outputs.contains(readVar)) {
+				if (this.wrongVars.contains(readVar)) {
 					return readVar.getComputationalCost();
 				}
 			}
 			for (VarValue writtenVar : node.getWrittenVariables()) {
-				if (this.outputs.contains(writtenVar)) {
+				if (this.wrongVars.contains(writtenVar)) {
 					return writtenVar.getComputationalCost();
 				}
 			}
@@ -969,7 +960,7 @@ public class StepwisePropagator {
 			}
 		}
 		
-		return this.outputs.get(0).getComputationalCost();
+		return this.wrongVars.get(0).getComputationalCost();
 	}
 	
 	/**
@@ -1054,12 +1045,12 @@ public class StepwisePropagator {
 		for (VarValue readVar : node.getReadVariables()) {
 			
 			// Ignore the input variables such that it will not be overwritten
-			if (this.inputs.contains(readVar)) {
+			if (this.correctVars.contains(readVar)) {
 				readVar.setAllProbability(PropProbability.HIGH);
 				continue;
 			}
 			
-			if (this.outputs.contains(readVar)) {
+			if (this.wrongVars.contains(readVar)) {
 				readVar.setAllProbability(PropProbability.LOW);
 				continue;
 			}
@@ -1105,7 +1096,7 @@ public class StepwisePropagator {
 		for (VarValue writeVar : node.getWrittenVariables()) {
 			
 			// Ignore the output variable such that it will not be overwritten
-			if (this.outputs.contains(writeVar)) {
+			if (this.wrongVars.contains(writeVar)) {
 				writeVar.setAllProbability(PropProbability.LOW);
 				continue;
 			}
@@ -1144,9 +1135,9 @@ public class StepwisePropagator {
 		if (node.isBranch()) {
 			VarValue conditionResult = node.getConditionResult();
 			
-			if (this.inputs.contains(conditionResult)) {
+			if (this.correctVars.contains(conditionResult)) {
 				conditionResult.setAllProbability(PropProbability.HIGH);
-			} else if (this.outputs.contains(conditionResult)) {
+			} else if (this.wrongVars.contains(conditionResult)) {
 				conditionResult.setAllProbability(PropProbability.LOW);
 			} else {
 				double avgProb = 0.0;
@@ -1178,19 +1169,19 @@ public class StepwisePropagator {
 		for (TraceNode node : this.slicedTrace) {
 			for (VarValue readVar : node.getReadVariables()) {
 				readVar.setAllProbability(PropProbability.UNCERTAIN);
-				if (this.inputs.contains(readVar)) {
+				if (this.correctVars.contains(readVar)) {
 					readVar.setAllProbability(PropProbability.HIGH);
 				}
-				if (this.outputs.contains(readVar)) {
+				if (this.wrongVars.contains(readVar)) {
 					readVar.setAllProbability(PropProbability.LOW);
 				}
 			}
 			for (VarValue writeVar : node.getWrittenVariables()) {
 				writeVar.setAllProbability(PropProbability.UNCERTAIN);
-				if (this.inputs.contains(writeVar)) {
+				if (this.correctVars.contains(writeVar)) {
 					writeVar.setAllProbability(PropProbability.HIGH);
 				}
-				if (this.outputs.contains(writeVar)) {
+				if (this.wrongVars.contains(writeVar)) {
 					writeVar.setAllProbability(PropProbability.LOW);
 				}
 			}
@@ -1222,23 +1213,23 @@ public class StepwisePropagator {
 			TraceNode controlDominator = node.getControlDominator();
 			if (controlDominator != null) {
 				VarValue controlDom = controlDominator.getConditionResult();
-				this.inputs.add(controlDom);
+				this.correctVars.add(controlDom);
 			}
 		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_PATH) {
 			// If the feedback is WRONG_PATH, set control dominator varvalue to wrong
 			TraceNode controlDominator = node.getControlDominator();
 			VarValue controlDom = controlDominator.getConditionResult();
-			this.outputs.add(controlDom);
+			this.wrongVars.add(controlDom);
 		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
 			// If the feedback is WRONG_VARIABLE_VALUE, set that variable to be wrong
 			// and set control dominator to be correct
 			VarValue wrongVar = feedback.getOption().getReadVar();
-			this.outputs.add(wrongVar);
+			this.wrongVars.add(wrongVar);
 			this.addOutputs(node.getWrittenVariables());
 			
 			TraceNode controlDom = node.getControlDominator();
 			if (controlDom != null) {
-				this.inputs.add(controlDom.getConditionResult());
+				this.correctVars.add(controlDom.getConditionResult());
 			}
 		}
 		

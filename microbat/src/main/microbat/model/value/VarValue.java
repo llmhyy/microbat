@@ -25,7 +25,7 @@ import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.probability.HasProbability;
 import microbat.probability.PropProbability;
-import microbat.probability.SPP.DijstraNode;
+import microbat.probability.SPP.pathfinding.DijstraNode;
 
 /**
  * @author Yun Lin

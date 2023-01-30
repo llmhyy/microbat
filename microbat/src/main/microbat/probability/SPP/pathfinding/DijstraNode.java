@@ -1,4 +1,4 @@
-package microbat.probability.SPP;
+package microbat.probability.SPP.pathfinding;
 
 import debuginfo.NodeFeedbackPair;
 import microbat.model.trace.TraceNode;

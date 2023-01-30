@@ -1,4 +1,4 @@
-package microbat.probability.SPP;
+package microbat.probability.SPP.pathfinding;
 
 import java.util.ArrayList;
 import java.util.Collection;

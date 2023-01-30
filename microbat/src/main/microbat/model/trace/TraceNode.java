@@ -33,7 +33,7 @@ import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.probability.PropProbability;
-import microbat.probability.SPP.DijstraNode;
+import microbat.probability.SPP.pathfinding.DijstraNode;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 

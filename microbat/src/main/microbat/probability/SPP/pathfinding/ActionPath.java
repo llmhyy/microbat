@@ -1,4 +1,4 @@
-package microbat.probability.SPP;
+package microbat.probability.SPP.pathfinding;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -68,6 +68,15 @@ public class ActionPath implements Iterable<NodeFeedbackPair>{
 	
 	public int getLength() {
 		return this.path.size();
+	}
+	
+	public boolean contains(final TraceNode node) {
+		for (NodeFeedbackPair pair : this) {
+			if (node.equals(pair.getNode())) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	@Override

@@ -16,7 +16,7 @@ import debuginfo.NodeFeedbackPair;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.probability.SPP.StepwisePropagator;
+import microbat.probability.SPP.SPP;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
 
@@ -64,7 +64,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 				List<VarValue> outputs = DebugInfo.getOutputs();
 				
 				// Set up the propagator that perform propagation
-				StepwisePropagator propagator = new StepwisePropagator(traceView.getTrace(), inputs, outputs);
+				SPP propagator = new SPP(traceView.getTrace(), inputs, outputs);
 
 				int feedbackCounts = 0;
 				
@@ -74,7 +74,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 					System.out.println("Propagation Start");
 					
 					// Start back propagation
-					propagator.backwardPropagate();
+//					propagator.backwardPropagate();
 					
 					System.out.println("Propagation End");
 					
