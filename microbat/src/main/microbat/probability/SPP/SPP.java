@@ -92,23 +92,28 @@ public class SPP {
 		this.wrongVars.addAll(outputs);
 	}
 	
-	public ActionPath suggestPath(final TraceNode startNode) {
+	public void propagate() {
 		ProbPropagator propagator = new ProbPropagator(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
 		propagator.propagate();
-		final TraceNode rootCause = this.proposeRootCause();
+	}
+	
+	public ActionPath suggestPath(final TraceNode startNode, final TraceNode endNode) {
+		if (startNode.getOrder() < endNode.getOrder()) {
+			throw new IllegalArgumentException("EndNode: " + endNode.getOrder() + " is in the downstream of startNode: " + startNode.getOrder());
+		}
 		PathFinder finder = new PathFinder(this.trace);
-		ActionPath path = finder.findPath_dijstra(startNode, rootCause);
+		ActionPath path = finder.findPath_dijstra(startNode, endNode);
 		return path;
 	}
 	
-	public ActionPath suggestPath(final TraceNode startNode, final ActionPath userPath) {
-		ProbPropagator propagator = new ProbPropagator(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
-		propagator.propagate();
-		final TraceNode rootCause = this.proposeRootCause();
-		PathFinder finder = new PathFinder(this.trace);
-		ActionPath path = finder.findPath_dijstra(startNode, rootCause);
-		if (!userPath.isFollowing(path)) {
-			path = finder.findPathway_greedy(startNode, rootCause, userPath);
+	public ActionPath suggestPath(final TraceNode startNode, final TraceNode endNode, final ActionPath mustFollowPath) {
+		if (startNode.getOrder() < endNode.getOrder()) {
+			throw new IllegalArgumentException("EndNode: " + endNode.getOrder() + " is in the downstream of startNode: " + startNode.getOrder());
+		}
+		ActionPath path = this.suggestPath(startNode, endNode);
+		if (!mustFollowPath.isFollowing(path)) {
+			PathFinder finder = new PathFinder(this.trace);
+			path = finder.findPathway_greedy(startNode, endNode, mustFollowPath);
 		}
 		return path;
 	}
@@ -198,7 +203,6 @@ public class SPP {
 	public void responseToFeedback(final NodeFeedbackPair nodeFeedbackPair) {
 		TraceNode node = nodeFeedbackPair.getNode();
 		UserFeedback feedback = nodeFeedbackPair.getFeedback();
-		
 		if (feedback.getFeedbackType() == UserFeedback.CORRECT) {
 			// If the feedback is CORRECT, then set every variable and control dom to be correct
 			this.addInputs(node.getReadVariables());
@@ -219,14 +223,17 @@ public class SPP {
 			VarValue wrongVar = feedback.getOption().getReadVar();
 			this.wrongVars.add(wrongVar);
 			this.addOutputs(node.getWrittenVariables());
-			
 			TraceNode controlDom = node.getControlDominator();
 			if (controlDom != null) {
 				this.correctVars.add(controlDom.getConditionResult());
 			}
 		}
-		
 		this.recordFeedback(nodeFeedbackPair);
+	}
+	
+	public UserFeedback giveFeedback(final TraceNode node) {
+		PathFinder finder = new PathFinder(this.trace);
+		return finder.giveFeedback(node);
 	}
 	
 	private void recordFeedback(final NodeFeedbackPair pair) {
