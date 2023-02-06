@@ -400,6 +400,16 @@ public class DebugFeedbackView extends ViewPart {
 		probColumn.setText("Probability");
 		probColumn.setWidth(100);
 		
+		TreeColumn forwardProbColumn = new TreeColumn(tree, SWT.LEFT);
+		forwardProbColumn.setAlignment(SWT.LEFT);
+		forwardProbColumn.setText("Forward Prob");
+		forwardProbColumn.setWidth(100);
+		
+		TreeColumn backwardProbColumn = new TreeColumn(tree, SWT.LEFT);
+		backwardProbColumn.setAlignment(SWT.LEFT);
+		backwardProbColumn.setText("Backward Prob");
+		backwardProbColumn.setWidth(100);
+		
 		return new CheckboxTreeViewer(tree);
 //		this.stateTreeViewer = new CheckboxTreeViewer(tree);
 //		if(type.equals(INPUT)){
@@ -1277,6 +1287,10 @@ public class DebugFeedbackView extends ViewPart {
 					return value;
 				case 3:
 					return String.format("%.2f", varValue.getProbability());
+				case 4:
+					return String.format("%.2f", varValue.getForwardProb());
+				case 5:
+					return String.format("%.2f", varValue.getBackwardProb());
 				}
 			}
 			
