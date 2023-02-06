@@ -1,5 +1,6 @@
 package microbat.handler;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -17,20 +18,18 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.probability.SPP.SPP;
+import microbat.probability.SPP.pathfinding.ActionPath;
+import microbat.recommendation.UserFeedback;
+import microbat.util.TraceUtil;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
 
 public class StepwisePropagationHandler extends AbstractHandler {
 
-	TraceView traceView = null;
+	protected TraceView buggyView = null;
 	
-//	private List<VarValue> inputs = new ArrayList<>();
-//	private List<VarValue> outputs = new ArrayList<>();
-//	
+	private ActionPath userPath = new ActionPath();
 
-//	
-//	private static UserFeedback manualFeedback = null;
-//	private static TraceNode feedbackNode = null;
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -48,7 +47,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 				System.out.println();
 				
 				// Check is the trace ready
-				if (traceView.getTrace() == null) {
+				if (buggyView.getTrace() == null) {
 					System.out.println("Please setup the trace before propagation");
 					return Status.OK_STATUS;
 				}
@@ -63,40 +62,100 @@ public class StepwisePropagationHandler extends AbstractHandler {
 				List<VarValue> inputs = DebugInfo.getInputs();
 				List<VarValue> outputs = DebugInfo.getOutputs();
 				
+				final TraceNode startingNode = getStartingNode(buggyView.getTrace(), outputs.get(0));
+
+			
 				// Set up the propagator that perform propagation
-				SPP propagator = new SPP(traceView.getTrace(), inputs, outputs);
+				SPP spp = new SPP(buggyView.getTrace(), inputs, outputs);
 
 				int feedbackCounts = 0;
+				TraceNode currentNode = startingNode;
+				boolean isOmissionBug = false;
 				
 				// Keep doing propagation until the root cause is found
-				while(!DebugInfo.isRootCauseFound()) {
+				while(!DebugInfo.isRootCauseFound() && !DebugInfo.isStop()) {
 					System.out.println("---------------------------------- " + feedbackCounts + " iteration");
-					System.out.println("Propagation Start");
+					System.out.println("Finding path to root cause ...");
 					
-					// Start back propagation
-//					propagator.backwardPropagate();
-					
-					System.out.println("Propagation End");
+					spp.propagate();
 					
 					// Get the predicted root cause
-					TraceNode rootCause = propagator.proposeRootCause();
+					TraceNode rootCause = spp.proposeRootCause();
 					System.out.println("Proposed Root Cause: " + rootCause.getOrder());
 					
 					// Visualization
 					jumpToNode(rootCause);
 					
-					// Obtain feedback from user
-					System.out.println("Please give a feedback");
-					DebugInfo.waitForFeedbackOrRootCause();
-					
-					if (DebugInfo.isRootCauseFound()) {
-						printReport(feedbackCounts);
-						break;
+					// Handle the case that root cause is at the downstream of current node
+					if (rootCause.getOrder() > currentNode.getOrder()) {
+						System.out.println();
+						System.out.println("Proposed a wrong root cause becuase it is the downstream of current node: " + currentNode.getOrder());
+						System.out.println("Give feedback based on probability:");
+						UserFeedback predictedFeedback = spp.giveFeedback(currentNode);
+						System.out.println(predictedFeedback);
+						NodeFeedbackPair userPair = askForFeedback(currentNode);
+						UserFeedback userFeedback = userPair.getFeedback();
+						currentNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
+						continue;
 					}
 					
-					NodeFeedbackPair nodeFeedbackPair = DebugInfo.getNodeFeedbackPair();
-					propagator.responseToFeedback(nodeFeedbackPair);
-					feedbackCounts +=1;
+					final ActionPath path = spp.suggestPath(currentNode, rootCause, userPath);
+					System.out.println();
+					System.out.println("Debug: Suggested Pathway");
+					for (NodeFeedbackPair section : path) {
+						System.out.println("Debug: " + section);
+					}
+					System.out.println();
+					
+					assert path.contains(currentNode) : "Suggested path does not contain the current node: " + currentNode.getOrder();
+					
+					List<NodeFeedbackPair> responses = new ArrayList<>();
+					for (NodeFeedbackPair action : path) {
+						
+						final TraceNode node = action.getNode();
+						if (!node.equals(currentNode)) {
+							continue;
+						}
+						
+						jumpToNode(currentNode);
+						
+						System.out.println("Predicted feedback: ");
+						System.out.println(action);
+						
+						// Obtain feedback from user
+						NodeFeedbackPair userPair = askForFeedback(currentNode);
+						userPath.addPair(userPair);
+						responses.add(userPair);
+						
+						System.out.println("User Feedback: ");
+						System.out.println(userPair);
+						
+						UserFeedback userFeedback = userPair.getFeedback();
+						UserFeedback predictedFeedback = action.getFeedback();
+
+						if (userFeedback.week_equals(predictedFeedback)) {
+							// Predict correctly
+							currentNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
+						} else {
+							if (userFeedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
+								isOmissionBug = true;
+							} else {
+								spp.responseToFeedbacks(responses);
+								currentNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
+								
+								// Check is it control flow omission bug
+								if (currentNode == null && userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+									isOmissionBug = true;
+								}
+							}
+							break;
+						}
+					}
+					
+					if (isOmissionBug) {
+						System.out.println("Omission bug detected");
+						break;
+					}
 				}
 				
 				return Status.OK_STATUS;
@@ -107,88 +166,55 @@ public class StepwisePropagationHandler extends AbstractHandler {
 		return null;
 	}
 	
-	private void setup() {
+	protected void setup() {
 		Display.getDefault().syncExec(new Runnable() {
 			@Override
 			public void run() {
-				traceView = MicroBatViews.getTraceView();
+				buggyView = MicroBatViews.getTraceView();
 			}
 		});
 	}
 	
-	public boolean isIOReady() {
+	protected boolean isIOReady() {
 		return !DebugInfo.getInputs().isEmpty() && !DebugInfo.getOutputs().isEmpty();
 	}
 	
-	private void jumpToNode(final TraceNode targetNode) {
+	protected void jumpToNode(final TraceNode targetNode) {
 		Display.getDefault().asyncExec(new Runnable() {
 		    @Override
 		    public void run() {
-				Trace buggyTrace = traceView.getTrace();
-				traceView.jumpToNode(buggyTrace, targetNode.getOrder(), true);
+				Trace buggyTrace = buggyView.getTrace();
+				buggyView.jumpToNode(buggyTrace, targetNode.getOrder(), true);
 		    }
 		});
 	}
 
-//	@Override
-//	public void registerHandler() {
-//		DebugFeedbackView.registerHandler(this);
-//		StepwisePropagationHandler.registerFlag = true;
-//		
-//		System.out.println();
-//		System.out.println("StepwisePropagationHandler is now registered to buttons");
-//		System.out.println("Please select inputs and outputs");
-//	}
-
-//	@Override
-//	public void addInputs(Collection<VarValue> inputs) {
-//		this.inputs.addAll(inputs);
-//		for (VarValue input : this.inputs) {
-//			System.out.println("StepwisePropagationHandler: Selected Inputs: " + input.getVarID());
-//		}
-//	}
-//
-//	@Override
-//	public void addOutputs(Collection<VarValue> outputs) {
-//		this.outputs.addAll(outputs);
-//		for (VarValue output : this.outputs) {
-//			System.out.println("StepwisePropagationHandler: Selected Outputs: " + output.getVarID());
-//		}
-//	}
-//
-//	@Override
-//	public void printIO() {
-//		for (VarValue input : this.inputs) {
-//			System.out.println("StepwisePropagationHandler: Selected Inputs: " + input.getVarID());
-//		}
-//		for (VarValue output : this.outputs) {
-//			System.out.println("StepwisePropagationHandler: Selected Outputs: " + output.getVarID());
-//		}
-//	}
-//
-//	@Override
-//	public void clearData() {
-//		this.inputs = null;
-//		this.outputs = null;
-//	}
-	
-//	public static boolean isManualFeedbackReady() {
-//		return StepwisePropagationHandler.manualFeedback != null && StepwisePropagationHandler.feedbackNode != null;
-//	}
-//	
-//	public static void setManualFeedback(UserFeedback manualFeedback, TraceNode node) {
-//		StepwisePropagationHandler.manualFeedback = manualFeedback;
-//		StepwisePropagationHandler.feedbackNode = node;
-//	}
-//	
-//	public static void resetManualFeedback() {
-//		StepwisePropagationHandler.manualFeedback = null;
-//		StepwisePropagationHandler.feedbackNode = null;
-//	}
-
-	private void printReport(final int noOfFeedbacks) {
+	protected void printReport(final int noOfFeedbacks) {
 		System.out.println("---------------------------------");
 		System.out.println("Number of feedbacks: " + noOfFeedbacks);
 		System.out.println("---------------------------------");
+	}
+	
+	protected TraceNode getStartingNode(final Trace trace, final VarValue output) {
+		for (int order = trace.size(); order>=0; order--) {
+			TraceNode node = trace.getTraceNode(order);
+			final String varID = output.getVarID();
+			if (node.isReadVariablesContains(varID)) {
+				return node;
+			} else if (node.isWrittenVariablesContains(varID)) {
+				return node;
+			}
+		}
+		return null;
+	}
+	
+	protected NodeFeedbackPair askForFeedback(final TraceNode node) {
+		System.out.println("Please give an feedback for node: " + node.getOrder());
+		DebugInfo.waitForFeedbackOrRootCauseOrStop();
+		NodeFeedbackPair userPair = DebugInfo.getNodeFeedbackPair();
+		System.out.println();
+		System.out.println("UserFeedback:");
+		System.out.println(userPair);
+		return userPair;
 	}
 }
