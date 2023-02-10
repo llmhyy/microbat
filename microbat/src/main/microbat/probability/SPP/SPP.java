@@ -13,6 +13,7 @@ import microbat.probability.SPP.pathfinding.ActionPath;
 import microbat.probability.SPP.pathfinding.PathFinder;
 import microbat.probability.SPP.propagation.ProbPropagator;
 import microbat.recommendation.UserFeedback;
+import microbat.recommendation.UserFeedback_M;
 import microbat.util.TraceUtil;
 
 /**
@@ -76,11 +77,18 @@ public class SPP {
 		this.slicedTrace = TraceUtil.dyanmicSlice(trace, this.wrongVars);
 	}
 	
+	public void addCorrectVar(VarValue correctVar) {
+		this.correctVars.add(correctVar);
+	}
+	
+	public void addWrongVar(VarValue wrongVar) {
+		this.wrongVars.add(wrongVar);
+	}
 	/**
 	 * Add input variables
 	 * @param inputs Input variables
 	 */
-	public void addInputs(Collection<VarValue> inputs) {
+	public void addCorrectVars(Collection<VarValue> inputs) {
 		this.correctVars.addAll(inputs);
 	}
 	
@@ -88,7 +96,7 @@ public class SPP {
 	 * Add output variables
 	 * @param outputs Output variables
 	 */
-	public void addOutputs(Collection<VarValue> outputs) {
+	public void addWrongVars(Collection<VarValue> outputs) {
 		this.wrongVars.addAll(outputs);
 	}
 	
@@ -205,8 +213,8 @@ public class SPP {
 		UserFeedback feedback = nodeFeedbackPair.getFeedback();
 		if (feedback.getFeedbackType() == UserFeedback.CORRECT) {
 			// If the feedback is CORRECT, then set every variable and control dom to be correct
-			this.addInputs(node.getReadVariables());
-			this.addInputs(node.getWrittenVariables());
+			this.addCorrectVars(node.getReadVariables());
+			this.addCorrectVars(node.getWrittenVariables());
 			TraceNode controlDominator = node.getControlDominator();
 			if (controlDominator != null) {
 				VarValue controlDom = controlDominator.getConditionResult();
@@ -218,11 +226,24 @@ public class SPP {
 			VarValue controlDom = controlDominator.getConditionResult();
 			this.wrongVars.add(controlDom);
 		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
-			// If the feedback is WRONG_VARIABLE_VALUE, set that variable to be wrong
+			// If the feedback is WRONG_VARIABLE_VALUE, set selected to be wrong
 			// and set control dominator to be correct
-			VarValue wrongVar = feedback.getOption().getReadVar();
-			this.wrongVars.add(wrongVar);
-			this.addOutputs(node.getWrittenVariables());
+			UserFeedback_M feedback_M = (UserFeedback_M) feedback;
+			List<VarValue> wrongReadVars = feedback_M.getSelectedReadVars();
+			for (VarValue readVar : node.getReadVariables()) {
+				if (readVar.isThisVariable()) {
+					continue;
+				}
+				if (wrongReadVars.contains(readVar)) {
+					this.addWrongVar(readVar);
+				} else {
+					this.addCorrectVar(readVar);
+				}
+			}
+			this.addWrongVars(node.getWrittenVariables());
+//			VarValue wrongVar = feedback.getOption().getReadVar();
+//			this.wrongVars.add(wrongVar);
+//			this.addWrongVars(node.getWrittenVariables());
 			TraceNode controlDom = node.getControlDominator();
 			if (controlDom != null) {
 				this.correctVars.add(controlDom.getConditionResult());

@@ -135,7 +135,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 
 						if (userFeedback.week_equals(predictedFeedback)) {
 							// Predict correctly
-							currentNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
+							currentNode = TraceUtil.findNextNode(currentNode, predictedFeedback, buggyView.getTrace());
 						} else {
 							if (userFeedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
 								isOmissionBug = true;

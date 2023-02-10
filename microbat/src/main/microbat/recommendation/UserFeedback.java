@@ -9,8 +9,8 @@ public class UserFeedback {
 	public static final String UNCLEAR = "unclear";
 	public static final String ROOTCAUSE = "root cause";
 	
-	private ChosenVariableOption option;
-	private String feedbackType;
+	protected ChosenVariableOption option;
+	protected String feedbackType;
 	
 	public UserFeedback(ChosenVariableOption option, String feedbackType) {
 		super();
@@ -65,6 +65,7 @@ public class UserFeedback {
 		}
 		return false;
 	}
+	
 	@Override
 	public String toString() {
 		if(option != null){

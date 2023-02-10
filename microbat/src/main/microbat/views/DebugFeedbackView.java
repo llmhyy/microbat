@@ -61,9 +61,11 @@ import microbat.probability.BP.BeliefPropagation;
 import microbat.recommendation.Bug;
 import microbat.recommendation.BugInferer;
 import microbat.recommendation.ChosenVariableOption;
+import microbat.recommendation.ChosenVariablesOption;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.StepRecommender;
 import microbat.recommendation.UserFeedback;
+import microbat.recommendation.UserFeedback_M;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
@@ -693,7 +695,7 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			UserFeedback feedback = new UserFeedback();
+			UserFeedback_M feedback = new UserFeedback_M();
 			if (yesButton.getSelection()) {
 				feedback.setFeedbackType(UserFeedback.CORRECT);
 			} else if (wrongPathButton.getSelection()) {
@@ -705,16 +707,7 @@ public class DebugFeedbackView extends ViewPart {
 				if (selectedReadVars.isEmpty() && selectedWriteVars.isEmpty()) {
 					throw new RuntimeException("No selected variables");
 				}
-				VarValue selectedReadVar = null;
-				if (!selectedReadVars.isEmpty()) {
-					selectedReadVar = selectedReadVars.get(0);
-				}
-				
-				VarValue selectedWriteVar = null;
-				if (!selectedWriteVars.isEmpty()) {
-					selectedReadVar = selectedWriteVars.get(0);
-				}
-				feedback.setOption(new ChosenVariableOption(selectedReadVar, selectedWriteVar));
+				feedback.setOption(new ChosenVariablesOption(selectedReadVars, selectedWriteVars));
 			}
 			DebugInfo.addNodeFeedbackPair(currentNode, feedback);
 		}

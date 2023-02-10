@@ -12,8 +12,8 @@ import microbat.model.value.VarValue;
  *
  */
 public class ChosenVariableOption {
-	private VarValue readVar;
-	private VarValue writtenVar;
+	protected VarValue readVar;
+	protected VarValue writtenVar;
 
 	public ChosenVariableOption(VarValue readVar, VarValue writtenVar) {
 		super();
