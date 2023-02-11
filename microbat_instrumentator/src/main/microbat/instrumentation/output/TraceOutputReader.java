@@ -141,6 +141,8 @@ public class TraceOutputReader extends OutputReader {
 			step.setException(readBoolean());
 			step.setBytecode(readString());
 			step.setInvokingMethod(readString());
+			TraceNode invokeMatchNode = readNode(allSteps);
+			step.setInvokingMatchNode(invokeMatchNode);
 		}
 		readRWVarValues(allSteps, false);
 		readRWVarValues(allSteps, true);

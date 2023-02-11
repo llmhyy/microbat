@@ -541,9 +541,15 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				if (latestNode != null) {
 					latestNode.setInvokingDetail(null);
 					TraceNode invokingMatchNode = this.findInvokingMatchNode(latestNode, invokeMethodSig);
+					if (invokingMatchNode == null) {
+						latestNode.setInvokingMatchNode(latestNode);
+					} else {
+						latestNode.setInvokingMatchNode(invokingMatchNode);
+						invokingMatchNode.setInvokingMatchNode(latestNode);
+					}
 					latestNode.setBytecode(invokingMatchNode.getBytecode());
-					latestNode.setInvokingMatchNode(invokingMatchNode);
-				
+					
+					
 					// TraceNode invokingMatchNode = findInvokingMatchNode(latestNode,
 					// invokeMethodSig);
 					// if(invokingMatchNode!=null){
