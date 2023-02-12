@@ -5,28 +5,29 @@ import java.util.Iterator;
 import java.util.List;
 
 import debuginfo.NodeFeedbackPair;
+import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;
 
-public class ActionPath implements Iterable<NodeFeedbackPair>{
+public class ActionPath implements Iterable<NodeFeedbacksPair>{
 
-	private List<NodeFeedbackPair> path = new ArrayList<>();
+	private List<NodeFeedbacksPair> path = new ArrayList<>();
 	
 	public ActionPath() {
 		
 	}
 	
-	public ActionPath (List<NodeFeedbackPair> path) {
+	public ActionPath (List<NodeFeedbacksPair> path) {
 		this.path = path;
 	}
 	
 	public ActionPath(final ActionPath other) {
-		for (NodeFeedbackPair pair : other) {
-			this.addPair(new NodeFeedbackPair(pair));
+		for (NodeFeedbacksPair pair : other) {
+			this.addPair(new NodeFeedbacksPair(pair));
 		}
 	}
 	
-	public NodeFeedbackPair get(final int i) {
+	public NodeFeedbacksPair get(final int i) {
 		return this.path.get(i);
 	}
 	
@@ -34,14 +35,13 @@ public class ActionPath implements Iterable<NodeFeedbackPair>{
 		return this.path.isEmpty();
 	}
 	
-	public NodeFeedbackPair peek() {
+	public NodeFeedbacksPair peek() {
 		return this.path.get(this.getLength()-1);
 	}
 	
 	public boolean canReachRootCause() {
-		NodeFeedbackPair pair = this.peek();
-		UserFeedback feedback = pair.getFeedback();
-		return feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE);
+		NodeFeedbacksPair pair = this.peek();
+		return pair.getFeedbackType().equals(UserFeedback.ROOTCAUSE);
 	}
 	
 	public void setLastAction(final UserFeedback feedback) {
@@ -49,7 +49,7 @@ public class ActionPath implements Iterable<NodeFeedbackPair>{
 	}
 	
 	public boolean isVisited(final TraceNode node) {
-		for (NodeFeedbackPair pair : this.path) {
+		for (NodeFeedbacksPair pair : this.path) {
 			TraceNode pathNode = pair.getNode();
 			if (pathNode.equals(node)) {
 				return true;
@@ -59,10 +59,10 @@ public class ActionPath implements Iterable<NodeFeedbackPair>{
 	}
 	
 	public void addPair(final TraceNode node, final UserFeedback feedback) {
-		this.addPair(new NodeFeedbackPair(node, feedback));
+		this.addPair(new NodeFeedbacksPair(node, feedback));
 	}
 	
-	public void addPair(final NodeFeedbackPair pair) {
+	public void addPair(final NodeFeedbacksPair pair) {
 		this.path.add(pair);
 	}
 	
@@ -71,7 +71,7 @@ public class ActionPath implements Iterable<NodeFeedbackPair>{
 	}
 	
 	public boolean contains(final TraceNode node) {
-		for (NodeFeedbackPair pair : this) {
+		for (NodeFeedbacksPair pair : this) {
 			if (node.equals(pair.getNode())) {
 				return true;
 			}
@@ -82,7 +82,7 @@ public class ActionPath implements Iterable<NodeFeedbackPair>{
 	@Override
 	public String toString() {
 		StringBuilder strBuilder = new StringBuilder();
-		for (NodeFeedbackPair pair : path) {
+		for (NodeFeedbacksPair pair : path) {
 			strBuilder.append(pair.toString());
 			strBuilder.append("\n");
 		}
@@ -90,7 +90,7 @@ public class ActionPath implements Iterable<NodeFeedbackPair>{
 	}
 	
 	@Override
-	public Iterator<NodeFeedbackPair> iterator() {
+	public Iterator<NodeFeedbacksPair> iterator() {
 		return this.path.iterator();
 	}
 	
@@ -103,8 +103,8 @@ public class ActionPath implements Iterable<NodeFeedbackPair>{
 			}
 			
 			for (int i=0; i<this.path.size(); i++) {
-				NodeFeedbackPair thisPair = this.path.get(i);
-				NodeFeedbackPair otherPair = otherPath.path.get(i);
+				NodeFeedbacksPair thisPair = this.path.get(i);
+				NodeFeedbacksPair otherPair = otherPath.path.get(i);
 				if (!thisPair.equals(otherPair)) {
 					return false;
 				}
@@ -121,24 +121,22 @@ public class ActionPath implements Iterable<NodeFeedbackPair>{
 			return true;
 		}
 		
-		if (this.getLength() > target.getLength()) {
+		if (this.getLength() < target.getLength()) {
 			return false;
 		}
 		
 		for (int i=0; i<target.getLength(); i++) {
-			final NodeFeedbackPair targetPair = target.get(i);
+			final NodeFeedbacksPair targetPair = target.get(i);
 			final TraceNode targetNode = targetPair.getNode();
-			final UserFeedback targetFeedback = targetPair.getFeedback();
-			
-			final NodeFeedbackPair pair = this.get(i);
+
+			final NodeFeedbacksPair pair = this.get(i);
 			final TraceNode node = pair.getNode();
-			final UserFeedback feedback = pair.getFeedback();
-			
+
 			if(!targetNode.equals(node)) {
 				return false;
 			}
 			
-			if(!targetFeedback.week_equals(feedback)) {
+			if(!targetPair.haveCommonFeedbackWith(pair)) {
 				return false;
 			}
 		}

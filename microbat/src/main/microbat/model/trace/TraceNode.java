@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import debuginfo.NodeFeedbackPair;
+import debuginfo.NodeFeedbacksPair;
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.bytecode.ByteCode;
@@ -131,7 +132,7 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	// Dijstra Node Property
 	protected double distance = Double.MAX_VALUE;
 	protected boolean isVisited = false;
-	protected NodeFeedbackPair prevNode = null;
+	protected NodeFeedbacksPair prevNode = null;
 	
 	protected long minOutputCost = 0;
 	
@@ -1396,12 +1397,12 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	}
 
 	@Override
-	public NodeFeedbackPair getPrevAction() {
+	public NodeFeedbacksPair getPrevAction() {
 		return this.prevNode;
 	}
 
 	@Override
-	public void setPrevAction(NodeFeedbackPair pair) {
+	public void setPrevAction(NodeFeedbacksPair pair) {
 		this.prevNode = pair;
 		
 	}

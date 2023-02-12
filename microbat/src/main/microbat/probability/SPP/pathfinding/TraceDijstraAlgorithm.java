@@ -12,6 +12,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import debuginfo.NodeFeedbackPair;
+import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -40,11 +41,11 @@ public class TraceDijstraAlgorithm {
 		this.init();
 		this.runAlgorithm();
 		
-		List<NodeFeedbackPair> actions = new ArrayList<>();
+		List<NodeFeedbacksPair> actions = new ArrayList<>();
 		TraceNode currentNode = endNode;
-		actions.add(new NodeFeedbackPair(this.endNode, new UserFeedback(UserFeedback.ROOTCAUSE)));
+		actions.add(new NodeFeedbacksPair(this.endNode, new UserFeedback(UserFeedback.ROOTCAUSE)));
 		while (!currentNode.equals(startNode)) {
-			NodeFeedbackPair action = currentNode.getPrevAction();
+			NodeFeedbacksPair action = currentNode.getPrevAction();
 			actions.add(action);
 			currentNode = action.getNode();
 		}
@@ -69,7 +70,7 @@ public class TraceDijstraAlgorithm {
 					if (distance < dNode.getDistance()) {
 						dNode.setDistance(distance);
 						UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_PATH);
-						dNode.setPrevAction(new NodeFeedbackPair(node, feedback));
+						dNode.setPrevAction(new NodeFeedbacksPair(node, feedback));
 					}
 				}
 			}
@@ -91,7 +92,7 @@ public class TraceDijstraAlgorithm {
 						dNode.setDistance(distance);
 						UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 						feedback.setOption(new ChosenVariableOption(readVar, null));
-						dNode.setPrevAction(new NodeFeedbackPair(node, feedback));
+						dNode.setPrevAction(new NodeFeedbacksPair(node, feedback));
 					}
 				}
 			}

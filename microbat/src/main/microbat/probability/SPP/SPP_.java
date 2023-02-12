@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import debuginfo.NodeFeedbackPair;
+import debuginfo.NodeFeedbacksPair;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
@@ -353,7 +354,7 @@ public class SPP_ {
 	public ActionPath findPathway_Greedy(final TraceNode startNode, final TraceNode endNode, final ActionPath initPath) {
 		ActionPath path = new ActionPath(initPath);
 		
-		UserFeedback lastFeedback = path.peek().getFeedback();
+		UserFeedback lastFeedback = path.peek().getFeedbacks().get(0);
 		TraceNode lastNode = path.peek().getNode();
 		
 		TraceNode currentNode = this.findNextNode(lastNode, lastFeedback);
@@ -450,7 +451,7 @@ public class SPP_ {
 		while (!paths.isEmpty()) {
 			path = paths.poll();
 			
-			NodeFeedbackPair pair = path.peek();
+			NodeFeedbacksPair pair = path.peek();
 			TraceNode lastNode = pair.getNode();
 			
 			if (lastNode.equals(endNode)) {
@@ -528,7 +529,7 @@ public class SPP_ {
 		// Start BFS
 		while (!paths.isEmpty()) {
 			path = paths.poll();
-			NodeFeedbackPair pair = path.peek();
+			NodeFeedbacksPair pair = path.peek();
 			TraceNode lastNode = pair.getNode();
 			
 			if (lastNode.equals(endNode)) {

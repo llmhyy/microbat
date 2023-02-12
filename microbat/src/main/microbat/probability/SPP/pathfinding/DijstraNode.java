@@ -1,6 +1,6 @@
 package microbat.probability.SPP.pathfinding;
 
-import debuginfo.NodeFeedbackPair;
+import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.TraceNode;
 
 public interface DijstraNode {
@@ -11,8 +11,8 @@ public interface DijstraNode {
 	public boolean isVisited();
 	public void setVisisted(final boolean isVisited);
 	
-	public NodeFeedbackPair getPrevAction();
-	public void setPrevAction(final NodeFeedbackPair node);
+	public NodeFeedbacksPair getPrevAction();
+	public void setPrevAction(final NodeFeedbacksPair node);
 	
 	public void init(boolean isStartNode);
 	

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Queue;
 
 import debuginfo.NodeFeedbackPair;
+import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -50,7 +51,7 @@ public class PathFinder {
 	public ActionPath findPathway_greedy(final TraceNode startNode, final TraceNode endNode, final ActionPath initPath) {
 		ActionPath path = new ActionPath(initPath);
 		
-		UserFeedback lastFeedback = path.peek().getFeedback();
+		UserFeedback lastFeedback = path.peek().getFeedbacks().get(0);
 		TraceNode lastNode = path.peek().getNode();
 		
 		TraceNode currentNode = this.findNextNode(lastNode, lastFeedback);
@@ -197,7 +198,7 @@ public class PathFinder {
 		// Start BFS
 		while (!paths.isEmpty()) {
 			path = paths.poll();
-			NodeFeedbackPair pair = path.peek();
+			NodeFeedbacksPair pair = path.peek();
 			TraceNode lastNode = pair.getNode();
 			
 			if (lastNode.equals(endNode)) {

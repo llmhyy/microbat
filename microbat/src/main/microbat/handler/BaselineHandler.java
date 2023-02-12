@@ -96,8 +96,8 @@ public class BaselineHandler extends AbstractHandler {
 						break;
 					}
 					
-					NodeFeedbackPair pair = DebugInfo.getNodeFeedbackPair();
-					BeliefPropagation.addFeedback(pair);
+//					NodeFeedbackPair pair = DebugInfo.getNodeFeedbackPairs();
+//					BeliefPropagation.addFeedback(pair);
 					noOfFeedbacks += 1;
 //					while (!BaselineHandler.isManualFeedbackReady() && !BaselineHandler.rootCauseFound) {
 //						try {

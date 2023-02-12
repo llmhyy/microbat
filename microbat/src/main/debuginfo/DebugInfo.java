@@ -21,7 +21,7 @@ public class DebugInfo {
 	
 	private static List<VarValue> inputs = new ArrayList<>();
 	private static List<VarValue> outputs = new ArrayList<>();
-	private static NodeFeedbackPair nodeFeedbackPair = null;
+	private static NodeFeedbacksPair nodeFeedbackPair = null;
 	private static boolean rootCauseFound = false;
 	private static boolean feedbackUpdatedFlag = false;
 	private static boolean stop = false;
@@ -88,14 +88,14 @@ public class DebugInfo {
 		DebugInfo.feedbackUpdatedFlag = false;
 	}
 	
-	public static void addNodeFeedbackPair(NodeFeedbackPair nodeFeedbackPair) {
+	public static void addNodeFeedbacksPair(NodeFeedbacksPair nodeFeedbackPair) {
 		DebugInfo.nodeFeedbackPair = nodeFeedbackPair;
 		DebugInfo.feedbackUpdatedFlag = true;
 	}
 	
-	public static void addNodeFeedbackPair(TraceNode node, UserFeedback feedback) {
-		NodeFeedbackPair pair = new NodeFeedbackPair(node, feedback);
-		DebugInfo.addNodeFeedbackPair(pair);
+	public static void addNodeFeedbacksPair(TraceNode node, List<UserFeedback> feedbacks) {
+		NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedbacks);
+		DebugInfo.addNodeFeedbacksPair(pair);
 	}
 	
 	public static boolean isRootCauseFound() {
@@ -126,7 +126,7 @@ public class DebugInfo {
 	 * Get the list of node feedback pair from users
 	 * @return Node Feedback Pair
 	 */
-	public static NodeFeedbackPair getNodeFeedbackPair() {
+	public static NodeFeedbacksPair getNodeFeedbackPair() {
 		DebugInfo.feedbackUpdatedFlag = false;
 		return DebugInfo.nodeFeedbackPair;
 	}
@@ -150,7 +150,7 @@ public class DebugInfo {
 	/**
 	 * Clear all node feedback pairs
 	 */
-	public static void clearNodeFeedbackPair() {
+	public static void clearNodeFeedbackPairs() {
 		DebugInfo.nodeFeedbackPair = null;
 	}
 	
@@ -160,7 +160,7 @@ public class DebugInfo {
 	public static void clearData() {
 		DebugInfo.clearInputs();
 		DebugInfo.clearOutputs();
-		DebugInfo.clearNodeFeedbackPair();
+		DebugInfo.clearNodeFeedbackPairs();
 		DebugInfo.feedbackUpdatedFlag = false;
 		DebugInfo.rootCauseFound = false;
 	}
@@ -182,14 +182,4 @@ public class DebugInfo {
 			System.out.println("DebugInfo - Selected outputs: " + output.getVarID());
 		}
 	}
-	
-	/**
-	 * Display given node feedback pairs
-	 */
-	public static void printNodeFeedbackPairs() {
-		System.out.println("DebugInfo - Given feedbacks: " + DebugInfo.nodeFeedbackPair);
-	}
-	
-	
-	
 }

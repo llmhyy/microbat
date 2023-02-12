@@ -8,6 +8,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import debuginfo.NodeFeedbackPair;
+import debuginfo.NodeFeedbacksPair;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
@@ -23,15 +24,15 @@ public class ProbPropagator {
 	private final Trace trace;
 	private final List<TraceNode> slicedTrace;
 	
-	private final List<VarValue> correctVars;
-	private final List<VarValue> wrongVars;
+	private final Set<VarValue> correctVars;
+	private final Set<VarValue> wrongVars;
 	
 	private final ProbAggregator aggregator = new ProbAggregator();
 	private final List<OpcodeType> unmodifiedType = new ArrayList<>();
 	
-	private List<NodeFeedbackPair> feedbackRecords = new ArrayList<>();
+	private List<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
 	
-	public ProbPropagator(Trace trace, List<TraceNode> slicedTrace, List<VarValue> correctVars, List<VarValue> wrongVars, List<NodeFeedbackPair> feedbackRecords) {
+	public ProbPropagator(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, List<NodeFeedbacksPair> feedbackRecords) {
 		this.trace = trace;
 		this.slicedTrace = slicedTrace;
 		this.correctVars = correctVars;
@@ -326,7 +327,7 @@ public class ProbPropagator {
 	}
 	
 	private boolean isFeedbackGiven(final TraceNode node) {
-		for (NodeFeedbackPair pair : this.feedbackRecords) {
+		for (NodeFeedbacksPair pair : this.feedbackRecords) {
 			if (node.equals(pair.getNode())) {
 				return true;
 			}

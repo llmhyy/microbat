@@ -2,9 +2,12 @@ package microbat.probability.SPP;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import debuginfo.NodeFeedbackPair;
+import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -40,12 +43,12 @@ public class SPP {
 	/**
 	 * List of input variables which assumed to be correct
 	 */
-	private List<VarValue> correctVars = new ArrayList<>();
+	private Set<VarValue> correctVars = new HashSet<>();
 	
 	/**
 	 * List of outputs variables which assumed to be wrong
 	 */
-	private List<VarValue> wrongVars = new ArrayList<>();
+	private Set<VarValue> wrongVars = new HashSet<>();
 	
 	/**
 	 * List of executed trace node after dynamic slicing
@@ -53,7 +56,7 @@ public class SPP {
 	private List<TraceNode> slicedTrace = null;
 
 	
-	private List<NodeFeedbackPair> feedbackRecords = new ArrayList<>();
+	private List<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
 	private final ProbAggregator aggregator = new ProbAggregator();
 	
 	/**
@@ -72,8 +75,8 @@ public class SPP {
 	 */
 	public SPP(Trace trace, List<VarValue> inputs, List<VarValue> outputs) {
 		this.trace = trace;
-		this.correctVars = inputs;
-		this.wrongVars = outputs;
+		this.correctVars.addAll(inputs);
+		this.wrongVars.addAll(outputs);
 		this.slicedTrace = TraceUtil.dyanmicSlice(trace, this.wrongVars);
 	}
 	
@@ -119,7 +122,7 @@ public class SPP {
 			throw new IllegalArgumentException("EndNode: " + endNode.getOrder() + " is in the downstream of startNode: " + startNode.getOrder());
 		}
 		ActionPath path = this.suggestPath(startNode, endNode);
-		if (!mustFollowPath.isFollowing(path)) {
+		if (!path.isFollowing(mustFollowPath)) {
 			PathFinder finder = new PathFinder(this.trace);
 			path = finder.findPathway_greedy(startNode, endNode, mustFollowPath);
 		}
@@ -198,20 +201,20 @@ public class SPP {
 	 * Set probability based on the user feedbacks
 	 * @param nodeFeedbackPairs List of user feedbacks
 	 */
-	public void responseToFeedbacks(Collection<NodeFeedbackPair> nodeFeedbackPairs) {
-		for (NodeFeedbackPair pair : nodeFeedbackPairs) {
+	public void responseToFeedbacks(Collection<NodeFeedbacksPair> nodeFeedbackPairs) {
+		for (NodeFeedbacksPair pair : nodeFeedbackPairs) {
 			this.responseToFeedback(pair);
 		}
 	}
 	
 	/**
 	 * Set probability based on the user feedback
-	 * @param nodeFeedbackPair User feedback 
+	 * @param nodeFeedbacksPair User feedback 
 	 */
-	public void responseToFeedback(final NodeFeedbackPair nodeFeedbackPair) {
-		TraceNode node = nodeFeedbackPair.getNode();
-		UserFeedback feedback = nodeFeedbackPair.getFeedback();
-		if (feedback.getFeedbackType() == UserFeedback.CORRECT) {
+	public void responseToFeedback(final NodeFeedbacksPair nodeFeedbacksPair) {
+		TraceNode node = nodeFeedbacksPair.getNode();
+//		UserFeedback feedback = nodeFeedbacksPair.getFeedback();
+		if (nodeFeedbacksPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
 			// If the feedback is CORRECT, then set every variable and control dom to be correct
 			this.addCorrectVars(node.getReadVariables());
 			this.addCorrectVars(node.getWrittenVariables());
@@ -220,20 +223,19 @@ public class SPP {
 				VarValue controlDom = controlDominator.getConditionResult();
 				this.correctVars.add(controlDom);
 			}
-		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_PATH) {
+		} else if (nodeFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 			// If the feedback is WRONG_PATH, set control dominator varvalue to wrong
 			TraceNode controlDominator = node.getControlDominator();
 			VarValue controlDom = controlDominator.getConditionResult();
 			this.wrongVars.add(controlDom);
-		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
+		} else if (nodeFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
 			// If the feedback is WRONG_VARIABLE_VALUE, set selected to be wrong
 			// and set control dominator to be correct
-			UserFeedback_M feedback_M = (UserFeedback_M) feedback;
-			List<VarValue> wrongReadVars = feedback_M.getSelectedReadVars();
+			List<VarValue> wrongReadVars = new ArrayList<>();
+			for (UserFeedback feedback : nodeFeedbacksPair.getFeedbacks()) {
+				wrongReadVars.add(feedback.getOption().getReadVar());
+			}
 			for (VarValue readVar : node.getReadVariables()) {
-				if (readVar.isThisVariable()) {
-					continue;
-				}
 				if (wrongReadVars.contains(readVar)) {
 					this.addWrongVar(readVar);
 				} else {
@@ -241,15 +243,12 @@ public class SPP {
 				}
 			}
 			this.addWrongVars(node.getWrittenVariables());
-//			VarValue wrongVar = feedback.getOption().getReadVar();
-//			this.wrongVars.add(wrongVar);
-//			this.addWrongVars(node.getWrittenVariables());
 			TraceNode controlDom = node.getControlDominator();
 			if (controlDom != null) {
 				this.correctVars.add(controlDom.getConditionResult());
 			}
 		}
-		this.recordFeedback(nodeFeedbackPair);
+		this.recordFeedback(nodeFeedbacksPair);
 	}
 	
 	public UserFeedback giveFeedback(final TraceNode node) {
@@ -257,12 +256,12 @@ public class SPP {
 		return finder.giveFeedback(node);
 	}
 	
-	private void recordFeedback(final NodeFeedbackPair pair) {
+	private void recordFeedback(final NodeFeedbacksPair pair) {
 		this.feedbackRecords.add(pair);
 	}
 	
 	private boolean isFeedbackGiven(final TraceNode node) {
-		for (NodeFeedbackPair pair : this.feedbackRecords) {
+		for (NodeFeedbacksPair pair : this.feedbackRecords) {
 			if (node.equals(pair.getNode())) {
 				return true;
 			}

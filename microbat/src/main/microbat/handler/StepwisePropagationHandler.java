@@ -14,6 +14,7 @@ import org.eclipse.swt.widgets.Display;
 
 import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbackPair;
+import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -93,8 +94,8 @@ public class StepwisePropagationHandler extends AbstractHandler {
 						System.out.println("Give feedback based on probability:");
 						UserFeedback predictedFeedback = spp.giveFeedback(currentNode);
 						System.out.println(predictedFeedback);
-						NodeFeedbackPair userPair = askForFeedback(currentNode);
-						UserFeedback userFeedback = userPair.getFeedback();
+						NodeFeedbacksPair userPair = askForFeedback(currentNode);
+						UserFeedback userFeedback = userPair.getFeedbacks().get(0);
 						currentNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
 						continue;
 					}
@@ -102,15 +103,15 @@ public class StepwisePropagationHandler extends AbstractHandler {
 					final ActionPath path = spp.suggestPath(currentNode, rootCause, userPath);
 					System.out.println();
 					System.out.println("Debug: Suggested Pathway");
-					for (NodeFeedbackPair section : path) {
+					for (NodeFeedbacksPair section : path) {
 						System.out.println("Debug: " + section);
 					}
 					System.out.println();
 					
 					assert path.contains(currentNode) : "Suggested path does not contain the current node: " + currentNode.getOrder();
 					
-					List<NodeFeedbackPair> responses = new ArrayList<>();
-					for (NodeFeedbackPair action : path) {
+					List<NodeFeedbacksPair> responses = new ArrayList<>();
+					for (NodeFeedbacksPair action : path) {
 						
 						final TraceNode node = action.getNode();
 						if (!node.equals(currentNode)) {
@@ -123,33 +124,63 @@ public class StepwisePropagationHandler extends AbstractHandler {
 						System.out.println(action);
 						
 						// Obtain feedback from user
-						NodeFeedbackPair userPair = askForFeedback(currentNode);
+						NodeFeedbacksPair userPair = askForFeedback(currentNode);
 						userPath.addPair(userPair);
 						responses.add(userPair);
 						
 						System.out.println("User Feedback: ");
 						System.out.println(userPair);
 						
-						UserFeedback userFeedback = userPair.getFeedback();
-						UserFeedback predictedFeedback = action.getFeedback();
-
-						if (userFeedback.week_equals(predictedFeedback)) {
-							// Predict correctly
+						UserFeedback predictedFeedback = action.getFeedbacks().get(0);
+					
+						if (userPair.containsFeedback(predictedFeedback)) {
 							currentNode = TraceUtil.findNextNode(currentNode, predictedFeedback, buggyView.getTrace());
 						} else {
-							if (userFeedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
+							// Prediction is wrong
+							if (userPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
 								isOmissionBug = true;
+								break;
 							} else {
 								spp.responseToFeedbacks(responses);
+								UserFeedback userFeedback = userPair.getFeedbacks().get(0);
 								currentNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
-								
-								// Check is it control flow omission bug
 								if (currentNode == null && userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 									isOmissionBug = true;
+									break;
 								}
 							}
-							break;
 						}
+//						// Check is predicted correctly
+//						boolean predictedCorrectly = false;
+//						for (NodeFeedbackPair pair : userPairs) {
+//							UserFeedback feedback = pair.getFeedback();
+//							if (feedback.week_equals(predictedFeedback)) {
+//								currentNode = TraceUtil.findNextNode(currentNode, predictedFeedback, buggyView.getTrace());
+//								predictedCorrectly = true;
+//								break;
+//							}
+//						}
+//						
+//						if (!predictedCorrectly) {
+//							for (NodeFeedbackPair pair : userPairs) {
+//								UserFeedback feedback = pair.getFeedback();
+//								if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
+//									isOmissionBug = true;
+//									break;
+//								}
+//							}
+//							if (isOmissionBug) {
+//								break;
+//							}
+//							spp.responseToFeedbacks(responses);
+//							UserFeedback userFeedback = userPairs.get(0).getFeedback();
+//							currentNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
+//							// Check is it control flow omission bug
+//							if (currentNode == null && userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+//								isOmissionBug = true;
+//							}
+//							break;
+//						}
 					}
 					
 					if (isOmissionBug) {
@@ -157,6 +188,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 						break;
 					}
 				}
+				
 				
 				return Status.OK_STATUS;
 			}
@@ -208,13 +240,14 @@ public class StepwisePropagationHandler extends AbstractHandler {
 		return null;
 	}
 	
-	protected NodeFeedbackPair askForFeedback(final TraceNode node) {
+	protected NodeFeedbacksPair askForFeedback(final TraceNode node) {
 		System.out.println("Please give an feedback for node: " + node.getOrder());
 		DebugInfo.waitForFeedbackOrRootCauseOrStop();
-		NodeFeedbackPair userPair = DebugInfo.getNodeFeedbackPair();
+		NodeFeedbacksPair userPairs = DebugInfo.getNodeFeedbackPair();
+		DebugInfo.clearNodeFeedbackPairs();
 		System.out.println();
 		System.out.println("UserFeedback:");
-		System.out.println(userPair);
-		return userPair;
+		System.out.println(userPairs);
+		return userPairs;
 	}
 }
