@@ -23,6 +23,10 @@ public class NodeFeedbacksPair {
 		this.feedbacks.add(feedback);
 	}
 	
+	public boolean doNotHaveFeedback() {
+		return this.feedbacks.isEmpty();
+	}
+	
 	public NodeFeedbacksPair(final NodeFeedbacksPair pair) {
 		this.node = pair.getNode();
 		this.feedbacks.addAll(pair.getFeedbacks());
