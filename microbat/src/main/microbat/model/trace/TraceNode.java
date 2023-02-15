@@ -1342,8 +1342,8 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 		return this.bytecode.contains("athrow");
 	}
 	
-	public void setInvokingMethod(final String invokingMethod) {
-		this.invokingMethod = invokingMethod;
+	public void addInvokingMethod(final String invokingMethod) {
+		this.invokingMethod += invokingMethod + ";";
 	}
 	
 	public String getInvokingMethod() {

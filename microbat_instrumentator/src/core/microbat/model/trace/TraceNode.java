@@ -34,7 +34,7 @@ public class TraceNode{
 	public final static int WRITTEN_VARS_INCORRECT = 7;
 	public final static int WRITTEN_VARS_UNKNOWN = 8;
 	
-	private String invokingMethod = null;
+	private String invokingMethod = "";
 	private InvokingDetail invokingDetail = null;
 	
 	private BreakPoint breakPoint;
@@ -998,8 +998,8 @@ public class TraceNode{
 		return invokingMethod;
 	}
 
-	public void setInvokingMethod(String invokingMethod) {
-		this.invokingMethod = invokingMethod;
+	public void addInvokingMethod(String invokingMethod) {
+		this.invokingMethod += invokingMethod + ";";
 	}
 
 	public InvokingDetail getInvokingDetail() {

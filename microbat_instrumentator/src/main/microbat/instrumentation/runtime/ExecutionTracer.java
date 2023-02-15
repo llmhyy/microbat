@@ -407,7 +407,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			hitLine(line, residingClassName, residingMethodSignature);
 			TraceNode latestNode = trace.getLatestNode();
 			if (latestNode != null) {
-				latestNode.setInvokingMethod(methodSig);
+				latestNode.addInvokingMethod(methodSig);
 				initInvokingDetail(invokeObj, invokeTypeSign, methodSig, params, paramTypeSignsCode, residingClassName,
 						latestNode);
 
@@ -506,7 +506,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 
 			TraceNode latestNode = trace.getLatestNode();
 			if (latestNode != null) {
-				latestNode.setInvokingMethod(methodSig);
+				latestNode.addInvokingMethod(methodSig);
 				initInvokingDetail(null, invokeTypeSign, methodSig, params, paramTypeSignsCode, className, latestNode);
 			}
 		} catch (Throwable t) {

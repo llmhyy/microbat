@@ -140,7 +140,7 @@ public class TraceOutputReader extends OutputReader {
 			}
 			step.setException(readBoolean());
 			step.setBytecode(readString());
-			step.setInvokingMethod(readString());
+			step.addInvokingMethod(readString());
 			TraceNode invokeMatchNode = readNode(allSteps);
 			step.setInvokingMatchNode(invokeMatchNode);
 		}
