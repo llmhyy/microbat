@@ -19,6 +19,8 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.probability.SPP.SPP;
+import microbat.probability.SPP.omissionbuglocalization.OmissionBugLocator;
+import microbat.probability.SPP.omissionbuglocalization.OmissionBugScope;
 import microbat.probability.SPP.pathfinding.ActionPath;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
@@ -73,6 +75,10 @@ public class StepwisePropagationHandler extends AbstractHandler {
 				TraceNode currentNode = startingNode;
 				boolean isOmissionBug = false;
 				
+				// Prepare for omission bug
+				NodeFeedbacksPair startFeedback = null;
+				NodeFeedbacksPair endFeedback = null;
+				
 				// Keep doing propagation until the root cause is found
 				while(!DebugInfo.isRootCauseFound() && !DebugInfo.isStop()) {
 					System.out.println("---------------------------------- " + feedbackCounts + " iteration");
@@ -125,7 +131,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 						
 						// Obtain feedback from user
 						NodeFeedbacksPair userPair = askForFeedback(currentNode);
-						userPath.addPair(userPair);
+						
 						responses.add(userPair);
 						
 						System.out.println("User Feedback: ");
@@ -139,57 +145,43 @@ public class StepwisePropagationHandler extends AbstractHandler {
 							// Prediction is wrong
 							if (userPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
 								isOmissionBug = true;
+								startFeedback = userPair;
+								endFeedback = userPath.peek(); // Last feedback
 								break;
 							} else {
 								spp.responseToFeedbacks(responses);
 								UserFeedback userFeedback = userPair.getFeedbacks().get(0);
-								currentNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
+								TraceNode nextNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
 								if (currentNode == null && userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 									isOmissionBug = true;
+									TraceNode startNode = OmissionBugLocator.getStartNodeForControlFlowOmission(currentNode, buggyView.getTrace());
+									startFeedback = new NodeFeedbacksPair(startNode);
+									endFeedback = userPair;
 									break;
 								}
+								currentNode = nextNode;
 							}
 						}
-//						// Check is predicted correctly
-//						boolean predictedCorrectly = false;
-//						for (NodeFeedbackPair pair : userPairs) {
-//							UserFeedback feedback = pair.getFeedback();
-//							if (feedback.week_equals(predictedFeedback)) {
-//								currentNode = TraceUtil.findNextNode(currentNode, predictedFeedback, buggyView.getTrace());
-//								predictedCorrectly = true;
-//								break;
-//							}
-//						}
-//						
-//						if (!predictedCorrectly) {
-//							for (NodeFeedbackPair pair : userPairs) {
-//								UserFeedback feedback = pair.getFeedback();
-//								if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
-//									isOmissionBug = true;
-//									break;
-//								}
-//							}
-//							if (isOmissionBug) {
-//								break;
-//							}
-//							spp.responseToFeedbacks(responses);
-//							UserFeedback userFeedback = userPairs.get(0).getFeedback();
-//							currentNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
-//							// Check is it control flow omission bug
-//							if (currentNode == null && userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-//								isOmissionBug = true;
-//							}
-//							break;
-//						}
+						userPath.addPair(userPair);
 					}
 					
 					if (isOmissionBug) {
-						System.out.println("Omission bug detected");
 						break;
 					}
 				}
 				
-				
+				if (isOmissionBug) {
+					System.out.println();
+					System.out.println("Omission bug detected");
+					OmissionBugLocator locator = new OmissionBugLocator(buggyView.getTrace(), startFeedback, endFeedback);
+					while (!locator.isInvestigationFinished()) {
+						TraceNode suspiciousNode = locator.getSuspiciousNode();
+						NodeFeedbacksPair userFeedbackPair = askForFeedback(suspiciousNode);
+						locator.takeFeedback(userFeedbackPair);
+					}
+					OmissionBugScope scope = locator.getBugScope();
+					System.out.println("Detected omission bug scope: " + scope);
+				}
 				return Status.OK_STATUS;
 			}
 			
