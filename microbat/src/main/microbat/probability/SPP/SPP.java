@@ -121,10 +121,35 @@ public class SPP {
 		if (startNode.getOrder() < endNode.getOrder()) {
 			throw new IllegalArgumentException("EndNode: " + endNode.getOrder() + " is in the downstream of startNode: " + startNode.getOrder());
 		}
-		ActionPath path = this.suggestPath(startNode, endNode);
-		if (!path.isFollowing(mustFollowPath)) {
+		
+		// If there are no user path provided, the find path from the error node
+		if (mustFollowPath == null) {
+			return this.suggestPath(startNode, endNode);
+		}
+		if (mustFollowPath.isEmpty()) {
+			return this.suggestPath(startNode, endNode);
+		}
+		
+		// If must follow path is provided,
+		// then find path starting from last node of the user path
+		NodeFeedbacksPair latestAction = mustFollowPath.peek();
+		TraceNode latestNode = TraceUtil.findNextNode(latestAction.getNode(), latestAction.getFirstFeedback(), trace);
+		if (latestNode == null) {
+			return null;
+		}
+		if (endNode.getOrder() > latestNode.getOrder()) {
+			return null;
+		}
+		
+		ActionPath consecutive_path = this.suggestPath(latestNode, endNode);
+		if (!consecutive_path.canReachRootCause()) {
 			PathFinder finder = new PathFinder(this.trace);
-			path = finder.findPathway_greedy(startNode, endNode, mustFollowPath);
+			consecutive_path = finder.findPathway_greedy(latestNode, endNode);
+		}
+		
+		ActionPath path = ActionPath.concat(mustFollowPath, consecutive_path);
+		if (!ActionPath.isConnectedPath(path, trace)) {
+			throw new RuntimeException("Path is not connected");
 		}
 		return path;
 	}
@@ -239,7 +264,7 @@ public class SPP {
 				if (wrongReadVars.contains(readVar)) {
 					this.addWrongVar(readVar);
 				} else {
-					this.addCorrectVar(readVar);
+//					this.addCorrectVar(readVar);
 				}
 			}
 			this.addWrongVars(node.getWrittenVariables());

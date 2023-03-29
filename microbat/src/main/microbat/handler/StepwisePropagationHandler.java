@@ -66,7 +66,6 @@ public class StepwisePropagationHandler extends AbstractHandler {
 				List<VarValue> outputs = DebugInfo.getOutputs();
 				
 				final TraceNode startingNode = getStartingNode(buggyView.getTrace(), outputs.get(0));
-
 			
 				// Set up the propagator that perform propagation
 				SPP spp = new SPP(buggyView.getTrace(), inputs, outputs);
@@ -114,9 +113,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 					}
 					System.out.println();
 					
-					assert path.contains(currentNode) : "Suggested path does not contain the current node: " + currentNode.getOrder();
-					
-					List<NodeFeedbacksPair> responses = new ArrayList<>();
+					List<NodeFeedbacksPair> responses_cache = new ArrayList<>();
 					for (NodeFeedbacksPair action : path) {
 						
 						final TraceNode node = action.getNode();
@@ -131,28 +128,28 @@ public class StepwisePropagationHandler extends AbstractHandler {
 						
 						// Obtain feedback from user
 						NodeFeedbacksPair userPair = askForFeedback(currentNode);
-						
-						responses.add(userPair);
-						
 						System.out.println("User Feedback: ");
 						System.out.println(userPair);
-						
+						userPath.addPair(userPair);
+						responses_cache.add(userPair);
 						UserFeedback predictedFeedback = action.getFeedbacks().get(0);
-					
 						if (userPair.containsFeedback(predictedFeedback)) {
+							// Feedback predicted correctly, save the feedback to cache then keep asking
 							currentNode = TraceUtil.findNextNode(currentNode, predictedFeedback, buggyView.getTrace());
+							
 						} else {
-							// Prediction is wrong
+							// Prediction is wrong, as for ground truth feedback and send to SPP together with
+							// all feedbacks in cache
 							if (userPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
 								isOmissionBug = true;
 								startFeedback = userPair;
 								endFeedback = userPath.peek(); // Last feedback
 								break;
 							} else {
-								spp.responseToFeedbacks(responses);
+								spp.responseToFeedbacks(responses_cache);
 								UserFeedback userFeedback = userPair.getFeedbacks().get(0);
 								TraceNode nextNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
-								if (currentNode == null && userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+								if (nextNode == null && userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 									isOmissionBug = true;
 									TraceNode startNode = OmissionBugLocator.getStartNodeForControlFlowOmission(currentNode, buggyView.getTrace());
 									startFeedback = new NodeFeedbacksPair(startNode);
@@ -162,7 +159,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 								currentNode = nextNode;
 							}
 						}
-						userPath.addPair(userPair);
+						
 					}
 					
 					if (isOmissionBug) {

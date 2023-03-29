@@ -95,7 +95,7 @@ public abstract class Client {
 	 * @return True when successfully end the server
 	 * @throws Exception
 	 */
-	public boolean endServer() throws Exception {
+	public boolean endServer() {
 		byte[] ending_msg = this.strToByte(END_MSG);
 		this.sendMsg(ending_msg);
 		String response = this.byteToStr(this.receiveMsg());
@@ -111,6 +111,9 @@ public abstract class Client {
 			final byte[] msgBreak = this.strToByte(Client.BREAK_MSG);
 			try {
 				for (byte[] message : messages) {
+					if (message.length > Client.BUFFER_SIZE) {
+						throw new RuntimeException("Message exceed maximum buffer size");
+					}
 					System.out.println("Message size: " + message.length);
 					this.writer.write(message);
 					Thread.sleep(Client.SLEEP_TIME);

@@ -83,6 +83,10 @@ public class ProbPropagator {
 		this.computeMinOutputCost();
 		for (TraceNode node : this.slicedTrace) {
 			
+			if (this.isFeedbackGiven(node)) {
+				continue;
+			}
+			
 			// Skip propagation if either read or written variable is missing
 			if (node.getReadVariables().isEmpty() || node.getWrittenVariables().isEmpty()) {
 				continue;
@@ -180,7 +184,6 @@ public class ProbPropagator {
 			
 			// Skip this node if the feedback is already given
 			if (this.isFeedbackGiven(node)) {
-				System.out.println("TraceNode: " + node.getOrder() + " is skipped because feedback is already given");
 				continue;
 			}
 			
@@ -189,7 +192,6 @@ public class ProbPropagator {
 			
 			// Skip when there are no either read or written variables
 			if (node.getReadVariables().isEmpty() || node.getWrittenVariables().isEmpty()) {
-				System.out.println("TraceNode: " + node.getOrder() + " is skipped because there are no either read or written variable");
 				continue;
 			}
 			

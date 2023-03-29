@@ -80,7 +80,7 @@ public class TraceDijstraAlgorithm {
 				if (this.isInsideRegion(dataDom) && this.graph.contains(dataDom)) {
 					VarValue dataDomVar = null;
 					for (VarValue writtenVar : dataDom.getWrittenVariables()) {
-						if (writtenVar.equals(readVar)) {
+						if (writtenVar.id_equals(readVar)) {
 							dataDomVar = writtenVar;
 							break;
 						}

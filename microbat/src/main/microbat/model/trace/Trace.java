@@ -931,9 +931,6 @@ public class Trace {
 				String wVarID = Variable.truncateSimpleID(writtenValue.getVarID());
 				String wHeadID = Variable.truncateSimpleID(writtenValue.getAliasVarID());
 				
-//				if (varValue.equals(writtenValue)) {
-//					return node;
-//				}
 				if(wVarID != null && wVarID.equals(varID)) {
 					return node;						
 				}

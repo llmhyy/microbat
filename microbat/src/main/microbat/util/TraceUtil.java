@@ -130,6 +130,19 @@ public class TraceUtil {
 		return nextNode;
 	}
 	
+	public static Set<TraceNode> findAllNextNodes(final TraceNode node, final Collection<UserFeedback> feedbacks, final Trace trace) {
+		if (node == null) throw new IllegalArgumentException("node should not be null");
+		if (trace == null) throw new IllegalArgumentException("trace should not be null");
+		
+		Set<TraceNode> nextNodes = new HashSet<>();
+		for (UserFeedback feedback : feedbacks) {
+			TraceNode nextNode = TraceUtil.findNextNode(node, feedback, trace);
+			if (nextNode != null) {
+				nextNodes.add(nextNode);
+			}
+		}
+		return nextNodes;
+	}
 	/**
 	 * Find all the nodes that affected by the give node using BFS
 	 * @param node Given starting node
@@ -151,21 +164,11 @@ public class TraceUtil {
 			controlDominatees.removeIf(controlDominatee -> croppedTrace.contains(controlDominatee));
 			toVisitNodes.addAll(controlDominatees);
 			
-			for (TraceNode controlDominatee : controlDominatees) {
-				if (controlDominatee.getOrder() == 417) {
-					System.out.println();
-				}
-			}
 //			croppedTrace.addAll(controlDominatees);
 			
 			for (VarValue writtenVar : currentNode.getWrittenVariables()) {
 				List<TraceNode> dataDominatees = trace.findDataDependentee(currentNode, writtenVar);
 				dataDominatees.removeIf(dataDominatee -> croppedTrace.contains(dataDominatee));
-				for (TraceNode controlDominatee : dataDominatees) {
-					if (controlDominatee.getOrder() == 417) {
-						System.out.println();
-					}
-				}
 				toVisitNodes.addAll(dataDominatees);
 //				croppedTrace.addAll(dataDominatees);
 			}

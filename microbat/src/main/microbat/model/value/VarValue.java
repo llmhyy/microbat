@@ -596,4 +596,27 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 		this.setVisisted(false);
 		this.setDistance(isStartNode ? PropProbability.LOW : Double.MAX_VALUE);
 	}
+	
+	public boolean id_equals(final Object otherObj) {
+		if (otherObj instanceof VarValue) {
+			VarValue otherVar = (VarValue) otherObj;
+			final String varID = Variable.truncateSimpleID(this.getVarID());
+			final String headID = Variable.truncateSimpleID(this.getAliasVarID());
+			final String otherVarID = Variable.truncateSimpleID(otherVar.getVarID());
+			final String otherHeadID = Variable.truncateSimpleID(otherVar.getAliasVarID());
+			if(otherVarID != null && otherVarID.equals(varID)) {
+				return true;						
+			}
+			
+			if(otherHeadID != null && otherHeadID.equals(headID)) {
+				return true;
+			}
+			
+			VarValue childValue = otherVar.findVarValue(varID, headID);
+			if(childValue != null) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

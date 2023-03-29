@@ -74,6 +74,13 @@ public class NodeFeedbacksPair {
 		return this.feedbacks.contains(feedback);
 	}
 	
+	public UserFeedback getFirstFeedback() {
+		if (this.feedbacks.isEmpty()) {
+			return null;
+		}
+		return this.feedbacks.get(0);
+	}
+	
 	public boolean haveCommonFeedbackWith(final NodeFeedbacksPair otherPair) {
 		Set<UserFeedback> thisFeedbackSet = new HashSet<>();
 		thisFeedbackSet.addAll(this.feedbacks);

@@ -14,6 +14,7 @@ import org.eclipse.swt.widgets.Display;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
+import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.probability.BP.BeliefPropagation;
@@ -34,20 +35,9 @@ public class TestHandler extends AbstractHandler {
 			protected IStatus run(IProgressMonitor monitor) {
 				setup();
 				
-				Trace trace = traceView.getTrace();
-				for(TraceNode node : trace.getExecutionList()) {
-					System.out.println("-------------------------------");
-					System.out.println("Trace Node: " + node.getOrder());
-					
-					if (isForEachLoop(node)) {
-						System.out.println("This node is for each loop");
-					}
-					ByteCodeList byteCodeList = new ByteCodeList(node.getBytecode());
-					System.out.println(byteCodeList.toOpCodeString());
-					for(ByteCode byteCode : byteCodeList) {
-						System.out.println(byteCode);
-					}
-				}
+		        RunningInfo runningInfo = RunningInfo.readFromFile("C:\\Users\\arkwa\\Desktop\\buggy-trace.exec");
+		        Trace trace = runningInfo.getMainTrace();
+		        
 				return Status.OK_STATUS;
 			}
 			
