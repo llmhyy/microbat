@@ -106,7 +106,7 @@ public class ProbPropagator {
 			}
 			
 			double avgProb = this.aggregator.aggregateForwardProb(readVars, ProbAggregateMethods.AVG);
-			if (avgProb <= PropProbability.LOW) {
+			if (avgProb <= PropProbability.UNCERTAIN) {
 				// No need to continue if the avgProb is already LOW
 				for (VarValue writtenVar : node.getWrittenVariables()) {
 					if (this.correctVars.contains(writtenVar)) {
@@ -114,7 +114,7 @@ public class ProbPropagator {
 					} else if (this.wrongVars.contains(writtenVar)) {
 						writtenVar.setAllProbability(PropProbability.LOW);
 					} else {
-						writtenVar.setForwardProb(avgProb);
+						writtenVar.setForwardProb(PropProbability.UNCERTAIN);
 					}
 				}
 				continue;
@@ -130,17 +130,19 @@ public class ProbPropagator {
 				}
 			} else {
 				// Calculate forward probability of written variable
-				long writtenCost = node.getWrittenVariables().get(0).getComputationalCost();
+//				long writtenCost = node.getWrittenVariables().get(0).getComputationalCost();
 				
 				// Find the closest wrong variable computational cost 
-				long outputCost = node.getMinOutpuCost();
+//				long outputCost = node.getMinOutpuCost();
+//				double loss = avgProb - PropProbability.LOW;
+//				double loss = (avgProb - PropProbability.LOW) * ((double) writtenCost / outputCost);
+//				double prob = avgProb - loss;
 				
-				double loss = (avgProb - PropProbability.LOW) * ((double) writtenCost / outputCost);
-				double prob = avgProb - loss;
+				double prob = avgProb;
 				if (prob < 0) {
-					System.out.println();
+					throw new RuntimeException("Problematic probability at node: " + node.getOrder() + ": " + prob);
 				}
-				for (VarValue writtenVar : node.getWrittenVariables()) {
+ 				for (VarValue writtenVar : node.getWrittenVariables()) {
 					if (this.correctVars.contains(writtenVar)) {
 						writtenVar.setAllProbability(PropProbability.HIGH);
 					} else if (this.wrongVars.contains(writtenVar)) {
@@ -204,7 +206,8 @@ public class ProbPropagator {
 			long opCost = this.countModifyOperation(node);
 			double gain = 0;
 			if (cumulativeCost != 0) {
-				gain = (0.95 - avgProb) * ((double) opCost/cumulativeCost);
+				// Define maximum gain by the step
+				gain = (PropProbability.UNCERTAIN - avgProb) * ((double) opCost/cumulativeCost);
 			}
 	
 			// Calculate total cost

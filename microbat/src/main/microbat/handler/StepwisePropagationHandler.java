@@ -131,10 +131,12 @@ public class StepwisePropagationHandler extends AbstractHandler {
 						System.out.println("User Feedback: ");
 						System.out.println(userPair);
 						userPath.addPair(userPair);
+						
 						responses_cache.add(userPair);
 						UserFeedback predictedFeedback = action.getFeedbacks().get(0);
 						if (userPair.containsFeedback(predictedFeedback)) {
 							// Feedback predicted correctly, save the feedback to cache then keep asking
+							// so that we don't need to do the propagation too frequently
 							currentNode = TraceUtil.findNextNode(currentNode, predictedFeedback, buggyView.getTrace());
 							
 						} else {
@@ -159,7 +161,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 								currentNode = nextNode;
 							}
 						}
-						
+
 					}
 					
 					if (isOmissionBug) {
@@ -170,14 +172,14 @@ public class StepwisePropagationHandler extends AbstractHandler {
 				if (isOmissionBug) {
 					System.out.println();
 					System.out.println("Omission bug detected");
-					OmissionBugLocator locator = new OmissionBugLocator(buggyView.getTrace(), startFeedback, endFeedback);
-					while (!locator.isInvestigationFinished()) {
-						TraceNode suspiciousNode = locator.getSuspiciousNode();
-						NodeFeedbacksPair userFeedbackPair = askForFeedback(suspiciousNode);
-						locator.takeFeedback(userFeedbackPair);
-					}
-					OmissionBugScope scope = locator.getBugScope();
-					System.out.println("Detected omission bug scope: " + scope);
+//					OmissionBugLocator locator = new OmissionBugLocator(buggyView.getTrace(), startFeedback, endFeedback);
+//					while (!locator.isInvestigationFinished()) {
+//						TraceNode suspiciousNode = locator.getSuspiciousNode();
+//						NodeFeedbacksPair userFeedbackPair = askForFeedback(suspiciousNode);
+//						locator.takeFeedback(userFeedbackPair);
+//					}
+//					OmissionBugScope scope = locator.getBugScope();
+//					System.out.println("Detected omission bug scope: " + scope);
 				}
 				return Status.OK_STATUS;
 			}

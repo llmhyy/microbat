@@ -264,7 +264,7 @@ public class SPP {
 				if (wrongReadVars.contains(readVar)) {
 					this.addWrongVar(readVar);
 				} else {
-//					this.addCorrectVar(readVar);
+					this.addCorrectVar(readVar);
 				}
 			}
 			this.addWrongVars(node.getWrittenVariables());
