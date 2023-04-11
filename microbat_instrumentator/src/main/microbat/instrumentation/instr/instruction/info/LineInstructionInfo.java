@@ -63,9 +63,9 @@ public class LineInstructionInfo{
 		this.insnList.setPositions(true);
 		lineInsns = findCorrespondingInstructions(insnList , lineNumberTable, lineGen.getSourceLine());
 		System.out.println(methodGen.getClassName() + "#" + line);
-		for (InstructionHandle ih: lineInsns) {
-			System.out.println(ih);
-		}
+//		for (InstructionHandle ih: lineInsns) {
+//			System.out.println(ih);
+//		}
 		rwInsructionInfo = extractRWInstructions(locId, isAppClass);
 		invokeInsns = extractInvokeInstructions(lineInsns);
 		returnInsns = extractReturnInstructions(lineInsns);
