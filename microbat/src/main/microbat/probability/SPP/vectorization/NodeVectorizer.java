@@ -3,6 +3,7 @@ package microbat.probability.SPP.vectorization;
 import java.util.Map;
 
 import microbat.model.trace.TraceNode;
+import microbat.probability.SPP.vectorization.vector.NodeVector;
 import sav.common.core.Pair;
 
 public class NodeVectorizer {
