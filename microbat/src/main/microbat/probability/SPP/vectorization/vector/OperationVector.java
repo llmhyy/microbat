@@ -4,47 +4,36 @@ import java.util.Arrays;
 
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
+import microbat.model.trace.TraceNode;
 
-public class OperationVector {
+public class OperationVector extends Vector{
 	private final boolean[] operation = new boolean[256];
-	private final boolean isCallingAPI;
-	private final double apiConfidence;
 	
-	public OperationVector(final ByteCodeList byteCodeList, final boolean isCallingAPI, final double apiConfidence) {
+	public OperationVector(final TraceNode node) {
+		ByteCodeList byteCodeList = new ByteCodeList(node.getBytecode());
+		for (int idx=0; idx<this.operation.length; idx++) {
+			this.operation[idx] = false;
+		}
 		for (ByteCode byteCode : byteCodeList) {
 			short opCode = byteCode.getOpcode();
-			operation[opCode] = true;
+			this.operation[opCode] = true;
 		}
-		this.isCallingAPI = isCallingAPI;
-		this.apiConfidence = apiConfidence;
 	}
 	
-	public OperationVector(final ByteCodeList byteCodeList, final boolean isCallingAPI) {
-		this(byteCodeList, isCallingAPI, 0.5);
+	public OperationVector(final OperationVector otherVector) {
+		for (int idx=0; idx<this.operation.length; idx++) {
+			this.operation[idx] = otherVector.operation[idx];
+		}
 	}
 	
 	public boolean[] getOperationArray() {
 		return this.operation;
 	}
 	
-	public boolean isCallingAPI() {
-		return this.isCallingAPI;
-	}
-	
-	public double getAPIConfidence() {
-		return this.apiConfidence;
-	}
-	
 	public boolean equals(Object otherObj) {
 		if (otherObj instanceof OperationVector) {
 			OperationVector otherVec = (OperationVector) otherObj;
 			if (!Arrays.equals(this.operation, otherVec.operation)) {
-				return false;
-			}
-			if (this.isCallingAPI == otherVec.isCallingAPI) {
-				return false;
-			}
-			if (this.apiConfidence == otherVec.apiConfidence) {
 				return false;
 			}
 			return true;
@@ -61,10 +50,6 @@ public class OperationVector {
 			strBuilder.append(",");
 			strBuilder.append(this.operation[idx] ? "1" : "0");
 		}
-		strBuilder.append(",");
-		strBuilder.append(this.isCallingAPI ? "1" : "0");
-		strBuilder.append(",");
-		strBuilder.append(String.format("%.2f", this.apiConfidence));
 		return strBuilder.toString();
 	}
 }

@@ -1,5 +1,10 @@
 package microbat.probability.SPP.vectorization.vector;
 
-public class EnvironmentVector {
+import microbat.model.trace.TraceNode;
 
+public class EnvironmentVector extends Vector {
+	
+	public EnvironmentVector(final TraceNode node) {
+		
+	}
 }
