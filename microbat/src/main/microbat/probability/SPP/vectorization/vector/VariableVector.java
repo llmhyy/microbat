@@ -6,6 +6,10 @@ import microbat.model.value.VarValue;
 
 public class VariableVector extends Vector {
 	
+	public static final int DIMENSION = 25;
+	
+	private final boolean[] vector = new boolean[VariableVector.DIMENSION];
+	
 	public VariableVector() {
 		
 	}
@@ -25,5 +29,16 @@ public class VariableVector extends Vector {
 			}
 		}
 		return varVectors;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder strBuilder = new StringBuilder();
+		strBuilder.append(this.vector[0] ? "1" : "0");
+		for (int idx=1; idx<this.vector.length; ++idx) {
+			strBuilder.append(",");
+			strBuilder.append(this.vector[idx] ? "1" : "0");
+		}
+		return strBuilder.toString();
 	}
 }

@@ -7,33 +7,36 @@ import microbat.bytecode.ByteCodeList;
 import microbat.model.trace.TraceNode;
 
 public class OperationVector extends Vector{
-	private final boolean[] operation = new boolean[256];
+	
+	public static final int DIMENSION = 256;
+	
+	private final boolean[] vector = new boolean[OperationVector.DIMENSION];
 	
 	public OperationVector(final TraceNode node) {
 		ByteCodeList byteCodeList = new ByteCodeList(node.getBytecode());
-		for (int idx=0; idx<this.operation.length; idx++) {
-			this.operation[idx] = false;
+		for (int idx=0; idx<this.vector.length; idx++) {
+			this.vector[idx] = false;
 		}
 		for (ByteCode byteCode : byteCodeList) {
 			short opCode = byteCode.getOpcode();
-			this.operation[opCode] = true;
+			this.vector[opCode] = true;
 		}
 	}
 	
 	public OperationVector(final OperationVector otherVector) {
-		for (int idx=0; idx<this.operation.length; idx++) {
-			this.operation[idx] = otherVector.operation[idx];
+		for (int idx=0; idx<this.vector.length; idx++) {
+			this.vector[idx] = otherVector.vector[idx];
 		}
 	}
 	
 	public boolean[] getOperationArray() {
-		return this.operation;
+		return this.vector;
 	}
 	
 	public boolean equals(Object otherObj) {
 		if (otherObj instanceof OperationVector) {
 			OperationVector otherVec = (OperationVector) otherObj;
-			if (!Arrays.equals(this.operation, otherVec.operation)) {
+			if (!Arrays.equals(this.vector, otherVec.vector)) {
 				return false;
 			}
 			return true;
@@ -45,10 +48,10 @@ public class OperationVector extends Vector{
 	@Override
 	public String toString() {
 		StringBuilder strBuilder = new StringBuilder();
-		strBuilder.append(this.operation[0] ? "1" : "0");
-		for (int idx=1; idx<this.operation.length; ++idx) {
+		strBuilder.append(this.vector[0] ? "1" : "0");
+		for (int idx=1; idx<this.vector.length; ++idx) {
 			strBuilder.append(",");
-			strBuilder.append(this.operation[idx] ? "1" : "0");
+			strBuilder.append(this.vector[idx] ? "1" : "0");
 		}
 		return strBuilder.toString();
 	}

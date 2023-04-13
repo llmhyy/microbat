@@ -1,7 +1,5 @@
 package microbat.probability.SPP.vectorization.vector;
 
-import microbat.bytecode.ByteCode;
-import microbat.bytecode.ByteCodeList;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
@@ -11,8 +9,8 @@ import microbat.model.value.VarValue;
  */
 public class NodeVector extends Vector {
 	
-	private static final int NUM_REF_VARS = 10;
-	private static final int NUM_FUNCS = 10;
+	public static final int NUM_REF_VARS = 10;
+	public static final int NUM_FUNCS = 10;
 	
 	private final OperationVector optVector;
 	private final VariableVector[] refVarVectors;
@@ -24,9 +22,30 @@ public class NodeVector extends Vector {
 		this.optVector = new OperationVector(node);
 		this.refVarVectors = VariableVector.constructVarVectors(
 			backward ? node.getWrittenVariables() : node.getReadVariables(),
-			NUM_FUNCS);
+			NodeVector.NUM_FUNCS);
 		this.targetVarVector = new VariableVector(targetVar);
 		this.envVector = new EnvironmentVector(node);
 		this.funcVectors = FunctionVector.constructFuncVectors(node, NodeVector.NUM_FUNCS);
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder strBuilder = new StringBuilder();
+		strBuilder.append(this.optVector);
+		strBuilder.append(",");
+		for (VariableVector refVarVector : this.refVarVectors) {
+			strBuilder.append(refVarVector);
+			strBuilder.append(",");
+		}
+		strBuilder.append(this.targetVarVector);
+		strBuilder.append(",");
+		strBuilder.append(this.envVector);
+		strBuilder.append(",");
+		for (FunctionVector funcVector : this.funcVectors) {
+			strBuilder.append(funcVector);
+			strBuilder.append(",");
+		}
+		strBuilder.deleteCharAt(strBuilder.length()-1);
+		return strBuilder.toString();
 	}
 }
