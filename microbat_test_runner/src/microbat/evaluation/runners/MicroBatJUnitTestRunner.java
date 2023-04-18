@@ -52,11 +52,12 @@ public class MicroBatJUnitTestRunner extends TestRunner {
     }
 
     private boolean checkMethodNameMatch(String junitDisplayName, String methodName) {
-        boolean isJUnit5 = junitDisplayName.indexOf("(") != -1; // JUnit5's test names have brackets, e.g. test(), while
-                                                                // JUnit4 does not e.g. test
+        // JUnit5's test names have brackets, e.g. test(),
+        // while JUnit4 does not e.g. test
+        boolean isJUnit5 = junitDisplayName.indexOf("(") != -1;
         if (isJUnit5) {
             return junitDisplayName.startsWith(methodName + "(");
         }
-        return junitDisplayName.startsWith(methodName);
+        return junitDisplayName.equals(methodName);
     }
 }
