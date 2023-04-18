@@ -1,6 +1,5 @@
-package microbat.evaluation.junit;
+package microbat.evaluation.runners;
 
-import java.net.URLClassLoader;
 import java.util.List;
 
 import org.junit.runner.Description;
@@ -10,24 +9,10 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
-public class MicroBatTestRunner {
+public class TestRunner {
 	
-	private boolean successful = false;
-	private String failureMessage = "no fail";
-	
-	public MicroBatTestRunner(){
-		
-	}
-	
-	public static void main(String[] args){
-//		String[] classAndMethod = args[0].split("#");
-		String className = args[0];
-		String methodName = args[1];
-		
-		MicroBatTestRunner testRunner = new MicroBatTestRunner();
-		testRunner.runTest(className, methodName);
-	}
-	
+	protected boolean successful = false;
+	protected String failureMessage = "no fail";
 	
 	public void runTest(final String className, final String methodName){
 		Request request;
@@ -64,37 +49,16 @@ public class MicroBatTestRunner {
 		$exitProgram(successful + ";" + this.failureMessage);
 	}
 	
-	private void $testFinished(String className, String methodName) {
+	protected void $testFinished(String className, String methodName) {
 		// for agent part.
 	}
 
-	private void $testStarted(String className, String methodName) {
+	protected void $testStarted(String className, String methodName) {
 		// for agent part.
 	}
 	
-	private void $exitProgram(String resultMsg) {
+	protected void $exitProgram(String resultMsg) {
 		// for agent part.
-	}
-
-	public static boolean isTestSuccessful(String className, String methodName, URLClassLoader classLoader){
-		Request request;
-		try {
-			if(classLoader == null){
-				request = Request.method(Class.forName(className), methodName);				
-			}
-			else{
-				request = Request.method(Class.forName(className, false, classLoader), methodName);
-			}
-			Result result = new JUnitCore().run(request);
-			boolean successful = result.wasSuccessful();
-			
-			return successful;
-			
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		
-		return false;
 	}
 
 	public boolean isSuccessful() {
