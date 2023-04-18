@@ -1,4 +1,4 @@
-package microbat.evaluation.junit; // TODO: This is for backward compatibility. Ideally the package should not have "junit" inside it, since it also handles testng currently
+package microbat.evaluation.junit; // TODO: This is for backward compatibility e.g. Tregression. Ideally the package name should not have "junit" inside it, since it also handles testng
 
 import microbat.evaluation.factory.MicroBatTestRunnerFactory;
 import microbat.evaluation.runners.TestRunner;

@@ -12,17 +12,15 @@ import microbat.evaluation.runners.MicroBatTestNGTestRunner;
 import microbat.evaluation.runners.TestRunner;
 
 // Decides which test runner to use e.g. junit, testng
-
 public class MicroBatTestRunnerFactory {
-	public TestRunner create(String className, String methodName) {
+    public TestRunner create(String className, String methodName) {
         LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-                .selectors(DiscoverySelectors.selectMethod(className, methodName))
-                .build();
-	    Launcher launcher = LauncherFactory.create();
-	    TestPlan testPlan = launcher.discover(request);
-	    if (testPlan.containsTests()) {
-			return new MicroBatJUnitTestRunner();
-	    }
-		return new MicroBatTestNGTestRunner();
-	}
+                .selectors(DiscoverySelectors.selectMethod(className, methodName)).build();
+        Launcher launcher = LauncherFactory.create();
+        TestPlan testPlan = launcher.discover(request);
+        if (testPlan.containsTests()) {
+            return new MicroBatJUnitTestRunner();
+        }
+        return new MicroBatTestNGTestRunner();
+    }
 }
