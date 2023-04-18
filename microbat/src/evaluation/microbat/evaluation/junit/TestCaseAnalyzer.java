@@ -694,26 +694,30 @@ public class TestCaseAnalyzer {
 	}
 
 	private AppJavaClassPath createProjectClassPath(String className, String methodName){
-		AppJavaClassPath classPath = MicroBatUtil.constructClassPaths();
-		
-		String userDir = System.getProperty("user.dir");
-		String junitDir = userDir + File.separator + "dropins" + File.separator + "junit_lib";
-		
-		String junitPath = junitDir + File.separator + "junit.jar";
-		String hamcrestCorePath = junitDir + File.separator + "org.hamcrest.core.jar";
-		String testRunnerPath = junitDir  + File.separator + "testrunner.jar";
-		
-		classPath.addClasspath(junitPath);
-		classPath.addClasspath(hamcrestCorePath);
-		classPath.addClasspath(testRunnerPath);
-		
-		classPath.addClasspath(junitDir);
-		
-		classPath.setOptionalTestClass(className);
-		classPath.setOptionalTestMethod(methodName);
-		
-		classPath.setLaunchClass(TEST_RUNNER);
-		
-		return classPath;
+        AppJavaClassPath classPath = MicroBatUtil.constructClassPaths();
+        
+        String userDir = System.getProperty("user.dir");
+        String junitDir = userDir + File.separator + "dropins" + File.separator + "junit_lib";
+        
+        String junitPath = junitDir + File.separator + "junit.jar";
+        String hamcrestCorePath = junitDir + File.separator + "org.hamcrest.core.jar";
+        String testRunnerPath = junitDir  + File.separator + "testrunner.jar";
+        String junit5Path = junitDir  + File.separator + "junit-platform-console-standalone-1.9.0.jar";
+        String junit5RunnerPath = junitDir  + File.separator + "org.junit.platform.runner_1.8.1.v20211018-1956.jar";
+        
+        classPath.addClasspath(junitPath);
+        classPath.addClasspath(hamcrestCorePath);
+        classPath.addClasspath(testRunnerPath);
+        classPath.addClasspath(junit5Path);
+        classPath.addClasspath(junit5RunnerPath);
+        
+        classPath.addClasspath(junitDir);
+        
+        classPath.setOptionalTestClass(className);
+        classPath.setOptionalTestMethod(methodName);
+        
+        classPath.setLaunchClass(TEST_RUNNER);
+        
+        return classPath;
 	}
 }
