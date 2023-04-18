@@ -40,15 +40,16 @@ More details can be refer to https://github.com/llmhyy/microbat/wiki/Compile-Run
 <p align="center">
   <img src="/microbat/image/f3.png" width="700" align="center">
 </p>
-- Then, you can click the Microbat (in Eclipse Menu) >> Start Debug. The hierarhical trace will be generated and you can provide the feedback for debuggng then.
+- Then, you can click the Microbat (in Eclipse Menu) >> Start Debug. The hierarhical trace will be generated and you can provide the feedback for debugging then.
 
-## Run with Junit method
-- Alternatively, we also support users (i.e., programmers) to run Microbat with JUnit test cases. 
-In this case, we need to package the project of "microbat_junit_test" and export it as a jar file "testrunner.jar".
-Moreover, we provide two jar files, i.e., [junit.jar](/microbat/lib/junit.jar) and [org.hamcrest.core.jar](/microbat/lib/org.hamcrest.core.jar).
-Then, we need to put testrunner.jar, junit.jar, and org.hamcrest.core.jar in the path eclipse_root_folder\dropins\junit_lib\
+## Run with test method
+Alternatively, we also support users (i.e., programmers) to run Microbat with JUnit4, JUnit5 and TestNG test cases. 
+In this case, we need to package the project of "microbat_test_runner" and export it as a jar file "testrunner.jar".
+Moreover, we provide five jar files, i.e., [junit.jar](/microbat/junit_lib/junit.jar), [org.hamcrest.core.jar](/microbat/junit_lib/org.hamcrest.core.jar), [junit-platform-console-standalone-1.9.0](/microbat/junit_lib/junit-platform-console-standalone-1.9.0), [org.testng_7.4.0.r202105021533](/microbat/junit_lib/org.testng_7.4.0.r202105021533) and [org.junit.platform.runner_1.8.1.v20211018-1956](/microbat/junit_lib/[org.junit.platform.runner_1.8.1.v20211018-1956).
 
-Then we can use the following configuration to have the trace of a junit method.
+Place the testrunner.jar, the five jar files in junit_lib mentioned above into the path eclipse_root_folder\dropins\junit_lib\
+
+We can use the following configuration to have the trace of a test method.
 <p align="center">
   <img src="/microbat/image/junit-trace.png" width="700" align="center">
 </p>
