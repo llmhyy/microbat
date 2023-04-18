@@ -659,7 +659,7 @@ public class ConcurrentTraceView extends TraceView {
 				// TODO it is better to parse method name as well.
 				// String message = className + "." + methodName + "(...): line " + lineNumber + "probability: " + prob;
 				String message = order + ". "
-						+ MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration, prob, predOrder);
+						+ MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration, prob, predOrder, node.getDrop());
 				return message;
 
 			}

@@ -592,7 +592,7 @@ public class TraceView extends ViewPart {
 				
 				// TODO it is better to parse method name as well.
 				// String message = className + "." + methodName + "(...): line " + lineNumber + "probability: " + prob;
-				String message = order + ". " + MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration, prob, predOrder);
+				String message = order + ". " + MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration, prob, predOrder, node.getDrop());
 				return message;
 
 			}

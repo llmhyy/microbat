@@ -130,7 +130,8 @@ public class ProbPropagator {
 				}
 			} else {
 				// Calculate forward probability of written variable
-//				long writtenCost = node.getWrittenVariables().get(0).getComputationalCost();
+				long writtenCost = node.getWrittenVariables().get(0).getComputationalCost();
+				long optCost = this.countModifyOperation(node);
 				
 				// Find the closest wrong variable computational cost 
 //				long outputCost = node.getMinOutpuCost();
@@ -138,7 +139,10 @@ public class ProbPropagator {
 //				double loss = (avgProb - PropProbability.LOW) * ((double) writtenCost / outputCost);
 //				double prob = avgProb - loss;
 				
-				double prob = avgProb;
+				double discount = 1 - ((double) optCost / writtenCost);
+				if (discount == 0) discount = 1;
+				double prob = avgProb * discount;
+				prob = Math.max(prob, PropProbability.UNCERTAIN);
 				if (prob < 0) {
 					throw new RuntimeException("Problematic probability at node: " + node.getOrder() + ": " + prob);
 				}
@@ -311,10 +315,12 @@ public class ProbPropagator {
 	private void combineProb() {
 		for (TraceNode node : this.slicedTrace) {
 			for (VarValue readVar : node.getReadVariables()) {
-				readVar.setProbability(readVar.getBackwardProb());
+				double avgProb = (readVar.getForwardProb() + readVar.getBackwardProb())/2;
+				readVar.setProbability(avgProb);
 			}
 			for (VarValue writtenVar : node.getWrittenVariables()) {
-				writtenVar.setProbability(writtenVar.getBackwardProb());
+				double avgProb = (writtenVar.getForwardProb() + writtenVar.getBackwardProb())/2;
+				writtenVar.setProbability(avgProb);
 			}
 		}
 	}

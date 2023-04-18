@@ -136,6 +136,8 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	
 	protected long minOutputCost = 0;
 	
+	private double drop = -2.0;
+	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		super();
 		this.breakPoint = breakPoint;
@@ -1430,5 +1432,13 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	
 	public void setMinOutputCost(final long minOutputCost) {
 		this.minOutputCost = minOutputCost;
+	}
+	
+	public void setDrop(double  drop) {
+		this.drop = drop;
+	}
+	
+	public double getDrop() {
+		return this.drop;
 	}
 }

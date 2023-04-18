@@ -175,6 +175,15 @@ public class SPP {
 				continue;
 			}
 			
+			List<VarValue> readVars = new ArrayList<>();
+			readVars.addAll(node.getReadVariables());
+			readVars.removeIf(var -> var.isThisVariable());
+			
+			List<VarValue> writtenVars = new ArrayList<>();
+			writtenVars.addAll(node.getWrittenVariables());
+			writtenVars.removeIf(var -> var.isThisVariable());
+			
+			
 			/*
 			 * We need to handle:
 			 * 1. Node without any variable
@@ -186,26 +195,27 @@ public class SPP {
 			 * It will ignore the node that already have feedback
 			 */
 			double drop = 0.0;
-			if (node.getWrittenVariables().isEmpty() && node.getReadVariables().isEmpty() && node.getControlDominator() == null) {
+			if (writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() == null) {
 				// Case 1
 				continue;
-			} else if (node.getWrittenVariables().isEmpty() && node.getReadVariables().isEmpty() && node.getControlDominator() != null) {
+			} else if (writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() != null) {
 				// Case 2
 				drop = PropProbability.UNCERTAIN - node.getControlDominator().getConditionResult().getProbability();
-			} else if (node.getWrittenVariables().isEmpty()) {
+			} else if (writtenVars.isEmpty()) {
 				// Case 3
-				double prob = this.aggregator.aggregateProb(node.getReadVariables(), ProbAggregateMethods.AVG);
+				double prob = this.aggregator.aggregateProb(readVars, ProbAggregateMethods.AVG);
 				drop = PropProbability.UNCERTAIN - prob;
-			} else if (node.getReadVariables().isEmpty()) {
+			} else if (readVars.isEmpty()) {
 				// Case 4
-				double prob = this.aggregator.aggregateProb(node.getWrittenVariables(), ProbAggregateMethods.AVG);
+				double prob = this.aggregator.aggregateProb(writtenVars, ProbAggregateMethods.AVG);
 				drop = PropProbability.UNCERTAIN - prob;
 			} else {
-				double readProb = this.aggregator.aggregateForwardProb(node.getReadVariables(), ProbAggregateMethods.MIN);
-				double writtenProb = this.aggregator.aggregateProb(node.getWrittenVariables(), ProbAggregateMethods.MIN);
+				double readProb = this.aggregator.aggregateProb(readVars, ProbAggregateMethods.MIN);
+				double writtenProb = this.aggregator.aggregateProb(writtenVars, ProbAggregateMethods.MIN);
 				drop = readProb - writtenProb;
 			}
 			
+			node.setDrop(drop);
 			if (drop < 0) {
 				// Case that the read variable is wrong but the written variable is correct
 				// Ignore it by now
