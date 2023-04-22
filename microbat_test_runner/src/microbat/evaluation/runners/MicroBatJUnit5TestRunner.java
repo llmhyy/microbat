@@ -12,7 +12,15 @@ import org.junit.platform.launcher.listeners.TestExecutionSummary;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 
-public class MicroBatJUnitTestRunner extends TestRunner {
+/**
+ * Runner for JUnit 5.
+ * This runner technically works for JUnit 3 and 4 as well, however, it requires JUnit 4.12 to be in the classpath.
+ * Our JUnit 4.12 jar (junit.jar) may be overriden by the project's own junit library, which could be older than junit 4.12. 
+ * For such cases, the other runner (MicroBatJUnit3And4TestRunner) should be used.
+ * @author bchenghi
+ *
+ */
+public class MicroBatJUnit5TestRunner extends TestRunner {
     public void runTest(final String className, final String methodName) {
         LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
                 .selectors(DiscoverySelectors.selectMethod(className, methodName)).build();
