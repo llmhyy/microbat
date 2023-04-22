@@ -29,8 +29,8 @@ public class MicroBatTestRunnerFactory {
         } catch (JUnitException e) {
             // Not JUnit 5
         }
-        boolean isJUnit3Test = new JUnit3And4TestFinder().junit3Or4TestExists(className, methodName);
-        if (isJUnit3Test) {
+        boolean isJUnit3Or4Test = new JUnit3And4TestFinder().junit3Or4TestExists(className, methodName);
+        if (isJUnit3Or4Test) {
             return new MicroBatJUnit3And4TestRunner();
         }
         return new MicroBatTestNGTestRunner();
