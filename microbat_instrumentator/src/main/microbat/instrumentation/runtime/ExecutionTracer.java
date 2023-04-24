@@ -689,6 +689,8 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			}
 
 			int order = trace.size() + 1;
+		
+			
 			if (order > stepLimit) {
 				shutdown();
 				Agent._exitProgram("fail;Trace is over long!");
@@ -815,9 +817,9 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		}
 		addSingleRWriteValue(currentNode, value, isWrittenVar);
 	}
-
 	private void addSingleRWriteValue(TraceNode currentNode, VarValue value, boolean isWrittenVar) {
 		if (isWrittenVar) {
+			
 			currentNode.addWrittenVariable(value);
 			// buildDataRelation(currentNode, value, Variable.WRITTEN);
 		} else {

@@ -33,29 +33,6 @@ public class ByteCode {
 		this.type = OpcodeType.parse(this.opCode);
 	}
 	
-//	public boolean isOneToOne() {
-//		return this.type != null ? this.type instanceof OTOByteCodeType : false;
-//	}
-//	
-//	public boolean isManyToOne() {
-//		return this.type != null ? this.type instanceof MTOByteCodeType : false;
-//	}
-//	
-//	public boolean isArrayAccess() {
-//		return this.type != null ? this.type instanceof ArrayByteCodeType : false;
-//	}
-//	
-//	public boolean isAttrAccess() {
-//		return this.type != null ? this.type instanceof AttributeByteCodeType : false;
-//	}
-//	
-//	public boolean isFuncCall() {
-//		return this.type != null ? this.type instanceof FunctionByteCodeType : false;
-//	}
-//	
-//	public int getOpcode() {
-//		return this.type == null?  -1 : type.getOpCode();
-//	}
 	
 	
 	/**
@@ -74,6 +51,7 @@ public class ByteCode {
 	public OpcodeType getOpcodeType() {
 		return this.type;
 	}
+
 	
 	@Override
 	public boolean equals(Object anotherObj) {

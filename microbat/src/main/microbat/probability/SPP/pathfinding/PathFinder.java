@@ -37,7 +37,7 @@ public class PathFinder {
 				break;
 			}
 			if (currentNode.getOrder() <= endNode.getOrder()) {
-				break;
+				return null;
 			}
 			UserFeedback feedback = this.giveFeedback(currentNode);
 			path.addPair(currentNode, feedback);

@@ -141,17 +141,17 @@ public class TraceAgent extends Agent {
 				}
 			}
 
-			TraceNode previousStepOver = currentNode.getStepOverPrevious();
-			if (previousStepOver != null
-					&& previousStepOver.getClassCanonicalName().equals(currentNode.getClassCanonicalName())
-					&& Math.abs(previousStepOver.getLineNumber() - currentNode.getLineNumber()) <= 0) {
-				for (VarValue readVar : previousStepOver.getReadVariables()) {
-					if (!currentNode.containReadVariable(readVar)) {
-						currentNode.addReadVariable(readVar);
-					}
-				}
-			}
-
+//			TraceNode previousStepOver = currentNode.getStepOverPrevious();
+//			if (previousStepOver != null
+//					&& previousStepOver.getClassCanonicalName().equals(currentNode.getClassCanonicalName())
+//					&& Math.abs(previousStepOver.getLineNumber() - currentNode.getLineNumber()) <= 0) {
+//				for (VarValue readVar : previousStepOver.getReadVariables()) {
+//					if (!currentNode.containReadVariable(readVar)) {
+//						currentNode.addReadVariable(readVar);
+//					}
+//				}
+//			}
+			
 			if (currentNode.getInvocationParent() != null && !currentNode.getPassParameters().isEmpty()) {
 				TraceNode invocationParent = currentNode.getInvocationParent();
 				TraceNode firstChild = invocationParent.getInvocationChildren().get(0);

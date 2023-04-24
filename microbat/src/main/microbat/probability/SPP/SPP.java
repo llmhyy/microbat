@@ -113,7 +113,12 @@ public class SPP {
 			throw new IllegalArgumentException("EndNode: " + endNode.getOrder() + " is in the downstream of startNode: " + startNode.getOrder());
 		}
 		PathFinder finder = new PathFinder(this.trace);
-		ActionPath path = finder.findPath_dijstra(startNode, endNode);
+		System.out.println("Find path by greedy ...");
+		ActionPath path = finder.findPathway_greedy(startNode, endNode);
+		if (path == null) {
+			System.out.println("Find path by Dijstra ...");
+			path = finder.findPath_dijstra(startNode, endNode);
+		}
 		return path;
 	}
 	
@@ -274,7 +279,7 @@ public class SPP {
 				if (wrongReadVars.contains(readVar)) {
 					this.addWrongVar(readVar);
 				} else {
-					this.addCorrectVar(readVar);
+//					this.addCorrectVar(readVar);
 				}
 			}
 			this.addWrongVars(node.getWrittenVariables());

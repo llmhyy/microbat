@@ -137,6 +137,7 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	protected long minOutputCost = 0;
 	
 	private double drop = -2.0;
+	private double gain = -2.0;
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		super();
@@ -1345,7 +1346,7 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	}
 	
 	public void addInvokingMethod(final String invokingMethod) {
-		this.invokingMethod += invokingMethod + ";";
+		this.invokingMethod += invokingMethod + "%";
 	}
 	
 	public String getInvokingMethod() {
@@ -1440,5 +1441,13 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	
 	public double getDrop() {
 		return this.drop;
+	}
+	
+	public void setGain(final double gain) {
+		this.gain = gain;
+	}
+	
+	public double getGain() {
+		return this.gain;
 	}
 }

@@ -105,9 +105,10 @@ public class StepwisePropagationHandler extends AbstractHandler {
 						continue;
 					}
 					
+					System.out.println("Debug: Finding action path to root cause ...");
 					final ActionPath path = spp.suggestPath(currentNode, rootCause, userPath);
 					System.out.println();
-					System.out.println("Debug: Suggested Pathway");
+					
 					for (NodeFeedbacksPair section : path) {
 						System.out.println("Debug: " + section);
 					}

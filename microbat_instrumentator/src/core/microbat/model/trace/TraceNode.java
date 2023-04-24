@@ -94,7 +94,7 @@ public class TraceNode{
 	
 	private long timestamp;
 	
-	private String bytecode;
+	private String bytecode = null;
 	
 	/**
 	 * Prefix of id of condition result variable. <br><br>
@@ -999,7 +999,7 @@ public class TraceNode{
 	}
 
 	public void addInvokingMethod(String invokingMethod) {
-		this.invokingMethod += invokingMethod + ";";
+		this.invokingMethod += invokingMethod + "%";
 	}
 
 	public InvokingDetail getInvokingDetail() {

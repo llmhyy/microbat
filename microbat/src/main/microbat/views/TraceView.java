@@ -56,6 +56,9 @@ import microbat.Activator;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;
+import microbat.bytecode.ByteCode;
+import microbat.bytecode.ByteCodeList;
+import microbat.bytecode.OpcodeType;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -527,7 +530,8 @@ public class TraceView extends ViewPart {
 	}
 
 	class TraceLabelProvider implements ILabelProvider {
-
+		
+	
 		public void addListener(ILabelProviderListener listener) {
 
 		}
@@ -590,9 +594,20 @@ public class TraceView extends ViewPart {
 					predOrder = controlDominator.getOrder();
 				}
 				
+				int count = 0;
+				for (ByteCode byteCode : new ByteCodeList(node.getBytecode())) {
+					final OpcodeType type = byteCode.getOpcodeType();
+					if (type.equals(OpcodeType.LOAD_FROM_ARRAY) || type.equals(OpcodeType.LOAD_VARIABLE) ||
+					    type.equals(OpcodeType.STORE_INTO_ARRAY) || type.equals(OpcodeType.STORE_VARIABLE) ||
+					    type.equals(OpcodeType.RETURN)) {
+						continue;
+					} else {
+						count += 1;
+					}
+				}
 				// TODO it is better to parse method name as well.
 				// String message = className + "." + methodName + "(...): line " + lineNumber + "probability: " + prob;
-				String message = order + ". " + MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration, prob, predOrder, node.getDrop());
+				String message = order + ". " + MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration, prob, predOrder, node.getDrop(), node.getGain(), node.getBytecode(), count);
 				return message;
 
 			}
@@ -601,7 +616,8 @@ public class TraceView extends ViewPart {
 		}
 
 	}
-
+	
+	
 	public Trace getCurrentTrace() {
 		return this.trace;
 	}

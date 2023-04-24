@@ -47,7 +47,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	protected double forward_prob = -1;
 	protected double backward_prob = -1;
 	
-	protected long computationalCost = 0;
+	protected double computationalCost = 0.0d;
 	protected boolean isInputRelated = false;
 	
 	// Dijstra Node property
@@ -525,11 +525,11 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 		this.probability = probability;
 	}
 	
-	public long getComputationalCost() {
+	public double getComputationalCost() {
 		return this.computationalCost;
 	}
 	
-	public void setComputationalCost(final long cost) {
+	public void setComputationalCost(final double cost) {
 		this.computationalCost = cost;
 	}
 	
@@ -618,5 +618,9 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 			}
 		}
 		return false;
+	}
+	
+	public boolean isArray() {
+		return this.getType().endsWith("[]");
 	}
 }

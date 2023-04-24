@@ -154,6 +154,16 @@ public class MicroBatUtil {
 		String testRunnerDir = junitDir + File.separator + "testrunner.jar";
 		appClassPath.addClasspath(testRunnerDir);
 		
+		// JUnit5
+		String junit5Path = junitDir  + File.separator + "junit-platform-console-standalone-1.9.0.jar";
+		appClassPath.addClasspath(junit5Path);
+		String junit5RunnerPath = junitDir  + File.separator + "org.junit.platform.runner_1.8.1.v20211018-1956.jar";
+		appClassPath.addClasspath(junit5RunnerPath);
+
+		// TestNG
+		String testNG = junitDir  + File.separator + "org.testng_7.4.0.r202105021533.jar";
+		appClassPath.addClasspath(testNG);
+		
 		/**
 		 * setting bcel lib (for instrumentation) into classpath
 		 */
@@ -327,8 +337,16 @@ public class MicroBatUtil {
 		return (T) obj;
 	}
 	
-	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, double prob, int order, double drop){
-		String exp = className + " line:" + lineNumber + " duration: " + duration + "ms probability: " + String.format("%.2f", prob) + " control dominator: " + order + " drop: " + drop;
+	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, double prob, int order, double drop, double gain, String byteCodeStr, int count){
+		String exp = className + 
+					 " line:" + lineNumber + 
+					 " duration: " + duration + 
+					 "ms probability: " + String.format("%.2f", prob) + 
+					 " control dominator: " + order 
+					 + " drop: " + drop + 
+					 " gain: " + gain +
+					 " byteCode: \"" + byteCodeStr + "\"" + 
+					 " count: " + count;
 		return exp;
 	}
 	

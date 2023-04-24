@@ -17,11 +17,17 @@ import microbat.bytecode.OpcodeType;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 import microbat.probability.BP.BeliefPropagation;
 import microbat.util.JavaUtil;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
+import microbat.probability.SPP.vectorization.vector.FunctionMismatchException;
+import microbat.probability.SPP.vectorization.vector.FunctionVector;
+import microbat.probability.SPP.vectorization.vector.NodeVector;
+import microbat.probability.SPP.vectorization.vector.VariableVector;
 
+import java.util.ArrayList;
 
 public class TestHandler extends AbstractHandler {
 	
@@ -35,8 +41,20 @@ public class TestHandler extends AbstractHandler {
 			protected IStatus run(IProgressMonitor monitor) {
 				setup();
 				
-		        RunningInfo runningInfo = RunningInfo.readFromFile("C:\\Users\\arkwa\\Desktop\\buggy-trace.exec");
-		        Trace trace = runningInfo.getMainTrace();
+		        Trace trace = traceView.getTrace();
+		        
+		        TraceNode node1 = trace.getTraceNode(7);
+		        VarValue var1 = node1.getReadVariables().get(0);
+		        
+		        TraceNode node2 = trace.getTraceNode(10);
+		        VarValue var2 = node2.getReadVariables().get(0);
+		        
+		        System.out.println(var1);
+		        System.out.println(var2);
+		        
+		        System.out.println(var1 == var2);
+		        
+		        var1.setProbability(10.0);
 		        
 				return Status.OK_STATUS;
 			}
@@ -44,105 +62,6 @@ public class TestHandler extends AbstractHandler {
 		};
 		job.schedule();
 		return null;
-	}
-	
-	private boolean isForEachLoop(TraceNode node) {
-		ByteCodeList byteCodeList = new ByteCodeList(node.getBytecode());
-		return this.isCollectionForEachLoop(byteCodeList) || this.isArrayListForEachLoop(byteCodeList);
-	}
-	
-	private boolean isCollectionForEachLoop(ByteCodeList byteCodeList) {
-		if (byteCodeList.size() != 10) {
-			return false;
-		}
-		int[] opCodeList = {-1,185,-1,167,-1,185,-1,-1,185,154};
-		for (int i=0; i<10; i++) {
-			ByteCode byteCode = byteCodeList.getByteCode(i);
-			int targetOpcode = opCodeList[i];
-			if (targetOpcode == -1) {
-				continue;
-			}
-			if (byteCode.getOpcode() != targetOpcode) {
-				return false;
-			}
-		}
-		
-		ByteCode byteCode_0 = byteCodeList.getByteCode(0);
-		if(byteCode_0.getOpcodeType() != OpcodeType.LOAD_VARIABLE) {
-			return false;
-		}
-		
-		ByteCode byteCode_2 = byteCodeList.getByteCode(2);
-		if (byteCode_2.getOpcodeType() != OpcodeType.STORE_VARIABLE) {
-			return false;
-		}
-		
-		ByteCode byteCode_4 = byteCodeList.getByteCode(4);
-		if (byteCode_4.getOpcodeType() != OpcodeType.LOAD_VARIABLE) {
-			return false;
-		}
-		
-		ByteCode byteCode_6 = byteCodeList.getByteCode(6);
-		if (byteCode_6.getOpcodeType() != OpcodeType.STORE_VARIABLE) {
-			return false;
-		}
-		
-		ByteCode byteCode_7 = byteCodeList.getByteCode(7);
-		if (byteCode_7.getOpcodeType() != OpcodeType.LOAD_VARIABLE) {
-			return false;
-		}
-		
-		return true;
-	}
-	
-	private boolean isArrayListForEachLoop(ByteCodeList byteCodeList) {
-		if (byteCodeList.size() != 16) {
-			return false;
-		}
-		
-		int[] opCodeList = {-1,89,58,190,54,3,-1,167,25,-1,-1,-1,132,-1,21,161};
-		for (int i=0; i<16; i++) {
-			ByteCode byteCode = byteCodeList.getByteCode(i);
-			int targetOpcode = opCodeList[i];
-			if (targetOpcode == -1) {
-				continue;
-			}
-			if (byteCode.getOpcode() != targetOpcode) {
-				return false;
-			}
-		}
-		
-		ByteCode byteCode_1 = byteCodeList.getByteCode(0);
-		if(byteCode_1.getOpcodeType() != OpcodeType.LOAD_VARIABLE) {
-			return false;
-		}
-		
-		ByteCode byteCode_6 = byteCodeList.getByteCode(6);
-		if (byteCode_6.getOpcodeType() != OpcodeType.STORE_VARIABLE) {
-			return false;
-		}
-		
-		ByteCode byteCode_9 = byteCodeList.getByteCode(9);
-		if (byteCode_9.getOpcodeType() != OpcodeType.LOAD_VARIABLE) {
-			return false;
-		}
-		
-		ByteCode byteCode_10 = byteCodeList.getByteCode(10);
-		if (byteCode_10.getOpcodeType() != OpcodeType.LOAD_FROM_ARRAY) {
-			return false;
-		}
-		
-		ByteCode byteCode_11 = byteCodeList.getByteCode(11);
-		if (byteCode_11.getOpcodeType() != OpcodeType.STORE_VARIABLE) {
-			return false;
-		}
-		
-		ByteCode byteCode_13 = byteCodeList.getByteCode(13);
-		if (byteCode_13.getOpcodeType() != OpcodeType.LOAD_VARIABLE) {
-			return false;
-		}
-		
-		return true;
 	}
 	
 	private void setup() {
