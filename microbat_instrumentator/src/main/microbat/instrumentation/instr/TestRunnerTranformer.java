@@ -51,7 +51,7 @@ public class TestRunnerTranformer extends AbstractTransformer implements ClassFi
 		if (!Agent.isInstrumentationActive()) {
 			return null;
 		}
-		if ("microbat/evaluation/junit/MicroBatTestRunner".equals(classFName)
+		if ("microbat/evaluation/runners/TestRunner".equals(classFName)
 				|| "sav/junit/SavJunitRunner".equals(classFName)
 				|| "sav/junit/SavSimpleRunner".equals(classFName)
 				|| "sav/junit/SavSocketTestRunner".equals(classFName)) {

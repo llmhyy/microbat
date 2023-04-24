@@ -337,6 +337,7 @@ public class MicroBatUtil {
 		return (T) obj;
 	}
 	
+<<<<<<< HEAD
 	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, double prob, int order, double drop, double gain, String byteCodeStr, int count){
 		String exp = className + 
 					 " line:" + lineNumber + 
@@ -349,6 +350,12 @@ public class MicroBatUtil {
 					 " count: " + count;
 		return exp;
 	}
+=======
+    public static String combineTraceNodeExpression(String className, int lineNumber, long duration){
+        String exp = className + " line:" + lineNumber + " duration: " + duration + "ms";
+        return exp;
+    }
+>>>>>>> origin/master
 	
 	/**
 	 * For string1: a b c d
