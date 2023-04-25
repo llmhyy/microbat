@@ -32,9 +32,6 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
                 tracer.unLock();
             }
 //			AgentLogger.debug("AbstractTransformation-Warning: ClassFName is null");
-            if (needToReleaseLock) {
-                tracer.unLock();
-            }
 			return null;
 		}
 		byte[] data = doTransform(loader, classFName, classBeingRedefined, protectionDomain, classfileBuffer);
