@@ -195,6 +195,7 @@ public class SPP {
 			 * 2. Node with only control dominator
 			 * 3. Node with only read variables
 			 * 4. Node with only written variables
+			 * 5. Node with written variable and control dominator
 			 * 5. Node with both read and written variables
 			 * 
 			 * It will ignore the node that already have feedback
@@ -214,6 +215,9 @@ public class SPP {
 				// Case 4
 				double prob = this.aggregator.aggregateProb(writtenVars, ProbAggregateMethods.AVG);
 				drop = PropProbability.UNCERTAIN - prob;
+			} else if (!writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() != null){
+				
+				drop = PropProbability.UNCERTAIN - node.getControlDominator().getConditionResult().getProbability();
 			} else {
 				double readProb = this.aggregator.aggregateProb(readVars, ProbAggregateMethods.MIN);
 				double writtenProb = this.aggregator.aggregateProb(writtenVars, ProbAggregateMethods.MIN);
@@ -228,7 +232,7 @@ public class SPP {
 				System.out.println("Warning: Trace node " + node.getOrder() + " has negative drop");
 				continue;
 			} else {
-				if (drop >= maxDrop) {
+				if (drop > maxDrop) {
 					maxDrop = drop;
 					rootCause = node;
 				}
@@ -296,7 +300,7 @@ public class SPP {
 		return finder.giveFeedback(node);
 	}
 	
-	private void recordFeedback(final NodeFeedbacksPair pair) {
+	public void recordFeedback(final NodeFeedbacksPair pair) {
 		this.feedbackRecords.add(pair);
 	}
 	

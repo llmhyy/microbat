@@ -22,6 +22,7 @@ import microbat.probability.SPP.SPP;
 import microbat.probability.SPP.omissionbuglocalization.OmissionBugLocator;
 import microbat.probability.SPP.omissionbuglocalization.OmissionBugScope;
 import microbat.probability.SPP.pathfinding.ActionPath;
+import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 import microbat.views.MicroBatViews;
@@ -65,11 +66,16 @@ public class StepwisePropagationHandler extends AbstractHandler {
 				List<VarValue> inputs = DebugInfo.getInputs();
 				List<VarValue> outputs = DebugInfo.getOutputs();
 				
+				VarValue output = outputs.get(0);
 				final TraceNode startingNode = getStartingNode(buggyView.getTrace(), outputs.get(0));
-			
+				UserFeedback initFeedback = new UserFeedback(new ChosenVariableOption(output, null), UserFeedback.WRONG_VARIABLE_VALUE);
+				NodeFeedbacksPair intiPair = new NodeFeedbacksPair(startingNode, initFeedback);
+				
 				// Set up the propagator that perform propagation
 				SPP spp = new SPP(buggyView.getTrace(), inputs, outputs);
-
+				
+				spp.recordFeedback(intiPair);
+				
 				int feedbackCounts = 0;
 				TraceNode currentNode = startingNode;
 				boolean isOmissionBug = false;
