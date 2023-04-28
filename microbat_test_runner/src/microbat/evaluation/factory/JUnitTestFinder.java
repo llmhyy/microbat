@@ -25,9 +25,9 @@ public class JUnitTestFinder {
         RunListener listener = new RunListener() {
             @Override
             public void testStarted(Description description) throws Exception {
-                String testName = description.getMethodName();
+                String testDisplayName = description.getDisplayName();
                 // If test is not found, its name is initializationError
-                foundJUnit3Or4Test = !"initializationError".equals(testName);
+                foundJUnit3Or4Test = !testDisplayName.startsWith("initializationError");
             }
         };
 
