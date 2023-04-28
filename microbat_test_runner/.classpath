@@ -7,7 +7,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="/microbat/junit_lib/junit.jar"/>
-	<classpathentry kind="lib" path="/microbat/junit_lib/junit-platform-console-standalone-1.0.0.jar"/>
+	<classpathentry kind="lib" path="/microbat/junit_lib/junit-platform-console-standalone-1.0.0.jar" sourcepath="/test-project/lib/junit-platform-launcher-1.0.0-sources.jar"/>
 	<classpathentry kind="lib" path="/microbat/junit_lib/junit-platform-runner-1.0.0.jar"/>
 	<classpathentry kind="lib" path="/microbat/junit_lib/org.testng_7.4.0.r202105021533.jar"/>
 	<classpathentry kind="output" path="bin"/>
