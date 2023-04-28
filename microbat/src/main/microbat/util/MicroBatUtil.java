@@ -155,9 +155,9 @@ public class MicroBatUtil {
 		appClassPath.addClasspath(testRunnerDir);
 		
 		// JUnit5
-		String junit5Path = junitDir  + File.separator + "junit-platform-console-standalone-1.9.0.jar";
+		String junit5Path = junitDir  + File.separator + "junit-platform-console-standalone-1.0.0.jar";
 		appClassPath.addClasspath(junit5Path);
-		String junit5RunnerPath = junitDir  + File.separator + "org.junit.platform.runner_1.8.1.v20211018-1956.jar";
+		String junit5RunnerPath = junitDir  + File.separator + "junit-platform-runner-1.0.0.jar";
 		appClassPath.addClasspath(junit5RunnerPath);
 		
 		// TestNG
