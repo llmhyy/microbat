@@ -148,7 +148,8 @@ public class VMRunner {
 		.appendIf(enableAssertionToken, config.isEnableAssertion())
 		.appendIf(noVerifyToken, config.isNoVerify())
 		.appendIf(String.format(debugToken, config.getPort()), config.isDebug() && (vmDebugPort < 0))
-		.appendIf(String.format("-agentlib:jdwp=transport=dt_socket,server=y,address=%s", vmDebugPort), vmDebugPort > 0);
+		.appendIf(String.format("-agentlib:jdwp=transport=dt_socket,server=y,address=%s", vmDebugPort), vmDebugPort > 0)
+		.appendIf("-Duser.dir=" + config.getWorkingDirectory(), !config.getWorkingDirectory().isEmpty());
 	}
 
 	public boolean startVm(List<String> commands, boolean waitUntilStop)
