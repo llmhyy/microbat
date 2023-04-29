@@ -503,4 +503,4 @@ public class MicroBatUtil {
 		return traceFolder;
 	}
 }
->>>>>>> 77f6840fea0cb540ddb04682738217a380345cef
+
