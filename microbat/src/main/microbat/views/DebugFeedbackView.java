@@ -45,7 +45,7 @@ import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;
-import microbat.handler.BaselineHandler;
+import microbat.handler.ProbInferHandler;
 import microbat.handler.CheckingState;
 import microbat.model.BreakPointValue;
 import microbat.model.trace.Trace;

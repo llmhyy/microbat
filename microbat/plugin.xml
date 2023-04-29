@@ -133,7 +133,7 @@
             name="Restore Trace">
       </command>
       <command
-            defaultHandler="microbat.handler.BaselineHandler"
+            defaultHandler="microbat.handler.ProbInferHandler"
             id="microbat.baseline"
             name="Baseline">
       </command>

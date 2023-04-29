@@ -411,7 +411,7 @@ public abstract class Constraint {
 	 */
 	public static VarValue extractControlDomVar(TraceNode controlDom) {
 		for (VarValue writeVar : controlDom.getWrittenVariables()) {
-			if (writeVar.getVarID().startsWith(BeliefPropagation.CONDITION_RESULT_ID_PRE)) {
+			if (writeVar.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID)) {
 				return writeVar;
 			}
 		}
