@@ -155,11 +155,11 @@ public class MicroBatUtil {
 		appClassPath.addClasspath(testRunnerDir);
 		
 		// JUnit5
-		String junit5Path = junitDir  + File.separator + "junit-platform-console-standalone-1.9.0.jar";
+		String junit5Path = junitDir  + File.separator + "junit-platform-console-standalone-1.0.0.jar";
 		appClassPath.addClasspath(junit5Path);
-		String junit5RunnerPath = junitDir  + File.separator + "org.junit.platform.runner_1.8.1.v20211018-1956.jar";
+		String junit5RunnerPath = junitDir  + File.separator + "junit-platform-runner-1.0.0.jar";
 		appClassPath.addClasspath(junit5RunnerPath);
-
+		
 		// TestNG
 		String testNG = junitDir  + File.separator + "org.testng_7.4.0.r202105021533.jar";
 		appClassPath.addClasspath(testNG);
@@ -336,20 +336,11 @@ public class MicroBatUtil {
 	public static <T> T asT(Object obj) {
 		return (T) obj;
 	}
-
-	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, double prob, int order, double drop, double gain, String byteCodeStr, int count){
-		String exp = className + 
-					 " line:" + lineNumber + 
-					 " duration: " + duration + 
-					 "ms probability: " + String.format("%.2f", prob) + 
-					 " control dominator: " + order 
-					 + " drop: " + drop + 
-					 " gain: " + gain +
-					 " byteCode: \"" + byteCodeStr + "\"" + 
-					 " count: " + count;
-		return exp;
-	}
-
+	
+    public static String combineTraceNodeExpression(String className, int lineNumber, long duration){
+        String exp = className + " line:" + lineNumber + " duration: " + duration + "ms";
+        return exp;
+    }
 	
 	/**
 	 * For string1: a b c d
@@ -512,3 +503,4 @@ public class MicroBatUtil {
 		return traceFolder;
 	}
 }
+>>>>>>> 77f6840fea0cb540ddb04682738217a380345cef

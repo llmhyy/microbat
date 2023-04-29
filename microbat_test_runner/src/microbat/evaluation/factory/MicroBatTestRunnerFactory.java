@@ -9,13 +9,13 @@ import microbat.evaluation.runners.TestRunner;
 public class MicroBatTestRunnerFactory {
     public TestRunner create(String className, String methodName) {
         JUnitTestFinder junitTestFinder = new JUnitTestFinder();
-        boolean isJUnit5Test = junitTestFinder.junit5TestExists(className, methodName);
-        if (isJUnit5Test) {
-            return new MicroBatJUnit5TestRunner();
-        }
         boolean isJUnit3Or4Test = junitTestFinder.junit3Or4TestExists(className, methodName);
         if (isJUnit3Or4Test) {
             return new MicroBatJUnit3And4TestRunner();
+        }
+        boolean isJUnit5Test = junitTestFinder.junit5TestExists(className, methodName);
+        if (isJUnit5Test) {
+            return new MicroBatJUnit5TestRunner();
         }
         return new MicroBatTestNGTestRunner();
     }
