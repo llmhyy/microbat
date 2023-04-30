@@ -84,9 +84,9 @@ public abstract class Constraint {
 	public Constraint(TraceNode node, double probProbability, String constraintID) {
 		TraceNode copiedTraceNode = Constraint.removeDupVars(node);
 		
-		if (Constraint.countPreds(copiedTraceNode) >= 30) {
-			throw new WrongConstraintConditionException("By now, constraint will not handle the case that predicates is more than 30 because it is too expensive to calculate");
-		}
+//		if (Constraint.countPreds(copiedTraceNode) >= 30) {
+//			throw new WrongConstraintConditionException("By now, constraint will not handle the case that predicates is more than 30 because it is too expensive to calculate");
+//		}
 		this.bitRepresentation = this.genBitRepresentation(copiedTraceNode);
 		this.conclusionIdx = this.defineConclusionIdx(copiedTraceNode);
 		this.propProbability = probProbability;
@@ -336,7 +336,7 @@ public abstract class Constraint {
 	/**
 	 * Remove all the duplicated variable in given node.
 	 * 
-	 * This method will deep copy the variable such that the original node will node be affected.
+	 * This method will deep copy the variable such that the original node will not be affected.
 	 * 
 	 * @param node Node to be copied
 	 * @return New trace node will all the duplicated variable is removed.

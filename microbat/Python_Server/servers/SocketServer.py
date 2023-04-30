@@ -36,6 +36,10 @@ class SocketServer(ABC):
             message_str = self.decode(message)
             if message_str == self.MSG_END:
                 break
+            elif message_str.endswith(self.MSG_END):
+                message_str.replace(self.MSG_END, "")
+                res += message_str
+                break  
             else:
                 res += message_str
         return res

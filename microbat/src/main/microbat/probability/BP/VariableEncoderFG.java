@@ -17,6 +17,7 @@ import microbat.probability.BP.constraint.VariableConstraintA1;
 import microbat.probability.BP.constraint.VariableConstraintA2;
 import microbat.probability.BP.constraint.VariableConstraintA3;
 import microbat.recommendation.UserFeedback;
+import debuginfo.NodeFeedbacksPair;
 
 /**
  * Variable encoder calculate the probability of correctness of variables
@@ -25,9 +26,9 @@ import microbat.recommendation.UserFeedback;
  */
 public class VariableEncoderFG extends Encoder {
 	
-	private List<VarValue> inputVars;
-	private List<VarValue> outputVars;
-	private List<NodeFeedbackPair> userFeedbacks = new ArrayList<>();
+	private List<VarValue> correctVars;
+	private List<VarValue> wrongVars;
+	private List<NodeFeedbacksPair> userFeedbacks = new ArrayList<>();
 	
 	/**
 	 * Constructor
@@ -36,11 +37,46 @@ public class VariableEncoderFG extends Encoder {
 	 * @param inputVars List of input variables
 	 * @param outputVars List of output variables
 	 */
-	public VariableEncoderFG(Trace trace, List<TraceNode> executionList, List<VarValue> inputVars, List<VarValue> outputVars) {
+	public VariableEncoderFG(Trace trace, List<TraceNode> executionList, List<VarValue> inputVars, List<VarValue> outputVars, List<NodeFeedbacksPair> pairs) {
 		super(trace, executionList);
-		this.inputVars = inputVars;
-		this.outputVars = outputVars;
+		this.correctVars = inputVars;
+		this.wrongVars = outputVars;
 		this.construntVarIDMap();
+		
+		for (NodeFeedbacksPair pair : pairs) {
+			final TraceNode node = pair.getNode();
+			final TraceNode controlDom = node.getControlDominator();
+			
+			final List<VarValue> readVars = new ArrayList<>();
+			readVars.addAll(node.getReadVariables());
+			readVars.removeIf(var -> var.isThisVariable());
+			
+			final List<VarValue> writtenVars = new ArrayList<>();
+			writtenVars.addAll(node.getWrittenVariables());
+			writtenVars.removeIf(var -> var.isThisVariable());
+			
+			if (pair.getFeedbackType().equals(UserFeedback.CORRECT)) {
+				this.correctVars.addAll(readVars);
+				this.correctVars.addAll(writtenVars);
+				if (controlDom != null) {
+					this.correctVars.add(controlDom.getConditionResult());
+				}
+			} else if (pair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+				if (controlDom == null) {
+					throw new RuntimeException("There are no control dominator");
+				}
+				final VarValue controlDomVar = controlDom.getConditionResult();
+				this.wrongVars.add(controlDomVar);
+			} else if (pair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+				List<VarValue> wrongReadVars = new ArrayList<>();
+				for (UserFeedback feedback : pair.getFeedbacks()) {
+					wrongReadVars.add(feedback.getOption().getReadVar());
+				}
+				this.wrongVars.addAll(wrongReadVars);
+				this.wrongVars.addAll(node.getWrittenVariables());
+				this.correctVars.add(controlDom.getConditionResult());
+			}
+		}
 	}
 	
 	/**
@@ -86,9 +122,9 @@ public class VariableEncoderFG extends Encoder {
 	 * Add the node feedback pair
 	 * @param userFeedbacks List of node feedback pair
 	 */
-	public void setFeedbacks(List<NodeFeedbackPair> userFeedbacks) {
-		this.userFeedbacks = userFeedbacks;
-	}
+//	public void setFeedbacks(List<NodeFeedbackPair> userFeedbacks) {
+//		this.userFeedbacks = userFeedbacks;
+//	}
 	
 	/**
 	 * Generate all involved constraints
@@ -166,80 +202,16 @@ public class VariableEncoderFG extends Encoder {
 	private List<Constraint> genPriorConstraints() {
 		List<Constraint> constraints = new ArrayList<>();
 
-		// Generate constraint for input variables
-		for (VarValue inputVar : this.inputVars) {
+		// Generate constraint for correct variables
+		for (VarValue inputVar : this.correctVars) {
 			Constraint constraint = new PriorConstraint(inputVar, PropProbability.HIGH);
 			constraints.add(constraint);
 		}
 		
-		// Generate constraint for output variables
-		for (VarValue outputVar : this.outputVars) {
+		// Generate constraint for wrong variables
+		for (VarValue outputVar : this.wrongVars) {
 			Constraint constraint = new PriorConstraint(outputVar, PropProbability.LOW);
 			constraints.add(constraint);
-		}
-
-		// Convert user feedbacks to prior constraints
-		System.out.println("Feedbacks Count: " + this.userFeedbacks.size());
-		for (NodeFeedbackPair feedbackPair : this.userFeedbacks) {
-			TraceNode node = feedbackPair.getNode();
-			UserFeedback feedback = feedbackPair.getFeedback();
-			
-			if (feedback.getFeedbackType() == UserFeedback.CORRECT) {
-				
-				/**
-				 * If the user feedback is CORRECT, then the following are all correct:
-				 * 1. Read variables
-				 * 2. Written variables
-				 * 3. Control dominator
-				 */
-				
-				for (VarValue readVar : node.getReadVariables()) {
-					Constraint constraint = new PriorConstraint(readVar, PropProbability.HIGH);
-					constraints.add(constraint);
-				}
-				
-				for (VarValue writeVar : node.getWrittenVariables()) {
-					Constraint constraint = new PriorConstraint(writeVar, PropProbability.HIGH);
-					constraints.add(constraint);
-				}
-				
-				TraceNode controlDominator = node.getControlDominator();
-				if (controlDominator != null) {
-					VarValue controlDomValue = Constraint.extractControlDomVar(controlDominator);
-					Constraint constraint = new PriorConstraint(controlDomValue, PropProbability.HIGH);
-					constraints.add(constraint);
-				}
-				
-			} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
-				
-				/**
-				 * If the user feedback is WRONG_VARIABLE_VALUE, then
-				 * 1. Selected read variable is wrong
-				 * 2. All written variable is wrong
-				 * 3. No comment on control dominator
-				 */
-				
-				VarValue wrongVar = feedback.getOption().getReadVar();
-				constraints.add(new PriorConstraint(wrongVar, PropProbability.LOW));
-				
-				for (VarValue writeVar : node.getWrittenVariables()) {
-					Constraint constraint = new PriorConstraint(writeVar, PropProbability.LOW);
-					constraints.add(constraint);
-				}
-				
-			} else if (feedback.getFeedbackType() == UserFeedback.WRONG_PATH) {
-				
-				/**
-				 * If the user feedback is WRONG_PATH, then
-				 * 1. The control dominator is wrong
-				 * 2. No comment for read and write variable
-				 */
-				
-				TraceNode controlDom = node.getControlDominator();
-				VarValue controlDomValue = Constraint.extractControlDomVar(controlDom);
-				Constraint constraint = new PriorConstraint(controlDomValue, PropProbability.LOW);
-				constraints.add(constraint);
-			}
 		}
 		
 		return constraints;

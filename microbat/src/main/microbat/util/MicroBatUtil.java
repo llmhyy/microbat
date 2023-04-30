@@ -337,10 +337,18 @@ public class MicroBatUtil {
 		return (T) obj;
 	}
 	
-    public static String combineTraceNodeExpression(String className, int lineNumber, long duration){
-        String exp = className + " line:" + lineNumber + " duration: " + duration + "ms";
-        return exp;
-    }
+	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, double prob, int order, double drop, double gain, String byteCodeStr, int count){
+		String exp = className + 
+					 " line:" + lineNumber + 
+					 " duration: " + duration + 
+					 "ms probability: " + String.format("%.2f", prob) + 
+					 " control dominator: " + order 
+					 + " drop: " + drop + 
+					 " gain: " + gain +
+					 " byteCode: \"" + byteCodeStr + "\"" + 
+					 " count: " + count;
+		return exp;
+	}
 	
 	/**
 	 * For string1: a b c d

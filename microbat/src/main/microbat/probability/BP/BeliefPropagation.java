@@ -46,7 +46,7 @@ public class BeliefPropagation {
 	/**
 	 * Trace after dynamic slicing based on the output variable
 	 */
-	private List<TraceNode> executionList = null;
+	private List<TraceNode> slicedTrace = new ArrayList<>();
 	
 	/**
 	 * Output variables of the program, which assumed to be wrong
@@ -66,6 +66,7 @@ public class BeliefPropagation {
 	 */
 	public BeliefPropagation(Trace trace, Collection<VarValue> inputs, Collection<VarValue> outputs) {
 		this.trace = trace;
+		this.slicedTrace = TraceUtil.dyanmicSlice(trace, outputs);
 		this.correctVars.addAll(inputs);
 		this.wrongVars.addAll(outputs);
 	}
@@ -76,7 +77,8 @@ public class BeliefPropagation {
 	public void encode() {
 
 		Constraint.resetID();
-		VariableEncoderFG varEncoder = new VariableEncoderFG(this.trace, this.executionList, this.correctVars, this.wrongVars);
+		
+		VariableEncoderFG varEncoder = new VariableEncoderFG(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
 		
 		// Include all the previous users feedback
 //		varEncoder.setFeedbacks(BeliefPropagation.userFeedbacks);
@@ -87,7 +89,7 @@ public class BeliefPropagation {
 		varEncoder.encode();	
 		
 		// Calculate the probability for statements
-		new StatementEncoderFG(trace, executionList).encode();
+		new StatementEncoderFG(trace, slicedTrace).encode();
 		
 		long endTime = System.currentTimeMillis();
 		
@@ -108,7 +110,7 @@ public class BeliefPropagation {
 	public TraceNode getMostErroneousNode() {
 		TraceNode errorNode = null;
 		double minProb = 2.0;
-		for (TraceNode node : this.executionList) {
+		for (TraceNode node : this.slicedTrace) {
 			if (!this.isFeedbackGiven(node) && node.getProbability() < minProb && node.getProbability() != -1.0) {
 				minProb = node.getProbability();
 				errorNode = node;
@@ -118,7 +120,12 @@ public class BeliefPropagation {
 	}
 	
 	public void responseFeedbacks(NodeFeedbacksPair pair) {
+		
+		// Replace the feedbacks if it already exists
+		this.feedbackRecords.removeIf(feedbackPair -> feedbackPair.getNode().equals(pair.getNode()));
+		// Record the feedbacks
 		this.feedbackRecords.add(pair);
+		
 		final TraceNode node = pair.getNode();
 		final TraceNode controlDom = node.getControlDominator();
 		
@@ -136,6 +143,20 @@ public class BeliefPropagation {
 			if (controlDom != null) {
 				this.correctVars.add(controlDom.getConditionResult());
 			}
+		} else if (pair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+			if (controlDom == null) {
+				throw new RuntimeException("There are no control dominator");
+			}
+			final VarValue controlDomVar = controlDom.getConditionResult();
+			this.wrongVars.add(controlDomVar);
+		} else if (pair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+			List<VarValue> wrongReadVars = new ArrayList<>();
+			for (UserFeedback feedback : pair.getFeedbacks()) {
+				wrongReadVars.add(feedback.getOption().getReadVar());
+			}
+			this.wrongVars.addAll(wrongReadVars);
+			this.wrongVars.addAll(node.getWrittenVariables());
+			this.correctVars.add(controlDom.getConditionResult());
 		}
 	}
 	

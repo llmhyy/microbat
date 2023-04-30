@@ -57,45 +57,29 @@ public abstract class Client {
 	/**
 	 * Connect to the server
 	 */
-	public void conntectServer() {
-		try {
-			this.socket = new Socket(this.HOST, this.PORT);
-			this.reader = new DataInputStream(this.socket.getInputStream());
-			this.writer = new DataOutputStream(this.socket.getOutputStream());
-		} catch (UnknownHostException e) {
-			this.socket = null;
-			this.reader = null;
-			this.writer = null;
-			System.out.println("Error: UnknowHostException encountered");
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public void conntectServer() throws UnknownHostException, IOException {
+		this.socket = new Socket(this.HOST, this.PORT);
+		this.reader = new DataInputStream(this.socket.getInputStream());
+		this.writer = new DataOutputStream(this.socket.getOutputStream());
 	}
 	
 	/**
 	 * Disconnect the server
 	 */
-	public void disconnectServer() {
-		try {
-			this.reader.close();
-			this.writer.close();
-			this.socket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			this.reader = null;
-			this.writer = null;
-			this.socket = null;
-		}
+	public void disconnectServer() throws IOException {
+		this.reader.close();
+		this.writer.close();
+		this.socket.close();
 	}
 	
 	/**
 	 * Terminate the server
 	 * @return True when successfully end the server
+	 * @throws InterruptedException 
+	 * @throws IOException 
 	 * @throws Exception
 	 */
-	public boolean endServer() {
+	public boolean endServer() throws IOException, InterruptedException {
 		byte[] ending_msg = this.strToByte(END_MSG);
 		this.sendMsg(ending_msg);
 		String response = this.byteToStr(this.receiveMsg());
@@ -106,48 +90,44 @@ public abstract class Client {
 	 * Send message to server
 	 * @param messages Messages to send
 	 */
-	protected void sendMsg(byte[]... messages) {
+	protected void sendMsg(byte[]... messages) throws IOException, InterruptedException {
 		if (this.isReady()) {
 			final byte[] msgBreak = this.strToByte(Client.BREAK_MSG);
-			try {
-				for (byte[] message : messages) {
-					if (message.length > Client.BUFFER_SIZE) {
-						throw new RuntimeException("Message exceed maximum buffer size");
-					}
-					System.out.println("Message size: " + message.length);
-					this.writer.write(message);
-					Thread.sleep(Client.SLEEP_TIME);
-					this.writer.write(msgBreak);
+			for (byte[] message : messages) {
+				if (message.length > Client.BUFFER_SIZE) {
+					throw new RuntimeException("Message exceed maximum buffer size");
 				}
-			} catch (IOException e) {
-				System.out.println("Error: Fail to send data from model server.");
-				e.printStackTrace();
-			} 
-			catch (InterruptedException e) {
-				e.printStackTrace();
+				System.out.println("Message size: " + message.length);
+				this.writer.write(message);
+//				Thread.sleep(Client.SLEEP_TIME);
+//				this.writer.write(msgBreak);
 			}
 		} else {
 			throw new RuntimeException("Socket is not ready");
 		}
 	}
 	
+	protected void sendMsg(final String message) throws IOException, InterruptedException {
+		final byte[] message_byte = this.strToByte(message);
+		this.sendMsg(message_byte);
+	}
+	
 	/**
 	 * Receive message from server
 	 * @return Message from server
 	 */
-	protected byte[] receiveMsg() {
-		try {
-			byte[] response = new byte[Client.BUFFER_SIZE];
-			int integer = this.reader.read(response);
-			if (integer == -1) {
-				throw new RuntimeException("No response from server");
-			}
-			return response;
-		} catch (IOException e) {
-			System.out.println("Error: Fail to receive data from model server.");
-			e.printStackTrace();
+	protected byte[] receiveMsg() throws IOException {
+		byte[] response = new byte[Client.BUFFER_SIZE];
+		int integer = this.reader.read(response);
+		if (integer == -1) {
+			throw new RuntimeException("No response from server");
 		}
-		return null;
+		return response;
+	}
+	
+	protected String receiveStrMsg() throws IOException {
+		byte[] message_byte = this.receiveMsg();
+		return this.byteToStr(message_byte);
 	}
 	
 	protected byte[] strToByte(final String str) {

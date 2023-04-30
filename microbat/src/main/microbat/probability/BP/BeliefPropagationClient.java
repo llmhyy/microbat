@@ -1,5 +1,8 @@
 package microbat.probability.BP;
 
+import java.util.List;
+
+import microbat.probability.BP.constraint.Constraint;
 import microbat.pyserver.Client;
 
 /**
@@ -11,6 +14,11 @@ public class BeliefPropagationClient extends Client {
 	
 	public BeliefPropagationClient() {
 		super("127.0.0.1", 8080);
+	}
+	
+	public String requestBP(final List<Constraint> constraints) {
+		
+		return "";
 	}
 	
 	/**

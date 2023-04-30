@@ -63,7 +63,7 @@ public abstract class Encoder {
 	 * @return True if the node will not be considered. False otherwise.
 	 */
 	protected boolean isSkippable(TraceNode node) {
-		return Constraint.countPreds(node) >= 30 || Constraint.countPreds(node) == 0;
+		return Constraint.countPreds(node) == 0;
 	}
 	
 	
