@@ -109,7 +109,7 @@ More details can be refer to https://github.com/llmhyy/microbat/wiki/Compile-Run
 ## Run with test method
 Alternatively, we also support users (i.e., programmers) to run Microbat with JUnit4, JUnit5 and TestNG test cases. 
 In this case, we need to package the project of "microbat_test_runner" and export it as a jar file "testrunner.jar".
-Moreover, we provide five jar files, i.e., [junit.jar](/microbat/junit_lib/junit.jar), [org.hamcrest.core.jar](/microbat/junit_lib/org.hamcrest.core.jar), [junit-platform-console-standalone-1.9.0](/microbat/junit_lib/junit-platform-console-standalone-1.9.0), [org.testng_7.4.0.r202105021533](/microbat/junit_lib/org.testng_7.4.0.r202105021533) and [org.junit.platform.runner_1.8.1.v20211018-1956](/microbat/junit_lib/[org.junit.platform.runner_1.8.1.v20211018-1956).
+Moreover, we provide five jar files, i.e., [junit.jar](/microbat/junit_lib/junit.jar), [org.hamcrest.core.jar](/microbat/junit_lib/org.hamcrest.core.jar), [junit-platform-console-standalone-1.0.0.jar](/microbat/junit_lib/junit-platform-console-standalone-1.0.0.jar), [org.testng_7.4.0.r202105021533](/microbat/junit_lib/org.testng_7.4.0.r202105021533) and [junit-platform-runner-1.0.0.jar](/microbat/junit_lib/junit-platform-runner-1.0.0.jar).
 
 Place the testrunner.jar, the five jar files in junit_lib mentioned above into the path eclipse_root_folder\dropins\junit_lib\
 
