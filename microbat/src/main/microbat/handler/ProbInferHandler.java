@@ -15,6 +15,7 @@ import org.eclipse.swt.widgets.Display;
 
 import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbackPair;
+import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -52,16 +53,16 @@ public class ProbInferHandler extends AbstractHandler {
 				
 				Trace trace = buggyView.getTrace();
 				
-				// Setup the probability encoder
-				BeliefPropagation encoder = new BeliefPropagation(trace);
-				
 				// Collect IO from users
 				List<VarValue> inputs = DebugInfo.getInputs();
-				encoder.setInputVars(inputs);
 				List<VarValue> outputs = DebugInfo.getOutputs();
-				encoder.setOutputVars(outputs);
+				if (inputs.isEmpty() || outputs.isEmpty()) {
+					throw new RuntimeException("Please specify the inputs and outputs");
+				}
 				
-				encoder.setup();
+				// Setup the probability encoder
+				BeliefPropagation encoder = new BeliefPropagation(trace, inputs, outputs);
+				
 				
 				while (!DebugInfo.isRootCauseFound()) {
 					System.out.println("---------------------------------- " + noOfFeedbacks + " iteration");
@@ -78,8 +79,9 @@ public class ProbInferHandler extends AbstractHandler {
 					System.out.println("Prediction: " + prediction.getOrder());
 					
 					// Wait for the feedback
-					DebugInfo.waitForFeedbackOrRootCause();
-
+					NodeFeedbacksPair pair = askForFeedback(prediction);
+					encoder.responseFeedbacks(pair);
+					
 					noOfFeedbacks += 1;
 
 				}
@@ -100,6 +102,17 @@ public class ProbInferHandler extends AbstractHandler {
 				buggyView.jumpToNode(buggyView.getTrace(), targetNode.getOrder(), true);
 		    }
 		});
+	}
+	
+	protected NodeFeedbacksPair askForFeedback(final TraceNode node) {
+		System.out.println("Please give an feedback for node: " + node.getOrder());
+		DebugInfo.waitForFeedbackOrRootCauseOrStop();
+		NodeFeedbacksPair userPairs = DebugInfo.getNodeFeedbackPair();
+		DebugInfo.clearNodeFeedbackPairs();
+		System.out.println();
+		System.out.println("UserFeedback:");
+		System.out.println(userPairs);
+		return userPairs;
 	}
 	
 	protected void setup() {

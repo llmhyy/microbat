@@ -1,5 +1,6 @@
 package microbat.probability.BP;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,17 +53,17 @@ public class StatementEncoderFG extends Encoder {
 				continue;
 			}
 			
+			List<Constraint> constraints = new ArrayList<>();
+			constraints.addAll(this.genVarToStatConstraints(node));
+			constraints.addAll(this.genPriorConstraints(node));
+			
+			String graphMsg = msgProcessor.buildGraphMsg(constraints);
+			String factorMsg = msgProcessor.buildFactorMsg(constraints);
+
 			try {
-				List<Constraint> constraints = new ArrayList<>();
-				constraints.addAll(this.genVarToStatConstraints(node));
-				constraints.addAll(this.genPriorConstraints(node));
-				
-				String graphMsg = msgProcessor.buildGraphMsg(constraints);
-				String factorMsg = msgProcessor.buildFactorMsg(constraints);
-				
-				client.conntectServer();
+				client.conntectServer();			
 				String response = client.requestBP(graphMsg, factorMsg);
-				
+			
 				Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
 				for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
 					String predID = pair.getKey();
@@ -74,12 +75,13 @@ public class StatementEncoderFG extends Encoder {
 						}
 					}
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				node.setProbability(2.0);
-			} finally {
 				client.disconnectServer();
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+				throw new RuntimeException("[Statement Encoder]: Error occur when calculating statement probability");
 			}
+
+
 		}
 	}
 	

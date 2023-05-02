@@ -59,9 +59,9 @@ public class StatementConstraintA4Test {
 		this.controlDom = new TraceNode(null, null, 1, null, "");
 
 		final String type = "boolean";
-		final String varName = BeliefPropagation.CONDITION_RESULT_NAME_PRE + this.controlDom.getOrder();
+		final String varName = TraceNode.CONDITION_RESULT_NAME + this.controlDom.getOrder();
 
-		this.controlDomValueID = BeliefPropagation.CONDITION_RESULT_ID_PRE + this.controlDom.getOrder();
+		this.controlDomValueID = TraceNode.CONDITION_RESULT_ID + this.controlDom.getOrder();
 
 		Variable variable = new LocalVar(varName, type, "", 1);
 		VarValue conditionResult = new PrimitiveValue("1", true, variable);

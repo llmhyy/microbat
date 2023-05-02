@@ -21,7 +21,8 @@ public class BaselineEvaluator {
 		this.buggyTrace = buggyTrace;
 		this.correctTrace = correctTrace;
 		
-		this.encoder = new BeliefPropagation(buggyTrace);
+//		this.encoder = new BeliefPropagation(buggyTrace);
+		this.encoder = null;
 	}
 	
 	/**

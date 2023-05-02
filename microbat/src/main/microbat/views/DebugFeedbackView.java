@@ -632,58 +632,58 @@ public class DebugFeedbackView extends ViewPart {
 		}
 	}
 	
-	class TestingButtonListener implements MouseListener {
-
-		@Override
-		public void mouseDoubleClick(MouseEvent e) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mouseDown(MouseEvent e) {
-			final Trace trace = getTraceView().getCurrentTrace();
-//			final Trace trace = getConcurrentTraceView().getCurTrace();
-			
-			Job job = new Job("searching for suspicious step...") {
-				
-				private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
-//					TraceView view = MicroBatViews.getTraceView();
-					getTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
-//					getConcurrentTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
-				}
-				
-				@Override
-				protected IStatus run(IProgressMonitor monitor) {
-					
-					BeliefPropagation encoder = new BeliefPropagation(trace);
-					encoder.setFlag(true);
-
-					encoder.encode();
-					
-					TraceNode errorNode = encoder.getMostErroneousNode();
-					System.out.println("Error Node: " + errorNode.getOrder());
-					Display.getDefault().asyncExec(new Runnable(){
-						@Override
-						public void run() {
-							jumpToNode(trace, errorNode);	
-						}
-					});
-					
-					return Status.OK_STATUS;
-				}
-			};
-			job.schedule();
-			
-		}
-
-		@Override
-		public void mouseUp(MouseEvent e) {
-			// TODO Auto-generated method stub
-			
-		}
-		
-	}
+//	class TestingButtonListener implements MouseListener {
+//
+//		@Override
+//		public void mouseDoubleClick(MouseEvent e) {
+//			// TODO Auto-generated method stub
+//			
+//		}
+//
+//		@Override
+//		public void mouseDown(MouseEvent e) {
+//			final Trace trace = getTraceView().getCurrentTrace();
+////			final Trace trace = getConcurrentTraceView().getCurTrace();
+//			
+//			Job job = new Job("searching for suspicious step...") {
+//				
+//				private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
+////					TraceView view = MicroBatViews.getTraceView();
+//					getTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
+////					getConcurrentTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
+//				}
+//				
+//				@Override
+//				protected IStatus run(IProgressMonitor monitor) {
+//					
+//					BeliefPropagation encoder = new BeliefPropagation(trace);
+//					encoder.setFlag(true);
+//
+//					encoder.encode();
+//					
+//					TraceNode errorNode = encoder.getMostErroneousNode();
+//					System.out.println("Error Node: " + errorNode.getOrder());
+//					Display.getDefault().asyncExec(new Runnable(){
+//						@Override
+//						public void run() {
+//							jumpToNode(trace, errorNode);	
+//						}
+//					});
+//					
+//					return Status.OK_STATUS;
+//				}
+//			};
+//			job.schedule();
+//			
+//		}
+//
+//		@Override
+//		public void mouseUp(MouseEvent e) {
+//			// TODO Auto-generated method stub
+//			
+//		}
+//		
+//	}
 	class BaselineButtonListener implements MouseListener {
 		
 		@Override

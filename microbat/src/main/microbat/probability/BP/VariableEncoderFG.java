@@ -1,5 +1,6 @@
 package microbat.probability.BP;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,6 @@ public class VariableEncoderFG extends Encoder {
 	
 	private List<VarValue> correctVars;
 	private List<VarValue> wrongVars;
-	private List<NodeFeedbacksPair> userFeedbacks = new ArrayList<>();
 	
 	/**
 	 * Constructor
@@ -99,32 +99,28 @@ public class VariableEncoderFG extends Encoder {
 		String graphMsg = msgProcessor.buildGraphMsg(constraints);
 		String factorMsg = msgProcessor.buildFactorMsg(constraints);
 		
-		client.conntectServer();
-		
-		// Response contain the probability of each variable
-		String response = client.requestBP(graphMsg, factorMsg);
-		
-		// Assign calculate probability to corresponding variable
-		Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
-		for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
-			String predID = pair.getKey();
-			Double prob = pair.getValue();
+		try {
+			client.conntectServer();
+			// Response contain the probability of each variable
+			String response = client.requestBP(graphMsg, factorMsg);
 			
-			for (VarValue var : this.getVarByID(predID)) {
-				var.setProbability(prob);
+			// Assign calculate probability to corresponding variable
+			Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
+			for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
+				String predID = pair.getKey();
+				Double prob = pair.getValue();
+				
+				for (VarValue var : this.getVarByID(predID)) {
+					var.setProbability(prob);
+				}
 			}
+			client.disconnectServer();
+			
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			throw new RuntimeException("[Variable Encoder] Error occur when calculating variable probabilities");
 		}
-		
-		client.disconnectServer();
 	}
-	
-	/**
-	 * Add the node feedback pair
-	 * @param userFeedbacks List of node feedback pair
-	 */
-//	public void setFeedbacks(List<NodeFeedbackPair> userFeedbacks) {
-//		this.userFeedbacks = userFeedbacks;
-//	}
 	
 	/**
 	 * Generate all involved constraints

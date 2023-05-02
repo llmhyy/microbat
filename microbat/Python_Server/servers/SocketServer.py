@@ -1,9 +1,11 @@
 import socket
+import select
+
 from abc import ABC, abstractmethod
 
 class SocketServer(ABC):
 
-    def __init__(self, host:str, port:str):
+    def __init__(self, host:str, port:str, verbose:bool = False):
         self._host = host
         self._port = port
         
@@ -11,74 +13,95 @@ class SocketServer(ABC):
         self.ENCODING_METHOD = "UTF-8"
         
         # Buffer size for the message
-        self.BUFFER_SIZE = pow(2, 20)
+        self.BUFFER_SIZE = 1024
         
-        self.SERVER_END = "SERVER_END"
+        self.SERVER_END = "END_SERVER"
         self.MSG_END = "MSG_END"
-
-        self.DILIMITER_1 = ','
-        self.DILIMITER_2 = "&"
+        self.MSG_RECIEVED = "MSG_RECEIVED"
         
         self._stillWorking = True
-        self._conn = None
-        self._addr = None
 
-    def recvMsg(self):
-        if self._conn is None:
+        self.verbose = verbose
+
+    def recvMsg(self, sock):
+        """
+        Keep receiving message until MSG_END is detected
+        """
+
+        if sock is None:
             raise Exception("The server is not connected")
         
-        res = ""
+        message = ""
         while True:
-            message = self._conn.recv(self.BUFFER_SIZE)
-            if not message:
-                return None
-            
-            message_str = self.decode(message)
-            if message_str == self.MSG_END:
+            buffer = sock.recv(self.BUFFER_SIZE)
+            if not buffer or self.decode(buffer) == self.MSG_END:
                 break
-            elif message_str.endswith(self.MSG_END):
-                message_str.replace(self.MSG_END, "")
-                res += message_str
-                break  
-            else:
-                res += message_str
-        return res
+            message += self.decode(buffer)
 
-    def sendMsg(self, message):
-        if self._conn is None:
+        if self.verbose and message != "":
+            print(f"[RECIEVED MESSAGE]: {message}")
+
+        return message
+
+    def sendMsg(self, sock, message):
+        """
+        Send message by chunk
+        """
+
+        if sock is None:
             return
-        message_str = self.encode(message)
-        print("response:", message_str)
-        self._conn.sendall(message_str)
+        
+        start, end = 0, self.BUFFER_SIZE
+        while True:
+            chunk_of_message = self.encode(message[start:end])
+            chunk_of_message = chunk_of_message.ljust(self.BUFFER_SIZE)
+            sock.sendall(chunk_of_message)
+            if end >= len(message):
+                break
+            start = end
+            end += self.BUFFER_SIZE
+        
+        if self.verbose:
+            print(f"[SEND MESSAGE]: " + message)
+        # Send the ending message
+        sock.sendall(self.encode(self.MSG_END))
 
     def encode(self, message):
         return message.encode(self.ENCODING_METHOD)
     
     def decode(self, message):
-        return message.decode(self.ENCODING_METHOD)
+        return message.decode(self.ENCODING_METHOD).strip('\x00')
+    
+    def isEndServerMsg(self, message):
+        return message == self.SERVER_END
     
     def endServer(self):
         """
         End the server and send a msg to client telling the server is ended
         """
         self._stillWorking = False
-        self.sendMsg(self.SERVER_END)
-
-    def isEndServerMsg(self, msg):
-        return msg == self.SERVER_END
     
     def start(self):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((self._host, self._port))
-            
-            while self._stillWorking:
-                print("Waiting for client ...")
-                s.listen()
-                self._conn, self._addr = s.accept()
-                
-                with self._conn:
-                    print(f"Connected by {self._addr}")
-                    self.func()
+
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_address = (self._host, self._port)
+        server_socket.bind(server_address)
+        server_socket.listen(5)
+
+        input_sockets = [server_socket]
+
+        while self._stillWorking:
+            readable, _, _ = select.select(input_sockets, [], [])
+            for sock in readable:
+                if sock is server_socket:
+                    client_socket, client_address = server_socket.accept()
+                    input_sockets.append(client_socket)
+                    print(f"New connection from {client_address}")
+                else:
+                    is_active = self.func(sock)
+                    if not is_active:
+                        input_sockets.remove(sock)
+                        sock.close()
 
     @abstractmethod
     def func(self):

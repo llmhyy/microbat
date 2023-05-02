@@ -1,5 +1,6 @@
 package microbat.probability.BP;
 
+import java.io.IOException;
 import java.util.List;
 
 import microbat.probability.BP.constraint.Constraint;
@@ -13,12 +14,15 @@ import microbat.pyserver.Client;
 public class BeliefPropagationClient extends Client {
 	
 	public BeliefPropagationClient() {
-		super("127.0.0.1", 8080);
+		this("127.0.0.1", 8080, false);
 	}
 	
-	public String requestBP(final List<Constraint> constraints) {
-		
-		return "";
+	public BeliefPropagationClient(final String host, final int port) {
+		this(host, port, false);
+	}
+	
+	public BeliefPropagationClient(final String host, final int port, final boolean verbose) {
+		super(host, port, verbose);
 	}
 	
 	/**
@@ -28,19 +32,14 @@ public class BeliefPropagationClient extends Client {
 	 * @param graphStruct Graph structure message
 	 * @param factors Factor message
 	 * @return String response from the server
+	 * @throws InterruptedException 
+	 * @throws IOException 
 	 * @throws Exception Throw when server does not response or have wrong response
 	 */
-	public String requestBP(final String graphStruct, final String factors) {
-		byte[] graphInput = this.strToByte(graphStruct);
-		byte[] factorInput = this.strToByte(factors);
-		
-		if (graphInput.length >= Client.BUFFER_SIZE || factorInput.length >= Client.BUFFER_SIZE) {
-			throw new RuntimeException("Message Exceed Max Buffer Size");
-		}
-		
-		this.sendMsg(graphInput, factorInput);
-		String responst_str = this.byteToStr(this.receiveMsg());
-		
+	public String requestBP(final String graphStruct, final String factors) throws IOException, InterruptedException {
+		this.sendMsg(graphStruct);
+		this.sendMsg(factors);
+		String responst_str = this.receiveMsg();
 		return responst_str;
 	}
 }

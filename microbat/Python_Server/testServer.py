@@ -2,14 +2,13 @@ from servers.SocketServer import SocketServer
 
 class TestServer(SocketServer):
 
-    def __init__(self, host, port):
-        super().__init__(host, port)
+    def __init__(self, host, port, verbose=False):
+        super().__init__(host, port, verbose)
     
     def func(self):
         print("Test Server start working ...")
         while True:
             msg = self.recvMsg()
-            msg = "Server recieved: "+ msg
             print(msg)
             self.sendMsg(msg)
 
@@ -20,7 +19,7 @@ class TestServer(SocketServer):
 if __name__ == '__main__':
     host = "127.0.0.1"
     port = 8080
-    server = TestServer(host, port)
+    server = TestServer(host, port, True)
     print("Server start ...")
     server.start()
     print("Server end")

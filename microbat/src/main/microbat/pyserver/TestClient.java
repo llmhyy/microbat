@@ -8,17 +8,21 @@ public class TestClient extends Client {
 		super(host, port);
 	}
 	
+	public TestClient(String host, int port, boolean verbose) {
+		super(host, port, verbose);
+	}
+	
 	public static void main(String[] args) {
     	final String host = "127.0.0.1";
     	final int port = 8080;
-    	TestClient client = new TestClient(host, port);
+    	TestClient client = new TestClient(host, port, true);
     	
     	String message = "message from test client";
     	try {
 			client.conntectServer();
 			client.sendMsg(message);
 
-			String recievedMsg = client.receiveStrMsg();
+			String recievedMsg = client.receiveMsg();
 			System.out.println("Message from server: " +  recievedMsg);
 			client.endServer();
 			client.disconnectServer();
