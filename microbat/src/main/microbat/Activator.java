@@ -28,7 +28,16 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public Activator() {
 	}
-
+	
+	/**
+	 * This is to stub the plugin variable, such that the code does not have to run as an Eclipse Application. @see microbat.ActivatorStub for an example.
+	 * (Previously, plugin variable was always null if run as an Java Application, resulting in NullPointerException)
+	 * @param activator
+	 */
+	public void setItselfAsPlugin() {
+		plugin = this;
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
