@@ -68,7 +68,11 @@ public class ProbInferHandler extends AbstractHandler {
 					System.out.println("---------------------------------- " + noOfFeedbacks + " iteration");
 					
 					// Calculate probability
+					long startTime = System.currentTimeMillis();
 					encoder.encode();
+					long endTime = System.currentTimeMillis();
+					long duration = Math.floorDiv(endTime - startTime, 1000);
+					System.out.println("Duration: " + duration + "s");
 					
 					// Predict root cause
 					TraceNode prediction = encoder.getMostErroneousNode();

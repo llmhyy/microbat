@@ -91,7 +91,7 @@ public class VariableEncoderFG extends Encoder {
 		// Generate all constraints
 		List<Constraint> constraints = this.genConstraints();
 		System.out.println("Variable Encoder: " + constraints.size() + " constraints.");
-		
+		System.out.println("Running belief propagation ...");
 		// Request the python server to run sum product algorithm
 		BeliefPropagationClient client = new BeliefPropagationClient();
 		

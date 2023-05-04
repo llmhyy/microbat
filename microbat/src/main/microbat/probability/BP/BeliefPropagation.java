@@ -78,23 +78,14 @@ public class BeliefPropagation {
 
 		Constraint.resetID();
 		
-		VariableEncoderFG varEncoder = new VariableEncoderFG(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
-		
-		// Include all the previous users feedback
-//		varEncoder.setFeedbacks(BeliefPropagation.userFeedbacks);
-		
-		long startTime = System.currentTimeMillis();
-		
 		// Calculate the probability for variables
+		VariableEncoderFG varEncoder = new VariableEncoderFG(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
 		varEncoder.encode();	
 		
 		// Calculate the probability for statements
-		new StatementEncoderFG(trace, slicedTrace).encode();
-		
-		long endTime = System.currentTimeMillis();
-		
-		long executionTime = Math.floorDiv(endTime - startTime, 1000);
-		System.out.println("Execution Time: " + executionTime + "s");
+		StatementEncoderFG statEncoder = new StatementEncoderFG(this.trace, this.slicedTrace);
+		statEncoder.encode();
+
 	}
 	
 
