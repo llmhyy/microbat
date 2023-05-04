@@ -138,6 +138,7 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	
 	private double drop = -2.0;
 	private double gain = -2.0;
+	private int computationCost = -1;
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		super();
@@ -1449,5 +1450,13 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	
 	public double getGain() {
 		return this.gain;
+	}
+	
+	public void setComputationCost(final int cost) {
+		this.computationCost = cost;
+	}
+	
+	public int getComputationCost() {
+		return this.computationCost;
 	}
 }

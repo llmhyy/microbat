@@ -34,7 +34,7 @@ public class PathFinder {
 			if (currentNode.equals(endNode)) {
 				UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
 				path.addPair(currentNode, feedback);
-				break;
+				return path;
 			}
 			if (currentNode.getOrder() <= endNode.getOrder()) {
 				return null;
@@ -43,7 +43,7 @@ public class PathFinder {
 			path.addPair(currentNode, feedback);
 			currentNode = this.findNextNode(currentNode, feedback);
 		}
-		return path;
+		return null;
 	}
 	
 	public ActionPath findPathway_greedy(final TraceNode startNode, final TraceNode endNode, final ActionPath initPath) {

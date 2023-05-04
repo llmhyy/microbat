@@ -32,7 +32,8 @@ public class ProbPropagator {
 	
 	private List<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
 	
-	private double max_cost = -1.0d;
+	private double max_var_cost = -1.0d;
+	private int total_node_cost = -1;
 	
 	public ProbPropagator(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, List<NodeFeedbacksPair> feedbackRecords) {
 		this.trace = trace;
@@ -85,9 +86,6 @@ public class ProbPropagator {
 //		this.computeMinOutputCost();
 		for (TraceNode node : this.slicedTrace) {
 			
-			if (node.getOrder() == 37) {
-				System.out.println();
-			}
 			
 			if (this.isFeedbackGiven(node)) {
 				continue;
@@ -111,76 +109,91 @@ public class ProbPropagator {
 				continue;
 			}
 			
-			double avgProb = this.aggregator.aggregateForwardProb(readVars, ProbAggregateMethods.AVG);
-			if (avgProb <= PropProbability.UNCERTAIN) {
-				// No need to continue if the avgProb is already LOW
-				for (VarValue writtenVar : node.getWrittenVariables()) {
-					if (this.correctVars.contains(writtenVar)) {
-						writtenVar.setAllProbability(PropProbability.HIGH);
-					} else if (this.wrongVars.contains(writtenVar)) {
-						writtenVar.setAllProbability(PropProbability.LOW);
-					} else {
-						writtenVar.setForwardProb(PropProbability.UNCERTAIN);
-					}
-				}
-				continue;
-			}
+			final double avgProb = this.aggregator.aggregateForwardProb(readVars, ProbAggregateMethods.AVG);
+			final double drop = avgProb - PropProbability.UNCERTAIN;
+			final double cost_factor = this.countModifyOperation(node) / (double) this.total_node_cost;
 			
-			if (node.isBranch()) {
-				for (VarValue writtenVar : node.getWrittenVariables()) {
-					if (this.wrongVars.contains(writtenVar)) {
-						writtenVar.setAllProbability(PropProbability.LOW);
-					} else {
-						writtenVar.setForwardProb(avgProb);
-					}
+			final double result_prob = avgProb - drop * cost_factor;
+			
+			for (VarValue writtenVar : node.getWrittenVariables()) {
+				if (writtenVar.isThisVariable()) {
+					continue;
 				}
-			} else {
-				// Calculate forward probability of written variable
-				double writtenCost = node.getWrittenVariables().get(0).getComputationalCost();
-				double optCost = Double.MIN_VALUE * this.countModifyOperation(node) / this.max_cost;
-				
-				// Find the closest wrong variable computational cost 
-//				long outputCost = node.getMinOutpuCost();
-//				double loss = avgProb - PropProbability.LOW;
-//				double loss = (avgProb - PropProbability.LOW) * ((double) writtenCost / outputCost);
-//				double prob = avgProb - loss;
-				
-				double discount = 1 - ((double) optCost / writtenCost);
-
-				if (discount == 0 || writtenCost == 0.0) discount = 1;
-				double prob = avgProb * discount;
-				prob = Math.max(prob, PropProbability.UNCERTAIN);
-				if (prob < 0) {
-					throw new RuntimeException("Problematic probability at node: " + node.getOrder() + ": " + prob);
-				}
- 				for (VarValue writtenVar : node.getWrittenVariables()) {
-					if (this.correctVars.contains(writtenVar)) {
-						writtenVar.setAllProbability(PropProbability.HIGH);
-					} else if (this.wrongVars.contains(writtenVar)) {
-						writtenVar.setAllProbability(PropProbability.LOW);
-					} else {
-						writtenVar.setForwardProb(prob);
-					}
+				if (this.isCorrect(writtenVar)) {
+					writtenVar.setForwardProb(PropProbability.HIGH);
+				} else {
+					writtenVar.setForwardProb(result_prob);
 				}
 			}
+//			
+//			if (avgProb <= PropProbability.UNCERTAIN) {
+//				// No need to continue if the avgProb is already LOW
+//				for (VarValue writtenVar : node.getWrittenVariables()) {
+//					if (this.correctVars.contains(writtenVar)) {
+//						writtenVar.setAllProbability(PropProbability.HIGH);
+//					} else if (this.wrongVars.contains(writtenVar)) {
+//						writtenVar.setAllProbability(PropProbability.LOW);
+//					} else {
+//						writtenVar.setForwardProb(PropProbability.UNCERTAIN);
+//					}
+//				}
+//				continue;
+//			}
+//			
+//			if (node.isBranch()) {
+//				for (VarValue writtenVar : node.getWrittenVariables()) {
+//					if (this.wrongVars.contains(writtenVar)) {
+//						writtenVar.setAllProbability(PropProbability.LOW);
+//					} else {
+//						writtenVar.setForwardProb(avgProb);
+//					}
+//				}
+//			} else {
+//				// Calculate forward probability of written variable
+//				double writtenCost = node.getWrittenVariables().get(0).getComputationalCost();
+//				double optCost = Double.MIN_VALUE * this.countModifyOperation(node) / this.max_var_cost;
+//				
+//				// Find the closest wrong variable computational cost 
+////				long outputCost = node.getMinOutpuCost();
+////				double loss = avgProb - PropProbability.LOW;
+////				double loss = (avgProb - PropProbability.LOW) * ((double) writtenCost / outputCost);
+////				double prob = avgProb - loss;
+//				
+//				double discount = 1 - ((double) optCost / writtenCost);
+//
+//				if (discount == 0 || writtenCost == 0.0) discount = 1;
+//				double prob = avgProb * discount;
+//				prob = Math.max(prob, PropProbability.UNCERTAIN);
+//				if (prob < 0) {
+//					throw new RuntimeException("Problematic probability at node: " + node.getOrder() + ": " + prob);
+//				}
+// 				for (VarValue writtenVar : node.getWrittenVariables()) {
+//					if (this.correctVars.contains(writtenVar)) {
+//						writtenVar.setAllProbability(PropProbability.HIGH);
+//					} else if (this.wrongVars.contains(writtenVar)) {
+//						writtenVar.setAllProbability(PropProbability.LOW);
+//					} else {
+//						writtenVar.setForwardProb(prob);
+//					}
+//				}
+//			}
 		}
+	}
+	
+	private boolean isCorrect(final VarValue var) {
+		return this.correctVars.contains(var);
+	}
+	
+	private boolean isWrong(final VarValue var) {
+		return this.wrongVars.contains(var);
 	}
 	
 	private void passForwardProp(final TraceNode node) {
 		// Receive the correctness propagation
 		for (VarValue readVar : node.getReadVariables()) {
-			
-			// Ignore the input variables such that it will not be overwritten
-			if (this.correctVars.contains(readVar)) {
-				readVar.setAllProbability(PropProbability.HIGH);
-				continue;
+			if (this.isCorrect(readVar)) {
+				readVar.setForwardProb(PropProbability.HIGH);
 			}
-			
-			if (this.wrongVars.contains(readVar)) {
-				readVar.setAllProbability(PropProbability.LOW);
-				continue;
-			}
-			
 			VarValue dataDomVar = this.findDataDomVar(readVar, node);
 			if (dataDomVar != null) {
 				readVar.setForwardProb(dataDomVar.getForwardProb());
@@ -195,10 +208,6 @@ public class ProbPropagator {
 		for (int order = this.slicedTrace.size()-1; order>=0; order--) {
 			TraceNode node = this.slicedTrace.get(order);
 			
-			if (node.getOrder() == 3580) {
-				System.out.println();
-			}
-			
 			// Skip this node if the feedback is already given
 			if (this.isFeedbackGiven(node)) {
 				continue;
@@ -212,86 +221,101 @@ public class ProbPropagator {
 				continue;
 			}
 			
-			// If node is branch node, backpropagate only when the condition result is wrong
-			if (node.isBranch()) {
-				final VarValue conditionResult = node.getConditionResult();
-				if (!this.wrongVars.contains(conditionResult)) {
-					continue;
-				}
+			final double avgProb = this.aggregator.aggregateBackwardProb(node.getWrittenVariables(), ProbAggregateMethods.AVG);
+			final double gain = PropProbability.UNCERTAIN - avgProb;
+			final double cost_factor = this.countModifyOperation(node) / this.total_node_cost;
+			node.setGain(gain * cost_factor);
+			List<VarValue> readVars = node.getReadVariables();
+			readVars.removeIf(var -> var.isThisVariable());
+			
+			double sum = 0.0d;
+			for (VarValue readVar : readVars) {
+				sum += readVar.getComputationalCost();
 			}
 			
-			// Aggregate written variable probability
-			double avgProb = this.aggregator.aggregateBackwardProb(node.getWrittenVariables(), ProbAggregateMethods.AVG);
+			sum = sum == 0 ? 1 : sum;
 			
-			// Calculate maximum gain
-			VarValue writtenVar = node.getWrittenVariables().get(0);
-			double cumulativeCost = writtenVar.getComputationalCost();
-			double opCost = Double.MIN_VALUE * this.countModifyOperation(node) / this.max_cost;
-			double gain = 0;
-			if (cumulativeCost != 0) {
-				// Define maximum gain by the step
-				gain = (PropProbability.UNCERTAIN - avgProb) * ((double) opCost/cumulativeCost);
-			}
-			
-			node.setGain(gain);
-			
-			// Calculate total cost
-			int totalCost = 0;
-			for (VarValue readVar : node.getReadVariables()) {
-				totalCost += readVar.getComputationalCost();
-			}
-	
-			for (VarValue readVar : node.getReadVariables()) {
-				
-				// Ignore this variable if it is input or output
-				if (this.wrongVars.contains(readVar) || this.correctVars.contains(readVar)) {
-					continue;
+			for (VarValue readVar : readVars) {
+				if (this.isWrong(readVar)) {
+					readVar.setBackwardProb(PropProbability.LOW);
+				} else {
+					final double suspiciousness = readVar.getComputationalCost() / sum;
+					final double prob = avgProb + gain * cost_factor * suspiciousness;
+					readVar.setBackwardProb(prob);
 				}
-				
-				if (readVar.isThisVariable()) {
-					readVar.setBackwardProb(PropProbability.HIGH);
-					continue;
-				}
-				
-				double factor = 1;
-				if (totalCost != 0) {
-					if (readVar.getComputationalCost() != totalCost) {
-						factor = 1 - readVar.getComputationalCost() / (double) totalCost;
-					}
-				}
-				
-				double prob = avgProb + gain  * factor;
-				readVar.setBackwardProb(prob);
-				
 				
 			}
 		}
-		
-		double max_gain = -2.0d;
-		int max_order = -1;
-		for (TraceNode node : this.slicedTrace) {
-			final double gain = node.getGain();
-			if (gain > max_gain) {
-				max_gain = gain;
-				max_order = node.getOrder();
-			}
-		}
-		
-		System.out.println("max_gain" + max_gain);
-		System.out.println("max_order" + max_order);
-		
-		int max_count = -1;
-		max_order = -1;
-		for (TraceNode node : this.slicedTrace) {
-			final int count = this.countModifyOperation(node);
-			if (max_count < count) {
-				max_count = count;
-				max_order = node.getOrder();
-			}
-		}
-		
-		System.out.println("max_count" + max_count);
-		System.out.println("max_order" + max_order);
+			
+//			// Calculate maximum gain
+//			VarValue writtenVar = node.getWrittenVariables().get(0);
+//			double cumulativeCost = writtenVar.getComputationalCost();
+//			double opCost = Double.MIN_VALUE * this.countModifyOperation(node) / this.max_var_cost;
+////			double gain = 0;
+//			if (cumulativeCost != 0) {
+//				// Define maximum gain by the step
+//				gain = (PropProbability.UNCERTAIN - avgProb) * ((double) opCost/cumulativeCost);
+//			}
+//			
+//			node.setGain(gain);
+//			
+//			// Calculate total cost
+//			int totalCost = 0;
+//			for (VarValue readVar : node.getReadVariables()) {
+//				totalCost += readVar.getComputationalCost();
+//			}
+//	
+//			for (VarValue readVar : node.getReadVariables()) {
+//				
+//				// Ignore this variable if it is input or output
+//				if (this.wrongVars.contains(readVar) || this.correctVars.contains(readVar)) {
+//					continue;
+//				}
+//				
+//				if (readVar.isThisVariable()) {
+//					readVar.setBackwardProb(PropProbability.HIGH);
+//					continue;
+//				}
+//				
+//				double factor = 1;
+//				if (totalCost != 0) {
+//					if (readVar.getComputationalCost() != totalCost) {
+//						factor = 1 - readVar.getComputationalCost() / (double) totalCost;
+//					}
+//				}
+//				
+//				double prob = avgProb + gain  * factor;
+//				readVar.setBackwardProb(prob);
+//				
+//				
+//			}
+//		}
+//		
+//		double max_gain = -2.0d;
+//		int max_order = -1;
+//		for (TraceNode node : this.slicedTrace) {
+//			final double gain = node.getGain();
+//			if (gain > max_gain) {
+//				max_gain = gain;
+//				max_order = node.getOrder();
+//			}
+//		}
+//		
+//		System.out.println("max_gain" + max_gain);
+//		System.out.println("max_order" + max_order);
+//		
+//		int max_count = -1;
+//		max_order = -1;
+//		for (TraceNode node : this.slicedTrace) {
+//			final int count = this.countModifyOperation(node);
+//			if (max_count < count) {
+//				max_count = count;
+//				max_order = node.getOrder();
+//			}
+//		}
+//		
+//		System.out.println("max_count" + max_count);
+//		System.out.println("max_order" + max_order);
 	}
 	
 	private void passBackwardProp(final TraceNode node) {
@@ -299,22 +323,14 @@ public class ProbPropagator {
 		// Receive the wrongness propagation
 		for (VarValue writeVar : node.getWrittenVariables()) {
 			
-			// Ignore the output variable such that it will not be overwritten
-			if (this.wrongVars.contains(writeVar)) {
-				writeVar.setAllProbability(PropProbability.LOW);
+			if (this.isWrong(writeVar)) {
+				writeVar.setBackwardProb(PropProbability.LOW);
 				continue;
 			}
 			
 			List<TraceNode> dataDominatees = this.trace.findDataDependentee(node, writeVar);
-			
-			// Remove the node that does not contribute to the result
-			for (int i=0; i<dataDominatees.size(); i++) {
-				TraceNode dataDominatee = dataDominatees.get(i);
-				if (!this.slicedTrace.contains(dataDominatee)) {
-					dataDominatees.remove(i);
-					i -= 1;
-				}
-			}
+			// Filter out the dominatees that does not contribute to the result
+			dataDominatees.removeIf(dataDominatee -> !this.slicedTrace.contains(dataDominatee));
 			
 			// Do nothing if no data dominatees is found
 			if (dataDominatees.isEmpty()) {
@@ -339,17 +355,15 @@ public class ProbPropagator {
 		if (node.isBranch()) {
 			VarValue conditionResult = node.getConditionResult();
 			
-			if (this.correctVars.contains(conditionResult)) {
-				conditionResult.setAllProbability(PropProbability.HIGH);
-			} else if (this.wrongVars.contains(conditionResult)) {
-				conditionResult.setAllProbability(PropProbability.LOW);
+			if (this.isWrong(conditionResult)) {
+				conditionResult.setBackwardProb(PropProbability.LOW);
 			} else {
+				List<TraceNode> controlDominatees = node.getControlDominatees();
+				controlDominatees.removeIf(controlDominatee -> !this.slicedTrace.contains(controlDominatee));
+				
 				double avgProb = 0.0;
 				int count = 0;
 				for (TraceNode controlDominatee : node.getControlDominatees()) {
-					if (!this.slicedTrace.contains(controlDominatee)) {
-						continue;
-					}
 					for (VarValue writtenVar : controlDominatee.getWrittenVariables()) {
 						avgProb += writtenVar.getBackwardProb();
 						count += 1;
@@ -467,8 +481,17 @@ public class ProbPropagator {
 //	}
 	
 	public void computeComputationalCost() {
+		
+		// First count the computational operations for each step
+		this.total_node_cost = 0;
+		for (TraceNode node : this.slicedTrace) {
+			final int count = this.countModifyOperation(node);
+			node.setComputationCost(count);
+			this.total_node_cost += count;
+		}
+		
+		
 		double max_cost = 0.0f;
-		int order = -1;
 		for (TraceNode node : this.slicedTrace) {
 	
 			// Inherit the computation cost from data dominator
@@ -482,6 +505,9 @@ public class ProbPropagator {
 			// Sum of read variables computational cost
 			double cumulatedCost = 0.0d;
 			for (VarValue readVar : node.getReadVariables()) {
+				if (readVar.isThisVariable()) {
+					continue;
+				}
 				cumulatedCost += readVar.getComputationalCost();
 			}
 			
@@ -497,23 +523,22 @@ public class ProbPropagator {
 			
 			// Define written variables computational cost
 			for (VarValue writtenVar : node.getWrittenVariables()) {
+				if (writtenVar.isThisVariable()) {
+					continue;
+				}
 				writtenVar.setComputationalCost(cost);
 			}
 		}
 		
-		this.max_cost = max_cost;
+		this.max_var_cost = max_cost;
 		
 		// Normalization
 		for (TraceNode node : this.slicedTrace) {
-
 			for (VarValue readVar : node.getReadVariables()) {
-				
-
 				final double cost = readVar.getComputationalCost();
 				readVar.setComputationalCost(cost / max_cost);
 			}
 			for (VarValue writtenVar : node.getWrittenVariables()) {
-
 				final double cost = writtenVar.getComputationalCost();
 				writtenVar.setComputationalCost(cost / max_cost);
 			}
