@@ -4,7 +4,7 @@ from .factor_graph import *
 STATEMENT_ID_PREFIX = "S_"
 
 class myLBP():
-    def __init__(self, pgm):
+    def __init__(self, pgm, verbose = False):
         if type(pgm) is not factor_graph:
             raise Exception('PGM is not a factor graph')
         if not pgm.is_connected():
@@ -14,7 +14,8 @@ class myLBP():
         self.__msg     = {}
         self.__msg_new = {}
         self.__pgm     = pgm
-        self.threshold = 1e-4
+        self.threshold = 1e-2
+        self.verbose = verbose
         
         # Initialization of messages
         # Set all the message to one
@@ -97,13 +98,19 @@ class myLBP():
             converge = True
             for (start_name, end_name), new_msg in self.__msg_new.items():
                 old_msg = self.__msg[(start_name, end_name)]
-                if (abs(old_msg.get_distribution() - new_msg.get_distribution()) > self.threshold).sum() == old_msg.get_distribution().size:
+                if (abs(old_msg.get_distribution() - new_msg.get_distribution()) > self.threshold).any():
+                    if self.verbose:
+                        print(f"Cannot not converge: {old_msg.get_variables()}:{old_msg.get_distribution}, {new_msg.get_variables()}:{new_msg.get_distribution}")
                     converge = False
+                    break
             
             isConverge = converge
             
             self.__msg.update(self.__msg_new)
             self.__t += 1
+
+            if self.verbose:
+                print(f"Iteration: {self.__t}")
     
     def __normalize_msg(self, message):
         return factor(message.get_variables(), message.get_distribution()/np.sum(message.get_distribution()))

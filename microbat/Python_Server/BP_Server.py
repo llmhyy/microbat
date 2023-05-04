@@ -10,7 +10,7 @@ class BP_Server(SocketServer):
         self.DILIMITER_1 = ','
         self.DILIMITER_2 = "&"
         self.MUL_SIGN = "*"
-        self.MAX_ITR = 100
+        self.MAX_ITR = 10
 
     def factorLoader(self, factor_input, dilimiter):
         tokens = factor_input.split(dilimiter)
@@ -70,7 +70,7 @@ class BP_Server(SocketServer):
 
             factorGraph.change_factor_distribution(constraintID, factor(predIDs,  probs))
 
-        lbp = myLBP(factorGraph)
+        lbp = myLBP(factorGraph, verbose=True)
 
         start = time.time()
         margProb = lbp.belief(predIDs_all, self.MAX_ITR)
