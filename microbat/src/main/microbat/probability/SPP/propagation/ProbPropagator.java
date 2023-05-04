@@ -63,19 +63,19 @@ public class ProbPropagator {
 			for (VarValue readVar : node.getReadVariables()) {
 				readVar.setAllProbability(PropProbability.UNCERTAIN);
 				if (this.correctVars.contains(readVar)) {
-					readVar.setAllProbability(PropProbability.HIGH);
+					readVar.setForwardProb(PropProbability.HIGH);
 				}
 				if (this.wrongVars.contains(readVar)) {
-					readVar.setAllProbability(PropProbability.LOW);
+					readVar.setBackwardProb(PropProbability.LOW);
 				}
 			}
 			for (VarValue writeVar : node.getWrittenVariables()) {
 				writeVar.setAllProbability(PropProbability.UNCERTAIN);
 				if (this.correctVars.contains(writeVar)) {
-					writeVar.setAllProbability(PropProbability.HIGH);
+					writeVar.setForwardProb(PropProbability.HIGH);
 				}
 				if (this.wrongVars.contains(writeVar)) {
-					writeVar.setAllProbability(PropProbability.LOW);
+					writeVar.setBackwardProb(PropProbability.LOW);
 				}
 			}
 		}
