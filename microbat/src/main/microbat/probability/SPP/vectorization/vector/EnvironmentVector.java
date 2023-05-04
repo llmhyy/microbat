@@ -11,13 +11,12 @@ public class EnvironmentVector extends Vector {
 	private final boolean[] vector = new boolean[EnvironmentVector.DIMENSION];
 	
 	public EnvironmentVector() {
-		super(new float[EnvironmentVector.DIMENSION]);
+		super(EnvironmentVector.DIMENSION);
 		Arrays.fill(this.vector, false);
 	}
 	
 	public EnvironmentVector(final TraceNode node) {
-		super(new float[EnvironmentVector.DIMENSION]);
-		Arrays.fill(this.vector, false);
+		super(EnvironmentVector.DIMENSION);
 	}
 
 }

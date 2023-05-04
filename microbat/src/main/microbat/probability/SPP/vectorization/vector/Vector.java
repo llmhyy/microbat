@@ -1,11 +1,18 @@
 package microbat.probability.SPP.vectorization.vector;
 
+import java.util.Arrays;
+
 public abstract class Vector {
 	
 	protected float[] vector;
 	
 	public Vector() {
 		this.vector = new float[0];
+	}
+	
+	public Vector(final int size) {
+		this.vector = new float[size];
+		Arrays.fill(this.vector, 0.0f);
 	}
 	
 	public Vector(float[] vector) {

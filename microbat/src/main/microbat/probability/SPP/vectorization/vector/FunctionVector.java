@@ -44,8 +44,7 @@ public class FunctionVector extends Vector {
 	private static final int LIBRARY_FUNC_IDX = 5;
 	
 	public FunctionVector() {
-		super(new float[FunctionVector.DIMENSION]);
-		Arrays.fill(this.vector, 0.0f);
+		super(FunctionVector.DIMENSION);
 		this.inputParamTypeVectors = new InputParameterVector[FunctionVector.INPUT_PARAM_COUNT];
 		for (int idx=0; idx<this.inputParamTypeVectors.length; idx++) {
 			this.inputParamTypeVectors[idx] = new InputParameterVector();
@@ -54,8 +53,7 @@ public class FunctionVector extends Vector {
 	}
 	
 	public FunctionVector(final ByteCode byteCode, final String funcSign) {
-		super(new float[FunctionVector.INVOKE_TYPE_COUNT+1]);
-		Arrays.fill(this.vector, 0.0f);
+		super(FunctionVector.INVOKE_TYPE_COUNT+1);
 		
 		final short optCode = byteCode.getOpcode();
 		if (this.isInvokeDynamic(optCode)) this.set(FunctionVector.DYNAMIC_IDX);
@@ -114,9 +112,7 @@ public class FunctionVector extends Vector {
 	}
 	
 	public static FunctionVector[] constructFuncVectors(final TraceNode node, final int vectorCount) {
-		if (node.getOrder() == 5 || node.getOrder() == 10) {
-			System.out.println();
-		}
+
 		FunctionVector[] funcVectors = new FunctionVector[vectorCount];
 	
 		ByteCodeList byteCodeList_1 = new ByteCodeList(node.getBytecode());

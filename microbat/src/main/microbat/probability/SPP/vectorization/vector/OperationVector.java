@@ -11,14 +11,11 @@ public class OperationVector extends Vector {
 	public static final int DIMENSION = 256;
 	
 	public OperationVector() {
-		super(new float[OperationVector.DIMENSION]);
-		Arrays.fill(this.vector, 0.0f);
+		super(OperationVector.DIMENSION);
 	}
 	
 	public OperationVector(final TraceNode node) {
-		super(new float[OperationVector.DIMENSION]);
-		Arrays.fill(this.vector, 0.0f);
-		
+		super(OperationVector.DIMENSION);
 		ByteCodeList byteCodeList = new ByteCodeList(node.getBytecode());
 		for (ByteCode byteCode : byteCodeList) {
 			short opCode = byteCode.getOpcode();

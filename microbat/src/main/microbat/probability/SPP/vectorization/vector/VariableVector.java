@@ -35,12 +35,11 @@ public class VariableVector extends Vector {
 	private static final int COST_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 5;
 
 	public VariableVector() {
-		super(new float[VariableVector.DIMENSION]);
-		Arrays.fill(this.vector, 0.0f);
+		super(VariableVector.DIMENSION);
 	}
 	
 	public VariableVector(final VarValue var) {
-		super(new float[VariableVector.DIMENSION]);
+		super(VariableVector.DIMENSION);
 		
 		String typeStr = var.getType();
 		

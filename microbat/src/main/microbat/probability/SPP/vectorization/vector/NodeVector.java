@@ -29,7 +29,7 @@ public class NodeVector extends Vector {
 	private final FunctionVector[] funcVectors;
 	
 	public NodeVector() {
-
+		
 		this.optVector = new OperationVector();
 		this.refVarVectors = new VariableVector[NodeVector.NUM_REF_VARS];
 		for (int idx=0; idx<this.refVarVectors.length; idx++) {
