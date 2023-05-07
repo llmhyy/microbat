@@ -2,9 +2,10 @@ package microbat.probability.SPP.vectorization.vector;
 
 import java.util.Arrays;
 
-public abstract class Vector {
+public class Vector {
 	
 	protected float[] vector;
+	protected final float eps = 0.0001f;
 	
 	public Vector() {
 		this.vector = new float[0];
@@ -46,38 +47,23 @@ public abstract class Vector {
 		strBuilder.deleteCharAt(strBuilder.length()-1);
 		return strBuilder.toString();
 	}
-//	protected ArrayList<E> vector;
-//	
-//	public Vector() {
-//		this.vector = null;
-//	}
-//	
-//	public Vector(ArrayList<E> vector) {
-//		this.vector = vector;
-//	}
-//	
-//	public int getSize() {
-//		return this.vector.size();
-//	}
-//	
-//	public ArrayList<E> getVector() {
-//		return this.vector;
-//	}
-//	
-//	abstract protected float[] toFloat();
-//	
-//	@Override
-//	public String toString() {
-//		if (this.vector == null || this.vector.isEmpty()) {
-//			return "";
-//		}
-//		StringBuilder strBuilder = new StringBuilder();
-//		for (float element : this.toFloat()) {
-//			strBuilder.append(element);
-//			strBuilder.append(",");
-//		}
-//		strBuilder.deleteCharAt(strBuilder.length()-1);
-//		return strBuilder.toString();
-//		
-//	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Vector) {
+			Vector otherVec = (Vector) obj;
+			if (otherVec.vector.length != this.vector.length) {
+				return false;
+			}
+			for (int idx=0; idx<this.vector.length; idx++) {
+				final float myElement = this.vector[idx];
+				final float otherElement = otherVec.vector[idx];
+				if (Math.abs(myElement - otherElement) > this.eps) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
 }

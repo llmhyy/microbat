@@ -14,15 +14,16 @@ import microbat.model.value.VarValue;
 
 public class VariableVector extends Vector {
 	
-	public static final int PRIMITIVE_TYPE_COUNT = 9;
+	/*
+	 * 9-dim: primitive type
+	 */
+	public static final int PRIMITIVE_TYPE_COUNT = 8;
 	// 1 for is_array
 	// 3 for scope: Local, Static, Instance
 	// 1 for is_reliable
 	// 1 for the computation cost
 	public static final int DIMENSION = VariableVector.PRIMITIVE_TYPE_COUNT + 1 + 3 + 1 + 1;
-	
-	private static final String LIBRARY_CLASSES_PATH = "./src/main/microbat/probability/SPP/vectorization/vector/java_11_classes.txt";
-	private static final Set<String> LIBRARY_CLASSES = VariableVector.readLibraryClasses();
+
 	
 	private static final List<String> PRIMITIVE_TYPES_1 = VariableVector.initPrimType_1();
 	private static final List<String> PRIMITIVE_TYPES_2 = VariableVector.initPrimType_2();
@@ -89,11 +90,11 @@ public class VariableVector extends Vector {
 	}
 	
 	public static boolean isReliableType(final String type) {
-		return VariableVector.LIBRARY_CLASSES.contains(type);
+		return LibraryClassDetector.isLibClass(type.replace(".", "/"));
 	}
 	
 	private static List<String> initPrimType_1() {
-		String[] types_array = {"int", "byte", "short", "long", "float", "double", "boolean", "char", "String"};
+		String[] types_array = {"int", "byte", "short", "long", "float", "double", "boolean", "char"};
 		List<String> types = Arrays.asList(types_array);
 		return types;
 	}
@@ -103,29 +104,6 @@ public class VariableVector extends Vector {
 		List<String> types = Arrays.asList(types_array);
 		return types;
 	}
-	
-	private static Set<String> readLibraryClasses() {
-		Set<String> classes = new HashSet<>();
-		BufferedReader reader;
-		
-		String basePath = System.getProperty("user.dir");
-		String classes_path = Paths.get(basePath, VariableVector.LIBRARY_CLASSES_PATH).toString();
-		
-		try {
-			reader = new BufferedReader(new FileReader(classes_path));
-			String line = reader.readLine();
-			while (line != null) {
-				classes.add(line);
-				line = reader.readLine();
-			}
 
-			reader.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException("Cannot read the library classes");
-		}
-	
-		return classes;
-	}
 	
 }

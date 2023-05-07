@@ -20,20 +20,27 @@ import microbat.model.trace.TraceNode;
 
 public class FunctionVector extends Vector {
 	
+	/*
+	 * Function vector structure:
+	 * 
+	 * 5-dim: one vector of invoke type
+	 * 1-dim: Indicate this function is called by library object
+	 * 20-dim: histogram of input type
+	 * 	8-dim for primitive type
+	 * 	1-dim for library object
+	 * 	1-dim for self-defined object
+	 * 	10-dim array version for the above feature
+	 * 20-dim: one hot vector of output type
+	 * 
+	 * 
+	 */
+	
 	public static final int INVOKE_TYPE_COUNT = 5;
-	public static final int INPUT_PARAM_COUNT = 10;
-
+	public static final int DIMENSION = FunctionVector.INVOKE_TYPE_COUNT + 1 +
+										InputParameterVector.DIMENSION + 
+										OutputParameterVector.DIMENSION;
 	
-	// Add 1 for library calling function
-	public static final int DIMENSION = FunctionVector.INVOKE_TYPE_COUNT + 
-										InputParameterVector.DIMENSION * FunctionVector.INPUT_PARAM_COUNT + 
-										OutputParameterVector.DIMENSION + 
-										1;
-
-	private static final String LIBRARY_CLASSES_PATH = "./src/main/microbat/probability/SPP/vectorization/vector/java_11_classes.txt";
-	private static final Set<String> LIBRARY_CLASSES = FunctionVector.readLibraryClasses();
-	
-	private final InputParameterVector[] inputParamTypeVectors;
+	private final InputParameterVector inputParamTypeVector;
 	private final OutputParameterVector outputParamTypeVector;
 	
 	private static final int DYNAMIC_IDX = 0;
@@ -45,16 +52,14 @@ public class FunctionVector extends Vector {
 	
 	public FunctionVector() {
 		super(FunctionVector.DIMENSION);
-		this.inputParamTypeVectors = new InputParameterVector[FunctionVector.INPUT_PARAM_COUNT];
-		for (int idx=0; idx<this.inputParamTypeVectors.length; idx++) {
-			this.inputParamTypeVectors[idx] = new InputParameterVector();
-		}
+		this.inputParamTypeVector = new InputParameterVector();
 		this.outputParamTypeVector = new OutputParameterVector();
 	}
 	
 	public FunctionVector(final ByteCode byteCode, final String funcSign) {
 		super(FunctionVector.INVOKE_TYPE_COUNT+1);
 		
+		// Check invoke type
 		final short optCode = byteCode.getOpcode();
 		if (this.isInvokeDynamic(optCode)) this.set(FunctionVector.DYNAMIC_IDX);
 		if (this.isInvokeInterface(optCode)) this.set(FunctionVector.INTERFACE_IDX);
@@ -62,21 +67,16 @@ public class FunctionVector extends Vector {
 		if (this.isInvokeStatic(optCode)) this.set(FunctionVector.STATIC_IDX);
 		if (this.isInvokeVirtual(optCode)) this.set(FunctionVector.VIRTUAL_IDX);
 		
-		final String classname = this.extractClassName(funcSign);
-		if (FunctionVector.isLibClass(classname)) this.set(LIBRARY_FUNC_IDX);
-		System.out.println("classname: " + classname);
+		final String classname = this.extractClassName(funcSign).replace(".", "/");
+		if (LibraryClassDetector.isLibClass(classname)) this.set(LIBRARY_FUNC_IDX);
 		
 		final String inputTypeDescriptors = this.extractInputTypeDescriptors(funcSign);
-		this.inputParamTypeVectors = InputParameterVector.constructVectors(inputTypeDescriptors, FunctionVector.INPUT_PARAM_COUNT);
-		for (InputParameterVector vector : this.inputParamTypeVectors) {
-			this.vector = ArrayUtils.addAll(this.vector, vector.getVector());
-		}
-		System.out.println("input: " + inputTypeDescriptors);
+		this.inputParamTypeVector = new InputParameterVector(inputTypeDescriptors);
+		this.vector = ArrayUtils.addAll(this.vector, this.inputParamTypeVector.getVector());
 		
 		final String returnTypeDescriptors = this.extractReturnTypeDescriptors(funcSign);
 		this.outputParamTypeVector = new OutputParameterVector(returnTypeDescriptors);
 		this.vector = ArrayUtils.addAll(this.vector, this.outputParamTypeVector.getVector());
-		System.out.println("output: " + returnTypeDescriptors);
 	}
 	
 	private String extractClassName(final String funcSign) {
@@ -157,7 +157,10 @@ public class FunctionVector extends Vector {
 
 		
 		if (funcSigns.size() != invokeCodes.size()) {
-			throw new FunctionMismatchException("Invokation not match: node " + node.getOrder());
+			for(int idx=0; idx<funcVectors.length; idx++) {
+				funcVectors[idx] = new FunctionVector();
+			}
+			return funcVectors;
 		}
 		
 		for (int idx=0; idx<funcVectors.length; idx++) {
@@ -170,43 +173,5 @@ public class FunctionVector extends Vector {
 			} 
 		}
 		return funcVectors;
-	}
-	
-	public List<String> splitMethodSigns(final String funcSigns) {
-		List<String> funcSign_list = new ArrayList<>();
-		String tempStr = "";
-		for (char c : funcSigns.toCharArray()) {
-			
-		}
-		return funcSign_list;
-	}
-	
-	public static boolean isLibClass(final String type) {
-		return FunctionVector.LIBRARY_CLASSES.contains(type);
-	}
-	
-	private static Set<String> readLibraryClasses() {
-		Set<String> classes = new HashSet<>();
-		BufferedReader reader;
-		
-		String basePath = System.getProperty("user.dir");
-		String classes_path = Paths.get(basePath, FunctionVector.LIBRARY_CLASSES_PATH).toString();
-		
-		try {
-			reader = new BufferedReader(new FileReader(classes_path));
-			String line = reader.readLine();
-			while (line != null) {
-				line = line.replace(".", "/");
-				classes.add(line);
-				line = reader.readLine();
-			}
-
-			reader.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException("Cannot read the library classes");
-		}
-	
-		return classes;
 	}
 }

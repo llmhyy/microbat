@@ -1,13 +1,18 @@
 package microbat.probability.SPP.vectorization.vector;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
-import microbat.model.trace.TraceNode;
-
-public class InputParameterVector extends Vector {
+public class InputParameterVector extends ParameterVector {
 
 	/*
+	 * 	20-dim: histogram of input type
+	 * 		8-dim for primitive type
+	 * 		1-dim for library object
+	 * 		1-dim for self-defined object
+	 * 		10-dim array version for the above feature
+	 * 
 	 * 	B	byte	signed byte
 		C	char	Unicode character code point in the Basic Multilingual Plane, encoded with UTF-16
 		D	double	double-precision floating-point value
@@ -18,38 +23,55 @@ public class InputParameterVector extends Vector {
 		S	short	signed short
 		Z	boolean	true or false
 		[	reference	one array dimension
+		
 	 */
 	
-	public static int DIMENSION = 11;
-	
-	private static final String ARRAY_DES = "[";
-	
-	private static final List<String> typeDescriptors = InputParameterVector.initTypeDescriptor_1();
-
+	public static int DIMENSION = 20;
 	
 	public InputParameterVector() {
-		super(new float[InputParameterVector.DIMENSION]);
-		Arrays.fill(this.vector, 0.0f);
+		super(InputParameterVector.DIMENSION);
+	}
+	
+	public InputParameterVector(final float[] vector) {
+		super(vector);
 	}
 	
 	public InputParameterVector(final String typeDescriptor) {
-		super(new float[InputParameterVector.DIMENSION]);
-		Arrays.fill(this.vector, 0.0f);
-	}
-	
-	public static InputParameterVector[] constructVectors(final String typeDescriptors, final int vectorCount) {
-		InputParameterVector[] vectors = new InputParameterVector[vectorCount];
-		for (int idx=0; idx<vectorCount; idx++) {
-			vectors[idx] = new InputParameterVector();
+		super(InputParameterVector.DIMENSION);
+		List<String> types = this.splitInputTypeDescriptor(typeDescriptor);
+		for (String type : types) {
+			if (type.startsWith("[L")) {
+				// Array of object
+				type = type.substring(2, type.length()-1);
+				int idx = LibraryClassDetector.isLibClass(type) ? ParameterVector.LIB_OBJ_IDX : ParameterVector.SELF_DEFINED_OBJ_IDX;
+				this.set(ParameterVector.ARRAY_OFFSET+idx);
+			} else if (type.startsWith("L")) {
+				// Object
+				type = type.substring(1, type.length()-1);
+				// Check is the object library object
+				int idx = LibraryClassDetector.isLibClass(type) ? ParameterVector.LIB_OBJ_IDX : ParameterVector.SELF_DEFINED_OBJ_IDX;
+				this.set(idx);
+			} else if (type.startsWith("[")){
+				// Array of primitive type
+				type = type.substring(1, type.length());
+				int idx = ParameterVector.getIdxOfPrimitiveType(type);
+				if (idx < 0) {
+					throw new RuntimeException("[InputParameterVector] Cannot get type idx: " + typeDescriptor);
+				}
+				this.set(ParameterVector.ARRAY_OFFSET+idx);
+			} else {
+				// Primitive type
+				int idx = ParameterVector.getIdxOfPrimitiveType(type);
+				if (idx < 0) {
+					throw new RuntimeException("[InputParameterVector] Cannot get type idx: " + typeDescriptor);
+				}
+				this.set(idx);
+			}
 		}
-		return vectors;
-	}
-
-	
-	private static List<String> initTypeDescriptor_1() {
-		String[] descriptor = {"B", "C", "D", "F", "I", "J", "L", "S", "Z"};
-		List<String> list = Arrays.asList(descriptor);
-		return list;
 	}
 	
+	@Override
+	public void set(final int idx) {
+		this.vector[idx]++;
+	}
 }

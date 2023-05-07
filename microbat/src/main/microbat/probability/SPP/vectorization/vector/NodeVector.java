@@ -51,6 +51,10 @@ public class NodeVector extends Vector {
 		for (FunctionVector funcVector : this.funcVectors) {
 			this.vector = ArrayUtils.addAll(this.vector, funcVector.getVector());
 		}
+		
+		if (this.vector.length != NodeVector.DIMENSION) {
+			throw new RuntimeException("dimension not match");
+		}
 	}
 	
 	/**
