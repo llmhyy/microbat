@@ -1002,6 +1002,7 @@ public class TraceNode{
 		this.invokingMethod += invokingMethod + "%";
 	}
 
+
 	public InvokingDetail getInvokingDetail() {
 		return invokingDetail;
 	}

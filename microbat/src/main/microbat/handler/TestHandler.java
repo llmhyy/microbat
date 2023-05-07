@@ -1,6 +1,8 @@
 package microbat.handler;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -22,13 +24,15 @@ import microbat.probability.BP.BeliefPropagation;
 import microbat.util.JavaUtil;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
+import microbat.probability.SPP.vectorization.vector.EnvironmentVector;
 import microbat.probability.SPP.vectorization.vector.FunctionMismatchException;
 import microbat.probability.SPP.vectorization.vector.FunctionVector;
 import microbat.probability.SPP.vectorization.vector.NodeVector;
 import microbat.probability.SPP.vectorization.vector.VariableVector;
+import microbat.model.BreakPoint;
 
 import java.util.ArrayList;
-
+import microbat.probability.SPP.vectorization.vector.*;
 public class TestHandler extends AbstractHandler {
 	
 	TraceView traceView = null;
@@ -42,19 +46,22 @@ public class TestHandler extends AbstractHandler {
 				setup();
 				
 		        Trace trace = traceView.getTrace();
+		        Map<BreakPoint, Integer> repeatedCounts = new HashMap<>();
 		        
-		        TraceNode node1 = trace.getTraceNode(7);
-		        VarValue var1 = node1.getReadVariables().get(0);
+		        for (TraceNode node : trace.getExecutionList()) {
+		        	final BreakPoint bkp = node.getBreakPoint();
+		        	if (repeatedCounts.containsKey(bkp)) {
+		        		repeatedCounts.put(bkp, repeatedCounts.get(bkp)+1);
+		        	} else {
+		        		repeatedCounts.put(bkp, 0);
+		        	}
+		        	node.repeatedCount = repeatedCounts.get(bkp);
+		        }
 		        
-		        TraceNode node2 = trace.getTraceNode(10);
-		        VarValue var2 = node2.getReadVariables().get(0);
-		        
-		        System.out.println(var1);
-		        System.out.println(var2);
-		        
-		        System.out.println(var1 == var2);
-		        
-		        var1.setProbability(10.0);
+		        for (TraceNode node: trace.getExecutionList()) {
+		        	System.out.println(node.getOrder() + "------------------------------------------------");
+		        	System.out.println("node.repeatedCount: " + node.repeatedCount);
+		        }
 		        
 				return Status.OK_STATUS;
 			}

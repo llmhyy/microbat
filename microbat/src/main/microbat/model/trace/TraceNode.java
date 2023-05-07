@@ -138,7 +138,16 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	
 	private double drop = -2.0;
 	private double gain = -2.0;
-	private int computationCost = -1;
+	private double computationCost = -1;
+	public int repeatedCount = 0;
+	
+	public TraceNode() {
+		this.breakPoint = null;
+		this.programState = null;
+		this.order = -1;
+		this.trace = null;
+		this.bytecode = "";
+	}
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		super();
@@ -1452,11 +1461,11 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 		return this.gain;
 	}
 	
-	public void setComputationCost(final int cost) {
+	public void setComputationCost(final double cost) {
 		this.computationCost = cost;
 	}
 	
-	public int getComputationCost() {
+	public double getComputationCost() {
 		return this.computationCost;
 	}
 }
