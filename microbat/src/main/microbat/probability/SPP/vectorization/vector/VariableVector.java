@@ -15,16 +15,15 @@ import microbat.model.value.VarValue;
 public class VariableVector extends Vector {
 	
 	/*
-	 * 9-dim: primitive type
+	 * 8-dim: primitive type
+	 * 1-dim: is array
+	 * 3-dim: one-hot vector of local, static, field
+	 * 1-dim: Library Class
+	 * 1-dim: computational cost
 	 */
 	public static final int PRIMITIVE_TYPE_COUNT = 8;
-	// 1 for is_array
-	// 3 for scope: Local, Static, Instance
-	// 1 for is_reliable
-	// 1 for the computation cost
 	public static final int DIMENSION = VariableVector.PRIMITIVE_TYPE_COUNT + 1 + 3 + 1 + 1;
 
-	
 	private static final List<String> PRIMITIVE_TYPES_1 = VariableVector.initPrimType_1();
 	private static final List<String> PRIMITIVE_TYPES_2 = VariableVector.initPrimType_2();
 	

@@ -1,84 +1,96 @@
 package microbat.probability.SPP.vectorization.vector;
 
-import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
 
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
-
-/**
- * Vectorization of Trace Node
- * @author David
- */
 public class NodeVector extends Vector {
 	
-	public static final int NUM_REF_VARS = 10;
-	public static final int NUM_FUNCS = 10;
-	public static final int DIMENSION = OperationVector.DIMENSION + 
-										VariableVector.DIMENSION * NodeVector.NUM_REF_VARS + 
-										VariableVector.DIMENSION +
-										EnvironmentVector.DIMENSION + 
-										FunctionVector.DIMENSION * NodeVector.NUM_FUNCS;
+	public static final int NUM_WRITTEN_VARS = 10;
+	public static final int NUM_READ_VARS = 10;
+	public static final int NUM_FUNC = 10;
+	public static final int DIMENSION = 0;
 	
 	private final OperationVector optVector;
-	private final VariableVector[] refVarVectors;
-	private final VariableVector targetVarVector;
+	private final VariableVector[] readVarVectors;
+	private final VariableVector[] writtenVarVectors;
 	private final EnvironmentVector envVector;
 	private final FunctionVector[] funcVectors;
 	
 	public NodeVector() {
-		
 		this.optVector = new OperationVector();
-		this.refVarVectors = new VariableVector[NodeVector.NUM_REF_VARS];
-		for (int idx=0; idx<this.refVarVectors.length; idx++) {
-			this.refVarVectors[idx] = new VariableVector();
+		this.readVarVectors = new VariableVector[NodeVector.NUM_READ_VARS];
+		for (int idx=0; idx<this.readVarVectors.length; idx++) {
+			this.readVarVectors[idx] = new VariableVector();
 		}
-		this.targetVarVector = new VariableVector();
+		this.writtenVarVectors = new VariableVector[NodeVector.NUM_WRITTEN_VARS];
+		for (int idx=0; idx<this.readVarVectors.length; idx++) {
+			this.writtenVarVectors[idx] = new VariableVector();
+		}
 		this.envVector = new EnvironmentVector();
-		this.funcVectors = new FunctionVector[NodeVector.NUM_FUNCS];
+		this.funcVectors = new FunctionVector[NodeVector.NUM_FUNC];
 		for (int idx=0; idx<this.funcVectors.length; idx++) {
 			this.funcVectors[idx] = new FunctionVector();
 		}
 		
-		this.vector = ArrayUtils.addAll(this.vector, optVector.getVector());
-		for (VariableVector refVarVector : this.refVarVectors) {
-			this.vector =  ArrayUtils.addAll(this.vector, refVarVector.getVector());
+		this.vector = ArrayUtils.addAll(this.vector, this.optVector.getVector());
+		for (VariableVector readVarVector : this.readVarVectors) {
+			this.vector = ArrayUtils.addAll(this.vector, readVarVector.getVector());
 		}
-		this.vector = ArrayUtils.addAll(this.vector, this.targetVarVector.getVector());
+		for (VariableVector writtenVarVector : this.writtenVarVectors) {
+			this.vector = ArrayUtils.addAll(this.vector, writtenVarVector.getVector());
+		}
 		this.vector = ArrayUtils.addAll(this.vector, this.envVector.getVector());
 		for (FunctionVector funcVector : this.funcVectors) {
 			this.vector = ArrayUtils.addAll(this.vector, funcVector.getVector());
 		}
-		
-		if (this.vector.length != NodeVector.DIMENSION) {
-			throw new RuntimeException("dimension not match");
-		}
 	}
 	
-	/**
-	 * If backward = true, source are written variables, target are read variable
-	 * If backward = false, source are read variables, target are written variable
-	 * We must have target variable
-	 * @param node
-	 * @param targetVar
-	 * @param backward
-	 */
-	public NodeVector(final TraceNode node, final VarValue targetVar, final boolean backward) {
-		this.optVector = new OperationVector(node);
-		this.refVarVectors = VariableVector.constructVarVectors(
-			backward ? node.getWrittenVariables() : node.getReadVariables(),
-			NodeVector.NUM_REF_VARS);
-		this.targetVarVector = new VariableVector(targetVar);
-		this.envVector = new EnvironmentVector(node);
-		this.funcVectors = FunctionVector.constructFuncVectors(node, NodeVector.NUM_FUNCS);
+	public NodeVector(final TraceNode node) {
 		
-		this.vector = ArrayUtils.addAll(this.vector, optVector.getVector());
-		for (VariableVector refVarVector : this.refVarVectors) {
-			this.vector =  ArrayUtils.addAll(this.vector, refVarVector.getVector());
+		// Operation vector
+		this.optVector = new OperationVector(node);
+		
+		// Read variables vector
+		this.readVarVectors = new VariableVector[NodeVector.NUM_READ_VARS];
+		List<VarValue> readVars = node.getReadVariables();
+		readVars.removeIf(var -> var.isThisVariable());
+		for (int idx=0; idx<this.readVarVectors.length; idx++) {
+			if (idx<readVars.size()) {
+				this.readVarVectors[idx] = new VariableVector(readVars.get(idx));
+			} else {
+				this.readVarVectors[idx] = new VariableVector();
+			}
 		}
-		this.vector = ArrayUtils.addAll(this.vector, this.targetVarVector.getVector());
+		
+		// Written variables vector
+		this.writtenVarVectors = new VariableVector[NodeVector.NUM_WRITTEN_VARS];
+		List<VarValue> writtenVars = node.getWrittenVariables();
+		writtenVars.removeIf(var -> var.isThisVariable());
+		for (int idx=0; idx<this.readVarVectors.length; idx++) {
+			if (idx<writtenVars.size()) {
+				this.writtenVarVectors[idx] = new VariableVector(writtenVars.get(idx));
+			} else {
+				this.writtenVarVectors[idx] = new VariableVector();
+			}
+		}
+		
+		// Environment vector
+		this.envVector = new EnvironmentVector(node);
+		
+		// Function vector
+		this.funcVectors = FunctionVector.constructFuncVectors(node, NodeVector.NUM_FUNC);
+		
+		this.vector = ArrayUtils.addAll(this.vector, this.optVector.getVector());
+		for (VariableVector readVarVector : this.readVarVectors) {
+			this.vector = ArrayUtils.addAll(this.vector, readVarVector.getVector());
+		}
+		for (VariableVector writtenVarVector : this.writtenVarVectors) {
+			this.vector = ArrayUtils.addAll(this.vector, writtenVarVector.getVector());
+		}
 		this.vector = ArrayUtils.addAll(this.vector, this.envVector.getVector());
 		for (FunctionVector funcVector : this.funcVectors) {
 			this.vector = ArrayUtils.addAll(this.vector, funcVector.getVector());
@@ -89,12 +101,12 @@ public class NodeVector extends Vector {
 		return this.optVector;
 	}
 	
-	public VariableVector[] getRefVarVectors() {
-		return this.refVarVectors;
+	public VariableVector[] getReadVarVectors() {
+		return this.readVarVectors;
 	}
 	
-	public VariableVector getTargetVarVector() {
-		return this.targetVarVector;
+	public VariableVector[] getWrittenVectors() {
+		return this.writtenVarVectors;
 	}
 	
 	public EnvironmentVector getEnvVector() {
@@ -103,26 +115,5 @@ public class NodeVector extends Vector {
 	
 	public FunctionVector[] getFuncVectors() {
 		return this.funcVectors;
-	}
-	
-	@Override
-	public String toString() {
-		StringBuilder strBuilder = new StringBuilder();
-		strBuilder.append(this.optVector);
-		strBuilder.append(",");
-		for (VariableVector refVarVector : this.refVarVectors) {
-			strBuilder.append(refVarVector);
-			strBuilder.append(",");
-		}
-		strBuilder.append(this.targetVarVector);
-		strBuilder.append(",");
-		strBuilder.append(this.envVector);
-		strBuilder.append(",");
-		for (FunctionVector funcVector : this.funcVectors) {
-			strBuilder.append(funcVector);
-			strBuilder.append(",");
-		}
-		strBuilder.deleteCharAt(strBuilder.length()-1);
-		return strBuilder.toString();
 	}
 }

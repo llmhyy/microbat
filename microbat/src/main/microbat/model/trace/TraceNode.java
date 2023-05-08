@@ -136,9 +136,9 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 	
 	protected long minOutputCost = 0;
 	
-	private double drop = -2.0;
-	private double gain = -2.0;
-	private double computationCost = -1;
+	public double drop = -2.0;
+	public double gain = -2.0;
+	public double computationCost = -1;
 	public int repeatedCount = 0;
 	
 	public TraceNode() {
