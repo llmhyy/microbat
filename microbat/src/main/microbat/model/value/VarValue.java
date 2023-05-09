@@ -47,7 +47,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	protected double forward_prob = -1;
 	protected double backward_prob = -1;
 	
-	protected double computationalCost = 0.0d;
+	public double computationalCost = 0.0d;
 	protected boolean isInputRelated = false;
 	
 	// Dijstra Node property

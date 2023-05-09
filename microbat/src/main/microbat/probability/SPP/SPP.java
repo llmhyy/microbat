@@ -128,10 +128,7 @@ public class SPP {
 		}
 		
 		// If there are no user path provided, the find path from the error node
-		if (mustFollowPath == null) {
-			return this.suggestPath(startNode, endNode);
-		}
-		if (mustFollowPath.isEmpty()) {
+		if (mustFollowPath == null || mustFollowPath.isEmpty()) {
 			return this.suggestPath(startNode, endNode);
 		}
 		
