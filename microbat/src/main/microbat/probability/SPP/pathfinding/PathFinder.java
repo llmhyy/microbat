@@ -1,10 +1,17 @@
 package microbat.probability.SPP.pathfinding;
 
+import static org.junit.Assert.assertThrows;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DirectedWeightedMultigraph;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
 import debuginfo.NodeFeedbackPair;
 import debuginfo.NodeFeedbacksPair;
@@ -13,18 +20,27 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
+import microbat.util.UniquePriorityQueue;
 
 public class PathFinder {
 	
 	private final Trace trace;
 	
-	public PathFinder(Trace trace ) {
+	private final List<TraceNode> slicedTrace;;
+	
+	public PathFinder(Trace trace, final List<TraceNode> slicedTrace ) {
 		this.trace = trace;
+		this.slicedTrace = slicedTrace;
 	}
 	
 	public ActionPath findPath_dijstra(final TraceNode startNode, final TraceNode endNode) {
-		TraceDijstraAlgorithm algorithm = new TraceDijstraAlgorithm(startNode, endNode, this.trace);
-		return algorithm.findShortestPath();
+		Graph<TraceNode, NodeFeedbacksPair> graph = this.constructGraph();
+		DijkstraShortestPath<TraceNode, NodeFeedbacksPair> dijstraAlg = new DijkstraShortestPath<>(graph);
+		List<NodeFeedbacksPair> path = dijstraAlg.getPath(startNode, endNode).getEdgeList();
+		if (path == null) {
+			throw new RuntimeException("There are no path from node: " + startNode.getOrder() + " to node: " + endNode.getOrder());
+		}
+		return new ActionPath(path);
 	}
 	
 	public ActionPath findPathway_greedy(final TraceNode startNode, final TraceNode endNode) {
@@ -104,74 +120,50 @@ public class PathFinder {
 		return feedback;
 	}
 	
-//	public UserFeedback giveFeedback(final TraceNode node) {
-//		/*
-//		 * Compare the probability of control and data correctness
-//		 * Do the slicing based on the lowest one
-//		 */
-//		
-//		UserFeedback feedback = new UserFeedback();
-//		
-//		TraceNode controlDom = node.getControlDominator();
-//		double controlProb = 2.0;
-//		if (controlDom != null) {
-//			VarValue conditionResult = controlDom.getConditionResult();
-//			
-//			// If the condition result is confirmed to be wrong,
-//			// then give feedback directly
-//			if (this.wrongVars.contains(conditionResult)) {
-//				feedback.setFeedbackType(UserFeedback.WRONG_PATH);
-//				return feedback; 
-//			}
-//			
-//			// Ignore if the condition result confirmed to be correct
-//			if (!this.correctVars.contains(conditionResult)) {
-//				controlProb = controlDom.getConditionResult().getProbability();
-//			} 
-//		}
-//		
-//		double minReadProb = 2.0;
-//		VarValue wrongVar = null;
-//		for (VarValue readVar : node.getReadVariables()) {
-//			
-//			// If the readVar is confirmed to be wrong,
-//			// then give feedback directly
-//			if (this.wrongVars.contains(readVar)) {
-//				feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
-//				feedback.setOption(new ChosenVariableOption(readVar, null));
-//				return feedback;
-//			}
-//			
-//			// If the readVar is This variable, then ignore
-//			if (readVar.isThisVariable()) {
-//				continue;
-//			}
-//			
-//			// If the readVar is confirmed to be correct, then ignore
-//			if (!this.correctVars.contains(readVar)) {
-//				double prob = readVar.getProbability();
-//				if (prob < minReadProb) {
-//					minReadProb = prob;
-//					wrongVar = readVar;
-//				}
-//			}
-//		}
-//		
-//		// There are no controlDom and readVar
-//		if (controlProb == 2.0 && minReadProb == 2.0) {
-//			feedback.setFeedbackType(UserFeedback.UNCLEAR);
-//			return feedback;
-//		}
-//		
-//		if (controlProb <= minReadProb) {
-//			feedback.setFeedbackType(UserFeedback.WRONG_PATH);
-//		} else {
-//			feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
-//			feedback.setOption(new ChosenVariableOption(wrongVar, null));
-//		}
-//		
-//		return feedback;
-//	}
+	private Graph<TraceNode, NodeFeedbacksPair> constructGraph() {
+		Graph<TraceNode, NodeFeedbacksPair> directedGraph = new DirectedWeightedMultigraph<TraceNode, NodeFeedbacksPair>(NodeFeedbacksPair.class);
+		
+		final TraceNode lastNode = this.slicedTrace.get(this.slicedTrace.size()-1);
+		UniquePriorityQueue<TraceNode> toVisitNodes = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
+			@Override
+			public int compare(TraceNode t1, TraceNode t2) {
+				return t2.getOrder() - t1.getOrder();
+			}
+		});
+		toVisitNodes.add(lastNode);
+		
+		while (!toVisitNodes.isEmpty()) {
+			final TraceNode node = toVisitNodes.poll();
+			directedGraph.addVertex(node);
+			for (VarValue readVar : node.getReadVariables()) {
+				if (readVar.isThisVariable()) {
+					continue;
+				}
+				final TraceNode dataDom = this.trace.findDataDependency(node, readVar);
+				if (dataDom != null) {
+					UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
+					feedback.setOption(new ChosenVariableOption(readVar, null));
+					NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
+					directedGraph.addVertex(dataDom);
+					directedGraph.addEdge(node, dataDom, pair);
+					directedGraph.setEdgeWeight(pair, readVar.getProbability());
+					toVisitNodes.add(dataDom);
+				}
+			}
+			
+			TraceNode controlDom = node.getControlDominator();
+			if (controlDom != null) {
+				UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_PATH);
+				NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
+				directedGraph.addVertex(controlDom);
+				directedGraph.addEdge(node, controlDom, pair);
+				directedGraph.setEdgeWeight(pair, controlDom.getConditionResult().getProbability());
+				toVisitNodes.add(controlDom);
+			}
+		} 
+		
+		return directedGraph;
+	}
 	
 	private TraceNode findNextNode(final TraceNode node, final UserFeedback feedback) {
 		TraceNode nextNode = null;

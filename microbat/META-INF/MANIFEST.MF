@@ -39,7 +39,10 @@ Bundle-ClassPath: .,
  lib/asm-tree-6.0.jar,
  lib/asm-util-6.0.jar,
  lib/mysql-connector-java-5.1.44-bin.jar,
- lib/sqlite-jdbc-3.32.3.2.jar
+ lib/sqlite-jdbc-3.32.3.2.jar,
+ lib/jgrapht-core-1.5.2.jar,
+ lib/jgrapht-io-1.5.2.jar,
+ lib/jheaps-0.14.jar
 Export-Package: 
  debuginfo,
  microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,org.eclipse.ui.plugin",

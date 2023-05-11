@@ -75,7 +75,12 @@ public class UserFeedback {
 			return "UserFeedback [feedbackType=" + feedbackType + "]";
 		}
 	}
-
+	
+	@Override
+	public int hashCode() {
+		return this.toString().hashCode();
+	}
+	
 	@Override
 	public boolean equals(Object obj){
 		if(obj instanceof UserFeedback){

@@ -121,6 +121,16 @@ public class NodeFeedbacksPair {
 	}
 	
 	@Override
+	public int hashCode() {
+		int hashCode = 17;
+		hashCode = 31 * hashCode + this.node.hashCode();
+		for (UserFeedback feedback : this.feedbacks) {
+			hashCode = 31*hashCode + feedback.hashCode();
+		}
+		return hashCode;
+	}
+	
+	@Override
 	public boolean equals(Object otherObj) {
 		if (otherObj instanceof NodeFeedbacksPair) {
 			NodeFeedbacksPair otherPair = (NodeFeedbacksPair) otherObj;

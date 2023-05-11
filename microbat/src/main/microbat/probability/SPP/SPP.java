@@ -112,7 +112,7 @@ public class SPP {
 		if (startNode.getOrder() < endNode.getOrder()) {
 			throw new IllegalArgumentException("EndNode: " + endNode.getOrder() + " is in the downstream of startNode: " + startNode.getOrder());
 		}
-		PathFinder finder = new PathFinder(this.trace);
+		PathFinder finder = new PathFinder(this.trace, this.slicedTrace);
 		System.out.println("Find path by greedy ...");
 		ActionPath path = finder.findPathway_greedy(startNode, endNode);
 		if (path == null) {
@@ -145,7 +145,7 @@ public class SPP {
 		
 		ActionPath consecutive_path = this.suggestPath(latestNode, endNode);
 		if (!consecutive_path.canReachRootCause()) {
-			PathFinder finder = new PathFinder(this.trace);
+			PathFinder finder = new PathFinder(this.trace, this.slicedTrace);
 			consecutive_path = finder.findPathway_greedy(latestNode, endNode);
 		}
 		
@@ -293,7 +293,7 @@ public class SPP {
 	}
 	
 	public UserFeedback giveFeedback(final TraceNode node) {
-		PathFinder finder = new PathFinder(this.trace);
+		PathFinder finder = new PathFinder(this.trace, this.slicedTrace);
 		return finder.giveFeedback(node);
 	}
 	
