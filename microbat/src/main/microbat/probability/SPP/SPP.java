@@ -57,7 +57,6 @@ public class SPP {
 
 	
 	private List<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
-	private final ProbAggregator aggregator = new ProbAggregator();
 	
 	/**
 	 * Constructor
@@ -177,14 +176,8 @@ public class SPP {
 				continue;
 			}
 			
-			List<VarValue> readVars = new ArrayList<>();
-			readVars.addAll(node.getReadVariables());
-			readVars.removeIf(var -> var.isThisVariable());
-			
-			List<VarValue> writtenVars = new ArrayList<>();
-			writtenVars.addAll(node.getWrittenVariables());
-			writtenVars.removeIf(var -> var.isThisVariable());
-			
+			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var .isThisVariable()).toList();
 			
 			/*
 			 * We need to handle:
@@ -193,7 +186,7 @@ public class SPP {
 			 * 3. Node with only read variables
 			 * 4. Node with only written variables
 			 * 5. Node with written variable and control dominator
-			 * 5. Node with both read and written variables
+			 * 6. Node with both read and written variables
 			 * 
 			 * It will ignore the node that already have feedback
 			 */
@@ -206,18 +199,19 @@ public class SPP {
 				drop = PropProbability.UNCERTAIN - node.getControlDominator().getConditionResult().getProbability();
 			} else if (writtenVars.isEmpty()) {
 				// Case 3
-				double prob = this.aggregator.aggregateProb(readVars, ProbAggregateMethods.AVG);
+				double prob = readVars.stream().mapToDouble(var -> var.getProbability()).average().orElse(0.5);
 				drop = PropProbability.UNCERTAIN - prob;
 			} else if (readVars.isEmpty()) {
 				// Case 4
-				double prob = this.aggregator.aggregateProb(writtenVars, ProbAggregateMethods.AVG);
+				double prob = writtenVars.stream().mapToDouble(var -> var.getProbability()).average().orElse(0.5);
 				drop = PropProbability.UNCERTAIN - prob;
 			} else if (!writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() != null){
-				
+				// Case 5
 				drop = PropProbability.UNCERTAIN - node.getControlDominator().getConditionResult().getProbability();
 			} else {
-				double readProb = this.aggregator.aggregateProb(readVars, ProbAggregateMethods.MIN);
-				double writtenProb = this.aggregator.aggregateProb(writtenVars, ProbAggregateMethods.MIN);
+				// Case 6
+				double readProb = readVars.stream().mapToDouble(var -> var.getProbability()).min().orElse(0.5);
+				double writtenProb = writtenVars.stream().mapToDouble(var -> var.getProbability()).min().orElse(0.5);
 				drop = readProb - writtenProb;
 			}
 			

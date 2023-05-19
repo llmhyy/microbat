@@ -706,8 +706,8 @@ public class DebugFeedbackView extends ViewPart {
 			} else {
 				List<VarValue> selectedReadVars = getSelectedReadVars();
 				List<VarValue> selectedWriteVars = getSelectedWriteVars();
-				if (selectedReadVars.isEmpty() && selectedWriteVars.isEmpty()) {
-					throw new RuntimeException("No selected variables");
+				if (selectedReadVars.isEmpty()) {
+					throw new RuntimeException("No read variables is selected");
 				}
 				for (VarValue readVar : selectedReadVars) {
 					UserFeedback feedback = new UserFeedback();

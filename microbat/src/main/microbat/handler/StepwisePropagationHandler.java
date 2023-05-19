@@ -166,6 +166,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 									break;
 								}
 								currentNode = nextNode;
+								break;
 							}
 						}
 

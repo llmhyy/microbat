@@ -15,6 +15,7 @@ import microbat.bytecode.OpcodeType;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.model.variable.Variable;
 import microbat.probability.PropProbability;
 import microbat.probability.SPP.ProbAggregateMethods;
 import microbat.probability.SPP.ProbAggregator;
@@ -59,19 +60,19 @@ public class ProbPropagator {
 			for (VarValue readVar : node.getReadVariables()) {
 				readVar.setAllProbability(PropProbability.UNCERTAIN);
 				if (this.correctVars.contains(readVar)) {
-					readVar.setForwardProb(PropProbability.HIGH);
+					readVar.setForwardProb(PropProbability.CORRECT);
 				}
 				if (this.wrongVars.contains(readVar)) {
-					readVar.setBackwardProb(PropProbability.LOW);
+					readVar.setBackwardProb(PropProbability.WRONG);
 				}
 			}
 			for (VarValue writeVar : node.getWrittenVariables()) {
 				writeVar.setAllProbability(PropProbability.UNCERTAIN);
 				if (this.correctVars.contains(writeVar)) {
-					writeVar.setForwardProb(PropProbability.HIGH);
+					writeVar.setForwardProb(PropProbability.CORRECT);
 				}
 				if (this.wrongVars.contains(writeVar)) {
-					writeVar.setBackwardProb(PropProbability.LOW);
+					writeVar.setBackwardProb(PropProbability.WRONG);
 				}
 			}
 		}
@@ -106,7 +107,7 @@ public class ProbPropagator {
 			
 			for (VarValue writtenVar : writtenVars) {
 				if (this.isCorrect(writtenVar)) {
-					writtenVar.setForwardProb(PropProbability.HIGH);
+					writtenVar.setForwardProb(PropProbability.CORRECT);
 				} else {
 					writtenVar.setForwardProb(result_prob);
 				}
@@ -126,7 +127,7 @@ public class ProbPropagator {
 		// Receive the correctness propagation
 		for (VarValue readVar : node.getReadVariables()) {
 			if (this.isCorrect(readVar)) {
-				readVar.setForwardProb(PropProbability.HIGH);
+				readVar.setForwardProb(PropProbability.CORRECT);
 			}
 			VarValue dataDomVar = this.findDataDomVar(readVar, node);
 			if (dataDomVar != null) {
@@ -142,6 +143,9 @@ public class ProbPropagator {
 		for (int order = this.slicedTrace.size()-1; order>=0; order--) {
 			TraceNode node = this.slicedTrace.get(order);
 			
+			if (node.getOrder() == 6) {
+				System.out.println();
+			}
 			// Initialize written variables probability
 			this.passBackwardProp(node);
 			
@@ -160,18 +164,27 @@ public class ProbPropagator {
 			final double cost_factor = node.computationCost;
 			node.setGain(gain * cost_factor);
 			
-			System.out.println("Node: " + node.getOrder() + " --------");
-			System.out.println("avgProb: " + avgProb);
-			System.out.println("cost_factor");
-			
 			// Sum of computation cost of read variables excluding "this" variable
 			final double sumOfCost = readVars.stream().mapToDouble(var -> var.computationalCost).sum();
-
+			final double readVarCount = readVars.size();
 			for (VarValue readVar : readVars) {
 				if (this.isWrong(readVar)) {
-					readVar.setBackwardProb(PropProbability.LOW);
+					readVar.setBackwardProb(PropProbability.WRONG);
 				} else {
-					final double suspiciousness = readVar.computationalCost / sumOfCost;
+					// If there are only one read variable, then it is the most suspicious
+					double suspiciousness;
+					if (readVars.size() == 1) {
+						suspiciousness = 1.0;
+					} else {
+						// It is still possible that sumOfCost is zero
+						// In this case, we distribute the wrongness evenly 
+						suspiciousness = sumOfCost == 0.0d ?
+											1 / readVarCount :
+											1 - readVar.computationalCost / sumOfCost;
+					}
+					
+					
+					
 					final double prob = avgProb + gain * cost_factor * suspiciousness;
 					readVar.setBackwardProb(prob);
 				}
@@ -185,14 +198,14 @@ public class ProbPropagator {
 		for (VarValue writtenVar : node.getWrittenVariables()) {
 			
 			if (this.isWrong(writtenVar)) {
-				writtenVar.setBackwardProb(PropProbability.LOW);
+				writtenVar.setBackwardProb(PropProbability.WRONG);
 				continue;
 			}
 			
 			// Different back propagation strategy for condition result
 			if (node.isBranch() && writtenVar.equals(node.getConditionResult())) {
 				/*
-				 * Backward probability of condtion result will be the average of
+				 * Backward probability of condition result will be the average of
 				 * all written variables that is under his control domination
 				 * 
 				 * We need to filter out those that does not contribute to the output
@@ -210,35 +223,13 @@ public class ProbPropagator {
 			List<TraceNode> dataDominatees = this.trace.findDataDependentee(node, writtenVar);
 			final double maxProb = dataDominatees.stream()
 					.filter(node_ -> this.slicedTrace.contains(node_))
-					.flatMap(node_ -> node_.getWrittenVariables().stream())
-					.mapToDouble(var -> var.getBackwardProb()).max()
+					.flatMap(node_ -> node_.getReadVariables().stream())
+					.filter(var -> var.equals(writtenVar))
+					.mapToDouble(var -> var.getBackwardProb())
+					.max()
 					.orElse(PropProbability.UNCERTAIN);
 			writtenVar.setBackwardProb(maxProb);
 		}
-		
-		// Backward probability of condition result is calculated as
-		// average of written variables probability in it's control scope
-//		if (node.isBranch()) {
-//			VarValue conditionResult = node.getConditionResult();
-//			
-//			if (this.isWrong(conditionResult)) {
-//				conditionResult.setBackwardProb(PropProbability.LOW);
-//			} else {
-//				List<TraceNode> controlDominatees = node.getControlDominatees();
-//				controlDominatees.removeIf(controlDominatee -> !this.slicedTrace.contains(controlDominatee));
-//				
-//				double avgProb = 0.0;
-//				int count = 0;
-//				for (TraceNode controlDominatee : node.getControlDominatees()) {
-//					for (VarValue writtenVar : controlDominatee.getWrittenVariables()) {
-//						avgProb += writtenVar.getBackwardProb();
-//						count += 1;
-//					}
-//				}
-//				avgProb = count == 0 ? PropProbability.UNCERTAIN : avgProb/count;
-//				conditionResult.setBackwardProb(avgProb);
-//			}
-//		}
 	}
 
 	private void combineProb() {
@@ -286,66 +277,6 @@ public class ProbPropagator {
 		return count;
 	}
 	
-//	private void computeMinOutputCost() {
-//		for (TraceNode node : this.slicedTrace) {
-//			node.setMinOutputCost(Long.MAX_VALUE);
-//		}
-//		TraceNode lastNode = this.slicedTrace.get(this.slicedTrace.size()-1);
-//		if (!lastNode.getWrittenVariables().isEmpty()) {
-//			lastNode.setMinOutputCost(lastNode.getWrittenVariables().get(0).getComputationalCost());
-//		} else {
-//			long maxComputationalCost = 0;
-//			for (VarValue readVar : lastNode.getReadVariables()) {
-//				if (readVar.getComputationalCost() > maxComputationalCost) {
-//					maxComputationalCost = readVar.getComputationalCost();
-//				}
-//			}
-//			lastNode.setMinOutputCost(maxComputationalCost);
-//		}
-//		
-//		Queue<TraceNode> toVisitNodes = new LinkedList<>();
-//		toVisitNodes.add(lastNode);
-//		
-//		Set<TraceNode> visitedNodes = new HashSet<>();
-//
-//		while(!toVisitNodes.isEmpty()) {
-//			TraceNode node = toVisitNodes.poll();
-//			visitedNodes.add(node);
-//			
-//			for (VarValue readVar : node.getReadVariables()) {
-//				if (this.wrongVars.contains(readVar)) {
-//					node.setMinOutputCost(readVar.getComputationalCost());
-//				}
-//			}
-//			for (VarValue writtenVar : node.getWrittenVariables()) {
-//				if (this.wrongVars.contains(writtenVar)) {
-//					node.setMinOutputCost(writtenVar.getComputationalCost());
-//				}
-//			}
-//			
-//			final long minOutput = node.getMinOutpuCost();
-//			
-//			for (VarValue readVar : node.getReadVariables()) {
-//				TraceNode dataDom = this.trace.findDataDependency(node, readVar);
-//				if (dataDom == null) {
-//					continue;
-//				}
-//				
-//				if (visitedNodes.contains(dataDom) && dataDom.getMinOutpuCost() < minOutput) {
-//					continue;
-//				}
-//				
-//				if (dataDom.getMinOutpuCost() > minOutput) {
-//					dataDom.setMinOutputCost(minOutput);
-//				}
-//				
-//				if (!toVisitNodes.contains(dataDom)) {
-//					toVisitNodes.add(dataDom);
-//				}
-//			}
-//		}
-//	}
-	
 	public void computeComputationalCost() {
 		
 		// First count the computational operations for each step and normalize
@@ -386,12 +317,6 @@ public class ProbPropagator {
 			final double optCost = node.computationCost;
 			final double cost = cumulatedCost + optCost;
 			
-			System.out.println("-----------");
-			System.out.println("TraceNode: " + node.getOrder());
-			System.out.println("Cumulated cost: " + cumulatedCost);
-			System.out.println("optCost: " + optCost);
-			System.out.println("cost: " + cost);
-			
 			// Assign computational cost to written variable, excluding "this" variable
 			node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).forEach(var -> var.computationalCost = cost);
 			maxVarCost = Math.max(cost, maxVarCost);
@@ -414,5 +339,6 @@ public class ProbPropagator {
 		this.unmodifiedType.add(OpcodeType.GET_STATIC_FIELD);
 		this.unmodifiedType.add(OpcodeType.PUT_FIELD);
 		this.unmodifiedType.add(OpcodeType.PUT_STATIC_FIELD);
+		this.unmodifiedType.add(OpcodeType.INVOKE);
 	}
 }

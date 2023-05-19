@@ -38,7 +38,7 @@ import microbat.probability.SPP.pathfinding.DijstraNode;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 
-public class TraceNode implements DijstraNode, Comparator<TraceNode> {
+public class TraceNode implements Comparator<TraceNode> {
 	
 	public final static int STEP_CORRECT = 0;
 	public final static int STEP_INCORRECT = 1;
@@ -1382,54 +1382,6 @@ public class TraceNode implements DijstraNode, Comparator<TraceNode> {
 			}
 		}
 		return false;
-	}
-
-	@Override
-	public double getDistance() {
-		return this.distance;
-	}
-
-	@Override
-	public void setDistance(double distance) {
-		this.distance = distance;
-	}
-
-//	@Override
-//	public double calProb() {
-//		return (this.getForwardProb() + this.getBackwardProb())/2;
-//	}
-
-	@Override
-	public boolean isVisited() {
-		return this.isVisited;
-	}
-
-	@Override
-	public void setVisisted(boolean isVisited) {
-		this.isVisited = isVisited;
-	}
-
-	@Override
-	public NodeFeedbacksPair getPrevAction() {
-		return this.prevNode;
-	}
-
-	@Override
-	public void setPrevAction(NodeFeedbacksPair pair) {
-		this.prevNode = pair;
-		
-	}
-
-	@Override
-	public void init(boolean isStartNode) {
-		this.setPrevAction(null);
-		this.setVisisted(false);
-		this.setDistance(isStartNode ? PropProbability.LOW : Double.MAX_VALUE);
-	}
-	
-	@Override
-	public TraceNode getTraceNode() {
-		return this;
 	}
 
 	@Override

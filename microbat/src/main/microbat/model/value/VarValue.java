@@ -49,12 +49,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	
 	public double computationalCost = 0.0d;
 	protected boolean isInputRelated = false;
-	
-	// Dijstra Node property
-	protected double distance = Double.MAX_VALUE;
-	protected boolean isVisited = false;
-	protected NodeFeedbackPair prevNode = null;
-	
+
 	public static final int NOT_NULL_VAL = 1;
 	
 	public VarValue(){}
@@ -522,6 +517,12 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	}
 	
 	public void setProbability(double probability) {
+		if (Double.isNaN(probability) || 
+			Double.isInfinite(probability) || 
+			probability < 0.0d || 
+			probability > 1.0d) {
+			throw new IllegalArgumentException("Invalid probability");
+		}
 		this.probability = probability;
 	}
 	
@@ -546,6 +547,12 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	}
 	
 	public void setForwardProb(final double forward_prob) {
+		if (Double.isNaN(forward_prob) || 
+				Double.isInfinite(forward_prob) || 
+				forward_prob < 0.0d || 
+				forward_prob > 1.0d) {
+				throw new IllegalArgumentException("Invalid probability");
+			}
 		this.forward_prob = forward_prob;
 	}
 	
@@ -554,6 +561,12 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	}
 	
 	public void setBackwardProb(final double backward_prob) {
+		if (Double.isNaN(backward_prob) || 
+				Double.isInfinite(backward_prob) || 
+				backward_prob < 0.0d || 
+				backward_prob > 1.0d) {
+				throw new IllegalArgumentException("Invalid probability");
+			}
 		this.backward_prob = backward_prob;
 	}
 	
@@ -561,40 +574,6 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 		this.setProbability(prob);
 		this.setForwardProb(prob);
 		this.setBackwardProb(prob);
-	}
-	
-	public double getDistance() {
-		return this.distance;
-	}
-	
-	public void setDistance(final double distance) {
-		this.distance = Math.min(this.distance, distance);
-	}
-	
-//	public double calProb() {
-//		return (this.getForwardProb() + this.getBackwardProb())/2;
-//	}
-	
-	public boolean isVisited() {
-		return this.isVisited;
-	}
-	
-	public void setVisisted(final boolean isVisited) {
-		this.isVisited = isVisited;
-	}
-	
-	public NodeFeedbackPair getPrevAction() {
-		return this.prevNode;
-	}
-	
-	public void setPrevAction(final NodeFeedbackPair pair) {
-		this.prevNode = pair;
-	}
-	
-	public void init(boolean isStartNode) {
-		this.setPrevAction(null);
-		this.setVisisted(false);
-		this.setDistance(isStartNode ? PropProbability.LOW : Double.MAX_VALUE);
 	}
 	
 	public boolean id_equals(final Object otherObj) {
