@@ -27,14 +27,16 @@ import microbat.views.TraceView;
 import microbat.probability.SPP.vectorization.vector.EnvironmentVector;
 import microbat.probability.SPP.vectorization.vector.FunctionMismatchException;
 import microbat.probability.SPP.vectorization.vector.FunctionVector;
-import microbat.probability.SPP.vectorization.vector.NodeVector;
+import microbat.probability.SPP.vectorization.vector.NodeVector_1;
 import microbat.probability.SPP.vectorization.vector.VariableVector;
 import microbat.model.BreakPoint;
+import microbat.probability.SPP.vectorization.TraceVectorizer;
 
 import java.util.ArrayList;
 import microbat.probability.SPP.vectorization.vector.*;
 public class TestHandler extends AbstractHandler {
 	
+	private final List<OpcodeType> unmodifiedType = new ArrayList<>();
 	TraceView traceView = null;
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -45,28 +47,13 @@ public class TestHandler extends AbstractHandler {
 			protected IStatus run(IProgressMonitor monitor) {
 				setup();
 				
-		        Trace trace = traceView.getTrace();
-		        Map<BreakPoint, Integer> repeatedCounts = new HashMap<>();
-		        
-		        for (TraceNode node : trace.getExecutionList()) {
-		        	final BreakPoint bkp = node.getBreakPoint();
-		        	if (repeatedCounts.containsKey(bkp)) {
-		        		repeatedCounts.put(bkp, repeatedCounts.get(bkp)+1);
-		        	} else {
-		        		repeatedCounts.put(bkp, 0);
-		        	}
-		        	node.repeatedCount = repeatedCounts.get(bkp);
-		        }
-		        
-		        for (TraceNode node: trace.getExecutionList()) {
-		        	System.out.println(node.getOrder() + "------------------------------------------------");
-		        	System.out.println("node.repeatedCount: " + node.repeatedCount);
-		        }
-		        
+				System.out.println(NodeVector.DIMENSION);
+				System.out.println(OutputParameterVector.DIMENSION);
+				
 				return Status.OK_STATUS;
 			}
-			
 		};
+		
 		job.schedule();
 		return null;
 	}

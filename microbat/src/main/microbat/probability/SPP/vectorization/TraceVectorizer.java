@@ -12,6 +12,8 @@ import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.probability.SPP.vectorization.vector.ClassificationVector;
+import microbat.probability.SPP.vectorization.vector.NodeVector;
 import microbat.probability.SPP.vectorization.vector.NodeVector_1;
 
 public class TraceVectorizer {
@@ -31,14 +33,21 @@ public class TraceVectorizer {
 		this.unmodifiedType.add(OpcodeType.RETURN);
 	}
 	
-	public List<NodeVector_1> vectorize(final Trace trace) {
+	public List<NodeVector> vectorize(final Trace trace) {
 		this.preprocess(trace);
-		List<NodeVector_1> vectors = new ArrayList<>();
+		List<NodeVector> vectors = new ArrayList<>();
 		for (TraceNode node : trace.getExecutionList()) {
-			for (VarValue readVar : node.getReadVariables()) {
-				NodeVector_1 vector = new NodeVector_1(node, readVar, true);
-				vectors.add(vector);
-			}
+			NodeVector vector = new NodeVector(node);
+			vectors.add(vector);
+		}
+		return vectors;
+	}
+	
+	public List<ClassificationVector> getClassificationVectors(final Trace trace) {
+		List<ClassificationVector> vectors = new ArrayList<>();
+		for (TraceNode node : trace.getExecutionList()) {
+			ClassificationVector vector = new ClassificationVector(node);
+			vectors.add(vector);
 		}
 		return vectors;
 	}

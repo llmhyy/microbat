@@ -11,8 +11,12 @@ public class NodeVector extends Vector {
 	
 	public static final int NUM_WRITTEN_VARS = 10;
 	public static final int NUM_READ_VARS = 10;
-	public static final int NUM_FUNC = 10;
-	public static final int DIMENSION = 0;
+	public static final int NUM_FUNC = 5;
+	public static final int DIMENSION = OperationVector.DIMENSION +
+										VariableVector.DIMENSION * NodeVector.NUM_READ_VARS +
+										VariableVector.DIMENSION * NodeVector.NUM_WRITTEN_VARS +
+										FunctionVector.DIMENSION * NodeVector.NUM_FUNC +
+										EnvironmentVector.DIMENSION;
 	
 	private final OperationVector optVector;
 	private final VariableVector[] readVarVectors;

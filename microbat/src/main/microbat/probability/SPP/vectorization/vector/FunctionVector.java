@@ -27,10 +27,10 @@ public class FunctionVector extends Vector {
 	 * 1-dim: Indicate this function is called by library object
 	 * 20-dim: histogram of input type
 	 * 	8-dim for primitive type
-	 * 	1-dim for library object
+	 * 	1-dim for library object4
 	 * 	1-dim for self-defined object
 	 * 	10-dim array version for the above feature
-	 * 20-dim: one hot vector of output type
+	 * 21-dim: one hot vector of output type. Types are same as input type with additional void type
 	 * 
 	 * 
 	 */
