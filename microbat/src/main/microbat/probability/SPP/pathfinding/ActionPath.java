@@ -1,6 +1,7 @@
 package microbat.probability.SPP.pathfinding;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -19,8 +20,8 @@ public class ActionPath implements Iterable<NodeFeedbacksPair>{
 	
 	public ActionPath() {}
 	
-	public ActionPath (List<NodeFeedbacksPair> path) {
-		this.path = path;
+	public ActionPath (Collection<NodeFeedbacksPair> path) {
+		this.path.addAll(path);
 	}
 	
 	public ActionPath(final ActionPath other) {

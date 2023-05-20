@@ -1,7 +1,5 @@
 package microbat.probability.SPP.pathfinding;
 
-import static org.junit.Assert.assertThrows;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -13,7 +11,6 @@ import org.jgrapht.Graph;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
-import debuginfo.NodeFeedbackPair;
 import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -65,9 +62,11 @@ public class PathFinder {
 	public ActionPath findPathway_greedy(final TraceNode startNode, final TraceNode endNode, final ActionPath initPath) {
 		ActionPath path = new ActionPath(initPath);
 		
+		// There should be only one feedback so directly get(0) is fine
 		UserFeedback lastFeedback = path.peek().getFeedbacks().get(0);
 		TraceNode lastNode = path.peek().getNode();
 		
+		// Set new starting node based on the initPath
 		TraceNode currentNode = this.findNextNode(lastNode, lastFeedback);
 		while (currentNode != null && currentNode.getOrder() > endNode.getOrder()) {
 			if (currentNode.equals(endNode)) {
@@ -75,7 +74,6 @@ public class PathFinder {
 				path.addPair(currentNode, feedback);
 				break;
 			}
-			
 			UserFeedback feedback = this.giveFeedback(currentNode);
 			path.addPair(currentNode, feedback);
 			currentNode = this.findNextNode(currentNode, feedback);
@@ -175,113 +173,4 @@ public class PathFinder {
 		}
 		return nextNode;
 	}
-	
-	public List<ActionPath> findAllPathway(final TraceNode startNode, final TraceNode endNode, Collection<VarValue> correctVars, Collection<VarValue> wrongVars) {
-		List<ActionPath> output = new ArrayList<>();
-		
-		// Setup for BFS
-		Queue<ActionPath> paths = new LinkedList<>();
-		ActionPath path = new ActionPath();
-		path.addPair(startNode, null);
-		paths.offer(path);
-		
-		// Start BFS
-		while (!paths.isEmpty()) {
-			path = paths.poll();
-			NodeFeedbacksPair pair = path.peek();
-			TraceNode lastNode = pair.getNode();
-			
-			if (lastNode.equals(endNode)) {
-				path.setLastAction(new UserFeedback(UserFeedback.ROOTCAUSE));
-				output.add(path);
-				continue;
-			}
-			
-			// Check if there any wrong variable
-			boolean haveWrongVariable = false;
-			for (VarValue readVar : lastNode.getReadVariables()) {
-				if (wrongVars.contains(readVar)) {
-					// If the read variable is said to be wrong, then path will only pass this variable
-					UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
-					feedback.setOption(new ChosenVariableOption(readVar, null));
-					path.setLastAction(feedback);
-					ActionPath newPath = new ActionPath(path);
-					path.setLastAction(null);
-					TraceNode nextNode = this.findNextNode(lastNode, feedback);
-					if (nextNode == null) {
-						continue;
-					}
-					
-					// Skip nextNode if it already beyond the endNode
-					if (nextNode.getOrder() < endNode.getOrder()) {
-						continue;
-					}
-					
-					newPath.addPair(nextNode, null);
-					paths.offer(newPath);
-					
-					haveWrongVariable = true;
-					continue;
-				}
-			}
-			
-			if (haveWrongVariable) {
-				continue;
-			}
-			
-			TraceNode controlDom = lastNode.getControlDominator();
-			if (controlDom != null) {
-				if (controlDom.getOrder() >= endNode.getOrder()) {
-					VarValue controlDomVar = controlDom.getConditionResult();
-					// Skip if the controlDom is correct
-					if (!correctVars.contains(controlDomVar)) {
-						path.setLastAction(new UserFeedback(UserFeedback.WRONG_PATH));
-						ActionPath newPath = new ActionPath(path);
-						newPath.addPair(controlDom, null);
-						paths.offer(newPath);
-						path.setLastAction(null);
-						
-						// Skip the read variables if the condition is wrong
-						if (wrongVars.contains(controlDomVar)) {
-							continue;
-						}
-					}
-				}
-			}
-			
-			// Search all read variable to go
-			for (VarValue readVar : lastNode.getReadVariables()) {
-				// Skip if the variables are said to be correct
-				if (correctVars.contains(readVar)) {
-					continue;
-				}
-				
-				// Skip if it is the This variable
-				if (readVar.isThisVariable()) {
-					continue;
-				}
-				
-				UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
-				feedback.setOption(new ChosenVariableOption(readVar, null));
-				path.setLastAction(feedback);
-				ActionPath newPath = new ActionPath(path);
-				path.setLastAction(null);
-				TraceNode nextNode = this.findNextNode(lastNode, feedback);
-				
-				if (nextNode == null) {
-					continue;
-				}
-				
-				if (nextNode.getOrder()<endNode.getOrder()) {
-					continue;
-				}
-				
-				newPath.addPair(nextNode, null);
-				paths.offer(newPath);
-			}
-		}
-		
-		return output;
-	}
-	
 }

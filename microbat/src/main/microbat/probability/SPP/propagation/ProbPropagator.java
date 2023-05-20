@@ -1,6 +1,7 @@
 package microbat.probability.SPP.propagation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,6 +20,7 @@ import microbat.model.variable.Variable;
 import microbat.probability.PropProbability;
 import microbat.probability.SPP.ProbAggregateMethods;
 import microbat.probability.SPP.ProbAggregator;
+import microbat.recommendation.UserFeedback;
 
 public class ProbPropagator {
 	
@@ -29,9 +31,9 @@ public class ProbPropagator {
 	private final Set<VarValue> wrongVars;
 	
 	private final List<OpcodeType> unmodifiedType = new ArrayList<>();
-	private List<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
+	private Collection<NodeFeedbacksPair> feedbackRecords = null;
 	
-	public ProbPropagator(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, List<NodeFeedbacksPair> feedbackRecords) {
+	public ProbPropagator(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
 		this.trace = trace;
 		this.slicedTrace = slicedTrace;
 		this.correctVars = correctVars;
@@ -41,6 +43,7 @@ public class ProbPropagator {
 	}
 	
 	public void propagate() {
+		this.fuseFeedbacks();
 		this.initProb();
 		this.computeComputationalCost();
 		this.forwardPropagate();
@@ -56,26 +59,30 @@ public class ProbPropagator {
 	 * Others are set to 0.5.
 	 */
 	public void initProb() {
-		for (TraceNode node : this.trace.getExecutionList()) {
-			for (VarValue readVar : node.getReadVariables()) {
-				readVar.setAllProbability(PropProbability.UNCERTAIN);
-				if (this.correctVars.contains(readVar)) {
-					readVar.setForwardProb(PropProbability.CORRECT);
-				}
-				if (this.wrongVars.contains(readVar)) {
-					readVar.setBackwardProb(PropProbability.WRONG);
-				}
-			}
-			for (VarValue writeVar : node.getWrittenVariables()) {
-				writeVar.setAllProbability(PropProbability.UNCERTAIN);
-				if (this.correctVars.contains(writeVar)) {
-					writeVar.setForwardProb(PropProbability.CORRECT);
-				}
-				if (this.wrongVars.contains(writeVar)) {
-					writeVar.setBackwardProb(PropProbability.WRONG);
-				}
-			}
-		}
+		
+		// Initialize all variables to UNCERTAIN
+		this.trace.getExecutionList().stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.setAllProbability(PropProbability.UNCERTAIN));
+		this.trace.getExecutionList().stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setAllProbability(PropProbability.UNCERTAIN));
+		
+		// Initialize inputs to be CORRECT
+		this.trace.getExecutionList().stream()
+									 .flatMap(node -> node.getReadVariables().stream())
+									 .filter(var -> this.isCorrect(var))
+									 .forEach(var -> var.setForwardProb(PropProbability.CORRECT));
+		this.trace.getExecutionList().stream()
+									 .flatMap(node -> node.getWrittenVariables().stream())
+									 .filter(var -> this.isCorrect(var))
+									 .forEach(var -> var.setForwardProb(PropProbability.CORRECT));
+		
+		// Initialize outputs to be WRONG
+		this.trace.getExecutionList().stream()
+									 .flatMap(node -> node.getReadVariables().stream())
+									 .filter(var -> this.isWrong(var))
+									 .forEach(var -> var.setBackwardProb(PropProbability.WRONG));
+		this.trace.getExecutionList().stream()
+									 .flatMap(node -> node.getWrittenVariables().stream())
+									 .filter(var -> this.isWrong(var))
+									 .forEach(var -> var.setBackwardProb(PropProbability.WRONG));
 	}
 	
 	private void forwardPropagate() {
@@ -143,9 +150,11 @@ public class ProbPropagator {
 		for (int order = this.slicedTrace.size()-1; order>=0; order--) {
 			TraceNode node = this.slicedTrace.get(order);
 			
-			if (node.getOrder() == 6) {
-				System.out.println();
+			// Skip propagation if feedback is given
+			if (this.isFeedbackGiven(node)) {
+				continue;
 			}
+			
 			// Initialize written variables probability
 			this.passBackwardProp(node);
 			
@@ -295,9 +304,7 @@ public class ProbPropagator {
 		for (TraceNode node : this.trace.getExecutionList()) {
 			
 			// Skip if there are no read variable (do not count "this" variable)
-			List<VarValue> readVars = new ArrayList<>();
-			readVars.addAll(node.getReadVariables());
-			readVars.removeIf(var -> var.isThisVariable());
+			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
 			if (readVars.size() == 0) {
 				continue;
 			}
@@ -322,10 +329,50 @@ public class ProbPropagator {
 			maxVarCost = Math.max(cost, maxVarCost);
 		}
 		final double maxVarCost_ = maxVarCost;
-		System.out.println("Max Var Cost: " + maxVarCost_);
 		
 		trace.getExecutionList().stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
 		trace.getExecutionList().stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
+	}
+	
+	private void fuseFeedbacks() {
+		for (NodeFeedbacksPair feedbackPair : this.feedbackRecords) {
+			TraceNode node = feedbackPair.getNode();
+//			UserFeedback feedback = nodeFeedbacksPair.getFeedback();
+			if (feedbackPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
+				// If the feedback is CORRECT, then set every variable and control dom to be correct
+				this.correctVars.addAll(node.getReadVariables());
+				this.correctVars.addAll(node.getWrittenVariables());
+				TraceNode controlDominator = node.getControlDominator();
+				if (controlDominator != null) {
+					VarValue controlDom = controlDominator.getConditionResult();
+					this.correctVars.add(controlDom);
+				}
+			} else if (feedbackPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+				// If the feedback is WRONG_PATH, set control dominator varvalue to wrong
+				TraceNode controlDominator = node.getControlDominator();
+				VarValue controlDom = controlDominator.getConditionResult();
+				this.wrongVars.add(controlDom);
+			} else if (feedbackPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+				// If the feedback is WRONG_VARIABLE_VALUE, set selected to be wrong
+				// and set control dominator to be correct
+				List<VarValue> wrongReadVars = new ArrayList<>();
+				for (UserFeedback feedback : feedbackPair.getFeedbacks()) {
+					wrongReadVars.add(feedback.getOption().getReadVar());
+				}
+				for (VarValue readVar : node.getReadVariables()) {
+					if (wrongReadVars.contains(readVar)) {
+						this.correctVars.add(readVar);
+					} else {
+//						this.addCorrectVar(readVar);
+					}
+				}
+				this.wrongVars.addAll(node.getWrittenVariables());
+				TraceNode controlDom = node.getControlDominator();
+				if (controlDom != null) {
+					this.correctVars.add(controlDom.getConditionResult());
+				}
+			}
+		}
 	}
 	
 	private void constructUnmodifiedOpcodeType() {

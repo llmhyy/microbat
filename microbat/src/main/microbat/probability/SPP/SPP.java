@@ -23,13 +23,6 @@ import microbat.util.TraceUtil;
  * StepwisePropagator is used to propagate
  * the probability of correctness
  * 
- * It propagate the probability by only
- * considering the current node and it's
- * first order neighbors
- * 
- * Time complexity is linear. O(n) where n
- * is the trace length
- * 
  * @author David
  *
  */
@@ -56,7 +49,7 @@ public class SPP {
 	private List<TraceNode> slicedTrace = null;
 
 	
-	private List<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
+	private Collection<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
 	
 	/**
 	 * Constructor
@@ -131,27 +124,21 @@ public class SPP {
 			return this.suggestPath(startNode, endNode);
 		}
 		
-		// If must follow path is provided,
+		// If mustFollowPath is provided,
 		// then find path starting from last node of the user path
 		NodeFeedbacksPair latestAction = mustFollowPath.peek();
 		TraceNode latestNode = TraceUtil.findNextNode(latestAction.getNode(), latestAction.getFirstFeedback(), trace);
-		if (latestNode == null) {
-			return null;
-		}
-		if (endNode.getOrder() > latestNode.getOrder()) {
-			return null;
+		if (latestNode == null || endNode.getOrder() > latestNode.getOrder()) {
+			throw new RuntimeException("[SPP] There are invalid next node based on the feedback");
 		}
 		
 		ActionPath consecutive_path = this.suggestPath(latestNode, endNode);
 		if (!consecutive_path.canReachRootCause()) {
-			PathFinder finder = new PathFinder(this.trace, this.slicedTrace);
-			consecutive_path = finder.findPathway_greedy(latestNode, endNode);
+			throw new RuntimeException("[SPP] Cannot construct valid path to root cause");
 		}
 		
+		// Concatenate two path together
 		ActionPath path = ActionPath.concat(mustFollowPath, consecutive_path);
-		if (!ActionPath.isConnectedPath(path, trace)) {
-			throw new RuntimeException("Path is not connected");
-		}
 		return path;
 	}
 	
@@ -232,67 +219,14 @@ public class SPP {
 		return rootCause;
 	}
 	
-	/**
-	 * Set probability based on the user feedbacks
-	 * @param nodeFeedbackPairs List of user feedbacks
-	 */
-	public void responseToFeedbacks(Collection<NodeFeedbacksPair> nodeFeedbackPairs) {
-		for (NodeFeedbacksPair pair : nodeFeedbackPairs) {
-			this.responseToFeedback(pair);
-		}
-	}
-	
-	/**
-	 * Set probability based on the user feedback
-	 * @param nodeFeedbacksPair User feedback 
-	 */
-	public void responseToFeedback(final NodeFeedbacksPair nodeFeedbacksPair) {
-		TraceNode node = nodeFeedbacksPair.getNode();
-//		UserFeedback feedback = nodeFeedbacksPair.getFeedback();
-		if (nodeFeedbacksPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
-			// If the feedback is CORRECT, then set every variable and control dom to be correct
-			this.addCorrectVars(node.getReadVariables());
-			this.addCorrectVars(node.getWrittenVariables());
-			TraceNode controlDominator = node.getControlDominator();
-			if (controlDominator != null) {
-				VarValue controlDom = controlDominator.getConditionResult();
-				this.correctVars.add(controlDom);
-			}
-		} else if (nodeFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-			// If the feedback is WRONG_PATH, set control dominator varvalue to wrong
-			TraceNode controlDominator = node.getControlDominator();
-			VarValue controlDom = controlDominator.getConditionResult();
-			this.wrongVars.add(controlDom);
-		} else if (nodeFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-			// If the feedback is WRONG_VARIABLE_VALUE, set selected to be wrong
-			// and set control dominator to be correct
-			List<VarValue> wrongReadVars = new ArrayList<>();
-			for (UserFeedback feedback : nodeFeedbacksPair.getFeedbacks()) {
-				wrongReadVars.add(feedback.getOption().getReadVar());
-			}
-			for (VarValue readVar : node.getReadVariables()) {
-				if (wrongReadVars.contains(readVar)) {
-					this.addWrongVar(readVar);
-				} else {
-//					this.addCorrectVar(readVar);
-				}
-			}
-			this.addWrongVars(node.getWrittenVariables());
-			TraceNode controlDom = node.getControlDominator();
-			if (controlDom != null) {
-				this.correctVars.add(controlDom.getConditionResult());
-			}
-		}
-		this.recordFeedback(nodeFeedbacksPair);
+	public void updateFeedbacks(Collection<NodeFeedbacksPair> feedbacks) {
+		this.feedbackRecords.clear();
+		this.feedbackRecords.addAll(feedbacks);
 	}
 	
 	public UserFeedback giveFeedback(final TraceNode node) {
 		PathFinder finder = new PathFinder(this.trace, this.slicedTrace);
 		return finder.giveFeedback(node);
-	}
-	
-	public void recordFeedback(final NodeFeedbacksPair pair) {
-		this.feedbackRecords.add(pair);
 	}
 	
 	private boolean isFeedbackGiven(final TraceNode node) {
