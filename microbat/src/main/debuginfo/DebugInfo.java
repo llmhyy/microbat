@@ -21,7 +21,7 @@ public class DebugInfo {
 	
 	private static List<VarValue> inputs = new ArrayList<>();
 	private static List<VarValue> outputs = new ArrayList<>();
-	private static NodeFeedbacksPair nodeFeedbackPair = null;
+	private static NodeFeedbacksPair nodeFeedbacksPair = null;
 	private static boolean rootCauseFound = false;
 	private static boolean feedbackUpdatedFlag = false;
 	private static boolean stop = false;
@@ -89,7 +89,7 @@ public class DebugInfo {
 	}
 	
 	public static void addNodeFeedbacksPair(NodeFeedbacksPair nodeFeedbackPair) {
-		DebugInfo.nodeFeedbackPair = nodeFeedbackPair;
+		DebugInfo.nodeFeedbacksPair = nodeFeedbackPair;
 		DebugInfo.feedbackUpdatedFlag = true;
 	}
 	
@@ -128,7 +128,7 @@ public class DebugInfo {
 	 */
 	public static NodeFeedbacksPair getNodeFeedbackPair() {
 		DebugInfo.feedbackUpdatedFlag = false;
-		return DebugInfo.nodeFeedbackPair;
+		return DebugInfo.nodeFeedbacksPair;
 	}
 	
 	/**
@@ -151,7 +151,7 @@ public class DebugInfo {
 	 * Clear all node feedback pairs
 	 */
 	public static void clearNodeFeedbackPairs() {
-		DebugInfo.nodeFeedbackPair = null;
+		DebugInfo.nodeFeedbacksPair = null;
 	}
 	
 	/**

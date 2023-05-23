@@ -35,8 +35,12 @@ public class PathFinder {
 		DijkstraShortestPath<TraceNode, NodeFeedbacksPair> dijstraAlg = new DijkstraShortestPath<>(graph);
 		List<NodeFeedbacksPair> path = dijstraAlg.getPath(startNode, endNode).getEdgeList();
 		if (path == null) {
-			throw new RuntimeException("There are no path from node: " + startNode.getOrder() + " to node: " + endNode.getOrder());
+			return null;
 		}
+		// Add the root cause feedback to the end of the path
+		UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
+		NodeFeedbacksPair pair = new NodeFeedbacksPair(endNode, feedback);
+		path.add(pair);
 		return new ActionPath(path);
 	}
 	

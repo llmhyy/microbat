@@ -361,7 +361,7 @@ public class ProbPropagator {
 				}
 				for (VarValue readVar : node.getReadVariables()) {
 					if (wrongReadVars.contains(readVar)) {
-						this.correctVars.add(readVar);
+						this.wrongVars.add(readVar);
 					} else {
 //						this.addCorrectVar(readVar);
 					}

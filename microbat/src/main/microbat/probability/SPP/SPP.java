@@ -116,8 +116,14 @@ public class SPP {
 	
 	public ActionPath suggestPath(final TraceNode startNode, final TraceNode endNode, final ActionPath mustFollowPath) {
 		if (startNode.getOrder() < endNode.getOrder()) {
-			throw new IllegalArgumentException("EndNode: " + endNode.getOrder() + " is in the downstream of startNode: " + startNode.getOrder());
-		}
+			System.out.println("Fail to propose a valid root cause, Now give feedback based on probability");
+			NodeFeedbacksPair latestAction = mustFollowPath.peek();
+			TraceNode latestNode = TraceUtil.findNextNode(latestAction.getNode(), latestAction.getFirstFeedback(), trace);
+			ActionPath path = new ActionPath(mustFollowPath);
+			UserFeedback feedback =  this.giveFeedback(latestNode);
+			NodeFeedbacksPair pair = new NodeFeedbacksPair(latestNode, feedback);
+			path.addPair(pair);
+			return path;		}
 		
 		// If there are no user path provided, the find path from the error node
 		if (mustFollowPath == null || mustFollowPath.isEmpty()) {
@@ -128,13 +134,18 @@ public class SPP {
 		// then find path starting from last node of the user path
 		NodeFeedbacksPair latestAction = mustFollowPath.peek();
 		TraceNode latestNode = TraceUtil.findNextNode(latestAction.getNode(), latestAction.getFirstFeedback(), trace);
-		if (latestNode == null || endNode.getOrder() > latestNode.getOrder()) {
+		if (latestNode == null) {
 			throw new RuntimeException("[SPP] There are invalid next node based on the feedback");
 		}
 		
 		ActionPath consecutive_path = this.suggestPath(latestNode, endNode);
-		if (!consecutive_path.canReachRootCause()) {
-			throw new RuntimeException("[SPP] Cannot construct valid path to root cause");
+		if (consecutive_path == null) {
+			// Fail to construct path, give feedback directly based on greedy approach
+			ActionPath path = new ActionPath(mustFollowPath);
+			UserFeedback feedback =  this.giveFeedback(latestNode);
+			NodeFeedbacksPair pair = new NodeFeedbacksPair(latestNode, feedback);
+			path.addPair(pair);
+			return path;
 		}
 		
 		// Concatenate two path together

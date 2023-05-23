@@ -68,14 +68,24 @@ public class StepwisePropagationHandler extends AbstractHandler {
 		
 		// Obtain the inputs and outputs from users
 		// We only consider the first output
-		List<VarValue> inputs = DebugInfo.getInputs();
-		List<VarValue> outputs = DebugInfo.getOutputs();
-		VarValue output = outputs.get(0);
+		final List<VarValue> inputs = DebugInfo.getInputs();
+		final List<VarValue> outputs = DebugInfo.getOutputs();
+		final NodeFeedbacksPair outputFeedback = DebugInfo.getNodeFeedbackPair();
+
+		VarValue output = outputs.get(0);		
+		TraceNode outputNode = null;
+		if (output.getVarID().startsWith("CR_")) {
+			// Initial feedback is wrong path
+			NodeFeedbacksPair initPair = DebugInfo.getNodeFeedbackPair();
+			outputNode = initPair.getNode();
+			this.userFeedbackRecords.add(initPair);
+		} else {
+			outputNode = this.getStartingNode(buggyView.getTrace(), outputs.get(0));
+			UserFeedback initFeedback = new UserFeedback(new ChosenVariableOption(output, null), UserFeedback.WRONG_VARIABLE_VALUE);
+			NodeFeedbacksPair initPair = new NodeFeedbacksPair(outputNode, initFeedback);
+			this.userFeedbackRecords.add(initPair);
+		}
 		
-		final TraceNode outputNode = this.getStartingNode(buggyView.getTrace(), outputs.get(0));
-		UserFeedback initFeedback = new UserFeedback(new ChosenVariableOption(output, null), UserFeedback.WRONG_VARIABLE_VALUE);
-		NodeFeedbacksPair intiPair = new NodeFeedbacksPair(outputNode, initFeedback);
-//		this.userFeedbackRecords.add(intiPair);
 		
 		// Set up the propagator that perform propagation,
 		// with initial feedback indicating the output variable  is wrong
@@ -97,19 +107,6 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			// Root cause prediction
 			TraceNode rootCause = spp.proposeRootCause();
 			System.out.println("Proposed Root Cause: " + rootCause.getOrder());
-			
-			// Handle the case that root cause is at the downstream of current node
-//			if (rootCause.getOrder() > currentNode.getOrder()) {
-//				System.out.println();
-//				System.out.println("Proposed a wrong root cause becuase it is the downstream of current node: " + currentNode.getOrder());
-//				System.out.println("Give feedback based on probability:");
-//				UserFeedback predictedFeedback = spp.giveFeedback(currentNode);
-//				System.out.println(predictedFeedback);
-//				NodeFeedbacksPair userPair = askForFeedback(currentNode);
-//				UserFeedback userFeedback = userPair.getFeedbacks().get(0);
-//				currentNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
-//				continue;
-//			}
 			
 			System.out.println("Path finding ...");
 			ActionPath userPath = new ActionPath(userFeedbackRecords);
@@ -251,7 +248,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 	}
 	
 	protected boolean isIOReady() {
-		return !DebugInfo.getInputs().isEmpty() && !DebugInfo.getOutputs().isEmpty();
+		return !DebugInfo.getInputs().isEmpty() && !(DebugInfo.getOutputs().isEmpty());
 	}
 	
 	protected void jumpToNode(final TraceNode targetNode) {
