@@ -133,6 +133,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 				}
 				
 				this.jumpToNode(currentNode);
+				System.out.println("------------------------------");
 				System.out.println("Predicted feedback: ");
 				System.out.println(action);
 				
