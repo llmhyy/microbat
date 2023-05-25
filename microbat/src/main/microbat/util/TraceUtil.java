@@ -119,6 +119,49 @@ public class TraceUtil {
 		return result;
 	}
 	
+	public static List<TraceNode> dyanmicSlice(final Trace trace, final TraceNode targetNode) {
+		UniquePriorityQueue<TraceNode> toVisitNodes = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
+			@Override
+			public int compare(TraceNode t1, TraceNode t2) {
+				return t2.getOrder() - t1.getOrder();
+			}
+		});
+		toVisitNodes.add(targetNode);
+		
+		// Perform dynamic slicing base starting from output trace node
+		Set<TraceNode> slicingSet = new HashSet<>();
+		while (!toVisitNodes.isEmpty()) {
+			TraceNode node = toVisitNodes.poll();
+			
+			// Add data dominator
+			for (VarValue readVar : node.getReadVariables()) {
+				TraceNode dataDom = trace.findDataDependency(node, readVar);
+				if (dataDom != null) {
+					toVisitNodes.add(dataDom);
+				}
+			}
+			
+			// Add control dominator
+			TraceNode controlDom = node.getControlDominator();
+			if (controlDom != null) {
+				toVisitNodes.add(controlDom);
+			}
+			
+			slicingSet.add(node);
+		}
+		
+		// Sort the result
+		List<TraceNode> result = new ArrayList<>(slicingSet);
+		Collections.sort(result, new Comparator<TraceNode>() {
+			@Override
+			public int compare(TraceNode node1, TraceNode node2) {
+				return node1.getOrder() - node2.getOrder();
+			}
+		});
+		
+		return result;
+	}
+	
 	public static TraceNode findNextNode(final TraceNode node, final UserFeedback feedback, final Trace trace) {
 		TraceNode nextNode = null;
 		if (feedback.getFeedbackType() == UserFeedback.WRONG_PATH) {

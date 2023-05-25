@@ -48,8 +48,13 @@ public class SPP {
 	 */
 	private List<TraceNode> slicedTrace = null;
 
-	
 	private Collection<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
+	
+	private final TraceNode outputNode;
+	
+	private TraceNode rootCause = null;
+	
+	private ActionPath path = null;
 	
 	/**
 	 * Constructor
@@ -57,6 +62,7 @@ public class SPP {
 	 */
 	public SPP(Trace trace) {
 		this.trace = trace;
+		this.outputNode = null;
 	}
 	
 	/**
@@ -65,11 +71,12 @@ public class SPP {
 	 * @param inputs Input variables which assumed to be correct
 	 * @param outputs Output variables which assumed to be wrong
 	 */
-	public SPP(Trace trace, List<VarValue> inputs, List<VarValue> outputs) {
+	public SPP(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode) {
 		this.trace = trace;
 		this.correctVars.addAll(inputs);
 		this.wrongVars.addAll(outputs);
-		this.slicedTrace = TraceUtil.dyanmicSlice(trace, this.wrongVars);
+		this.slicedTrace = TraceUtil.dyanmicSlice(trace, outputNode);
+		this.outputNode = outputNode;
 	}
 	
 	public void addCorrectVar(VarValue correctVar) {
@@ -100,6 +107,39 @@ public class SPP {
 		propagator.propagate();
 	}
 	
+	public UserFeedback giveFeedback(final TraceNode node) {
+		for (NodeFeedbacksPair action : this.path) {
+			if (action.getNode().equals(node)) {
+				return action.getFirstFeedback();
+			}
+		}
+		SPP.printMsg("This node is not contained in path");
+		throw new RuntimeException("Given node is not in the path");
+	}
+	
+	public void locateRootCause() {
+		this.rootCause = this.proposeRootCause();
+		if (this.rootCause == null) {
+			SPP.printMsg("Cannot locate root cause");
+		} else {
+			SPP.printMsg("Proposed root cause: " + this.rootCause.getOrder());
+		}
+	}
+	
+	public void constructPath() {
+		ActionPath mustFollowPath = new ActionPath(this.feedbackRecords);
+		this.path = this.suggestPath(this.outputNode, this.rootCause, mustFollowPath);
+		if (this.path == null) {
+			SPP.printMsg("Failed to construct the path ...");
+			throw new RuntimeException("Failed to construct the path ...");
+		} else {
+			SPP.printMsg("Suggested path ...");
+			for (NodeFeedbacksPair pair : this.path) {
+				SPP.printMsg(pair.toString());
+			}
+		}
+	}
+	
 	public ActionPath suggestPath(final TraceNode startNode, final TraceNode endNode) {
 		if (startNode.getOrder() < endNode.getOrder()) {
 			throw new IllegalArgumentException("EndNode: " + endNode.getOrder() + " is in the downstream of startNode: " + startNode.getOrder());
@@ -123,7 +163,8 @@ public class SPP {
 			UserFeedback feedback =  this.giveFeedback(latestNode);
 			NodeFeedbacksPair pair = new NodeFeedbacksPair(latestNode, feedback);
 			path.addPair(pair);
-			return path;		}
+			return path;
+		}
 		
 		// If there are no user path provided, the find path from the error node
 		if (mustFollowPath == null || mustFollowPath.isEmpty()) {
@@ -170,7 +211,7 @@ public class SPP {
 		double maxDrop = 0.0;
 		for (TraceNode node : this.slicedTrace) {
 			
-			if (this.isFeedbackGiven(node)) {
+			if (this.isFeedbackGiven(node) || this.outputNode.equals(node)) {
 				continue;
 			}
 			
@@ -217,8 +258,7 @@ public class SPP {
 			if (drop < 0) {
 				// Case that the read variable is wrong but the written variable is correct
 				// Ignore it by now
-				
-				System.out.println("Warning: Trace node " + node.getOrder() + " has negative drop");
+//				System.out.println("Warning: Trace node " + node.getOrder() + " has negative drop");
 				continue;
 			} else {
 				if (drop > maxDrop) {
@@ -235,10 +275,10 @@ public class SPP {
 		this.feedbackRecords.addAll(feedbacks);
 	}
 	
-	public UserFeedback giveFeedback(final TraceNode node) {
-		PathFinder finder = new PathFinder(this.trace, this.slicedTrace);
-		return finder.giveFeedback(node);
-	}
+//	public UserFeedback giveFeedback(final TraceNode node) {
+//		PathFinder finder = new PathFinder(this.trace, this.slicedTrace);
+//		return finder.giveFeedback(node);
+//	}
 	
 	private boolean isFeedbackGiven(final TraceNode node) {
 		for (NodeFeedbacksPair pair : this.feedbackRecords) {
@@ -247,5 +287,9 @@ public class SPP {
 			}
 		}
 		return false;
+	}
+	
+	public static void printMsg(final String message) {
+		System.out.println("[SPP] " + message);
 	}
 }

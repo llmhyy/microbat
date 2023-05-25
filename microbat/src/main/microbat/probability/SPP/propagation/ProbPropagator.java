@@ -115,6 +115,8 @@ public class ProbPropagator {
 			for (VarValue writtenVar : writtenVars) {
 				if (this.isCorrect(writtenVar)) {
 					writtenVar.setForwardProb(PropProbability.CORRECT);
+				} else if (this.isWrong(writtenVar)) {
+//					writtenVar.setForwardProb(PropProbability.UNCERTAIN);
 				} else {
 					writtenVar.setForwardProb(result_prob);
 				}
@@ -191,8 +193,6 @@ public class ProbPropagator {
 											1 / readVarCount :
 											1 - readVar.computationalCost / sumOfCost;
 					}
-					
-					
 					
 					final double prob = avgProb + gain * cost_factor * suspiciousness;
 					readVar.setBackwardProb(prob);
@@ -289,19 +289,18 @@ public class ProbPropagator {
 	public void computeComputationalCost() {
 		
 		// First count the computational operations for each step and normalize
-		final long totalNodeCost = this.trace.getExecutionList().stream()
+		final long totalNodeCost = this.slicedTrace.stream()
 									   .mapToLong(node -> this.countModifyOperation(node))
 									   .sum();
 		
-		this.trace.getExecutionList().stream()
-									 .forEach(node -> node.computationCost =  this.countModifyOperation(node) / (double) totalNodeCost);
+		this.slicedTrace.stream().forEach(node -> node.computationCost =  this.countModifyOperation(node) / (double) totalNodeCost);
 		
 		// Init computational cost of all variable to 1.0
-		this.trace.getExecutionList().stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost = 0.0d);
-		this.trace.getExecutionList().stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost = 0.0d);
+		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost = 0.0d);
+		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost = 0.0d);
 									 
 		double maxVarCost = 0.0f;
-		for (TraceNode node : this.trace.getExecutionList()) {
+		for (TraceNode node : this.slicedTrace) {
 			
 			// Skip if there are no read variable (do not count "this" variable)
 			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
@@ -330,8 +329,12 @@ public class ProbPropagator {
 		}
 		final double maxVarCost_ = maxVarCost;
 		
-		trace.getExecutionList().stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
-		trace.getExecutionList().stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
+		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
+		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
+		
+//		for (TraceNode node : trace.getExecutionList()) {
+//			System.out.println("Node: " + node.getOrder() + " cost: " + node.computationCost);
+//		}
 	}
 	
 	private void fuseFeedbacks() {

@@ -337,7 +337,7 @@ public class MicroBatUtil {
 		return (T) obj;
 	}
 	
-	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, double prob, int order, double drop, double gain, String byteCodeStr, int count){
+	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, double prob, int order, double drop, double gain, double computationCost){
 		String exp = className + 
 					 " line:" + lineNumber + 
 					 " duration: " + duration + 
@@ -345,8 +345,7 @@ public class MicroBatUtil {
 					 " control dominator: " + order 
 					 + " drop: " + drop + 
 					 " gain: " + gain +
-					 " byteCode: \"" + byteCodeStr + "\"" + 
-					 " count: " + count;
+					 " cost: " + computationCost;
 		return exp;
 	}
 	
