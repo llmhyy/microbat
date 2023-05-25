@@ -20,12 +20,14 @@ public class ClassificationVector extends Vector {
 	private static final List<OpcodeType> bitOpcodes = ClassificationVector.initBitOpcodes();
 	private static final List<OpcodeType> loadOpcodes = ClassificationVector.initLoadOpcodes();
 	private static final List<OpcodeType> storeOpcodes = ClassificationVector.initStoreOpcodes();
-
+	private static final List<OpcodeType> compareOpcodes = ClassificationVector.initCompareOpcodes();
+	
+			
 	private static final int MATH_IDX = 0;
 	private static final int CALL_METHOD_IDX = 1;
 	private static final int CONDITION_IDX = 2;
-	private static final int RETURN_IDX = 3;
-	private static final int INIT_IDX = 4;
+	private static final int INIT_IDX = 3;
+	private static final int RETURN_IDX = 4;
 	private static final int BIT_IDX = 5;
 	private static final int LOAD_IDX = 6;
 	private static final int STORE_IDX = 7;
@@ -35,12 +37,25 @@ public class ClassificationVector extends Vector {
 		ByteCodeList byteCodes = new ByteCodeList(node.getBytecode());
 		if (this.isMathOpt(byteCodes)) this.set(ClassificationVector.MATH_IDX);
 		if (this.isInvokeOpcodes(byteCodes)) this.set(ClassificationVector.CALL_METHOD_IDX);
-		if (node.isConditional()) this.set(ClassificationVector.CONDITION_IDX);
+		if (this.isCompare(byteCodes)) this.set(ClassificationVector.CONDITION_IDX);
 		if (this.isInitOpcodes(byteCodes)) this.set(ClassificationVector.INIT_IDX);
 		if (this.isReturnOpcodes(byteCodes)) this.set(ClassificationVector.RETURN_IDX);
 		if (this.isBitOpcodes(byteCodes)) this.set(ClassificationVector.BIT_IDX);
 		if (this.isLoadOpcodes(byteCodes)) this.set(ClassificationVector.LOAD_IDX);
 		if (this.isStoreOpcodes(byteCodes)) this.set(ClassificationVector.STORE_IDX);
+	}
+	
+	public ClassificationVector(final float[] vector) {
+		super(vector);
+	}
+	
+	private boolean isCompare(final ByteCodeList byteCodes) {
+		for (ByteCode byteCode : byteCodes) {
+			if (ClassificationVector.compareOpcodes.contains(byteCode.getOpcodeType())) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private boolean isMathOpt(final ByteCodeList byteCodes) {
@@ -150,6 +165,7 @@ public class ClassificationVector extends Vector {
 		List<OpcodeType> loadOpcodes = new ArrayList<>();
 		loadOpcodes.add(OpcodeType.LOAD_CONSTANT);
 		loadOpcodes.add(OpcodeType.LOAD_FROM_ARRAY);
+		loadOpcodes.add(OpcodeType.LOAD_VARIABLE);
 		loadOpcodes.add(OpcodeType.GET_STATIC_FIELD);
 		loadOpcodes.add(OpcodeType.GET_FIELD);
 		return loadOpcodes;
@@ -158,11 +174,25 @@ public class ClassificationVector extends Vector {
 	private static List<OpcodeType> initStoreOpcodes() {
 		List<OpcodeType> storeOpcodes = new ArrayList<>();
 		storeOpcodes.add(OpcodeType.STORE_VARIABLE);
+		
 		storeOpcodes.add(OpcodeType.STORE_INTO_ARRAY);
 		storeOpcodes.add(OpcodeType.PUT_STATIC_FIELD);
 		storeOpcodes.add(OpcodeType.PUT_FIELD);
 		return storeOpcodes;
 	}
 	
+	private static List<OpcodeType> initCompareOpcodes() {
+		List<OpcodeType> storeOpcodes = new ArrayList<>();
+		storeOpcodes.add(OpcodeType.IF_EQUALS);
+		storeOpcodes.add(OpcodeType.IF_NOT_EQUALS);
+		storeOpcodes.add(OpcodeType.IF_GREATER);
+		storeOpcodes.add(OpcodeType.IF_LESS);
+		storeOpcodes.add(OpcodeType.IF_GREATER_EQUALS);
+		storeOpcodes.add(OpcodeType.IF_LESS_EQUALS);
+		storeOpcodes.add(OpcodeType.COMPARE);
+		storeOpcodes.add(OpcodeType.IF_NULL);
+		storeOpcodes.add(OpcodeType.IF_NOT_NULL);
+		return storeOpcodes;
+	}
 	
 }

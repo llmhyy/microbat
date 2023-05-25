@@ -2,9 +2,12 @@ package microbat.probability.SPP.vectorization;
 
 import java.util.List;
 import java.util.Map;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.File;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
@@ -31,25 +34,46 @@ public class TraceVectorizer {
 		this.unmodifiedType.add(OpcodeType.STORE_INTO_ARRAY);
 		this.unmodifiedType.add(OpcodeType.STORE_VARIABLE);
 		this.unmodifiedType.add(OpcodeType.RETURN);
+		this.unmodifiedType.add(OpcodeType.GET_FIELD);
+		this.unmodifiedType.add(OpcodeType.GET_STATIC_FIELD);
+		this.unmodifiedType.add(OpcodeType.PUT_FIELD);
+		this.unmodifiedType.add(OpcodeType.PUT_STATIC_FIELD);
+		this.unmodifiedType.add(OpcodeType.INVOKE);
 	}
 	
-	public List<NodeVector> vectorize(final Trace trace) {
+	public List<NodeFeatureRecord> vectorize(final Trace trace) {
 		this.preprocess(trace);
-		List<NodeVector> vectors = new ArrayList<>();
+		List<NodeFeatureRecord> records = new ArrayList<>();
 		for (TraceNode node : trace.getExecutionList()) {
-			NodeVector vector = new NodeVector(node);
-			vectors.add(vector);
+			NodeVector vector = null;
+			try {
+				vector = new NodeVector(node);
+			} catch (Exception e) {
+				vector = new NodeVector();
+			}
+			
+			ClassificationVector classificationVector = new ClassificationVector(node);
+			NodeFeatureRecord record = new NodeFeatureRecord(node, vector, classificationVector);
+			records.add(record);
 		}
-		return vectors;
+		return records;
+		
 	}
 	
-	public List<ClassificationVector> getClassificationVectors(final Trace trace) {
-		List<ClassificationVector> vectors = new ArrayList<>();
-		for (TraceNode node : trace.getExecutionList()) {
-			ClassificationVector vector = new ClassificationVector(node);
-			vectors.add(vector);
+	public void wirteToFile(List<NodeFeatureRecord> records, final String path) {
+		try {
+			System.out.println("Writing feature to " + path);
+			FileWriter writer = new FileWriter(path);
+			for (NodeFeatureRecord record : records) {
+				writer.write(record.toString());
+				writer.write("\n");
+			}
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return vectors;
+		
 	}
 	
 	private void preprocess(final Trace trace) {
@@ -71,10 +95,62 @@ public class TraceVectorizer {
 	}
 	
 	private void computeCost(final Trace trace) {
-		int totalNodeCost = 0;
-		for (TraceNode node : trace.getExecutionList()) {
+		// First count the computational operations for each step and normalize
+		final long totalNodeCost = trace.getExecutionList().stream()
+								   .mapToLong(node -> this.countModifyOperation(node))
+								   .sum();
+		
+		trace.getExecutionList().stream()
+		 	.forEach(node -> node.computationCost =  this.countModifyOperation(node) / (double) totalNodeCost);
+		
+		// Init computational cost of all variable to 1.0
+		trace.getExecutionList().stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost = 0.0d);
+		trace.getExecutionList().stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost = 0.0d);
 
+		double maxVarCost = 0.0f;
+		for (TraceNode node : trace.getExecutionList()) {
+			
+			// Skip if there are no read variable (do not count "this" variable)
+			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+			if (readVars.size() == 0) {
+				continue;
+			}
+			
+			// Inherit computational cost
+			for (VarValue readVar : node.getReadVariables()) {
+				final VarValue dataDomVar = this.findDataDomVar(trace, readVar, node);
+				if (dataDomVar != null) {
+					readVar.computationalCost = dataDomVar.computationalCost;
+				}
+			}
+			
+			// Sum up the cost of all read variable, excluding "this" variable
+			final double cumulatedCost = node.getReadVariables().stream().filter(var -> !var.isThisVariable())
+					.mapToDouble(var -> var.computationalCost)
+					.sum();
+			final double optCost = node.computationCost;
+			final double cost = cumulatedCost + optCost;
+			
+			// Assign computational cost to written variable, excluding "this" variable
+			node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).forEach(var -> var.computationalCost = cost);
+			maxVarCost = Math.max(cost, maxVarCost);
 		}
+		
+		final double maxVarCost_ = maxVarCost;
+		trace.getExecutionList().stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
+		trace.getExecutionList().stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
+	}
+	
+	private VarValue findDataDomVar(final Trace trace, final VarValue var, final TraceNode node) {
+		TraceNode dataDominator = trace.findDataDependency(node, var);
+		if (dataDominator != null) {
+			for (VarValue writeVar : dataDominator.getWrittenVariables()) {
+				if (writeVar.equals(var)) {
+					return writeVar;
+				}
+			}
+		}
+		return null;
 	}
 	
 	private int countModifyOperation(final TraceNode node) {
