@@ -30,14 +30,18 @@ public class VariableVector extends Vector {
 	private static final List<String> PRIMITIVE_TYPES_2 = VariableVector.initPrimType_2();
 	
 	private static final int IS_ARRAY_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 0;
-	private static final int IS_LOCAL_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 1;
-	private static final int IS_STATIC_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 2;
-	private static final int IS_INSTANCE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 3;
-	private static final int IS_RELIABLE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 4;
+	private static final int IS_RELIABLE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 1;
+	private static final int IS_LOCAL_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 2;
+	private static final int IS_STATIC_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 3;
+	private static final int IS_INSTANCE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 4;
 	private static final int COST_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 5;
 
 	public VariableVector() {
 		super(VariableVector.DIMENSION);
+	}
+	
+	public VariableVector(final float[] vector) {
+		super(vector);
 	}
 	
 	public VariableVector(final VarValue var) {

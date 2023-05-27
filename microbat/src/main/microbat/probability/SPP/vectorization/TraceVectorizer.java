@@ -45,6 +45,9 @@ public class TraceVectorizer {
 		this.preprocess(trace);
 		List<NodeFeatureRecord> records = new ArrayList<>();
 		for (TraceNode node : trace.getExecutionList()) {
+			if (node.getBytecode() == "") {
+				continue;
+			}
 			NodeVector vector = null;
 			try {
 				vector = new NodeVector(node);
