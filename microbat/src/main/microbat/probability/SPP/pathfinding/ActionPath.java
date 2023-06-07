@@ -20,6 +20,9 @@ public class ActionPath implements Iterable<NodeFeedbacksPair>{
 	
 	public ActionPath() {}
 	
+	public ActionPath(NodeFeedbacksPair pair) {
+		this.path.add(pair);
+	}
 	public ActionPath (Collection<NodeFeedbacksPair> path) {
 		this.path.addAll(path);
 	}

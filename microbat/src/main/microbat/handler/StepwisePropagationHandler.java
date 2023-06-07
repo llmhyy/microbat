@@ -81,7 +81,6 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			outputNode = this.getStartingNode(buggyView.getTrace(), outputs.get(0));
 		}
 		
-		
 		// Set up the propagator that perform propagation,
 		// with initial feedback indicating the output variable  is wrong
 		SPP spp = new SPP(buggyView.getTrace(), inputs, outputs, outputNode);
@@ -94,7 +93,11 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			// Perform propagation
 			spp.updateFeedbacks(userFeedbackRecords);
 			SPP.printMsg("Propagating probability ...");
+			long startTime = System.currentTimeMillis();
 			spp.propagate();
+			long endTime = System.currentTimeMillis();
+			long duration = (endTime - startTime) / 1000;
+			SPP.printMsg("Propagation Duration: " + duration + " s");
 			SPP.printMsg("Locating root cause ...");
 			spp.locateRootCause();
 			SPP.printMsg("Constructing path to root cause ...");

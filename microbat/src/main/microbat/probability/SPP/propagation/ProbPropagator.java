@@ -137,6 +137,7 @@ public class ProbPropagator {
 		for (VarValue readVar : node.getReadVariables()) {
 			if (this.isCorrect(readVar)) {
 				readVar.setForwardProb(PropProbability.CORRECT);
+				return;
 			}
 			VarValue dataDomVar = this.findDataDomVar(readVar, node);
 			if (dataDomVar != null) {
@@ -321,7 +322,7 @@ public class ProbPropagator {
 					.mapToDouble(var -> var.computationalCost)
 					.sum();
 			final double optCost = node.computationCost;
-			final double cost = cumulatedCost + optCost;
+			final double cost = Double.isInfinite(cumulatedCost + optCost) ? Double.MAX_VALUE : cumulatedCost + optCost;
 			
 			// Assign computational cost to written variable, excluding "this" variable
 			node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).forEach(var -> var.computationalCost = cost);

@@ -15,6 +15,7 @@ import microbat.probability.PropProbability;
 import microbat.probability.SPP.pathfinding.ActionPath;
 import microbat.probability.SPP.pathfinding.PathFinder;
 import microbat.probability.SPP.propagation.ProbPropagator;
+import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.recommendation.UserFeedback_M;
 import microbat.util.TraceUtil;
@@ -76,6 +77,9 @@ public class SPP {
 		this.correctVars.addAll(inputs);
 		this.wrongVars.addAll(outputs);
 		this.slicedTrace = TraceUtil.dyanmicSlice(trace, outputNode);
+		for (TraceNode node : this.slicedTrace) {
+			System.out.println("TraceNode: " + node.getOrder() + " : " + node.getBytecode());
+		}
 		this.outputNode = outputNode;
 	}
 	
@@ -142,7 +146,9 @@ public class SPP {
 	
 	public ActionPath suggestPath(final TraceNode startNode, final TraceNode endNode) {
 		if (startNode.getOrder() < endNode.getOrder()) {
-			throw new IllegalArgumentException("EndNode: " + endNode.getOrder() + " is in the downstream of startNode: " + startNode.getOrder());
+			UserFeedback feedback = this.giveGreedyFeedback(endNode);
+			NodeFeedbacksPair pair = new NodeFeedbacksPair(startNode, feedback);
+			return new ActionPath(pair);
 		}
 		PathFinder finder = new PathFinder(this.trace, this.slicedTrace);
 		System.out.println("Find path by greedy ...");
@@ -160,7 +166,7 @@ public class SPP {
 			NodeFeedbacksPair latestAction = mustFollowPath.peek();
 			TraceNode latestNode = TraceUtil.findNextNode(latestAction.getNode(), latestAction.getFirstFeedback(), trace);
 			ActionPath path = new ActionPath(mustFollowPath);
-			UserFeedback feedback =  this.giveFeedback(latestNode);
+			UserFeedback feedback =  this.giveGreedyFeedback(latestNode);
 			NodeFeedbacksPair pair = new NodeFeedbacksPair(latestNode, feedback);
 			path.addPair(pair);
 			return path;
@@ -183,7 +189,7 @@ public class SPP {
 		if (consecutive_path == null) {
 			// Fail to construct path, give feedback directly based on greedy approach
 			ActionPath path = new ActionPath(mustFollowPath);
-			UserFeedback feedback =  this.giveFeedback(latestNode);
+			UserFeedback feedback =  this.giveGreedyFeedback(latestNode);
 			NodeFeedbacksPair pair = new NodeFeedbacksPair(latestNode, feedback);
 			path.addPair(pair);
 			return path;
@@ -291,5 +297,42 @@ public class SPP {
 	
 	public static void printMsg(final String message) {
 		System.out.println("[SPP] " + message);
+	}
+	
+	private UserFeedback giveGreedyFeedback(final TraceNode node) {
+		UserFeedback feedback = new UserFeedback();
+		
+		TraceNode controlDom = node.getControlDominator();
+		double controlProb = 2.0;
+		if (controlDom != null) {
+			controlProb = controlDom.getConditionResult().getProbability();
+		}
+		
+		double minReadProb = 2.0;
+		VarValue wrongVar = null;
+		for (VarValue readVar : node.getReadVariables()) {
+			// If the readVar is This variable, then ignore
+			if (readVar.isThisVariable()) {
+				continue;
+			}
+			double prob = readVar.getProbability();
+			if (prob < minReadProb) {
+				minReadProb = prob;
+				wrongVar = readVar;
+			}
+		}
+		
+		// There are no controlDom and readVar
+		if (controlProb == 2.0 && minReadProb == 2.0) {
+			feedback.setFeedbackType(UserFeedback.UNCLEAR);
+			return feedback;
+		}
+		if (controlProb <= minReadProb) {
+			feedback.setFeedbackType(UserFeedback.WRONG_PATH);
+		} else {
+			feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+			feedback.setOption(new ChosenVariableOption(wrongVar, null));
+		}
+		return feedback;
 	}
 }

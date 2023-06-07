@@ -35,6 +35,7 @@ public abstract class AbstractTransformer implements ClassFileTransformer {
 			return null;
 		}
 		byte[] data = doTransform(loader, classFName, classBeingRedefined, protectionDomain, classfileBuffer);
+
 		log(classfileBuffer, data, classFName, false);
 					
 		if (needToReleaseLock) {

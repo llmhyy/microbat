@@ -10,7 +10,7 @@ class BP_Server(SocketServer):
         self.DILIMITER_1 = ','
         self.DILIMITER_2 = "&"
         self.MUL_SIGN = "*"
-        self.MAX_ITR = 10
+        self.MAX_ITR = 5
 
     def factorLoader(self, factor_input, dilimiter):
         tokens = factor_input.split(dilimiter)
