@@ -22,7 +22,7 @@ import microbat.probability.SPP.ProbAggregateMethods;
 import microbat.probability.SPP.ProbAggregator;
 import microbat.recommendation.UserFeedback;
 
-public class ProbPropagator {
+public class SPPPropagator implements ProbabilityPropagator {
 	
 	private final Trace trace;
 	private final List<TraceNode> slicedTrace;
@@ -33,7 +33,7 @@ public class ProbPropagator {
 	private final List<OpcodeType> unmodifiedType = new ArrayList<>();
 	private Collection<NodeFeedbacksPair> feedbackRecords = null;
 	
-	public ProbPropagator(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
+	public SPPPropagator(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
 		this.trace = trace;
 		this.slicedTrace = slicedTrace;
 		this.correctVars = correctVars;

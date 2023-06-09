@@ -99,7 +99,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			long duration = (endTime - startTime) / 1000;
 			SPP.printMsg("Propagation Duration: " + duration + " s");
 			SPP.printMsg("Locating root cause ...");
-			spp.locateRootCause();
+			spp.locateRootCause(currentNode);
 			SPP.printMsg("Constructing path to root cause ...");
 			spp.constructPath();
 			

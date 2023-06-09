@@ -76,15 +76,15 @@ public class BeliefPropagation {
 	 */
 	public void encode() {
 
-		Constraint.resetID();
-		
-		// Calculate the probability for variables
-		VariableEncoderFG varEncoder = new VariableEncoderFG(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
-		varEncoder.encode();	
-		
-		// Calculate the probability for statements
-		StatementEncoderFG statEncoder = new StatementEncoderFG(this.trace, this.slicedTrace);
-		statEncoder.encode();
+//		Constraint.resetID();
+//		
+//		// Calculate the probability for variables
+//		VariableEncoderFG varEncoder = new VariableEncoderFG(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
+//		varEncoder.encode();	
+//		
+//		// Calculate the probability for statements
+//		StatementEncoderFG statEncoder = new StatementEncoderFG(this.trace, this.slicedTrace);
+//		statEncoder.encode();
 
 	}
 	

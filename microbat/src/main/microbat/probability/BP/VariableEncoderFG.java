@@ -2,8 +2,11 @@ package microbat.probability.BP;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import debuginfo.NodeFeedbackPair;
 import microbat.model.trace.Trace;
@@ -27,8 +30,8 @@ import debuginfo.NodeFeedbacksPair;
  */
 public class VariableEncoderFG extends Encoder {
 	
-	private List<VarValue> correctVars;
-	private List<VarValue> wrongVars;
+	private Set<VarValue> correctVars;
+	private Set<VarValue> wrongVars;
 	
 	/**
 	 * Constructor
@@ -37,7 +40,7 @@ public class VariableEncoderFG extends Encoder {
 	 * @param inputVars List of input variables
 	 * @param outputVars List of output variables
 	 */
-	public VariableEncoderFG(Trace trace, List<TraceNode> executionList, List<VarValue> inputVars, List<VarValue> outputVars, List<NodeFeedbacksPair> pairs) {
+	public VariableEncoderFG(Trace trace, List<TraceNode> executionList, Set<VarValue> inputVars, Set<VarValue> outputVars, Collection<NodeFeedbacksPair> pairs) {
 		super(trace, executionList);
 		this.correctVars = inputVars;
 		this.wrongVars = outputVars;
@@ -74,7 +77,9 @@ public class VariableEncoderFG extends Encoder {
 				}
 				this.wrongVars.addAll(wrongReadVars);
 				this.wrongVars.addAll(node.getWrittenVariables());
-				this.correctVars.add(controlDom.getConditionResult());
+				if (controlDom != null) {
+					this.correctVars.add(controlDom.getConditionResult());
+				}
 			}
 		}
 	}

@@ -14,7 +14,9 @@ import microbat.model.value.VarValue;
 import microbat.probability.PropProbability;
 import microbat.probability.SPP.pathfinding.ActionPath;
 import microbat.probability.SPP.pathfinding.PathFinder;
-import microbat.probability.SPP.propagation.ProbPropagator;
+import microbat.probability.SPP.propagation.ProbabilityPropagator;
+import microbat.probability.SPP.propagation.PropInfer;
+import microbat.probability.SPP.propagation.SPPPropagator;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.recommendation.UserFeedback_M;
@@ -57,13 +59,20 @@ public class SPP {
 	
 	private ActionPath path = null;
 	
+	private final boolean useBaseline;
+	
 	/**
 	 * Constructor
 	 * @param trace Execution trace for target program
 	 */
 	public SPP(Trace trace) {
+		this(trace, false);
+	}
+	
+	public SPP(final Trace trace, final boolean useBaseline) {
 		this.trace = trace;
 		this.outputNode = null;
+		this.useBaseline = useBaseline;
 	}
 	
 	/**
@@ -73,6 +82,10 @@ public class SPP {
 	 * @param outputs Output variables which assumed to be wrong
 	 */
 	public SPP(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode) {
+		this(trace, inputs, outputs, outputNode, false);
+	}
+	
+	public SPP(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode, final boolean useBaseline) {
 		this.trace = trace;
 		this.correctVars.addAll(inputs);
 		this.wrongVars.addAll(outputs);
@@ -81,7 +94,9 @@ public class SPP {
 			System.out.println("TraceNode: " + node.getOrder() + " : " + node.getBytecode());
 		}
 		this.outputNode = outputNode;
+		this.useBaseline = useBaseline;
 	}
+	
 	
 	public void addCorrectVar(VarValue correctVar) {
 		this.correctVars.add(correctVar);
@@ -107,7 +122,12 @@ public class SPP {
 	}
 	
 	public void propagate() {
-		ProbPropagator propagator = new ProbPropagator(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
+		ProbabilityPropagator propagator = null;
+		if (this.useBaseline) {
+			propagator = new PropInfer(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
+		} else {
+			propagator = new SPPPropagator(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
+		}
 		propagator.propagate();
 	}
 	
@@ -121,8 +141,8 @@ public class SPP {
 		throw new RuntimeException("Given node is not in the path");
 	}
 	
-	public void locateRootCause() {
-		this.rootCause = this.proposeRootCause();
+	public void locateRootCause(final TraceNode currentNode) {
+		this.rootCause = this.proposeRootCause(currentNode);
 		if (this.rootCause == null) {
 			SPP.printMsg("Cannot locate root cause");
 		} else {
@@ -212,12 +232,12 @@ public class SPP {
 	 * 
 	 * @return Root cause node
 	 */
-	public TraceNode proposeRootCause() {
+	public TraceNode proposeRootCause(final TraceNode currentNode) {
 		TraceNode rootCause = null;
 		double maxDrop = 0.0;
 		for (TraceNode node : this.slicedTrace) {
 			
-			if (this.isFeedbackGiven(node) || this.outputNode.equals(node)) {
+			if (this.isFeedbackGiven(node) || this.outputNode.equals(node) || node.getOrder() > currentNode.getOrder()) {
 				continue;
 			}
 			
