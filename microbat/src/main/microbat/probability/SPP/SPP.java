@@ -234,7 +234,7 @@ public class SPP {
 	 */
 	public TraceNode proposeRootCause(final TraceNode currentNode) {
 		TraceNode rootCause = null;
-		double maxDrop = 0.0;
+		double maxDrop = -1.0;
 		for (TraceNode node : this.slicedTrace) {
 			
 			if (this.isFeedbackGiven(node) || this.outputNode.equals(node) || node.getOrder() > currentNode.getOrder()) {

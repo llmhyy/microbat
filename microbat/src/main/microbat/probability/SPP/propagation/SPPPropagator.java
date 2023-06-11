@@ -182,6 +182,8 @@ public class SPPPropagator implements ProbabilityPropagator {
 			for (VarValue readVar : readVars) {
 				if (this.isWrong(readVar)) {
 					readVar.setBackwardProb(PropProbability.WRONG);
+				} else if (this.isCorrect(readVar)) {
+					// Do nothing
 				} else {
 					// If there are only one read variable, then it is the most suspicious
 					double suspiciousness;
@@ -294,7 +296,11 @@ public class SPPPropagator implements ProbabilityPropagator {
 									   .mapToLong(node -> this.countModifyOperation(node))
 									   .sum();
 		
-		this.slicedTrace.stream().forEach(node -> node.computationCost =  this.countModifyOperation(node) / (double) totalNodeCost);
+		if (totalNodeCost == 0) {
+			this.slicedTrace.stream().forEach(node -> node.computationCost = 0);
+		} else {
+			this.slicedTrace.stream().forEach(node -> node.computationCost =  this.countModifyOperation(node) / (double) totalNodeCost);
+		}
 		
 		// Init computational cost of all variable to 1.0
 		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost = 0.0d);
@@ -329,10 +335,14 @@ public class SPPPropagator implements ProbabilityPropagator {
 			maxVarCost = Math.max(cost, maxVarCost);
 		}
 		final double maxVarCost_ = maxVarCost;
-		
-		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
-		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
-		
+		if (maxVarCost_ == 0) {
+			this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost = 0);
+			this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost = 0);
+		} else {
+			this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
+			this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost /= maxVarCost_);
+		}
+
 //		for (TraceNode node : trace.getExecutionList()) {
 //			System.out.println("Node: " + node.getOrder() + " cost: " + node.computationCost);
 //		}
