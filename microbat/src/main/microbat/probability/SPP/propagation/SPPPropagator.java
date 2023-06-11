@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import debuginfo.NodeFeedbackPair;
 import debuginfo.NodeFeedbacksPair;
@@ -97,8 +98,8 @@ public class SPPPropagator implements ProbabilityPropagator {
 			this.passForwardProp(node);
 						
 			// We will ignore "this" variable
-			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
-			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).toList();
+			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
+			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
 			
 			// Skip propagation if either read or written variable is missing
 			if (readVars.isEmpty() || writtenVars.isEmpty()) {
@@ -162,8 +163,8 @@ public class SPPPropagator implements ProbabilityPropagator {
 			this.passBackwardProp(node);
 			
 			// We will ignore "this" variable
-			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
-			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).toList();
+			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
+			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
 			
 			// Skip propagation if either read or written variable is missing
 			if (readVars.isEmpty() || writtenVars.isEmpty()) {
@@ -310,7 +311,7 @@ public class SPPPropagator implements ProbabilityPropagator {
 		for (TraceNode node : this.slicedTrace) {
 			
 			// Skip if there are no read variable (do not count "this" variable)
-			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
 			if (readVars.size() == 0) {
 				continue;
 			}
