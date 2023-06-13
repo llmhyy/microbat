@@ -2,6 +2,7 @@ package microbat.probability.SPP.vectorization;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -126,7 +127,7 @@ public class TraceVectorizer {
 		for (TraceNode node : trace.getExecutionList()) {
 			
 			// Skip if there are no read variable (do not count "this" variable)
-			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
 			if (readVars.size() == 0) {
 				continue;
 			}
