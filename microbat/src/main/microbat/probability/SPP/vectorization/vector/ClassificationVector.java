@@ -11,7 +11,7 @@ import java.util.List;
 
 public class ClassificationVector extends Vector {
 	
-	public static final int DIMENSION = 8;
+	public static final int DIMENSION = 3;
 	
 	private static final List<OpcodeType> mathOpcodes = ClassificationVector.initMathOpcodes();
 	private static final List<OpcodeType> invokeOpcodes = ClassificationVector.initInvokeOpcodes();
@@ -22,27 +22,39 @@ public class ClassificationVector extends Vector {
 	private static final List<OpcodeType> storeOpcodes = ClassificationVector.initStoreOpcodes();
 	private static final List<OpcodeType> compareOpcodes = ClassificationVector.initCompareOpcodes();
 	
-			
-	private static final int MATH_IDX = 0;
-	private static final int CALL_METHOD_IDX = 1;
-	private static final int CONDITION_IDX = 2;
-	private static final int INIT_IDX = 3;
-	private static final int RETURN_IDX = 4;
-	private static final int BIT_IDX = 5;
-	private static final int LOAD_IDX = 6;
-	private static final int STORE_IDX = 7;
+	private static final int NORMAL_IDX = 0;
+	private static final int CONDITION_DIX = 1;
+	private static final int INVOKE_IDX = 2;
+//	private static final int MATH_IDX = 0;
+//	private static final int CALL_METHOD_IDX = 1;
+//	private static final int CONDITION_IDX = 2;
+//	private static final int INIT_IDX = 3;
+//	private static final int RETURN_IDX = 4;
+//	private static final int BIT_IDX = 5;
+//	private static final int LOAD_IDX = 6;
+//	private static final int STORE_IDX = 7;
 	
 	public ClassificationVector(final TraceNode node) {
 		super(ClassificationVector.DIMENSION);
 		ByteCodeList byteCodes = new ByteCodeList(node.getBytecode());
-		if (this.isMathOpt(byteCodes)) this.set(ClassificationVector.MATH_IDX);
-		if (this.isInvokeOpcodes(byteCodes)) this.set(ClassificationVector.CALL_METHOD_IDX);
-		if (this.isCompare(byteCodes)) this.set(ClassificationVector.CONDITION_IDX);
-		if (this.isInitOpcodes(byteCodes)) this.set(ClassificationVector.INIT_IDX);
-		if (this.isReturnOpcodes(byteCodes)) this.set(ClassificationVector.RETURN_IDX);
-		if (this.isBitOpcodes(byteCodes)) this.set(ClassificationVector.BIT_IDX);
-		if (this.isLoadOpcodes(byteCodes)) this.set(ClassificationVector.LOAD_IDX);
-		if (this.isStoreOpcodes(byteCodes)) this.set(ClassificationVector.STORE_IDX);
+		if (!node.isConditional() && !this.isInvokeOpcodes(byteCodes)) {
+			this.set(NORMAL_IDX);
+		} else {
+			if (node.isConditional()) {
+				this.set(CONDITION_DIX);
+			}
+			if (this.isInvokeOpcodes(byteCodes)) {
+				this.set(INVOKE_IDX);
+			}
+		}
+//		if (this.isMathOpt(byteCodes)) this.set(ClassificationVector.MATH_IDX);
+//		if (this.isInvokeOpcodes(byteCodes)) this.set(ClassificationVector.CALL_METHOD_IDX);
+//		if (this.isCompare(byteCodes)) this.set(ClassificationVector.CONDITION_IDX);
+//		if (this.isInitOpcodes(byteCodes)) this.set(ClassificationVector.INIT_IDX);
+//		if (this.isReturnOpcodes(byteCodes)) this.set(ClassificationVector.RETURN_IDX);
+//		if (this.isBitOpcodes(byteCodes)) this.set(ClassificationVector.BIT_IDX);
+//		if (this.isLoadOpcodes(byteCodes)) this.set(ClassificationVector.LOAD_IDX);
+//		if (this.isStoreOpcodes(byteCodes)) this.set(ClassificationVector.STORE_IDX);
 	}
 	
 	public ClassificationVector(final float[] vector) {

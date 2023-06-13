@@ -47,8 +47,7 @@ public class TestHandler extends AbstractHandler {
 			protected IStatus run(IProgressMonitor monitor) {
 				setup();
 				
-				System.out.println(NodeVector.DIMENSION);
-				System.out.println(OutputParameterVector.DIMENSION);
+				execute();
 				
 				return Status.OK_STATUS;
 			}
@@ -56,6 +55,13 @@ public class TestHandler extends AbstractHandler {
 		
 		job.schedule();
 		return null;
+	}
+	
+	private void execute() {
+		final Trace trace = this.traceView.getTrace();
+		for (TraceNode node : trace.getExecutionList()) {
+			System.out.println("Node: " + node.getOrder() + " : " + node.getBytecode());
+		}
 	}
 	
 	private void setup() {

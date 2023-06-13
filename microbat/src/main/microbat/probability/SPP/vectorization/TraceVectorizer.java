@@ -55,12 +55,24 @@ public class TraceVectorizer {
 				vector = new NodeVector();
 			}
 			
+			if (this.containInvalidValue(vector.getVector()) ) {
+				continue;
+			}
 			ClassificationVector classificationVector = new ClassificationVector(node);
 			NodeFeatureRecord record = new NodeFeatureRecord(node, vector, classificationVector);
 			records.add(record);
 		}
 		return records;
 		
+	}
+	
+	private boolean containInvalidValue(final float[] vector) {
+		for (float element : vector) {
+			if (Float.isNaN(element) || Float.isInfinite(element)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public void wirteToFile(List<NodeFeatureRecord> records, final String path) {
@@ -73,7 +85,6 @@ public class TraceVectorizer {
 			}
 			writer.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -99,14 +110,15 @@ public class TraceVectorizer {
 	
 	private void computeCost(final Trace trace) {
 		// First count the computational operations for each step and normalize
+		// Use addExact here to handle overflow issue
 		final long totalNodeCost = trace.getExecutionList().stream()
-								   .mapToLong(node -> this.countModifyOperation(node))
-								   .sum();
+				.mapToLong(node -> this.countModifyOperation(node))
+				.sum();
 		
 		trace.getExecutionList().stream()
-		 	.forEach(node -> node.computationCost =  this.countModifyOperation(node) / (double) totalNodeCost);
+		 	.forEach(node -> node.computationCost = this.countModifyOperation(node) / ((double) totalNodeCost));
 		
-		// Init computational cost of all variable to 1.0
+		// Init computational cost of all variable to 0.0
 		trace.getExecutionList().stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost = 0.0d);
 		trace.getExecutionList().stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost = 0.0d);
 
@@ -132,7 +144,7 @@ public class TraceVectorizer {
 					.mapToDouble(var -> var.computationalCost)
 					.sum();
 			final double optCost = node.computationCost;
-			final double cost = cumulatedCost + optCost;
+			final double cost = Double.isInfinite(cumulatedCost+optCost) ? Double.MAX_VALUE : cumulatedCost+optCost;
 			
 			// Assign computational cost to written variable, excluding "this" variable
 			node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).forEach(var -> var.computationalCost = cost);
