@@ -91,9 +91,6 @@ public class SPP {
 		this.correctVars.addAll(inputs);
 		this.wrongVars.addAll(outputs);
 		this.slicedTrace = TraceUtil.dyanmicSlice(trace, outputNode);
-		for (TraceNode node : this.slicedTrace) {
-			System.out.println("TraceNode: " + node.getOrder() + " : " + node.getBytecode());
-		}
 		this.outputNode = outputNode;
 		this.useBaseline = useBaseline;
 	}
