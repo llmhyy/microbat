@@ -161,7 +161,7 @@ public class MicroBatUtil {
 		appClassPath.addClasspath(junit5RunnerPath);
 		
 		// TestNG
-		String testNG = junitDir  + File.separator + "org.testng_7.4.0.r202105021533.jar";
+		String testNG = junitDir  + File.separator + "testng-6.0.jar";
 		appClassPath.addClasspath(testNG);
 		
 		/**
