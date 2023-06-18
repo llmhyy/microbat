@@ -15,7 +15,7 @@ import org.testng.xml.XmlTest;
 
 public class MicroBatTestNGTestRunner extends TestRunner {
     public void runTest(final String className, final String methodName) {
-        TestListenerAdapter tla = new TestListenerAdapter() {
+        Object tla = new TestListenerAdapter() {
             @Override
             public void onStart(ITestContext context) {
                 super.onStart(context);
@@ -54,7 +54,6 @@ public class MicroBatTestNGTestRunner extends TestRunner {
         testNG.addListener(tla);
         testNG.run();
         setSuccessful(!testNG.hasFailure());
-
         System.currentTimeMillis();
         System.out.println("is successful? " + successful);
         System.out.println(this.failureMessage);
