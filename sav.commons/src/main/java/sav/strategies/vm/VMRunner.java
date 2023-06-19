@@ -177,6 +177,7 @@ public class VMRunner {
 //			executorService.
 			timer = null;
 			timerTask = null;
+			timeout = 20 * 60 * 1000; // timeout: 20 minutes
 			if (timeout != NO_TIME_OUT) {
 				timerTask = timeoutExecutor.schedule(new Runnable() {
 					
