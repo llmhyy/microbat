@@ -162,6 +162,10 @@ public class SPP {
 		}
 	}
 	
+	public ActionPath getPath() {
+		return this.path;
+	}
+	
 	public ActionPath suggestPath(final TraceNode startNode, final TraceNode endNode) {
 		if (startNode.getOrder() < endNode.getOrder()) {
 			UserFeedback feedback = this.giveGreedyFeedback(endNode);
