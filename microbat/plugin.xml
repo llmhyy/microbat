@@ -39,6 +39,14 @@
             name="Recommending Reason"
             restorable="true">
       </view>
+      <view
+            category="microbat.category"
+            class="microbat.views.PathView"
+            icon="icons/path_mark.png"
+            id="microbat.evalView.pathView"
+            name="Path view"
+            restorable="true">
+      </view>
       <category
             id="microbat.evalCategory"
             name="Evaluation">

@@ -12,6 +12,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
 
 import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbacksPair;
@@ -24,11 +25,14 @@ import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 import microbat.views.MicroBatViews;
+import microbat.views.PathView;
 import microbat.views.TraceView;
 
 public class StepwisePropagationHandler extends AbstractHandler {
 
 	protected TraceView buggyView = null;
+	protected PathView pathView = null;
+	
 	private Stack<NodeFeedbacksPair> userFeedbackRecords = new Stack<>();
 	
 	@Override
@@ -101,7 +105,13 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			SPP.printMsg("Locating root cause ...");
 			spp.locateRootCause(currentNode);
 			SPP.printMsg("Constructing path to root cause ...");
+			
+			// generate trace
 			spp.constructPath();
+			ActionPath path = spp.getPath();									
+			this.pathView.setActionPath(path);
+			this.pathView.attach(this.buggyView);
+			this.updateView();
 			
 			boolean needPropagateAgain = false;
 			while (!needPropagateAgain && !isEnd) {
@@ -332,11 +342,63 @@ public class StepwisePropagationHandler extends AbstractHandler {
 	}
 	
 	
+	/**
+	 * Pads the given trace at the top and bottom end with its parents
+	 * and returns the padded trace.
+	 * 
+	 * @param trace The trace to pad
+	 * @return The padded trace with the parent operations.
+	 */
+	private List<TraceNode> padTrace(Trace trace) {
+		List<TraceNode> execList = trace.getExecutionList();
+		List<TraceNode> result = new ArrayList<>();
+		if (execList.size() < 1) {
+			return result;
+		}
+		int smallestOrder = Integer.MAX_VALUE;
+		TraceNode top = null;
+		for (TraceNode node : execList) {
+			if (smallestOrder > node.getOrder()) {
+				top = node; 
+				smallestOrder = node.getOrder();
+			}
+		}
+		Stack<TraceNode> nodes = new Stack<>();
+		while (top != null) {
+			nodes.add(top);
+			top = top.getAbstractionParent();
+		}
+		while (!nodes.empty()) {
+			TraceNode node = nodes.pop();			
+			result.add(node);
+		}
+		for (int i = 1; i < execList.size(); ++i) {
+			result.add(execList.get(i));
+		}
+		return result;
+	}
+	
+	private void updateView() {
+		if (this.buggyView != null && this.pathView != null) {			
+			Display.getDefault().syncExec(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					buggyView.updateData();					
+					pathView.updateData();					
+				}
+			});
+		} else {
+			System.out.println("buggyView or correctView is null");
+		}
+	}
+	
 	protected void setup() {
 		Display.getDefault().syncExec(new Runnable() {
 			@Override
 			public void run() {
 				buggyView = MicroBatViews.getTraceView();
+				pathView = MicroBatViews.getPathView();
 			}
 		});
 	}

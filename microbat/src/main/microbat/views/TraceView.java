@@ -396,6 +396,37 @@ public class TraceView extends ViewPart {
 
 		appendMenuForTraceStep();
 	}
+	
+	public void jumpToNode(TraceNode node) {
+		if (!programmingSelection) {
+			Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
+			behavior.increaseAdditionalClick();
+			new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
+		}
+
+		otherViewsBehavior(node);
+
+		if (jumpFromSearch) {
+			jumpFromSearch = false;
+
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(300);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					searchText.setFocus();
+				}
+			});
+
+		} else {
+			listViewer.getTree().setFocus();
+		}
+
+		trace.setObservingIndex(node.getOrder() - 1);
+	}
 
 	protected Action createForSearchAction() {
 		Action action = new Action() {
