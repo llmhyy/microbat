@@ -161,7 +161,7 @@ public class MicroBatUtil {
 		appClassPath.addClasspath(junit5RunnerPath);
 		
 		// TestNG
-		String testNG = junitDir  + File.separator + "org.testng_7.4.0.r202105021533.jar";
+		String testNG = junitDir  + File.separator + "testng-6.0.jar";
 		appClassPath.addClasspath(testNG);
 		
 		/**
@@ -337,14 +337,13 @@ public class MicroBatUtil {
 		return (T) obj;
 	}
 	
-	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, double prob, int order, double drop, double gain, double computationCost){
+	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, double prob, int order, double drop, double computationCost){
 		String exp = className + 
 					 " line:" + lineNumber + 
 					 " duration: " + duration + 
 					 "ms probability: " + String.format("%.2f", prob) + 
 					 " control dominator: " + order 
 					 + " drop: " + drop + 
-					 " gain: " + gain +
 					 " cost: " + computationCost;
 		return exp;
 	}
@@ -510,4 +509,3 @@ public class MicroBatUtil {
 		return traceFolder;
 	}
 }
-

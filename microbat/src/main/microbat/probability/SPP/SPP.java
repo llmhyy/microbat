@@ -91,9 +91,6 @@ public class SPP {
 		this.correctVars.addAll(inputs);
 		this.wrongVars.addAll(outputs);
 		this.slicedTrace = TraceUtil.dyanmicSlice(trace, outputNode);
-		for (TraceNode node : this.slicedTrace) {
-			System.out.println("TraceNode: " + node.getOrder() + " : " + node.getBytecode());
-		}
 		this.outputNode = outputNode;
 		this.useBaseline = useBaseline;
 	}
@@ -163,6 +160,10 @@ public class SPP {
 				SPP.printMsg(pair.toString());
 			}
 		}
+	}
+	
+	public ActionPath getPath() {
+		return this.path;
 	}
 	
 	public ActionPath suggestPath(final TraceNode startNode, final TraceNode endNode) {
