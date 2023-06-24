@@ -17,8 +17,10 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.probability.SPP.vectorization.vector.ClassificationVector;
+import microbat.probability.SPP.vectorization.vector.ContextVector;
 import microbat.probability.SPP.vectorization.vector.NodeVector;
 import microbat.probability.SPP.vectorization.vector.NodeVector_1;
+import microbat.probability.SPP.vectorization.vector.Vector;
 
 public class TraceVectorizer {
 
@@ -49,18 +51,25 @@ public class TraceVectorizer {
 			if (node.getBytecode() == "") {
 				continue;
 			}
-			NodeVector vector = null;
+
+			Vector vector = null;
 			try {
 				vector = new NodeVector(node);
+//				vector = new ContextVector(node, trace);
 			} catch (Exception e) {
 				vector = new NodeVector();
+				System.out.println("[TraceVectorization] error occur when forming vector");
 			}
 			
 			if (this.containInvalidValue(vector.getVector()) ) {
 				continue;
 			}
-			ClassificationVector classificationVector = new ClassificationVector(node);
-			NodeFeatureRecord record = new NodeFeatureRecord(node, vector, classificationVector);
+			
+			if (vector.getVector().length == 777) {
+				System.out.println();
+			}
+//			ClassificationVector classificationVector = new ClassificationVector(node);
+			NodeFeatureRecord record = new NodeFeatureRecord(node, vector);
 			records.add(record);
 		}
 		return records;

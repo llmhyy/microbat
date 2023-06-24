@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
+import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
 public class VariableVector extends Vector {
@@ -24,7 +25,7 @@ public class VariableVector extends Vector {
 	 * 1-dim: computational cost
 	 */
 	public static final int PRIMITIVE_TYPE_COUNT = 8;
-	public static final int DIMENSION = VariableVector.PRIMITIVE_TYPE_COUNT + 6;
+	public static final int DIMENSION = VariableVector.PRIMITIVE_TYPE_COUNT + 7;
 
 	private static final List<String> PRIMITIVE_TYPES_1 = VariableVector.initPrimType_1();
 	private static final List<String> PRIMITIVE_TYPES_2 = VariableVector.initPrimType_2();
@@ -35,6 +36,7 @@ public class VariableVector extends Vector {
 	private static final int IS_STATIC_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 3;
 	private static final int IS_INSTANCE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 4;
 	private static final int COST_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 5;
+	private static final int IS_CONDITION_RESULT_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 6;
 
 	public VariableVector() {
 		super(VariableVector.DIMENSION);
@@ -65,6 +67,7 @@ public class VariableVector extends Vector {
 		if (VariableVector.isReliableType(typeStr)) this.set(VariableVector.IS_RELIABLE_IDX);
 		
 		this.vector[VariableVector.COST_IDX] = (float) var.getComputationalCost();
+		if (var.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID)) this.set(VariableVector.IS_CONDITION_RESULT_IDX);
 	}
 
 	private int getTypeIdx(final String typeStr) {
