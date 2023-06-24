@@ -9,9 +9,9 @@ import microbat.model.value.VarValue;
 
 public class NodeVector extends Vector {
 	
-	public static final int NUM_WRITTEN_VARS = 10;
-	public static final int NUM_READ_VARS = 10;
-	public static final int NUM_FUNC = 5;
+	public static final int NUM_WRITTEN_VARS = 3;
+	public static final int NUM_READ_VARS = 5;
+	public static final int NUM_FUNC = 3;
 	public static final int DIMENSION = OperationVector.DIMENSION +
 										VariableVector.DIMENSION * NodeVector.NUM_READ_VARS +
 										VariableVector.DIMENSION * NodeVector.NUM_WRITTEN_VARS +
@@ -31,7 +31,7 @@ public class NodeVector extends Vector {
 			this.readVarVectors[idx] = new VariableVector();
 		}
 		this.writtenVarVectors = new VariableVector[NodeVector.NUM_WRITTEN_VARS];
-		for (int idx=0; idx<this.readVarVectors.length; idx++) {
+		for (int idx=0; idx<this.writtenVarVectors.length; idx++) {
 			this.writtenVarVectors[idx] = new VariableVector();
 		}
 		this.envVector = new EnvironmentVector();
@@ -60,8 +60,8 @@ public class NodeVector extends Vector {
 		
 		// Read variables vector
 		this.readVarVectors = new VariableVector[NodeVector.NUM_READ_VARS];
-		List<VarValue> readVars = node.getReadVariables();
-		readVars.removeIf(var -> var.isThisVariable());
+		List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+//		readVars.removeIf(var -> var.isThisVariable());
 		for (int idx=0; idx<this.readVarVectors.length; idx++) {
 			if (idx<readVars.size()) {
 				this.readVarVectors[idx] = new VariableVector(readVars.get(idx));
@@ -72,9 +72,9 @@ public class NodeVector extends Vector {
 		
 		// Written variables vector
 		this.writtenVarVectors = new VariableVector[NodeVector.NUM_WRITTEN_VARS];
-		List<VarValue> writtenVars = node.getWrittenVariables();
-		writtenVars.removeIf(var -> var.isThisVariable());
-		for (int idx=0; idx<this.readVarVectors.length; idx++) {
+		List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).toList();
+//		writtenVars.removeIf(var -> var.isThisVariable());
+		for (int idx=0; idx<this.writtenVarVectors.length; idx++) {
 			if (idx<writtenVars.size()) {
 				this.writtenVarVectors[idx] = new VariableVector(writtenVars.get(idx));
 			} else {
