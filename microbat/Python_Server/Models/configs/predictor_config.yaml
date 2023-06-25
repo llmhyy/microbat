@@ -1,0 +1,13 @@
+data.input_size: 523
+data.hidden_sizes: [256, 128]
+data.capacity: 10000
+
+training.epochs: 1000
+training.batch_size: 256
+training.gamma: 0.99
+training.eps_start: 0.9
+training.eps_end: 0.05
+training.eps_decay: 1000
+training.lr: 1.0e-4
+training.tau: 0.005
+training.device: cuda
