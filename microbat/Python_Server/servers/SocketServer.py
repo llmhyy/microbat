@@ -104,5 +104,5 @@ class SocketServer(ABC):
                         sock.close()
 
     @abstractmethod
-    def func(self):
+    def func(self, sock):
         raise NotImplementedError()
