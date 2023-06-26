@@ -121,7 +121,7 @@ def main(config):
     trainer.train()
 
 if __name__ == '__main__':
-    file_path = "C:\\Users\\david\\Documents\\Python\\Models\\configs\\encoder_config.yaml"
+    file_path = "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\Models\\configs\\encoder_config.yaml"
 
     # Open the YAML file
     with open(file_path, "r") as yaml_file:

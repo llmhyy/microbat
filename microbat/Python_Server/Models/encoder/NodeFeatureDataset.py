@@ -43,7 +43,6 @@ class NodeFeatureDataset(Dataset):
                 raise Exception(f"There are only one element in label {label}, please filter it out from dataset")
 
         print(f"Collected {len(self.data)} data ...")
-        
 
     def __len__(self):
         return len(self.data)
@@ -59,16 +58,15 @@ class NodeFeatureDataset(Dataset):
 
     def get_pos_sample(self, index):
         label = self.labels[index]
-        positive_idxes = self.label2data[label]
+        positive_idxes = self.label2data[label][:]
         positive_idxes.remove(index) # Don't sample itself as positive sample
         positive_idx = random.sample(positive_idxes, 1)[0]
         pos_feature = self.data[positive_idx]
         return self.to_tensor(pos_feature)
 
-
     def get_neg_sample(self, index):
         label = self.labels[index]
-        labels_ = list(self.label2data.keys())
+        labels_ = list(self.label2data.keys())[:]
         labels_.remove(label)
         neg_label = random.sample(labels_, k=1)[0]
         negative_idxes = self.label2data[neg_label]
