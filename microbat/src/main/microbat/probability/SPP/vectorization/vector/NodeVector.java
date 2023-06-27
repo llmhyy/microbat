@@ -15,13 +15,11 @@ public class NodeVector extends Vector {
 	public static final int DIMENSION = OperationVector.DIMENSION +
 										VariableVector.DIMENSION * NodeVector.NUM_READ_VARS +
 										VariableVector.DIMENSION * NodeVector.NUM_WRITTEN_VARS +
-										FunctionVector.DIMENSION * NodeVector.NUM_FUNC +
-										EnvironmentVector.DIMENSION;
+										FunctionVector.DIMENSION * NodeVector.NUM_FUNC;
 	
 	private final OperationVector optVector;
 	private final VariableVector[] readVarVectors;
 	private final VariableVector[] writtenVarVectors;
-	private final EnvironmentVector envVector;
 	private final FunctionVector[] funcVectors;
 	
 	public NodeVector() {
@@ -34,7 +32,6 @@ public class NodeVector extends Vector {
 		for (int idx=0; idx<this.writtenVarVectors.length; idx++) {
 			this.writtenVarVectors[idx] = new VariableVector();
 		}
-		this.envVector = new EnvironmentVector();
 		this.funcVectors = new FunctionVector[NodeVector.NUM_FUNC];
 		for (int idx=0; idx<this.funcVectors.length; idx++) {
 			this.funcVectors[idx] = new FunctionVector();
@@ -47,7 +44,6 @@ public class NodeVector extends Vector {
 		for (VariableVector writtenVarVector : this.writtenVarVectors) {
 			this.vector = ArrayUtils.addAll(this.vector, writtenVarVector.getVector());
 		}
-		this.vector = ArrayUtils.addAll(this.vector, this.envVector.getVector());
 		for (FunctionVector funcVector : this.funcVectors) {
 			this.vector = ArrayUtils.addAll(this.vector, funcVector.getVector());
 		}
@@ -81,9 +77,7 @@ public class NodeVector extends Vector {
 				this.writtenVarVectors[idx] = new VariableVector();
 			}
 		}
-		
-		// Environment vector
-		this.envVector = new EnvironmentVector(node);
+	
 		
 		// Function vector
 		this.funcVectors = FunctionVector.constructFuncVectors(node, NodeVector.NUM_FUNC);
@@ -95,7 +89,6 @@ public class NodeVector extends Vector {
 		for (VariableVector writtenVarVector : this.writtenVarVectors) {
 			this.vector = ArrayUtils.addAll(this.vector, writtenVarVector.getVector());
 		}
-		this.vector = ArrayUtils.addAll(this.vector, this.envVector.getVector());
 		for (FunctionVector funcVector : this.funcVectors) {
 			this.vector = ArrayUtils.addAll(this.vector, funcVector.getVector());
 		}
@@ -113,9 +106,6 @@ public class NodeVector extends Vector {
 		return this.writtenVarVectors;
 	}
 	
-	public EnvironmentVector getEnvVector() {
-		return this.envVector;
-	}
 	
 	public FunctionVector[] getFuncVectors() {
 		return this.funcVectors;

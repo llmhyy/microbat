@@ -5,14 +5,13 @@ import microbat.model.trace.TraceNode;
 
 public class EnvironmentVector extends Vector {
 	
-	public static final int DIMENSION = 6;
+	public static final int DIMENSION = 5;
 	
 	private static final int ORDER_IDX = 0;
 	private static final int CONDITION_IDX = 1;
 	private static final int COST_IDX = 2;
-	private static final int REPEAT_IDX = 3;
-	private static final int CONTROL_IDX = 4;
-	private static final int INVOK_LEVEL_IDX = 5;
+	private static final int CONTROL_IDX = 3;
+	private static final int INVOK_LEVEL_IDX = 4;
 	
 	public EnvironmentVector() {
 		super(EnvironmentVector.DIMENSION);
@@ -30,7 +29,6 @@ public class EnvironmentVector extends Vector {
 		
 		this.vector[EnvironmentVector.COST_IDX] = (float) node.getComputationCost();
 		
-		this.vector[EnvironmentVector.REPEAT_IDX] = 1/(float) (node.repeatedCount+1);
 		
 		this.vector[EnvironmentVector.CONTROL_IDX] = node.getControlDominatees().size() / (float) trace.size();
 		

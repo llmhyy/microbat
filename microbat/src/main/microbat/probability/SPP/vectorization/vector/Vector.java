@@ -31,7 +31,7 @@ public class Vector {
 	protected void set(final int idx) {
 		this.vector[idx] = 1.0f;
 	}
-	
+
 	@Override
 	public String toString() {
 		if (this.vector == null || this.vector.length == 0) {
@@ -65,5 +65,39 @@ public class Vector {
 			return true;
 		}
 		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		int hashCode = 1;
+		for (float value : this.vector) {
+			int elementHashCode = Float.floatToIntBits(value);
+			hashCode = 31 * hashCode + elementHashCode;
+		}
+		return hashCode;
+	}
+	
+	public static double calCosSim(final Vector vector1, final Vector vector2) {
+		if (vector1.getSize() != vector2.getSize()) {
+			throw new IllegalArgumentException("Vector lengths does not match");
+		}
+		
+		double dotProduct = 0.0d;
+		double norm1 = 0.0d;
+		double norm2 = 0.0d;
+		
+		for (int i=0; i<vector1.getVector().length; i++) {
+			dotProduct += vector1.getVector()[i] * vector2.getVector()[i];
+			norm1 += Math.pow(vector1.getVector()[i], 2);
+			norm2 += Math.pow(vector2.getVector()[i], 2);
+		}
+		
+		double similarity;
+		if (norm1 == 0.0d || norm2 == 0.0d) {
+			similarity = 0.0d;
+		} else {
+			similarity = dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
+		}
+		return similarity;
 	}
 }

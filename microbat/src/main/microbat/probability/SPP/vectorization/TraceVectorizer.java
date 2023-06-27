@@ -3,12 +3,12 @@ package microbat.probability.SPP.vectorization;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.File;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
@@ -16,11 +16,9 @@ import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.probability.SPP.vectorization.vector.ClassificationVector;
-import microbat.probability.SPP.vectorization.vector.ContextVector;
 import microbat.probability.SPP.vectorization.vector.NodeVector;
-import microbat.probability.SPP.vectorization.vector.NodeVector_1;
 import microbat.probability.SPP.vectorization.vector.Vector;
+
 
 public class TraceVectorizer {
 
@@ -45,8 +43,9 @@ public class TraceVectorizer {
 	}
 	
 	public List<NodeFeatureRecord> vectorize(final Trace trace) {
-		this.preprocess(trace);
+//		this.preprocess(trace);
 		List<NodeFeatureRecord> records = new ArrayList<>();
+		Set<Vector> existingVectors = new HashSet<>();
 		for (TraceNode node : trace.getExecutionList()) {
 			if (node.getBytecode() == "") {
 				continue;
@@ -65,9 +64,11 @@ public class TraceVectorizer {
 				continue;
 			}
 			
-			if (vector.getVector().length == 777) {
-				System.out.println();
+			if (existingVectors.contains(vector)) {
+				continue;
 			}
+			
+			existingVectors.add(vector);
 //			ClassificationVector classificationVector = new ClassificationVector(node);
 			NodeFeatureRecord record = new NodeFeatureRecord(node, vector);
 			records.add(record);
