@@ -56,7 +56,6 @@ public abstract class Client {
 	
 	private final byte paddingByte = 0;
 	
-	
 	protected Socket socket;
 	private InputStream reader;
 	private OutputStream writer;
@@ -95,6 +94,9 @@ public abstract class Client {
 		this.reader.close();
 		this.writer.close();
 		this.socket.close();
+		this.reader = null;
+		this.writer = null;
+		this.socket = null;
 	}
 	
 	/**
@@ -104,10 +106,7 @@ public abstract class Client {
 	 * @throws Exception
 	 */
 	public void endServer() throws IOException, InterruptedException {
-
 		this.sendMsg(this.END_MSG);
-//		String response = this.byteToStr(this.receiveMsg());
-//		return response == Client.END_SERVER_MSG;
 	}
 	
 	/**
@@ -125,38 +124,12 @@ public abstract class Client {
 				this.writer.write(chunk_of_message);
 				start = end;
  			}
-//			int offset = 0;
-//			while (offset < message.length) {
-//				int length = Math.min(Client.CHUNK_SIZE, message.length - offset);
-//				this.writer.write(message, offset, length);
-//				offset += length;
-//			}
 			this.writer.write(this.END_MSG);
 		} else {
-			throw new RuntimeException("Socket is not ready");
+			throw new RuntimeException(Client.genMsg("Server is not connected"));
 		}
 	}
 	
-
-//	/**
-//	 * Send message to server
-//	 * @param messages Messages to send
-//	 */
-//	protected void sendMsg(byte[]... messages) throws IOException, InterruptedException {
-//		if (this.isReady()) {
-//			final byte[] msgBreak = this.strToByte(Client.END_MSG);
-//			for (byte[] message : messages) {
-//				if (message.length > Client.CHUNK_SIZE) {
-//					throw new RuntimeException("Message exceed maximum buffer size");
-//				}
-//				System.out.println("Message size: " + message.length);
-//				this.writer.write(message);
-//			}
-//			this.writer.write(msgBreak);
-//		} else {
-//			throw new RuntimeException("Socket is not ready");
-//		}
-//	}
 	
 	public void sendMsg(final String message) throws IOException, InterruptedException {
 		if (this.verbose) {
@@ -189,18 +162,8 @@ public abstract class Client {
 			System.out.println("[RECEIVE MESSAGE]: " + strBuilder.toString());
 		}
 		return strBuilder.toString();
-//		byte[] response = new byte[Client.CHUNK_SIZE];
-//		int integer = this.reader.read(response);
-//		if (integer == -1) {
-//			throw new RuntimeException("No response from server");
-//		}
-//		return response;
 	}
-	
-//	protected String receiveStrMsg() throws IOException {
-//		byte[] message_byte = this.receiveMsg();
-//		return this.byteToStr(message_byte);
-//	}
+
 	
 	protected byte[] strToByte(final String str) {
 		return str.getBytes(Client.charset);
@@ -214,5 +177,9 @@ public abstract class Client {
 	
 	protected boolean isReady() {
 		return this.socket != null && this.writer != null && this.reader != null;
+	}
+	
+	public static String genMsg(final String message) {
+		return "[Client] " + message;
 	}
 }
