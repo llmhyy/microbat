@@ -296,17 +296,11 @@ public class SPP implements ProbabilityPropagator {
 	}
 	
 	protected double calForwardFactor(final TraceNode node) {
-		return 1 - node.computationCost;
+		return Math.random();
 	}
 	
 	protected double calBackwardFactor(final VarValue var, final TraceNode node) {
-		final double totalCost = node.getReadVariables().stream().mapToDouble(readVar -> readVar.computationalCost).sum();
-		if (totalCost == 0) {
-			return (1 - node.computationCost) * (1 / node.getReadVariables().size());
-		} else {
-			return (1 - node.computationCost) * (var.computationalCost / totalCost);
-		}
-		
+		return Math.random();
 	}
 	
 	protected boolean isComputational(final TraceNode node) {
@@ -398,5 +392,13 @@ public class SPP implements ProbabilityPropagator {
 		this.unmodifiedType.add(OpcodeType.PUT_FIELD);
 		this.unmodifiedType.add(OpcodeType.PUT_STATIC_FIELD);
 		this.unmodifiedType.add(OpcodeType.INVOKE);
+	}
+	
+	public static String genMsg(final String message) {
+		return "[SPP] " + message;
+	}
+	
+	public static void printMsg(final String message) {
+		System.out.println(SPP.genMsg(message));
 	}
 }

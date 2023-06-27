@@ -18,6 +18,7 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.probability.SPP.DebugPilot;
+import microbat.probability.SPP.propagation.PropagatorType;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 import microbat.views.MicroBatViews;
@@ -80,7 +81,7 @@ public class ProbInferHandler extends AbstractHandler {
 		
 		// Set up the propagator that perform propagation,
 		// with initial feedback indicating the output variable  is wrong
-		DebugPilot spp = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode, true);
+		DebugPilot spp = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode, PropagatorType.ProfInfer);
 		
 		TraceNode currentNode = outputNode;
 		

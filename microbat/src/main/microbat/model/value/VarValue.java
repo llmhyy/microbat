@@ -46,18 +46,22 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	protected double probability = -1;
 	protected double forward_prob = -1;
 	protected double backward_prob = -1;
+	protected List<Double> conditionBackwardProb = new ArrayList<>();
 	
 	public double computationalCost = 0.0d;
 	protected boolean isInputRelated = false;
 
 	public static final int NOT_NULL_VAL = 1;
 	
-	public VarValue(){}
+	public VarValue(){
+		this.conditionBackwardProb = new ArrayList<>();
+	}
 	
 	protected VarValue(boolean isRoot, Variable variable) {
 		this.isRoot = isRoot;
 		this.variable = variable;
 		this.computationalCost = 0;
+		this.conditionBackwardProb = new ArrayList<>();
 	}
 	
 	public abstract VarValue clone();
@@ -601,5 +605,20 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	
 	public boolean isArray() {
 		return this.getType().endsWith("[]");
+	}
+	
+	public void addBackwardProbability(final double prob) {
+		if (this.conditionBackwardProb == null) {
+			this.conditionBackwardProb = new ArrayList<>();
+		}
+		this.conditionBackwardProb.add(prob);
+	}
+	
+	public List<Double> getConditionBackwardProb() {
+		return this.conditionBackwardProb;
+	}
+	
+	public boolean isConditionResult() {
+		return this.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID);
 	}
 }

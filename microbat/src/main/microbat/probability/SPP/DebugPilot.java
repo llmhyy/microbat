@@ -1,5 +1,6 @@
 package microbat.probability.SPP;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -16,7 +17,10 @@ import microbat.probability.SPP.pathfinding.ActionPath;
 import microbat.probability.SPP.pathfinding.PathFinder;
 import microbat.probability.SPP.propagation.ProbabilityPropagator;
 import microbat.probability.SPP.propagation.PropInfer;
+import microbat.probability.SPP.propagation.PropagatorType;
 import microbat.probability.SPP.propagation.SPP;
+import microbat.probability.SPP.propagation.SPPH;
+import microbat.probability.SPP.propagation.SPPRL;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
@@ -58,20 +62,20 @@ public class DebugPilot {
 	
 	private ActionPath path = null;
 	
-	private final boolean useBaseline;
+	private final PropagatorType propagatorType;
 	
 	/**
 	 * Constructor
 	 * @param trace Execution trace for target program
 	 */
-	public DebugPilot(Trace trace) {
-		this(trace, false);
+	public DebugPilot(Trace trace, PropagatorType propagatorType) {
+		this(trace, false, propagatorType);
 	}
 	
-	public DebugPilot(final Trace trace, final boolean useBaseline) {
+	public DebugPilot(final Trace trace, final boolean useBaseline, PropagatorType propagatorType) {
 		this.trace = trace;
 		this.outputNode = null;
-		this.useBaseline = useBaseline;
+		this.propagatorType = propagatorType;
 	}
 	
 	/**
@@ -80,17 +84,17 @@ public class DebugPilot {
 	 * @param inputs Input variables which assumed to be correct
 	 * @param outputs Output variables which assumed to be wrong
 	 */
-	public DebugPilot(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode) {
-		this(trace, inputs, outputs, outputNode, false);
+	public DebugPilot(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode, PropagatorType propagatorType) {
+		this(trace, inputs, outputs, outputNode, false, propagatorType);
 	}
 	
-	public DebugPilot(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode, final boolean useBaseline) {
+	public DebugPilot(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode, final boolean useBaseline, PropagatorType propagatorType) {
 		this.trace = trace;
 		this.correctVars.addAll(inputs);
 		this.wrongVars.addAll(outputs);
 		this.slicedTrace = TraceUtil.dyanmicSlice(trace, outputNode);
 		this.outputNode = outputNode;
-		this.useBaseline = useBaseline;
+		this.propagatorType = propagatorType;
 	}
 	
 	
@@ -118,13 +122,32 @@ public class DebugPilot {
 	}
 	
 	public void propagate() {
-		ProbabilityPropagator propagator = null;
-		if (this.useBaseline) {
-			propagator = new PropInfer(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
-		} else {
-			propagator = new SPP(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
+		switch(this.propagatorType) {
+		case Heuristic:
+			SPPH spp_h = new SPPH(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
+			spp_h.propagate();
+			break;
+		case ProfInfer:
+			PropInfer propInfer = new PropInfer(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
+			propInfer.propagate();
+			break;
+		case RL:
+			SPPRL spp_rl = new SPPRL(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
+			try {
+				spp_rl.connectServer();
+				spp_rl.propagate();
+				spp_rl.dissconnectServer();
+			} catch (IOException e) {
+				throw new RuntimeException(DebugPilot.genMsg("Server problem: " + e.toString()));
+			}
+			break;
+		case Random:
+			SPP spp = new SPP(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
+			spp.propagate();
+			break;
+		default:
+			break;
 		}
-		propagator.propagate();
 	}
 	
 	public UserFeedback giveFeedback(final TraceNode node) {
@@ -315,8 +338,12 @@ public class DebugPilot {
 		return false;
 	}
 	
+	public static String genMsg(final String message) {
+		return "[DebugPilot] " + message;
+	}
+	
 	public static void printMsg(final String message) {
-		System.out.println("[SPP] " + message);
+		System.out.println(DebugPilot.genMsg(message));
 	}
 	
 	private UserFeedback giveGreedyFeedback(final TraceNode node) {

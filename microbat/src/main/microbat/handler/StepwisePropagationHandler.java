@@ -20,6 +20,7 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.probability.SPP.DebugPilot;
 import microbat.probability.SPP.pathfinding.ActionPath;
+import microbat.probability.SPP.propagation.PropagatorType;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
@@ -83,7 +84,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 		
 		// Set up the propagator that perform propagation,
 		// with initial feedback indicating the output variable  is wrong
-		DebugPilot spp = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode);
+		DebugPilot debugPilot = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode, PropagatorType.RL);
 		
 		TraceNode currentNode = outputNode;
 		
@@ -91,21 +92,21 @@ public class StepwisePropagationHandler extends AbstractHandler {
 		// Keep doing propagation until the root cause is found
 		while(!DebugInfo.isRootCauseFound() && !DebugInfo.isStop() && !isEnd) {
 			// Perform propagation
-			spp.updateFeedbacks(userFeedbackRecords);
+			debugPilot.updateFeedbacks(userFeedbackRecords);
 			DebugPilot.printMsg("Propagating probability ...");
 			long startTime = System.currentTimeMillis();
-			spp.propagate();
+			debugPilot.propagate();
 			long endTime = System.currentTimeMillis();
 			long duration = (endTime - startTime) / 1000;
 			DebugPilot.printMsg("Propagation Duration: " + duration + " s");
 			DebugPilot.printMsg("Locating root cause ...");
-			spp.locateRootCause(currentNode);
+			debugPilot.locateRootCause(currentNode);
 			DebugPilot.printMsg("Constructing path to root cause ...");
-			spp.constructPath();
+			debugPilot.constructPath();
 			
 			boolean needPropagateAgain = false;
 			while (!needPropagateAgain && !isEnd) {
-				UserFeedback predictedFeedback = spp.giveFeedback(currentNode);
+				UserFeedback predictedFeedback = debugPilot.giveFeedback(currentNode);
 				DebugPilot.printMsg("--------------------------------------");
 				DebugPilot.printMsg("Predicted feedback of node: " + currentNode.getOrder() + ": " + predictedFeedback.toString());
 				NodeFeedbacksPair userFeedbacks = this.askForFeedback(currentNode);
@@ -197,136 +198,6 @@ public class StepwisePropagationHandler extends AbstractHandler {
 					currentNode = TraceUtil.findNextNode(currentNode, userFeedbacks.getFirstFeedback(), this.buggyView.getTrace());
 				}
 			}
-//			// Root cause prediction
-//			TraceNode rootCause = spp.proposeRootCause();
-//			System.out.println("Proposed Root Cause: " + rootCause.getOrder());
-//			
-//			System.out.println("Path finding ...");
-//			ActionPath userPath = new ActionPath(userFeedbackRecords);
-//			final ActionPath path = spp.suggestPath(currentNode, rootCause, userPath);
-//			
-//			System.out.println();
-//			for (NodeFeedbacksPair section : path) {
-//				System.out.println("Debug: " + section);
-//			}
-//			System.out.println();
-//			
-//			// Ensure that user current location is on the path
-//			if (!path.contains(currentNode)) {
-//				throw new RuntimeException("Suggested path does not contain current node");
-//			}
-//			
-//			for (int idx=0; idx<path.getLength(); idx++) {
-//				final NodeFeedbacksPair action = path.get(idx);
-//				
-//				// Go to the current location
-//				final TraceNode node = action.getNode();
-//				if (!node.equals(currentNode)) {
-//					continue;
-//				}
-//				
-//				this.jumpToNode(currentNode);
-//				System.out.println("------------------------------");
-//				System.out.println("Predicted feedback: ");
-//				System.out.println(action);
-//				
-//				// Obtain feedback from user
-//				NodeFeedbacksPair userFeedbackPair = askForFeedback(currentNode);
-//				final UserFeedback predictedFeedback = action.getFeedbacks().get(0);
-//				
-//				// Feedback predicted correctly
-//				if (userFeedbackPair.containsFeedback(predictedFeedback)) {
-//					currentNode = TraceUtil.findNextNode(currentNode, predictedFeedback, buggyView.getTrace());
-//					this.userFeedbackRecords.add(userFeedbackPair);
-//					continue;
-//				}
-//				
-//				// Feedback is predicted wrongly
-//						
-//				/*
-//				 *  If the feedback is CORRECT, there are two reasons:
-//				 *  1. User give wrong feedback
-//				 *  2. Omission bug occur
-//				 */
-//				if (userFeedbackPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
-//					// We first assume user give a wrong feedback
-//					NodeFeedbacksPair prevPair = userFeedbackRecords.peek();
-//					UserFeedback prevFeedback = prevPair.getFeedbacks().get(0);
-//					TraceNode prevNode = prevPair.getNode();
-//					jumpToNode(prevNode);
-//					System.out.println("[SPP] Please confirm again the feedback of this node: " + node.getOrder());
-//					NodeFeedbacksPair correctingFeedbackPair = askForFeedback(node);
-//					if (prevPair.equals(correctingFeedbackPair)) {
-//						// User insist feedback is correct, omission bug confirmed
-//						if (prevFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-//							final VarValue var = prevFeedback.getOption().getReadVar();
-//							reportMissingAssignmentOmissionBug(node, prevNode, var);
-//						} else {
-//							reportMissingBranchOmissionBug(node, prevNode);
-//						}
-//						isEnd = true;
-//					} else {
-//						// User confirm that previous feedback is inaccurate, it is possible that they
-//						// give more than one inaccurate feedback, so that we loop to find out the last accurate feedback
-//						userFeedbackRecords.pop();
-//						while (!userFeedbackRecords.isEmpty()) {
-//							prevPair = userFeedbackRecords.peek();
-//							prevNode = prevPair.getNode();
-//							prevFeedback = prevPair.getFeedbacks().get(0);
-//							jumpToNode(prevNode);
-//							System.out.println("[SPP] Please confirm again the feedback of this node: " + node.getOrder());
-//							correctingFeedbackPair = askForFeedback(node);
-//							if (correctingFeedbackPair.equals(prevPair)) {
-//								// Last accurate feedback located
-//								break;
-//							}
-//							userFeedbackRecords.pop();
-//						}
-//						currentNode = TraceUtil.findNextNode(prevNode, prevFeedback, this.buggyView.getTrace());
-//					}
-//					break;
-//				}
-//				
-//				UserFeedback userFeedback = userFeedbackPair.getFeedbacks().get(0);
-//				TraceNode nextNode = TraceUtil.findNextNode(currentNode, userFeedback, buggyView.getTrace());
-//				
-//				/*
-//				 * If the feedback is wrong path and there are no control dominator, 
-//				 * there are several reasons:
-//				 * 1. User give a wrong feedback
-//				 * 2. Omission bug msing branch
-//				 */
-//				if (nextNode == null && userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-//					// First assume user give a wrong feedback
-//					System.out.println("[SPP] There are no control dominator of this step. Can you confirm again the feedback of node: " + node.getOrder());
-//					final NodeFeedbacksPair correctingFeedbackPair = askForFeedback(node);
-//					if (correctingFeedbackPair.equals(userFeedbackPair)) {
-//						// User insist feedback is correct, omission bug confirmed
-//						TraceNode beginNode = node.getInvocationParent();
-//						if (beginNode == null) {
-//							beginNode = buggyView.getTrace().getTraceNode(1);
-//						}
-//						reportMissingBranchOmissionBug(beginNode, node);
-//						isEnd = true;
-//						break;
-//					} else {
-//						// Check is the feedback match with the predicted feedback
-//						if (correctingFeedbackPair.containsFeedback(predictedFeedback)) {
-//							currentNode = TraceUtil.findNextNode(currentNode, predictedFeedback, buggyView.getTrace());
-//							continue;
-//						} else {
-//							// if not, then process it the same way as wrong prediction
-//							userFeedbackPair = correctingFeedbackPair;
-//							userFeedback = userFeedbackPair.getFeedbacks().get(0);
-//						}
-//					}
-//				}
-//				
-//				// Handle wrong prediction
-//				this.userFeedbackRecords.add(userFeedbackPair);
-//				currentNode = TraceUtil.findNextNode(currentNode, userFeedback, this.buggyView.getTrace());
-//				break;
-//			}
 		}
 		return Status.OK_STATUS;
 	}
