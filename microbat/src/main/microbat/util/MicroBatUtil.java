@@ -22,11 +22,13 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import debuginfo.NodeFeedbacksPair;
 import microbat.Activator;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.preference.MicrobatPreference;
+import microbat.recommendation.UserFeedback;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
@@ -346,6 +348,27 @@ public class MicroBatUtil {
 					 + " drop: " + drop + 
 					 " cost: " + computationCost;
 		return exp;
+	}
+	
+	public static String genPathMessage(final NodeFeedbacksPair pair, final int index) {
+		final TraceNode node = pair.getNode();
+		final UserFeedback feedback = pair.getFirstFeedback();
+		StringBuilder strBuilder = new StringBuilder();
+		strBuilder.append("Path " + index);
+		strBuilder.append("|");
+		strBuilder.append("TraceNode: " + node.getOrder());
+		strBuilder.append("|");
+		strBuilder.append("Feedback: ");
+		if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
+			strBuilder.append("Correct");
+		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+			strBuilder.append("Wrong path");
+		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+			strBuilder.append("Wrong variable of " + feedback.getOption().getReadVar().getVarName());
+		} else if (feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
+			strBuilder.append("Root cause");
+		}
+		return strBuilder.toString();
 	}
 	
 	/**
