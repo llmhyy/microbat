@@ -7,13 +7,16 @@ import org.eclipse.jface.viewers.StructuredSelection;
 
 import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.TraceNode;
+import microbat.views.PathView;
 import microbat.views.TraceView;
 
 public class PathViewSelectionListener implements ISelectionChangedListener {
 	
 	private TraceView attachedTraceView = null;
+	private PathView parentPathView = null;
 	
-	public PathViewSelectionListener() {		
+	public PathViewSelectionListener(PathView parentPathView) {
+		this.parentPathView = parentPathView;
 	}
 	
 	public void attachTraceView(TraceView view) {
@@ -24,11 +27,13 @@ public class PathViewSelectionListener implements ISelectionChangedListener {
 	public void selectionChanged(SelectionChangedEvent event) {
 		if (attachedTraceView == null) return;
 		ISelection iSel = event.getSelection();
+		
 		if (iSel instanceof StructuredSelection) {
 			StructuredSelection sel = (StructuredSelection) iSel;
 			Object obj = sel.getFirstElement();
-			if (obj instanceof NodeFeedbacksPair) {
+			if (obj instanceof NodeFeedbacksPair) {				
 				NodeFeedbacksPair node = (NodeFeedbacksPair) obj;
+				this.parentPathView.otherViewsBehaviour(node.getNode());
 				attachedTraceView.jumpToNode(node.getNode());
 			}
 			

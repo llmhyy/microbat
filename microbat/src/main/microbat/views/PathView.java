@@ -19,6 +19,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.model.trace.TraceNode;
 import microbat.probability.SPP.pathfinding.ActionPath;
 import microbat.views.listeners.PathViewSelectionListener;
 import microbat.views.providers.ActionPathContentProvider;
@@ -39,7 +40,7 @@ public class PathView extends ViewPart {
 	private String previousSearchExpression = "";
 	
 	public PathView() {
-		this.selectionListener = new PathViewSelectionListener();
+		this.selectionListener = new PathViewSelectionListener(this);
 	}
 	
 	public void setSearchText(String expression) {		
@@ -87,6 +88,14 @@ public class PathView extends ViewPart {
 			}
 		});
 
+	}
+	
+	public void otherViewsBehaviour(TraceNode node) {
+		// perform the jump on both correct trace view and
+		// on buggy trace
+		
+		// check if correct view exists and perform the jump
+		
 	}
 	
 	protected void addSearchTextListener(final Text searchText) {

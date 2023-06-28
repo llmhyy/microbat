@@ -5,8 +5,14 @@ import java.util.Optional;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
+
+import microbat.bytecode.ByteCode;
+import microbat.bytecode.ByteCodeList;
+import microbat.bytecode.OpcodeType;
+import microbat.model.BreakPoint;
 import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;
+import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import microbat.views.ImageUI;
 import debuginfo.NodeFeedbacksPair;
@@ -56,7 +62,10 @@ public class FeedbackNodePairLabelProvider implements ILabelProvider {
 		}
 		return null;
 	}
+	
+	
 
+	
 	@Override
 	public String getText(Object element) {
 		// TODO Auto-generated method stub
@@ -67,9 +76,7 @@ public class FeedbackNodePairLabelProvider implements ILabelProvider {
 			String feedback = node.getFeedbacks().size() == 0 
 					? "Error no feedback"
 					: node.getFeedbacks().get(0).toString();
-			return traceNode.toString() + ": " + feedback;
-			
-			
+			return MicroBatUtil.generateTraceNodeText(traceNode) + ": " + feedback;					
 		}
 		return null;
 	}

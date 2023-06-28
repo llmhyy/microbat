@@ -23,6 +23,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import microbat.Activator;
+import microbat.bytecode.ByteCode;
+import microbat.bytecode.ByteCodeList;
+import microbat.bytecode.OpcodeType;
+import microbat.model.BreakPoint;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
@@ -493,6 +497,47 @@ public class MicroBatUtil {
 //		
 //		return false;
 //	}
+	
+	// todo: Remove dup code in TraceView / move this functionality to TraceView
+	public static String generateTraceNodeText(TraceNode node) {
+		BreakPoint breakPoint = node.getBreakPoint();
+		// BreakPointValue programState = node.getProgramState();
+
+		String className = breakPoint.getClassCanonicalName();
+		if (className.contains(".")) {
+			className = className.substring(className.lastIndexOf(".") + 1, className.length());
+		}
+
+		// String methodName = breakPoint.getMethodName();
+		int lineNumber = breakPoint.getLineNumber();
+		int order = node.getOrder();
+
+		long duration = node.calulcateDuration();
+		
+		double prob = node.getProbability();
+		int predOrder = -1;
+		double predProb = -1;
+		TraceNode controlDominator = node.getControlDominator();
+		if (controlDominator != null) {
+			predOrder = controlDominator.getOrder();
+		}
+		
+		int count = 0;
+		for (ByteCode byteCode : new ByteCodeList(node.getBytecode())) {
+			final OpcodeType type = byteCode.getOpcodeType();
+			if (type.equals(OpcodeType.LOAD_FROM_ARRAY) || type.equals(OpcodeType.LOAD_VARIABLE) ||
+			    type.equals(OpcodeType.STORE_INTO_ARRAY) || type.equals(OpcodeType.STORE_VARIABLE) ||
+			    type.equals(OpcodeType.RETURN)) {
+				continue;
+			} else {
+				count += 1;
+			}
+		}
+		// TODO it is better to parse method name as well.
+		// String message = className + "." + methodName + "(...): line " + lineNumber + "probability: " + prob;
+		String message = order + ". " + MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration, prob, predOrder, node.getDrop(), node.computationCost);
+		return message;
+	}	
 	
 	public static String getTraceFolder() {
 		return new StringBuilder(IResourceUtils.getEclipseRootDir()).append(File.separator).append("trace")
