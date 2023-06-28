@@ -132,7 +132,8 @@ public class FunctionVector extends Vector {
 			}
 		}
 		
-		// Need to check the matched node as sometimes it may contains part of the byte code or function signature
+		// Need to check the matched node as sometimes it may contains part 
+		// of the byte code or function signature
 		final TraceNode matchedNode = node.getInvokingMatchNode();
 		if (matchedNode != null) {
 			if (matchedNode.getOrder() != node.getOrder()) {
@@ -151,7 +152,7 @@ public class FunctionVector extends Vector {
 				}
 			}
 		} else {
-			System.out.println("Don't have matched node");
+//			System.out.println("Don't have matched node");
 		}
 
 

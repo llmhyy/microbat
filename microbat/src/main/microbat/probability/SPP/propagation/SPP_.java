@@ -19,11 +19,9 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.probability.PropProbability;
-import microbat.probability.SPP.ProbAggregateMethods;
-import microbat.probability.SPP.ProbAggregator;
 import microbat.recommendation.UserFeedback;
 
-public class SPPPropagator implements ProbabilityPropagator {
+public class SPP_ implements ProbabilityPropagator {
 	
 	private final Trace trace;
 	private final List<TraceNode> slicedTrace;
@@ -34,7 +32,7 @@ public class SPPPropagator implements ProbabilityPropagator {
 	private final List<OpcodeType> unmodifiedType = new ArrayList<>();
 	private Collection<NodeFeedbacksPair> feedbackRecords = null;
 	
-	public SPPPropagator(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
+	public SPP_(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
 		this.trace = trace;
 		this.slicedTrace = slicedTrace;
 		this.correctVars = correctVars;
@@ -138,7 +136,7 @@ public class SPPPropagator implements ProbabilityPropagator {
 		for (VarValue readVar : node.getReadVariables()) {
 			if (this.isCorrect(readVar)) {
 				readVar.setForwardProb(PropProbability.CORRECT);
-				return;
+				continue;
 			}
 			VarValue dataDomVar = this.findDataDomVar(readVar, node);
 			if (dataDomVar != null) {

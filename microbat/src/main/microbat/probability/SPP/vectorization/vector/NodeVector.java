@@ -9,19 +9,17 @@ import microbat.model.value.VarValue;
 
 public class NodeVector extends Vector {
 	
-	public static final int NUM_WRITTEN_VARS = 10;
-	public static final int NUM_READ_VARS = 10;
-	public static final int NUM_FUNC = 5;
+	public static final int NUM_WRITTEN_VARS = 3;
+	public static final int NUM_READ_VARS = 5;
+	public static final int NUM_FUNC = 3;
 	public static final int DIMENSION = OperationVector.DIMENSION +
 										VariableVector.DIMENSION * NodeVector.NUM_READ_VARS +
 										VariableVector.DIMENSION * NodeVector.NUM_WRITTEN_VARS +
-										FunctionVector.DIMENSION * NodeVector.NUM_FUNC +
-										EnvironmentVector.DIMENSION;
+										FunctionVector.DIMENSION * NodeVector.NUM_FUNC;
 	
 	private final OperationVector optVector;
 	private final VariableVector[] readVarVectors;
 	private final VariableVector[] writtenVarVectors;
-	private final EnvironmentVector envVector;
 	private final FunctionVector[] funcVectors;
 	
 	public NodeVector() {
@@ -31,10 +29,9 @@ public class NodeVector extends Vector {
 			this.readVarVectors[idx] = new VariableVector();
 		}
 		this.writtenVarVectors = new VariableVector[NodeVector.NUM_WRITTEN_VARS];
-		for (int idx=0; idx<this.readVarVectors.length; idx++) {
+		for (int idx=0; idx<this.writtenVarVectors.length; idx++) {
 			this.writtenVarVectors[idx] = new VariableVector();
 		}
-		this.envVector = new EnvironmentVector();
 		this.funcVectors = new FunctionVector[NodeVector.NUM_FUNC];
 		for (int idx=0; idx<this.funcVectors.length; idx++) {
 			this.funcVectors[idx] = new FunctionVector();
@@ -47,7 +44,6 @@ public class NodeVector extends Vector {
 		for (VariableVector writtenVarVector : this.writtenVarVectors) {
 			this.vector = ArrayUtils.addAll(this.vector, writtenVarVector.getVector());
 		}
-		this.vector = ArrayUtils.addAll(this.vector, this.envVector.getVector());
 		for (FunctionVector funcVector : this.funcVectors) {
 			this.vector = ArrayUtils.addAll(this.vector, funcVector.getVector());
 		}
@@ -60,8 +56,8 @@ public class NodeVector extends Vector {
 		
 		// Read variables vector
 		this.readVarVectors = new VariableVector[NodeVector.NUM_READ_VARS];
-		List<VarValue> readVars = node.getReadVariables();
-		readVars.removeIf(var -> var.isThisVariable());
+		List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+//		readVars.removeIf(var -> var.isThisVariable());
 		for (int idx=0; idx<this.readVarVectors.length; idx++) {
 			if (idx<readVars.size()) {
 				this.readVarVectors[idx] = new VariableVector(readVars.get(idx));
@@ -72,18 +68,16 @@ public class NodeVector extends Vector {
 		
 		// Written variables vector
 		this.writtenVarVectors = new VariableVector[NodeVector.NUM_WRITTEN_VARS];
-		List<VarValue> writtenVars = node.getWrittenVariables();
-		writtenVars.removeIf(var -> var.isThisVariable());
-		for (int idx=0; idx<this.readVarVectors.length; idx++) {
+		List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).toList();
+//		writtenVars.removeIf(var -> var.isThisVariable());
+		for (int idx=0; idx<this.writtenVarVectors.length; idx++) {
 			if (idx<writtenVars.size()) {
 				this.writtenVarVectors[idx] = new VariableVector(writtenVars.get(idx));
 			} else {
 				this.writtenVarVectors[idx] = new VariableVector();
 			}
 		}
-		
-		// Environment vector
-		this.envVector = new EnvironmentVector(node);
+	
 		
 		// Function vector
 		this.funcVectors = FunctionVector.constructFuncVectors(node, NodeVector.NUM_FUNC);
@@ -95,7 +89,6 @@ public class NodeVector extends Vector {
 		for (VariableVector writtenVarVector : this.writtenVarVectors) {
 			this.vector = ArrayUtils.addAll(this.vector, writtenVarVector.getVector());
 		}
-		this.vector = ArrayUtils.addAll(this.vector, this.envVector.getVector());
 		for (FunctionVector funcVector : this.funcVectors) {
 			this.vector = ArrayUtils.addAll(this.vector, funcVector.getVector());
 		}
@@ -113,9 +106,6 @@ public class NodeVector extends Vector {
 		return this.writtenVarVectors;
 	}
 	
-	public EnvironmentVector getEnvVector() {
-		return this.envVector;
-	}
 	
 	public FunctionVector[] getFuncVectors() {
 		return this.funcVectors;

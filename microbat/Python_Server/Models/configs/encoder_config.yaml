@@ -1,20 +1,20 @@
-data.train_data_path: E:\david\FeatureDataset
-data.eval_data_path: E:\david\FeatureDataset
+data.train_data_path: E:\david\FeatureDataset\train.json
+data.eval_data_path: E:\david\FeatureDataset\val.json
 
 # data.train_data_path: E:\david\TestDataset
 data.batch_size: 512
 data.num_workers: 10
-data.input_size: 777
-data.hidden_sizes: [512]
-data.output_size: 128
+data.input_size: 514
+data.hidden_sizes: [256, 128]
+data.output_size: 64
 
 training.device: "cuda"
-training.num_epoch: 15
+training.num_epoch: 20
 training.lr: 0.01
 
 training.save_interval: 5
 training.output_path: C:\Users\david\Documents\Workspace
-training.version: encoder_20230530_2
+training.version: encoder_20230626
 
 visualization.log_interval: 10
 visualization.sample_size: 100

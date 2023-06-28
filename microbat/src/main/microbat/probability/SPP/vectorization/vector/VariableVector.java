@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
+import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
 public class VariableVector extends Vector {
@@ -26,18 +27,22 @@ public class VariableVector extends Vector {
 	public static final int PRIMITIVE_TYPE_COUNT = 8;
 	public static final int DIMENSION = VariableVector.PRIMITIVE_TYPE_COUNT + 6;
 
-	private static final List<String> PRIMITIVE_TYPES_1 = VariableVector.initPrimType_1();
-	private static final List<String> PRIMITIVE_TYPES_2 = VariableVector.initPrimType_2();
+	protected static final List<String> PRIMITIVE_TYPES_1 = VariableVector.initPrimType_1();
+	protected static final List<String> PRIMITIVE_TYPES_2 = VariableVector.initPrimType_2();
 	
-	private static final int IS_ARRAY_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 0;
-	private static final int IS_RELIABLE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 1;
-	private static final int IS_LOCAL_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 2;
-	private static final int IS_STATIC_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 3;
-	private static final int IS_INSTANCE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 4;
-	private static final int COST_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 5;
+	protected static final int IS_ARRAY_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 0;
+	protected static final int IS_RELIABLE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 1;
+	protected static final int IS_LOCAL_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 2;
+	protected static final int IS_STATIC_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 3;
+	protected static final int IS_INSTANCE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 4;
+	protected static final int IS_CONDITION_RESULT_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 5;
 
 	public VariableVector() {
 		super(VariableVector.DIMENSION);
+	}
+	
+	public VariableVector(final int size) {
+		super(size);
 	}
 	
 	public VariableVector(final float[] vector) {
@@ -63,11 +68,12 @@ public class VariableVector extends Vector {
 		if (var.isField()) this.set(VariableVector.IS_INSTANCE_IDX);
 		if (var.isStatic()) this.set(VariableVector.IS_STATIC_IDX);
 		if (VariableVector.isReliableType(typeStr)) this.set(VariableVector.IS_RELIABLE_IDX);
-		
-		this.vector[VariableVector.COST_IDX] = (float) var.getComputationalCost();
+//		
+//		this.vector[VariableVector.COST_IDX] = (float) var.getComputationalCost();
+		if (var.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID)) this.set(VariableVector.IS_CONDITION_RESULT_IDX);
 	}
 
-	private int getTypeIdx(final String typeStr) {
+	protected int getTypeIdx(final String typeStr) {
 		int idx_1 = VariableVector.PRIMITIVE_TYPES_1.indexOf(typeStr);
 		int idx_2 = VariableVector.PRIMITIVE_TYPES_2.indexOf(typeStr);
 		return Math.max(idx_1, idx_2);

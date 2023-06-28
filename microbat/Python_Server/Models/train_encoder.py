@@ -62,7 +62,7 @@ class Trainer():
             vis_features = []
             vis_class = []
             step_ = 0
-            for anchor_feature, pos_feature, neg_feature, cls_vector in self.dataloader:
+            for anchor_feature, pos_feature, neg_feature, labels in self.dataloader:
                 self.optimizier.zero_grad()
                 
                 anchor_embedding = self.model(anchor_feature.to(self.device))
@@ -80,7 +80,7 @@ class Trainer():
                     indices = torch.randperm(B)[:self.vis_sample_size]
                     selected_features = anchor_embedding[indices]
                     selected_features = selected_features.detach().cpu()
-                    selected_class = cls_vector[indices]
+                    selected_class = labels[indices]
                     vis_features.extend(list(selected_features))
                     vis_class.extend(list(selected_class))
                     
@@ -121,7 +121,7 @@ def main(config):
     trainer.train()
 
 if __name__ == '__main__':
-    file_path = "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\SPP\\configs\\encoder_config.yaml"
+    file_path = "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\Models\\configs\\encoder_config.yaml"
 
     # Open the YAML file
     with open(file_path, "r") as yaml_file:

@@ -13,8 +13,8 @@ public class TestClient extends Client {
 	}
 	
 	public static void main(String[] args) {
-    	final String host = "127.0.0.1";
-    	final int port = 8080;
+    	final String host = "127.0.0.2";
+    	final int port = 8081;
     	TestClient client = new TestClient(host, port, true);
     	
     	String message = "message from test client";
