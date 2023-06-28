@@ -9,6 +9,7 @@ import org.eclipse.swt.graphics.Image;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
+import microbat.instrumentation.utils.MicrobatUtils;
 import microbat.model.BreakPoint;
 import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;
@@ -45,9 +46,9 @@ public class FeedbackNodePairLabelProvider implements ILabelProvider {
 
 	@Override
 	public Image getImage(Object element) {
-		if (element instanceof NodeFeedbacksPair) {
-			NodeFeedbacksPair node = (NodeFeedbacksPair) element;			
-			TraceNode traceNode = node.getNode();
+		if (element instanceof ActionPathContentProvider.ContentWrapper) {
+			ActionPathContentProvider.ContentWrapper node = (ActionPathContentProvider.ContentWrapper) element;			
+			TraceNode traceNode = node.getNode().getNode();
 			if (traceNode.hasChecked()) {
 				if (!traceNode.isAllReadWrittenVarCorrect(true)) {
 					return Settings.imageUI.getImage(ImageUI.WRONG_VALUE_MARK);
@@ -69,14 +70,9 @@ public class FeedbackNodePairLabelProvider implements ILabelProvider {
 	@Override
 	public String getText(Object element) {
 		// TODO Auto-generated method stub
-		if (element instanceof NodeFeedbacksPair) {
-			NodeFeedbacksPair node = (NodeFeedbacksPair) element;
-			TraceNode traceNode = node.getNode();
-			
-			String feedback = node.getFeedbacks().size() == 0 
-					? "Error no feedback"
-					: node.getFeedbacks().get(0).toString();
-			return MicroBatUtil.generateTraceNodeText(traceNode) + ": " + feedback;					
+		if (element instanceof ActionPathContentProvider.ContentWrapper) {
+			ActionPathContentProvider.ContentWrapper node = (ActionPathContentProvider.ContentWrapper) element;			
+			return MicroBatUtil.genPathMessage(node.getNode(), node.getIndex());					
 		}
 		return null;
 	}

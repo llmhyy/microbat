@@ -9,6 +9,7 @@ import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.TraceNode;
 import microbat.views.PathView;
 import microbat.views.TraceView;
+import microbat.views.providers.ActionPathContentProvider;
 
 public class PathViewSelectionListener implements ISelectionChangedListener {
 	
@@ -31,8 +32,9 @@ public class PathViewSelectionListener implements ISelectionChangedListener {
 		if (iSel instanceof StructuredSelection) {
 			StructuredSelection sel = (StructuredSelection) iSel;
 			Object obj = sel.getFirstElement();
-			if (obj instanceof NodeFeedbacksPair) {				
-				NodeFeedbacksPair node = (NodeFeedbacksPair) obj;
+			if (obj instanceof ActionPathContentProvider.ContentWrapper) {				
+				ActionPathContentProvider.ContentWrapper contentWrapper = (ActionPathContentProvider.ContentWrapper) obj;
+				NodeFeedbacksPair node = contentWrapper.getNode();
 				this.parentPathView.otherViewsBehaviour(node.getNode());
 				attachedTraceView.jumpToNode(node.getNode());
 			}
