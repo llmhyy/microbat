@@ -36,7 +36,6 @@ public class PathView extends ViewPart {
 	protected Text searchText;	
 	protected ActionPath actionPath;
 	protected Button searchButton;
-	protected TraceView correcTraceView = null;
 	protected TraceView buggyTraceView = null;
 	
 	
@@ -95,30 +94,11 @@ public class PathView extends ViewPart {
 
 	}
 	
-	// Hacky solution to update focus on both buggy path view
-	// and correct path view
-	// Currently only works because
-	// ```````````````````````````````````````````
-	//  -- CorrectTraceView.java
-	//	if(pair != null){
-	//		buggyNode = pair.getBeforeNode();
-	//		if (buggyNode != null) {
-	//			BuggyTraceView buggyTraceView = TregressionViews.getBuggyTraceView();
-	//			buggyTraceView.jumpToNode(buggyTraceView.getTrace(), buggyNode.getOrder(), false);
-	//		}
-	//	}
-	// ```````````````````````````````````````
-	// The corresponding pair is null in the correct trace view.
-	// If it weren't null, we would updating the view to jump to the wrong node.
+
 	public void otherViewsBehaviour(TraceNode node) {
 		if (this.buggyTraceView != null) {
 			this.buggyTraceView.jumpToNode(this.buggyTraceView.getTrace(), node.getOrder(), false);
-		}
-		if (this.correcTraceView != null) {
-			Trace trace = this.correcTraceView.getTrace();
-			
-			
-			// this.correcTraceView.jumpToNode(this.correcTraceView.getTrace(), )
+			this.buggyTraceView.jumpToNode(node);
 		}
 	}
 	
@@ -171,7 +151,4 @@ public class PathView extends ViewPart {
 		this.buggyTraceView = view;
 	}
 	
-	public void setCorrectView(TraceView view) {
-		this.correcTraceView = view;
-	}
 }
