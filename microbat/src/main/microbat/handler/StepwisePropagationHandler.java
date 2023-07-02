@@ -110,7 +110,6 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			debugPilot.constructPath();
 			ActionPath path = debugPilot.getPath();									
 			this.pathView.setActionPath(path);
-			this.pathView.attach(this.buggyView);
 			this.updateView();
 			
 			boolean needPropagateAgain = false;
@@ -269,6 +268,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			public void run() {
 				buggyView = MicroBatViews.getTraceView();
 				pathView = MicroBatViews.getPathView();
+				pathView.setBuggyView(buggyView);
 			}
 		});
 	}

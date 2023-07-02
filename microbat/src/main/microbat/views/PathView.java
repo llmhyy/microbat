@@ -1,5 +1,7 @@
 package microbat.views;
 
+import java.util.ArrayList;
+
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
@@ -19,6 +21,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.probability.SPP.pathfinding.ActionPath;
 import microbat.views.listeners.PathViewSelectionListener;
@@ -32,8 +35,10 @@ public class PathView extends ViewPart {
 	protected ListViewer listViewer;
 	protected Text searchText;	
 	protected ActionPath actionPath;
-	protected TraceView attached = null;
 	protected Button searchButton;
+	protected TraceView correcTraceView = null;
+	protected TraceView buggyTraceView = null;
+	
 	
 	private PathViewSelectionListener selectionListener;
 
@@ -90,12 +95,31 @@ public class PathView extends ViewPart {
 
 	}
 	
+	// Hacky solution to update focus on both buggy path view
+	// and correct path view
+	// Currently only works because
+	// ```````````````````````````````````````````
+	//  -- CorrectTraceView.java
+	//	if(pair != null){
+	//		buggyNode = pair.getBeforeNode();
+	//		if (buggyNode != null) {
+	//			BuggyTraceView buggyTraceView = TregressionViews.getBuggyTraceView();
+	//			buggyTraceView.jumpToNode(buggyTraceView.getTrace(), buggyNode.getOrder(), false);
+	//		}
+	//	}
+	// ```````````````````````````````````````
+	// The corresponding pair is null in the correct trace view.
+	// If it weren't null, we would updating the view to jump to the wrong node.
 	public void otherViewsBehaviour(TraceNode node) {
-		// perform the jump on both correct trace view and
-		// on buggy trace
-		
-		// check if correct view exists and perform the jump
-		
+		if (this.buggyTraceView != null) {
+			this.buggyTraceView.jumpToNode(this.buggyTraceView.getTrace(), node.getOrder(), false);
+		}
+		if (this.correcTraceView != null) {
+			Trace trace = this.correcTraceView.getTrace();
+			
+			
+			// this.correcTraceView.jumpToNode(this.correcTraceView.getTrace(), )
+		}
 	}
 	
 	protected void addSearchTextListener(final Text searchText) {
@@ -115,9 +139,7 @@ public class PathView extends ViewPart {
 	}
 	
 	public void jumpToNode(String searchContent, boolean next) {
-		// todo: implement the node jumping functionality
-		// --> route the node jumping to the buggy traceview
-		if (this.attached != null) this.attached.jumpToNode(searchContent, next);
+		
 	}
 	
 	private void createListView(Composite parent) {
@@ -145,7 +167,11 @@ public class PathView extends ViewPart {
 		listViewer.refresh();
 	}
 	
-	public void attach(TraceView view) {		
-		selectionListener.attachTraceView(view);
+	public void setBuggyView(TraceView view) {
+		this.buggyTraceView = view;
+	}
+	
+	public void setCorrectView(TraceView view) {
+		this.correcTraceView = view;
 	}
 }

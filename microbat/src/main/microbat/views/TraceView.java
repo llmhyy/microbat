@@ -83,7 +83,8 @@ public class TraceView extends ViewPart {
 
 	public TraceView() {
 	}
-
+	
+	
 	public void setSearchText(String expression) {
 		this.searchText.setText(expression);
 		this.previousSearchExpression = expression;

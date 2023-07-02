@@ -1,5 +1,7 @@
 package microbat.views.listeners;
 
+import java.util.ArrayList;
+
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -13,20 +15,16 @@ import microbat.views.providers.ActionPathContentProvider;
 
 public class PathViewSelectionListener implements ISelectionChangedListener {
 	
-	private TraceView attachedTraceView = null;
 	private PathView parentPathView = null;
+	private ArrayList<TraceView> attachedTraceViews = new ArrayList<>();
 	
 	public PathViewSelectionListener(PathView parentPathView) {
 		this.parentPathView = parentPathView;
 	}
 	
-	public void attachTraceView(TraceView view) {
-		this.attachedTraceView = view;
-	}
 
 	@Override
 	public void selectionChanged(SelectionChangedEvent event) {
-		if (attachedTraceView == null) return;
 		ISelection iSel = event.getSelection();
 		
 		if (iSel instanceof StructuredSelection) {
@@ -36,7 +34,7 @@ public class PathViewSelectionListener implements ISelectionChangedListener {
 				ActionPathContentProvider.ContentWrapper contentWrapper = (ActionPathContentProvider.ContentWrapper) obj;
 				NodeFeedbacksPair node = contentWrapper.getNode();
 				this.parentPathView.otherViewsBehaviour(node.getNode());
-				attachedTraceView.jumpToNode(node.getNode());
+
 			}
 			
 		}
