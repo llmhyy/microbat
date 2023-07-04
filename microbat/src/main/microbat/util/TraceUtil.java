@@ -218,6 +218,50 @@ public class TraceUtil {
 		}
 		
 		return croppedTrace;
-		
 	}
-}
+	
+	public static int relationDistance(final TraceNode node1, final TraceNode node2, final Trace trace, final int disLimit) {
+		if (node1.equals(node2)) {
+			return 0;
+		}
+		Set<TraceNode> nextNodes = TraceUtil.extractRelatedNodes(node1, trace);
+		for (int distance=1; distance<=disLimit; distance++) {
+			if (nextNodes.contains(node2)) {
+				return distance;
+			}
+			Set<TraceNode> candidatesNodes = new HashSet<>();
+			for (TraceNode node : nextNodes) {
+				candidatesNodes.addAll(TraceUtil.extractRelatedNodes(node, trace));
+			}
+		}
+		return -1;
+	}
+	
+	public static Set<TraceNode> extractRelatedNodes(final TraceNode node, final Trace trace) {
+		Set<TraceNode> relatedNodes = new HashSet<>();
+		
+		// Control Dominator
+		final TraceNode controlDom = node.getControlDominator();
+		if (controlDom != null) {
+			relatedNodes.add(controlDom);
+		}
+		
+		// Data Dominator
+		for (VarValue readVar : node.getReadVariables()) {
+			final TraceNode dataDom = trace.findDataDependency(node, readVar);
+			if (dataDom != null) {
+				relatedNodes.add(dataDom);
+			}
+		}
+		
+		// Control Dominatees
+		relatedNodes.addAll(node.getControlDominatees());
+		
+		// Data Dominatees
+		for (VarValue writtenVar : node.getWrittenVariables()) {
+			relatedNodes.addAll(trace.findDataDependentee(node, writtenVar));
+		}
+		
+		return relatedNodes;
+	}
+} 

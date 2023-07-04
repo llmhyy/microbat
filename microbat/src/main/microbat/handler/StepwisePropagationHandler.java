@@ -15,10 +15,12 @@ import org.eclipse.swt.widgets.Display;
 
 import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbacksPair;
+import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.probability.SPP.DebugPilot;
+import microbat.probability.SPP.NodeNotInPathException;
 import microbat.probability.SPP.pathfinding.ActionPath;
 import microbat.probability.SPP.propagation.PropagatorType;
 import microbat.recommendation.ChosenVariableOption;
@@ -84,10 +86,10 @@ public class StepwisePropagationHandler extends AbstractHandler {
 		
 		// Set up the propagator that perform propagation,
 		// with initial feedback indicating the output variable  is wrong
-		DebugPilot debugPilot = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode, PropagatorType.RL);
+		DebugPilot debugPilot = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode, PropagatorType.Random);
 		
 		TraceNode currentNode = outputNode;
-		
+		List<TraceNode> candidatesCurrentNodes = new ArrayList<>();
 		boolean isEnd = false;
 		// Keep doing propagation until the root cause is found
 		while(!DebugInfo.isRootCauseFound() && !DebugInfo.isStop() && !isEnd) {
@@ -106,7 +108,23 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			
 			boolean needPropagateAgain = false;
 			while (!needPropagateAgain && !isEnd) {
-				UserFeedback predictedFeedback = debugPilot.giveFeedback(currentNode);
+				UserFeedback predictedFeedback = null;
+				if (candidatesCurrentNodes.size() > 1) {
+					for (TraceNode candidateNode : candidatesCurrentNodes) {
+						try {
+							predictedFeedback = debugPilot.giveFeedback(candidateNode);
+						} catch (NodeNotInPathException e ) {
+							continue;
+						}
+						currentNode = candidateNode;
+						break;
+					}
+					if (predictedFeedback == null) {
+						throw new NodeNotInPathException(Log.genMsg(getClass(), "Give nodes " + candidatesCurrentNodes + " does not in path"));
+					}
+				} else {
+					predictedFeedback = debugPilot.giveFeedback(currentNode);
+				}
 				DebugPilot.printMsg("--------------------------------------");
 				DebugPilot.printMsg("Predicted feedback of node: " + currentNode.getOrder() + ": " + predictedFeedback.toString());
 				NodeFeedbacksPair userFeedbacks = this.askForFeedback(currentNode);
@@ -195,7 +213,15 @@ public class StepwisePropagationHandler extends AbstractHandler {
 					DebugPilot.printMsg("Wong prediction on feedback, start propagation again");
 					needPropagateAgain = true;
 					this.userFeedbackRecords.add(userFeedbacks);
-					currentNode = TraceUtil.findNextNode(currentNode, userFeedbacks.getFirstFeedback(), this.buggyView.getTrace());
+					candidatesCurrentNodes.clear();
+					if (userFeedbacks.getFeedbacks().size() > 1) {
+						for (UserFeedback feedback : userFeedbacks.getFeedbacks()) {
+							final TraceNode nextNode = TraceUtil.findNextNode(currentNode, feedback, this.buggyView.getTrace());
+							candidatesCurrentNodes.add(nextNode);
+						}
+					} else {
+						currentNode = TraceUtil.findNextNode(currentNode, userFeedbacks.getFirstFeedback(), this.buggyView.getTrace());
+					}
 				}
 			}
 		}

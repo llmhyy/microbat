@@ -401,4 +401,9 @@ public class SPP_ implements ProbabilityPropagator {
 		this.unmodifiedType.add(OpcodeType.PUT_STATIC_FIELD);
 		this.unmodifiedType.add(OpcodeType.INVOKE);
 	}
+
+	@Override
+	public void updateFeedbacks(Collection<NodeFeedbacksPair> pairs) {
+		this.feedbackRecords = pairs;
+	}
 }
