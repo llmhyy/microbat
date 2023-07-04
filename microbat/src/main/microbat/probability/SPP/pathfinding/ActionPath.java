@@ -9,6 +9,7 @@ import java.util.Set;
 
 import debuginfo.NodeFeedbackPair;
 import debuginfo.NodeFeedbacksPair;
+import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;
@@ -33,7 +34,7 @@ public class ActionPath implements Iterable<NodeFeedbacksPair>{
 		}
 	}
 	
-	public static ActionPath concat(final ActionPath path1, final ActionPath path2) {
+	public static ActionPath concat(final ActionPath path1, final ActionPath path2, final Trace trace) {
 		if (path1 == null && path2 == null) return null;
 		if (path1 == null) return path2;
 		if (path2 == null) return path1;
@@ -44,8 +45,26 @@ public class ActionPath implements Iterable<NodeFeedbacksPair>{
 		TraceNode lastNode = path1.peek().getNode();
 		TraceNode nextNode = path2.get(0).getNode();
 		if (lastNode.equals(nextNode)) {
-			path.removeLastAction();
+			path.pop();
+		} 
+		
+		if (path1.peek().getFeedbacks().size() > 1) {
+			final NodeFeedbacksPair pair = path1.pop();
+			final TraceNode node = pair.getNode();
+			NodeFeedbacksPair newPair = null;
+			for (UserFeedback feedback : pair.getFeedbacks()) {
+				TraceNode targetNextNode = TraceUtil.findNextNode(node, feedback, trace);
+				if (targetNextNode.equals(nextNode)) {
+					newPair = new NodeFeedbacksPair(node, feedback);
+					break;
+				}
+			}
+			if (newPair == null) {
+				throw new RuntimeException(Log.genMsg(ActionPath.class, "Concatinating two path that is not connected"));
+			}
+			path.addPair(newPair);
 		}
+		
 		for (NodeFeedbacksPair pair : path2) {
 			path.addPair(pair);
 		}
@@ -90,9 +109,14 @@ public class ActionPath implements Iterable<NodeFeedbacksPair>{
 		}
 	}
 	
-	public void removeLastAction() {
+	public NodeFeedbacksPair pop() {
 		if (!this.path.isEmpty()) {
-			this.path.remove(this.path.size()-1);
+			final int lastIdx = this.path.size()-1;
+			NodeFeedbacksPair pair = this.path.get(lastIdx);
+			this.path.remove(lastIdx);
+			return pair;
+		} else {
+			throw new RuntimeException(Log.genMsg(getClass(), "Trying to pop an empty path"));
 		}
 	}
 	
