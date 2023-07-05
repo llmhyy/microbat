@@ -2,7 +2,7 @@ from collections import deque, namedtuple
 
 import random
 
-Transition = namedtuple('Transition', ('state', 'probability', 'reward'))
+Transition = namedtuple('Transition', ('feature', 'prob', 'reward'))
 
 class ReplayMemory(object):
     def __init__(self, config):
@@ -10,8 +10,11 @@ class ReplayMemory(object):
         self.capacity = self.config["data.capacity"]
         self.memory = deque([], maxlen=self.capacity)
     
-    def push(self, *args):
-        self.memory.append(Transition(*args))
+    def push(self, transition):
+        self.memory.append(transition)
+
+    # def push(self, *args):
+    #     self.memory.append(Transition(*args))
 
     def sample(self, batch_size):
         return random.sample(self.memory, batch_size)

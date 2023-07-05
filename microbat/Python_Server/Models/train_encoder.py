@@ -107,12 +107,13 @@ class Trainer():
             self.writer.add_image("projected embedding", image_tensor, global_step=epoch)
 
             # Save model
-            if epoch+1 % self.save_interval == 0:
+            if (epoch+1) % self.save_interval == 0:
                 self.save_model(epoch+1)
-            
+        
+        self.save_model("latest")
 
-    def save_model(self, epoch):
-        output_path = os.path.join(self.output_folder, f"epoch_{epoch}.pt")
+    def save_model(self, msg):
+        output_path = os.path.join(self.output_folder, f"epoch_{msg}.pt")
         print(f"Saving model to {output_path}")
         torch.save(self.model.state_dict(), output_path)
 

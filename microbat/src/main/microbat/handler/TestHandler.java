@@ -27,7 +27,6 @@ import microbat.views.TraceView;
 import microbat.probability.SPP.vectorization.vector.EnvironmentVector;
 import microbat.probability.SPP.vectorization.vector.FunctionMismatchException;
 import microbat.probability.SPP.vectorization.vector.FunctionVector;
-import microbat.probability.SPP.vectorization.vector.NodeVector_1;
 import microbat.probability.SPP.vectorization.vector.VariableVector;
 import microbat.model.BreakPoint;
 import microbat.probability.SPP.vectorization.TraceVectorizer;

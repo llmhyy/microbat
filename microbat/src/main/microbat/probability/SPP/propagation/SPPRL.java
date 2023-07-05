@@ -39,14 +39,6 @@ public class SPPRL extends SPP {
 		this.backwardClient.disconnectServer();
 	}
 	
-	@Override
-	public void propagate() {
-		this.fuseFeedbacks();
-		this.initProb();
-		this.forwardProp();
-		this.backwardProp();
-		this.combineProb();
-	}
 	
 	@Override
 	protected void forwardProp() {

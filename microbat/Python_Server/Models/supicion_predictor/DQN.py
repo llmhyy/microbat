@@ -8,12 +8,11 @@ class DQN(nn.Module):
         self.input_size = self.config["data.input_size"]
         self.hidden_sizes = self.config["data.hidden_sizes"]
         assert len(self.hidden_sizes) >=1, f"[DQN] Hidden layer size should not be empty"
-
         self.fc1 = nn.Linear(self.input_size, self.hidden_sizes[0])
         self.hidden_layers = nn.ModuleList()
         for i in range(len(self.hidden_sizes)-1):
             self.hidden_layers.append(
-                nn.Linear(self.hidden_layers[i], self.hidden_sizes[i+1])
+                nn.Linear(self.hidden_sizes[i], self.hidden_sizes[i+1])
             )
         self.fc_out = nn.Linear(self.hidden_sizes[-1], 1)
         self.activation = nn.ReLU()

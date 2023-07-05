@@ -7,21 +7,23 @@ import microbat.probability.SPP.vectorization.vector.VariableVectorC;
 
 public class BackwardModelClient extends RLModelClient {
 	
+	protected final static String defaultHost = "127.0.0.3";
+	protected final static int  defaultPort = 8083;
+		
 	public BackwardModelClient() {
-		super("127.0.0.3", 8083, false);
+		this(BackwardModelClient.defaultHost, BackwardModelClient.defaultPort, false);
+	}
+	
+	public BackwardModelClient(boolean verbose) {
+		this(BackwardModelClient.defaultHost, BackwardModelClient.defaultPort, verbose);
 	}
 	
 	public BackwardModelClient(String host, int port) {
-		super(host, port);
+		this(host, port, false);
 	}
 	
 	public BackwardModelClient(String host, int port, boolean verbose) {
 		super(host, port, verbose);
-	}
-	
-	public void sendVarFeature(final VarValue var) throws IOException, InterruptedException {
-		final VariableVectorC vector = new VariableVectorC(var);
-		this.sendMsg(vector.toString());
 	}
 
 }
