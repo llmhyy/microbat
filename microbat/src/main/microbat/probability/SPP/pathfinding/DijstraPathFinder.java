@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
@@ -36,10 +37,9 @@ public class DijstraPathFinder extends AbstractPathFinder {
 		}
 		Graph<TraceNode, NodeFeedbacksPair> graph = this.constructGraph();
 		DijkstraShortestPath<TraceNode, NodeFeedbacksPair> dijstraAlg = new DijkstraShortestPath<>(graph);
-		List<NodeFeedbacksPair> path = dijstraAlg.getPath(startNode, endNode).getEdgeList();
-		if (path == null) {
-			return null;
-		}
+		GraphPath<TraceNode, NodeFeedbacksPair> result = dijstraAlg.getPath(startNode, endNode);
+		if (result == null) return null;
+		List<NodeFeedbacksPair> path = result.getEdgeList();
 		// Add the root cause feedback to the end of the path
 		UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
 		NodeFeedbacksPair pair = new NodeFeedbacksPair(endNode, feedback);

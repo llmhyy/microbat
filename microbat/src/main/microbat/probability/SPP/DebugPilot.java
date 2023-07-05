@@ -1,10 +1,11 @@
 package microbat.probability.SPP;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -15,18 +16,13 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.probability.PropProbability;
 import microbat.probability.SPP.pathfinding.ActionPath;
-import microbat.probability.SPP.pathfinding.DijstraPathFinder;
 import microbat.probability.SPP.pathfinding.PathFinder;
-import microbat.probability.SPP.pathfinding.PathFinder_;
-import microbat.probability.SPP.pathfinding.RandomPathFinder;
+import microbat.probability.SPP.pathfinding.PathFinderFactory;
+import microbat.probability.SPP.pathfinding.PathFinderType;
 import microbat.probability.SPP.propagation.ProbabilityPropagator;
-import microbat.probability.SPP.propagation.PropInfer;
+import microbat.probability.SPP.propagation.PropagatorFactory;
 import microbat.probability.SPP.propagation.PropagatorType;
-import microbat.probability.SPP.propagation.SPP;
-import microbat.probability.SPP.propagation.SPPH;
-import microbat.probability.SPP.propagation.SPPRL;
-import microbat.probability.SPP.propagation.SPPRandomPath;
-import microbat.recommendation.ChosenVariableOption;
+
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 
@@ -39,107 +35,31 @@ import microbat.util.TraceUtil;
  */
 public class DebugPilot {
 	
-	/**
-	 * Execution trace of target program
-	 */
 	private final Trace trace;
-	
-	/**
-	 * List of input variables which assumed to be correct
-	 */
 	private Set<VarValue> correctVars = new HashSet<>();
-	
-	/**
-	 * List of outputs variables which assumed to be wrong
-	 */
 	private Set<VarValue> wrongVars = new HashSet<>();
-	
-	/**
-	 * List of executed trace node after dynamic slicing
-	 */
-	private List<TraceNode> slicedTrace = null;
-
-	private Collection<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
-	
 	private final TraceNode outputNode;
-	
-	private TraceNode rootCause = null;
-	
-	private ActionPath path = null;
-	
 	private final PropagatorType propagatorType;
+	private final PathFinderType pathFinderType;
 	
-	private final ProbabilityPropagator propagator;
-	
-	private final PathFinder pathFinder;
-	
-	/**
-	 * Constructor
-	 * @param trace Execution trace for target program
-	 */
-	public DebugPilot(Trace trace, PropagatorType propagatorType) {
-		this(trace, false, propagatorType);
-	}
-	
-	public DebugPilot(final Trace trace, final boolean useBaseline, PropagatorType propagatorType) {
-		this.trace = trace;
-		this.outputNode = null;
-		this.propagatorType = propagatorType;
-		this.propagator = this.getPropagator();
-		this.pathFinder = this.getPathFinder();
-	}
-	
-	/**
-	 * Constructor
-	 * @param trace Execution trace for target program
-	 * @param inputs Input variables which assumed to be correct
-	 * @param outputs Output variables which assumed to be wrong
-	 */
-	public DebugPilot(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode, PropagatorType propagatorType) {
-		this(trace, inputs, outputs, outputNode, false, propagatorType);
-	}
-	
-	public DebugPilot(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode, final boolean useBaseline, PropagatorType propagatorType) {
+	private List<TraceNode> slicedTrace = null;
+	private Collection<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
+	private TraceNode rootCause = null;
+	private ActionPath path = null;
+
+	public DebugPilot(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode, PropagatorType propagatorType, PathFinderType pathFinderType) {
+		Objects.requireNonNull(trace, Log.genMsg(getClass(), "Given trace is null"));
+		Objects.requireNonNull(inputs, Log.genMsg(getClass(), "Given inputs is null"));
+		Objects.requireNonNull(outputs, Log.genMsg(getClass(), "Given outputs is null"));
+		Objects.requireNonNull(outputNode, Log.genMsg(getClass(), "Given outputNode is null"));
+		Objects.requireNonNull(propagatorType, Log.genMsg(getClass(), "Given propagatorType is null"));
 		this.trace = trace;
 		this.correctVars.addAll(inputs);
 		this.wrongVars.addAll(outputs);
 		this.slicedTrace = TraceUtil.dyanmicSlice(trace, outputNode);
 		this.outputNode = outputNode;
 		this.propagatorType = propagatorType;
-		this.propagator = this.getPropagator();
-		this.pathFinder = this.getPathFinder();
-	}
-	
-	protected ProbabilityPropagator getPropagator() {
-		ProbabilityPropagator propagator = null;
-		switch (this.propagatorType) {
-		case Heuristic_Cost:
-			propagator = new SPPH(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
-			break;
-		case ProfInfer:
-			propagator = new PropInfer(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
-			break;
-		case RL:
-			propagator = new SPPRL(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
-			break;
-		case Random:
-			propagator = new SPPRandomPath(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
-			break;
-		case Heuristic_Random:
-			propagator = new SPP(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
-			break;
-		default:
-			break;
-		}
-		return propagator;
-	}
-	
-	protected PathFinder getPathFinder() {
-		if (this.propagatorType == PropagatorType.Random) {
-			return new RandomPathFinder(this.trace, this.slicedTrace);
-		} else {
-			return new DijstraPathFinder(this.trace, this.slicedTrace);
-		}
+		this.pathFinderType = pathFinderType;
 	}
 	
 	public void addCorrectVar(VarValue correctVar) {
@@ -149,6 +69,7 @@ public class DebugPilot {
 	public void addWrongVar(VarValue wrongVar) {
 		this.wrongVars.add(wrongVar);
 	}
+	
 	/**
 	 * Add input variables
 	 * @param inputs Input variables
@@ -166,7 +87,7 @@ public class DebugPilot {
 	}
 	
 	public void propagate() {
-		this.propagator.updateFeedbacks(this.feedbackRecords);
+		ProbabilityPropagator propagator = PropagatorFactory.getPropagator(this.propagatorType, this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
 		propagator.propagate();
 	}
 	
@@ -176,16 +97,15 @@ public class DebugPilot {
 				return action.getFirstFeedback();
 			}
 		}
-		DebugPilot.printMsg("This node is not contained in path");
 		throw new NodeNotInPathException(Log.genMsg(getClass(), "This node " + node.getOrder() + " is not contained in path"));
 	}
 	
 	public void locateRootCause(final TraceNode currentNode) {
 		this.rootCause = this.proposeRootCause(currentNode);
 		if (this.rootCause == null) {
-			DebugPilot.printMsg("Cannot locate root cause");
+			Log.printMsg(this.getClass(), "Cannot locate root cause");
 		} else {
-			DebugPilot.printMsg("Proposed root cause: " + this.rootCause.getOrder());
+			Log.printMsg(this.getClass(), "Proposed root cause: " + this.rootCause.getOrder());
 		}
 	}
 	
@@ -194,124 +114,29 @@ public class DebugPilot {
 	}
 	
 	public void constructPath() {
+		PathFinder pathFinder = PathFinderFactory.getFinder(this.pathFinderType, this.trace, this.slicedTrace);
+		
 		ActionPath mustFollowPath = new ActionPath(this.feedbackRecords);
-		this.path = this.suggestPath(this.outputNode, this.rootCause, mustFollowPath);
-		if (this.path == null) {
-			throw new RuntimeException(Log.genMsg(getClass(), "Failed to generate path"));
+		if (mustFollowPath == null || mustFollowPath.isEmpty()) {
+			this.path = pathFinder.findPath(this.outputNode, this.rootCause);
+			return;
 		} else {
-			Log.printMsg(getClass(), "Suggested path ...");
-			for (NodeFeedbacksPair pair : this.path) {
-				Log.printMsg(this.getClass(), pair.toString());
+			NodeFeedbacksPair latestAction = mustFollowPath.peek();
+			for (UserFeedback feedback : latestAction.getFeedbacks()) {
+				final TraceNode nextNode = TraceUtil.findNextNode(latestAction.getNode(), feedback, this.trace);
+				ActionPath consecutivePath = pathFinder.findPath(nextNode, this.rootCause);
+				if (consecutivePath == null) continue;
+				this.path = ActionPath.concat(mustFollowPath, consecutivePath, this.trace);
+				return;
 			}
 		}
+		throw new RuntimeException(Log.genMsg(getClass(), "Suggest path out of loop"));
 	}
 	
 	public ActionPath getPath() {
 		return this.path;
 	}
 	
-	public void sendReward(final float reward) {
-		if (this.propagator instanceof SPPRL) {
-			SPPRL spprl = (SPPRL) this.propagator;
-			spprl.sendReward(reward);
-		}
-	}
-	
-	protected double genRandomProb() {
-		return Math.random();
-	}
-	
-	public ActionPath suggestRandomPath(final TraceNode startNode) {
-		return null;
-	}
-	
-	public ActionPath suggestRandomPath(final TraceNode startNode, final ActionPath mustFollowPath) {
-		if (mustFollowPath == null || mustFollowPath.isEmpty()) {
-			return this.suggestRandomPath(startNode);
-		}
-		// If mustFollowPath is provided,
-		// then find path starting from last node of the user path
-		NodeFeedbacksPair latestAction = mustFollowPath.peek();
-		TraceNode latestNode = TraceUtil.findNextNode(latestAction.getNode(), latestAction.getFirstFeedback(), trace);
-		if (latestNode == null) {
-			throw new RuntimeException("[SPP] There are invalid next node based on the feedback");
-		}
-		
-		ActionPath consecutive_path = this.suggestRandomPath(latestNode);
-
-		// Concatenate two path together
-		ActionPath path = ActionPath.concat(mustFollowPath, consecutive_path, this.trace);
-		return path;
-	}
-	
-//	public ActionPath suggestPath(final TraceNode startNode, final TraceNode endNode) {
-//		if (startNode.getOrder() < endNode.getOrder()) {
-//			UserFeedback feedback = this.giveGreedyFeedback(endNode);
-//			NodeFeedbacksPair pair = new NodeFeedbacksPair(startNode, feedback);
-//			return new ActionPath(pair);
-//		}
-//		PathFinder_ finder = new PathFinder_(this.trace, this.slicedTrace);
-//		System.out.println("Find path by greedy ...");
-//		ActionPath path = finder.findPathway_greedy(startNode, endNode);
-//		if (path == null) {
-//			System.out.println("Find path by Dijstra ...");
-//			path = finder.findPath_dijstra(startNode, endNode);
-//		}
-//		return path;
-//	}
-	
-	public ActionPath suggestPath(final TraceNode startNode, final TraceNode endNode, final ActionPath mustFollowPath) {
-//		if (startNode.getOrder() < endNode.getOrder()) {
-//			System.out.println("Fail to propose a valid root cause, Now give feedback based on probability");
-//			NodeFeedbacksPair latestAction = mustFollowPath.peek();
-//			TraceNode latestNode = TraceUtil.findNextNode(latestAction.getNode(), latestAction.getFirstFeedback(), trace);
-//			ActionPath path = new ActionPath(mustFollowPath);
-//			UserFeedback feedback =  this.giveGreedyFeedback(latestNode);
-//			NodeFeedbacksPair pair = new NodeFeedbacksPair(latestNode, feedback);
-//			path.addPair(pair);
-//			return path;
-//		}
-		
-		// If there are no user path provided, the find path from the error node
-		if (mustFollowPath == null || mustFollowPath.isEmpty()) {
-			return this.pathFinder.findPath(startNode, endNode);
-		}
-		
-		// If mustFollowPath is provided,
-		// then find path starting from last node of the user path
-		NodeFeedbacksPair latestAction = mustFollowPath.peek();
-		for (UserFeedback feedback : latestAction.getFeedbacks()) {
-			try {
-				final TraceNode nextNode = TraceUtil.findNextNode(latestAction.getNode(), feedback, this.trace);
-				ActionPath consecutivePath = this.pathFinder.findPath(nextNode, endNode);
-				ActionPath path = ActionPath.concat(mustFollowPath, consecutivePath, this.trace);
-				return path;
-			} catch (NullPointerException e) {
-				continue;
-			}
-		}
-		
-		throw new RuntimeException(Log.genMsg(getClass(), "Suggest path out of loop"));
-//		TraceNode latestNode = TraceUtil.findNextNode(latestAction.getNode(), latestAction.getFirstFeedback(), trace);
-//		if (latestNode == null) {
-//			throw new RuntimeException("[SPP] There are invalid next node based on the feedback");
-//		}
-//		
-////		ActionPath consecutive_path = this.suggestPath(latestNode, endNode);
-//		ActionPath consecutive_path = this.pathFinder.findPath(latestNode, endNode);
-//		if (consecutive_path == null) {
-//			// Fail to construct path, give feedback directly based on greedy approach
-//			ActionPath path = new ActionPath(mustFollowPath);
-//			UserFeedback feedback =  this.giveGreedyFeedback(latestNode);
-//			NodeFeedbacksPair pair = new NodeFeedbacksPair(latestNode, feedback);
-//			path.addPair(pair);
-//			return path;
-//		}
-//		
-//		// Concatenate two path together
-//		ActionPath path = ActionPath.concat(mustFollowPath, consecutive_path);
-//		return path;
-	}
 	
 	/**
 	 * Propose the root cause node. <br><br>
@@ -375,9 +200,6 @@ public class DebugPilot {
 			
 			node.setDrop(drop);
 			if (drop < 0) {
-				// Case that the read variable is wrong but the written variable is correct
-				// Ignore it by now
-//				System.out.println("Warning: Trace node " + node.getOrder() + " has negative drop");
 				continue;
 			} else {
 				if (drop > maxDrop) {
@@ -403,48 +225,21 @@ public class DebugPilot {
 		return false;
 	}
 	
-	public static String genMsg(final String message) {
-		return "[DebugPilot] " + message;
-	}
-	
-	public static void printMsg(final String message) {
-		System.out.println(DebugPilot.genMsg(message));
-	}
-	
-	private UserFeedback giveGreedyFeedback(final TraceNode node) {
-		UserFeedback feedback = new UserFeedback();
-		
-		TraceNode controlDom = node.getControlDominator();
-		double controlProb = 2.0;
-		if (controlDom != null) {
-			controlProb = controlDom.getConditionResult().getProbability();
+	public void multiSlicing() {
+		Set<TraceNode> relatedNodes = new HashSet<>();
+		relatedNodes.addAll(TraceUtil.dyanmicSlice(this.trace, this.outputNode));
+		for (NodeFeedbacksPair pair : this.feedbackRecords) {
+			final TraceNode node = pair.getNode();
+			relatedNodes.retainAll(TraceUtil.dyanmicSlice(this.trace, node));
 		}
-		
-		double minReadProb = 2.0;
-		VarValue wrongVar = null;
-		for (VarValue readVar : node.getReadVariables()) {
-			// If the readVar is This variable, then ignore
-			if (readVar.isThisVariable()) {
-				continue;
+		List<TraceNode> newSlicedNodes = new ArrayList<>();
+		newSlicedNodes.addAll(relatedNodes);
+		newSlicedNodes.sort(new Comparator<TraceNode>() {
+			@Override
+			public int compare(TraceNode t1, TraceNode t2) {
+				return t1.getOrder() - t2.getOrder();
 			}
-			double prob = readVar.getProbability();
-			if (prob < minReadProb) {
-				minReadProb = prob;
-				wrongVar = readVar;
-			}
-		}
-		
-		// There are no controlDom and readVar
-		if (controlProb == 2.0 && minReadProb == 2.0) {
-			feedback.setFeedbackType(UserFeedback.UNCLEAR);
-			return feedback;
-		}
-		if (controlProb <= minReadProb) {
-			feedback.setFeedbackType(UserFeedback.WRONG_PATH);
-		} else {
-			feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
-			feedback.setOption(new ChosenVariableOption(wrongVar, null));
-		}
-		return feedback;
+		});
+		this.slicedTrace = newSlicedNodes;
 	}
 }

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import debuginfo.NodeFeedbackPair;
+import microbat.log.Log;
 import microbat.model.trace.TraceNode;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
@@ -525,7 +526,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 			Double.isInfinite(probability) || 
 			probability < 0.0d || 
 			probability > 1.0d) {
-			throw new IllegalArgumentException("Invalid probability");
+			throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid probability: " + backward_prob));
 		}
 		this.probability = probability;
 	}
@@ -555,7 +556,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 				Double.isInfinite(forward_prob) || 
 				forward_prob < 0.0d || 
 				forward_prob > 1.0d) {
-				throw new IllegalArgumentException("Invalid probability");
+			throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid probability: " + backward_prob));
 			}
 		this.forward_prob = forward_prob;
 	}
@@ -569,7 +570,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 				Double.isInfinite(backward_prob) || 
 				backward_prob < 0.0d || 
 				backward_prob > 1.0d) {
-				throw new IllegalArgumentException("Invalid probability");
+				throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid probability: " + backward_prob));
 			}
 		this.backward_prob = backward_prob;
 	}
