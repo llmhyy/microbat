@@ -24,6 +24,10 @@ import org.slf4j.LoggerFactory;
 
 import debuginfo.NodeFeedbacksPair;
 import microbat.Activator;
+import microbat.bytecode.ByteCode;
+import microbat.bytecode.ByteCodeList;
+import microbat.bytecode.OpcodeType;
+import microbat.model.BreakPoint;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;

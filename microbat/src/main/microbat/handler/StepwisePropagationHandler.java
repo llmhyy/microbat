@@ -12,6 +12,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
 
 import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbacksPair;
@@ -28,11 +29,14 @@ import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 import microbat.views.MicroBatViews;
+import microbat.views.PathView;
 import microbat.views.TraceView;
 
 public class StepwisePropagationHandler extends AbstractHandler {
 
 	protected TraceView buggyView = null;
+	protected PathView pathView = null;
+	
 	private Stack<NodeFeedbacksPair> userFeedbackRecords = new Stack<>();
 	
 	@Override
@@ -102,11 +106,15 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			debugPilot.propagate();
 			long endTime = System.currentTimeMillis();
 			long duration = (endTime - startTime) / 1000;
+			
 			Log.printMsg(this.getClass(), "Propagation Duration: " + duration + " s");
 			Log.printMsg(this.getClass(), "Locating root cause ...");
 			debugPilot.locateRootCause(currentNode);
 			Log.printMsg(this.getClass(), "Constructing path to root cause ...");
 			debugPilot.constructPath();
+			ActionPath path = debugPilot.getPath();									
+			this.pathView.setActionPath(path);
+			this.updateView();
 			
 			boolean needPropagateAgain = false;
 			while (!needPropagateAgain && !isEnd) {
@@ -231,11 +239,28 @@ public class StepwisePropagationHandler extends AbstractHandler {
 	}
 	
 	
+	private void updateView() {
+		if (this.buggyView != null && this.pathView != null) {			
+			Display.getDefault().syncExec(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					buggyView.updateData();					
+					pathView.updateData();					
+				}
+			});
+		} else {
+			System.out.println("buggyView or correctView is null");
+		}
+	}
+	
 	protected void setup() {
 		Display.getDefault().syncExec(new Runnable() {
 			@Override
 			public void run() {
 				buggyView = MicroBatViews.getTraceView();
+				pathView = MicroBatViews.getPathView();
+				pathView.setBuggyView(buggyView);
 			}
 		});
 	}

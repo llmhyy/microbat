@@ -39,6 +39,17 @@ public class MicroBatViews {
 		return view;
 	}
 	
+	public static PathView getPathView() {
+		PathView pathView = null;
+		try {
+			pathView = (PathView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(PathView.ID);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		return pathView;
+	}
+	
+	
 //	public static ConcurrentTraceView getConcurrentTraceView(){
 //		ConcurrentTraceView view = null;
 //		try {
