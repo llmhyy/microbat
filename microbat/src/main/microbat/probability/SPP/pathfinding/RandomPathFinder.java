@@ -79,7 +79,9 @@ public class RandomPathFinder extends AbstractPathFinder {
 	}
 	
 	protected List<VarValue> getFilteredReadVarList(final TraceNode node) {
-		return node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+		return node.getReadVariables().stream().filter(var -> 
+			(!var.isThisVariable()) && this.trace.findDataDependency(node, var) != null
+		).toList();
 	}
 	
 
