@@ -51,7 +51,7 @@ public class ActionPathContentProvider implements IStructuredContentProvider {
 			nodeFeedbacksPairs[i] = actionPath.get(i);
 		}
 		Arrays.sort(nodeFeedbacksPairs, (pair1, pair2) -> {
-			return pair1.getNode().getOrder() - pair2.getNode().getOrder();
+			return pair2.getNode().getOrder() - pair1.getNode().getOrder();
 		});
 		Object[] result = new Object[actionPath.getLength()];
 		for (int i = 0; i < actionPath.getLength(); ++i) {
