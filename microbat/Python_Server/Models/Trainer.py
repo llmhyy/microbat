@@ -47,6 +47,7 @@ class Trainer():
             if torch.isnan(prob):
                 printMsg(f"{prob} is nan", Trainer)
             prob = torch.nan_to_num(prob, nan=0.5, posinf=1.0, neginf=0.0)
+            prob = torch.clip(prob, min=0.0, max=1.0)
             return prob
 
     def clear_cache(self):

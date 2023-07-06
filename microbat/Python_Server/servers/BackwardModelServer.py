@@ -1,5 +1,5 @@
 from RLModelServer import RLModelServer
-from Models.Trainer import Trainer
+from Models.supicion_predictor.DQN import DQN
 from servers.FeedbackFeature import FeedbackVector
 from utils.Log import printMsg
 from gensim.models.fasttext import load_facebook_vectors
@@ -7,24 +7,28 @@ from gensim.models.fasttext import load_facebook_vectors
 import torch
 import yaml
 
-class BackwardModelTrainServer(RLModelServer):
+class BackwardModelServer(RLModelServer):
 
     CONDITION_RESULT_NAME = "ConditionResult_"
 
     def __init__(self, config):
-        super().__init__(config)
-        self.trainer = Trainer(config)
+        super(BackwardModelServer, self).__init__(config)
         self.feedback_sim = self.config["training.feedback_sim"]
+        self.device = self.config["training.device"]
+        self.policy_net = DQN(self.config).to(self.device)
+        self.model_path = self.config["training.load_path"]
+        self.policy_net.load_state_dict(torch.load(self.model_path))
+        self.policy_net = self.policy_net.float()
+        self.policy_net.eval()
         self.var_type_sim = self.config["training.var_type_sim"]
         self.var_name_sim = self.config["training.var_name_sim"]
         self.work_embedding_path = self.config["encoder.work_embedding_path"]
         print(f"Loading word embeddings from {self.work_embedding_path}")
         self.word_embeddings = load_facebook_vectors(self.work_embedding_path)
-
         
     def func(self, sock):
-        printMsg("-------------------------------------------", BackwardModelTrainServer)
-        printMsg("Recieve feedbacks ...", BackwardModelTrainServer)
+        printMsg("-------------------------------------------", BackwardModelServer)
+        printMsg("Recieve feedbacks ...", BackwardModelServer)
         feedback_features = self.recieve_all_feedbacks(sock)
         while self.should_continoue(sock):
             node_order = self.recieve_node_order(sock)
@@ -40,36 +44,30 @@ class BackwardModelTrainServer(RLModelServer):
                     related_feedbacks.append(feedback_feature)
 
             if len(related_feedbacks) == 0:
-                input_feature = self.list_to_tensor([node_vector, var_vector, torch.tensor([0.0]) , torch.Tensor(FeedbackVector.DIMENSION)])
-                prob = self.trainer.predict_prob(input_feature)
-                reward = torch.tensor([0]).to(self.device)
+                input_feature = self.list_to_tensor([node_vector, var_vector, torch.tensor([0.0]), torch.Tensor(FeedbackVector.DIMENSION)])
+                prob = self.predict_prob(input_feature)
             else:
                 probs = []
-                rewards = []
                 for related_feedback in related_feedbacks:
                     if self.is_condition_result(var_name):
                         sim = torch.tensor([1.0]) if related_feedback.feedback_vector.is_wrong_path_feedback() else torch.tensor([0.0])
                     else:
                         sim = torch.tensor([0.0]) if related_feedback.feedback_vector.is_wrong_path_feedback() else self.cosine_sim(var_name_vector, self.gen_word_embedding(related_feedback.variable_name))
                     input_feature = self.list_to_tensor([node_vector, var_vector, sim, related_feedback.feedback_vector.vector])
-                    prob = self.trainer.predict_prob(input_feature)
+                    prob = self.predict_prob(input_feature)
                     probs.append(prob)
-                    rewards.append(self.cal_reward(prob, related_feedback, var_vector, var_name, var_name_vector))
                 prob = sum(probs) / len(probs)
-                reward = sum(rewards) / len(rewards)
 
-            printMsg(f"Node: {node_order} \t backward factor: {prob.item()} \trelated feedback count: {len(related_feedbacks)} \treward: {reward.item()}", BackwardModelTrainServer)
+            printMsg(f"Node: {node_order} \t backward factor: {prob.item()} \trelated feedback count: {len(related_feedbacks)}", BackwardModelServer)
             self.send_prob(sock, prob.item())
-            self.trainer.save_to_cache(input_feature, prob, reward)
 
-        reward = self.recieve_reward(sock)
-        reward = torch.tensor([reward]).to(self.device)
-        printMsg(f"path reward: {reward.item()}", BackwardModelTrainServer)
-        self.trainer.update_cache_reward(reward)
-        self.trainer.save_cache_to_memory()
-        self.trainer.clear_cache()
-        self.trainer.optimize_model()
-        printMsg("Finish propagation ...", BackwardModelTrainServer)
+        printMsg("Finish propagation ...", BackwardModelServer)
+    
+    def predict_prob(self, input_feature):
+        prob = self.policy_net(input_feature.float())
+        prob = torch.nan_to_num(prob, nan=0.5, posinf=1.0, neginf=0.0)
+        prob = torch.clip(prob, min=0.0, max=1.0)
+        return prob
     
     def gen_word_embedding(self, word):
         return torch.tensor(self.word_embeddings[word]).to(self.device)
@@ -78,11 +76,11 @@ class BackwardModelTrainServer(RLModelServer):
         feedback_vector = feedback_feature.feedback_vector
         target_var_type = feedback_feature.variable_vector
         target_var_name = feedback_feature.variable_name
-        target_var_name_vector = self.gen_word_embedding(target_var_name)
+        target_var_name_vector = self.gen_word_embedding(feedback_feature.variable_name)
         if feedback_vector.is_correct_feedback():
             expected = 0
         elif feedback_vector.is_wrong_path_feedback():
-            if self.is_condition_result(ref_var_name):
+            if self.is_condition_result(ref_var_type, ref_var_name, target_var_type, target_var_name):
                 expected = 1
             else:
                 expected = 0.5
@@ -99,13 +97,13 @@ class BackwardModelTrainServer(RLModelServer):
         return self.cosine_sim(ref_var_name_vector, target_var_name_vector) > self.var_name_sim and self.cosine_sim(ref_var_type, target_var_type) > self.var_type_sim
     
     def is_condition_result(self, var_name):
-        return var_name.startswith(BackwardModelTrainServer.CONDITION_RESULT_NAME)
+        return var_name.startswith(BackwardModelServer.CONDITION_RESULT_NAME)
 
 if __name__ == "__main__":
     config_path = "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\servers\\configs\\backward_server_config.yaml"
     with open(config_path, "r") as yaml_file:
         config = yaml.safe_load(yaml_file)
-    server = BackwardModelTrainServer(config)
+    server = BackwardModelServer(config)
     print("Server start ...")
     server.start()
     print("Server end")
