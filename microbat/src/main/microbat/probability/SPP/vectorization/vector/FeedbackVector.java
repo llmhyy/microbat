@@ -7,12 +7,17 @@ public class FeedbackVector extends Vector {
 	public static final int FEEDBACK_COUNT = 3;
 	public static final int DIMENSION = FeedbackVector.FEEDBACK_COUNT;
 	
-	private static final int CORRECT_IDX = 0;
-	private static final int WRONG_PATH_IDX = 1;
-	private static final int WRONG_VARIABLE_IDX = 2;
+	protected static final int CORRECT_IDX = 0;
+	protected static final int WRONG_PATH_IDX = 1;
+	protected static final int WRONG_VARIABLE_IDX = 2;
+	
 	
 	public FeedbackVector() {
 		super(FeedbackVector.DIMENSION);
+	}
+	
+	public FeedbackVector(final int size) {
+		super(size);
 	}
 	
 	public FeedbackVector(final float[] vector) {

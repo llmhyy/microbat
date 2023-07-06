@@ -23,6 +23,9 @@ class SocketServer(ABC):
 
         self.verbose = verbose
 
+    def detect_connection_message(self, sock):
+        sock.recv(self.BUFFER_SIZE)
+
     def recvMsg(self, sock):
         """
         Keep receiving message until MSG_END is detected

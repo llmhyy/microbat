@@ -77,14 +77,14 @@ public class Vector {
 		return hashCode;
 	}
 	
-	public static double calCosSim(final Vector vector1, final Vector vector2) {
+	public static float calCosSim(final Vector vector1, final Vector vector2) {
 		if (vector1.getSize() != vector2.getSize()) {
 			throw new IllegalArgumentException("Vector lengths does not match");
 		}
 		
-		double dotProduct = 0.0d;
-		double norm1 = 0.0d;
-		double norm2 = 0.0d;
+		float dotProduct = 0.0f;
+		float norm1 = 0.0f;
+		float norm2 = 0.0f;
 		
 		for (int i=0; i<vector1.getVector().length; i++) {
 			dotProduct += vector1.getVector()[i] * vector2.getVector()[i];
@@ -92,11 +92,11 @@ public class Vector {
 			norm2 += Math.pow(vector2.getVector()[i], 2);
 		}
 		
-		double similarity;
+		float similarity;
 		if (norm1 == 0.0d || norm2 == 0.0d) {
-			similarity = 0.0d;
+			similarity = 0.0f;
 		} else {
-			similarity = dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
+			similarity = (float) (dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2)));
 		}
 		return similarity;
 	}

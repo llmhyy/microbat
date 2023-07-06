@@ -102,4 +102,9 @@ public class PropInfer implements ProbabilityPropagator {
 		}
 	}
 
+	@Override
+	public void updateFeedbacks(Collection<NodeFeedbacksPair> pairs) {
+		this.feedbackRecords = pairs;
+	}
+
 }

@@ -1,0 +1,9 @@
+server.host: "127.0.0.4"
+server.port: 8084
+server.verbose: False
+
+encoder.pca: True
+encoder.pca_path: C:\\Users\\david\\Documents\\Workspace\\pca\\model.joblib
+encoder.config_path: C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\Models\\configs\\encoder_config.yaml
+encoder.encoder_path: "C:\\Users\\david\\Documents\\Workspace\\encoder_80_20230629\\epoch_latest.pt"
+training.device: cuda

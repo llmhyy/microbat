@@ -1,29 +1,18 @@
 import torch
-import os
-import math
+from gensim.models import FastText
+from gensim.models.fasttext import load_facebook_vectors
 
 def main():
 
-    path = "E:\david\FeatureDataset"
-    filepaths = []
-    for root, _, files in os.walk(path):
-        for file_name in files:
-            file_path = os.path.join(root, file_name)
-            filepaths.append(file_path)
+    # Load pre-trained FastText model
+    path = "C:\\Users\\david\\Documents\\fasttext\\wiki.en.bin"
+    wv = load_facebook_vectors(path)
 
-    class_vector_dict = {}
-    for filepath in filepaths:
-        print(f"Loading data from {filepath}")
-        with open(filepath, 'r') as file:
-            for line in file:
-                tokens = line.split(":")
-                cls_vector = tokens[1]
-                if cls_vector in class_vector_dict:
-                    class_vector_dict[cls_vector]+=1
-                else:
-                    class_vector_dict[cls_vector] = 1
-    
-    print(class_vector_dict)
+    # Example usage
+    word = "learning"
+    embedding = wv[word]
+    print(embedding)
+
 
 
     

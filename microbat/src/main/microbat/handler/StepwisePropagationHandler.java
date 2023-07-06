@@ -16,11 +16,14 @@ import org.eclipse.ui.PlatformUI;
 
 import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbacksPair;
+import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.probability.SPP.DebugPilot;
+import microbat.probability.SPP.NodeNotInPathException;
 import microbat.probability.SPP.pathfinding.ActionPath;
+import microbat.probability.SPP.pathfinding.PathFinderType;
 import microbat.probability.SPP.propagation.PropagatorType;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
@@ -88,25 +91,26 @@ public class StepwisePropagationHandler extends AbstractHandler {
 		
 		// Set up the propagator that perform propagation,
 		// with initial feedback indicating the output variable  is wrong
-		DebugPilot debugPilot = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode, PropagatorType.Heuristic);
+		DebugPilot debugPilot = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode, PropagatorType.None, PathFinderType.Random);
 		
 		TraceNode currentNode = outputNode;
-		
+		List<TraceNode> candidatesCurrentNodes = new ArrayList<>();
 		boolean isEnd = false;
 		// Keep doing propagation until the root cause is found
 		while(!DebugInfo.isRootCauseFound() && !DebugInfo.isStop() && !isEnd) {
 			// Perform propagation
 			debugPilot.updateFeedbacks(userFeedbackRecords);
-			DebugPilot.printMsg("Propagating probability ...");
+			debugPilot.multiSlicing();
+			Log.printMsg(this.getClass(), "Propagating probability ...");
 			long startTime = System.currentTimeMillis();
 			debugPilot.propagate();
 			long endTime = System.currentTimeMillis();
 			long duration = (endTime - startTime) / 1000;
 			
-			DebugPilot.printMsg("Propagation Duration: " + duration + " s");
-			DebugPilot.printMsg("Locating root cause ...");
+			Log.printMsg(this.getClass(), "Propagation Duration: " + duration + " s");
+			Log.printMsg(this.getClass(), "Locating root cause ...");
 			debugPilot.locateRootCause(currentNode);
-			DebugPilot.printMsg("Constructing path to root cause ...");
+			Log.printMsg(this.getClass(), "Constructing path to root cause ...");
 			debugPilot.constructPath();
 			ActionPath path = debugPilot.getPath();									
 			this.pathView.setActionPath(path);
@@ -114,9 +118,25 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			
 			boolean needPropagateAgain = false;
 			while (!needPropagateAgain && !isEnd) {
-				UserFeedback predictedFeedback = debugPilot.giveFeedback(currentNode);
-				DebugPilot.printMsg("--------------------------------------");
-				DebugPilot.printMsg("Predicted feedback of node: " + currentNode.getOrder() + ": " + predictedFeedback.toString());
+				UserFeedback predictedFeedback = null;
+				if (candidatesCurrentNodes.size() > 1) {
+					for (TraceNode candidateNode : candidatesCurrentNodes) {
+						try {
+							predictedFeedback = debugPilot.giveFeedback(candidateNode);
+						} catch (NodeNotInPathException e ) {
+							continue;
+						}
+						currentNode = candidateNode;
+						break;
+					}
+					if (predictedFeedback == null) {
+						throw new NodeNotInPathException(Log.genMsg(getClass(), "Give nodes " + candidatesCurrentNodes + " does not in path"));
+					}
+				} else {
+					predictedFeedback = debugPilot.giveFeedback(currentNode);
+				}
+				Log.printMsg(this.getClass(), "--------------------------------------");
+				Log.printMsg(this.getClass(), "Predicted feedback of node: " + currentNode.getOrder() + ": " + predictedFeedback.toString());
 				NodeFeedbacksPair userFeedbacks = this.askForFeedback(currentNode);
 				if (userFeedbacks.containsFeedback(predictedFeedback)) {
 					// Feedback predicted correctly, save the feedback into record and move to next node
@@ -135,10 +155,10 @@ public class StepwisePropagationHandler extends AbstractHandler {
 					 *  If user insist the previous feedback is accurate, then we say there is 
 					 *  omission bug
 					 */
-					DebugPilot.printMsg("You give CORRECT feedback at node: " + currentNode.getOrder());
+					Log.printMsg(this.getClass(), "You give CORRECT feedback at node: " + currentNode.getOrder());
 					NodeFeedbacksPair prevRecord = this.userFeedbackRecords.peek();
 					TraceNode prevNode = prevRecord.getNode();
-					DebugPilot.printMsg("Please confirm the feedback at previous node.");
+					Log.printMsg(this.getClass(), "Please confirm the feedback at previous node.");
 					NodeFeedbacksPair correctingFeedbacks = this.askForFeedback(prevNode);
 					if (correctingFeedbacks.equals(prevRecord)) {
 						// Omission bug confirmed
@@ -150,20 +170,20 @@ public class StepwisePropagationHandler extends AbstractHandler {
 						while (!lastAccurateFeedbackLocated && !isEnd) {
 							prevRecord = this.userFeedbackRecords.peek();
 							prevNode = prevRecord.getNode();
-							DebugPilot.printMsg("Please confirm the feedback at previous node.");
+							Log.printMsg(this.getClass(), "Please confirm the feedback at previous node.");
 							correctingFeedbacks = this.askForFeedback(prevNode);
 							if (correctingFeedbacks.equals(prevRecord)) {
 								lastAccurateFeedbackLocated = true;
 								currentNode = TraceUtil.findNextNode(prevNode, correctingFeedbacks.getFeedbacks().get(0), this.buggyView.getTrace());
-								DebugPilot.printMsg("Last accurate feedback located. Please start giveing feedback from node: " + currentNode.getOrder());
+								Log.printMsg(this.getClass(), "Last accurate feedback located. Please start giveing feedback from node: " + currentNode.getOrder());
 								continue;
 							}
 							this.userFeedbackRecords.pop();
 							if (this.userFeedbackRecords.isEmpty()) {
 								// Reach initial feedback
-								DebugPilot.printMsg("You are going to reach the initialize feedback which assumed to be accurate");
-								DebugPilot.printMsg("Pleas start giving from node: "+prevNode.getOrder());
-								DebugPilot.printMsg("If the initial feedback is inaccurate, please start the whole process again");
+								Log.printMsg(this.getClass(), "You are going to reach the initialize feedback which assumed to be accurate");
+								Log.printMsg(this.getClass(), "Pleas start giving from node: "+prevNode.getOrder());
+								Log.printMsg(this.getClass(), "If the initial feedback is inaccurate, please start the whole process again");
 								currentNode = prevNode;
 								lastAccurateFeedbackLocated = true;
 							}
@@ -183,7 +203,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 					 * If the user insist the feedback is accurate, then
 					 * omission bug confirm
 					 */
-					DebugPilot.printMsg("Cannot find next node. Please double check you feedback at node: " + currentNode.getOrder());
+					Log.printMsg(this.getClass(), "Cannot find next node. Please double check you feedback at node: " + currentNode.getOrder());
 					NodeFeedbacksPair correctingFeedbacks = this.askForFeedback(currentNode);
 					if (correctingFeedbacks.equals(userFeedbacks)) {
 						// Omission bug confirmed
@@ -191,7 +211,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 						this.reportOmissionBug(startNode, correctingFeedbacks);
 						isEnd = true;
 					} else {
-						DebugPilot.printMsg("Wong prediction on feedback, start propagation again");
+						Log.printMsg(this.getClass(), "Wong prediction on feedback, start propagation again");
 						needPropagateAgain = true;
 						this.userFeedbackRecords.add(correctingFeedbacks);
 						currentNode = TraceUtil.findNextNode(currentNode, correctingFeedbacks.getFirstFeedback(), this.buggyView.getTrace());
@@ -200,52 +220,24 @@ public class StepwisePropagationHandler extends AbstractHandler {
 					/*	Wrong prediction on feedback
 					 *  We need to record it and start the propagation again
 					 */
-					DebugPilot.printMsg("Wong prediction on feedback, start propagation again");
+					Log.printMsg(this.getClass(), "Wong prediction on feedback, start propagation again");
 					needPropagateAgain = true;
 					this.userFeedbackRecords.add(userFeedbacks);
-					currentNode = TraceUtil.findNextNode(currentNode, userFeedbacks.getFirstFeedback(), this.buggyView.getTrace());
+					candidatesCurrentNodes.clear();
+					if (userFeedbacks.getFeedbacks().size() > 1) {
+						for (UserFeedback feedback : userFeedbacks.getFeedbacks()) {
+							final TraceNode nextNode = TraceUtil.findNextNode(currentNode, feedback, this.buggyView.getTrace());
+							candidatesCurrentNodes.add(nextNode);
+						}
+					} else {
+						currentNode = TraceUtil.findNextNode(currentNode, userFeedbacks.getFirstFeedback(), this.buggyView.getTrace());
+					}
 				}
 			}
 		}
 		return Status.OK_STATUS;
 	}
 	
-	
-	/**
-	 * Pads the given trace at the top and bottom end with its parents
-	 * and returns the padded trace.
-	 * 
-	 * @param trace The trace to pad
-	 * @return The padded trace with the parent operations.
-	 */
-	private List<TraceNode> padTrace(Trace trace) {
-		List<TraceNode> execList = trace.getExecutionList();
-		List<TraceNode> result = new ArrayList<>();
-		if (execList.size() < 1) {
-			return result;
-		}
-		int smallestOrder = Integer.MAX_VALUE;
-		TraceNode top = null;
-		for (TraceNode node : execList) {
-			if (smallestOrder > node.getOrder()) {
-				top = node; 
-				smallestOrder = node.getOrder();
-			}
-		}
-		Stack<TraceNode> nodes = new Stack<>();
-		while (top != null) {
-			nodes.add(top);
-			top = top.getAbstractionParent();
-		}
-		while (!nodes.empty()) {
-			TraceNode node = nodes.pop();			
-			result.add(node);
-		}
-		for (int i = 1; i < execList.size(); ++i) {
-			result.add(execList.get(i));
-		}
-		return result;
-	}
 	
 	private void updateView() {
 		if (this.buggyView != null && this.pathView != null) {			
@@ -308,12 +300,12 @@ public class StepwisePropagationHandler extends AbstractHandler {
 	
 	protected NodeFeedbacksPair askForFeedback(final TraceNode node) {
 		this.jumpToNode(node);
-		DebugPilot.printMsg("Please give an feedback for node: " + node.getOrder());
+		Log.printMsg(this.getClass(), "Please give an feedback for node: " + node.getOrder());
 		DebugInfo.waitForFeedbackOrRootCauseOrStop();
 		NodeFeedbacksPair userPairs = DebugInfo.getNodeFeedbackPair();
 		DebugInfo.clearNodeFeedbackPairs();
 		System.out.println();
-		DebugPilot.printMsg("UserFeedback: " + userPairs);
+		Log.printMsg(this.getClass(), "UserFeedback: " + userPairs);
 		return userPairs;
 	}
 	
@@ -326,20 +318,20 @@ public class StepwisePropagationHandler extends AbstractHandler {
 		}
 	}
 	protected void reportMissingBranchOmissionBug(final TraceNode startNode, final TraceNode endNode) {
-		DebugPilot.printMsg("-------------------------------------------");
-		DebugPilot.printMsg("Omission bug detected");
-		DebugPilot.printMsg("Scope begin: " + startNode.getOrder());
-		DebugPilot.printMsg("Scope end: " + endNode.getOrder());
-		DebugPilot.printMsg("Omission Type: Missing Branch");
-		DebugPilot.printMsg("-------------------------------------------");
+		Log.printMsg(this.getClass(), "-------------------------------------------");
+		Log.printMsg(this.getClass(), "Omission bug detected");
+		Log.printMsg(this.getClass(), "Scope begin: " + startNode.getOrder());
+		Log.printMsg(this.getClass(), "Scope end: " + endNode.getOrder());
+		Log.printMsg(this.getClass(), "Omission Type: Missing Branch");
+		Log.printMsg(this.getClass(), "-------------------------------------------");
 	}
 	
 	protected void reportMissingAssignmentOmissionBug(final TraceNode startNode, final TraceNode endNode, final VarValue var) {
-		DebugPilot.printMsg("-------------------------------------------");
-		DebugPilot.printMsg("Omission bug detected");
-		DebugPilot.printMsg("Scope begin: " + startNode.getOrder());
-		DebugPilot.printMsg("Scope end: " + endNode.getOrder());
-		DebugPilot.printMsg("Omission Type: Missing Assignment of " + var.getVarName());
-		DebugPilot.printMsg("-------------------------------------------");
+		Log.printMsg(this.getClass(), "-------------------------------------------");
+		Log.printMsg(this.getClass(), "Omission bug detected");
+		Log.printMsg(this.getClass(), "Scope begin: " + startNode.getOrder());
+		Log.printMsg(this.getClass(), "Scope end: " + endNode.getOrder());
+		Log.printMsg(this.getClass(), "Omission Type: Missing Assignment of " + var.getVarName());
+		Log.printMsg(this.getClass(), "-------------------------------------------");
 	}
 }

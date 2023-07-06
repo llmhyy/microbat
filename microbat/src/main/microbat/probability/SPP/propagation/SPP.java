@@ -2,23 +2,27 @@ package microbat.probability.SPP.propagation;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 
 import debuginfo.NodeFeedbacksPair;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
+import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.probability.PropProbability;
 import microbat.recommendation.UserFeedback;
+import microbat.util.TraceUtil;
 
 public class SPP implements ProbabilityPropagator {
 	
 	protected final Trace trace;
-	protected final List<TraceNode> slicedTrace;
+	protected List<TraceNode> slicedTrace;
 	
 	protected final Set<VarValue> correctVars;
 	protected final Set<VarValue> wrongVars;
@@ -38,6 +42,7 @@ public class SPP implements ProbabilityPropagator {
 	@Override
 	public void propagate() {
 		this.fuseFeedbacks();
+		this.updateSlicedTrace();
 		this.computeComputationalCost();
 		this.initProb();
 		this.forwardProp();
@@ -111,13 +116,6 @@ public class SPP implements ProbabilityPropagator {
 					readVar.setBackwardProb(resultProb);
 				}	
 			}
-			
-//			// Propagate to control dominator as well
-//			final TraceNode controlDom = node.getControlDominator();
-//			if (controlDom != null) {
-//				final double prob = this.predictBackwardDiscount(node);
-//				controlDom.getConditionResult().addBackwardProbability(prob);
-//			}
 		}
 		
 		// Normalize to target range
@@ -136,9 +134,7 @@ public class SPP implements ProbabilityPropagator {
 	 */
 	protected void forwardProp() {
 		for (TraceNode node : this.slicedTrace) {
-			if (node.getOrder() == 3) {
-				System.out.println();
-			}
+			Log.printMsg(getClass(), "Forward: " + node.getOrder());
 			if (this.isFeedbackGiven(node)) continue;
 			
 			// Pass forward probability
@@ -338,6 +334,23 @@ public class SPP implements ProbabilityPropagator {
 		return count;
 	}
 	
+	protected void updateSlicedTrace() {
+		Set<TraceNode> relatedNodes = new HashSet<>();
+		relatedNodes.addAll(this.slicedTrace);
+		for (NodeFeedbacksPair pair : this.feedbackRecords) {
+			final TraceNode node = pair.getNode();
+			relatedNodes.retainAll(TraceUtil.dyanmicSlice(this.trace, node));
+		}
+		List<TraceNode> newSlicedNodes = new ArrayList<>();
+		newSlicedNodes.addAll(relatedNodes);
+		newSlicedNodes.sort(new Comparator<TraceNode>() {
+			@Override
+			public int compare(TraceNode t1, TraceNode t2) {
+				return t1.getOrder() - t2.getOrder();
+			}
+		});
+	}  
+	
 	protected void computeComputationalCost() {
 		
 		// Calculate computation cost for each step 
@@ -393,12 +406,9 @@ public class SPP implements ProbabilityPropagator {
 		this.unmodifiedType.add(OpcodeType.PUT_STATIC_FIELD);
 		this.unmodifiedType.add(OpcodeType.INVOKE);
 	}
-	
-	public static String genMsg(final String message) {
-		return "[SPP] " + message;
-	}
-	
-	public static void printMsg(final String message) {
-		System.out.println(SPP.genMsg(message));
+
+	@Override
+	public void updateFeedbacks(Collection<NodeFeedbacksPair> pairs) {
+		this.feedbackRecords = pairs;
 	}
 }

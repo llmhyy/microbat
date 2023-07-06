@@ -5,6 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Forward Server",
+            "type": "python",
+            "request": "launch",
+            "program": "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\servers\\ForwardModelTrainServer.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": { "PYTHONPATH": "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\servers"}
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
