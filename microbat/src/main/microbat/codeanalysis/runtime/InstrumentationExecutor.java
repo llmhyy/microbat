@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
 import microbat.agent.TraceAgentRunner;
+import microbat.debugpilot.propagation.BP.BeliefPropagation;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.AgentParams.LogType;
 import microbat.instrumentation.filter.CodeRangeEntry;
@@ -31,7 +32,6 @@ import microbat.model.value.VarValue;
 import microbat.preference.DatabasePreference;
 import microbat.preference.ExecutionRangePreference;
 import microbat.preference.MicrobatPreference;
-import microbat.probability.BP.BeliefPropagation;
 import microbat.sql.DBSettings;
 import microbat.sql.DbService;
 import microbat.util.JavaUtil;
