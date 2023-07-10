@@ -30,6 +30,14 @@ public class ActionPathContentProvider implements IStructuredContentProvider {
 		public NodeFeedbacksPair getNode() {
 			return nodePair;
 		}
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof ContentWrapper) {
+				ContentWrapper cw = (ContentWrapper) other;
+				return cw.index == this.index && cw.getNode() == this.getNode();
+			}
+			return false;
+		}
 	}
 	
 	@Override
@@ -40,7 +48,7 @@ public class ActionPathContentProvider implements IStructuredContentProvider {
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {		
 	}
-
+	
 	@Override
 	public Object[] getElements(Object inputElement) {
 		if (!(inputElement instanceof ActionPath)) return null;

@@ -3,6 +3,7 @@ package microbat.views;
 import java.util.ArrayList;
 
 import org.eclipse.jface.viewers.ListViewer;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
@@ -24,6 +25,7 @@ import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.probability.SPP.pathfinding.ActionPath;
+import microbat.util.MicroBatUtil;
 import microbat.views.listeners.PathViewSelectionListener;
 import microbat.views.providers.ActionPathContentProvider;
 import microbat.views.providers.FeedbackNodePairLabelProvider;
@@ -119,14 +121,24 @@ public class PathView extends ViewPart {
 	}
 	
 	public void jumpToNode(String searchContent, boolean next) {
+
 		
+		for (int i = 0; i < ((ActionPath) listViewer.getInput()).getLength(); ++i) {
+			ActionPathContentProvider.ContentWrapper content = (ActionPathContentProvider.ContentWrapper) listViewer.getElementAt(i);
+			String label = MicroBatUtil.genPathMessage(content.getNode(), content.getIndex());
+			if (label.contains(searchContent)) {
+				this.listViewer.setSelection(new StructuredSelection(listViewer.getElementAt(i)), true);
+				listViewer.refresh();
+				return;
+			}
+		}
 	}
 	
 	private void createListView(Composite parent) {
 		listViewer = new ListViewer(parent, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);		
 		listViewer.setContentProvider(new ActionPathContentProvider());
 		listViewer.setLabelProvider(new FeedbackNodePairLabelProvider());
-		listViewer.getList().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		listViewer.getList().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 		listViewer.addPostSelectionChangedListener(this.selectionListener);
 	}
 
