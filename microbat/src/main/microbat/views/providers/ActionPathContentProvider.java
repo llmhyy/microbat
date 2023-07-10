@@ -30,6 +30,14 @@ public class ActionPathContentProvider implements IStructuredContentProvider {
 		public NodeFeedbacksPair getNode() {
 			return nodePair;
 		}
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof ContentWrapper) {
+				ContentWrapper cw = (ContentWrapper) other;
+				return cw.index == this.index && cw.getNode() == this.getNode();
+			}
+			return false;
+		}
 	}
 	
 	@Override
@@ -40,7 +48,7 @@ public class ActionPathContentProvider implements IStructuredContentProvider {
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {		
 	}
-
+	
 	@Override
 	public Object[] getElements(Object inputElement) {
 		if (!(inputElement instanceof ActionPath)) return null;
@@ -51,7 +59,7 @@ public class ActionPathContentProvider implements IStructuredContentProvider {
 			nodeFeedbacksPairs[i] = actionPath.get(i);
 		}
 		Arrays.sort(nodeFeedbacksPairs, (pair1, pair2) -> {
-			return pair1.getNode().getOrder() - pair2.getNode().getOrder();
+			return pair2.getNode().getOrder() - pair1.getNode().getOrder();
 		});
 		Object[] result = new Object[actionPath.getLength()];
 		for (int i = 0; i < actionPath.getLength(); ++i) {
