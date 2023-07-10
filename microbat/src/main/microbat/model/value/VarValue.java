@@ -18,15 +18,14 @@ import java.util.List;
 import java.util.Set;
 
 import debuginfo.NodeFeedbackPair;
+import microbat.debugpilot.propagation.probability.HasProbability;
+import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.log.Log;
 import microbat.model.trace.TraceNode;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
-import microbat.probability.HasProbability;
-import microbat.probability.PropProbability;
-import microbat.probability.SPP.pathfinding.DijstraNode;
 
 /**
  * @author Yun Lin

@@ -9,8 +9,8 @@ import org.eclipse.jface.viewers.Viewer;
 
 import com.ibm.wala.util.collections.Pair;
 
-import microbat.probability.SPP.pathfinding.ActionPath;
 import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.pathfinding.ActionPath;
 
 public class ActionPathContentProvider implements IStructuredContentProvider {
 	

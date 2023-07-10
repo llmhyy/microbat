@@ -8,16 +8,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import microbat.debugpilot.propagation.BP.BeliefPropagation;
+import microbat.debugpilot.propagation.BP.constraint.Constraint;
+import microbat.debugpilot.propagation.BP.constraint.StatementConstraintA2;
+import microbat.debugpilot.propagation.BP.constraint.WrongConstraintConditionException;
+import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
-import microbat.probability.PropProbability;
-import microbat.probability.BP.BeliefPropagation;
-import microbat.probability.BP.constraint.Constraint;
-import microbat.probability.BP.constraint.StatementConstraintA2;
-import microbat.probability.BP.constraint.WrongConstraintConditionException;
 
 public class StatementConstraintA2Test {
 	private VarValue readVar1;

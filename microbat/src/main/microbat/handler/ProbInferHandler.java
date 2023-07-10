@@ -14,13 +14,13 @@ import org.eclipse.swt.widgets.Display;
 
 import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.DebugPilot;
+import microbat.debugpilot.pathfinding.PathFinderType;
+import microbat.debugpilot.propagation.PropagatorType;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.probability.SPP.DebugPilot;
-import microbat.probability.SPP.pathfinding.PathFinderType;
-import microbat.probability.SPP.propagation.PropagatorType;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 import microbat.views.MicroBatViews;

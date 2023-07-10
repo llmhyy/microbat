@@ -24,6 +24,6 @@ training.feedback_sim: 0.8
 training.reward_weight: 0.8
 
 training.load_model: False
-training.load_path: "C:\\Users\\david\\Documents\\Workspace\\ForwardTrainer\\epoch_10.pt"
+training.load_path: "C:\\Users\\david\\Documents\\Workspace\\ForwardTrainer\\epoch_20.pt"
 training.save_interval: 10
 training.output_path: C:\\Users\\david\\Documents\\Workspace\\ForwardTrainer

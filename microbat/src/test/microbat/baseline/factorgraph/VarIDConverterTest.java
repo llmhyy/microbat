@@ -6,7 +6,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import microbat.probability.BP.VarIDConverter;
+import microbat.debugpilot.propagation.BP.VarIDConverter;
 
 public class VarIDConverterTest {
 	

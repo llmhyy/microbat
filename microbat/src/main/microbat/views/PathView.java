@@ -22,10 +22,9 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.pathfinding.ActionPath;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
-import microbat.probability.SPP.pathfinding.ActionPath;
-import microbat.util.MicroBatUtil;
 import microbat.views.listeners.PathViewSelectionListener;
 import microbat.views.providers.ActionPathContentProvider;
 import microbat.views.providers.FeedbackNodePairLabelProvider;

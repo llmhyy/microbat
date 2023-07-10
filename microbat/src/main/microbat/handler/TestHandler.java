@@ -16,24 +16,19 @@ import org.eclipse.swt.widgets.Display;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
+import microbat.debugpilot.propagation.BP.BeliefPropagation;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.probability.BP.BeliefPropagation;
 import microbat.util.JavaUtil;
+import microbat.vectorization.TraceVectorizer;
+import microbat.vectorization.vector.*;
 import microbat.views.MicroBatViews;
 import microbat.views.TraceView;
-import microbat.probability.SPP.vectorization.vector.EnvironmentVector;
-import microbat.probability.SPP.vectorization.vector.FunctionMismatchException;
-import microbat.probability.SPP.vectorization.vector.FunctionVector;
-// import microbat.probability.SPP.vectorization.vector.NodeVector_1;
-import microbat.probability.SPP.vectorization.vector.VariableVector;
 import microbat.model.BreakPoint;
-import microbat.probability.SPP.vectorization.TraceVectorizer;
 
 import java.util.ArrayList;
-import microbat.probability.SPP.vectorization.vector.*;
 public class TestHandler extends AbstractHandler {
 	
 	private final List<OpcodeType> unmodifiedType = new ArrayList<>();

@@ -40,7 +40,7 @@ class BackwardModelTrainServer(RLModelServer):
                     related_feedbacks.append(feedback_feature)
 
             if len(related_feedbacks) == 0:
-                input_feature = self.list_to_tensor([node_vector, var_vector, torch.Tensor(FeedbackVector.DIMENSION)])
+                input_feature = self.list_to_tensor([node_vector, var_vector, torch.tensor([0.0]) , torch.Tensor(FeedbackVector.DIMENSION)])
                 prob = self.trainer.predict_prob(input_feature)
                 reward = torch.tensor([0]).to(self.device)
             else:
@@ -78,11 +78,11 @@ class BackwardModelTrainServer(RLModelServer):
         feedback_vector = feedback_feature.feedback_vector
         target_var_type = feedback_feature.variable_vector
         target_var_name = feedback_feature.variable_name
-        target_var_name_vector = self.gen_word_embedding(feedback_feature.variable_name)
+        target_var_name_vector = self.gen_word_embedding(target_var_name)
         if feedback_vector.is_correct_feedback():
             expected = 0
         elif feedback_vector.is_wrong_path_feedback():
-            if self.is_condition_result(ref_var_type, ref_var_name, target_var_type, target_var_name):
+            if self.is_condition_result(ref_var_name):
                 expected = 1
             else:
                 expected = 0.5
