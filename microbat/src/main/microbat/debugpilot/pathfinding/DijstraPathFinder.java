@@ -73,7 +73,6 @@ public class DijstraPathFinder extends AbstractPathFinder {
 					NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
 					directedGraph.addVertex(dataDom);
 					directedGraph.addEdge(node, dataDom, pair);
-					Log.printMsg(getClass(), "Node: " + node.getOrder() + " Node: " + dataDom.getOrder());
 					directedGraph.setEdgeWeight(pair, readVar.getProbability());
 					toVisitNodes.add(dataDom);
 				}

@@ -128,7 +128,6 @@ public abstract class SPP implements ProbabilityPropagator {
 	 */
 	protected void forwardProp() {
 		for (TraceNode node : this.slicedTrace) {
-			Log.printMsg(getClass(), "Forward: " + node.getOrder());
 			if (this.isFeedbackGiven(node)) continue;
 			
 			// Pass forward probability
@@ -188,7 +187,9 @@ public abstract class SPP implements ProbabilityPropagator {
 				writtenVar.setBackwardProb(PropProbability.ONE);
 			} else {
 				if (node.isBranch() && writtenVar.isConditionResult()) {
-					writtenVar.setBackwardProb(writtenVar.getConditionBackwardProb().stream().mapToDouble(Double::doubleValue).average().orElse(PropProbability.UNCERTAIN));
+					writtenVar.setBackwardProb(writtenVar.getConditionBackwardProb() == null ? 
+							PropProbability.UNCERTAIN :
+							writtenVar.getConditionBackwardProb().stream().mapToDouble(Double::doubleValue).average().orElse(PropProbability.UNCERTAIN));
 				} else {
 					List<TraceNode> dataDominatees = this.trace.findDataDependentee(node, writtenVar);
 					final double maxProb = dataDominatees.stream().filter(dataDominatee -> this.slicedTrace.contains(dataDominatee))
