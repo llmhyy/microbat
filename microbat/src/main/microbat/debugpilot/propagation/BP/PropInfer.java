@@ -1,6 +1,5 @@
 package microbat.debugpilot.propagation.BP;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -11,7 +10,6 @@ import microbat.debugpilot.propagation.BP.constraint.Constraint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.recommendation.UserFeedback;
 
 public class PropInfer implements ProbabilityPropagator {
 
@@ -49,56 +47,12 @@ public class PropInfer implements ProbabilityPropagator {
 	@Override
 	public void propagate() {
 		Constraint.resetID();
-		
 		// Calculate the probability for variables
 		VariableEncoderFG varEncoder = new VariableEncoderFG(this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
-		varEncoder.encode();	
-		
+		varEncoder.encode();
 		// Calculate the probability for statements
 		StatementEncoderFG statEncoder = new StatementEncoderFG(this.trace, this.slicedTrace);
 		statEncoder.encode();
 
 	}
-	
-	public void responseFeedbacks(NodeFeedbacksPair pair) {
-		
-		// Replace the feedbacks if it already exists
-		this.feedbackRecords.removeIf(feedbackPair -> feedbackPair.getNode().equals(pair.getNode()));
-		// Record the feedbacks
-		this.feedbackRecords.add(pair);
-		
-		final TraceNode node = pair.getNode();
-		final TraceNode controlDom = node.getControlDominator();
-		
-		final List<VarValue> readVars = new ArrayList<>();
-		readVars.addAll(node.getReadVariables());
-		readVars.removeIf(var -> var.isThisVariable());
-		
-		final List<VarValue> writtenVars = new ArrayList<>();
-		writtenVars.addAll(node.getWrittenVariables());
-		writtenVars.removeIf(var -> var.isThisVariable());
-		
-		if (pair.getFeedbackType().equals(UserFeedback.CORRECT)) {
-			this.correctVars.addAll(readVars);
-			this.correctVars.addAll(writtenVars);
-			if (controlDom != null) {
-				this.correctVars.add(controlDom.getConditionResult());
-			}
-		} else if (pair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-			if (controlDom == null) {
-				throw new RuntimeException("There are no control dominator");
-			}
-			final VarValue controlDomVar = controlDom.getConditionResult();
-			this.wrongVars.add(controlDomVar);
-		} else if (pair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-			List<VarValue> wrongReadVars = new ArrayList<>();
-			for (UserFeedback feedback : pair.getFeedbacks()) {
-				wrongReadVars.add(feedback.getOption().getReadVar());
-			}
-			this.wrongVars.addAll(wrongReadVars);
-			this.wrongVars.addAll(node.getWrittenVariables());
-			this.correctVars.add(controlDom.getConditionResult());
-		}
-	}
-
 }
