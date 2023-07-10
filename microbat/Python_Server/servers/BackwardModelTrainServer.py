@@ -1,4 +1,4 @@
-from RLModelServer import RLModelServer
+from RLModelTrainServer import RLModelTrainServer
 from Models.Trainer import Trainer
 from servers.FeedbackFeature import FeedbackVector
 from utils.Log import printMsg
@@ -7,24 +7,45 @@ from gensim.models.fasttext import load_facebook_vectors
 import torch
 import yaml
 
-class BackwardModelTrainServer(RLModelServer):
+class BackwardModelTrainServer(RLModelTrainServer):
 
     CONDITION_RESULT_NAME = "ConditionResult_"
 
     def __init__(self, config):
         super().__init__(config)
         self.trainer = Trainer(config)
-        self.feedback_sim = self.config["training.feedback_sim"]
-        self.var_type_sim = self.config["training.var_type_sim"]
-        self.var_name_sim = self.config["training.var_name_sim"]
         self.work_embedding_path = self.config["encoder.work_embedding_path"]
         print(f"Loading word embeddings from {self.work_embedding_path}")
         self.word_embeddings = load_facebook_vectors(self.work_embedding_path)
 
-        
     def func(self, sock):
         printMsg("-------------------------------------------", BackwardModelTrainServer)
         printMsg("Recieve feedbacks ...", BackwardModelTrainServer)
+        mode = self.recvMsg(sock)
+        if mode == RLModelTrainServer.INFERENCE_MODE:
+            feedback_features = self.recieve_all_feedbacks(sock)
+            while self.should_continoue(sock):
+                node_order = self.recieve_node_order(sock)
+                node_vector = self.recieve_node_vector(sock)
+                var_vector = self.recieve_variable_vector(sock)
+                var_name = self.recieve_variable_name(sock)
+
+                probs = []
+                for feedback_features in feedback_features:
+                    node_sim = self.cal_node_sim(node_vector, feedback_feature.node_vector)
+                    var_sim = self.cal_var_sim(var_vector, var_name, feedback_feature.variable_vector, feedback_feature.variable_name)
+                    input_feature = self.list_to_tensor([node_vector, var_vector, node_sim, var_sim])
+                    prob = self.trainer.predict_prob(input_feature)
+                    probs.append(prob)
+                probs = sum(probs) / len(probs)
+                printMsg(f"Node: {node_order} \t backward factor: {prob.item()}", BackwardModelTrainServer)
+                self.send_prob(sock, prob.item())
+            printMsg("Finish propagation ...", BackwardModelTrainServer)
+        elif mode == RLModelTrainServer.REWARD_MODE:
+            pass
+        else:
+            raise Exception()
+        
         feedback_features = self.recieve_all_feedbacks(sock)
         while self.should_continoue(sock):
             node_order = self.recieve_node_order(sock)
@@ -74,6 +95,13 @@ class BackwardModelTrainServer(RLModelServer):
     def gen_word_embedding(self, word):
         return torch.tensor(self.word_embeddings[word]).to(self.device)
 
+    def cal_var_sim(self, var_type_1, var_name_1, var_type_2, var_name_2):
+        type_sim = self.cosine_sim(var_type_1, var_type_2)
+        var_name_vector_1 = self.work_embedding_path[var_name_1]
+        var_name_vector_2 = self.work_embedding_path[var_name_2]
+        name_sim = self.cosine_sim(var_name_vector_1, var_name_vector_2)
+        return type_sim * name_sim
+    
     def cal_reward(self, predict, feedback_feature, ref_var_type, ref_var_name, ref_var_name_vector):
         feedback_vector = feedback_feature.feedback_vector
         target_var_type = feedback_feature.variable_vector

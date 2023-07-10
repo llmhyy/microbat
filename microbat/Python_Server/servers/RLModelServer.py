@@ -4,7 +4,7 @@ sys.path.append("..")
 from servers.SocketServer import SocketServer
 from Models.encoder.Encoder import Encoder
 from servers.FeedbackFeature import FeedbackVector, FeedbackFeature
-from servers.NodeFeature import NodeFeature
+from gensim.models.fasttext import load_facebook_vectors
 
 from joblib import load
 import yaml
@@ -92,12 +92,6 @@ class RLModelServer(SocketServer):
         order = int(message)
         return order
         
-    def recieve_reward(self, sock):
-        message = self.recvMsg(sock)
-        reward = float(message)
-        reward = torch.tensor(reward).to(self.device)
-        return reward
-        
     def receive_sim(self, sock):
         message = self.recvMsg(sock)
         sim = float(message)
@@ -134,6 +128,9 @@ class RLModelServer(SocketServer):
     def send_prob(self, sock, prob):
         self.sendMsg(sock, str(prob))
 
+    def cal_node_sim(self, node_1, node_2):
+        return self.cosine_sim(node_1, node_2)
+    
     def cosine_sim(self, vector_1, vector_2):
         vector_1 = vector_1.view(1, -1)
         vector_2 = vector_2.view(1, -1)

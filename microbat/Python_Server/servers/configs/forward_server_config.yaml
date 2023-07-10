@@ -7,7 +7,7 @@ encoder.pca_path: C:\\Users\\david\\Documents\\Workspace\\pca\\model.joblib
 encoder.config_path: C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\Models\\configs\\encoder_config.yaml
 encoder.encoder_path: "C:\\Users\\david\\Documents\\Workspace\\encoder_80_20230629\\epoch_latest.pt"
 
-data.input_size: 771
+data.input_size: 770
 data.hidden_sizes: [256, 128]
 data.capacity: 100000
 

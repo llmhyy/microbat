@@ -8,7 +8,7 @@ encoder.config_path: C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\M
 encoder.encoder_path: "C:\\Users\\david\\Documents\\Workspace\\encoder_80_20230629\\epoch_latest.pt"
 encoder.work_embedding_path: "C:\\Users\\david\\Documents\\fasttext\\wiki.en.bin"
 
-data.input_size: 786
+data.input_size: 784
 data.hidden_sizes: [256, 128]
 data.capacity: 100000
 

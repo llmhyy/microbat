@@ -35,7 +35,6 @@ class BackwardModelServer(RLModelServer):
             node_vector = self.recieve_node_vector(sock)
             var_vector = self.recieve_variable_vector(sock)
             var_name = self.recieve_variable_name(sock)
-            var_name_vector = self.gen_word_embedding(var_name)
 
             related_feedbacks = []
             for feedback_feature in feedback_features:
@@ -49,11 +48,9 @@ class BackwardModelServer(RLModelServer):
             else:
                 probs = []
                 for related_feedback in related_feedbacks:
-                    if self.is_condition_result(var_name):
-                        sim = torch.tensor([1.0]) if related_feedback.feedback_vector.is_wrong_path_feedback() else torch.tensor([0.0])
-                    else:
-                        sim = torch.tensor([0.0]) if related_feedback.feedback_vector.is_wrong_path_feedback() else self.cosine_sim(var_name_vector, self.gen_word_embedding(related_feedback.variable_name))
-                    input_feature = self.list_to_tensor([node_vector, var_vector, sim, related_feedback.feedback_vector.vector])
+                    node_sim = self.cal_node_sim(node_vector, related_feedback.node_vector)
+                    var_sim = self.cal_var_sim(var_vector, var_name, related_feedback.variable_vector, related_feedback.variable_name)
+                    input_feature = self.list_to_tensor([node_vector, var_vector, node_sim, var_sim])
                     prob = self.predict_prob(input_feature)
                     probs.append(prob)
                 prob = sum(probs) / len(probs)
@@ -72,32 +69,32 @@ class BackwardModelServer(RLModelServer):
     def gen_word_embedding(self, word):
         return torch.tensor(self.word_embeddings[word]).to(self.device)
 
-    def cal_reward(self, predict, feedback_feature, ref_var_type, ref_var_name, ref_var_name_vector):
-        feedback_vector = feedback_feature.feedback_vector
-        target_var_type = feedback_feature.variable_vector
-        target_var_name = feedback_feature.variable_name
-        target_var_name_vector = self.gen_word_embedding(feedback_feature.variable_name)
-        if feedback_vector.is_correct_feedback():
-            expected = 0
-        elif feedback_vector.is_wrong_path_feedback():
-            if self.is_condition_result(ref_var_type, ref_var_name, target_var_type, target_var_name):
-                expected = 1
-            else:
-                expected = 0.5
-        elif feedback_vector.is_wrong_var_feedback():
-            if self.is_condition_result(ref_var_name):
-                expected = 0
-            elif self.is_same_var(ref_var_type, ref_var_name_vector, target_var_type, target_var_name_vector):
-                expected = 1
-            else:
-                expected = 0
-        return 1 - (expected-predict)**2
+    # def cal_reward(self, predict, feedback_feature, ref_var_type, ref_var_name, ref_var_name_vector):
+    #     feedback_vector = feedback_feature.feedback_vector
+    #     target_var_type = feedback_feature.variable_vector
+    #     target_var_name = feedback_feature.variable_name
+    #     target_var_name_vector = self.gen_word_embedding(feedback_feature.variable_name)
+    #     if feedback_vector.is_correct_feedback():
+    #         expected = 0
+    #     elif feedback_vector.is_wrong_path_feedback():
+    #         if self.is_condition_result(ref_var_type, ref_var_name, target_var_type, target_var_name):
+    #             expected = 1
+    #         else:
+    #             expected = 0.5
+    #     elif feedback_vector.is_wrong_var_feedback():
+    #         if self.is_condition_result(ref_var_name):
+    #             expected = 0
+    #         elif self.is_same_var(ref_var_type, ref_var_name_vector, target_var_type, target_var_name_vector):
+    #             expected = 1
+    #         else:
+    #             expected = 0
+    #     return 1 - (expected-predict)**2
 
-    def is_same_var(self, ref_var_type, ref_var_name_vector, target_var_type, target_var_name_vector):
-        return self.cosine_sim(ref_var_name_vector, target_var_name_vector) > self.var_name_sim and self.cosine_sim(ref_var_type, target_var_type) > self.var_type_sim
+    # def is_same_var(self, ref_var_type, ref_var_name_vector, target_var_type, target_var_name_vector):
+    #     return self.cosine_sim(ref_var_name_vector, target_var_name_vector) > self.var_name_sim and self.cosine_sim(ref_var_type, target_var_type) > self.var_type_sim
     
-    def is_condition_result(self, var_name):
-        return var_name.startswith(BackwardModelServer.CONDITION_RESULT_NAME)
+    # def is_condition_result(self, var_name):
+    #     return var_name.startswith(BackwardModelServer.CONDITION_RESULT_NAME)
 
 if __name__ == "__main__":
     config_path = "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\servers\\configs\\backward_server_config.yaml"
