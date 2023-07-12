@@ -37,13 +37,9 @@ public class DijstraPathFinder extends AbstractPathFinder {
 		}
 		Graph<TraceNode, NodeFeedbacksPair> graph = this.constructGraph();
 		DijkstraShortestPath<TraceNode, NodeFeedbacksPair> dijstraAlg = new DijkstraShortestPath<>(graph);
-		GraphPath<TraceNode, NodeFeedbacksPair> result = null;
-		try {
-			result = dijstraAlg.getPath(startNode, endNode);
-		} catch (IllegalArgumentException iae) {
-			System.out.println();
-		}
-		if (result == null) return null;
+		GraphPath<TraceNode, NodeFeedbacksPair> result = dijstraAlg.getPath(startNode, endNode);;
+		if (result == null) 
+			throw new RuntimeException(Log.genMsg(this.getClass(), "Dijstra algorithm cannot find the path"));
 		List<NodeFeedbacksPair> path = result.getEdgeList();
 		// Add the root cause feedback to the end of the path
 		UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
@@ -93,6 +89,10 @@ public class DijstraPathFinder extends AbstractPathFinder {
 				toVisitNodes.add(controlDom);
 			}
 		} 
+		
+		if (directedGraph.vertexSet().size() != this.slicedTrace.size()) {
+			throw new RuntimeException(Log.genMsg(this.getClass(), "Graph constructed does not match with sliced trace: " + directedGraph.vertexSet().size() + " : " + this.slicedTrace.size()));
+		}
 		
 		return directedGraph;
 	}

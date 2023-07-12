@@ -209,6 +209,10 @@ public class DebugPilot {
 				}
 			}
 		}
+		
+		if (rootCause == null) {
+			rootCause = this.slicedTrace.get(0);
+		}
 		return rootCause;
 	}
 	
