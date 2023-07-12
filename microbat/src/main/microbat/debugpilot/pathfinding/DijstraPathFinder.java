@@ -37,7 +37,12 @@ public class DijstraPathFinder extends AbstractPathFinder {
 		}
 		Graph<TraceNode, NodeFeedbacksPair> graph = this.constructGraph();
 		DijkstraShortestPath<TraceNode, NodeFeedbacksPair> dijstraAlg = new DijkstraShortestPath<>(graph);
-		GraphPath<TraceNode, NodeFeedbacksPair> result = dijstraAlg.getPath(startNode, endNode);
+		GraphPath<TraceNode, NodeFeedbacksPair> result = null;
+		try {
+			result = dijstraAlg.getPath(startNode, endNode);
+		} catch (IllegalArgumentException iae) {
+			System.out.println();
+		}
 		if (result == null) return null;
 		List<NodeFeedbacksPair> path = result.getEdgeList();
 		// Add the root cause feedback to the end of the path
@@ -63,9 +68,9 @@ public class DijstraPathFinder extends AbstractPathFinder {
 			final TraceNode node = toVisitNodes.poll();
 			directedGraph.addVertex(node);
 			for (VarValue readVar : node.getReadVariables()) {
-				if (readVar.isThisVariable()) {
-					continue;
-				}
+//				if (readVar.isThisVariable()) {
+//					continue;
+//				}
 				final TraceNode dataDom = this.trace.findDataDependency(node, readVar);
 				if (dataDom != null) {
 					UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);

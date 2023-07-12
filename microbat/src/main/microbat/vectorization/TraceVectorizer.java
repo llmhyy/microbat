@@ -137,7 +137,8 @@ public class TraceVectorizer {
 		for (TraceNode node : trace.getExecutionList()) {
 			
 			// Skip if there are no read variable (do not count "this" variable)
-			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
+//			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
+			List<VarValue> readVars = node.getReadVariables();
 			if (readVars.size() == 0) {
 				continue;
 			}
@@ -151,14 +152,17 @@ public class TraceVectorizer {
 			}
 			
 			// Sum up the cost of all read variable, excluding "this" variable
-			final double cumulatedCost = node.getReadVariables().stream().filter(var -> !var.isThisVariable())
-					.mapToDouble(var -> var.computationalCost)
-					.sum();
+//			final double cumulatedCost = node.getReadVariables().stream().filter(var -> !var.isThisVariable())
+//					.mapToDouble(var -> var.computationalCost)
+//					.sum();
+			final double cumulatedCost = node.getReadVariables().stream().mapToDouble(var -> var.computationalCost).sum();
+					
 			final double optCost = node.computationCost;
 			final double cost = Double.isInfinite(cumulatedCost+optCost) ? Double.MAX_VALUE : cumulatedCost+optCost;
 			
 			// Assign computational cost to written variable, excluding "this" variable
-			node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).forEach(var -> var.computationalCost = cost);
+			node.getWrittenVariables().stream().forEach(var -> var.computationalCost = cost);
+//			node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).forEach(var -> var.computationalCost = cost);
 			maxVarCost = Math.max(cost, maxVarCost);
 		}
 		

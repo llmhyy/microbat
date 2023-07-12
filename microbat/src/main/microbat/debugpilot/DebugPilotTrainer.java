@@ -11,6 +11,7 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.pyserver.BackwardModelTrainClient;
 import microbat.pyserver.ForwardModelTrainClient;
+import microbat.pyserver.RLModelTrainClient;
 import sav.common.core.Pair;
 
 public class DebugPilotTrainer extends DebugPilot {
@@ -25,39 +26,22 @@ public class DebugPilotTrainer extends DebugPilot {
 	}
 	
 	public void sendRewards(List<Pair<TraceNode, Double>> rewardList) {
-		this.sendRewardsToForwardServer(rewardList);
-		this.sendRewardsToBackwardServer(rewardList);
+		this.sendRewards(rewardList, this.forwardTrainClient);
+		this.sendRewards(rewardList, this.backwardTrainClient);
 	}
 	
-	protected void sendRewardsToBackwardServer(List<Pair<TraceNode, Double>> rewardList) {
+	public void sendRewards(List<Pair<TraceNode, Double>> rewardList, RLModelTrainClient client) {
 		try {
-			this.backwardTrainClient.conntectServer();
-			this.backwardTrainClient.notifyRewardMode();
+			client.conntectServer();
+			client.notifyRewardMode();
 			for (Pair<TraceNode, Double> pair : rewardList) {
 				final TraceNode node = pair.first();
 				final double reward = pair.second();
-				this.backwardTrainClient.notifyContinuoue();
-				this.backwardTrainClient.sendReward(node, reward);
+				client.notifyContinuoue();
+				client.sendReward(node, reward);
 			}
-			this.backwardTrainClient.notifyStop();
-			this.backwardTrainClient.disconnectServer();
-		} catch (IOException | InterruptedException e) {
-			throw new RuntimeException(Log.genMsg(getClass(), "Server connection problem"));
-		}
-	}
-	
-	protected void sendRewardsToForwardServer(List<Pair<TraceNode, Double>> rewardList) {
-		try {
-			this.forwardTrainClient.conntectServer();
-			this.forwardTrainClient.notifyRewardMode();
-			for (Pair<TraceNode, Double> pair : rewardList) {
-				final TraceNode node = pair.first();
-				final double reward = pair.second();
-				this.forwardTrainClient.notifyContinuoue();
-				this.forwardTrainClient.sendReward(node, reward);
-			}
-			this.forwardTrainClient.notifyStop();
-			this.forwardTrainClient.disconnectServer();
+			client.notifyStop();
+			client.disconnectServer();
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(Log.genMsg(getClass(), "Server connection problem"));
 		}

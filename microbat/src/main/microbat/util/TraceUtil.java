@@ -21,7 +21,7 @@ import microbat.recommendation.UserFeedback;
  * TraceUtil provides helper function
  * to analyze the trace
  * 
- * @author David
+ * @author WYK
  *
  */
 public class TraceUtil {
@@ -207,13 +207,10 @@ public class TraceUtil {
 			controlDominatees.removeIf(controlDominatee -> croppedTrace.contains(controlDominatee));
 			toVisitNodes.addAll(controlDominatees);
 			
-//			croppedTrace.addAll(controlDominatees);
-			
 			for (VarValue writtenVar : currentNode.getWrittenVariables()) {
 				List<TraceNode> dataDominatees = trace.findDataDependentee(currentNode, writtenVar);
 				dataDominatees.removeIf(dataDominatee -> croppedTrace.contains(dataDominatee));
 				toVisitNodes.addAll(dataDominatees);
-//				croppedTrace.addAll(dataDominatees);
 			}
 		}
 		
@@ -263,5 +260,9 @@ public class TraceUtil {
 		}
 		
 		return relatedNodes;
+	}
+	
+	public static List<VarValue> filterThisVar(final Collection<VarValue> vars) {
+		return vars.stream().filter(var -> var.isThisVariable()).toList();
 	}
 } 

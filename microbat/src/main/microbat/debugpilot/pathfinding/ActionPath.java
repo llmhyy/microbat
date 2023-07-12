@@ -34,44 +34,6 @@ public class ActionPath implements Iterable<NodeFeedbacksPair>{
 		}
 	}
 	
-	public static ActionPath concat(final ActionPath path1, final ActionPath path2, final Trace trace) {
-		if (path1 == null && path2 == null) return null;
-		if (path1 == null) return path2;
-		if (path2 == null) return path1;
-		if (path1.isEmpty()) return path2;
-		if (path2.isEmpty()) return path1;
-		
-		ActionPath path = new ActionPath(path1);
-		TraceNode lastNode = path1.peek().getNode();
-		TraceNode nextNode = path2.get(0).getNode();
-		if (lastNode.equals(nextNode)) {
-			path.pop();
-		} 
-		
-		if (path1.peek().getFeedbacks().size() > 1) {
-			final NodeFeedbacksPair pair = path1.pop();
-			final TraceNode node = pair.getNode();
-			NodeFeedbacksPair newPair = null;
-			for (UserFeedback feedback : pair.getFeedbacks()) {
-				TraceNode targetNextNode = TraceUtil.findNextNode(node, feedback, trace);
-				if (targetNextNode.equals(nextNode)) {
-					newPair = new NodeFeedbacksPair(node, feedback);
-					break;
-				}
-			}
-			if (newPair == null) {
-				throw new RuntimeException(Log.genMsg(ActionPath.class, "Concatinating two path that is not connected"));
-			}
-			path.addPair(newPair);
-		}
-		
-		for (NodeFeedbacksPair pair : path2) {
-			path.addPair(pair);
-		}
-		
-		return path;
-	}
-	
 	public NodeFeedbacksPair get(final int i) {
 		return this.path.get(i);
 	}
@@ -154,6 +116,16 @@ public class ActionPath implements Iterable<NodeFeedbacksPair>{
 	@Override
 	public Iterator<NodeFeedbacksPair> iterator() {
 		return this.path.iterator();
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 7;
+		int result = 1;
+		for (NodeFeedbacksPair pair : this.path) {
+			result = prime * result + pair.hashCode();
+		}
+		return result;
 	}
 	
 	@Override

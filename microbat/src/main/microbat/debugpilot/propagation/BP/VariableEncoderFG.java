@@ -50,13 +50,17 @@ public class VariableEncoderFG extends Encoder {
 			final TraceNode node = pair.getNode();
 			final TraceNode controlDom = node.getControlDominator();
 			
-			final List<VarValue> readVars = new ArrayList<>();
-			readVars.addAll(node.getReadVariables());
-			readVars.removeIf(var -> var.isThisVariable());
+//			final List<VarValue> readVars = new ArrayList<>();
+//			readVars.addAll(node.getReadVariables());
+//			readVars.removeIf(var -> var.isThisVariable());
+//			
+//			final List<VarValue> writtenVars = new ArrayList<>();
+//			writtenVars.addAll(node.getWrittenVariables());
+//			writtenVars.removeIf(var -> var.isThisVariable());
 			
-			final List<VarValue> writtenVars = new ArrayList<>();
-			writtenVars.addAll(node.getWrittenVariables());
-			writtenVars.removeIf(var -> var.isThisVariable());
+			final List<VarValue> readVars = node.getReadVariables();
+			final List<VarValue> writtenVars = node.getWrittenVariables();
+			
 			
 			if (pair.getFeedbackType().equals(UserFeedback.CORRECT)) {
 				this.correctVars.addAll(readVars);

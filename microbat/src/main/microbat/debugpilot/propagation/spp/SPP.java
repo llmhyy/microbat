@@ -91,8 +91,10 @@ public abstract class SPP implements ProbabilityPropagator {
 			this.inheritBackwardProp(node);
 			
 			// Ignore "this" variable
-			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
-			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).toList();
+//			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+//			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).toList();
+			List<VarValue> readVars = node.getReadVariables();
+			List<VarValue> writtenVars = node.getWrittenVariables();
 			
 			// Skip if read or written variables is missing
 			if (readVars.isEmpty() || writtenVars.isEmpty()) {
@@ -134,8 +136,10 @@ public abstract class SPP implements ProbabilityPropagator {
 			this.inheritForwardProp(node);
 			
 			// Ignore "this" variable
-			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
-			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).toList();
+//			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+//			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).toList();
+			List<VarValue> readVars = node.getReadVariables();
+			List<VarValue> writtenVars = node.getWrittenVariables();
 			
 			// Skip if read or written variable is missing
 			if (readVars.isEmpty() || writtenVars.isEmpty()) {
@@ -269,12 +273,11 @@ public abstract class SPP implements ProbabilityPropagator {
 		final TraceNode controlDom = node.getControlDominator();
 		if (controlDom != null) {
 			for (VarValue writtenVar : node.getWrittenVariables()) {
-				if (!writtenVar.isThisVariable()) {
+//				if (!writtenVar.isThisVariable()) {
 					controlDom.getConditionResult().addBackwardProbability(writtenVar.getBackwardProb());
-				}
+//				}
 			}
 		}
-		
 	}
 	
 	protected boolean isComputational(final TraceNode node) {
@@ -325,8 +328,9 @@ public abstract class SPP implements ProbabilityPropagator {
 		// Calculate computational cost for each variable
 		double maxVarCost = 0.0d;
 		for (TraceNode node : this.slicedTrace) {
-			// Ignore "this" variable
-			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+
+//			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+			List<VarValue> readVars = node.getReadVariables();
 			
 			if (readVars.isEmpty()) {
 				continue;
@@ -344,7 +348,8 @@ public abstract class SPP implements ProbabilityPropagator {
 			final double optCost = node.computationCost;
 			final double cost = Double.isInfinite(cumulatedCost+optCost) ? Double.MAX_VALUE : cumulatedCost+optCost;
 			
-			node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).forEach(var -> var.computationalCost = cost);
+			node.getWrittenVariables().stream().forEach(var -> var.computationalCost = cost);
+//			node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).forEach(var -> var.computationalCost = cost);
 			maxVarCost = Math.max(cost,  maxVarCost);
 		}
 		
@@ -373,9 +378,12 @@ public abstract class SPP implements ProbabilityPropagator {
 					this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).mapToDouble(var -> var.getForwardProb()).min().orElse(0.0d));
 		final double max = Math.max(this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).mapToDouble(var -> var.getForwardProb()).max().orElse(0.0d), 
 					this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).mapToDouble(var -> var.getForwardProb()).max().orElse(0.0d));
-		this.slicedTrace.stream().flatMap(node  -> node.getReadVariables().stream()).forEach(var -> var.setForwardProb(this.normalize(var.getForwardProb(), min, max, targetMin, targetMax)));
-		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setForwardProb(this.normalize(var.getForwardProb(), min, max, targetMin, targetMax)));
-	
+		
+		if (Double.compare(min, max) != 0) {
+			this.slicedTrace.stream().flatMap(node  -> node.getReadVariables().stream()).forEach(var -> var.setForwardProb(this.normalize(var.getForwardProb(), min, max, targetMin, targetMax)));
+			this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setForwardProb(this.normalize(var.getForwardProb(), min, max, targetMin, targetMax)));
+		}
+
 	}
 	
 	protected void normalizeBackwardProb(final double targetMin, final double targetMax) {
@@ -383,8 +391,11 @@ public abstract class SPP implements ProbabilityPropagator {
 					this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).mapToDouble(var -> var.getBackwardProb()).min().orElse(0.0d));
 		final double max = Math.max(this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).mapToDouble(var -> var.getBackwardProb()).max().orElse(0.0d), 
 					this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).mapToDouble(var -> var.getBackwardProb()).max().orElse(0.0d));
-		this.slicedTrace.stream().flatMap(node  -> node.getReadVariables().stream()).forEach(var -> var.setBackwardProb(this.normalize(var.getBackwardProb(), min, max, targetMin, targetMax)));
-		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setBackwardProb(this.normalize(var.getBackwardProb(), min, max, targetMin, targetMax)));
+		
+		if (Double.compare(min, max) != 0 ) {
+			this.slicedTrace.stream().flatMap(node  -> node.getReadVariables().stream()).forEach(var -> var.setBackwardProb(this.normalize(var.getBackwardProb(), min, max, targetMin, targetMax)));
+			this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setBackwardProb(this.normalize(var.getBackwardProb(), min, max, targetMin, targetMax)));
+		}
 	}
 	
 	protected void normalizeProb(final double targetMin, final double targetMax) {
@@ -392,7 +403,9 @@ public abstract class SPP implements ProbabilityPropagator {
 				this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).mapToDouble(var -> var.getProbability()).min().orElse(0.0d));
 		final double max = Math.max(this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).mapToDouble(var -> var.getProbability()).max().orElse(0.0d), 
 				this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).mapToDouble(var -> var.getProbability()).max().orElse(0.0d));
-		this.slicedTrace.stream().flatMap(node  -> node.getReadVariables().stream()).forEach(var -> var.setProbability(this.normalize(var.getProbability(), min, max, targetMin, targetMax)));
-		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setProbability(this.normalize(var.getProbability(), min, max, targetMin, targetMax)));
+		if (Double.compare(min, max) == 0) {
+			this.slicedTrace.stream().flatMap(node  -> node.getReadVariables().stream()).forEach(var -> var.setProbability(this.normalize(var.getProbability(), min, max, targetMin, targetMax)));
+			this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setProbability(this.normalize(var.getProbability(), min, max, targetMin, targetMax)));			
+		}
 	}
 }

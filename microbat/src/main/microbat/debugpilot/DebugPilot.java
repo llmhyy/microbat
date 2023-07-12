@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import debuginfo.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.ActionPath;
+import microbat.debugpilot.pathfinding.ActionPathUtil;
 import microbat.debugpilot.pathfinding.PathFinder;
 import microbat.debugpilot.pathfinding.PathFinderFactory;
 import microbat.debugpilot.pathfinding.PathFinderType;
@@ -125,7 +126,7 @@ public class DebugPilot {
 				final TraceNode nextNode = TraceUtil.findNextNode(latestAction.getNode(), feedback, this.trace);
 				ActionPath consecutivePath = pathFinder.findPath(nextNode, this.rootCause);
 				if (consecutivePath == null) continue;
-				this.path = ActionPath.concat(mustFollowPath, consecutivePath, this.trace);
+				this.path = ActionPathUtil.concat(mustFollowPath, consecutivePath, this.trace);
 				return;
 			}
 		}
@@ -158,9 +159,10 @@ public class DebugPilot {
 				continue;
 			}
 			
-			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
-			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var .isThisVariable()).collect(Collectors.toList());
-			
+//			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
+//			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var .isThisVariable()).collect(Collectors.toList());
+			List<VarValue> readVars = node.getReadVariables();
+			List<VarValue> writtenVars = node.getWrittenVariables();
 			/*
 			 * We need to handle:
 			 * 1. Node without any variable

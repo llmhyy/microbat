@@ -555,7 +555,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 				Double.isInfinite(forward_prob) || 
 				forward_prob < 0.0d || 
 				forward_prob > 1.0d) {
-			throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid probability: " + backward_prob));
+			throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid forward probability: " + backward_prob));
 			}
 		this.forward_prob = forward_prob;
 	}
@@ -569,7 +569,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 				Double.isInfinite(backward_prob) || 
 				backward_prob < 0.0d || 
 				backward_prob > 1.0d) {
-				throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid probability: " + backward_prob));
+				throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid backward probability: " + backward_prob));
 			}
 		this.backward_prob = backward_prob;
 	}

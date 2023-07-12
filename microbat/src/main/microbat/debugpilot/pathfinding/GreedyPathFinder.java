@@ -52,9 +52,9 @@ public class GreedyPathFinder extends AbstractPathFinder {
 		VarValue wrongVar = null;
 		for (VarValue readVar : node.getReadVariables()) {
 			// If the readVar is This variable, then ignore
-			if (readVar.isThisVariable()) {
-				continue;
-			}
+//			if (readVar.isThisVariable()) {
+//				continue;
+//			}
 			double prob = readVar.getProbability();
 			if (prob < minReadProb) {
 				minReadProb = prob;

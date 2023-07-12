@@ -56,7 +56,8 @@ public class NodeVector extends Vector {
 		
 		// Read variables vector
 		this.readVarVectors = new VariableVector[NodeVector.NUM_READ_VARS];
-		List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+//		List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
+		List<VarValue> readVars = node.getReadVariables();
 //		readVars.removeIf(var -> var.isThisVariable());
 		for (int idx=0; idx<this.readVarVectors.length; idx++) {
 			if (idx<readVars.size()) {
@@ -68,7 +69,8 @@ public class NodeVector extends Vector {
 		
 		// Written variables vector
 		this.writtenVarVectors = new VariableVector[NodeVector.NUM_WRITTEN_VARS];
-		List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).toList();
+//		List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).toList();
+		List<VarValue> writtenVars = node.getWrittenVariables();
 //		writtenVars.removeIf(var -> var.isThisVariable());
 		for (int idx=0; idx<this.writtenVarVectors.length; idx++) {
 			if (idx<writtenVars.size()) {
