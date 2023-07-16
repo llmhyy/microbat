@@ -17,6 +17,6 @@ public abstract class AbstractPathFinder implements PathFinder {
 	}
 	
 	@Override
-	public abstract ActionPath findPath(TraceNode startNode, TraceNode endNode);
+	public abstract FeedbackPath findPath(TraceNode startNode, TraceNode endNode);
 
 }

@@ -2,7 +2,7 @@ from collections import deque, namedtuple
 
 import random
 
-Transition = namedtuple('Transition', ('feature', 'prob', 'reward'))
+Transition = namedtuple('Transition', ('node_order', 'input', 'action', 'reward'))
 
 class ReplayMemory(object):
     def __init__(self, config):

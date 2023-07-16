@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import debuginfo.NodeFeedbacksPair;
-import microbat.debugpilot.pathfinding.ActionPath;
+import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.debugpilot.pathfinding.ActionPathUtil;
 import microbat.debugpilot.pathfinding.PathFinder;
 import microbat.debugpilot.pathfinding.PathFinderFactory;
@@ -45,7 +45,7 @@ public class DebugPilot {
 	protected List<TraceNode> slicedTrace = null;
 	protected Collection<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
 	protected TraceNode rootCause = null;
-	protected ActionPath path = null;
+	protected FeedbackPath path = null;
 
 	public DebugPilot(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode, PropagatorType propagatorType, PathFinderType pathFinderType) {
 		Objects.requireNonNull(trace, Log.genMsg(getClass(), "Given trace is null"));
@@ -116,7 +116,7 @@ public class DebugPilot {
 	public void constructPath() {
 		PathFinder pathFinder = PathFinderFactory.getFinder(this.pathFinderType, this.trace, this.slicedTrace);
 		
-		ActionPath mustFollowPath = new ActionPath(this.feedbackRecords);
+		FeedbackPath mustFollowPath = new FeedbackPath(this.feedbackRecords);
 		if (mustFollowPath == null || mustFollowPath.isEmpty()) {
 			this.path = pathFinder.findPath(this.outputNode, this.rootCause);
 			return;
@@ -124,7 +124,7 @@ public class DebugPilot {
 			NodeFeedbacksPair latestAction = mustFollowPath.peek();
 			for (UserFeedback feedback : latestAction.getFeedbacks()) {
 				final TraceNode nextNode = TraceUtil.findNextNode(latestAction.getNode(), feedback, this.trace);
-				ActionPath consecutivePath = pathFinder.findPath(nextNode, this.rootCause);
+				FeedbackPath consecutivePath = pathFinder.findPath(nextNode, this.rootCause);
 				if (consecutivePath == null) continue;
 				this.path = ActionPathUtil.concat(mustFollowPath, consecutivePath, this.trace);
 				return;
@@ -133,7 +133,7 @@ public class DebugPilot {
 		throw new RuntimeException(Log.genMsg(getClass(), "Suggest path out of loop"));
 	}
 	
-	public ActionPath getPath() {
+	public FeedbackPath getPath() {
 		return this.path;
 	}
 	

@@ -3,17 +3,18 @@ server.port: 8083
 server.verbose: False
 
 encoder.pca: True
-encoder.pca_path: C:\\Users\\david\\Documents\\Workspace\\pca\\model.joblib
+encoder.pca_path: "C:\\Users\\david\\Documents\\Workspace\\pca\\model.joblib"
 encoder.config_path: C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\Models\\configs\\encoder_config.yaml
 encoder.encoder_path: "C:\\Users\\david\\Documents\\Workspace\\encoder_80_20230629\\epoch_latest.pt"
 encoder.work_embedding_path: "C:\\Users\\david\\Documents\\fasttext\\wiki.en.bin"
 
-data.input_size: 784
-data.hidden_sizes: [256, 128]
-data.capacity: 100000
+data.input_size: 2
+data.hidden_sizes: [4]
+data.output_size: 3
+data.capacity: 10000
 
 training.epochs: 1000
-training.batch_size: 128
+training.batch_size: 8
 training.gamma: 0.99
 training.eps_start: 0.9
 training.eps_end: 0.05

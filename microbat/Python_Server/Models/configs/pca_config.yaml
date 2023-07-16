@@ -1,3 +1,3 @@
-data.train_data: E:\david\FeatureDataset\data.json
+data.train_data: D:\FeatureDataset\data.json
 data.output_dim: 64
 data.output_path: C:\Users\david\Documents\Workspace\pca\model.joblib

@@ -27,11 +27,11 @@ public class DijstraPathFinder extends AbstractPathFinder {
 	}
 
 	@Override
-	public ActionPath findPath(TraceNode startNode, TraceNode endNode) {
+	public FeedbackPath findPath(TraceNode startNode, TraceNode endNode) {
 		Objects.requireNonNull(startNode, Log.genMsg(getClass(), "start node should not be null"));
 		Objects.requireNonNull(endNode, Log.genMsg(getClass(), "endNode should not be null"));
 		if (startNode.equals(endNode)) {
-			ActionPath path = new ActionPath();
+			FeedbackPath path = new FeedbackPath();
 			path.addPair(endNode, new UserFeedback(UserFeedback.ROOTCAUSE));
 			return path;
 		}
@@ -45,7 +45,7 @@ public class DijstraPathFinder extends AbstractPathFinder {
 		UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
 		NodeFeedbacksPair pair = new NodeFeedbacksPair(endNode, feedback);
 		path.add(pair);
-		return new ActionPath(path);
+		return new FeedbackPath(path);
 	}
 
 	protected Graph<TraceNode, NodeFeedbacksPair> constructGraph() {

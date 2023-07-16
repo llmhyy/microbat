@@ -22,7 +22,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import debuginfo.NodeFeedbacksPair;
-import microbat.debugpilot.pathfinding.ActionPath;
+import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.util.MicroBatUtil;
@@ -36,7 +36,7 @@ public class PathView extends ViewPart {
 	
 	protected ListViewer listViewer;
 	protected Text searchText;	
-	protected ActionPath actionPath;
+	protected FeedbackPath actionPath;
 	protected Button searchButton;
 	protected TraceView buggyTraceView = null;
 	
@@ -123,7 +123,7 @@ public class PathView extends ViewPart {
 	public void jumpToNode(String searchContent, boolean next) {
 
 		
-		for (int i = 0; i < ((ActionPath) listViewer.getInput()).getLength(); ++i) {
+		for (int i = 0; i < ((FeedbackPath) listViewer.getInput()).getLength(); ++i) {
 			ActionPathContentProvider.ContentWrapper content = (ActionPathContentProvider.ContentWrapper) listViewer.getElementAt(i);
 			String label = MicroBatUtil.genPathMessage(content.getNode(), content.getIndex());
 			if (label.contains(searchContent)) {
@@ -148,7 +148,7 @@ public class PathView extends ViewPart {
 		
 	}
 	
-	public void setActionPath(ActionPath actionPath) {
+	public void setActionPath(FeedbackPath actionPath) {
 		this.actionPath = actionPath;
 	}
 	

@@ -18,7 +18,7 @@ import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbacksPair;
 import microbat.debugpilot.DebugPilot;
 import microbat.debugpilot.NodeNotInPathException;
-import microbat.debugpilot.pathfinding.ActionPath;
+import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.debugpilot.pathfinding.PathFinderType;
 import microbat.debugpilot.propagation.PropagatorType;
 import microbat.log.Log;
@@ -112,7 +112,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			debugPilot.locateRootCause(currentNode);
 			Log.printMsg(this.getClass(), "Constructing path to root cause ...");
 			debugPilot.constructPath();
-			ActionPath path = debugPilot.getPath();									
+			FeedbackPath path = debugPilot.getPath();									
 			this.pathView.setActionPath(path);
 			this.updateView();
 			

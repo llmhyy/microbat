@@ -7,7 +7,6 @@
 
 
 import numpy  as np
-import igraph as ig
 
 import matplotlib.pyplot as plt
 plt.rc("text", usetex=True)

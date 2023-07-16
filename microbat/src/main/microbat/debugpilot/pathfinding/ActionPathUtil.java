@@ -9,14 +9,14 @@ import microbat.util.TraceUtil;
 
 public class ActionPathUtil {
 	
-	public static ActionPath concat(final ActionPath path1, final ActionPath path2, final Trace trace) {
+	public static FeedbackPath concat(final FeedbackPath path1, final FeedbackPath path2, final Trace trace) {
 		if (path1 == null && path2 == null) return null;
 		if (path1 == null) return path2;
 		if (path2 == null) return path1;
 		if (path1.isEmpty()) return path2;
 		if (path2.isEmpty()) return path1;
 		
-		ActionPath path = new ActionPath(path1);
+		FeedbackPath path = new FeedbackPath(path1);
 		TraceNode lastNode = path1.peek().getNode();
 		TraceNode nextNode = path2.get(0).getNode();
 		if (lastNode.equals(nextNode)) {
@@ -35,7 +35,7 @@ public class ActionPathUtil {
 				}
 			}
 			if (newPair == null) {
-				throw new RuntimeException(Log.genMsg(ActionPath.class, "Concatinating two path that is not connected"));
+				throw new RuntimeException(Log.genMsg(FeedbackPath.class, "Concatinating two path that is not connected"));
 			}
 			path.addPair(newPair);
 		}
@@ -47,7 +47,7 @@ public class ActionPathUtil {
 		return path;
 	}
 	
-	public static boolean samePathBeforeNode(final ActionPath path1, final ActionPath path2, final TraceNode targetNode) {
+	public static boolean samePathBeforeNode(final FeedbackPath path1, final FeedbackPath path2, final TraceNode targetNode) {
 		if (!path1.contains(targetNode) || !path2.contains(targetNode)) {
 			throw new IllegalArgumentException(Log.genMsg(ActionPathUtil.class, "Given target node: " + targetNode.getOrder() + " does not appear in both path"));
 		}

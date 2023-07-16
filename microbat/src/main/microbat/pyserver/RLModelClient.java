@@ -141,8 +141,17 @@ public abstract class RLModelClient extends Client {
 		this.sendMsg(vector.toString());
 	}
 	
-	public double recieveFactor() throws IOException {
+	public double receiveFactor() throws IOException {
 		String message = this.receiveMsg();
+		return Double.valueOf(message);
+	}
+
+	public String recieveModelPredictionString() throws IOException {
+		return this.receiveMsg();
+	}
+	
+	public double receiveAlpha() throws IOException {
+		final String message = this.receiveMsg();
 		return Double.valueOf(message);
 	}
 	

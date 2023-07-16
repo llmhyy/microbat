@@ -56,7 +56,7 @@ public class SPPRL extends SPP {
 		try {
 			this.forwardClient.notifyContinuoue();
 			this.forwardClient.sendContextFeature(node);
-			double factor = this.forwardClient.recieveFactor();
+			double factor = this.forwardClient.receiveFactor();
 			return factor;
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(Log.genMsg(getClass(), "Server connection problem"));
@@ -70,7 +70,7 @@ public class SPPRL extends SPP {
 			this.backwardClient.sendContextFeature(node);
 			this.backwardClient.sendVariableVector(var);
 			this.backwardClient.sendVariableName(var);
-			double factor = this.backwardClient.recieveFactor();
+			double factor = this.backwardClient.receiveFactor();
 			return factor;
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(Log.genMsg(getClass(), "Server connection problem"));
@@ -87,7 +87,7 @@ public class SPPRL extends SPP {
 				this.backwardClient.sendContextFeature(node);
 				this.backwardClient.sendVariableVector(controlDomVar);
 				this.backwardClient.sendVariableName(controlDomVar);
-				double factor = this.backwardClient.recieveFactor();
+				double factor = this.backwardClient.receiveFactor();
 				controlDomVar.addBackwardProbability(factor);
 			} catch (IOException | InterruptedException e) {
 				throw new RuntimeException(Log.genMsg(getClass(), "Server connection problem"));

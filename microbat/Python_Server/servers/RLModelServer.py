@@ -128,6 +128,9 @@ class RLModelServer(SocketServer):
     def send_prob(self, sock, prob):
         self.sendMsg(sock, str(prob))
 
+    def send_alpha(self, sock, alpha):
+        self.sendMsg(sock, str(alpha))
+        
     def cal_node_sim(self, node_1, node_2):
         return self.cosine_sim(node_1, node_2)
     
@@ -140,3 +143,11 @@ class RLModelServer(SocketServer):
         for i in range(len(list_of_tensors)):
             list_of_tensors[i] = list_of_tensors[i].to(self.device)
         return torch.cat(list_of_tensors,dim=0).reshape(-1).to(self.device)
+    
+    def cal_alpha(self, node_vector, feedback_vectors):
+        if len(feedback_vectors) == 0:
+            return 0
+        alphas = []
+        for feedback_vector in feedback_vectors:
+            alphas.append(self.cal_node_sim(node_vector, feedback_vector))
+        return sum(alphas) / len(alphas)

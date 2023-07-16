@@ -36,6 +36,7 @@ public class VariableVector extends Vector {
 	protected static final int IS_STATIC_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 3;
 	protected static final int IS_INSTANCE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 4;
 	protected static final int IS_CONDITION_RESULT_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 5;
+//	protected static final int IS_THIS_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 6;
 
 	public VariableVector() {
 		super(VariableVector.DIMENSION);
@@ -71,6 +72,7 @@ public class VariableVector extends Vector {
 //		
 //		this.vector[VariableVector.COST_IDX] = (float) var.getComputationalCost();
 		if (var.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID)) this.set(VariableVector.IS_CONDITION_RESULT_IDX);
+//		if (var.isThisVariable()) this.set(VariableVector.IS_THIS_IDX);
 	}
 
 	protected int getTypeIdx(final String typeStr) {

@@ -200,7 +200,7 @@ public abstract class SPP implements ProbabilityPropagator {
 														 .flatMap(dataDominatee -> dataDominatee.getReadVariables().stream())
 														 .filter(var -> var.equals(writtenVar))
 														 .mapToDouble(var -> var.getBackwardProb())
-														 .max().orElse(PropProbability.UNCERTAIN);
+														 .average().orElse(PropProbability.UNCERTAIN);
 					writtenVar.setBackwardProb(maxProb);	
 				}
 			}

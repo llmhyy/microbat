@@ -8,8 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class LibraryClassDetector {
-	
-	private static final String LIBRARY_CLASSES_PATH = "./src/main/microbat/probability/SPP/vectorization/vector/java_11_classes.txt";
+	private static final String LIBRARY_CLASSES_PATH = "./src/main/microbat/vectorization/vector/java_11_classes.txt";
 	private static final Set<String> LIBRARY_CLASSES = LibraryClassDetector.readLibraryClasses();
 	
 	public static boolean isLibClass(final String type) {

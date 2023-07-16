@@ -18,10 +18,10 @@ public class GreedyPathFinder extends AbstractPathFinder {
 	}
 
 	@Override
-	public ActionPath findPath(TraceNode startNode, TraceNode endNode) {
+	public FeedbackPath findPath(TraceNode startNode, TraceNode endNode) {
 		Objects.requireNonNull(startNode, Log.genMsg(getClass(), "start node should not be null"));
 		Objects.requireNonNull(endNode, Log.genMsg(getClass(), "endNode should not be null"));
-		ActionPath path = new ActionPath();
+		FeedbackPath path = new FeedbackPath();
 		TraceNode currentNode = startNode;
 		while(currentNode != null) {
 			if (currentNode.equals(endNode)) {

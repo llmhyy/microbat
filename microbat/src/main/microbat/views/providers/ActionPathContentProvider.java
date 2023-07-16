@@ -10,7 +10,7 @@ import org.eclipse.jface.viewers.Viewer;
 import com.ibm.wala.util.collections.Pair;
 
 import debuginfo.NodeFeedbacksPair;
-import microbat.debugpilot.pathfinding.ActionPath;
+import microbat.debugpilot.pathfinding.FeedbackPath;
 
 public class ActionPathContentProvider implements IStructuredContentProvider {
 	
@@ -51,9 +51,9 @@ public class ActionPathContentProvider implements IStructuredContentProvider {
 	
 	@Override
 	public Object[] getElements(Object inputElement) {
-		if (!(inputElement instanceof ActionPath)) return null;
+		if (!(inputElement instanceof FeedbackPath)) return null;
 		// TODO Auto-generated method stub
-		ActionPath actionPath = (ActionPath) inputElement;
+		FeedbackPath actionPath = (FeedbackPath) inputElement;
 		NodeFeedbacksPair[] nodeFeedbacksPairs = new NodeFeedbacksPair[actionPath.getLength()];
 		for (int i = 0; i < actionPath.getLength(); ++i) {			
 			nodeFeedbacksPairs[i] = actionPath.get(i);
