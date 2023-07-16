@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import java.util.HashSet;
 
 import debuginfo.NodeFeedbacksPair;
@@ -289,7 +290,14 @@ public abstract class SPP implements ProbabilityPropagator {
 	}
 	
 	protected double normalize(final double probability, final double min, final double max, final double targetMin, final double targetMax) {
-		return (probability - min) / (max - min) * (targetMax - targetMin) + targetMin;
+		// Handle the case that duplicated variable
+		if (probability < min) {
+			return min;
+		} else if (probability > max) {
+			return max;
+		} else {
+			return (probability - min) / (max - min) * (targetMax - targetMin) + targetMin;			
+		}
 	}
 	
 	protected VarValue findDataDomVar(final VarValue var, final TraceNode node) {
@@ -383,15 +391,13 @@ public abstract class SPP implements ProbabilityPropagator {
 			this.slicedTrace.stream().flatMap(node  -> node.getReadVariables().stream()).forEach(var -> var.setForwardProb(this.normalize(var.getForwardProb(), min, max, targetMin, targetMax)));
 			this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setForwardProb(this.normalize(var.getForwardProb(), min, max, targetMin, targetMax)));
 		}
-
 	}
 	
 	protected void normalizeBackwardProb(final double targetMin, final double targetMax) {
-		final double min = Math.min(this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).mapToDouble(var -> var.getBackwardProb()).min().orElse(0.0d),
-					this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).mapToDouble(var -> var.getBackwardProb()).min().orElse(0.0d));
-		final double max = Math.max(this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).mapToDouble(var -> var.getBackwardProb()).max().orElse(0.0d), 
-					this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).mapToDouble(var -> var.getBackwardProb()).max().orElse(0.0d));
-		
+		final double min = Stream.concat(this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()), this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()))
+				.mapToDouble(var -> var.getBackwardProb()).min().orElse(0.0d);
+		final double max = Stream.concat(this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()), this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()))
+				.mapToDouble(var -> var.getBackwardProb()).max().orElse(0.0d);
 		if (Double.compare(min, max) != 0 ) {
 			this.slicedTrace.stream().flatMap(node  -> node.getReadVariables().stream()).forEach(var -> var.setBackwardProb(this.normalize(var.getBackwardProb(), min, max, targetMin, targetMax)));
 			this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setBackwardProb(this.normalize(var.getBackwardProb(), min, max, targetMin, targetMax)));
