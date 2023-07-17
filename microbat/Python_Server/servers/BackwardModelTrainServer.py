@@ -25,28 +25,35 @@ class BackwardModelTrainServer(RLModelTrainServer):
             printMsg("Inference mode", BackwardModelTrainServer)
             printMsg("Recieve feedbacks ...", BackwardModelTrainServer)
             feedback_features = self.recieve_all_feedbacks(sock)
-            feedback_vectors = [feedback_feature.node_vector for feedback_feature in feedback_features]
             while self.should_continoue(sock):
                 node_order = self.recieve_node_order(sock)
                 node_vector = self.recieve_node_vector(sock)
                 var_vector = self.recieve_variable_vector(sock)
                 var_name = self.recieve_variable_name(sock)
 
-                actions = []
+                predictions = []
+
+                max_step_sim = -1.0
+                max_var_sim = -1.0
                 for feedback_feature in feedback_features:
                     node_sim = self.cal_node_sim(node_vector, feedback_feature.node_vector)
                     var_sim = self.cal_var_sim(var_vector, var_name, feedback_feature.variable_vector, feedback_feature.variable_name)
-                    input_feature = self.list_to_tensor([node_vector, var_vector, node_sim, var_sim])
-                    prob = self.trainer.predict_prob(input_feature)
-                    probs.append(prob)
-                    self.trainer.save_to_cache(node_order, input_feature, prob, 0)
-                    printMsg(f"Node: {node_order} \t backward factor: {node_sim.item()}, {var_sim.item()} -> {prob.item()}", BackwardModelTrainServer)
-                assert len(probs) != 0, genMsg("prob is an emtpy list", BackwardModelTrainServer)
-                probs = sum(probs) / len(probs)
-                self.send_prob(sock, prob.item())
-                alpha = self.cal_alpha(node_vector, feedback_vectors)
-                printMsg(f"Node: {node_order} \t backward alpha: {alpha.item()}", BackwardModelTrainServer)
-                self.send_alpha(sock, alpha.item())
+                    input_feature = self.list_to_tensor([node_sim, var_sim])
+                    prediction = self.trainer.predict(input_feature)
+                    predictions.append(prediction)
+                    self.trainer.save_to_cache(node_order, input_feature, prediction, 0)
+                    
+                    max_step_sim = max(node_sim.item(), max_step_sim)
+                    max_var_sim = max(var_sim.item(), max_var_sim)
+
+                predictions = [str(prediction.item()) for prediction in predictions]
+                # printMsg(f"Node: {node_order} \t max sim : {max_step_sim}, {max_var_sim} -> {predictions}", BackwardModelTrainServer)
+                assert len(predictions) != 0, genMsg("prob is an emtpy list", BackwardModelTrainServer)
+                
+                self.send_predictions(sock, ",".join(predictions))
+                # alpha = self.cal_alpha(node_vector, feedback_vectors)
+                # printMsg(f"Node: {node_order} \t backward alpha: {alpha.item()}", BackwardModelTrainServer)
+                # self.send_alpha(sock, alpha.item())
             printMsg("Finish propagation ...", BackwardModelTrainServer)
         elif mode == RLModelTrainServer.REWARD_MODE:
             printMsg("Reward model", BackwardModelTrainServer)
@@ -55,6 +62,7 @@ class BackwardModelTrainServer(RLModelTrainServer):
                 node_order = self.recieve_node_order(sock)
                 reward = self.recieve_reward(sock)
                 rewardList.append((node_order, reward))
+                # printMsg(f"Received reward {node_order} : {reward}", BackwardModelTrainServer)
             self.trainer.update_cache_reward(rewardList)
             self.trainer.save_cache_to_memory()
             self.trainer.clear_cache()

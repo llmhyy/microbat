@@ -119,7 +119,7 @@ public class TraceUtil {
 		return result;
 	}
 	
-	public static List<TraceNode> dyanmicSlice(final Trace trace, final TraceNode targetNode) {
+	public static List<TraceNode> dynamicSlic(final Trace trace, final TraceNode targetNode) {
 		UniquePriorityQueue<TraceNode> toVisitNodes = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
 			@Override
 			public int compare(TraceNode t1, TraceNode t2) {

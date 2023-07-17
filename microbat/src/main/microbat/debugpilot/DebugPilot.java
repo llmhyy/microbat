@@ -56,7 +56,7 @@ public class DebugPilot {
 		this.trace = trace;
 		this.correctVars.addAll(inputs);
 		this.wrongVars.addAll(outputs);
-		this.slicedTrace = TraceUtil.dyanmicSlice(trace, outputNode);
+		this.slicedTrace = TraceUtil.dynamicSlic(trace, outputNode);
 		this.outputNode = outputNode;
 		this.propagatorType = propagatorType;
 		this.pathFinderType = pathFinderType;
@@ -232,10 +232,13 @@ public class DebugPilot {
 	
 	public void multiSlicing() {
 		Set<TraceNode> relatedNodes = new HashSet<>();
-		relatedNodes.addAll(TraceUtil.dyanmicSlice(this.trace, this.outputNode));
+		relatedNodes.addAll(TraceUtil.dynamicSlic(this.trace, this.outputNode));
 		for (NodeFeedbacksPair pair : this.feedbackRecords) {
 			final TraceNode node = pair.getNode();
-			relatedNodes.retainAll(TraceUtil.dyanmicSlice(this.trace, node));
+			relatedNodes.retainAll(TraceUtil.dynamicSlic(this.trace, node));
+			if (pair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+				relatedNodes.retainAll(TraceUtil.dynamicSlic(trace, node.getControlDominator()));
+			}
 		}
 		List<TraceNode> newSlicedNodes = new ArrayList<>();
 		newSlicedNodes.addAll(relatedNodes);

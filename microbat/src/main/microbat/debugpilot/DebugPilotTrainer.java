@@ -26,7 +26,7 @@ public class DebugPilotTrainer extends DebugPilot {
 	}
 	
 	public void sendRewards(List<Pair<TraceNode, Double>> rewardList) {
-		this.sendRewards(rewardList, this.forwardTrainClient);
+//		this.sendRewards(rewardList, this.forwardTrainClient);
 		this.sendRewards(rewardList, this.backwardTrainClient);
 	}
 	

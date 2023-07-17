@@ -14,7 +14,7 @@ data.output_size: 3
 data.capacity: 10000
 
 training.epochs: 1000
-training.batch_size: 8
+training.batch_size: 64
 training.gamma: 0.99
 training.eps_start: 0.9
 training.eps_end: 0.05

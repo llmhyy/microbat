@@ -45,7 +45,7 @@ class ForwardModelServer(RLModelServer):
                     probs.append(prob)
                 prob = sum(probs)/len(probs)
             printMsg(f"Node: {node_order} \t forward factor: {prob.item()} \t related feedback count: {len(related_feedbacks)}", ForwardModelServer)
-            self.send_prob(sock, prob.item())
+            self.send_predictions(sock, prob.item())
         printMsg("Finish propagation ...", ForwardModelServer)
 
     

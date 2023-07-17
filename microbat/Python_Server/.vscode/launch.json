@@ -4,14 +4,16 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
-            "name": "Python: Forward Server",
+            "name": "Python: Backward Server",
             "type": "python",
             "request": "launch",
-            "program": "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\servers\\ForwardModelTrainServer.py",
+            "program": "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\servers\\BackwardModelTrainServer.py",
             "console": "integratedTerminal",
+            "cwd": "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\servers",
             "justMyCode": true,
-            "env": { "PYTHONPATH": "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\servers"}
+
         },
         {
             "name": "Python: Current File",

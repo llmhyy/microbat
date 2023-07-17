@@ -38,7 +38,7 @@ class ForwardModelTrainServer(RLModelTrainServer):
                     printMsg(f"Node: {node_order} \t forward factor: {node_sim.item()} -> {prob.item()}", ForwardModelTrainServer)
                 assert len(probs) != 0, genMsg(f"prob is an empty list", ForwardModelTrainServer)
                 probs = sum(probs) / len(probs)
-                self.send_prob(sock, prob.item())
+                self.send_predictions(sock, prob.item())
                 alpha = self.cal_alpha(node_vector, feedback_vectors)
                 printMsg(f"Node: {node_order} \t forward alpha: {alpha.item()}", ForwardModelTrainServer)
                 self.send_alpha(sock, alpha.item())

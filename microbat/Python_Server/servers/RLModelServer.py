@@ -125,7 +125,7 @@ class RLModelServer(SocketServer):
         vector = torch.tensor(vector).float().to(self.device)
         return vector
     
-    def send_prob(self, sock, prob):
+    def send_predictions(self, sock, prob):
         self.sendMsg(sock, str(prob))
 
     def send_alpha(self, sock, alpha):
@@ -142,7 +142,7 @@ class RLModelServer(SocketServer):
     def list_to_tensor(self, list_of_tensors):
         for i in range(len(list_of_tensors)):
             list_of_tensors[i] = list_of_tensors[i].to(self.device)
-        return torch.cat(list_of_tensors,dim=0).reshape(-1).to(self.device)
+        return torch.cat(list_of_tensors,dim=0).reshape(-1).to(self.device).float()
     
     def cal_alpha(self, node_vector, feedback_vectors):
         if len(feedback_vectors) == 0:

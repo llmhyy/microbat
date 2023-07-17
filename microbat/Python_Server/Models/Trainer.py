@@ -39,27 +39,20 @@ class Trainer():
         self.criterion = nn.SmoothL1Loss()
 
         self.cache = []
-
         self.save_interval = self.config["training.save_interval"]
         self.output_folder = self.config["training.output_path"]
+
         self.epoch = 0
 
-    def predict_prob(self, feature):
+    def predict(self, feature):
         sample = random.random()
         eps_threshold = self.eps_end + (self.eps_start - self.eps_end) * math.exp(-1.0 * self.epoch / self.eps_decay)
         if sample > eps_threshold:
             with torch.no_grad():
-                return self.policy_net(feature).max(1)[1].view(1,1)
+                return self.policy_net(feature).argmax().view(1,1)
         else:
             return torch.randint(0, self.action_size, size=(1,1), device=self.device, dtype=torch.long)
-    
-        # with torch.no_grad():
-        #     prob = self.policy_net(feature.float().to(self.device))
-        #     if torch.isnan(prob):
-        #         printMsg(f"{prob} is nan", Trainer)
-        #     prob = torch.nan_to_num(prob, nan=0.5, posinf=1.0, neginf=0.0)
-        #     prob = torch.clip(prob, min=0.0, max=1.0)
-        #     return prob
+
 
     def clear_cache(self):
         self.cache = []
@@ -100,16 +93,24 @@ class Trainer():
         transitions = self.memory.sample(self.batch_size)
         batch = Transition(*zip(*transitions))
 
-        input_batch = torch.cat(batch.input)
+        input_batch = torch.stack(batch.input)
         action_batch = torch.cat(batch.action)
-        reward_batch = torch.cat(batch.reward)
+        reward_batch = torch.stack(batch.reward)
+
+        printMsg("---------------------------", Trainer)
+        for i in range(input_batch.shape[0]):
+            input = input_batch[i]
+            reward = reward_batch[i]
+            action = action_batch[i]
+            printMsg(f"{input[0].item()} \t {input[1].item()} \t -> action: {action.item()} \t -> {reward.item()}", Trainer)
+
 
         predicted_reward = self.policy_net(input_batch).gather(1, action_batch)
-        loss = self.criterion(predicted_reward, reward_batch)
+        loss = self.criterion(predicted_reward.squeeze(), reward_batch)
 
         self.optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_value_(self.policy.net.parameters(), 100)
+        torch.nn.utils.clip_grad_value_(self.policy_net.parameters(), 100)
         self.optimizer.step()
         # feature_batch = torch.stack(batch.feature).to(self.device).float()
         # prob_batch = self.policy_net(feature_batch)
