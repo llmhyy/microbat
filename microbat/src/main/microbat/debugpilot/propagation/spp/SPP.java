@@ -35,7 +35,8 @@ public abstract class SPP implements ProbabilityPropagator {
 	public SPP(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
 		this.trace = trace;
 		this.slicedTrace = slicedTrace;
-		this.correctVars = correctVars;
+//		this.correctVars = correctVars;
+		this.correctVars = new HashSet<>();
 		this.wrongVars = wrongVars;
 		this.feedbackRecords = feedbackRecords;
 		this.constructUnmodifiedOpcodeType();
@@ -46,7 +47,7 @@ public abstract class SPP implements ProbabilityPropagator {
 		this.fuseFeedbacks();
 		this.computeComputationalCost();
 		this.initProb();
-		this.forwardProp();
+//		this.forwardProp();
 		this.backwardProp();
 		this.combineProb();
 	}
@@ -239,14 +240,19 @@ public abstract class SPP implements ProbabilityPropagator {
 	}
 	
 	protected void combineProb() {
-		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream())
-						.forEach(var -> 
-							var.setProbability((var.getForwardProb() + (1.0d-var.getBackwardProb()))/2.0d)
-						);
-		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream())
-						.forEach(var -> 
-							var.setProbability((var.getForwardProb() + (1.0-var.getBackwardProb()))/2.0d)
-						);
+		
+		Stream.concat(
+				this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()), 
+				this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()))
+			.forEach(var -> var.setProbability(1 - var.getBackwardProb()));
+//		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream())
+//						.forEach(var -> 
+//							var.setProbability((var.getForwardProb() + (1.0d-var.getBackwardProb()))/2.0d)
+//						);
+//		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream())
+//						.forEach(var -> 
+//							var.setProbability((var.getForwardProb() + (1.0-var.getBackwardProb()))/2.0d)
+//						);
 	}
 	
 	protected boolean isCorrect(final VarValue var) {
