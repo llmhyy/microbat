@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
+import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
@@ -37,9 +38,9 @@ public class DijstraPathFinder extends AbstractPathFinder {
 		}
 		Graph<TraceNode, NodeFeedbacksPair> graph = this.constructGraph();
 		DijkstraShortestPath<TraceNode, NodeFeedbacksPair> dijstraAlg = new DijkstraShortestPath<>(graph);
-		GraphPath<TraceNode, NodeFeedbacksPair> result = dijstraAlg.getPath(startNode, endNode);;
+		GraphPath<TraceNode, NodeFeedbacksPair> result = dijstraAlg.getPath(startNode, endNode);
 		if (result == null) 
-			throw new RuntimeException(Log.genMsg(this.getClass(), "Dijstra algorithm cannot find the path"));
+			return null;
 		List<NodeFeedbacksPair> path = result.getEdgeList();
 		// Add the root cause feedback to the end of the path
 		UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
@@ -64,9 +65,6 @@ public class DijstraPathFinder extends AbstractPathFinder {
 			final TraceNode node = toVisitNodes.poll();
 			directedGraph.addVertex(node);
 			for (VarValue readVar : node.getReadVariables()) {
-//				if (readVar.isThisVariable()) {
-//					continue;
-//				}
 				final TraceNode dataDom = this.trace.findDataDependency(node, readVar);
 				if (dataDom != null) {
 					UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);

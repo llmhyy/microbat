@@ -100,6 +100,10 @@ public class DebugPilot {
 		throw new NodeNotInPathException(Log.genMsg(getClass(), "This node " + node.getOrder() + " is not contained in path"));
 	}
 	
+	public void locateRootCause() {
+		this.rootCause = this.proposeRootCause();
+	}
+	
 	public void locateRootCause(final TraceNode currentNode) {
 		this.rootCause = this.proposeRootCause(currentNode);
 		if (this.rootCause == null) {
@@ -137,6 +141,72 @@ public class DebugPilot {
 		return this.path;
 	}
 	
+	
+	public TraceNode proposeRootCause() {
+		TraceNode rootCause = null;
+		double maxDrop = -1.0;
+		for (TraceNode node : this.slicedTrace) {
+			
+			if (this.isFeedbackGiven(node) || this.outputNode.equals(node)) {
+				continue;
+			}
+			
+//			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
+//			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var .isThisVariable()).collect(Collectors.toList());
+			List<VarValue> readVars = node.getReadVariables();
+			List<VarValue> writtenVars = node.getWrittenVariables();
+			/*
+			 * We need to handle:
+			 * 1. Node without any variable
+			 * 2. Node with only control dominator
+			 * 3. Node with only read variables
+			 * 4. Node with only written variables
+			 * 5. Node with written variable and control dominator
+			 * 6. Node with both read and written variables
+			 * 
+			 * It will ignore the node that already have feedback
+			 */
+			double drop = 0.0;
+			if (writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() == null) {
+				// Case 1
+				continue;
+			} else if (writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() != null) {
+				// Case 2
+				drop = PropProbability.UNCERTAIN - node.getControlDominator().getConditionResult().getProbability();
+			} else if (writtenVars.isEmpty()) {
+				// Case 3
+				double prob = readVars.stream().mapToDouble(var -> var.getProbability()).average().orElse(0.5);
+				drop = PropProbability.UNCERTAIN - prob;
+			} else if (readVars.isEmpty()) {
+				// Case 4
+				double prob = writtenVars.stream().mapToDouble(var -> var.getProbability()).average().orElse(0.5);
+				drop = PropProbability.UNCERTAIN - prob;
+			} else if (!writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() != null){
+				// Case 5
+				drop = PropProbability.UNCERTAIN - node.getControlDominator().getConditionResult().getProbability();
+			} else {
+				// Case 6
+				double readProb = readVars.stream().mapToDouble(var -> var.getProbability()).min().orElse(0.5);
+				double writtenProb = writtenVars.stream().mapToDouble(var -> var.getProbability()).min().orElse(0.5);
+				drop = readProb - writtenProb;
+			}
+			
+			node.setDrop(drop);
+			if (drop < 0) {
+				continue;
+			} else {
+				if (drop > maxDrop) {
+					maxDrop = drop;
+					rootCause = node;
+				}
+			}
+		}
+		
+		if (rootCause == null) {
+			rootCause = this.slicedTrace.get(0);
+		}
+		return rootCause;
+	}
 	
 	/**
 	 * Propose the root cause node. <br><br>

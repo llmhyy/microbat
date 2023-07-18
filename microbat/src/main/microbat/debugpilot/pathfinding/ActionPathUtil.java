@@ -24,7 +24,7 @@ public class ActionPathUtil {
 		} 
 		
 		if (path1.peek().getFeedbacks().size() > 1) {
-			final NodeFeedbacksPair pair = path1.pop();
+			final NodeFeedbacksPair pair = path.pop();
 			final TraceNode node = pair.getNode();
 			NodeFeedbacksPair newPair = null;
 			for (UserFeedback feedback : pair.getFeedbacks()) {
