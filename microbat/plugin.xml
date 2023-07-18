@@ -406,12 +406,21 @@
             id="microbat.preference.executionRange"
             name="Execution Range">
       </page>
+      <page
+            category="microbat.preference"
+            class="microbat.preference.DebugPilotPreference"
+            id="microbat.preference.debugpilot"
+            name="Debug Pilot Setting">
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.editors.annotationTypes">
       <type
             name="microbat.specification.step">
       </type>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
    </extension>
 
 </plugin>

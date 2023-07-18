@@ -15,6 +15,7 @@ import org.eclipse.swt.widgets.Display;
 
 import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbacksPair;
+import microbat.Activator;
 import microbat.debugpilot.DebugPilot;
 import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.debugpilot.pathfinding.PathFinderType;
@@ -23,6 +24,7 @@ import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.preference.DebugPilotPreference;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 import microbat.views.MicroBatViews;
@@ -68,12 +70,26 @@ public class DebugPilotHandler extends AbstractHandler {
 			return;
 		}
 		
+		final String propagatorName = Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PROPAGATOR_TYPE);
+		if (propagatorName.equals("")) {
+			Log.printMsg(getClass(), "Please setup the propagator type in Preference -> Microbat Debugging -> Debug Pilot Settings");
+			return;
+		}
+		final PropagatorType propagatorType = PropagatorType.valueOf(propagatorName);
+		
+		final String pathFinderName = Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PATHFINDER_TYPE);
+		if (pathFinderName.equals("")) {
+			Log.printMsg(getClass(), "Please setup the path finder type in Preference -> Microbat Debugging -> Debug Pilot Settings");
+			return;
+		}
+		final PathFinderType pathFinderType = PathFinderType.valueOf(pathFinderName);
+		
 		// Locate outputs
 		final List<VarValue> outputs = DebugInfo.getOutputs();
 		final TraceNode outputNode = outputs.get(0).isConditionResult() ? DebugInfo.getNodeFeedbackPair().getNode() : this.getOutputNode(outputs.get(0));
 		
 		// Initialize DebugPilot
-		final DebugPilot debugPilot = new DebugPilot(buggyTrace, new ArrayList<VarValue>(), outputs, outputNode, PropagatorType.Heuristic_Cost, PathFinderType.Dijstra);
+		final DebugPilot debugPilot = new DebugPilot(buggyTrace, new ArrayList<VarValue>(), outputs, outputNode, propagatorType, pathFinderType);
 		
 		boolean isEnd = false;
 		while (!DebugInfo.isRootCauseFound() && !DebugInfo.isStop() && !isEnd) {

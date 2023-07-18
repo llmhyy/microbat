@@ -61,8 +61,8 @@ public class MicrobatPreference extends PreferencePage implements
 //		this.defaultProjectPath = Activator.getDefault().getPreferenceStore().getString(PROJECT_PATH);
 //		this.defaultDropInFolder = Activator.getDefault().getPreferenceStore().getString(DROP_IN_FOLDER_MICROBAT);
 //		this.defaultConfigPath = Activator.getDefault().getPreferenceStore().getString(CONFIG_PATH_MICROBAT);
-		this.defaultTestCaseID = Activator.getDefault().getPreferenceStore().getString(TEST_CASE_ID_MICROBAT);
-		this.defaultUseTestCaseID = Activator.getDefault().getPreferenceStore().getString(USE_TEST_CASE_ID);
+//		this.defaultTestCaseID = Activator.getDefault().getPreferenceStore().getString(TEST_CASE_ID_MICROBAT);
+//		this.defaultUseTestCaseID = Activator.getDefault().getPreferenceStore().getString(USE_TEST_CASE_ID);
 		
 	}
 
@@ -96,8 +96,8 @@ public class MicrobatPreference extends PreferencePage implements
 //	public static final String DROP_IN_FOLDER_MICROBAT = "dropInFolder";
 //	public static final String CONFIG_PATH_MICROBAT = "configPath";
 //	public static final String PROJECT_PATH = "projectPath";
-	public static final String TEST_CASE_ID_MICROBAT = "testCaseID";
-	public static final String USE_TEST_CASE_ID = "useTestCaseID";
+//	public static final String TEST_CASE_ID_MICROBAT = "testCaseID";
+//	public static final String USE_TEST_CASE_ID = "useTestCaseID";
 
 	private Combo projectCombo;
 	private Text lanuchClassText;
@@ -114,11 +114,11 @@ public class MicrobatPreference extends PreferencePage implements
 	private Button runWithDebugModeButton;
 	private Button enableMethodSplittingButton;
 	private Text java7HomePathText;
-	private Button useTestCaseIDButton;
+//	private Button useTestCaseIDButton;
 //	private Text dropInFolderText;
 //	private Text configPathText;
 //	private Text projectPathText;
-	private Text testCaseIDText;
+//	private Text testCaseIDText;
 	
 //	private Combo autoFeedbackCombo;
 	
@@ -140,8 +140,8 @@ public class MicrobatPreference extends PreferencePage implements
 //	private String defaultDropInFolder;
 //	private String defaultConfigPath;
 //	private String defaultProjectPath;
-	private String defaultTestCaseID;
-	private String defaultUseTestCaseID;
+//	private String defaultTestCaseID;
+//	private String defaultUseTestCaseID;
 
 	@Override
 	protected Control createContents(Composite parent) {
@@ -286,7 +286,7 @@ public class MicrobatPreference extends PreferencePage implements
 		testMethodText.setLayoutData(testMethoDataData);
 		
 		// Create setting UI for mutation
-		this.createMutationSeetingGroup(parent);
+//		this.createMutationSeetingGroup(parent);
 		
 //		Label classNameLabel = new Label(seedStatementGroup, SWT.NONE);
 //		classNameLabel.setText("Class Name: ");
@@ -326,8 +326,8 @@ public class MicrobatPreference extends PreferencePage implements
 //		preferences.put(DROP_IN_FOLDER_MICROBAT, this.dropInFolderText.getText());
 //		preferences.put(CONFIG_PATH_MICROBAT, this.configPathText.getText());
 //		preferences.put(PROJECT_PATH, this.projectPathText.getText());
-		preferences.put(TEST_CASE_ID_MICROBAT, this.testCaseIDText.getText());
-		preferences.put(USE_TEST_CASE_ID, String.valueOf(this.useTestCaseIDButton.getSelection()));
+//		preferences.put(TEST_CASE_ID_MICROBAT, this.testCaseIDText.getText());
+//		preferences.put(USE_TEST_CASE_ID, String.valueOf(this.useTestCaseIDButton.getSelection()));
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(LANUCH_CLASS, this.lanuchClassText.getText());
@@ -347,8 +347,8 @@ public class MicrobatPreference extends PreferencePage implements
 //		Activator.getDefault().getPreferenceStore().putValue(DROP_IN_FOLDER_MICROBAT, this.dropInFolderText.getText());
 //		Activator.getDefault().getPreferenceStore().putValue(CONFIG_PATH_MICROBAT, this.configPathText.getText());
 //		Activator.getDefault().getPreferenceStore().putValue(PROJECT_PATH, this.projectPathText.getText());
-		Activator.getDefault().getPreferenceStore().putValue(TEST_CASE_ID_MICROBAT, this.testCaseIDText.getText());
-		Activator.getDefault().getPreferenceStore().putValue(USE_TEST_CASE_ID, String.valueOf(this.useTestCaseIDButton.getSelection()));
+//		Activator.getDefault().getPreferenceStore().putValue(TEST_CASE_ID_MICROBAT, this.testCaseIDText.getText());
+//		Activator.getDefault().getPreferenceStore().putValue(USE_TEST_CASE_ID, String.valueOf(this.useTestCaseIDButton.getSelection()));
 		
 		confirmChanges();
 		
@@ -387,26 +387,26 @@ public class MicrobatPreference extends PreferencePage implements
 		return projectStrings;
 	}
 	
-	private void createMutationSeetingGroup(Composite parent) {
-		Group mutationGroup = new Group(parent, SWT.NONE);
-		mutationGroup.setText("Select Test Case By ID");
+//	private void createMutationSeetingGroup(Composite parent) {
+//		Group mutationGroup = new Group(parent, SWT.NONE);
+//		mutationGroup.setText("Select Test Case By ID");
+//		
+//		GridData mutationGroupData = new GridData(SWT.FILL, SWT.FILL, true, true);
+//		mutationGroupData.horizontalSpan = 3;
+//		mutationGroup.setLayoutData(mutationGroupData);
+//		
+//		GridLayout layout = new GridLayout();
+//		layout.numColumns = 2;
+//		
+//		mutationGroup.setLayout(layout);
 		
-		GridData mutationGroupData = new GridData(SWT.FILL, SWT.FILL, true, true);
-		mutationGroupData.horizontalSpan = 3;
-		mutationGroup.setLayoutData(mutationGroupData);
-		
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		
-		mutationGroup.setLayout(layout);
-		
-		this.useTestCaseIDButton = new Button(mutationGroup, SWT.CHECK);
-		this.useTestCaseIDButton.setText("Use Test Case ID");
-		GridData useTestCaseIDData = new GridData(SWT.FILL, SWT.FILL, true, false);
-		useTestCaseIDData.horizontalSpan = 3;
-		this.useTestCaseIDButton.setLayoutData(useTestCaseIDData);
-		boolean useTestCaseIDSelected = this.defaultUseTestCaseID.equals("true");
-		this.useTestCaseIDButton.setSelection(useTestCaseIDSelected);
+//		this.useTestCaseIDButton = new Button(mutationGroup, SWT.CHECK);
+//		this.useTestCaseIDButton.setText("Use Test Case ID");
+//		GridData useTestCaseIDData = new GridData(SWT.FILL, SWT.FILL, true, false);
+//		useTestCaseIDData.horizontalSpan = 3;
+//		this.useTestCaseIDButton.setLayoutData(useTestCaseIDData);
+//		boolean useTestCaseIDSelected = this.defaultUseTestCaseID.equals("true");
+//		this.useTestCaseIDButton.setSelection(useTestCaseIDSelected);
 		
 //		Label projectPathLabel = new Label(mutationGroup, SWT.NONE);
 //		projectPathLabel.setText("Project Path: ");
@@ -426,11 +426,11 @@ public class MicrobatPreference extends PreferencePage implements
 //		this.configPathText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
 //		this.configPathText.setText(this.defaultConfigPath);
 		
-		Label testCaseIDLable = new Label(mutationGroup, SWT.NONE);
-		testCaseIDLable.setText("Test ID: ");
-		this.testCaseIDText = new Text(mutationGroup, SWT.NONE);
-		this.testCaseIDText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
-		this.testCaseIDText.setText(this.defaultTestCaseID);
-		
-	}
+//		Label testCaseIDLable = new Label(mutationGroup, SWT.NONE);
+//		testCaseIDLable.setText("Test ID: ");
+//		this.testCaseIDText = new Text(mutationGroup, SWT.NONE);
+//		this.testCaseIDText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+//		this.testCaseIDText.setText(this.defaultTestCaseID);
+//		
+//	}
 }
