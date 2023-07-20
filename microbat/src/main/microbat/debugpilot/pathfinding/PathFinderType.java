@@ -3,5 +3,5 @@ package microbat.debugpilot.pathfinding;
 public enum PathFinderType {
 	Random,
 	Greedy,
-	Dijstra,
+	Dijkstra,
 }
