@@ -31,16 +31,8 @@ class SimModelServer(RLModelServer):
                 node_sim = self.cal_node_sim(node_vector, feedback_feature.node_vector)
                 var_sim = self.cal_var_sim(var_vector, var_name, feedback_feature.variable_vector, feedback_feature.variable_name)
                 prediction = self.predict(node_sim.item(), var_sim.item())
-                # if node_order == 119 :
-                #     printMsg(f"Node: {node_order} sim: {node_sim.item()} {var_sim.item()} {var_name} {feedback_feature.variable_name} with feedback {feedback_feature.node_order} to action {prediction}", SimModelServer)
                 predictions.append(prediction)
-
-            # if 1 in predictions:
-            #     printMsg(f"NodeL {node_order} with prediction 1", SimModelServer)
-            # elif 2 in predictions:
-            #     printMsg(f"NodeL {node_order} with prediction 1", SimModelServer)
             predictions = [str(prediction) for prediction in predictions]
-            # printMsg(f"Node: {node_order} \\t max sim : {max_step_sim}, {max_var_sim} -> {predictions}", BackwardModelTrainServer)
             assert len(predictions) != 0, genMsg("prob is an emtpy list", SimModelServer)
             self.send_predictions(sock, ",".join(predictions))
         printMsg("Finish sim calculation ...", SimModelServer)

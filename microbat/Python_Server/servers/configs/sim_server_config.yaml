@@ -2,8 +2,8 @@ server.host: "127.0.0.4"
 server.port: 8084
 server.verbose: False
 
-encoder.pca_path: "C:\\Users\\david\\Documents\\Workspace\\pca\\model.joblib"
-encoder.work_embedding_path: "C:\\Users\\david\\Documents\\fasttext\\wiki.en.bin"
+encoder.pca_path: "..\\pca\\model.joblib"
+encoder.work_embedding_path: "..\\fasttext\\wiki.en.bin"
 
 step_sim_threshold: 0.7
 var_sim_threshold: 0.8
