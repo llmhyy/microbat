@@ -21,12 +21,12 @@ class RLModelServer(SocketServer):
         port = self.config["server.port"]
         verbose = self.config["server.verbose"]
         super(RLModelServer, self).__init__(host, port, verbose)
-        self.use_pca = self.config["encoder.pca"]
+        # self.use_pca = self.config["encoder.pca"]
         self.encoder = self.load_encoder()
         self.continueMsg = "CONTINUE"
         self.stopMsg = "STOP"
-        self.device = self.config["training.device"]
-    
+        self.device = self.config.get("training.device", "cpu")
+
     def func(self, sock):
         raise NotImplementedError()
     
@@ -81,11 +81,11 @@ class RLModelServer(SocketServer):
         return feedbacks
     
     def gen_embedding(self, vector):
-        if self.use_pca:
-            embedding = self.encoder.transform(vector.detach().cpu().numpy().reshape(1, -1))
-            return torch.tensor(embedding).to(self.device)
-        else:
-            return self.encoder(vector)
+        # if self.use_pca:
+        embedding = self.encoder.transform(vector.detach().cpu().numpy().reshape(1, -1))
+        return torch.tensor(embedding).to(self.device)
+        # else:
+        #     return self.encoder(vector)
         
     def recieve_node_order(self, sock):
         message = self.recvMsg(sock)
@@ -99,10 +99,10 @@ class RLModelServer(SocketServer):
         return sim
         
     def load_encoder(self):
-        if self.use_pca:
-            return self.load_pca()
-        else:
-            return self.load_encoder_model()
+        # if self.use_pca:
+        return self.load_pca()
+        # else:
+        #     return self.load_encoder_model()
 
     def load_pca(self):
         return load(self.config["encoder.pca_path"])
