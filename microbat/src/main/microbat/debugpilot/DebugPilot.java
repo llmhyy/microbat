@@ -19,6 +19,7 @@ import microbat.debugpilot.propagation.ProbabilityPropagator;
 import microbat.debugpilot.propagation.PropagatorFactory;
 import microbat.debugpilot.propagation.PropagatorType;
 import microbat.debugpilot.propagation.probability.PropProbability;
+import microbat.debugpilot.propagation.spp.StepExplaination;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -121,6 +122,10 @@ public class DebugPilot {
 		PathFinder pathFinder = PathFinderFactory.getFinder(this.pathFinderType, this.trace, this.slicedTrace);
 		
 		FeedbackPath mustFollowPath = new FeedbackPath(this.feedbackRecords);
+		for (NodeFeedbacksPair pair : mustFollowPath) {
+			pair.getNode().reason = StepExplaination.USRE_CONFIRMED;
+		}
+		
 		if (mustFollowPath == null || mustFollowPath.isEmpty()) {
 			this.path = pathFinder.findPath(this.outputNode, this.rootCause);
 			return;
@@ -131,6 +136,9 @@ public class DebugPilot {
 				FeedbackPath consecutivePath = pathFinder.findPath(nextNode, this.rootCause);
 				if (consecutivePath == null) continue;
 				this.path = ActionPathUtil.concat(mustFollowPath, consecutivePath, this.trace);
+				for (NodeFeedbacksPair pair : consecutivePath) {
+					pair.getNode().updateReason(pair);
+				}
 				return;
 			}
 		}
@@ -204,6 +212,11 @@ public class DebugPilot {
 		
 		if (rootCause == null) {
 			rootCause = this.slicedTrace.get(0);
+		}
+		if (this.pathFinderType == PathFinderType.Random) {
+			rootCause.reason = StepExplaination.RANDOM;
+		} else {
+			rootCause.reason = StepExplaination.LAREST_GAP;
 		}
 		return rootCause;
 	}
@@ -283,6 +296,7 @@ public class DebugPilot {
 		if (rootCause == null) {
 			rootCause = this.slicedTrace.get(0);
 		}
+		rootCause.reason = "Largest gap";
 		return rootCause;
 	}
 	

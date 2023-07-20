@@ -91,7 +91,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 		
 		// Set up the propagator that perform propagation,
 		// with initial feedback indicating the output variable  is wrong
-		DebugPilot debugPilot = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode, PropagatorType.Heuristic_Cost, PathFinderType.Dijstra);
+		DebugPilot debugPilot = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode, PropagatorType.SPP_COST, PathFinderType.Dijstra);
 		
 		TraceNode currentNode = outputNode;
 		List<TraceNode> candidatesCurrentNodes = new ArrayList<>();

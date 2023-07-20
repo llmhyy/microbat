@@ -359,9 +359,9 @@ public class MicroBatUtil {
 		final UserFeedback feedback = pair.getFirstFeedback();
 		StringBuilder strBuilder = new StringBuilder();
 		strBuilder.append("Path " + index);
-		strBuilder.append("|");
+		strBuilder.append("\t|");
 		strBuilder.append("TraceNode: " + node.getOrder());
-		strBuilder.append("|");
+		strBuilder.append("\t|");
 		strBuilder.append("Feedback: ");
 		if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
 			strBuilder.append("Correct");
@@ -372,6 +372,9 @@ public class MicroBatUtil {
 		} else if (feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
 			strBuilder.append("Root cause");
 		}
+		strBuilder.append("\t|");
+		strBuilder.append("Reason: ");
+		strBuilder.append(node.reason);
 		return strBuilder.toString();
 	}
 	

@@ -18,12 +18,18 @@ public class SPPRandom extends SPP {
 
 	@Override
 	protected double calForwardFactor(TraceNode node) {
+		node.reason = StepExplaination.RANDOM;
 		return Math.random();
 	}
 
 	@Override
 	protected double calBackwardFactor(VarValue var, TraceNode node) {
-		return Math.random();
+		node.reason = StepExplaination.RANDOM;
+		if (!this.isComputational(node)) {
+			return 1.0d;
+		} else {
+			return Math.random();
+		}
 	}
 
 }

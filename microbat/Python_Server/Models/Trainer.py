@@ -25,12 +25,15 @@ class Trainer():
         self.should_load_model = self.config["training.load_model"]
         self.reward_weight = self.config["training.reward_weight"]
         self.action_size = self.config["data.output_size"]
+        self.epoch = 0
 
         self.policy_net = DQN(self.config).to(self.device).float()
         if self.should_load_model:
             model_path = self.config["training.load_path"]
-            print(f"Loading existing model from {model_path}")
+            printMsg(f"Loading existing model from {model_path}", Trainer)
             self.policy_net.load_state_dict(torch.load(model_path))
+            self.epoch = int(self.extract_substring(model_path, "epoch_", ".pt"))
+            printMsg(f"Start training from {self.epoch}", Trainer)
 
         # self.target_net = DQN(self.config).to(self.device).float()
         # self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -42,7 +45,6 @@ class Trainer():
         self.save_interval = self.config["training.save_interval"]
         self.output_folder = self.config["training.output_path"]
 
-        self.epoch = 0
 
     def predict(self, feature):
         sample = random.random()
@@ -53,6 +55,14 @@ class Trainer():
         else:
             return torch.randint(0, self.action_size, size=(1,1), device=self.device, dtype=torch.long)
 
+    def extract_substring(self, text, start_value, end_value):
+        start_index = text.find(start_value)
+        if start_index == -1:
+            return ""  # Start value not found
+        end_index = text.find(end_value, start_index + len(start_value))
+        if end_index == -1:
+            return ""  # End value not found
+        return text[start_index + len(start_value):end_index]
 
     def clear_cache(self):
         self.cache = []

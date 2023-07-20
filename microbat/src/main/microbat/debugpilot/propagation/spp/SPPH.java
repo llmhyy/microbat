@@ -23,11 +23,16 @@ public class SPPH extends SPP {
 	
 	@Override
 	protected double calBackwardFactor(final VarValue var, final TraceNode node) {
-		final double totalCost = node.getReadVariables().stream().mapToDouble(readVar -> readVar.computationalCost).sum();
-		if (totalCost == 0) {
-			return (1 - node.computationCost) * (1 / node.getReadVariables().size());
+		node.reason = StepExplaination.COST;
+		if (!this.isComputational(node)) {
+			return 1.0d;
 		} else {
-			return (1 - node.computationCost) * (var.computationalCost / totalCost);
+			final double totalCost = node.getReadVariables().stream().mapToDouble(readVar -> readVar.computationalCost).sum();
+			if (totalCost == 0) {
+				return (1 - node.computationCost) * (1 / node.getReadVariables().size());
+			} else {
+				return (1 - node.computationCost) * (var.computationalCost / totalCost);
+			}			
 		}
 	}
 }

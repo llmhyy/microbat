@@ -20,6 +20,7 @@ import microbat.debugpilot.DebugPilot;
 import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.debugpilot.pathfinding.PathFinderType;
 import microbat.debugpilot.propagation.PropagatorType;
+import microbat.debugpilot.propagation.spp.StepExplaination;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -160,7 +161,7 @@ public class DebugPilotHandler extends AbstractHandler {
 						if (newFeedback.equals(correctingFeedback)) {
 							// Omission bug detected
 							NodeFeedbacksPair previousFeedback = this.userFeedbackRecords.peek();
-							this.reportOmissionBug(userNode, previousFeedback);
+							this.reportOmissionBug(userNode, previousFeedback, proposedPath);
 							isEnd = true;
 							break;
 						} else {
@@ -175,7 +176,7 @@ public class DebugPilotHandler extends AbstractHandler {
 						if (newFeedback.equals(correctingFeedback)) {
 							// Omission bug detected
 							NodeFeedbacksPair previousFeedback = this.userFeedbackRecords.peek();
-							this.reportOmissionBug(userNode, previousFeedback);
+							this.reportOmissionBug(userNode, previousFeedback, proposedPath);
 							isEnd = true;
 							break;
 						} else {
@@ -249,13 +250,21 @@ public class DebugPilotHandler extends AbstractHandler {
 		return true;
 	}
 	
-	protected void reportOmissionBug(final TraceNode startNode, final NodeFeedbacksPair feedback) {
+	protected void reportOmissionBug(final TraceNode startNode, final NodeFeedbacksPair feedback, final FeedbackPath path) {
+		final FeedbackPath newPath = new FeedbackPath();
+		for (NodeFeedbacksPair pair : path) {
+			if (pair.getNode().getOrder() >= startNode.getOrder()) {
+				newPath.addPair(pair);
+			}
+		}
 		if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 			this.reportMissingBranchOmissionBug(startNode, feedback.getNode());
 		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
 			VarValue varValue = feedback.getFeedbacks().get(0).getOption().getReadVar();
 			this.reportMissingAssignmentOmissionBug(startNode, feedback.getNode(), varValue);
 		}
+		this.pathView.setActionPath(newPath);
+		this.updateView();
 	}
 	protected void reportMissingBranchOmissionBug(final TraceNode startNode, final TraceNode endNode) {
 		Log.printMsg(this.getClass(), "-------------------------------------------");
@@ -264,6 +273,8 @@ public class DebugPilotHandler extends AbstractHandler {
 		Log.printMsg(this.getClass(), "Scope end: " + endNode.getOrder());
 		Log.printMsg(this.getClass(), "Omission Type: Missing Branch");
 		Log.printMsg(this.getClass(), "-------------------------------------------");
+		startNode.reason = StepExplaination.MISS_BRANCH;
+		endNode.reason = StepExplaination.MISS_BRANCH;
 	}
 	
 	protected void reportMissingAssignmentOmissionBug(final TraceNode startNode, final TraceNode endNode, final VarValue var) {
@@ -273,6 +284,8 @@ public class DebugPilotHandler extends AbstractHandler {
 		Log.printMsg(this.getClass(), "Scope end: " + endNode.getOrder());
 		Log.printMsg(this.getClass(), "Omission Type: Missing Assignment of " + var.getVarName());
 		Log.printMsg(this.getClass(), "-------------------------------------------");
+		startNode.reason = StepExplaination.MISS_DEF(var.getVarName());
+		endNode.reason = StepExplaination.MISS_DEF(var.getVarName());
 	}
 
 }
