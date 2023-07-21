@@ -7,7 +7,7 @@ import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 
-public class ActionPathUtil {
+public class FeedbackPathUtil {
 	
 	public static FeedbackPath concat(final FeedbackPath path1, final FeedbackPath path2, final Trace trace) {
 		if (path1 == null && path2 == null) return null;
@@ -49,7 +49,7 @@ public class ActionPathUtil {
 	
 	public static boolean samePathBeforeNode(final FeedbackPath path1, final FeedbackPath path2, final TraceNode targetNode) {
 		if (!path1.contains(targetNode) || !path2.contains(targetNode)) {
-			throw new IllegalArgumentException(Log.genMsg(ActionPathUtil.class, "Given target node: " + targetNode.getOrder() + " does not appear in both path"));
+			throw new IllegalArgumentException(Log.genMsg(FeedbackPathUtil.class, "Given target node: " + targetNode.getOrder() + " does not appear in both path"));
 		}
 		
 		final int minPathLength = Math.min(path1.getLength(), path2.getLength());
@@ -66,7 +66,7 @@ public class ActionPathUtil {
 				return false;
 			}
 		}
-		throw new RuntimeException(Log.genMsg(ActionPathUtil.class, "Program should not execute this line of code"));
+		throw new RuntimeException(Log.genMsg(FeedbackPathUtil.class, "Program should not execute this line of code"));
 	}
 	
  }
