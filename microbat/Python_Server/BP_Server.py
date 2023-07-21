@@ -11,64 +11,19 @@ class BP_Server(SocketServer):
         self.DILIMITER_2 = "&"
         self.MUL_SIGN = "*"
         self.MAX_ITR = 5
-
-    def factorLoader(self, factor_input, dilimiter):
-        tokens = factor_input.split(dilimiter)
-        for idx in range(0, len(tokens), 4):
-            yield tokens[idx], tokens[idx+1], tokens[idx+2], tokens[idx+3]
-
-    def checkDuplicateVar(self, str_):
-        str_tokens = [i.split('(') for i in str_.split(')') if i != '']
-        for token in str_tokens:
-            vars = token[1].split(',')
-            if len(vars) != len(set(vars)):
-                print("contain duplicate variables: ", token[0])
-                print(vars)
-                raise ValueError('Duplicated variables: ' + token[0])
-            
+        
     def func(self, sock):
 
-        graph_input = self.recvMsg(sock)
-        if graph_input == "":
-            return False
-        if self.isEndServerMsg(graph_input):
-            self.endServer()
-            return False
+        graph_str = self.recvGraphMsg(sock)
+        self.checkDuplicateVar(graph_str)
+        factorGraph = string2factor_graph(graph_str)
 
-        factor_input = self.recvMsg(sock)
-        if self.isEndServerMsg(factor_input):
-            self.endServer()
-            return False
-
-        self.checkDuplicateVar(graph_input)
+        factor_messages = self.recvFactorMsg(sock)
         
-        factorGraph = string2factor_graph(graph_input)
         predIDs_all = set()
-
-        for order, constraintID, predIDs_str, probs_str in self.factorLoader(factor_input, self.DILIMITER_2):
-
-            predIDs = predIDs_str.split(self.DILIMITER_1)
-
-            predIDs_all.update(predIDs)
-            predCount = len(predIDs)
-
-            shape = [2 for _ in range(predCount)]
-            shape = tuple(shape)
-
-            probs_tokens = probs_str.split(self.DILIMITER_1)
-
-            probs = []
-            for probs_token in probs_tokens:
-                probs_str, count = probs_token.split(self.MUL_SIGN)
-                count = int(count)
-                prob = float(probs_str)
-                for _ in range(count):
-                    probs.append(prob)
-
-            probs = np.array(probs)
-            probs = probs.reshape(shape)
-
-            factorGraph.change_factor_distribution(constraintID, factor(predIDs,  probs))
+        for constrain_id, var_ids, probs in factor_messages:
+            predIDs_all.update(var_ids)
+            factorGraph.change_factor_distribution(constrain_id, factor(var_ids, probs))
 
         lbp = myLBP(factorGraph, verbose=True)
 
@@ -83,12 +38,64 @@ class BP_Server(SocketServer):
             output_str += self.DILIMITER_2
         output_str = output_str[:-1]
         self.sendMsg(sock, output_str)
-        return True
+    
+    def recvGraphMsg(self, sock):
+        print("Start receive graph message ...")
+        graph_str = ""
+        while self.should_continoue(sock):
+            message = self.recvMsg(sock)
+            graph_str += message
+        print("Finish receive graph message ...")
+        return graph_str
+    
+    def recvFactorMsg(self, sock):
+        print("Start factor messages ....")
+        factor_messages = []
+        while self.should_continoue(sock):
+            message = self.recvMsg(sock)
+            node_order, constraint_id, var_ids_str, probs_str = self.splitFactorMsg(message)
+            var_ids = var_ids_str.split(self.DILIMITER_1)
+            var_count = len(var_ids)
+            probs = self.gen_probs_array(probs_str, var_count)
+            factor_messages.append((constraint_id, var_ids, probs))
+        print("Finish receive factor message ...")
+        return factor_messages
+    
+    def gen_probs_array(self, probs_str, pred_count):
+        shape = tuple([2 for _ in range(pred_count)])
+        prob_tokens = probs_str.split(self.DILIMITER_1)
+        probs = []
+        for prob_token in prob_tokens:
+            prob_str, count = prob_token.split(self.MUL_SIGN)
+            count = int(count)
+            prob = float(prob_str)
+            for _ in range(count):
+                probs.append(prob)
+        probs = np.array(probs).reshape(shape)
+        return probs
+    
+    def splitFactorMsg(self, factor_message):
+        node_order, constraint_id, var_ids_str, probs_str = factor_message.split(self.DILIMITER_2)
+        return node_order, constraint_id, var_ids_str, probs_str
+    
+    def factorLoader(self, factor_input, dilimiter):
+        tokens = factor_input.split(dilimiter)
+        for idx in range(0, len(tokens), 4):
+            yield tokens[idx], tokens[idx+1], tokens[idx+2], tokens[idx+3]
+
+    def checkDuplicateVar(self, str_):
+        str_tokens = [i.split('(') for i in str_.split(')') if i != '']
+        for token in str_tokens:
+            vars = token[1].split(',')
+            if len(vars) != len(set(vars)):
+                print("contain duplicate variables: ", token[0])
+                print(vars)
+                raise ValueError('Duplicated variables: ' + token[0])
 
 if __name__ == '__main__':
     host = "127.0.0.1"
     port = 8080
-    server = BP_Server(host, port, verbose=True)
+    server = BP_Server(host, port)
     print("Server start ...")
     server.start()
     print("Server end")

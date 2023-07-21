@@ -1,7 +1,9 @@
 package microbat.debugpilot.propagation.BP;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import microbat.debugpilot.propagation.BP.constraint.Constraint;
 import microbat.pyserver.Client;
@@ -12,6 +14,8 @@ import microbat.pyserver.Client;
  *
  */
 public class BeliefPropagationClient extends Client {
+	
+	protected final MessageProcessor messageProcessor = new MessageProcessor();
 	
 	public BeliefPropagationClient() {
 		this("127.0.0.1", 8080, false);
@@ -41,5 +45,34 @@ public class BeliefPropagationClient extends Client {
 		this.sendMsg(factors);
 		String responst_str = this.receiveMsg();
 		return responst_str;
+	}
+	
+	public Map<String, Double> requestBP(final Collection<Constraint> constraints) throws IOException, InterruptedException {
+		this.sendGraphMsg(constraints);
+		this.sendFactorMsg(constraints);
+		return this.receiveResponse();
+	}
+	
+	protected void sendGraphMsg(final Collection<Constraint> constraints) throws IOException, InterruptedException {
+		for (Constraint constraint : constraints) {
+			this.notifyContinuoue();
+			final String graphMsg = this.messageProcessor.buildGrapMsg(constraint);
+			this.sendMsg(graphMsg);
+		}
+		this.notifyStop();
+	}
+	
+	protected void sendFactorMsg(final Collection<Constraint> constraints) throws IOException, InterruptedException {
+		for (Constraint constraint: constraints) {
+			this.notifyContinuoue();
+			final String factorMsg = this.messageProcessor.buildFactorMsg(constraint);
+			this.sendMsg(factorMsg);
+		}
+		this.notifyStop();
+	}
+	
+	protected Map<String, Double> receiveResponse() throws IOException {
+		final String response = this.receiveMsg();
+		return this.messageProcessor.recieveMsg(response);
 	}
 }
