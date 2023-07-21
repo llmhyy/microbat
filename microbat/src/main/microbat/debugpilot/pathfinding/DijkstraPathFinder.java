@@ -21,9 +21,9 @@ import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.UniquePriorityQueue;
 
-public class DijstraPathFinder extends AbstractPathFinder {
+public class DijkstraPathFinder extends AbstractPathFinder {
 
-	public DijstraPathFinder(Trace trace, List<TraceNode> slicedTrace) {
+	public DijkstraPathFinder(Trace trace, List<TraceNode> slicedTrace) {
 		super(trace, slicedTrace);
 	}
 

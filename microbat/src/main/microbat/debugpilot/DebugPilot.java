@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import debuginfo.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.FeedbackPath;
-import microbat.debugpilot.pathfinding.ActionPathUtil;
+import microbat.debugpilot.pathfinding.FeedbackPathUtil;
 import microbat.debugpilot.pathfinding.PathFinder;
 import microbat.debugpilot.pathfinding.PathFinderFactory;
 import microbat.debugpilot.pathfinding.PathFinderType;
@@ -135,7 +135,7 @@ public class DebugPilot {
 				final TraceNode nextNode = TraceUtil.findNextNode(latestAction.getNode(), feedback, this.trace);
 				FeedbackPath consecutivePath = pathFinder.findPath(nextNode, this.rootCause);
 				if (consecutivePath == null) continue;
-				this.path = ActionPathUtil.concat(mustFollowPath, consecutivePath, this.trace);
+				this.path = FeedbackPathUtil.concat(mustFollowPath, consecutivePath, this.trace);
 				for (NodeFeedbacksPair pair : consecutivePath) {
 					pair.getNode().updateReason(pair);
 				}
