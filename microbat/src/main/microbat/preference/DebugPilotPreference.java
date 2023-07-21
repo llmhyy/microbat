@@ -25,7 +25,7 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 	private static final String ID = "microbat.preference.debugpilot";
 	
 	protected static final PropagatorType DEFAULT_PROPAGATOR_TYPE = PropagatorType.SPP_COST;
-	protected static final PathFinderType DEFEAUL_PATH_FINDER_TYPE = PathFinderType.Dijstra;
+	protected static final PathFinderType DEFEAUL_PATH_FINDER_TYPE = PathFinderType.Dijkstra;
 	
 	public static final String PROPAGATOR_TYPE = "PROPAGATOR_TYPE";
 	public static final String PATHFINDER_TYPE = "PATHFINDER_TYPE";

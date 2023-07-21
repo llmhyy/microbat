@@ -13,7 +13,7 @@ public class PathFinderFactory {
 	
 	public static PathFinder getFinder(final PathFinderType type, final Trace trace, final List<TraceNode> slicedTrace) {
 		switch(type) {
-		case Dijstra:
+		case Dijkstra:
 			return new DijstraPathFinder(trace, slicedTrace);
 		case Greedy:
 			return new GreedyPathFinder(trace, slicedTrace);
