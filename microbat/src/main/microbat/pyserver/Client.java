@@ -1,7 +1,5 @@
 package microbat.pyserver;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,6 +20,9 @@ public abstract class Client {
 	 * MSG_BREAK appear at the end of each message
 	 */
 	protected static final String END_MSG_STR = "MSG_END";
+	
+	protected static final String continueMsg = "CONTINUE";
+	protected static final String stopMsg = "STOP";
 	
 	protected final byte[] END_SERVER_MSG;
 	protected final byte[] END_MSG;
@@ -53,8 +54,6 @@ public abstract class Client {
 	protected final int PORT;
 	
 	protected boolean verbose = false;
-	
-	private final byte paddingByte = 0;
 	
 	protected Socket socket;
 	private InputStream reader;
@@ -181,5 +180,13 @@ public abstract class Client {
 	
 	public static String genMsg(final String message) {
 		return "[Client] " + message;
+	}
+	
+	public void notifyContinuoue() throws IOException, InterruptedException {
+		this.sendMsg(RLModelClient.continueMsg);
+	}
+	
+	public void notifyStop() throws IOException, InterruptedException {
+		this.sendMsg(RLModelClient.stopMsg);
 	}
 }
