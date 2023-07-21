@@ -130,12 +130,12 @@ public class DebugPilot {
 			this.path = pathFinder.findPath(this.outputNode, this.rootCause);
 			return;
 		} else {
-			NodeFeedbacksPair latestAction = mustFollowPath.peek();
+			NodeFeedbacksPair latestAction = mustFollowPath.getLastFeedback();
 			for (UserFeedback feedback : latestAction.getFeedbacks()) {
 				final TraceNode nextNode = TraceUtil.findNextNode(latestAction.getNode(), feedback, this.trace);
 				FeedbackPath consecutivePath = pathFinder.findPath(nextNode, this.rootCause);
 				if (consecutivePath == null) continue;
-				this.path = FeedbackPathUtil.concat(mustFollowPath, consecutivePath, this.trace);
+				this.path = FeedbackPathUtil.concat(mustFollowPath, consecutivePath);
 				for (NodeFeedbacksPair pair : consecutivePath) {
 					pair.getNode().updateReason(pair);
 				}

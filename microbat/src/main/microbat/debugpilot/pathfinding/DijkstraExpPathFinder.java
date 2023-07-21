@@ -1,8 +1,10 @@
 package microbat.debugpilot.pathfinding;
 
 import java.util.List;
+import java.util.Objects;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;
@@ -16,6 +18,9 @@ public class DijkstraExpPathFinder extends DijkstraPathFinder {
 
 	@Override
 	public FeedbackPath findPath(TraceNode startNode, TraceNode endNode) {
+		Objects.requireNonNull(startNode, Log.genMsg(getClass(), "Start node should not be null"));
+		Objects.requireNonNull(endNode, Log.genMsg(getClass(), "End node should not be null"));
+		
 		FeedbackPath explanablePath = super.findPath(startNode, endNode);
 		for (int pathIdx=0; pathIdx < explanablePath.getLength(); pathIdx++) {
 			final NodeFeedbacksPair pair = explanablePath.get(pathIdx);
@@ -24,7 +29,10 @@ public class DijkstraExpPathFinder extends DijkstraPathFinder {
 			if (!pair.containsFeedback(greedyFeedback)) {
 				final TraceNode nextNode = TraceUtil.findNextNode(node, greedyFeedback, trace);
 				if (nextNode != null) {
-					
+					 FeedbackPath insertPath = super.findPath(nextNode, endNode);
+					 if (insertPath != null) {
+						 explanablePath = FeedbackPathUtil.splicePathAtIndex(explanablePath, insertPath, pathIdx+1);
+					 }
 				}
 			}
 		}

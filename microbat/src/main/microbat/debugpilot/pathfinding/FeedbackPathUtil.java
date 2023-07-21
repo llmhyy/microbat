@@ -1,5 +1,7 @@
 package microbat.debugpilot.pathfinding;
 
+import java.util.Objects;
+
 import debuginfo.NodeFeedbacksPair;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
@@ -9,7 +11,7 @@ import microbat.util.TraceUtil;
 
 public class FeedbackPathUtil {
 	
-	public static FeedbackPath concat(final FeedbackPath path1, final FeedbackPath path2, final Trace trace) {
+	public static FeedbackPath concat(final FeedbackPath path1, final FeedbackPath path2) {
 		if (path1 == null && path2 == null) return null;
 		if (path1 == null) return path2;
 		if (path2 == null) return path1;
@@ -17,13 +19,14 @@ public class FeedbackPathUtil {
 		if (path2.isEmpty()) return path1;
 		
 		FeedbackPath path = new FeedbackPath(path1);
-		TraceNode lastNode = path1.peek().getNode();
+		TraceNode lastNode = path1.getLastFeedback().getNode();
 		TraceNode nextNode = path2.get(0).getNode();
 		if (lastNode.equals(nextNode)) {
 			path.pop();
 		} 
 		
-		if (path1.peek().getFeedbacks().size() > 1) {
+		final Trace trace = lastNode.getTrace();
+		if (path1.getLastFeedback().getFeedbacks().size() > 1) {
 			final NodeFeedbacksPair pair = path.pop();
 			final TraceNode node = pair.getNode();
 			NodeFeedbacksPair newPair = null;
@@ -45,6 +48,15 @@ public class FeedbackPathUtil {
 		}
 		
 		return path;
+	}
+	
+
+	public static FeedbackPath splicePathAtIndex(final FeedbackPath sourcePath, final FeedbackPath splicePath, final int idx) {
+		Objects.requireNonNull(splicePath, Log.genMsg(FeedbackPathUtil.class, "splicePath cannot be null"));
+		if (sourcePath == null || sourcePath.isEmpty() || idx==0) return splicePath;
+		if (idx > sourcePath.getLength()) return FeedbackPathUtil.concat(sourcePath, splicePath);
+		FeedbackPath resultPath = FeedbackPathUtil.concat(sourcePath.subPath(0, idx), splicePath);
+		return resultPath;
 	}
 	
 	public static boolean samePathBeforeNode(final FeedbackPath path1, final FeedbackPath path2, final TraceNode targetNode) {
