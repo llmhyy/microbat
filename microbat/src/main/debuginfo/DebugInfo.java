@@ -21,6 +21,8 @@ public class DebugInfo {
 	
 	private static List<VarValue> inputs = new ArrayList<>();
 	private static List<VarValue> outputs = new ArrayList<>();
+	private static List<NodeVarPair> inputNodeVarPairs = new ArrayList<>();
+	private static List<NodeVarPair> outputNodeVarPairs = new ArrayList<>();
 	private static NodeFeedbacksPair nodeFeedbacksPair = null;
 	private static boolean rootCauseFound = false;
 	private static boolean feedbackUpdatedFlag = false;
@@ -50,6 +52,14 @@ public class DebugInfo {
 		DebugInfo.printInputs();
 	}
 	
+	public static void addInputNodeVarPairs(Collection<NodeVarPair> inputNodeVarPairs) {
+		DebugInfo.inputNodeVarPairs.addAll(inputNodeVarPairs);
+		inputNodeVarPairs.forEach((pair) -> {
+			DebugInfo.inputs.add(pair.getVariable());
+		});
+		DebugInfo.printInputs();
+	}
+	
 	public static void addOutputs(Collection<VarValue> outputs) {
 		DebugInfo.outputs.addAll(outputs);
 		DebugInfo.printOutputs();
@@ -57,6 +67,14 @@ public class DebugInfo {
 	
 	public static void addOutput(VarValue output) {
 		DebugInfo.outputs.add(output);
+		DebugInfo.printOutputs();
+	}
+	
+	public static void addOutputNodeVarPairs(Collection<NodeVarPair> outputNodeVarPairs) {
+		DebugInfo.outputNodeVarPairs.addAll(outputNodeVarPairs);
+		outputNodeVarPairs.forEach((pair) -> {
+			DebugInfo.outputs.add(pair.getVariable());
+		});
 		DebugInfo.printOutputs();
 	}
 	
@@ -114,12 +132,20 @@ public class DebugInfo {
 		return DebugInfo.inputs;
 	}
 	
+	public static List<NodeVarPair> getInputNodeVarPairs() {
+		return DebugInfo.inputNodeVarPairs;
+	}
+	
 	/**
 	 * Get the list of outputs given from users 
 	 * @return List of output variables
 	 */
 	public static List<VarValue> getOutputs() {
 		return DebugInfo.outputs;
+	}
+	
+	public static List<NodeVarPair> getOutputNodeVarPairs() {
+		return DebugInfo.outputNodeVarPairs;
 	}
 	
 	/**
@@ -136,6 +162,7 @@ public class DebugInfo {
 	 */
 	public static void clearInputs() {
 		DebugInfo.inputs.clear();
+		DebugInfo.inputNodeVarPairs.clear();
 		System.out.println("DebugInfo - Clear Inputs");
 	}
 	
@@ -144,6 +171,7 @@ public class DebugInfo {
 	 */
 	public static void clearOutputs() {
 		DebugInfo.outputs.clear();
+		DebugInfo.outputNodeVarPairs.clear();
 		System.out.println("DebugInfo - Clear Outputs");
 	}
 	
