@@ -25,6 +25,7 @@ import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
 import microbat.debugpilot.propagation.probability.PropProbability;
+import microbat.debugpilot.propagation.spp.StepExplaination;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
@@ -139,6 +140,9 @@ public class TraceNode implements Comparator<TraceNode> {
 	public double gain = -2.0d;
 	public double computationCost = -1.0d;
 	public int repeatedCount = 0;
+	
+	public String reason = "";
+	protected Map<NodeFeedbacksPair, String> reasonMap;
 	
 	public TraceNode() {
 		this.breakPoint = null;
@@ -1418,5 +1422,21 @@ public class TraceNode implements Comparator<TraceNode> {
 	
 	public double getComputationCost() {
 		return this.computationCost;
+	}
+	
+	public void storeReason(final NodeFeedbacksPair pair, final String reason) {
+		if (this.reasonMap == null) {
+			this.reasonMap = new HashMap<>();
+		}
+		
+		this.reasonMap.put(pair, reason);
+	}
+	
+	public void updateReason(final NodeFeedbacksPair pair) {
+		if (this.reasonMap == null) {
+			this.reason = StepExplaination.COST;
+		} else {			
+			this.reason = this.reasonMap.getOrDefault(pair, StepExplaination.COST);
+		}
 	}
 }

@@ -21,26 +21,12 @@ class RLModelServer(SocketServer):
         port = self.config["server.port"]
         verbose = self.config["server.verbose"]
         super(RLModelServer, self).__init__(host, port, verbose)
-        self.use_pca = self.config["encoder.pca"]
+        # self.use_pca = self.config["encoder.pca"]
         self.encoder = self.load_encoder()
-        self.continueMsg = "CONTINUE"
-        self.stopMsg = "STOP"
-        self.device = self.config["training.device"]
-    
+        self.device = self.config.get("training.device", "cpu")
+
     def func(self, sock):
         raise NotImplementedError()
-    
-    def should_continoue(self, sock):
-        message = self.recvMsg(sock)
-        if message == self.continueMsg:
-            return True
-        elif message == self.stopMsg:
-            return False
-        elif self.isEndServerMsg(message):
-            self.endServer()
-            return False
-        else:
-            return False
 
     def recieve_node_vector(self, sock):
         feature = []
@@ -81,11 +67,11 @@ class RLModelServer(SocketServer):
         return feedbacks
     
     def gen_embedding(self, vector):
-        if self.use_pca:
-            embedding = self.encoder.transform(vector.detach().cpu().numpy().reshape(1, -1))
-            return torch.tensor(embedding).to(self.device)
-        else:
-            return self.encoder(vector)
+        # if self.use_pca:
+        embedding = self.encoder.transform(vector.detach().cpu().numpy().reshape(1, -1))
+        return torch.tensor(embedding).to(self.device)
+        # else:
+        #     return self.encoder(vector)
         
     def recieve_node_order(self, sock):
         message = self.recvMsg(sock)
@@ -99,10 +85,10 @@ class RLModelServer(SocketServer):
         return sim
         
     def load_encoder(self):
-        if self.use_pca:
-            return self.load_pca()
-        else:
-            return self.load_encoder_model()
+        # if self.use_pca:
+        return self.load_pca()
+        # else:
+        #     return self.load_encoder_model()
 
     def load_pca(self):
         return load(self.config["encoder.pca_path"])
@@ -125,7 +111,7 @@ class RLModelServer(SocketServer):
         vector = torch.tensor(vector).float().to(self.device)
         return vector
     
-    def send_prob(self, sock, prob):
+    def send_predictions(self, sock, prob):
         self.sendMsg(sock, str(prob))
 
     def send_alpha(self, sock, alpha):
@@ -142,7 +128,7 @@ class RLModelServer(SocketServer):
     def list_to_tensor(self, list_of_tensors):
         for i in range(len(list_of_tensors)):
             list_of_tensors[i] = list_of_tensors[i].to(self.device)
-        return torch.cat(list_of_tensors,dim=0).reshape(-1).to(self.device)
+        return torch.cat(list_of_tensors,dim=0).reshape(-1).to(self.device).float()
     
     def cal_alpha(self, node_vector, feedback_vectors):
         if len(feedback_vectors) == 0:

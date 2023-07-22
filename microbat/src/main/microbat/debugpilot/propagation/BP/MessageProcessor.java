@@ -23,6 +23,8 @@ public class MessageProcessor {
 	private final String DELIMITER_2;
 	private final String MUL_SIGN;
 	
+	protected final VarIDConverter varIDConverter = new VarIDConverter();
+	
 	public MessageProcessor() {
 		this(",", "&", "*");
 	}
@@ -51,25 +53,28 @@ public class MessageProcessor {
 	 */
 	public String buildGraphMsg(List<Constraint> constraints) {
 		StringBuilder strBuilder = new StringBuilder();
-		
-		VarIDConverter IDConverter = new VarIDConverter();
-		
 		for (Constraint constraint : constraints) {
-			
-			strBuilder.append(constraint.getConstraintID());
-			strBuilder.append("(");
-			
-			for (String predID : constraint.getInvolvedPredIDs()) {
-				// We need to convert the variable ID to graph node ID
-				String convertedID = IDConverter.varID2GraphID(predID);
-				strBuilder.append(convertedID);
-				strBuilder.append(this.DELIMITER_1);
-			}
-			
-			// Remove the last delimiter
-			strBuilder.deleteCharAt(strBuilder.length()-1);
-			strBuilder.append(")");
+			strBuilder.append(this.buildGrapMsg(constraint));
 		}
+		return strBuilder.toString();
+	}
+	
+	public String buildGrapMsg(final Constraint constraint) {
+		StringBuilder strBuilder = new StringBuilder();
+		strBuilder.append(constraint.getConstraintID());
+		strBuilder.append("(");
+		
+		for (String predID : constraint.getInvolvedPredIDs()) {
+			// We need to convert the variable ID to graph node ID
+			String convertedID = this.varIDConverter.varID2GraphID(predID);
+			strBuilder.append(convertedID);
+			strBuilder.append(this.DELIMITER_1);
+		}
+		
+		// Remove the last delimiter
+		strBuilder.deleteCharAt(strBuilder.length()-1);
+		strBuilder.append(")");
+		
 		return strBuilder.toString();
 	}
 	
@@ -82,56 +87,55 @@ public class MessageProcessor {
 	 */
 	public String buildFactorMsg(List<Constraint> constraints) {
 		StringBuilder strBuilder = new StringBuilder();
-		
-		VarIDConverter IDConverter = new VarIDConverter();
-		
 		for (Constraint constraint : constraints) {
-			
-			strBuilder.append(constraint.getOrder());
+			strBuilder.append(this.buildFactorMsg(constraint));
 			strBuilder.append(this.DELIMITER_2);
-			strBuilder.append(constraint.getConstraintID());
-			strBuilder.append(this.DELIMITER_2);
+		}
+		// Remove the last delimiter
+		strBuilder.deleteCharAt(strBuilder.length()-1);
+		return strBuilder.toString();
+	}
+	
+	public String buildFactorMsg(final Constraint constraint) {
+		StringBuilder strBuilder = new StringBuilder();
+		
+		strBuilder.append(constraint.getOrder());
+		strBuilder.append(this.DELIMITER_2);
+		strBuilder.append(constraint.getConstraintID());
+		strBuilder.append(this.DELIMITER_2);
 
-			for (String predID : constraint.getInvolvedPredIDs()) {
-				String convertedID = IDConverter.varID2GraphID(predID);
-				strBuilder.append(convertedID);
-				strBuilder.append(this.DELIMITER_1);
-			}
-			// Remove the last delimiter
-			strBuilder.deleteCharAt(strBuilder.length()-1);
-			strBuilder.append(this.DELIMITER_2);
-			
-			final int maxCase = constraint.getMaxCaseNo();
-			
-			double prevProb = constraint.getProbability(0);
-			int count = 1;
-			for (int caseNo=1; caseNo < maxCase; caseNo++) {
-				double prob = constraint.getProbability(caseNo);
-				if (prob == prevProb) {
-					count += 1;
-				} else {
-					strBuilder.append(String.format("%.2f", prevProb));
-					strBuilder.append(this.MUL_SIGN);
-					strBuilder.append(count);
-					strBuilder.append(this.DELIMITER_1);
-					prevProb = prob;
-					count = 1;
-				}
-			}
-			
-			strBuilder.append(String.format("%.2f", prevProb));
-			strBuilder.append(this.MUL_SIGN);
-			strBuilder.append(count);
-			// Remove the last delimiter
-//			strBuilder.deleteCharAt(strBuilder.length()-1);
-			
-			strBuilder.append(this.DELIMITER_2);
-			
-			
+		for (String predID : constraint.getInvolvedPredIDs()) {
+			String convertedID = this.varIDConverter.varID2GraphID(predID);
+			strBuilder.append(convertedID);
+			strBuilder.append(this.DELIMITER_1);
 		}
 		
 		// Remove the last delimiter
 		strBuilder.deleteCharAt(strBuilder.length()-1);
+		strBuilder.append(this.DELIMITER_2);
+		
+		final int maxCase = constraint.getMaxCaseNo();
+		
+		double prevProb = constraint.getProbability(0);
+		int count = 1;
+		for (int caseNo=1; caseNo < maxCase; caseNo++) {
+			double prob = constraint.getProbability(caseNo);
+			if (prob == prevProb) {
+				count += 1;
+			} else {
+				strBuilder.append(String.format("%.2f", prevProb));
+				strBuilder.append(this.MUL_SIGN);
+				strBuilder.append(count);
+				strBuilder.append(this.DELIMITER_1);
+				prevProb = prob;
+				count = 1;
+			}
+		}
+		
+		strBuilder.append(String.format("%.2f", prevProb));
+		strBuilder.append(this.MUL_SIGN);
+		strBuilder.append(count);
+		
 		return strBuilder.toString();
 	}
 	

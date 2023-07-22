@@ -32,14 +32,15 @@ public class GreedyPathFinder extends AbstractPathFinder {
 			if (currentNode.getOrder() <= endNode.getOrder()) {
 				return null;
 			}
-			UserFeedback feedback = this.giveFeedback(currentNode);
+			UserFeedback feedback = GreedyPathFinder.giveFeedback(currentNode);
 			path.addPair(currentNode, feedback);
 			currentNode = TraceUtil.findNextNode(currentNode, feedback, this.trace);
 		}
 		return null;
 	}
 	
-	protected UserFeedback giveFeedback(final TraceNode node) {
+	public static UserFeedback giveFeedback(final TraceNode node) {
+		Objects.requireNonNull(node, Log.genMsg(GreedyPathFinder.class, "Given node is null"));
 		UserFeedback feedback = new UserFeedback();
 		
 		TraceNode controlDom = node.getControlDominator();
@@ -51,10 +52,6 @@ public class GreedyPathFinder extends AbstractPathFinder {
 		double minReadProb = 2.0;
 		VarValue wrongVar = null;
 		for (VarValue readVar : node.getReadVariables()) {
-			// If the readVar is This variable, then ignore
-//			if (readVar.isThisVariable()) {
-//				continue;
-//			}
 			double prob = readVar.getProbability();
 			if (prob < minReadProb) {
 				minReadProb = prob;

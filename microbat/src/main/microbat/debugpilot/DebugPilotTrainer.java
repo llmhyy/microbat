@@ -20,13 +20,13 @@ public class DebugPilotTrainer extends DebugPilot {
 	protected final BackwardModelTrainClient backwardTrainClient;
 	
 	public DebugPilotTrainer(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode) {
-		super(trace, inputs, outputs, outputNode, PropagatorType.RL_TRAIN, PathFinderType.Dijstra);
+		super(trace, inputs, outputs, outputNode, PropagatorType.SPP_RL_TRAIN, PathFinderType.Dijkstra);
 		this.forwardTrainClient = new ForwardModelTrainClient();
 		this.backwardTrainClient = new BackwardModelTrainClient();
 	}
 	
 	public void sendRewards(List<Pair<TraceNode, Double>> rewardList) {
-		this.sendRewards(rewardList, this.forwardTrainClient);
+//		this.sendRewards(rewardList, this.forwardTrainClient);
 		this.sendRewards(rewardList, this.backwardTrainClient);
 	}
 	

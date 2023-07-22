@@ -45,23 +45,17 @@ public class VariableEncoderFG extends Encoder {
 		this.correctVars = inputVars;
 		this.wrongVars = outputVars;
 		this.construntVarIDMap();
-		
+		this.fuseUserFeedbacks(pairs);
+	}
+	
+	protected void fuseUserFeedbacks(final Collection<NodeFeedbacksPair> pairs) {
 		for (NodeFeedbacksPair pair : pairs) {
 			final TraceNode node = pair.getNode();
 			final TraceNode controlDom = node.getControlDominator();
-			
-//			final List<VarValue> readVars = new ArrayList<>();
-//			readVars.addAll(node.getReadVariables());
-//			readVars.removeIf(var -> var.isThisVariable());
-//			
-//			final List<VarValue> writtenVars = new ArrayList<>();
-//			writtenVars.addAll(node.getWrittenVariables());
-//			writtenVars.removeIf(var -> var.isThisVariable());
-			
+
 			final List<VarValue> readVars = node.getReadVariables();
 			final List<VarValue> writtenVars = node.getWrittenVariables();
-			
-			
+		
 			if (pair.getFeedbackType().equals(UserFeedback.CORRECT)) {
 				this.correctVars.addAll(readVars);
 				this.correctVars.addAll(writtenVars);
@@ -101,33 +95,26 @@ public class VariableEncoderFG extends Encoder {
 		List<Constraint> constraints = this.genConstraints();
 		System.out.println("Variable Encoder: " + constraints.size() + " constraints.");
 		System.out.println("Running belief propagation ...");
-		// Request the python server to run sum product algorithm
+
 		BeliefPropagationClient client = new BeliefPropagationClient();
 		
-		MessageProcessor msgProcessor = new MessageProcessor();
-		String graphMsg = msgProcessor.buildGraphMsg(constraints);
-		String factorMsg = msgProcessor.buildFactorMsg(constraints);
-		
+		Map<String, Double> varsProb = null;
 		try {
 			client.conntectServer();
-			// Response contain the probability of each variable
-			String response = client.requestBP(graphMsg, factorMsg);
-			
-			// Assign calculate probability to corresponding variable
-			Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
-			for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
-				String predID = pair.getKey();
-				Double prob = pair.getValue();
-				
-				for (VarValue var : this.getVarByID(predID)) {
-					var.setProbability(prob);
-				}
-			}
+			varsProb = client.requestBP(constraints);
 			client.disconnectServer();
-			
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 			throw new RuntimeException("[Variable Encoder] Error occur when calculating variable probabilities");
+		}
+		
+		// Assign calculate probability to corresponding variable
+		for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
+			String predID = pair.getKey();
+			Double prob = pair.getValue();
+			for (VarValue var : this.getVarByID(predID)) {
+				var.setProbability(prob);
+			}
 		}
 	}
 	

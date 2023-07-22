@@ -25,12 +25,15 @@ class Trainer():
         self.should_load_model = self.config["training.load_model"]
         self.reward_weight = self.config["training.reward_weight"]
         self.action_size = self.config["data.output_size"]
+        self.epoch = 0
 
         self.policy_net = DQN(self.config).to(self.device).float()
         if self.should_load_model:
             model_path = self.config["training.load_path"]
-            print(f"Loading existing model from {model_path}")
+            printMsg(f"Loading existing model from {model_path}", Trainer)
             self.policy_net.load_state_dict(torch.load(model_path))
+            self.epoch = int(self.extract_substring(model_path, "epoch_", ".pt"))
+            printMsg(f"Start training from {self.epoch}", Trainer)
 
         # self.target_net = DQN(self.config).to(self.device).float()
         # self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -39,27 +42,27 @@ class Trainer():
         self.criterion = nn.SmoothL1Loss()
 
         self.cache = []
-
         self.save_interval = self.config["training.save_interval"]
         self.output_folder = self.config["training.output_path"]
-        self.epoch = 0
 
-    def predict_prob(self, feature):
+
+    def predict(self, feature):
         sample = random.random()
         eps_threshold = self.eps_end + (self.eps_start - self.eps_end) * math.exp(-1.0 * self.epoch / self.eps_decay)
         if sample > eps_threshold:
             with torch.no_grad():
-                return self.policy_net(feature).max(1)[1].view(1,1)
+                return self.policy_net(feature).argmax().view(1,1)
         else:
             return torch.randint(0, self.action_size, size=(1,1), device=self.device, dtype=torch.long)
-    
-        # with torch.no_grad():
-        #     prob = self.policy_net(feature.float().to(self.device))
-        #     if torch.isnan(prob):
-        #         printMsg(f"{prob} is nan", Trainer)
-        #     prob = torch.nan_to_num(prob, nan=0.5, posinf=1.0, neginf=0.0)
-        #     prob = torch.clip(prob, min=0.0, max=1.0)
-        #     return prob
+
+    def extract_substring(self, text, start_value, end_value):
+        start_index = text.find(start_value)
+        if start_index == -1:
+            return ""  # Start value not found
+        end_index = text.find(end_value, start_index + len(start_value))
+        if end_index == -1:
+            return ""  # End value not found
+        return text[start_index + len(start_value):end_index]
 
     def clear_cache(self):
         self.cache = []
@@ -100,16 +103,24 @@ class Trainer():
         transitions = self.memory.sample(self.batch_size)
         batch = Transition(*zip(*transitions))
 
-        input_batch = torch.cat(batch.input)
+        input_batch = torch.stack(batch.input)
         action_batch = torch.cat(batch.action)
-        reward_batch = torch.cat(batch.reward)
+        reward_batch = torch.stack(batch.reward)
+
+        printMsg("---------------------------", Trainer)
+        for i in range(input_batch.shape[0]):
+            input = input_batch[i]
+            reward = reward_batch[i]
+            action = action_batch[i]
+            printMsg(f"{input[0].item()} \t {input[1].item()} \t -> action: {action.item()} \t -> {reward.item()}", Trainer)
+
 
         predicted_reward = self.policy_net(input_batch).gather(1, action_batch)
-        loss = self.criterion(predicted_reward, reward_batch)
+        loss = self.criterion(predicted_reward.squeeze(), reward_batch)
 
         self.optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_value_(self.policy.net.parameters(), 100)
+        torch.nn.utils.clip_grad_value_(self.policy_net.parameters(), 100)
         self.optimizer.step()
         # feature_batch = torch.stack(batch.feature).to(self.device).float()
         # prob_batch = self.policy_net(feature_batch)

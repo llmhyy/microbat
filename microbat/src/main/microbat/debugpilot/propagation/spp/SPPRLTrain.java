@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -124,6 +125,10 @@ public class SPPRLTrain extends SPP {
 	}
 	
 	protected double calHeuristicBackwardFactor(final TraceNode node, final VarValue var) {
+		if (var.isConditionResult()) {
+			return node.getWrittenVariables().stream().mapToDouble(writtenVar -> writtenVar.getBackwardProb()).average().orElse(PropProbability.UNCERTAIN);
+		}
+		
 		final double totalCost = node.getReadVariables().stream().mapToDouble(readVar -> readVar.computationalCost).sum();
 		if (totalCost == 0) {
 			return (1 - node.computationCost) * (1 / node.getReadVariables().size());

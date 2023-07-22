@@ -1,8 +1,4 @@
-import torch
-from gensim.models import FastText
-from gensim.models.fasttext import load_facebook_vectors
-
-import yaml
+import matplotlib.pyplot as plt
 
 def main():
 

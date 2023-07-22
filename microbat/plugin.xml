@@ -151,9 +151,9 @@
             name="Testing Microbat">
       </command>
       <command
-            defaultHandler="microbat.handler.StepwisePropagationHandler"
-            id="microbat.stepwisePropagation"
-            name="Stepwise Probability Propagation">
+            defaultHandler="microbat.handler.DebugPilotHandler"
+            id="microbat.debugpilot"
+            name="Debug Pilot">
       </command>
    </extension>
    <extension
@@ -242,7 +242,7 @@
                   style="push">
             </command>
             <command
-                  commandId="microbat.stepwisePropagation"
+                  commandId="microbat.debugpilot"
                   icon="icons/releng_gears.gif"
                   label="stepwisePropagation"
                   style="push">
@@ -406,12 +406,21 @@
             id="microbat.preference.executionRange"
             name="Execution Range">
       </page>
+      <page
+            category="microbat.preference"
+            class="microbat.preference.DebugPilotPreference"
+            id="microbat.preference.debugpilot"
+            name="Debug Pilot Setting">
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.editors.annotationTypes">
       <type
             name="microbat.specification.step">
       </type>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
    </extension>
 
 </plugin>

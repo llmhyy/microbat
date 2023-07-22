@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Set;
 
 import debuginfo.NodeFeedbacksPair;
-import microbat.debugpilot.propagation.BP.PropInfer;
+import microbat.debugpilot.propagation.BP.ProbInfer;
+import microbat.debugpilot.propagation.spp.SPPCF;
 import microbat.debugpilot.propagation.spp.SPPH;
 import microbat.debugpilot.propagation.spp.SPPRL;
 import microbat.debugpilot.propagation.spp.SPPRLTrain;
@@ -22,18 +23,20 @@ public class PropagatorFactory {
 	public static ProbabilityPropagator getPropagator(final PropagatorType type, Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars,
 			Collection<NodeFeedbacksPair> feedbackRecords) {
 		switch(type) {
-		case Heuristic_Cost:
+		case SPP_COST:
 			return new SPPH(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
 		case ProfInfer:
-			return new PropInfer(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
-		case Heuristic_Random:
+			return new ProbInfer(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
+		case SPP_Random:
 			return new SPPRandom(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
-		case RL:
+		case SPP_RL:
 			return new SPPRL(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
-		case RL_TRAIN:
+		case SPP_RL_TRAIN:
 			return new SPPRLTrain(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
 		case None:
 			return new EmptyPropagator();
+		case SPP_CF:
+			return new SPPCF(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
 		default:
 			// Should not enter here
 			throw new RuntimeException(Log.genMsg(PropagatorFactory.class, "Undefined propagator type: " + type));

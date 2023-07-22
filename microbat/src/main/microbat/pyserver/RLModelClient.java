@@ -18,9 +18,6 @@ import microbat.vectorization.vector.VariableVector;
 
 public abstract class RLModelClient extends Client {
 	
-	protected static final String continueMsg = "CONTINUE";
-	protected static final String stopMsg = "STOP";
-	
 	public RLModelClient(String host, int port) {
 		this(host, port, false);
 	}
@@ -28,16 +25,7 @@ public abstract class RLModelClient extends Client {
 	public RLModelClient(String host, int post, boolean verbose) {
 		super(host, post, verbose);
 	}
-	
-	public void notifyContinuoue() throws IOException, InterruptedException {
-		this.sendMsg(RLModelClient.continueMsg);
-	}
-	
-	public void notifyStop() throws IOException, InterruptedException {
-		this.sendMsg(RLModelClient.stopMsg);
-	}
-	
-	
+
 	public void sendNodeFeature(final TraceNode node) throws IOException, InterruptedException {
 		final NodeVector vector = new NodeVector(node);
 		this.sendMsg(vector.toString());

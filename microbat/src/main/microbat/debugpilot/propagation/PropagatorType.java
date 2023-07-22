@@ -1,10 +1,11 @@
 package microbat.debugpilot.propagation;
 
 public enum PropagatorType {
-	ProfInfer,
 	None,
-	Heuristic_Random,
-	Heuristic_Cost,
-	RL,
-	RL_TRAIN,
+	ProfInfer,
+	SPP_Random,
+	SPP_COST,
+	SPP_CF,
+	SPP_RL,
+	SPP_RL_TRAIN,
 }

@@ -56,7 +56,7 @@ class BackwardModelServer(RLModelServer):
                 prob = sum(probs) / len(probs)
 
             printMsg(f"Node: {node_order} \t backward factor: {prob.item()} \trelated feedback count: {len(related_feedbacks)}", BackwardModelServer)
-            self.send_prob(sock, prob.item())
+            self.send_predictions(sock, prob.item())
 
         printMsg("Finish propagation ...", BackwardModelServer)
     

@@ -14,7 +14,7 @@ data.output_size: 3
 data.capacity: 10000
 
 training.epochs: 1000
-training.batch_size: 8
+training.batch_size: 64
 training.gamma: 0.99
 training.eps_start: 0.9
 training.eps_end: 0.05
@@ -29,5 +29,5 @@ training.reward_weight: 0.8
 
 training.save_interval: 10
 training.output_path: C:\\Users\\david\\Documents\\Workspace\\BackwardTrainer
-training.load_model: False
-training.load_path: "C:\\Users\\david\\Documents\\Workspace\\BackwardTrainer\\epoch_20.pt"
+training.load_model: True
+training.load_path: "C:\\Users\\david\\Documents\\Workspace\\BackwardTrainer\\epoch_260.pt"

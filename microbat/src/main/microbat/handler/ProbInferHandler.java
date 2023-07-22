@@ -83,7 +83,7 @@ public class ProbInferHandler extends AbstractHandler {
 		
 		// Set up the propagator that perform propagation,
 		// with initial feedback indicating the output variable  is wrong
-		DebugPilot spp = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode, PropagatorType.ProfInfer, PathFinderType.Dijstra);
+		DebugPilot spp = new DebugPilot(buggyView.getTrace(), inputs, outputs, outputNode, PropagatorType.ProfInfer, PathFinderType.Dijkstra);
 		
 		TraceNode currentNode = outputNode;
 		

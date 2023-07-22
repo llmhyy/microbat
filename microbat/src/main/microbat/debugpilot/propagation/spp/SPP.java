@@ -30,14 +30,15 @@ public abstract class SPP implements ProbabilityPropagator {
 	protected final Set<VarValue> wrongVars;
 	
 	protected final List<OpcodeType> unmodifiedType = new ArrayList<>();
-	protected Collection<NodeFeedbacksPair> feedbackRecords = null;
+	protected List<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
 	
 	public SPP(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
 		this.trace = trace;
 		this.slicedTrace = slicedTrace;
-		this.correctVars = correctVars;
+//		this.correctVars = correctVars;
+		this.correctVars = new HashSet<>();
 		this.wrongVars = wrongVars;
-		this.feedbackRecords = feedbackRecords;
+		this.feedbackRecords.addAll(feedbackRecords);
 		this.constructUnmodifiedOpcodeType();
 	}
 	
@@ -46,7 +47,7 @@ public abstract class SPP implements ProbabilityPropagator {
 		this.fuseFeedbacks();
 		this.computeComputationalCost();
 		this.initProb();
-		this.forwardProp();
+//		this.forwardProp();
 		this.backwardProp();
 		this.combineProb();
 	}
@@ -86,19 +87,19 @@ public abstract class SPP implements ProbabilityPropagator {
 	protected void backwardProp() {
 		for (int order = this.slicedTrace.size()-1; order>=0; order--) {
 			final TraceNode node = this.slicedTrace.get(order);
-			if (this.isFeedbackGiven(node)) continue;
+			if (this.isFeedbackGiven(node)) {
+				node.reason = "User Confirmed";
+				continue;
+			}
 			
 			// Inherit backward probability
 			this.inheritBackwardProp(node);
 			
-			// Ignore "this" variable
-//			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
-//			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var.isThisVariable()).toList();
 			List<VarValue> readVars = node.getReadVariables();
 			List<VarValue> writtenVars = node.getWrittenVariables();
 			
-			// Skip if read or written variables is missing
-			if (readVars.isEmpty() || writtenVars.isEmpty()) {
+			// Skip if written variables is missing
+			if (writtenVars.isEmpty()) {
 				continue;
 			}
 		
@@ -109,12 +110,7 @@ public abstract class SPP implements ProbabilityPropagator {
 				} else if (this.isWrong(readVar)) {
 					readVar.setBackwardProb(PropProbability.ONE);
 				} else {
-					double factor;
-					if (!this.isComputational(node) || this.isTested(node)) {
-						factor = 1.0d;
-					} else {
-						factor = this.calBackwardFactor(readVar, node);
-					}
+					final double factor = this.calBackwardFactor(readVar, node);
 					final double resultProb = avgProb * factor;
 					readVar.setBackwardProb(resultProb);
 				}	
@@ -239,14 +235,19 @@ public abstract class SPP implements ProbabilityPropagator {
 	}
 	
 	protected void combineProb() {
-		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream())
-						.forEach(var -> 
-							var.setProbability((var.getForwardProb() + (1.0d-var.getBackwardProb()))/2.0d)
-						);
-		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream())
-						.forEach(var -> 
-							var.setProbability((var.getForwardProb() + (1.0-var.getBackwardProb()))/2.0d)
-						);
+		
+		Stream.concat(
+				this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()), 
+				this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()))
+			.forEach(var -> var.setProbability(1 - var.getBackwardProb()));
+//		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream())
+//						.forEach(var -> 
+//							var.setProbability((var.getForwardProb() + (1.0d-var.getBackwardProb()))/2.0d)
+//						);
+//		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream())
+//						.forEach(var -> 
+//							var.setProbability((var.getForwardProb() + (1.0-var.getBackwardProb()))/2.0d)
+//						);
 	}
 	
 	protected boolean isCorrect(final VarValue var) {
@@ -274,9 +275,7 @@ public abstract class SPP implements ProbabilityPropagator {
 		final TraceNode controlDom = node.getControlDominator();
 		if (controlDom != null) {
 			for (VarValue writtenVar : node.getWrittenVariables()) {
-//				if (!writtenVar.isThisVariable()) {
-					controlDom.getConditionResult().addBackwardProbability(writtenVar.getBackwardProb());
-//				}
+				controlDom.getConditionResult().addBackwardProbability(writtenVar.getBackwardProb());
 			}
 		}
 	}

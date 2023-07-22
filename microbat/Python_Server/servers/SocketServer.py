@@ -19,6 +19,9 @@ class SocketServer(ABC):
         self.MSG_END = "MSG_END"
         self.MSG_RECIEVED = "MSG_RECEIVED"
         
+        self.continueMsg = "CONTINUE"
+        self.stopMsg = "STOP"
+
         self._stillWorking = True
 
         self.verbose = verbose
@@ -26,6 +29,18 @@ class SocketServer(ABC):
     def detect_connection_message(self, sock):
         sock.recv(self.BUFFER_SIZE)
 
+    def should_continoue(self, sock):
+        message = self.recvMsg(sock)
+        if message == self.continueMsg:
+            return True
+        elif message == self.stopMsg:
+            return False
+        elif self.isEndServerMsg(message):
+            self.endServer()
+            return False
+        else:
+            return False
+        
     def recvMsg(self, sock):
         """
         Keep receiving message until MSG_END is detected

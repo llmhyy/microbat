@@ -11,7 +11,7 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
-public class PropInfer implements ProbabilityPropagator {
+public class ProbInfer implements ProbabilityPropagator {
 
 	/**
 	 * The complete trace of execution of buggy program
@@ -36,7 +36,7 @@ public class PropInfer implements ProbabilityPropagator {
 	private Collection<NodeFeedbacksPair> feedbackRecords = null;
 	
 	
-	public PropInfer(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
+	public ProbInfer(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
 		this.trace = trace;
 		this.slicedTrace = slicedTrace;
 		this.correctVars = correctVars;
