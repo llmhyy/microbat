@@ -25,10 +25,20 @@ public class SPPRandom extends SPP {
 	@Override
 	protected double calBackwardFactor(VarValue var, TraceNode node) {
 		node.reason = StepExplaination.RANDOM;
-		if (!this.isComputational(node)) {
+		if (var.isConditionResult()) {
+			return Math.random();
+		} else if (!this.isComputational(node)) {
 			return 1.0d;
 		} else {
 			return Math.random();
+		}
+	}
+	
+	@Override
+	protected void calConditionBackwardFactor(final TraceNode node) {
+		final TraceNode controlDom = node.getControlDominator();
+		if (controlDom != null) {
+			controlDom.getConditionResult().addBackwardProbability(Math.random());
 		}
 	}
 
