@@ -44,8 +44,8 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 	@Override
 	public void init(IWorkbench workbench) {
 		try {			
-			this.propagatorType = PropagatorType.valueOf(Activator.getDefault().getPreferenceStore().getDefaultString(DebugPilotPreference.PROPAGATOR_TYPE));
-			this.pathFinderType = PathFinderType.valueOf(Activator.getDefault().getPreferenceStore().getDefaultString(DebugPilotPreference.PATHFINDER_TYPE));
+			this.propagatorType = PropagatorType.valueOf(Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PROPAGATOR_TYPE));
+			this.pathFinderType = PathFinderType.valueOf(Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PATHFINDER_TYPE));
 		} catch (IllegalArgumentException e) {
 			this.propagatorType = DebugPilotPreference.DEFAULT_PROPAGATOR_TYPE;
 			this.pathFinderType = DebugPilotPreference.DEFEAUL_PATH_FINDER_TYPE;
@@ -85,10 +85,10 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 		preferences.put(DebugPilotPreference.PROPAGATOR_TYPE, this.propagatorType.name());
 		preferences.put(DebugPilotPreference.PATHFINDER_TYPE, this.pathFinderType.name());
 		
-		Activator.getDefault().getPreferenceStore().setDefault(DebugPilotPreference.PROPAGATOR_TYPE, this.propagatorType.name());
-		Activator.getDefault().getPreferenceStore().setValue(DebugPilotPreference.PROPAGATOR_TYPE, this.propagatorType.name());
-		Activator.getDefault().getPreferenceStore().setDefault(DebugPilotPreference.PATHFINDER_TYPE, this.pathFinderType.name());
-		Activator.getDefault().getPreferenceStore().setValue(DebugPilotPreference.PATHFINDER_TYPE, this.pathFinderType.name());		
+//		Activator.getDefault().getPreferenceStore().setDefault(DebugPilotPreference.PROPAGATOR_TYPE, this.propagatorType.name());
+		Activator.getDefault().getPreferenceStore().putValue(DebugPilotPreference.PROPAGATOR_TYPE, this.propagatorType.name());
+//		Activator.getDefault().getPreferenceStore().setDefault(DebugPilotPreference.PATHFINDER_TYPE, this.pathFinderType.name());
+		Activator.getDefault().getPreferenceStore().putValue(DebugPilotPreference.PATHFINDER_TYPE, this.pathFinderType.name());	
 	}
 	
 	protected void createPropagatorSetting(final Composite parent) {
