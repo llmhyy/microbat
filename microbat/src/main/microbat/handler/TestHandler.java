@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 
+import microbat.Activator;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
@@ -21,6 +22,7 @@ import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.preference.DebugPilotPreference;
 import microbat.util.JavaUtil;
 import microbat.vectorization.TraceVectorizer;
 import microbat.vectorization.vector.*;
@@ -53,10 +55,9 @@ public class TestHandler extends AbstractHandler {
 	}
 	
 	private void execute() {
-		final Trace trace = this.traceView.getTrace();
-		for (TraceNode node : trace.getExecutionList()) {
-			System.out.println("Node: " + node.getOrder() + " : " + node.getBytecode());
-		}
+		System.out.println(Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PROPAGATOR_TYPE));
+		System.out.println(Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PATHFINDER_TYPE));
+		System.out.println("-----");
 	}
 	
 	private void setup() {
