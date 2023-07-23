@@ -145,7 +145,6 @@ public abstract class RLModelClient extends Client {
 	
 	public void sendFeedbackVectors(final Collection<NodeFeedbacksPair> pairs) throws IOException, InterruptedException {
 		for (NodeFeedbacksPair pair : pairs) {
-			this.notifyContinuoue();
 			this.sendFeedbackVector(pair);
 		}
 		this.notifyStop();
@@ -159,6 +158,7 @@ public abstract class RLModelClient extends Client {
 	}
 	
 	protected void sendFeedbackVector(final TraceNode node, final UserFeedback feedback) throws IOException, InterruptedException {
+		this.notifyContinuoue();
 		this.sendContextFeature(node);
 		FeedbackVector feedbackVector = new FeedbackVector(feedback);
 		this.sendMsg(feedbackVector.toString());

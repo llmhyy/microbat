@@ -22,6 +22,7 @@ public class DijkstraExpPathFinder extends DijkstraPathFinder {
 		Objects.requireNonNull(endNode, Log.genMsg(getClass(), "End node should not be null"));
 		
 		FeedbackPath explanablePath = super.findPath(startNode, endNode);
+		if (explanablePath == null) return null;
 		for (int pathIdx=0; pathIdx < explanablePath.getLength(); pathIdx++) {
 			final NodeFeedbacksPair pair = explanablePath.get(pathIdx);
 			final TraceNode node = pair.getNode();
@@ -31,6 +32,7 @@ public class DijkstraExpPathFinder extends DijkstraPathFinder {
 				if (nextNode != null) {
 					 FeedbackPath insertPath = super.findPath(nextNode, endNode);
 					 if (insertPath != null) {
+						 explanablePath.get(pathIdx).setFeedback(greedyFeedback);
 						 explanablePath = FeedbackPathUtil.splicePathAtIndex(explanablePath, insertPath, pathIdx+1);
 					 }
 				}
