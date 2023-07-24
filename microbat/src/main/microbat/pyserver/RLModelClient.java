@@ -18,9 +18,6 @@ import microbat.vectorization.vector.VariableVector;
 
 public abstract class RLModelClient extends Client {
 	
-	protected static final String continueMsg = "CONTINUE";
-	protected static final String stopMsg = "STOP";
-	
 	public RLModelClient(String host, int port) {
 		this(host, port, false);
 	}
@@ -28,16 +25,7 @@ public abstract class RLModelClient extends Client {
 	public RLModelClient(String host, int post, boolean verbose) {
 		super(host, post, verbose);
 	}
-	
-	public void notifyContinuoue() throws IOException, InterruptedException {
-		this.sendMsg(RLModelClient.continueMsg);
-	}
-	
-	public void notifyStop() throws IOException, InterruptedException {
-		this.sendMsg(RLModelClient.stopMsg);
-	}
-	
-	
+
 	public void sendNodeFeature(final TraceNode node) throws IOException, InterruptedException {
 		final NodeVector vector = new NodeVector(node);
 		this.sendMsg(vector.toString());
@@ -157,7 +145,6 @@ public abstract class RLModelClient extends Client {
 	
 	public void sendFeedbackVectors(final Collection<NodeFeedbacksPair> pairs) throws IOException, InterruptedException {
 		for (NodeFeedbacksPair pair : pairs) {
-			this.notifyContinuoue();
 			this.sendFeedbackVector(pair);
 		}
 		this.notifyStop();
@@ -171,6 +158,7 @@ public abstract class RLModelClient extends Client {
 	}
 	
 	protected void sendFeedbackVector(final TraceNode node, final UserFeedback feedback) throws IOException, InterruptedException {
+		this.notifyContinuoue();
 		this.sendContextFeature(node);
 		FeedbackVector feedbackVector = new FeedbackVector(feedback);
 		this.sendMsg(feedbackVector.toString());

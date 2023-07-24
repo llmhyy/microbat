@@ -115,7 +115,14 @@ public abstract class SPP implements ProbabilityPropagator {
 					readVar.setBackwardProb(resultProb);
 				}	
 			}
-			this.calConditionBackwardFactor(node);
+			
+			final TraceNode controlDom = node.getControlDominator();
+			if (controlDom != null) {
+				final VarValue conditionReslt = controlDom.getConditionResult();
+				final double factor = this.calBackwardFactor(controlDom.getConditionResult(), node);
+				final double resultProb = avgProb * factor;
+				conditionReslt.addBackwardProbability(resultProb);
+			}
 		}
 		
 		// Normalize to target range

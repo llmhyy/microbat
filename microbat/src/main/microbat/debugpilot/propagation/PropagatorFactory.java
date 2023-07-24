@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import debuginfo.NodeFeedbacksPair;
-import microbat.debugpilot.propagation.BP.PropInfer;
+import microbat.debugpilot.propagation.BP.ProbInfer;
 import microbat.debugpilot.propagation.spp.SPPCF;
 import microbat.debugpilot.propagation.spp.SPPH;
 import microbat.debugpilot.propagation.spp.SPPRL;
@@ -26,7 +26,7 @@ public class PropagatorFactory {
 		case SPP_COST:
 			return new SPPH(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
 		case ProfInfer:
-			return new PropInfer(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
+			return new ProbInfer(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
 		case SPP_Random:
 			return new SPPRandom(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
 		case SPP_RL:

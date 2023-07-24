@@ -2,12 +2,10 @@ package microbat.debugpilot.pathfinding;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import debuginfo.NodeFeedbackPair;
 import debuginfo.NodeFeedbacksPair;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
@@ -42,17 +40,17 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 		return this.path.isEmpty();
 	}
 	
-	public NodeFeedbacksPair peek() {
+	public NodeFeedbacksPair getLastFeedback() {
 		return this.path.get(this.getLength()-1);
 	}
 	
 	public boolean canReachRootCause() {
-		NodeFeedbacksPair pair = this.peek();
+		NodeFeedbacksPair pair = this.getLastFeedback();
 		return pair.getFeedbackType().equals(UserFeedback.ROOTCAUSE);
 	}
 	
 	public void setLastAction(final UserFeedback feedback) {
-		this.peek().setFeedback(feedback);
+		this.getLastFeedback().setFeedback(feedback);
 	}
 	
 	public boolean isVisited(final TraceNode node) {
@@ -92,6 +90,10 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 	
 	public int getLength() {
 		return this.path.size();
+	}
+	
+	public FeedbackPath subPath(final int fromIdx, final int toIdx) {
+		return new FeedbackPath(this.path.subList(fromIdx, toIdx));
 	}
 	
 	public boolean contains(final TraceNode node) {

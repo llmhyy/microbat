@@ -23,24 +23,10 @@ class RLModelServer(SocketServer):
         super(RLModelServer, self).__init__(host, port, verbose)
         # self.use_pca = self.config["encoder.pca"]
         self.encoder = self.load_encoder()
-        self.continueMsg = "CONTINUE"
-        self.stopMsg = "STOP"
         self.device = self.config.get("training.device", "cpu")
 
     def func(self, sock):
         raise NotImplementedError()
-    
-    def should_continoue(self, sock):
-        message = self.recvMsg(sock)
-        if message == self.continueMsg:
-            return True
-        elif message == self.stopMsg:
-            return False
-        elif self.isEndServerMsg(message):
-            self.endServer()
-            return False
-        else:
-            return False
 
     def recieve_node_vector(self, sock):
         feature = []

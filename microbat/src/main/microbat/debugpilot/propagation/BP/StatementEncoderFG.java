@@ -44,10 +44,7 @@ public class StatementEncoderFG extends Encoder {
 
 	@Override
 	public void encode() {
-		
-		BeliefPropagationClient client = new BeliefPropagationClient();
-		MessageProcessor msgProcessor = new MessageProcessor();
-		
+
 		for (TraceNode node : this.executionList) {
 			if (this.isSkippable(node)) {
 				continue;
@@ -56,32 +53,28 @@ public class StatementEncoderFG extends Encoder {
 			List<Constraint> constraints = new ArrayList<>();
 			constraints.addAll(this.genVarToStatConstraints(node));
 			constraints.addAll(this.genPriorConstraints(node));
-			
-			String graphMsg = msgProcessor.buildGraphMsg(constraints);
-			String factorMsg = msgProcessor.buildFactorMsg(constraints);
 
+			Map<String, Double> varsProb;
 			try {
+				BeliefPropagationClient client = new BeliefPropagationClient();
 				client.conntectServer();			
-				String response = client.requestBP(graphMsg, factorMsg);
-			
-				Map<String, Double> varsProb = msgProcessor.recieveMsg(response);
-				for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
-					String predID = pair.getKey();
-					Double prob = pair.getValue();
-					if (StatementConstraint.isStatID(predID)) {
-						int nodeOrder = StatementConstraint.extractStatOrderFromID(predID);
-						if (nodeOrder == node.getOrder()) {
-							node.setProbability(prob);
-						}
-					}
-				}
+				varsProb = client.requestBP(constraints);
 				client.disconnectServer();
 			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();
 				throw new RuntimeException("[Statement Encoder]: Error occur when calculating statement probability");
 			}
-
-
+			
+			for (Map.Entry<String, Double> pair : varsProb.entrySet()) {
+				String predID = pair.getKey();
+				Double prob = pair.getValue();
+				if (StatementConstraint.isStatID(predID)) {
+					int nodeOrder = StatementConstraint.extractStatOrderFromID(predID);
+					if (nodeOrder == node.getOrder()) {
+						node.setProbability(prob);
+					}
+				}
+			}
 		}
 	}
 	
