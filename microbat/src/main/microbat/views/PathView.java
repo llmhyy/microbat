@@ -1,8 +1,15 @@
 package microbat.views;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.function.Function;
 
+import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ListViewer;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
@@ -25,6 +32,7 @@ import debuginfo.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.recommendation.UserFeedback;
 import microbat.util.MicroBatUtil;
 import microbat.views.listeners.PathViewSelectionListener;
 import microbat.views.providers.ActionPathContentProvider;
@@ -33,12 +41,12 @@ import microbat.views.providers.FeedbackNodePairLabelProvider;
 // todo: node: feedback -- ui
 public class PathView extends ViewPart {
 	public static final String ID = "microbat.evalView.pathView";
-	
-	protected ListViewer listViewer;
+
 	protected Text searchText;	
 	protected FeedbackPath actionPath;
 	protected Button searchButton;
 	protected TraceView buggyTraceView = null;
+	protected TableViewer table;
 	
 	
 	private PathViewSelectionListener selectionListener;
@@ -62,7 +70,7 @@ public class PathView extends ViewPart {
 		layout.numColumns = 2;
 		parent.setLayout(layout);
 		createSearchBox(parent);
-		createListView(parent);
+		createTableView(parent);
 		
 	}
 	
@@ -123,24 +131,81 @@ public class PathView extends ViewPart {
 	public void jumpToNode(String searchContent, boolean next) {
 
 		
-		for (int i = 0; i < ((FeedbackPath) listViewer.getInput()).getLength(); ++i) {
-			ActionPathContentProvider.ContentWrapper content = (ActionPathContentProvider.ContentWrapper) listViewer.getElementAt(i);
+		for (int i = 0; i < ((FeedbackPath) table.getInput()).getLength(); ++i) {
+			ActionPathContentProvider.ContentWrapper content = (ActionPathContentProvider.ContentWrapper) table.getElementAt(i);
 			String label = MicroBatUtil.genPathMessage(content.getNode(), content.getIndex());
 			if (label.contains(searchContent)) {
-				this.listViewer.setSelection(new StructuredSelection(listViewer.getElementAt(i)), true);
-				listViewer.refresh();
+				this.table.setSelection(new StructuredSelection(table.getElementAt(i)), true);
+				table.refresh();
 				return;
 			}
 		}
 	}
 	
-	private void createListView(Composite parent) {
-		listViewer = new ListViewer(parent, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);		
-		listViewer.setContentProvider(new ActionPathContentProvider());
-		listViewer.setLabelProvider(new FeedbackNodePairLabelProvider());
-		listViewer.getList().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
-		listViewer.addPostSelectionChangedListener(this.selectionListener);
+	private void createTableView(Composite parent) {
+		Composite tableContainer = new Composite(parent, SWT.NONE);
+		TableColumnLayout tcl = new TableColumnLayout();
+		tableContainer.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+		table = new TableViewer(tableContainer, SWT.BORDER | 
+					SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
+		String[] headers = {
+			"Path", "TraceNode", "Feedback", "Reason"
+		};
+		int[] weights = {
+			100, 100, 300, 300	
+		};
+		ArrayList<Function<ActionPathContentProvider.ContentWrapper, String>> functions
+		 = new ArrayList<>();
+		functions.add(cw -> "" + cw.getIndex());
+		functions.add(cw -> "" + cw.getNode().getNode().getOrder());
+		functions.add(cw -> {
+			final UserFeedback feedback = cw.getNode().getFirstFeedback();
+			switch (feedback.getFeedbackType()) {
+			case UserFeedback.CORRECT:
+				return "Correct";
+			case UserFeedback.WRONG_PATH:
+				return "Wrong path";
+			case UserFeedback.WRONG_VARIABLE_VALUE:
+				return "Wrong variable of " + feedback.getOption().getReadVar().getVarName();
+			case UserFeedback.ROOTCAUSE:
+				return "Root cause";
+			}
+			return "";
+		});
+		assert(functions.size() == headers.length);
+		assert(weights.length == headers.length);
+		functions.add(cw -> {
+			return "" + cw.getNode().getNode().reason;
+		});
+		
+		for (int i = 0; i < functions.size(); ++i) {
+			final int j = i;
+			TableViewerColumn col = new TableViewerColumn(table, SWT.LEFT);
+			col.getColumn().setText(headers[i]);
+			col.setLabelProvider(new ColumnLabelProvider() {
+				@Override
+				public String getText(Object object) {
+					if (object instanceof ActionPathContentProvider.ContentWrapper) {
+						ActionPathContentProvider.ContentWrapper cw = (ActionPathContentProvider.ContentWrapper) object;
+						return functions.get(j).apply(cw);
+					}
+					return "";
+				}
+			});
+			tcl.setColumnData(col.getColumn(), new ColumnWeightData(weights[i]));
+		}
+//		table.setLabelProvider(new FeedbackNodePairLabelProvider());
+		table.setContentProvider(new ActionPathContentProvider());
+		table.getTable().setLayoutData(GridData.FILL_BOTH);
+		table.addPostSelectionChangedListener(this.selectionListener);
+		table.getTable().setHeaderVisible(true);
+		table.getTable().setLinesVisible(true);
+		tableContainer.setLayout(tcl);
+		
+		
 	}
+	
+
 
 	@Override
 	public void setFocus() {
@@ -155,8 +220,10 @@ public class PathView extends ViewPart {
 	
 	
 	public void updateData() {
-		listViewer.setInput(actionPath);
-		listViewer.refresh();
+//		listViewer.setInput(actionPath);
+//		listViewer.refresh();
+		table.setInput(actionPath);
+		table.refresh();
 	}
 	
 	public void setBuggyView(TraceView view) {
