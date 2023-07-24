@@ -172,11 +172,12 @@ public class PathView extends ViewPart {
 			}
 			return "";
 		});
-		assert(functions.size() == headers.length);
-		assert(weights.length == headers.length);
+		
 		functions.add(cw -> {
 			return "" + cw.getNode().getNode().reason;
 		});
+		assert(functions.size() == headers.length);
+		assert(weights.length == headers.length);
 		
 		for (int i = 0; i < functions.size(); ++i) {
 			final int j = i;
