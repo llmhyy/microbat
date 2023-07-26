@@ -1,6 +1,6 @@
 package microbat.pyserver;
 
-public class ForwardModelClient extends RLModelClient {
+public class ForwardModelClient extends ModelClient {
 	
 	protected final static String defaultHost = "127.0.0.4";
 	protected final static int defaultPort = 8084;

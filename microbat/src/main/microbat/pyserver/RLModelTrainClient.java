@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import microbat.model.trace.TraceNode;
 
-public abstract class RLModelTrainClient extends RLModelClient {
+public abstract class RLModelTrainClient extends ModelClient {
 
 	protected static final String inferenceMsg = "INFERENCE_MODE";
 	protected static final String rewardMsg = "REWARD_MODE";

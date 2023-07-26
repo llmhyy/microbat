@@ -13,18 +13,18 @@ import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.pyserver.BackwardModelClient;
+import microbat.pyserver.SimModelClient;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 
 public class SPPCF extends SPPH {
 
-	protected final BackwardModelClient client;
+	protected final SimModelClient client;
 	
 	public SPPCF(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars,
 			Collection<NodeFeedbacksPair> feedbackRecords) {
 		super(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
-		this.client = new BackwardModelClient("172.26.191.20", 8084);
+		this.client = new SimModelClient(true);
 	}
 
 	@Override

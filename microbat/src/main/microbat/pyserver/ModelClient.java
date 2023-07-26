@@ -3,26 +3,24 @@ package microbat.pyserver;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 
 import debuginfo.NodeFeedbacksPair;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.model.variable.Variable;
 import microbat.recommendation.UserFeedback;
 import microbat.vectorization.vector.ContextVector;
 import microbat.vectorization.vector.FeedbackVector;
 import microbat.vectorization.vector.NodeVector;
 import microbat.vectorization.vector.VariableVector;
 
-public abstract class RLModelClient extends Client {
+public abstract class ModelClient extends Client {
 	
-	public RLModelClient(String host, int port) {
+	public ModelClient(String host, int port) {
 		this(host, port, false);
 	}
 	
-	public RLModelClient(String host, int post, boolean verbose) {
+	public ModelClient(String host, int post, boolean verbose) {
 		super(host, post, verbose);
 	}
 

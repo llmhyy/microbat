@@ -183,10 +183,10 @@ public abstract class Client {
 	}
 	
 	public void notifyContinuoue() throws IOException, InterruptedException {
-		this.sendMsg(RLModelClient.continueMsg);
+		this.sendMsg(Client.continueMsg);
 	}
 	
 	public void notifyStop() throws IOException, InterruptedException {
-		this.sendMsg(RLModelClient.stopMsg);
+		this.sendMsg(Client.stopMsg);
 	}
 }
