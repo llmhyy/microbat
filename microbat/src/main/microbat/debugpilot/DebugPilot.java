@@ -20,6 +20,8 @@ import microbat.debugpilot.propagation.PropagatorFactory;
 import microbat.debugpilot.propagation.PropagatorType;
 import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.debugpilot.propagation.spp.StepExplaination;
+import microbat.debugpilot.rootcausefinder.RootCauseLocator;
+import microbat.debugpilot.rootcausefinder.RootCauseLocatorFactory;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -102,7 +104,8 @@ public class DebugPilot {
 	}
 	
 	public void locateRootCause() {
-		this.rootCause = this.proposeRootCause();
+		RootCauseLocator locator = RootCauseLocatorFactory.getLocator(this.propagatorType, this.slicedTrace, this.feedbackRecords);
+		this.rootCause = locator.locateRootCause();
 	}
 	
 	public void locateRootCause(final TraceNode currentNode) {
