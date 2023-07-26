@@ -1,6 +1,6 @@
-server.host: "127.0.0.4"
+server.host: "0.0.0.0"
 server.port: 8084
-server.verbose: False
+server.verbose: True
 
 encoder.pca_path: "..\\pca\\model.joblib"
 encoder.work_embedding_path: "..\\fasttext\\wiki.en.bin"
