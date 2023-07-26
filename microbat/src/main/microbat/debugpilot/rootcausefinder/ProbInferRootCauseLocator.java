@@ -15,7 +15,10 @@ public class ProbInferRootCauseLocator extends AbstractRootCauseLocator {
 
 	@Override
 	public TraceNode locateRootCause() {
-		return this.slicedTrace.stream().min(Comparator.comparingDouble(TraceNode::getProbability)).orElse(null);
+		return this.slicedTrace.stream()
+				.filter(node -> !this.isFeedbackGivenTo(node))
+				.min(Comparator.comparingDouble(TraceNode::getProbability))
+				.orElse(null);
 	}
 
 }
