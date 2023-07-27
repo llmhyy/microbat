@@ -106,15 +106,7 @@ public class DebugPilot {
 	public void locateRootCause() {
 		RootCauseLocator locator = RootCauseLocatorFactory.getLocator(this.propagatorType, this.slicedTrace, this.feedbackRecords);
 		this.rootCause = locator.locateRootCause();
-	}
-	
-	public void locateRootCause(final TraceNode currentNode) {
-		this.rootCause = this.proposeRootCause(currentNode);
-		if (this.rootCause == null) {
-			Log.printMsg(this.getClass(), "Cannot locate root cause");
-		} else {
-			Log.printMsg(this.getClass(), "Proposed root cause: " + this.rootCause.getOrder());
-		}
+		Log.printMsg(getClass(), "Proposed root cause: " + this.rootCause.getOrder());
 	}
 	
 	public TraceNode getRootCause() {

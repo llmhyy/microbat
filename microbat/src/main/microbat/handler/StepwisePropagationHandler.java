@@ -109,7 +109,7 @@ public class StepwisePropagationHandler extends AbstractHandler {
 			
 			Log.printMsg(this.getClass(), "Propagation Duration: " + duration + " s");
 			Log.printMsg(this.getClass(), "Locating root cause ...");
-			debugPilot.locateRootCause(currentNode);
+//			debugPilot.locateRootCause(currentNode);
 			Log.printMsg(this.getClass(), "Constructing path to root cause ...");
 			debugPilot.constructPath();
 			FeedbackPath path = debugPilot.getPath();									

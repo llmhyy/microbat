@@ -100,7 +100,7 @@ public class ProbInferHandler extends AbstractHandler {
 			long duration = (endTime - startTime) / 1000;
 			Log.printMsg(this.getClass(), "Propagation Duration: " + duration + " s");
 			Log.printMsg(this.getClass(), "Locating root cause ...");
-			spp.locateRootCause(currentNode);
+//			spp.locateRootCause(currentNode);
 			Log.printMsg(this.getClass(), "Constructing path to root cause ...");
 			spp.constructPath();
 			
