@@ -10,10 +10,12 @@ public abstract class AbstractRootCauseLocator implements RootCauseLocator {
 	
 	protected final List<TraceNode> slicedTrace;
 	protected final Collection<NodeFeedbacksPair> feedbacks;
+	protected final TraceNode outputNode;
 	
-	public AbstractRootCauseLocator(final List<TraceNode> sliceTrace, Collection<NodeFeedbacksPair> feedbacks) {
+	public AbstractRootCauseLocator(final List<TraceNode> sliceTrace, Collection<NodeFeedbacksPair> feedbacks, final TraceNode outputNode) {
 		this.slicedTrace = sliceTrace;
 		this.feedbacks = feedbacks;
+		this.outputNode = outputNode;
 	}
 	
 	@Override

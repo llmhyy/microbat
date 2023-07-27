@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import debuginfo.NodeFeedbacksPair;
@@ -53,16 +54,6 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 		this.getLastFeedback().setFeedback(feedback);
 	}
 	
-	public boolean isVisited(final TraceNode node) {
-		for (NodeFeedbacksPair pair : this.path) {
-			TraceNode pathNode = pair.getNode();
-			if (pathNode.equals(node)) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
 	public void removeFirstAction() {
 		if (!this.path.isEmpty()) {
 			this.path.remove(0);
@@ -103,6 +94,16 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 			}
 		}
 		return false;
+	}
+	
+	public NodeFeedbacksPair getFeedback(final TraceNode node) {
+		Objects.requireNonNull(node, Log.genMsg(getClass(), "Given node should not be null"));
+		for (NodeFeedbacksPair pair : this.path) {
+			if (pair.getNode().equals(node)) {
+				return pair;
+			}
+		}
+		throw new IllegalArgumentException(Log.genMsg(getClass(), "Path does not contian the node: " + node.getOrder()));
 	}
 	
 	@Override

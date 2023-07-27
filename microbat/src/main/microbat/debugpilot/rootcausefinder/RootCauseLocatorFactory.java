@@ -9,19 +9,23 @@ import microbat.log.Log;
 import microbat.model.trace.TraceNode;
 
 public class RootCauseLocatorFactory {
+	
 	private RootCauseLocatorFactory() {}
 	
-	public static RootCauseLocator getLocator(final PropagatorType type, final List<TraceNode> sliceTrace, final Collection<NodeFeedbacksPair> feedbacks ) {
+	public static RootCauseLocator getLocator(final PropagatorType type, 
+			final List<TraceNode> sliceTrace, 
+			final Collection<NodeFeedbacksPair> feedbacks,
+			final TraceNode outputNode) {
 		switch (type) {
 		case None:
 		case ProfInfer:
-			return new ProbInferRootCauseLocator(sliceTrace, feedbacks);
+			return new ProbInferRootCauseLocator(sliceTrace, feedbacks, outputNode);
 		case SPP_Random:
 		case SPP_COST:
 		case SPP_CF:
 		case SPP_RL:
 		case SPP_RL_TRAIN:
-			return new SPPRootCauseLocator(sliceTrace, feedbacks);
+			return new SPPRootCauseLocator(sliceTrace, feedbacks, outputNode);
 		default:
 			throw new IllegalArgumentException(Log.genMsg("RootCauseLocatorFactory", "Unhandled root casue locator type" + type));
 		}

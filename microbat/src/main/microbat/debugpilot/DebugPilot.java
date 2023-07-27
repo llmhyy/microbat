@@ -47,8 +47,6 @@ public class DebugPilot {
 	
 	protected List<TraceNode> slicedTrace = null;
 	protected Collection<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
-	protected TraceNode rootCause = null;
-	protected FeedbackPath path = null;
 
 	public DebugPilot(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode, PropagatorType propagatorType, PathFinderType pathFinderType) {
 		Objects.requireNonNull(trace, Log.genMsg(getClass(), "Given trace is null"));
@@ -94,26 +92,12 @@ public class DebugPilot {
 		propagator.propagate();
 	}
 	
-	public UserFeedback giveFeedback(final TraceNode node) {
-		for (NodeFeedbacksPair action : this.path) {
-			if (action.getNode().equals(node)) {
-				return action.getFirstFeedback();
-			}
-		}
-		throw new NodeNotInPathException(Log.genMsg(getClass(), "This node " + node.getOrder() + " is not contained in path"));
+	public TraceNode locateRootCause() {
+		RootCauseLocator locator = RootCauseLocatorFactory.getLocator(this.propagatorType, this.slicedTrace, this.feedbackRecords, this.outputNode);
+		return locator.locateRootCause();
 	}
 	
-	public void locateRootCause() {
-		RootCauseLocator locator = RootCauseLocatorFactory.getLocator(this.propagatorType, this.slicedTrace, this.feedbackRecords);
-		this.rootCause = locator.locateRootCause();
-		Log.printMsg(getClass(), "Proposed root cause: " + this.rootCause.getOrder());
-	}
-	
-	public TraceNode getRootCause() {
-		return this.rootCause;
-	}
-	
-	public void constructPath() {
+	public FeedbackPath constructPath(final TraceNode rootCause) {
 		PathFinder pathFinder = PathFinderFactory.getFinder(this.pathFinderType, this.trace, this.slicedTrace);
 		
 		FeedbackPath mustFollowPath = new FeedbackPath(this.feedbackRecords);
@@ -122,191 +106,26 @@ public class DebugPilot {
 		}
 		
 		if (mustFollowPath == null || mustFollowPath.isEmpty()) {
-			this.path = pathFinder.findPath(this.outputNode, this.rootCause);
-			return;
+			return pathFinder.findPath(this.outputNode, rootCause);
 		} else {
 			NodeFeedbacksPair latestAction = mustFollowPath.getLastFeedback();
 			for (UserFeedback feedback : latestAction.getFeedbacks()) {
 				final TraceNode nextNode = TraceUtil.findNextNode(latestAction.getNode(), feedback, this.trace);
-				FeedbackPath consecutivePath = pathFinder.findPath(nextNode, this.rootCause);
+				FeedbackPath consecutivePath = pathFinder.findPath(nextNode, rootCause);
 				if (consecutivePath == null) continue;
-				this.path = FeedbackPathUtil.concat(mustFollowPath, consecutivePath);
+				FeedbackPath path = FeedbackPathUtil.concat(mustFollowPath, consecutivePath);
 				for (NodeFeedbacksPair pair : consecutivePath) {
 					pair.getNode().updateReason(pair);
 				}
-				return;
+				return path;
 			}
 		}
-		throw new RuntimeException(Log.genMsg(getClass(), "Suggest path out of loop"));
-	}
-	
-	public FeedbackPath getPath() {
-		return this.path;
-	}
-	
-	
-	public TraceNode proposeRootCause() {
-		TraceNode rootCause = null;
-		double maxDrop = -1.0;
-		for (TraceNode node : this.slicedTrace) {
-			
-			if (this.isFeedbackGiven(node) || this.outputNode.equals(node)) {
-				continue;
-			}
-			
-//			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
-//			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var .isThisVariable()).collect(Collectors.toList());
-			List<VarValue> readVars = node.getReadVariables();
-			List<VarValue> writtenVars = node.getWrittenVariables();
-			/*
-			 * We need to handle:
-			 * 1. Node without any variable
-			 * 2. Node with only control dominator
-			 * 3. Node with only read variables
-			 * 4. Node with only written variables
-			 * 5. Node with written variable and control dominator
-			 * 6. Node with both read and written variables
-			 * 
-			 * It will ignore the node that already have feedback
-			 */
-			double drop = 0.0;
-			if (writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() == null) {
-				// Case 1
-				continue;
-			} else if (writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() != null) {
-				// Case 2
-				drop = PropProbability.UNCERTAIN - node.getControlDominator().getConditionResult().getProbability();
-			} else if (writtenVars.isEmpty()) {
-				// Case 3
-				double prob = readVars.stream().mapToDouble(var -> var.getProbability()).average().orElse(0.5);
-				drop = PropProbability.UNCERTAIN - prob;
-			} else if (readVars.isEmpty()) {
-				// Case 4
-				double prob = writtenVars.stream().mapToDouble(var -> var.getProbability()).average().orElse(0.5);
-				drop = PropProbability.UNCERTAIN - prob;
-			} else if (!writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() != null){
-				// Case 5
-				drop = PropProbability.UNCERTAIN - node.getControlDominator().getConditionResult().getProbability();
-			} else {
-				// Case 6
-				double readProb = readVars.stream().mapToDouble(var -> var.getProbability()).min().orElse(0.5);
-				double writtenProb = writtenVars.stream().mapToDouble(var -> var.getProbability()).min().orElse(0.5);
-				drop = readProb - writtenProb;
-			}
-			
-			node.setDrop(drop);
-			if (drop < 0) {
-				continue;
-			} else {
-				if (drop > maxDrop) {
-					maxDrop = drop;
-					rootCause = node;
-				}
-			}
-		}
-		
-		if (rootCause == null) {
-			rootCause = this.slicedTrace.get(0);
-		}
-		if (this.pathFinderType == PathFinderType.Random) {
-			rootCause.reason = StepExplaination.RANDOM;
-		} else {
-			rootCause.reason = StepExplaination.LAREST_GAP;
-		}
-		return rootCause;
-	}
-	
-	/**
-	 * Propose the root cause node. <br><br>
-	 * 
-	 * It will compare the drop of correctness
-	 * probability from read variables to the
-	 * written variables. <br><br>
-	 * 
-	 * The one with the maximum drop will be the
-	 * root cause. <br><br>
-	 * 
-	 * @return Root cause node
-	 */
-	public TraceNode proposeRootCause(final TraceNode currentNode) {
-		TraceNode rootCause = null;
-		double maxDrop = -1.0;
-		for (TraceNode node : this.slicedTrace) {
-			
-			if (this.isFeedbackGiven(node) || this.outputNode.equals(node) || node.getOrder() > currentNode.getOrder()) {
-				continue;
-			}
-			
-//			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).collect(Collectors.toList());
-//			List<VarValue> writtenVars = node.getWrittenVariables().stream().filter(var -> !var .isThisVariable()).collect(Collectors.toList());
-			List<VarValue> readVars = node.getReadVariables();
-			List<VarValue> writtenVars = node.getWrittenVariables();
-			/*
-			 * We need to handle:
-			 * 1. Node without any variable
-			 * 2. Node with only control dominator
-			 * 3. Node with only read variables
-			 * 4. Node with only written variables
-			 * 5. Node with written variable and control dominator
-			 * 6. Node with both read and written variables
-			 * 
-			 * It will ignore the node that already have feedback
-			 */
-			double drop = 0.0;
-			if (writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() == null) {
-				// Case 1
-				continue;
-			} else if (writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() != null) {
-				// Case 2
-				drop = PropProbability.UNCERTAIN - node.getControlDominator().getConditionResult().getProbability();
-			} else if (writtenVars.isEmpty()) {
-				// Case 3
-				double prob = readVars.stream().mapToDouble(var -> var.getProbability()).average().orElse(0.5);
-				drop = PropProbability.UNCERTAIN - prob;
-			} else if (readVars.isEmpty()) {
-				// Case 4
-				double prob = writtenVars.stream().mapToDouble(var -> var.getProbability()).average().orElse(0.5);
-				drop = PropProbability.UNCERTAIN - prob;
-			} else if (!writtenVars.isEmpty() && readVars.isEmpty() && node.getControlDominator() != null){
-				// Case 5
-				drop = PropProbability.UNCERTAIN - node.getControlDominator().getConditionResult().getProbability();
-			} else {
-				// Case 6
-				double readProb = readVars.stream().mapToDouble(var -> var.getProbability()).min().orElse(0.5);
-				double writtenProb = writtenVars.stream().mapToDouble(var -> var.getProbability()).min().orElse(0.5);
-				drop = readProb - writtenProb;
-			}
-			
-			node.setDrop(drop);
-			if (drop < 0) {
-				continue;
-			} else {
-				if (drop > maxDrop) {
-					maxDrop = drop;
-					rootCause = node;
-				}
-			}
-		}
-		
-		if (rootCause == null) {
-			rootCause = this.slicedTrace.get(0);
-		}
-		rootCause.reason = "Largest gap";
-		return rootCause;
+		throw new RuntimeException(Log.genMsg(getClass(), "Cannot construct path"));
 	}
 	
 	public void updateFeedbacks(Collection<NodeFeedbacksPair> feedbacks) {
 		this.feedbackRecords.clear();
 		this.feedbackRecords.addAll(feedbacks);
-	}
-	
-	private boolean isFeedbackGiven(final TraceNode node) {
-		for (NodeFeedbacksPair pair : this.feedbackRecords) {
-			if (node.equals(pair.getNode())) {
-				return true;
-			}
-		}
-		return false;
 	}
 	
 	public void multiSlicing() {

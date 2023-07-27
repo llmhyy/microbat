@@ -141,11 +141,6 @@
             name="Restore Trace">
       </command>
       <command
-            defaultHandler="microbat.handler.ProbInferHandler"
-            id="microbat.baseline"
-            name="Baseline">
-      </command>
-      <command
             defaultHandler="microbat.handler.TestHandler"
             id="microbat.testing"
             name="Testing Microbat">

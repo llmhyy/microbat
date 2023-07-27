@@ -111,11 +111,10 @@ public class DebugPilotHandler extends AbstractHandler {
 			Log.printMsg(this.getClass(), "Propagation Duration: " + duration + " s");
 			
 			Log.printMsg(this.getClass(), "Locating root cause ...");
-			debugPilot.locateRootCause();
+			TraceNode rootCause = debugPilot.locateRootCause();
 			
 			Log.printMsg(this.getClass(), "Constructing path to root cause ...");
-			debugPilot.constructPath();
-			final FeedbackPath proposedPath = debugPilot.getPath();
+			final FeedbackPath proposedPath =  debugPilot.constructPath(rootCause);
 			
 			// Update path view
 			this.pathView.setActionPath(proposedPath);

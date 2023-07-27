@@ -10,8 +10,8 @@ import microbat.model.value.VarValue;
 
 public class SPPRootCauseLocator extends AbstractRootCauseLocator {
 
-	public SPPRootCauseLocator(List<TraceNode> sliceTrace, Collection<NodeFeedbacksPair> feedbacks) {
-		super(sliceTrace, feedbacks);
+	public SPPRootCauseLocator(List<TraceNode> sliceTrace, Collection<NodeFeedbacksPair> feedbacks, TraceNode outputNode) {
+		super(sliceTrace, feedbacks, outputNode);
 	}
 
 	@Override
@@ -19,9 +19,9 @@ public class SPPRootCauseLocator extends AbstractRootCauseLocator {
 		TraceNode rootCause = null;
 		double maxDrop = -1.0d;
 		for (TraceNode node : this.slicedTrace) {
-			if (this.isFeedbackGivenTo(node)) continue;
+			if (this.isFeedbackGivenTo(node) || node.equals(outputNode)) continue;
 			double drop = this.calDrop(node);
-			drop *= node.getControlDominator() == null ? 1.0d : node.getControlDominator().getConditionResult().getProbability();
+//			drop *= node.getControlDominator() == null ? 1.0d : node.getControlDominator().getConditionResult().getProbability();
 			node.setDrop(maxDrop);
 			if (drop < 0) continue;
 			if (drop > maxDrop) {
