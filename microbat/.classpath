@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src/main"/>
-	<classpathentry excluding="resources/" kind="src" path="src/test"/>
+	<classpathentry excluding="r/" kind="src" path="src/test"/>
 	<classpathentry kind="src" path="src/evaluation"/>
 	<classpathentry kind="src" path="src/behavior"/>
 	<classpathentry exported="true" kind="lib" path="lib/instrumentator.jar" sourcepath="/microbat_instrumentator"/>

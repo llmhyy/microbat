@@ -2,8 +2,8 @@
 /target/
 lib/instrumentator.jar
 lib/instrumentator.jar
-Python_Server/BP/__pycache__/
-Python_Server/servers/__pycache__/
-Python_Server/fasttext/
-Python_Server/.vscode
+resources/Python_Server/BP/__pycache__/
+resources/Python_Server/servers/__pycache__/
+resources/Python_Server/fasttext/
+resources/Python_Server/.vscode
 microbat/src/main/microbat/handler/TestHandler.java
