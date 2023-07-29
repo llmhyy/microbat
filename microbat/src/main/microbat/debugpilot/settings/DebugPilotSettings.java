@@ -11,13 +11,13 @@ import microbat.model.value.VarValue;
 
 public class DebugPilotSettings {
 
-	protected Collection<NodeFeedbacksPair> feedbacks;
-	protected TraceNode outputNode;
+	protected Collection<NodeFeedbacksPair> feedbacks = null;
+	protected TraceNode outputNode = null;
 	protected PathFinderSettings pathFinderSettings = new PathFinderSettings();
 	
 	protected PropagatorSettings propagatorSettings = new PropagatorSettings();
 	protected RootCauseLocatorSettings rootCauseLocatorSettings = new RootCauseLocatorSettings();
-	protected Trace trace;
+	protected Trace trace = null;
 
 	public DebugPilotSettings() {
 
