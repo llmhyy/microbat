@@ -1,4 +1,4 @@
-name: base
+name: debugpilot
 channels:
   - defaults
 dependencies:
