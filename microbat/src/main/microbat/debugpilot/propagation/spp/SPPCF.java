@@ -29,7 +29,6 @@ public class SPPCF extends SPPH {
 	public SPPCF(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> wrongVars,
 			Collection<NodeFeedbacksPair> feedbackRecords, String serverHost, int serverPort) {
 		super(trace, slicedTrace, wrongVars, feedbackRecords);
-		System.out.println(serverHost + " + " + serverPort);
 		this.client = new SimModelClient(serverHost, serverPort);
 	}
 
