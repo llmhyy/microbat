@@ -5,15 +5,20 @@ import java.util.List;
 import java.util.Set;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.settings.PropagatorSettings;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
 public class SPPRandom extends SPP {
 
-	public SPPRandom(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars,
+	public SPPRandom(PropagatorSettings settings) {
+		super(settings);
+	}
+	
+	public SPPRandom(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> wrongVars,
 			Collection<NodeFeedbacksPair> feedbackRecords) {
-		super(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
+		super(trace, slicedTrace, wrongVars, feedbackRecords);
 	}
 
 	@Override

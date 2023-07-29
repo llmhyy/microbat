@@ -5,15 +5,21 @@ import java.util.List;
 import java.util.Set;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.settings.DebugPilotSettings;
+import microbat.debugpilot.settings.PropagatorSettings;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
 public class SPPH extends SPP {
 
-	public SPPH(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars,
+	public SPPH(final PropagatorSettings settings) {
+		super(settings);
+	}
+	
+	public SPPH(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> wrongVars,
 			Collection<NodeFeedbacksPair> feedbackRecords) {
-		super(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
+		super(trace, slicedTrace, wrongVars, feedbackRecords);
 	}
 
 	@Override

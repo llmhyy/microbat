@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 import debuginfo.NodeFeedbacksPair;
-import microbat.debugpilot.propagation.probability.PropProbability;
+import microbat.debugpilot.settings.PropagatorSettings;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -21,10 +21,16 @@ public class SPPCF extends SPPH {
 
 	protected final SimModelClient client;
 	
-	public SPPCF(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars,
-			Collection<NodeFeedbacksPair> feedbackRecords) {
-		super(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
-		this.client = new SimModelClient(true);
+	public SPPCF(final PropagatorSettings settings) {
+		this(settings.getTrace(), settings.getSlicedTrace(), settings.getWrongVars(), settings.getFeedbacks(),
+				settings.getServerHost(), settings.getServerPort());
+	}
+	
+	public SPPCF(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> wrongVars,
+			Collection<NodeFeedbacksPair> feedbackRecords, String serverHost, int serverPort) {
+		super(trace, slicedTrace, wrongVars, feedbackRecords);
+		System.out.println(serverHost + " + " + serverPort);
+		this.client = new SimModelClient(serverHost, serverPort);
 	}
 
 	@Override

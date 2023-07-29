@@ -3,6 +3,7 @@ package microbat.debugpilot.pathfinding;
 import java.util.List;
 import java.util.Objects;
 
+import microbat.debugpilot.settings.PathFinderSettings;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -13,6 +14,10 @@ import microbat.util.TraceUtil;
 
 public class GreedyPathFinder extends AbstractPathFinder {
 
+	public GreedyPathFinder(final PathFinderSettings settings) {
+		this(settings.getTrace(), settings.getSlicedTrace());
+	}
+	
 	public GreedyPathFinder(Trace trace, List<TraceNode> slicedTrace) {
 		super(trace, slicedTrace);
 	}

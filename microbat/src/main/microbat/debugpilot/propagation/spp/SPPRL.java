@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.settings.PropagatorSettings;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -18,9 +19,13 @@ public class SPPRL extends SPP {
 	protected final ForwardModelClient forwardClient;
 	protected final BackwardModelClient backwardClient;
 	
-	public SPPRL(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars,
+	public SPPRL(final PropagatorSettings settings) {
+		this(settings.getTrace(), settings.getSlicedTrace(), settings.getWrongVars(), settings.getFeedbacks());
+	}
+	
+	public SPPRL(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> wrongVars,
 			Collection<NodeFeedbacksPair> feedbackRecords) {
-		super(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
+		super(trace, slicedTrace, wrongVars, feedbackRecords);
 		this.forwardClient = new ForwardModelClient();
 		this.backwardClient = new BackwardModelClient();
 	}

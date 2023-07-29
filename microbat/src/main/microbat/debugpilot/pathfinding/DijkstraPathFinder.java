@@ -13,6 +13,7 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.settings.PathFinderSettings;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -23,6 +24,10 @@ import microbat.util.UniquePriorityQueue;
 
 public class DijkstraPathFinder extends AbstractPathFinder {
 
+	public DijkstraPathFinder(final PathFinderSettings settings) {
+		this(settings.getTrace(), settings.getSlicedTrace());
+	}
+	
 	public DijkstraPathFinder(Trace trace, List<TraceNode> slicedTrace) {
 		super(trace, slicedTrace);
 	}

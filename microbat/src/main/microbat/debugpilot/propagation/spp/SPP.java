@@ -2,11 +2,10 @@ package microbat.debugpilot.propagation.spp;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-import java.util.HashSet;
 
 import debuginfo.NodeFeedbacksPair;
 import microbat.bytecode.ByteCode;
@@ -14,12 +13,11 @@ import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
 import microbat.debugpilot.propagation.ProbabilityPropagator;
 import microbat.debugpilot.propagation.probability.PropProbability;
-import microbat.log.Log;
+import microbat.debugpilot.settings.PropagatorSettings;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.UserFeedback;
-import microbat.util.TraceUtil;
 
 public abstract class SPP implements ProbabilityPropagator {
 	
@@ -32,10 +30,13 @@ public abstract class SPP implements ProbabilityPropagator {
 	protected final List<OpcodeType> unmodifiedType = new ArrayList<>();
 	protected List<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
 	
-	public SPP(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
+	public SPP(final PropagatorSettings settings) {
+		this(settings.getTrace(), settings.getSlicedTrace(), settings.getWrongVars(), settings.getFeedbacks());
+	}
+	
+	public SPP(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
 		this.trace = trace;
 		this.slicedTrace = slicedTrace;
-//		this.correctVars = correctVars;
 		this.correctVars = new HashSet<>();
 		this.wrongVars = wrongVars;
 		this.feedbackRecords.addAll(feedbackRecords);
@@ -47,7 +48,6 @@ public abstract class SPP implements ProbabilityPropagator {
 		this.fuseFeedbacks();
 		this.computeComputationalCost();
 		this.initProb();
-//		this.forwardProp();
 		this.backwardProp();
 		this.combineProb();
 	}

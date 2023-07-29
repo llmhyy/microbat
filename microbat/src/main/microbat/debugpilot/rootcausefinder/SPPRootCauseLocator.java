@@ -5,11 +5,16 @@ import java.util.List;
 
 import debuginfo.NodeFeedbacksPair;
 import microbat.debugpilot.propagation.probability.PropProbability;
+import microbat.debugpilot.settings.RootCauseLocatorSettings;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
 public class SPPRootCauseLocator extends AbstractRootCauseLocator {
 
+	public SPPRootCauseLocator(final RootCauseLocatorSettings settings) {
+		this(settings.getSliceTrace(), settings.getFeedbacks(), settings.getOutputNode());
+	}
+	
 	public SPPRootCauseLocator(List<TraceNode> sliceTrace, Collection<NodeFeedbacksPair> feedbacks, TraceNode outputNode) {
 		super(sliceTrace, feedbacks, outputNode);
 	}

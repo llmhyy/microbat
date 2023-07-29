@@ -3,6 +3,7 @@ package microbat.debugpilot.pathfinding;
 import java.util.List;
 import java.util.Objects;
 
+import microbat.debugpilot.settings.PathFinderSettings;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -15,6 +16,10 @@ public class RandomPathFinder extends AbstractPathFinder {
 
 	protected static final double ROOT_CAUSE_PROB = 0.1;
 	protected static final double CONTROL_PROB = 0.3;
+	
+	public RandomPathFinder(final PathFinderSettings settings) {
+		this(settings.getTrace(), settings.getSlicedTrace());
+	}
 	
 	public RandomPathFinder(Trace trace, List<TraceNode> slicedTrace) {
 		super(trace, slicedTrace);

@@ -1,6 +1,6 @@
 package microbat.handler;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Stack;
 
@@ -15,17 +15,14 @@ import org.eclipse.swt.widgets.Display;
 
 import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbacksPair;
-import microbat.Activator;
 import microbat.debugpilot.DebugPilot;
 import microbat.debugpilot.pathfinding.FeedbackPath;
-import microbat.debugpilot.pathfinding.PathFinderType;
-import microbat.debugpilot.propagation.PropagatorType;
 import microbat.debugpilot.propagation.spp.StepExplaination;
+import microbat.debugpilot.settings.DebugPilotSettings;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.preference.DebugPilotPreference;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 import microbat.views.MicroBatViews;
@@ -71,26 +68,36 @@ public class DebugPilotHandler extends AbstractHandler {
 			return;
 		}
 		
-		final String propagatorName = Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PROPAGATOR_TYPE);
-		if (propagatorName.equals("")) {
-			Log.printMsg(getClass(), "Please setup the propagator type in Preference -> Microbat Debugging -> Debug Pilot Settings");
-			return;
-		}
-		final PropagatorType propagatorType = PropagatorType.valueOf(propagatorName);
+		DebugPilotSettings settings = new DebugPilotSettings();
+		settings.setPropagatorSettings(PreferenceParser.getPreferencePropagatorSettings());
+		settings.setPathFinderSettings(PreferenceParser.getPreferencePathFinderSettings());
 		
-		final String pathFinderName = Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PATHFINDER_TYPE);
-		if (pathFinderName.equals("")) {
-			Log.printMsg(getClass(), "Please setup the path finder type in Preference -> Microbat Debugging -> Debug Pilot Settings");
-			return;
-		}
-		final PathFinderType pathFinderType = PathFinderType.valueOf(pathFinderName);
+		List<VarValue> outputs = DebugInfo.getOutputs();
+		settings.setWrongVars(new HashSet<>(outputs));
+		settings.setTrace(buggyTrace);
 		
-		// Locate outputs
-		final List<VarValue> outputs = DebugInfo.getOutputs();
 		final TraceNode outputNode = outputs.get(0).isConditionResult() ? DebugInfo.getNodeFeedbackPair().getNode() : this.getOutputNode(outputs.get(0));
+		settings.setOutputNode(outputNode);
 		
+//		final String propagatorName = Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PROPAGATOR_TYPE_KEY);
+//		if (propagatorName.equals("")) {
+//			Log.printMsg(getClass(), "Please setup the propagator type in Preference -> Microbat Debugging -> Debug Pilot Settings");
+//			return;
+//		}
+//		final PropagatorType propagatorType = PropagatorType.valueOf(propagatorName);
+//		
+//		final String pathFinderName = Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PATHFINDER_TYPE_KEY);
+//		if (pathFinderName.equals("")) {
+//			Log.printMsg(getClass(), "Please setup the path finder type in Preference -> Microbat Debugging -> Debug Pilot Settings");
+//			return;
+//		}
+//		final PathFinderType pathFinderType = PathFinderType.valueOf(pathFinderName);
+//		
+//		// Locate outputs
+//		final List<VarValue> outputs = DebugInfo.getOutputs();
+//		
 		// Initialize DebugPilot
-		final DebugPilot debugPilot = new DebugPilot(buggyTrace, new ArrayList<VarValue>(), outputs, outputNode, propagatorType, pathFinderType);
+		final DebugPilot debugPilot = new DebugPilot(settings);
 		
 		boolean isEnd = false;
 		while (!DebugInfo.isRootCauseFound() && !DebugInfo.isStop() && !isEnd) {
@@ -225,7 +232,6 @@ public class DebugPilotHandler extends AbstractHandler {
 		Display.getDefault().syncExec(new Runnable() {
 			@Override
 			public void run() {
-				// TODO Auto-generated method stub
 				buggyView.updateData();					
 				pathView.updateData();					
 			}

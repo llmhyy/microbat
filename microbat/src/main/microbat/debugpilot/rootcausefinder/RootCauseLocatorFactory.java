@@ -1,33 +1,20 @@
 package microbat.debugpilot.rootcausefinder;
 
-import java.util.Collection;
-import java.util.List;
-
-import debuginfo.NodeFeedbacksPair;
-import microbat.debugpilot.propagation.PropagatorType;
+import microbat.debugpilot.settings.RootCauseLocatorSettings;
 import microbat.log.Log;
-import microbat.model.trace.TraceNode;
 
 public class RootCauseLocatorFactory {
 	
 	private RootCauseLocatorFactory() {}
 	
-	public static RootCauseLocator getLocator(final PropagatorType type, 
-			final List<TraceNode> sliceTrace, 
-			final Collection<NodeFeedbacksPair> feedbacks,
-			final TraceNode outputNode) {
-		switch (type) {
-		case None:
-		case ProfInfer:
-			return new ProbInferRootCauseLocator(sliceTrace, feedbacks, outputNode);
-		case SPP_Random:
-		case SPP_COST:
-		case SPP_CF:
-		case SPP_RL:
-		case SPP_RL_TRAIN:
-			return new SPPRootCauseLocator(sliceTrace, feedbacks, outputNode);
+	public static RootCauseLocator getLocator(RootCauseLocatorSettings settings) {
+		switch (settings.getRootCauseLocatorType()) {
+		case PROBINFER:
+			return new ProbInferRootCauseLocator(settings);
+		case SPP:
+			return new SPPRootCauseLocator(settings);
 		default:
-			throw new IllegalArgumentException(Log.genMsg("RootCauseLocatorFactory", "Unhandled root casue locator type" + type));
+			throw new IllegalArgumentException(Log.genMsg("RootCauseLocatorFactory", "Unhandled root casue locator type" + settings.getRootCauseLocatorType()));
 		}
 	}
 }

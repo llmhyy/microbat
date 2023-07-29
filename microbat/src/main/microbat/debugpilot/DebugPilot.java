@@ -22,6 +22,8 @@ import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.debugpilot.propagation.spp.StepExplaination;
 import microbat.debugpilot.rootcausefinder.RootCauseLocator;
 import microbat.debugpilot.rootcausefinder.RootCauseLocatorFactory;
+import microbat.debugpilot.settings.DebugPilotSettings;
+import microbat.debugpilot.settings.PropagatorSettings;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -38,79 +40,83 @@ import microbat.util.TraceUtil;
  */
 public class DebugPilot {
 	
-	protected final Trace trace;
-	protected Set<VarValue> correctVars = new HashSet<>();
-	protected Set<VarValue> wrongVars = new HashSet<>();
-	protected final TraceNode outputNode;
-	protected final PropagatorType propagatorType;
-	protected final PathFinderType pathFinderType;
+	DebugPilotSettings debugPilotSettings;
 	
-	protected List<TraceNode> slicedTrace = null;
-	protected Collection<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
-
-	public DebugPilot(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode, PropagatorType propagatorType, PathFinderType pathFinderType) {
-		Objects.requireNonNull(trace, Log.genMsg(getClass(), "Given trace is null"));
-		Objects.requireNonNull(inputs, Log.genMsg(getClass(), "Given inputs is null"));
-		Objects.requireNonNull(outputs, Log.genMsg(getClass(), "Given outputs is null"));
-		Objects.requireNonNull(outputNode, Log.genMsg(getClass(), "Given outputNode is null"));
-		Objects.requireNonNull(propagatorType, Log.genMsg(getClass(), "Given propagatorType is null"));
-		this.trace = trace;
-		this.correctVars.addAll(inputs);
-		this.wrongVars.addAll(outputs);
-		this.slicedTrace = TraceUtil.dynamicSlic(trace, outputNode);
-		this.outputNode = outputNode;
-		this.propagatorType = propagatorType;
-		this.pathFinderType = pathFinderType;
+	public DebugPilot(final DebugPilotSettings settings) {
+		Objects.requireNonNull(settings, Log.genMsg(getClass(), "Settings should not be null"));
+		this.debugPilotSettings = settings;
 	}
 	
-	public void addCorrectVar(VarValue correctVar) {
-		this.correctVars.add(correctVar);
-	}
-	
-	public void addWrongVar(VarValue wrongVar) {
-		this.wrongVars.add(wrongVar);
-	}
-	
-	/**
-	 * Add input variables
-	 * @param inputs Input variables
-	 */
-	public void addCorrectVars(Collection<VarValue> inputs) {
-		this.correctVars.addAll(inputs);
-	}
-	
-	/**
-	 * Add output variables
-	 * @param outputs Output variables
-	 */
-	public void addWrongVars(Collection<VarValue> outputs) {
-		this.wrongVars.addAll(outputs);
-	}
+//	public DebugPilot(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode, PropagatorType propagatorType, PathFinderType pathFinderType) {
+//		Objects.requireNonNull(trace, Log.genMsg(getClass(), "Given trace is null"));
+//		Objects.requireNonNull(inputs, Log.genMsg(getClass(), "Given inputs is null"));
+//		Objects.requireNonNull(outputs, Log.genMsg(getClass(), "Given outputs is null"));
+//		Objects.requireNonNull(outputNode, Log.genMsg(getClass(), "Given outputNode is null"));
+//		Objects.requireNonNull(propagatorType, Log.genMsg(getClass(), "Given propagatorType is null"));
+//		
+//		DebugPilotSettings settings = new DebugPilotSettings();
+//		settings.setTrace(trace);;
+//		settings.setCorrectVars(new HashSet<>(inputs));
+//		settings.setWrongVars(new HashSet<>(outputs));
+//		settings.setOutputNode(outputNode);
+//		
+//		PropagatorSettings propagatorSettings = new PropagatorSettings();
+//		propagatorSettings.setPropagatorType(propagatorType);
+//		settings.setPropagatorSettings(propagatorSettings);
+//		
+//		Path
+//		
+//		this.trace = trace;
+//		this.correctVars.addAll(inputs);
+//		this.wrongVars.addAll(outputs);
+//		this.slicedTrace = TraceUtil.dynamicSlic(trace, outputNode);
+//		this.outputNode = outputNode;
+//		this.propagatorType = propagatorType;
+//		this.pathFinderType = pathFinderType;
+//	}
+//	
+//	/**
+//	 * Add input variables
+//	 * @param inputs Input variables
+//	 */
+//	public void addCorrectVars(Collection<VarValue> inputs) {
+//		this.correctVars.addAll(inputs);
+//	}
+//	
+//	/**
+//	 * Add output variables
+//	 * @param outputs Output variables
+//	 */
+//	public void addWrongVars(Collection<VarValue> outputs) {
+//		this.wrongVars.addAll(outputs);
+//	}
 	
 	public void propagate() {
-		ProbabilityPropagator propagator = PropagatorFactory.getPropagator(this.propagatorType, this.trace, this.slicedTrace, this.correctVars, this.wrongVars, this.feedbackRecords);
+		ProbabilityPropagator propagator = PropagatorFactory.getPropagator(this.debugPilotSettings.getPropagatorSettings());
 		propagator.propagate();
 	}
 	
 	public TraceNode locateRootCause() {
-		RootCauseLocator locator = RootCauseLocatorFactory.getLocator(this.propagatorType, this.slicedTrace, this.feedbackRecords, this.outputNode);
-		return locator.locateRootCause();
+		RootCauseLocator locator = RootCauseLocatorFactory.getLocator(this.debugPilotSettings.getRootCauseLocatorSettings());
+		TraceNode rootCause = locator.locateRootCause();
+		rootCause.reason = StepExplaination.LAREST_GAP;
+		return rootCause;
 	}
 	
 	public FeedbackPath constructPath(final TraceNode rootCause) {
-		PathFinder pathFinder = PathFinderFactory.getFinder(this.pathFinderType, this.trace, this.slicedTrace);
+		PathFinder pathFinder = PathFinderFactory.getFinder(this.debugPilotSettings.getPathFinderSettings());
 		
-		FeedbackPath mustFollowPath = new FeedbackPath(this.feedbackRecords);
+		FeedbackPath mustFollowPath = new FeedbackPath(this.debugPilotSettings.getFeedbacks());
 		for (NodeFeedbacksPair pair : mustFollowPath) {
 			pair.getNode().reason = StepExplaination.USRE_CONFIRMED;
 		}
 		
 		if (mustFollowPath == null || mustFollowPath.isEmpty()) {
-			return pathFinder.findPath(this.outputNode, rootCause);
+			return pathFinder.findPath(this.debugPilotSettings.getOutputNode(), rootCause);
 		} else {
 			NodeFeedbacksPair latestAction = mustFollowPath.getLastFeedback();
 			for (UserFeedback feedback : latestAction.getFeedbacks()) {
-				final TraceNode nextNode = TraceUtil.findNextNode(latestAction.getNode(), feedback, this.trace);
+				final TraceNode nextNode = TraceUtil.findNextNode(latestAction.getNode(), feedback, this.debugPilotSettings.getTrace());
 				FeedbackPath consecutivePath = pathFinder.findPath(nextNode, rootCause);
 				if (consecutivePath == null) continue;
 				FeedbackPath path = FeedbackPathUtil.concat(mustFollowPath, consecutivePath);
@@ -124,16 +130,18 @@ public class DebugPilot {
 	}
 	
 	public void updateFeedbacks(Collection<NodeFeedbacksPair> feedbacks) {
-		this.feedbackRecords.clear();
-		this.feedbackRecords.addAll(feedbacks);
+		this.debugPilotSettings.setFeedbackRecords(feedbacks);
 	}
 	
 	public void multiSlicing() {
+		final Trace trace = this.debugPilotSettings.getTrace();
+		final TraceNode outputNode = this.debugPilotSettings.getOutputNode();
+		
 		Set<TraceNode> relatedNodes = new HashSet<>();
-		relatedNodes.addAll(TraceUtil.dynamicSlic(this.trace, this.outputNode));
-		for (NodeFeedbacksPair pair : this.feedbackRecords) {
+		relatedNodes.addAll(TraceUtil.dynamicSlic(trace, outputNode));
+		for (NodeFeedbacksPair pair : this.debugPilotSettings.getFeedbacks()) {
 			final TraceNode node = pair.getNode();
-			relatedNodes.retainAll(TraceUtil.dynamicSlic(this.trace, node));
+			relatedNodes.retainAll(TraceUtil.dynamicSlic(trace, node));
 			if (pair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 				relatedNodes.retainAll(TraceUtil.dynamicSlic(trace, node.getControlDominator()));
 			}
@@ -146,6 +154,7 @@ public class DebugPilot {
 				return t1.getOrder() - t2.getOrder();
 			}
 		});
-		this.slicedTrace = newSlicedNodes;
+		
+		this.debugPilotSettings.setSlicedTrace(newSlicedNodes);
 	}
 }

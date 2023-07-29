@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.settings.PathFinderSettings;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -12,6 +13,10 @@ import microbat.util.TraceUtil;
 
 public class DijkstraExpPathFinder extends DijkstraPathFinder {
 
+	public DijkstraExpPathFinder(final PathFinderSettings settings) {
+		this(settings.getTrace(), settings.getSlicedTrace());
+	}
+	
 	public DijkstraExpPathFinder(Trace trace, List<TraceNode> slicedTrace) {
 		super(trace, slicedTrace);
 	}

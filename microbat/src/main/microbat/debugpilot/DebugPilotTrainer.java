@@ -3,12 +3,9 @@ package microbat.debugpilot;
 import java.io.IOException;
 import java.util.List;
 
-import microbat.debugpilot.pathfinding.PathFinderType;
-import microbat.debugpilot.propagation.PropagatorType;
+import microbat.debugpilot.settings.DebugPilotSettings;
 import microbat.log.Log;
-import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
-import microbat.model.value.VarValue;
 import microbat.pyserver.BackwardModelTrainClient;
 import microbat.pyserver.ForwardModelTrainClient;
 import microbat.pyserver.RLModelTrainClient;
@@ -19,8 +16,8 @@ public class DebugPilotTrainer extends DebugPilot {
 	protected final ForwardModelTrainClient forwardTrainClient;
 	protected final BackwardModelTrainClient backwardTrainClient;
 	
-	public DebugPilotTrainer(Trace trace, List<VarValue> inputs, List<VarValue> outputs, TraceNode outputNode) {
-		super(trace, inputs, outputs, outputNode, PropagatorType.SPP_RL_TRAIN, PathFinderType.Dijkstra);
+	public DebugPilotTrainer(DebugPilotSettings settings) {
+		super(settings);
 		this.forwardTrainClient = new ForwardModelTrainClient();
 		this.backwardTrainClient = new BackwardModelTrainClient();
 	}

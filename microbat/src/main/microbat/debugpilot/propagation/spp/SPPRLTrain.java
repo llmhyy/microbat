@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import debuginfo.NodeFeedbacksPair;
 import microbat.debugpilot.propagation.probability.PropProbability;
+import microbat.debugpilot.settings.PropagatorSettings;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -24,9 +25,13 @@ public class SPPRLTrain extends SPP {
 	protected final BackwardModelTrainClient backwardTrainClient;
 	protected double alpha = -1.0d;
 	
-	public SPPRLTrain(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars,
+	public SPPRLTrain(PropagatorSettings settings) {
+		this(settings.getTrace(), settings.getSlicedTrace(), settings.getWrongVars(), settings.getFeedbacks());
+	}
+	
+	public SPPRLTrain(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> wrongVars,
 			Collection<NodeFeedbacksPair> feedbackRecords) {
-		super(trace, slicedTrace, correctVars, wrongVars, feedbackRecords);
+		super(trace, slicedTrace, wrongVars, feedbackRecords);
 		this.forwardTrainClient = new ForwardModelTrainClient();
 		this.backwardTrainClient = new BackwardModelTrainClient();
 	}

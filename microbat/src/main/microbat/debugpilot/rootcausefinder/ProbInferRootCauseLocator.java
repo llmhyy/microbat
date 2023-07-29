@@ -5,10 +5,15 @@ import java.util.Comparator;
 import java.util.List;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.settings.RootCauseLocatorSettings;
 import microbat.model.trace.TraceNode;
 
 public class ProbInferRootCauseLocator extends AbstractRootCauseLocator {
 
+	public ProbInferRootCauseLocator(final RootCauseLocatorSettings settings) {
+		this(settings.getSliceTrace(), settings.getFeedbacks(), settings.getOutputNode());
+	}
+	
 	public ProbInferRootCauseLocator(List<TraceNode> sliceTrace, Collection<NodeFeedbacksPair> feedbacks, TraceNode outputNode) {
 		super(sliceTrace, feedbacks, outputNode);
 	}
