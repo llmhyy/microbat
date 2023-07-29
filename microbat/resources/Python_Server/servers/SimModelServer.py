@@ -61,7 +61,7 @@ class SimModelServer(RLModelServer):
     def is_zero(self, vector):
         return (vector == 0).all()
 if __name__ == "__main__":
-    config_path = "C:\\Users\\david\\git\\microbat\\microbat\\Python_Server\\servers\\configs\\sim_server_config.yaml"
+    config_path = ".\\configs\\sim_server_config.yaml"
     with open(config_path, "r") as yaml_file:
         config = yaml.safe_load(yaml_file)
     server = SimModelServer(config)
