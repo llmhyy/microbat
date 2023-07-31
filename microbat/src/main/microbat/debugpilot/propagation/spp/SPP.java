@@ -85,6 +85,13 @@ public abstract class SPP implements ProbabilityPropagator {
 	 * Backward propagation
 	 */
 	protected void backwardProp() {
+		
+		for (TraceNode node : this.slicedTrace) {
+			if (node.isBranch()) {
+				node.getConditionResult().clearBackwardProbs();
+			}
+		}
+		
 		for (int order = this.slicedTrace.size()-1; order>=0; order--) {
 			final TraceNode node = this.slicedTrace.get(order);
 			if (this.isFeedbackGiven(node)) {
