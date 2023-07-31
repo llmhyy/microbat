@@ -618,6 +618,12 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 		return this.conditionBackwardProb;
 	}
 	
+	public void clearBackwardProbs() {
+		if (this.conditionBackwardProb != null) {
+			this.conditionBackwardProb.clear();			
+		}
+	}
+	
 	public boolean isConditionResult() {
 		return this.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID);
 	}
