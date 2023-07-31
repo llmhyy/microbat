@@ -1,5 +1,6 @@
 package microbat.debugpilot.settings;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class RootCauseLocatorSettings {
 	
 	protected RootCauseLocatorType rootCauseLocatorType = RootCauseLocatorSettings.DEFAULT_ROOT_CAUSE_LOCATOR_TYPE;
 	protected List<TraceNode> sliceTrace = null;
-	protected Collection<NodeFeedbacksPair> feedbacks = null;
+	protected Collection<NodeFeedbacksPair> feedbacks = new ArrayList<>();
 	protected TraceNode outputNode = null; 
 	
 	public RootCauseLocatorSettings() {
@@ -49,7 +50,8 @@ public class RootCauseLocatorSettings {
 	}
 
 	public void setFeedbacks(Collection<NodeFeedbacksPair> feedbacks) {
-		this.feedbacks = feedbacks;
+		this.feedbacks.clear();
+		this.feedbacks.addAll(feedbacks);
 	}
 
 	public TraceNode getOutputNode() {

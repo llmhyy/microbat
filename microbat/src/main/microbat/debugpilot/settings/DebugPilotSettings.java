@@ -1,5 +1,6 @@
 package microbat.debugpilot.settings;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -11,7 +12,7 @@ import microbat.model.value.VarValue;
 
 public class DebugPilotSettings {
 
-	protected Collection<NodeFeedbacksPair> feedbacks = null;
+	protected Collection<NodeFeedbacksPair> feedbacks = new ArrayList<>();
 	protected TraceNode outputNode = null;
 	protected PathFinderSettings pathFinderSettings = new PathFinderSettings();
 	
@@ -52,7 +53,8 @@ public class DebugPilotSettings {
 	}
 
 	public void setFeedbackRecords(Collection<NodeFeedbacksPair> feedbackRecords) {
-		this.feedbacks = feedbackRecords;
+		this.feedbacks.clear();
+		this.feedbacks.addAll(feedbackRecords);
 		this.propagatorSettings.setFeedbacks(feedbackRecords);
 		this.rootCauseLocatorSettings.setFeedbacks(feedbackRecords);
 	}

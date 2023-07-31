@@ -1,5 +1,6 @@
 package microbat.debugpilot.settings;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +27,7 @@ public class PropagatorSettings {
 	protected List<TraceNode> slicedTrace = null;
 	protected Set<VarValue> correctVars = null;
 	protected Set<VarValue> wrongVars = null;
-	protected Collection<NodeFeedbacksPair> feedbacks = null;
+	protected Collection<NodeFeedbacksPair> feedbacks = new ArrayList<>();
 	
 	public PropagatorSettings() {
 		
@@ -101,7 +102,8 @@ public class PropagatorSettings {
 	}
 
 	public void setFeedbacks(Collection<NodeFeedbacksPair> feedbacks) {
-		this.feedbacks = feedbacks;
+		this.feedbacks.clear();
+		this.feedbacks.addAll(feedbacks);
 	}
 
 	
