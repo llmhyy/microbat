@@ -68,7 +68,11 @@ public class DebugPilot {
 					continue;
 				FeedbackPath path = FeedbackPathUtil.concat(mustFollowPath, consecutivePath);
 				for (NodeFeedbacksPair pair : consecutivePath) {
-					pair.getNode().updateReason(pair);
+					if (pair.getNode().equals(rootCause)) {
+						pair.getNode().reason = StepExplaination.LAREST_GAP;
+					} else {						
+						pair.getNode().updateReason(pair);
+					}
 				}
 				return path;
 			}
