@@ -1,55 +1,42 @@
 package microbat.debugpilot.propagation.spp;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.IntStream;
 
 import debuginfo.NodeFeedbacksPair;
 import microbat.debugpilot.settings.PropagatorSettings;
-import microbat.log.Log;
-import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.pyserver.SimModelClient;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 
 public class SPPCF extends SPPH {
 
-	protected final SimModelClient client;
+	protected final StepComparision comparision = new StepComparision();
 	
 	public SPPCF(final PropagatorSettings settings) {
-		this(settings.getTrace(), settings.getSlicedTrace(), settings.getWrongVars(), settings.getFeedbacks(),
-				settings.getServerHost(), settings.getServerPort());
-	}
-	
-	public SPPCF(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> wrongVars,
-			Collection<NodeFeedbacksPair> feedbackRecords, String serverHost, int serverPort) {
-		super(trace, slicedTrace, wrongVars, feedbackRecords);
-		this.client = new SimModelClient(serverHost, serverPort);
+		super(settings);
 	}
 
-	@Override
-	protected void backwardProp() {
-		try {
-			this.client.conntectServer();
-			this.client.sendFeedbackVectors(this.feedbackRecords);
-			super.backwardProp();
-			this.client.notifyStop();
-			this.client.disconnectServer();
-		} catch (IOException | InterruptedException e) {
-			throw new RuntimeException(Log.genMsg(getClass(), "Server connection problem"));
-		}
-	}
-	
-	@Override
-	protected double calForwardFactor(TraceNode node) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+//	@Override
+//	protected void backwardProp() {
+//		try {
+//			this.client.conntectServer();
+//			this.client.sendFeedbackVectors(this.feedbackRecords);
+//			super.backwardProp();
+//			this.client.notifyStop();
+//			this.client.disconnectServer();
+//		} catch (IOException | InterruptedException e) {
+//			throw new RuntimeException(Log.genMsg(getClass(), "Server connection problem"));
+//		}
+//	}
+//	
+//	@Override
+//	protected double calForwardFactor(TraceNode node) {
+//		// TODO Auto-generated method stub
+//		return 0;
+//	}
 
 	@Override
 	protected double calBackwardFactor(VarValue var, TraceNode node) {
@@ -63,6 +50,52 @@ public class SPPCF extends SPPH {
 			return this.calFactor(node, var);
 		}
 	}
+	
+	protected double calFactor(final TraceNode node, final VarValue var) {
+		List<ModelPrediction> predictions = this.getPredictions(node, var);
+		this.storeReason(node, var, predictions);
+		final boolean isAllUncertain = predictions.stream().allMatch(prediction -> prediction.equals(ModelPrediction.UNCERTAIN));
+		if (isAllUncertain) {
+			return super.calBackwardFactor(var, node);
+		} else {
+			return predictions.stream().filter(prediction -> !prediction.equals(ModelPrediction.UNCERTAIN))
+					.mapToDouble(prediction -> prediction.equals(ModelPrediction.SUSPICION) ? 1.0d : 0.0d)
+					.average().orElse(-1.0d);
+		}
+	}
+	
+	protected List<ModelPrediction> getPredictions(final TraceNode node, final VarValue var) {
+		List<ModelPrediction> predictions = new ArrayList<>();
+		for (NodeFeedbacksPair pair : this.feedbackRecords) {
+			final TraceNode feedbackNode = pair.getNode();
+			for (UserFeedback feedback : pair.getFeedbacks()) {
+				final VarValue feedbackVar = this.extractWrongVar(feedbackNode, feedback);
+				final boolean nodeSimilar = this.comparision.isSimiliar(node, feedbackNode);
+				final boolean varSimilar = this.comparision.isSimiliar(var, feedbackVar);
+				if (nodeSimilar && varSimilar) {
+					predictions.add(ModelPrediction.SUSPICION);
+				} else if (nodeSimilar && !varSimilar) {
+					predictions.add(ModelPrediction.NOT_SUSPICION);
+				} else {
+					predictions.add(ModelPrediction.UNCERTAIN);
+				}
+			}
+		}
+		return predictions;
+	}
+	
+	protected VarValue extractWrongVar(final TraceNode node, final UserFeedback feedback) {
+		VarValue wrongVar;
+		if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+			wrongVar = feedback.getOption().getReadVar();
+		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+			wrongVar = node.getControlDominator().getConditionResult();
+		} else {
+			wrongVar = null;
+		}
+		return wrongVar;
+	}
+	
 	
 //	@Override
 //	protected void calConditionBackwardFactor(final TraceNode node) {
@@ -84,27 +117,27 @@ public class SPPCF extends SPPH {
 //		}
 //	}
 	
-	protected double calFactor(final TraceNode node, final VarValue var) {
-		try {
-			this.client.notifyContinuoue();
-			this.client.sendContextFeature(node);
-			this.client.sendVariableVector(var);
-			this.client.sendVariableName(var);
-			final String response = this.client.recieveModelPredictionString();
-			List<ModelPrediction> predictions = ModelPrediction.parseStringList(response);
-			this.storeReason(node, var, predictions);
-			final boolean isAllUncertain = predictions.stream().allMatch(prediction -> prediction.equals(ModelPrediction.UNCERTAIN));
-			if (isAllUncertain) {
-				return super.calBackwardFactor(var, node);
-			} else {
-				return predictions.stream().filter(prediction -> !prediction.equals(ModelPrediction.UNCERTAIN))
-						.mapToDouble(prediction -> prediction.equals(ModelPrediction.SUSPICION) ? 1.0d : 0.0d)
-						.average().orElse(-1.0d);
-			}
-		} catch (IOException | InterruptedException e) {
-			throw new RuntimeException(Log.genMsg(getClass(), "Server connection problem"));
-		}
-	}
+//	protected double calFactor(final TraceNode node, final VarValue var) {
+//		try {
+//			this.client.notifyContinuoue();
+//			this.client.sendContextFeature(node);
+//			this.client.sendVariableVector(var);
+//			this.client.sendVariableName(var);
+//			final String response = this.client.recieveModelPredictionString();
+//			List<ModelPrediction> predictions = ModelPrediction.parseStringList(response);
+//			this.storeReason(node, var, predictions);
+//			final boolean isAllUncertain = predictions.stream().allMatch(prediction -> prediction.equals(ModelPrediction.UNCERTAIN));
+//			if (isAllUncertain) {
+//				return super.calBackwardFactor(var, node);
+//			} else {
+//				return predictions.stream().filter(prediction -> !prediction.equals(ModelPrediction.UNCERTAIN))
+//						.mapToDouble(prediction -> prediction.equals(ModelPrediction.SUSPICION) ? 1.0d : 0.0d)
+//						.average().orElse(-1.0d);
+//			}
+//		} catch (IOException | InterruptedException e) {
+//			throw new RuntimeException(Log.genMsg(getClass(), "Server connection problem"));
+//		}
+//	}
 	
 //	protected double calFactor(final VarValue var, final TraceNode node, List<ModelPrediction> predictions) {
 //		final boolean isAllUncertain = predictions.stream().allMatch(prediction -> prediction.equals(ModelPrediction.UNCERTAIN));

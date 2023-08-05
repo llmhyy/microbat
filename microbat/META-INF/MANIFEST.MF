@@ -105,6 +105,7 @@ Export-Package:
  microbat.debugpilot.pathfinding,
  microbat.debugpilot.propagation,
  microbat.debugpilot.propagation.BP,
+ microbat.debugpilot.propagation.spp,
  microbat.debugpilot.rootcausefinder,
  microbat.debugpilot.settings,
  microbat.evaluation;

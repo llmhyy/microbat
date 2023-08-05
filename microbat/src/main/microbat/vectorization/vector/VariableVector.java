@@ -53,6 +53,10 @@ public class VariableVector extends Vector {
 	public VariableVector(final VarValue var) {
 		super(VariableVector.DIMENSION);
 		
+		if (var.isConditionResult()) {
+			return;
+		}
+		
 		String typeStr = var.getType();
 		
 		if (var.isArray()) {

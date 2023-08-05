@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.apache.poi.util.SystemOutLogger;
+
 import debuginfo.NodeFeedbacksPair;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
@@ -109,7 +111,10 @@ public abstract class SPP implements ProbabilityPropagator {
 			if (writtenVars.isEmpty()) {
 				continue;
 			}
-		
+			
+			if (node.getOrder() == 120) {
+				System.out.println();
+			}
 			final double avgProb = writtenVars.stream().mapToDouble(var -> var.getBackwardProb()).average().orElse(0.0d);
 			for (VarValue readVar : readVars) {
 				if (this.isCorrect(readVar)) {
@@ -125,10 +130,15 @@ public abstract class SPP implements ProbabilityPropagator {
 			
 			final TraceNode controlDom = node.getControlDominator();
 			if (controlDom != null) {
-				final VarValue conditionReslt = controlDom.getConditionResult();
-				final double factor = this.calBackwardFactor(controlDom.getConditionResult(), node);
+				final VarValue conditionResult = controlDom.getConditionResult();
+				final double factor = this.calBackwardFactor(controlDom.getConditionResult(), node);				
 				final double resultProb = avgProb * factor;
-				conditionReslt.addBackwardProbability(resultProb);
+				conditionResult.addBackwardProbability(resultProb);
+				// If we are sure control dominator is wrong (factor == 1.0), 
+				// then the read variables are set to unknown
+				if (factor == 1.0d) {
+					node.getReadVariables().stream().forEach(var -> var.setBackwardProb(1 - PropProbability.UNCERTAIN));
+				}
 			}
 		}
 		
@@ -249,19 +259,10 @@ public abstract class SPP implements ProbabilityPropagator {
 	}
 	
 	protected void combineProb() {
-		
 		Stream.concat(
 				this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()), 
 				this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()))
 			.forEach(var -> var.setProbability(1 - var.getBackwardProb()));
-//		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream())
-//						.forEach(var -> 
-//							var.setProbability((var.getForwardProb() + (1.0d-var.getBackwardProb()))/2.0d)
-//						);
-//		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream())
-//						.forEach(var -> 
-//							var.setProbability((var.getForwardProb() + (1.0-var.getBackwardProb()))/2.0d)
-//						);
 	}
 	
 	protected boolean isCorrect(final VarValue var) {
