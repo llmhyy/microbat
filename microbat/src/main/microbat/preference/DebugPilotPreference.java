@@ -91,7 +91,7 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 		this.createPropagatorSetting(contents);
 		this.createPathFinderSetting(contents);
 		this.createRootCauseLocatorSetting(contents);
-		this.createLocalServerSetting(contents);
+//		this.createLocalServerSetting(contents);
 		return contents;
 	}
 	

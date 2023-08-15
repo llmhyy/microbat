@@ -74,28 +74,14 @@ public class DebugPilotHandler extends AbstractHandler {
 		
 		List<VarValue> outputs = DebugInfo.getOutputs();
 		settings.setWrongVars(new HashSet<>(outputs));
+		
+		List<VarValue> inputs = DebugInfo.getInputs();
+		settings.setCorrectVars(new HashSet<>(inputs));
 		settings.setTrace(buggyTrace);
 		
 		final TraceNode outputNode = outputs.get(0).isConditionResult() ? DebugInfo.getNodeFeedbackPair().getNode() : this.getOutputNode(outputs.get(0));
 		settings.setOutputNode(outputNode);
 		
-//		final String propagatorName = Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PROPAGATOR_TYPE_KEY);
-//		if (propagatorName.equals("")) {
-//			Log.printMsg(getClass(), "Please setup the propagator type in Preference -> Microbat Debugging -> Debug Pilot Settings");
-//			return;
-//		}
-//		final PropagatorType propagatorType = PropagatorType.valueOf(propagatorName);
-//		
-//		final String pathFinderName = Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PATHFINDER_TYPE_KEY);
-//		if (pathFinderName.equals("")) {
-//			Log.printMsg(getClass(), "Please setup the path finder type in Preference -> Microbat Debugging -> Debug Pilot Settings");
-//			return;
-//		}
-//		final PathFinderType pathFinderType = PathFinderType.valueOf(pathFinderName);
-//		
-//		// Locate outputs
-//		final List<VarValue> outputs = DebugInfo.getOutputs();
-//		
 		// Initialize DebugPilot
 		final DebugPilot debugPilot = new DebugPilot(settings);
 		
