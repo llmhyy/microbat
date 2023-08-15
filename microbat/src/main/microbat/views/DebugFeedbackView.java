@@ -553,45 +553,46 @@ public class DebugFeedbackView extends ViewPart {
 		
 //		Label holder = new Label(feedbackGroup, SWT.NONE);
 //		holder.setText("");
+		GridData buttonGridData = new GridData(SWT.FILL, SWT.FILL, true, false);
 
 		Button submitButton = new Button(feedbackGroup, SWT.NONE);
 		submitButton.setText("Find bug!");
-		submitButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		submitButton.setLayoutData(buttonGridData);
 		submitButton.addMouseListener(new FeedbackSubmitListener());
 		
 		Button baselineButton = new Button(feedbackGroup, SWT.NONE);
 		baselineButton.setText("Baseline");
-		baselineButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		baselineButton.setLayoutData(buttonGridData);
 		baselineButton.addMouseListener(new BaselineButtonListener());
 		
 		Button inputButton = new Button(feedbackGroup, SWT.NONE);
 		inputButton.setText("Inputs");
-		inputButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		inputButton.setLayoutData(buttonGridData);
 		inputButton.addMouseListener(new AddInputsListener());
 		
 		Button outputButton = new Button(feedbackGroup, SWT.NONE);
 		outputButton.setText("Outputs");
-		outputButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		outputButton.setLayoutData(buttonGridData);
 		outputButton.addMouseListener(new AddOutputsListener());
 		
 		Button clearIOButton = new Button(feedbackGroup, SWT.NONE);
 		clearIOButton.setText("clear IO");
-		clearIOButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		clearIOButton.setLayoutData(buttonGridData);
 		clearIOButton.addMouseListener(new ClearVarsListener());
 		
 		Button printIOButton = new Button(feedbackGroup, SWT.NONE);
 		printIOButton.setText("IO");
-		printIOButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		printIOButton.setLayoutData(buttonGridData);
 		printIOButton.addMouseListener(new ShowIOListener());
-		
-		Button rootCauseFoundButton = new Button(feedbackGroup, SWT.NONE);
-		rootCauseFoundButton.setText("Root Cause");
-		rootCauseFoundButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
-		rootCauseFoundButton.addMouseListener(new RootCauseFoundListener());
+//		
+//		Button rootCauseFoundButton = new Button(feedbackGroup, SWT.NONE);
+//		rootCauseFoundButton.setText("Root Cause");
+//		rootCauseFoundButton.setLayoutData(buttonGridData);
+//		rootCauseFoundButton.addMouseListener(new RootCauseFoundListener());
 				
 		bugTypeInferenceButton = new Button(feedbackGroup, SWT.NONE);
 		bugTypeInferenceButton.setText("Infer type!");
-		bugTypeInferenceButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+		bugTypeInferenceButton.setLayoutData(buttonGridData);
 		bugTypeInferenceButton.addMouseListener(new InferBugTypeListener());
 		bugTypeInferenceButton.setEnabled(isValidToInferBugType());
 	}
