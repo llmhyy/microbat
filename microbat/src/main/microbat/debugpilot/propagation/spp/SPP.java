@@ -88,11 +88,10 @@ public abstract class SPP implements ProbabilityPropagator {
 	 */
 	protected void backwardProp() {
 		
-		for (TraceNode node : this.slicedTrace) {
-			if (node.isBranch()) {
-				node.getConditionResult().clearBackwardProbs();
-			}
-		}
+		// Clear the backward probability
+		this.slicedTrace.stream().filter(node -> node.isBranch()).forEach(node -> node.getConditionResult().clearBackwardProbs());
+		
+		this.feedbackRecords.stream().forEach(nodeFeedbacksPair -> this.updateProbByFeedback(nodeFeedbacksPair));
 		
 		for (int order = this.slicedTrace.size()-1; order>=0; order--) {
 			final TraceNode node = this.slicedTrace.get(order);
@@ -427,5 +426,27 @@ public abstract class SPP implements ProbabilityPropagator {
 			this.slicedTrace.stream().flatMap(node  -> node.getReadVariables().stream()).forEach(var -> var.setProbability(this.normalize(var.getProbability(), min, max, targetMin, targetMax)));
 			this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setProbability(this.normalize(var.getProbability(), min, max, targetMin, targetMax)));			
 		}
+	}
+	
+	protected void updateProbByFeedback(final NodeFeedbacksPair pair) {
+		final TraceNode node = pair.getNode();
+		if (pair.getFeedbackType().equals(UserFeedback.CORRECT)) {
+			node.getWrittenVariables().forEach(var -> var.setProbability(PropProbability.ONE));
+			node.getReadVariables().forEach(var -> var.setProbability(PropProbability.ONE));
+		} else if (pair.getFeedbackType().equals(UserFeedback.WRONG_PATH) || pair.getFeedbackType().equals(UserFeedback.UNCLEAR)) {
+			node.getWrittenVariables().forEach(var -> var.setProbability(PropProbability.UNCERTAIN));
+			node.getReadVariables().forEach(var -> var.setProbability(PropProbability.UNCERTAIN));
+		} else if (pair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+			node.getWrittenVariables().forEach(var -> var.setProbability(PropProbability.ZERO));
+			List<VarValue> wrongVars = pair.getFeedbacks().stream().map(feedback -> feedback.getOption().getReadVar()).toList();
+			for (VarValue readVar : node.getReadVariables()) {
+				if (wrongVars.contains(readVar)) {
+					readVar.setProbability(PropProbability.ZERO);
+				} else {
+					readVar.setProbability(PropProbability.ONE);
+				}
+			}
+		}
+		
 	}
 }
