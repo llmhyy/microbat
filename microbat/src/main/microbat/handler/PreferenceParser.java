@@ -14,9 +14,9 @@ public class PreferenceParser {
 	public static PropagatorSettings getPreferencePropagatorSettings() {
 		PropagatorSettings settings = new PropagatorSettings();
 		settings.setPropagatorType(PreferenceParser.getPreferencePropagatorType());
-		settings.setUseLocalServer(PreferenceParser.getPrferenceUseLocalServer());
-		settings.setServerHost(PreferenceParser.getPreferenceServerHost());
-		settings.setServerPort(PreferenceParser.getPreferenceServerPort());
+//		settings.setUseLocalServer(PreferenceParser.getPrferenceUseLocalServer());
+//		settings.setServerHost(PreferenceParser.getPreferenceServerHost());
+//		settings.setServerPort(PreferenceParser.getPreferenceServerPort());
 		return settings;
 	}
 	
@@ -37,20 +37,20 @@ public class PreferenceParser {
 		return propagatorTypeString == null  ? PropagatorSettings.DEFAULT_PROPAGATOR_TYPE : PropagatorType.valueOf(propagatorTypeString);
 	}
 	
-	public static boolean getPrferenceUseLocalServer() {
-		final String string = PreferenceParser.getPreferenceStringByKey(DebugPilotPreference.USE_LOCAL_SERVER_KEY);
-		return string == null ? PropagatorSettings.DEFAULT_USE_LOCATL_SERVER : Boolean.valueOf(string);
-	}
-	
-	public static String getPreferenceServerHost() {
-		final String string =  PreferenceParser.getPreferenceStringByKey(DebugPilotPreference.SERVER_HOST_KEY);
-		return string == null ? PropagatorSettings.DEFAULT_SERVER_HOST : string;
-	}
-	
-	public static int getPreferenceServerPort() {
-		final String string =  PreferenceParser.getPreferenceStringByKey(DebugPilotPreference.SERVER_PORT_KEY);
-		return string == null ? PropagatorSettings.DEFAULT_SERVER_PORT : Integer.valueOf(string);
-	}
+//	public static boolean getPrferenceUseLocalServer() {
+//		final String string = PreferenceParser.getPreferenceStringByKey(DebugPilotPreference.USE_LOCAL_SERVER_KEY);
+//		return string == null ? PropagatorSettings.DEFAULT_USE_LOCATL_SERVER : Boolean.valueOf(string);
+//	}
+//	
+//	public static String getPreferenceServerHost() {
+//		final String string =  PreferenceParser.getPreferenceStringByKey(DebugPilotPreference.SERVER_HOST_KEY);
+//		return string == null ? PropagatorSettings.DEFAULT_SERVER_HOST : string;
+//	}
+//	
+//	public static int getPreferenceServerPort() {
+//		final String string =  PreferenceParser.getPreferenceStringByKey(DebugPilotPreference.SERVER_PORT_KEY);
+//		return string == null ? PropagatorSettings.DEFAULT_SERVER_PORT : Integer.valueOf(string);
+//	}
 	
 	public static PathFinderType getPreferencePathFinderType() {
 		final String string = PreferenceParser.getPreferenceStringByKey(DebugPilotPreference.PATHFINDER_TYPE_KEY);
