@@ -97,9 +97,6 @@ public class DebugPilot {
 		for (NodeFeedbacksPair pair : this.debugPilotSettings.getFeedbacks()) {
 			final TraceNode node = TraceUtil.findNextNode(pair.getNode(), pair.getFirstFeedback(), trace);
 			relatedNodes.retainAll(TraceUtil.dynamicSlic(trace, node));
-			if (pair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-				relatedNodes.retainAll(TraceUtil.dynamicSlic(trace, node.getControlDominator()));
-			}
 		}
 		List<TraceNode> newSlicedNodes = new ArrayList<>();
 		newSlicedNodes.addAll(relatedNodes);

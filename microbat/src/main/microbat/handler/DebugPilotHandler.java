@@ -13,13 +13,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.internal.compiler.ast.TrueLiteral;
 import org.eclipse.swt.widgets.Display;
-import org.etsi.uri.x01903.v13.CompleteRevocationRefsType;
 
 import debuginfo.DebugInfo;
 import debuginfo.NodeFeedbacksPair;
-import fj.P;
 import microbat.debugpilot.DebugPilot;
 import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.debugpilot.propagation.spp.StepExplaination;
@@ -33,7 +30,6 @@ import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 import microbat.views.MicroBatViews;
 import microbat.views.PathView;
-import microbat.views.ReasonGenerator;
 import microbat.views.TraceView;
 
 public class DebugPilotHandler extends AbstractHandler {
