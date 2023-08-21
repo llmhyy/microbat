@@ -7,6 +7,9 @@ public class StepExplaination {
 	public static final String USRE_CONFIRMED = "User Confirmed";
 	public static final String COST = "Computational Cost";
 	public static final String MISS_BRANCH = "Missing Branch";
+	public static final String SCANNING = "Scanning";
+	public static final String BINARY_SEARCH = "Binary Serach";
+	public static final String RELATED = "Related";
 	public static final String REF(final int order) {
 		return "Reference to feedback on node: " + order;
 	}

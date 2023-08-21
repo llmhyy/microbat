@@ -95,7 +95,7 @@ public class DebugPilot {
 		Set<TraceNode> relatedNodes = new HashSet<>();
 		relatedNodes.addAll(TraceUtil.dynamicSlic(trace, outputNode));
 		for (NodeFeedbacksPair pair : this.debugPilotSettings.getFeedbacks()) {
-			final TraceNode node = pair.getNode();
+			final TraceNode node = TraceUtil.findNextNode(pair.getNode(), pair.getFirstFeedback(), trace);
 			relatedNodes.retainAll(TraceUtil.dynamicSlic(trace, node));
 			if (pair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 				relatedNodes.retainAll(TraceUtil.dynamicSlic(trace, node.getControlDominator()));

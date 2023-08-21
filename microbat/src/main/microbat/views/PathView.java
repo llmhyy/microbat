@@ -169,6 +169,8 @@ public class PathView extends ViewPart {
 				return "Wrong variable of " + feedback.getOption().getReadVar().getVarName();
 			case UserFeedback.ROOTCAUSE:
 				return "Root cause";
+			case UserFeedback.UNCLEAR:
+				return "Unclear";
 			}
 			return "";
 		});

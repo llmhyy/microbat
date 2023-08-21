@@ -8,11 +8,13 @@ import java.util.Objects;
 import java.util.Set;
 
 import debuginfo.NodeFeedbacksPair;
+import microbat.evaluation.Feedback;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
+import microbat.vectorization.NodeFeatureRecord;
 
 public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 
@@ -23,6 +25,7 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 	public FeedbackPath(NodeFeedbacksPair pair) {
 		this.path.add(pair);
 	}
+	
 	public FeedbackPath (Collection<NodeFeedbacksPair> path) {
 		this.path.addAll(path);
 	}
@@ -35,6 +38,14 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 	
 	public NodeFeedbacksPair get(final int i) {
 		return this.path.get(i);
+	}
+	
+	public NodeFeedbacksPair getPairByNode(final TraceNode node) {
+		List<NodeFeedbacksPair> possiblePairs = this.path.stream().filter(pair -> pair.getNode().equals(node)).toList();
+		if (possiblePairs.isEmpty()) {
+			throw new IllegalArgumentException(Log.genMsg(getClass(), "Path does not contain node: " + node.getOrder()));
+		}
+		return possiblePairs.get(0);
 	}
 	
 	public boolean isEmpty() {
@@ -77,6 +88,37 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 	
 	public void addPair(final NodeFeedbacksPair pair) {
 		this.path.add(pair);
+	}
+	
+	public void addPairByOrder(final TraceNode node, final UserFeedback feedback) {
+		this.addPairByOrder(new NodeFeedbacksPair(node, feedback));
+	}
+	
+	public void addPairByOrder(final NodeFeedbacksPair pairToInsert) {
+		final TraceNode nodeToBeIntert = pairToInsert.getNode();
+		int idx=0;
+		for (; idx<this.path.size(); idx++) {
+			final TraceNode node = this.path.get(idx).getNode();
+			if (node.getOrder() < nodeToBeIntert.getOrder()) {
+				break;
+			}
+		}
+		this.path.add(idx, pairToInsert);
+	}
+	
+	public void replacePair(final TraceNode node, final UserFeedback feedback) {
+		this.replacePair(new NodeFeedbacksPair(node, feedback));
+	}
+	
+	public void replacePair(final NodeFeedbacksPair pairToReplace) {
+		for (NodeFeedbacksPair pair : this.path) {
+			final TraceNode node = pair.getNode();
+			if (node.equals(pairToReplace.getNode())) {
+				pair.setFeedbacks(pairToReplace.getFeedbacks());
+				return;
+			}
+		}
+		throw new IllegalArgumentException(Log.genMsg(getClass(), "Target node: " + pairToReplace.getNode().getOrder() + " does not appear in the path"));
 	}
 	
 	public int getLength() {
