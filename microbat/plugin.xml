@@ -150,6 +150,11 @@
             id="microbat.debugpilot"
             name="Debug Pilot">
       </command>
+      <command
+            defaultHandler="microbat.handler.StopDebugPilotHandler"
+            id="microbat.stopdebugpilot"
+            name="Stop Debug Pilot">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -240,6 +245,11 @@
                   commandId="microbat.debugpilot"
                   icon="icons/releng_gears.gif"
                   label="stepwisePropagation"
+                  style="push">
+            </command>
+            <command
+                  commandId="microbat.stopdebugpilot"
+                  icon="icons/cross_mark.png"
                   style="push">
             </command>
          </toolbar>
