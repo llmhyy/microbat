@@ -39,6 +39,8 @@ public class DebugPilotHandler extends AbstractHandler {
 	
 	protected Stack<NodeFeedbacksPair> userFeedbackRecords = new Stack<>();
 	
+	protected final static String DEBUGPILOT_STOP_MESSAGE = "DebugPilot stop";
+	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		Job job = new Job("DebugPilot") {
@@ -130,6 +132,10 @@ public class DebugPilotHandler extends AbstractHandler {
 			NodeFeedbacksPair correctingFeedback = null;
 			while (correctingFeedback == null) {
 				correctingFeedback = this.waitForFeedback();
+				if (correctingFeedback == null) {
+					Log.printMsg(this.getClass(), DebugPilotHandler.DEBUGPILOT_STOP_MESSAGE);
+					return;
+				}
 				final TraceNode userNode = correctingFeedback.getNode();
 				if (!proposedPath.contains(userNode)) {
 					correctingFeedback = null;
@@ -150,24 +156,22 @@ public class DebugPilotHandler extends AbstractHandler {
 					/*
 					 * Handle three cases correspondingly
 					 * 1. CORRECT
-					 * 		Double check the previous node.
-					 * 		If previous feedback is inaccurate, then adjust it
-					 * 		If user insist the previous feedback is accurate, then omission bug occur
+					 * 		Omission bug occur
 					 * 2. Invalid feedback (cannot find next node in trace based on give feedback)
-					 * 		Double check with user, if user insist, then omission bug occur
+					 * 		Omission bug
 					 * 3. Valid feedback
 					 * 		Record it in the stack
 					 */
 					if (correctingFeedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
 						NodeFeedbacksPair previousFeedbacksPair = this.userFeedbackRecords.peek();
 						proposedPath.replacePair(correctingFeedback);
-						this.handleOmissionBug(userNode, previousFeedbacksPair, proposedPath);
+						this.handleOmissionBug(userNode, previousFeedbacksPair.getNode(), previousFeedbacksPair.getFirstFeedback(), proposedPath);
 						isEnd = true;
 						break;
 					} else if (!this.isValidFeedback(correctingFeedback)) {
 						Log.printMsg(this.getClass(), "Cannot find next node. Omission bug detected");
 						NodeFeedbacksPair previousFeedbacksPair = this.userFeedbackRecords.peek();
-						this.handleOmissionBug(userNode, previousFeedbacksPair, proposedPath);
+						this.handleOmissionBug(userNode, previousFeedbacksPair.getNode(), previousFeedbacksPair.getFirstFeedback(), proposedPath);
 						isEnd = true;
 						break;
 					} else { 
@@ -234,33 +238,27 @@ public class DebugPilotHandler extends AbstractHandler {
 		return true;
 	}
 	
-	protected void handleOmissionBug(final TraceNode startTraceNode, final NodeFeedbacksPair previousFeedbacksPair, final FeedbackPath feedbackPath) {
-		Objects.requireNonNull(startTraceNode, Log.genMsg(this.getClass(), "Start trace node cannot be null"));
-		Objects.requireNonNull(previousFeedbacksPair, Log.genMsg(this.getClass(), "Previous feedback cannot be null"));
+	protected void handleOmissionBug(final TraceNode startNode, final TraceNode endNode, final UserFeedback userFeedback, final FeedbackPath feedbackPath) {
+		Objects.requireNonNull(startNode, Log.genMsg(this.getClass(), "Start node cannot be null"));
+		Objects.requireNonNull(endNode, Log.genMsg(this.getClass(), "End node cannot be null"));
+		Objects.requireNonNull(userFeedback, Log.genMsg(this.getClass(), "User feedback cannot be null"));
 		Objects.requireNonNull(feedbackPath, Log.genMsg(this.getClass(), "Feedback path cannot be null"));
 		
+		this.updateOmissionNodeReason(startNode, endNode, userFeedback);
+		
 		System.out.println("Omission bug detected ...");
-		final int startOrder = startTraceNode.getOrder();
-		final int endOrder = previousFeedbacksPair.getNode().getOrder();
+		final int startOrder = startNode.getOrder();
+		final int endOrder = endNode.getOrder();
 		List<TraceNode> candidateNodes = this.buggyView.getTrace().getExecutionList().stream().filter(node -> node.getOrder() > startOrder && node.getOrder() < endOrder).toList();
 		
-		if (previousFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-			startTraceNode.reason = StepExplaination.MISS_BRANCH;
-			previousFeedbacksPair.getNode().reason = StepExplaination.MISS_BRANCH;
-		} else {
-			final VarValue wrongVar = previousFeedbacksPair.getFirstFeedback().getOption().getReadVar();
-			startTraceNode.reason = StepExplaination.MISS_DEF(wrongVar.getVarName());
-			previousFeedbacksPair.getNode().reason = StepExplaination.MISS_DEF(wrongVar.getVarName());
-		}
-		
 		if (candidateNodes.isEmpty()) {
-			this.reportOmissionBug(startTraceNode, previousFeedbacksPair, feedbackPath);
-		} else if (previousFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+			this.reportOmissionBug(startNode, endNode, userFeedback);
+		} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 			this.handleControlOmissionBug(candidateNodes, feedbackPath);
-		} else if (previousFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-			this.handleDataOmissionBug(candidateNodes, previousFeedbacksPair.getFirstFeedback().getOption().getReadVar(), feedbackPath);
+		} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+			this.handleDataOmissionBug(candidateNodes, userFeedback.getOption().getReadVar(), feedbackPath);
 		} else {
-			throw new RuntimeException("Cannot handle omission bug other than control omission or data omission.");
+			throw new IllegalArgumentException(Log.genMsg(getClass(), "Unhandled feedback type: " + userFeedback));
 		}
 	}
 	
@@ -277,6 +275,11 @@ public class DebugPilotHandler extends AbstractHandler {
 			this.updateView();
 			System.out.println("Proposed root cause is node: " + node.getOrder() + ". If you does not agree, please give feedback on this node.");
 			NodeFeedbacksPair pair = this.waitForFeedback();
+			if (pair == null) {
+				Log.printMsg(this.getClass(), DebugPilotHandler.DEBUGPILOT_STOP_MESSAGE);
+				return;
+			}
+			
 			if (pair.getFeedbackType().equals(UserFeedback.CORRECT)) {
 				left = mid+1;
 			} else {
@@ -300,6 +303,10 @@ public class DebugPilotHandler extends AbstractHandler {
 			this.updateView();
 			System.out.println("Please give a feedback on node: " + node.getOrder());
 			NodeFeedbacksPair pair = this.waitForFeedback();
+			if (pair == null) {
+				Log.printMsg(this.getClass(), DebugPilotHandler.DEBUGPILOT_STOP_MESSAGE);
+				return;
+			}
 			feedbackPath.replacePair(pair);
 			if (pair.getFeedbackType().equals(UserFeedback.CORRECT)) {
 				startOrder = pair.getNode().getOrder();
@@ -320,6 +327,10 @@ public class DebugPilotHandler extends AbstractHandler {
 			this.updateView();
 			@SuppressWarnings("unused")
 			NodeFeedbacksPair pair = this.waitForFeedback();
+			if (pair == null) {
+				Log.printMsg(this.getClass(), DebugPilotHandler.DEBUGPILOT_STOP_MESSAGE);
+				return;
+			}
 			node.reason = StepExplaination.USRE_CONFIRMED;
 			feedbackPath.replacePair(pair);
 		}
@@ -337,21 +348,28 @@ public class DebugPilotHandler extends AbstractHandler {
 			).toList();
 	}
 	
-	protected void reportOmissionBug(final TraceNode startNode, final NodeFeedbacksPair feedback, final FeedbackPath path) {
-		final FeedbackPath newPath = new FeedbackPath();
-		for (NodeFeedbacksPair pair : path) {
-			if (pair.getNode().getOrder() >= startNode.getOrder()) {
-				newPath.addPair(pair);
-			}
-		}
+	public void updateOmissionNodeReason(final TraceNode startNode, final TraceNode endNode, final UserFeedback feedback) {
 		if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-			this.reportMissingBranchOmissionBug(startNode, feedback.getNode());
-		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-			VarValue varValue = feedback.getFeedbacks().get(0).getOption().getReadVar();
-			this.reportMissingAssignmentOmissionBug(startNode, feedback.getNode(), varValue);
+			startNode.reason = StepExplaination.MISS_BRANCH;
+			endNode.reason = StepExplaination.MISS_BRANCH;
+		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)){
+			final VarValue wrongVar = feedback.getOption().getReadVar();
+			startNode.reason = StepExplaination.MISS_DEF(wrongVar.getVarName());
+			endNode.reason = StepExplaination.MISS_DEF(wrongVar.getVarName());
+		} else {
+			throw new IllegalArgumentException(Log.genMsg(getClass(), "Unhandled feedback type: " + feedback));
 		}
-		this.pathView.setActionPath(newPath);
-		this.updateView();
+	}
+	
+	protected void reportOmissionBug(final TraceNode startNode, final TraceNode endNode, final UserFeedback feedback) {
+		if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+			this.reportMissingBranchOmissionBug(startNode, endNode);
+		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+			final VarValue wrongVar = feedback.getOption().getReadVar();
+			this.reportMissingAssignmentOmissionBug(startNode, endNode, wrongVar);
+		} else {
+			throw new IllegalArgumentException(Log.genMsg(getClass(), "Unhandled feedback type: " + feedback));
+		}
 	}
 	
 	protected void reportMissingBranchOmissionBug(final TraceNode startNode, final TraceNode endNode) {
@@ -361,8 +379,6 @@ public class DebugPilotHandler extends AbstractHandler {
 		Log.printMsg(this.getClass(), "Scope end: " + endNode.getOrder());
 		Log.printMsg(this.getClass(), "Omission Type: Missing Branch");
 		Log.printMsg(this.getClass(), "-------------------------------------------");
-		startNode.reason = StepExplaination.MISS_BRANCH;
-		endNode.reason = StepExplaination.MISS_BRANCH;
 	}
 	
 	protected void reportMissingAssignmentOmissionBug(final TraceNode startNode, final TraceNode endNode, final VarValue var) {
@@ -372,8 +388,6 @@ public class DebugPilotHandler extends AbstractHandler {
 		Log.printMsg(this.getClass(), "Scope end: " + endNode.getOrder());
 		Log.printMsg(this.getClass(), "Omission Type: Missing Assignment of " + var.getVarName());
 		Log.printMsg(this.getClass(), "-------------------------------------------");
-		startNode.reason = StepExplaination.MISS_DEF(var.getVarName());
-		endNode.reason = StepExplaination.MISS_DEF(var.getVarName());
 	}
 
 }
