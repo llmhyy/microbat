@@ -1439,4 +1439,18 @@ public class TraceNode implements Comparator<TraceNode> {
 			this.reason = this.reasonMap.getOrDefault(pair, StepExplaination.COST);
 		}
 	}
+	
+	public boolean isCertain() {
+		if (this.reasonMap == null) {
+			return false;
+		}
+		
+		for (String reason : this.reasonMap.values()) {
+			if (!reason.equals(StepExplaination.COST)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
 }

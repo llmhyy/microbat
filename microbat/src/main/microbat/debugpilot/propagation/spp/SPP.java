@@ -95,6 +95,10 @@ public abstract class SPP implements ProbabilityPropagator {
 		
 		for (int order = this.slicedTrace.size()-1; order>=0; order--) {
 			final TraceNode node = this.slicedTrace.get(order);
+			
+			if (node.getOrder() == 124) {
+				System.out.println();
+			}
 			if (this.isFeedbackGiven(node)) {
 				node.reason = "User Confirmed";
 				continue;
@@ -111,9 +115,6 @@ public abstract class SPP implements ProbabilityPropagator {
 				continue;
 			}
 			
-			if (node.getOrder() == 120) {
-				System.out.println();
-			}
 			final double avgProb = writtenVars.stream().mapToDouble(var -> var.getBackwardProb()).average().orElse(0.0d);
 			for (VarValue readVar : readVars) {
 				if (this.isCorrect(readVar)) {
@@ -135,7 +136,7 @@ public abstract class SPP implements ProbabilityPropagator {
 				conditionResult.addBackwardProbability(resultProb);
 				// If we are sure control dominator is wrong (factor == 1.0), 
 				// then the read variables are set to unknown
-				if (factor == 1.0d) {
+				if (factor == 1.0d && node.isCertain()) {
 					node.getReadVariables().stream().forEach(var -> var.setBackwardProb(1 - PropProbability.UNCERTAIN));
 				}
 			}
