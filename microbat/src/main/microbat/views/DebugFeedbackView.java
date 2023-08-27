@@ -40,6 +40,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import debuginfo.DebugInfo;
+import debuginfo.NodeFeedbacksPair;
+import debuginfo.NodeVarPair;
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
@@ -560,7 +562,7 @@ public class DebugFeedbackView extends ViewPart {
 		submitButton.addMouseListener(new FeedbackSubmitListener());
 		
 		Button baselineButton = new Button(feedbackGroup, SWT.NONE);
-		baselineButton.setText("Baseline");
+		baselineButton.setText("Feedback");
 		baselineButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
 		baselineButton.addMouseListener(new BaselineButtonListener());
 		
@@ -682,10 +684,7 @@ public class DebugFeedbackView extends ViewPart {
 	class BaselineButtonListener implements MouseListener {
 		
 		@Override
-		public void mouseDoubleClick(MouseEvent e) {
-			// TODO Auto-generated method stub
-			
-		}
+		public void mouseDoubleClick(MouseEvent e) {}
 
 		@Override
 		public void mouseDown(MouseEvent e) {
@@ -701,8 +700,8 @@ public class DebugFeedbackView extends ViewPart {
 			} else {
 				List<VarValue> selectedReadVars = getSelectedReadVars();
 				List<VarValue> selectedWriteVars = getSelectedWriteVars();
-				if (selectedReadVars.isEmpty()) {
-					throw new RuntimeException("No read variables is selected");
+				if (selectedReadVars.isEmpty() && selectedWriteVars.isEmpty()) {
+					throw new RuntimeException("No selected variables");
 				}
 				for (VarValue readVar : selectedReadVars) {
 					UserFeedback feedback = new UserFeedback();
@@ -715,10 +714,7 @@ public class DebugFeedbackView extends ViewPart {
 		}
 
 		@Override
-		public void mouseUp(MouseEvent e) {
-			// TODO Auto-generated method stub
-			
-		}
+		public void mouseUp(MouseEvent e) {	}
 	}
 	
 	class FeedbackSubmitListener implements MouseListener{
@@ -1485,8 +1481,20 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			List<VarValue> outputs = getSelectedVars();
-			DebugInfo.addOutputs(outputs);
+			List<NodeVarPair> outputNodeVarPairs = new ArrayList<>();
+			if (wrongPathButton.getSelection()) {
+				TraceNode controlDom = currentNode.getControlDominator();
+				VarValue controlDomVar = controlDom.getConditionResult();
+				outputNodeVarPairs.add(new NodeVarPair(currentNode, controlDomVar, controlDom.getOrder()));
+				DebugInfo.addOutputNodeVarPairs(outputNodeVarPairs);
+				
+				UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_PATH);
+				NodeFeedbacksPair pair = new NodeFeedbacksPair(currentNode, feedback);
+				DebugInfo.addNodeFeedbacksPair(pair);
+			} else {
+				outputNodeVarPairs.addAll(getSelectedNodeVarPairs());
+				DebugInfo.addOutputNodeVarPairs(outputNodeVarPairs);
+			}
 		}
 
 		@Override
@@ -1500,8 +1508,8 @@ public class DebugFeedbackView extends ViewPart {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-			List<VarValue> inputs = getSelectedVars();
-			DebugInfo.addInputs(inputs);
+			List<NodeVarPair> inputNodeVarPairs = getSelectedNodeVarPairs();
+			DebugInfo.addInputNodeVarPairs(inputNodeVarPairs);
 		}
 
 		@Override
@@ -1553,6 +1561,20 @@ public class DebugFeedbackView extends ViewPart {
 		@Override
 		public void mouseUp(MouseEvent e) {}
 		
+	}
+	
+	private List<NodeVarPair> getSelectedNodeVarPairs() {
+		List<NodeVarPair> pairs = new ArrayList<>();
+		List<VarValue> selectedVars = this.getSelectedVars();
+		List<VarValue> variables = new ArrayList<>();
+		variables.addAll(currentNode.getReadVariables());
+		variables.addAll(currentNode.getWrittenVariables());
+		variables.forEach((var) -> {
+			if (selectedVars.contains(var)) {
+				pairs.add(new NodeVarPair(currentNode, var));
+			}
+		});
+		return pairs;
 	}
 	
 }
