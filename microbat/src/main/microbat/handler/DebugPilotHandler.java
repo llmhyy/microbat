@@ -244,6 +244,7 @@ public class DebugPilotHandler extends AbstractHandler {
 		Objects.requireNonNull(userFeedback, Log.genMsg(this.getClass(), "User feedback cannot be null"));
 		Objects.requireNonNull(feedbackPath, Log.genMsg(this.getClass(), "Feedback path cannot be null"));
 		
+		feedbackPath.removePathBeforeNode(startNode);
 		this.updateOmissionNodeReason(startNode, endNode, userFeedback);
 		
 		System.out.println("Omission bug detected ...");
@@ -287,6 +288,8 @@ public class DebugPilotHandler extends AbstractHandler {
 			}
 			node.reason = StepExplaination.USRE_CONFIRMED;
 			feedbackPath.replacePair(pair);
+			this.pathView.setActionPath(feedbackPath);
+			this.updateView();
 		}
 		System.out.println("No more trace node can be recommended");
 	}
@@ -333,6 +336,8 @@ public class DebugPilotHandler extends AbstractHandler {
 			}
 			node.reason = StepExplaination.USRE_CONFIRMED;
 			feedbackPath.replacePair(pair);
+			this.pathView.setActionPath(feedbackPath);
+			this.updateView();
 		}
 		System.out.println("No more trace node can be recommeded");
 	}

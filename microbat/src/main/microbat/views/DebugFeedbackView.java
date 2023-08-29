@@ -586,10 +586,10 @@ public class DebugFeedbackView extends ViewPart {
 		printIOButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
 		printIOButton.addMouseListener(new ShowIOListener());
 		
-		Button rootCauseFoundButton = new Button(feedbackGroup, SWT.NONE);
-		rootCauseFoundButton.setText("Root Cause");
-		rootCauseFoundButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
-		rootCauseFoundButton.addMouseListener(new RootCauseFoundListener());
+//		Button rootCauseFoundButton = new Button(feedbackGroup, SWT.NONE);
+//		rootCauseFoundButton.setText("Root Cause");
+//		rootCauseFoundButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+//		rootCauseFoundButton.addMouseListener(new RootCauseFoundListener());
 				
 		bugTypeInferenceButton = new Button(feedbackGroup, SWT.NONE);
 		bugTypeInferenceButton.setText("Infer type!");

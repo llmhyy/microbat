@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import debuginfo.NodeFeedbacksPair;
 import microbat.evaluation.Feedback;
@@ -247,5 +248,21 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 			reachableNodes = TraceUtil.findAllNextNodes(node, action.getFeedbacks(), trace);
 		}
 		return true;
+	}
+	
+	public void removePathAfterNode(final TraceNode node) {
+		this.removePathAfterNodeOrder(node.getOrder());
+	}
+	
+	public void removePathAfterNodeOrder(final int nodeOrder) {
+		this.path = this.path.stream().filter(nodeFeedbacksPair -> nodeFeedbacksPair.getNode().getOrder() <= nodeOrder).collect(Collectors.toList());
+	}
+	
+	public void removePathBeforeNode(final TraceNode node) { 
+		this.removePathBeforeNodeOrder(node.getOrder());
+	}
+	
+	public void removePathBeforeNodeOrder(final int nodeOrder) {
+		this.path = this.path.stream().filter(nodeFeedbacksPair -> nodeFeedbacksPair.getNode().getOrder() >= nodeOrder).collect(Collectors.toList());
 	}
 }
