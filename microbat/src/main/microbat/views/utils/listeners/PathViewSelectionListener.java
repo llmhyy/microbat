@@ -1,4 +1,4 @@
-package microbat.views.listeners;
+package microbat.views.utils.listeners;
 
 import java.util.ArrayList;
 
@@ -7,11 +7,11 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 
-import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.model.trace.TraceNode;
 import microbat.views.PathView;
 import microbat.views.TraceView;
-import microbat.views.providers.ActionPathContentProvider;
+import microbat.views.utils.contentprovider.ActionPathContentProvider;
 
 public class PathViewSelectionListener implements ISelectionChangedListener {
 	

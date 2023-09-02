@@ -22,11 +22,11 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import debuginfo.NodeFeedbacksPair;
 import microbat.Activator;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.model.BreakPoint;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -48,7 +48,9 @@ public class MicroBatUtil {
 		IProject iProject = myWorkspaceRoot.getProject(projectName);
 		
 		String projectPath = iProject.getLocationURI().getPath();
-//		projectPath = projectPath.substring(1, projectPath.length());
+		if (projectPath.startsWith("/")) {
+			projectPath = projectPath.substring(1, projectPath.length());
+		}
 		projectPath = projectPath.replace("/", File.separator);
 		
 		return projectPath;

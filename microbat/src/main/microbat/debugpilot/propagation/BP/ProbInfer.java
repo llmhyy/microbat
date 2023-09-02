@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.propagation.ProbabilityPropagator;
 import microbat.debugpilot.propagation.BP.constraint.Constraint;
 import microbat.debugpilot.settings.PropagatorSettings;

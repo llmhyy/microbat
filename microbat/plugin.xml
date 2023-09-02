@@ -67,6 +67,14 @@
             name="After Trace"
             restorable="true">
       </view>
+      <view
+            category="microbat.category"
+            class="microbat.views.DebugPilotFeedbackView"
+            icon="icons/feedback.png"
+            id="microbat.view.debugPilotFeedback"
+            name="DebugPilot Feedback"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">

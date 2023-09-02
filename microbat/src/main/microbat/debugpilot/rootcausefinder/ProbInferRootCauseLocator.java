@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.settings.RootCauseLocatorSettings;
 import microbat.model.trace.TraceNode;
 

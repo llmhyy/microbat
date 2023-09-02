@@ -1,4 +1,4 @@
-package microbat.views.providers;
+package microbat.views.utils.lableprovider;
 
 import java.util.Optional;
 
@@ -9,6 +9,7 @@ import org.eclipse.swt.graphics.Image;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.instrumentation.utils.MicrobatUtils;
 import microbat.model.BreakPoint;
 import microbat.model.trace.TraceNode;
@@ -16,7 +17,7 @@ import microbat.recommendation.UserFeedback;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import microbat.views.ImageUI;
-import debuginfo.NodeFeedbacksPair;
+import microbat.views.utils.contentprovider.ActionPathContentProvider;
 
 public class FeedbackNodePairLabelProvider implements ILabelProvider {
 

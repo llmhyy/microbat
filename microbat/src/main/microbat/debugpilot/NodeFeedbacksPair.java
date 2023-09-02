@@ -1,4 +1,4 @@
-package debuginfo;
+package microbat.debugpilot;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +21,13 @@ public class NodeFeedbacksPair {
 	public NodeFeedbacksPair(final TraceNode node, final UserFeedback feedback) {
 		this.node = node;
 		this.feedbacks.add(feedback);
+	}
+	
+	public NodeFeedbacksPair(final TraceNode node, UserFeedback...feedbacks) {
+		this.node = node;
+		for (UserFeedback feedback : feedbacks) {
+			this.feedbacks.add(feedback);
+		}
 	}
 	
 	public boolean doNotHaveFeedback() {

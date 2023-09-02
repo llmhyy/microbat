@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import debuginfo.NodeFeedbackPair;
+import microbat.debugpilot.NodeFeedbackPair;
 import microbat.debugpilot.propagation.probability.HasProbability;
 import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.log.Log;

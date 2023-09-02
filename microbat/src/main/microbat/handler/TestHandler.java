@@ -55,9 +55,7 @@ public class TestHandler extends AbstractHandler {
 	}
 	
 	private void execute() {
-		System.out.println(Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PROPAGATOR_TYPE));
-		System.out.println(Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PATHFINDER_TYPE));
-		System.out.println("-----");
+
 	}
 	
 	private void setup() {

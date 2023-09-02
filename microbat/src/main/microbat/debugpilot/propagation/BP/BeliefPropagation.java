@@ -1,5 +1,7 @@
 package microbat.debugpilot.propagation.BP;
 
+import microbat.debugpilot.NodeFeedbackPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.propagation.BP.constraint.Constraint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -24,9 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
-
-import debuginfo.NodeFeedbackPair;
-import debuginfo.NodeFeedbacksPair;
 
 /**
  * Belief Propagation follow the procedure in ICSE18 paper

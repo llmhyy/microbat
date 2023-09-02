@@ -4,7 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import debuginfo.NodeFeedbacksPair;
+import microbat.baseline.constraints.VariableConstraintA1Test;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.settings.DebugPilotSettings;
 import microbat.debugpilot.settings.PropagatorSettings;
 import microbat.model.trace.Trace;
@@ -31,7 +32,8 @@ public class SPPH extends SPP {
 	protected double calBackwardFactor(final VarValue var, final TraceNode node) {
 		node.reason = StepExplaination.COST;
 		if (var.isConditionResult()) {
-			return this.calHeuristicFactor(var, node);
+//			return this.calHeuristicFactor(var, node);
+			return 1.0d;
 		} else if (!this.isComputational(node)) {
 			return 1.0d;
 		} else {
@@ -41,11 +43,10 @@ public class SPPH extends SPP {
 	
 	protected double calHeuristicFactor(final VarValue var, final TraceNode node) {
 		double totalCost = node.getReadVariables().stream().mapToDouble(readVar -> readVar.computationalCost).sum();
-		totalCost += node.getControlDominator() == null ? 0.0d : node.getControlDominator().getConditionResult().computationalCost;
 		double factor = 1 - node.computationCost;
 		if (totalCost == 0.0d) {
-			final int varCount = node.getControlDominator() == null ? node.getReadVariables().size() : node.getReadVariables().size()+1;
-			factor *= 1 / varCount;
+			final int varCount = node.getReadVariables().size()+1;
+			factor *= 1.0d / varCount;
 		} else {
 			factor *= var.computationalCost / totalCost;
 		}

@@ -2,6 +2,7 @@ package microbat.views;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -9,9 +10,11 @@ import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseAdapter;
@@ -24,19 +27,21 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
-import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.FeedbackPath;
+import microbat.debugpilot.propagation.spp.StepExplaination;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;
 import microbat.util.MicroBatUtil;
-import microbat.views.listeners.PathViewSelectionListener;
-import microbat.views.providers.ActionPathContentProvider;
-import microbat.views.providers.FeedbackNodePairLabelProvider;
+import microbat.views.utils.contentprovider.ActionPathContentProvider;
+import microbat.views.utils.lableprovider.FeedbackNodePairLabelProvider;
+import microbat.views.utils.listeners.PathViewSelectionListener;
 
 // todo: node: feedback -- ui
 public class PathView extends ViewPart {
@@ -52,6 +57,8 @@ public class PathView extends ViewPart {
 	private PathViewSelectionListener selectionListener;
 
 	private String previousSearchExpression = "";
+	
+	protected List<Button> checkButtons = new ArrayList<>();
 	
 	public PathView() {
 		this.selectionListener = new PathViewSelectionListener(this);
@@ -111,7 +118,6 @@ public class PathView extends ViewPart {
 			this.buggyTraceView.jumpToNode(node);
 		}
 	}
-	
 	protected void addSearchTextListener(final Text searchText) {
 		searchText.addKeyListener(new KeyAdapter() {
 			@Override
@@ -149,10 +155,10 @@ public class PathView extends ViewPart {
 		table = new TableViewer(tableContainer, SWT.BORDER | 
 					SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
 		String[] headers = {
-			"Path", "TraceNode", "Feedback", "Reason"
+			"Path", "TraceNode", "Prediction", "Confirm"
 		};
 		int[] weights = {
-			100, 100, 300, 300	
+			100, 100, 400, 100	
 		};
 		ArrayList<Function<ActionPathContentProvider.ContentWrapper, String>> functions
 		 = new ArrayList<>();
@@ -162,13 +168,13 @@ public class PathView extends ViewPart {
 			final UserFeedback feedback = cw.getNode().getFirstFeedback();
 			switch (feedback.getFeedbackType()) {
 			case UserFeedback.CORRECT:
-				return "Correct";
+				return "This step is correct";
 			case UserFeedback.WRONG_PATH:
-				return "Wrong path";
+				return "This step should not be executed";
 			case UserFeedback.WRONG_VARIABLE_VALUE:
-				return "Wrong variable of " + feedback.getOption().getReadVar().getVarName();
+				return "Wrong variable: " + feedback.getOption().getReadVar().getVarName();
 			case UserFeedback.ROOTCAUSE:
-				return "Root cause";
+				return "This step is the root cause";
 			case UserFeedback.UNCLEAR:
 				return "Unclear";
 			}
@@ -176,7 +182,7 @@ public class PathView extends ViewPart {
 		});
 		
 		functions.add(cw -> {
-			return "" + cw.getNode().getNode().reason;
+			return cw.getNode().getNode().reason.equals(StepExplaination.USRE_CONFIRMED) ? "Yes" : "No";
 		});
 		assert(functions.size() == headers.length);
 		assert(weights.length == headers.length);
@@ -195,6 +201,33 @@ public class PathView extends ViewPart {
 					return "";
 				}
 			});
+//			if (i == functions.size()-1) {
+//				col.setLabelProvider(new ColumnLabelProvider() {
+//					@Override
+//					public void update(ViewerCell cell) {
+//						Button button = new Button((Composite) cell.getViewerRow().getControl(), SWT.CHECK);
+////						checkButtons.add(button);
+//						TableItem item = (TableItem) cell.getItem();
+//						TableEditor editor = new TableEditor(item.getParent());
+//						editor.grabHorizontal = true;
+//						editor.grabVertical = true;
+//						editor.horizontalAlignment = SWT.CENTER;
+//						editor.setEditor(button, item, cell.getColumnIndex());
+//						editor.layout();
+//					}
+//				});
+//			} else {
+//				col.setLabelProvider(new ColumnLabelProvider() {
+//					@Override
+//					public String getText(Object object) {
+//						if (object instanceof ActionPathContentProvider.ContentWrapper) {
+//							ActionPathContentProvider.ContentWrapper cw = (ActionPathContentProvider.ContentWrapper) object;
+//							return functions.get(j).apply(cw);
+//						}
+//						return "";
+//					}
+//				});
+//			}
 			tcl.setColumnData(col.getColumn(), new ColumnWeightData(weights[i]));
 		}
 //		table.setLabelProvider(new FeedbackNodePairLabelProvider());
@@ -225,12 +258,17 @@ public class PathView extends ViewPart {
 	public void updateData() {
 //		listViewer.setInput(actionPath);
 //		listViewer.refresh();
+		this.checkButtons.clear();
 		table.setInput(actionPath);
 		table.refresh();
 	}
 	
 	public void setBuggyView(TraceView view) {
 		this.buggyTraceView = view;
+	}
+	
+	public void getCheckedElement() {
+		System.out.println(this.checkButtons.size());
 	}
 	
 }

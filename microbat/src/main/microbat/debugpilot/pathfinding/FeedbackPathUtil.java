@@ -2,7 +2,7 @@ package microbat.debugpilot.pathfinding;
 
 import java.util.Objects;
 
-import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;

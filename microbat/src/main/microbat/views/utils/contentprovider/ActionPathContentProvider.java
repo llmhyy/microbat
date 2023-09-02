@@ -1,4 +1,4 @@
-package microbat.views.providers;
+package microbat.views.utils.contentprovider;
 
 import java.util.Arrays;
 
@@ -9,7 +9,7 @@ import org.eclipse.jface.viewers.Viewer;
 
 import com.ibm.wala.util.collections.Pair;
 
-import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.FeedbackPath;
 
 public class ActionPathContentProvider implements IStructuredContentProvider {

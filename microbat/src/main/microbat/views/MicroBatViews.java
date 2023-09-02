@@ -23,6 +23,17 @@ public class MicroBatViews {
 		return view;
 	}
 	
+	public static DebugPilotFeedbackView getDebugPilotFeedbackView() {
+		try {
+			DebugPilotFeedbackView view = (DebugPilotFeedbackView) PlatformUI.getWorkbench().
+					getActiveWorkbenchWindow().getActivePage().showView(DebugPilotFeedbackView.ID);
+			return view;
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	public static TraceView getTraceView(){
 		TraceView view = null;
 		try {

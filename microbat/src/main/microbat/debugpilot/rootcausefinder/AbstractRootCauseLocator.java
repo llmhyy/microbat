@@ -3,7 +3,7 @@ package microbat.debugpilot.rootcausefinder;
 import java.util.Collection;
 import java.util.List;
 
-import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.model.trace.TraceNode;
 
 public abstract class AbstractRootCauseLocator implements RootCauseLocator {

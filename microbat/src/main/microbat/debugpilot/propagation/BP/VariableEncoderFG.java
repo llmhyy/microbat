@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import debuginfo.NodeFeedbackPair;
+import microbat.debugpilot.NodeFeedbackPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.propagation.BP.constraint.BitRepresentation;
 import microbat.debugpilot.propagation.BP.constraint.Constraint;
 import microbat.debugpilot.propagation.BP.constraint.PriorConstraint;
@@ -21,7 +22,6 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.UserFeedback;
-import debuginfo.NodeFeedbacksPair;
 
 /**
  * Variable encoder calculate the probability of correctness of variables

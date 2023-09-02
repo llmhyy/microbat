@@ -8,7 +8,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
-import debuginfo.DebugInfo;
+import microbat.debugpilot.DebugPilotInfo;
 
 public class StopDebugPilotHandler extends AbstractHandler {
 
@@ -17,7 +17,7 @@ public class StopDebugPilotHandler extends AbstractHandler {
 		Job job = new Job("DebugPilot") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				DebugInfo.setStop(true);
+				DebugPilotInfo.getInstance().setStop(true);
 				return Status.OK_STATUS;
 			}
 		};

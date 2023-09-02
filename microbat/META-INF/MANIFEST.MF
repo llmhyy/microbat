@@ -44,7 +44,6 @@ Bundle-ClassPath: .,
  lib/jgrapht-io-1.5.2.jar,
  lib/jheaps-0.14.jar
 Export-Package: 
- debuginfo,
  microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,org.eclipse.ui.plugin",
  microbat.agent,
  microbat.algorithm.graphdiff;uses:="microbat.model.value",

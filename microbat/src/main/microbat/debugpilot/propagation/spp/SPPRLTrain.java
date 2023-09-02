@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.debugpilot.settings.PropagatorSettings;
 import microbat.log.Log;

@@ -17,13 +17,13 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
-import debuginfo.NodeFeedbackPair;
-import debuginfo.NodeFeedbacksPair;
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
+import microbat.debugpilot.NodeFeedbackPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.debugpilot.propagation.spp.StepExplaination;
 import microbat.model.AttributionVar;

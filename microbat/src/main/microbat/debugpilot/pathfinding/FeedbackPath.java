@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import debuginfo.NodeFeedbacksPair;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.evaluation.Feedback;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
@@ -255,7 +255,18 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 	}
 	
 	public void removePathAfterNodeOrder(final int nodeOrder) {
-		this.path = this.path.stream().filter(nodeFeedbacksPair -> nodeFeedbacksPair.getNode().getOrder() <= nodeOrder).collect(Collectors.toList());
+		boolean nodeOrderInPath = this.path.stream().anyMatch(pair -> pair.getNode().getOrder() == nodeOrder);
+		if (!nodeOrderInPath) {
+			throw new IllegalArgumentException("Given node order: " + nodeOrder + " does not lies in path.");
+		}
+		List<NodeFeedbacksPair> newPath = new ArrayList<>();
+		for (NodeFeedbacksPair pair : this.path) {
+			newPath.add(pair);
+			if (pair.getNode().getOrder() == nodeOrder) {
+				break;
+			}
+		}
+		this.path = newPath;
 	}
 	
 	public void removePathBeforeNode(final TraceNode node) { 
@@ -263,6 +274,20 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 	}
 	
 	public void removePathBeforeNodeOrder(final int nodeOrder) {
-		this.path = this.path.stream().filter(nodeFeedbacksPair -> nodeFeedbacksPair.getNode().getOrder() >= nodeOrder).collect(Collectors.toList());
+		boolean nodeOrderInPath = this.path.stream().anyMatch(pair -> pair.getNode().getOrder() == nodeOrder);
+		if (!nodeOrderInPath) {
+			throw new IllegalArgumentException("Given node order: " + nodeOrder + " does not lies in path.");
+		}
+		List<NodeFeedbacksPair> newPath = new ArrayList<>();
+		boolean startLoading = false;
+		for (NodeFeedbacksPair pair : this.path) {
+			if (pair.getNode().getOrder() == nodeOrder) {
+				startLoading = true;
+			}
+			if (startLoading) {
+				newPath.add(pair);
+			}
+		}
+		this.path = newPath;
 	}
 }

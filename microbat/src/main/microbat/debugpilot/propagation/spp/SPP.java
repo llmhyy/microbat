@@ -9,10 +9,10 @@ import java.util.stream.Stream;
 
 import org.apache.poi.util.SystemOutLogger;
 
-import debuginfo.NodeFeedbacksPair;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.propagation.ProbabilityPropagator;
 import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.debugpilot.settings.PropagatorSettings;
@@ -96,14 +96,14 @@ public abstract class SPP implements ProbabilityPropagator {
 		for (int order = this.slicedTrace.size()-1; order>=0; order--) {
 			final TraceNode node = this.slicedTrace.get(order);
 			
-			if (node.getOrder() == 124) {
-				System.out.println();
-			}
 			if (this.isFeedbackGiven(node)) {
 				node.reason = "User Confirmed";
 				continue;
 			}
 			
+			if (node.getOrder() == 540) {
+				System.out.println();
+			}
 			// Inherit backward probability
 			this.inheritBackwardProp(node);
 			
@@ -212,6 +212,9 @@ public abstract class SPP implements ProbabilityPropagator {
 				writtenVar.setBackwardProb(PropProbability.ONE);
 			} else {
 				if (node.isBranch() && writtenVar.isConditionResult()) {
+					if (node.getOrder() == 129) {
+						System.out.println();
+					}
 					writtenVar.setBackwardProb(writtenVar.getConditionBackwardProb() == null ? 
 							PropProbability.UNCERTAIN :
 							writtenVar.getConditionBackwardProb().stream().mapToDouble(Double::doubleValue).average().orElse(PropProbability.UNCERTAIN));

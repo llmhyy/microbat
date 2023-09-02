@@ -1,4 +1,4 @@
-package debuginfo;
+package microbat.debugpilot;
 
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
