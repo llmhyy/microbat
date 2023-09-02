@@ -25,8 +25,8 @@ public class SPPCF extends SPPH {
 			return super.calBackwardFactor(var, node);
 		} else if (var.isConditionResult()) {
 			return this.calFactor(node, var);
-		} else if (!this.isComputational(node)) {
-			return 1.0d;
+//		} else if (!this.isComputational(node)) {
+//			return 1.0d;
 		} else {
 			return this.calFactor(node, var);
 		}
@@ -91,6 +91,14 @@ public class SPPCF extends SPPH {
 	}
 	
 	protected String genReason(final List<ModelPrediction> predictions) {
+		// Align the index of predictions and corresponding feedback
+		List<NodeFeedbacksPair> detailedFeedbacksPairs = new ArrayList<>();
+		for (NodeFeedbacksPair pair : this.feedbackRecords) {
+			for (int i=0; i<pair.getFeedbacks().size(); i++) {
+				detailedFeedbacksPairs.add(pair);
+			}
+		}
+		
 		List<Integer> suspicionIdxes = IntStream.range(0, predictions.size())
                 .filter(i -> predictions.get(i) == ModelPrediction.SUSPICION)
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
@@ -101,18 +109,15 @@ public class SPPCF extends SPPH {
 		if (suspicionIdxes.isEmpty() && nonSupspicionIdxes.isEmpty()) {
 			return StepExplaination.COST;
 		} else if (nonSupspicionIdxes.isEmpty()) {
-			final NodeFeedbacksPair pair = this.feedbackRecords.get(suspicionIdxes.get(0));
+			final NodeFeedbacksPair pair = detailedFeedbacksPairs.get(suspicionIdxes.get(0));
 			return StepExplaination.REF(pair.getNode().getOrder());
 		} else if (suspicionIdxes.isEmpty()) {
-			final NodeFeedbacksPair pair = this.feedbackRecords.get(nonSupspicionIdxes.get(0));
+			final NodeFeedbacksPair pair = detailedFeedbacksPairs.get(nonSupspicionIdxes.get(0));
 			return StepExplaination.REF(pair.getNode().getOrder());
 		} else {
-			final NodeFeedbacksPair pair_1 = this.feedbackRecords.get(suspicionIdxes.get(0));
-			final NodeFeedbacksPair pair_2 = this.feedbackRecords.get(nonSupspicionIdxes.get(0));
+			final NodeFeedbacksPair pair_1 = detailedFeedbacksPairs.get(suspicionIdxes.get(0));
+			final NodeFeedbacksPair pair_2 = detailedFeedbacksPairs.get(nonSupspicionIdxes.get(0));
 			return StepExplaination.REF(pair_1.getNode().getOrder(), pair_2.getNode().getOrder());
 		}
 	}
-	
-	
-
 }

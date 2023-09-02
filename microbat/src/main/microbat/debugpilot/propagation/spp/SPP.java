@@ -101,9 +101,6 @@ public abstract class SPP implements ProbabilityPropagator {
 				continue;
 			}
 			
-			if (node.getOrder() == 540) {
-				System.out.println();
-			}
 			// Inherit backward probability
 			this.inheritBackwardProp(node);
 			

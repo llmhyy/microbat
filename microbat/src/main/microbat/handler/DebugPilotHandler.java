@@ -17,11 +17,12 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.internal.about.AboutUtils;
 
-import microbat.debugpilot.DebugPilotInfo;
 import microbat.debugpilot.DebugPilot;
+import microbat.debugpilot.DebugPilotInfo;
 import microbat.debugpilot.NodeFeedbacksPair;
+import microbat.debugpilot.fsc.AbstractDebugPilotState;
+import microbat.debugpilot.fsc.DebugPilotFiniteStateMachine;
 import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.debugpilot.propagation.spp.StepExplaination;
 import microbat.debugpilot.settings.DebugPilotSettings;
@@ -32,25 +33,19 @@ import microbat.model.value.VarValue;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
-import microbat.views.DebugFeedbackView;
-import microbat.views.DebugPilotFeedbackView;
 import microbat.views.MicroBatViews;
 import microbat.views.PathView;
 import microbat.views.TraceView;
 
 public class DebugPilotHandler extends AbstractHandler {
-	
+
 	protected TraceView buggyView;
+	
 	protected PathView pathView;
 	
-	protected Stack<NodeFeedbacksPair> userFeedbackRecords = new Stack<>();
+	protected Trace trace;
+	
 	protected DebugPilotInfo info = DebugPilotInfo.getInstance();
-	
-	protected final static String DEBUGPILOT_STOP_MESSAGE = "DebugPilot stop";
-	
-	public DebugPilotHandler() {
-
-	}
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -65,10 +60,9 @@ public class DebugPilotHandler extends AbstractHandler {
 		job.schedule();
 		return null;
 	}
-
 	
 	protected void execute() {
-
+		
 		if (!this.isDebugPilotReady()) {
 			return;
 		}
@@ -92,109 +86,25 @@ public class DebugPilotHandler extends AbstractHandler {
 
 		settings.setTrace(this.buggyView.getTrace());
 		
+		NodeFeedbacksPair initFeedback;
 		if (outputNode.isReadVariablesContains(wrongVar.getVarID())) {
 			UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 			feedback.setOption(new ChosenVariableOption(wrongVar, null));
-			userFeedbackRecords.add(new NodeFeedbacksPair(outputNode, feedback));
+			initFeedback = new NodeFeedbacksPair(outputNode, feedback);
 		} else {
 			UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_PATH);
-			userFeedbackRecords.add(new NodeFeedbacksPair(outputNode, feedback));
+			initFeedback = new NodeFeedbacksPair(outputNode, feedback);
 		}
 		
 		// Initialize DebugPilot
 		final DebugPilot debugPilot = new DebugPilot(settings);
+		final DebugPilotFiniteStateMachine fsm = new DebugPilotFiniteStateMachine(debugPilot);
+		fsm.setState(new PropagationState(fsm, initFeedback));
 		
-		boolean isEnd = false;
-		while (!DebugPilotInfo.getInstance().isStop() && !isEnd) {
-			Log.printMsg(getClass(), "---------------------------");
-			// Update feedback
-			debugPilot.updateFeedbacks(this.userFeedbackRecords);
-			this.userFeedbackRecords.clear();
-			
-			// Multi-Slicing 
-			debugPilot.multiSlicing();
-			
-			// Probability Probability
-			Log.printMsg(this.getClass(), "Propagating probability ...");
-			long startTime = System.currentTimeMillis();
-			debugPilot.propagate();
-			long endTime = System.currentTimeMillis();
-			long duration = (endTime - startTime) / 1000;
-			Log.printMsg(this.getClass(), "Propagation Duration: " + duration + " s");
-			
-			Log.printMsg(this.getClass(), "Locating root cause ...");
-			TraceNode rootCause = debugPilot.locateRootCause();
-			
-			Log.printMsg(this.getClass(), "Constructing path to root cause ...");
-			final FeedbackPath proposedPath =  debugPilot.constructPath(rootCause);
-			
-			// Update path view
-			this.updatePathView(proposedPath);
-			Log.printMsg(getClass(), "Please give you feedback on path view");
-			
-			// Ensure user give feedback on path
-			NodeFeedbacksPair correctingFeedback = null;
-			while (correctingFeedback == null) {
-				correctingFeedback = this.waitForFeedback();
-				if (correctingFeedback == null) {
-					Log.printMsg(this.getClass(), DebugPilotHandler.DEBUGPILOT_STOP_MESSAGE);
-					return;
-				}
-				final TraceNode userNode = correctingFeedback.getNode();
-				if (!proposedPath.contains(userNode)) {
-					correctingFeedback = null;
-					this.popErrorDialog("Please give the feedback on node that inside the path. Node: " + userNode.getOrder() + " is not lie in path.");
-				}
-			}
-			
-			
-			// Handle the case that root cause is reach
-			if (correctingFeedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
-				proposedPath.replacePair(correctingFeedback);
-				proposedPath.removePathAfterNode(correctingFeedback.getNode());
-				this.updatePathView(proposedPath);
-				return;
-			}
-			
-			// Update feedback accordingly
-			int pathIdx = 0;
-			while (pathIdx < proposedPath.getLength()) {
-				final NodeFeedbacksPair proposedPair = proposedPath.get(pathIdx);
-				final TraceNode proposedNode = proposedPair.getNode();
-				final TraceNode userNode = correctingFeedback.getNode();
-				if (!proposedNode.equals(userNode)) {
-					this.userFeedbackRecords.add(proposedPair);
-					pathIdx += 1;
-				} else {
-					/*
-					 * Handle three cases correspondingly
-					 * 1. CORRECT
-					 * 		Omission bug occur
-					 * 2. Invalid feedback (cannot find next node in trace based on give feedback)
-					 * 		Omission bug
-					 * 3. Valid feedback
-					 * 		Record it in the stack
-					 */
-					if (correctingFeedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
-						NodeFeedbacksPair previousFeedbacksPair = this.userFeedbackRecords.peek();
-						proposedPath.replacePair(correctingFeedback);
-						this.handleOmissionBug(userNode, previousFeedbacksPair.getNode(), previousFeedbacksPair.getFirstFeedback(), proposedPath);
-						isEnd = true;
-						break;
-					} else if (!this.canLeadToNextNode(correctingFeedback)) {
-						Log.printMsg(this.getClass(), "Cannot find next node. Omission bug detected");
-						NodeFeedbacksPair previousFeedbacksPair = this.userFeedbackRecords.peek();
-						this.handleOmissionBug(userNode, previousFeedbacksPair.getNode(), previousFeedbacksPair.getFirstFeedback(), proposedPath);
-						isEnd = true;
-						break;
-					} else { 
-						Log.printMsg(this.getClass(), "Wong feedback on path: " + pathIdx + " node: " + userNode.getOrder() +  " , start propagation again");
-						this.userFeedbackRecords.add(correctingFeedback);
-						break;
-					}
-				}
-			}
+		while (!fsm.isEnd()) {
+			fsm.handleFeedback();
 		}
+		
 	}
 	
 	protected void setup() {
@@ -204,38 +114,83 @@ public class DebugPilotHandler extends AbstractHandler {
 				buggyView = MicroBatViews.getTraceView();
 				pathView = MicroBatViews.getPathView();
 				pathView.setBuggyView(buggyView);
+				trace = buggyView.getTrace();
 			}
 		});
 	}
 	
-	protected boolean isOuputReady() {
-		return !DebugPilotInfo.getInstance().getOutputs().isEmpty();
+	protected void updatePathView(final FeedbackPath path) {
+		this.pathView.setActionPath(path);
+		this.updateView();
 	}
 	
-	protected TraceNode getOutputNode(final VarValue outputVar) {
-		final Trace trace = this.buggyView.getTrace();
-		for (int order = trace.size(); order>=0; order--) {
-			TraceNode node = trace.getTraceNode(order);
-			final String varID = outputVar.getVarID();
-			if (node.isReadVariablesContains(varID) || node.isWrittenVariablesContains(varID)) {
-				return node;
+	protected void updateView() {
+		Display.getDefault().syncExec(new Runnable() {
+			@Override
+			public void run() {
+				buggyView.updateData();					
+				pathView.updateData();					
+			}
+		});
+	}
+	
+	protected NodeFeedbacksPair waitForFeedback(FeedbackPath path) {
+		final DebugPilotInfo info = DebugPilotInfo.getInstance();
+		boolean isValidFeedback = false;
+		NodeFeedbacksPair userPair = null;
+		while (!isValidFeedback) {
+			info.waifForFeedbacksPairOrStop();
+			userPair = info.getNodeFeedbackPair();
+			info.clearNodeFeedbackPairs();
+			
+			if (userPair == null) {
+				// Null is also a valid feedback indicating stop of progress
+				break;
+			}
+			isValidFeedback = this.checkIsValidFeedback(userPair, path);
+		}
+		return userPair;
+	}
+	
+	protected boolean checkIsValidFeedback(final NodeFeedbacksPair pair, final FeedbackPath path) {
+		// Feedback is invalid when there are conflicting feedback
+		Objects.requireNonNull(pair, Log.genMsg(getClass(), "Given feedbacksPair cannot not null"));
+		if (pair.getFeedbacks().size() == 1) {
+			return true;
+		}
+		
+		String feedbackType = null;
+		for (UserFeedback feedback : pair.getFeedbacks()) {
+			if (feedbackType == null) {
+				feedbackType = feedback.getFeedbackType();
+			} else if (!feedbackType.equals(feedback.getFeedbackType())) {
+				this.popErrorDialog("You give conflicting feedback on node " + pair.getNode().getOrder());
+				return false;
 			}
 		}
-		return null;
+		
+		if (!path.contains(pair.getNode())) {
+			this.popErrorDialog("Please give the feedback on node that inside the path. Node: " + pair.getNode().getOrder() + " is not lie in path.");
+			return false;
+		}
+		
+		return true;
 	}
-	
+
+	/**
+		 * DebugPilot is ready when: <br>
+		 * <br>
+		 * 1. Trace is generated <br>
+		 * 2. DebugPilot info is ready <br>
+		 * <br>
+		 * Info is ready when user indicate either wrong variable or output node is in wrong branch <br>
+		 * <br>
+		 * If output node is in wrong branch, then the wrong variable is be empty<br>
+		 * otherwise, there must be at least one wrong variable<br>
+		 * 
+	 * @return True if debug pilot is ready
+	 */
 	protected boolean isDebugPilotReady() {
-		/*
-		 * DebugPilot is ready when:
-		 * 
-		 * 1. Trace is generated
-		 * 2. DebugPilot info is ready
-		 * 
-		 * Info is ready when user indicate either wrong variable or output node is in wrong branch
-		 * 
-		 * If output node is in wrong branch, then the wrong variable is be empty
-		 * otherwise, there must be at least one wrong variable
-		 */
 		final Trace buggyTrace = this.buggyView.getTrace();
 		if (buggyTrace == null) {
 			this.popErrorDialog("Trace is not generated.");
@@ -263,52 +218,18 @@ public class DebugPilotHandler extends AbstractHandler {
 		return true;
 	}
 	
-	protected void updateView() {
-		Display.getDefault().syncExec(new Runnable() {
-			@Override
-			public void run() {
-				buggyView.updateData();					
-				pathView.updateData();					
-			}
+	protected void popErrorDialog(final String errorMsg) {
+		Display.getDefault().asyncExec(() -> {
+			Shell shell = Display.getCurrent().getActiveShell();
+			MessageDialog.openError(shell, "DebugPilot Error", errorMsg);
 		});
 	}
 	
-	protected NodeFeedbacksPair waitForFeedback() {
-		final DebugPilotInfo info = DebugPilotInfo.getInstance();
-		boolean isValidFeedback = false;
-		NodeFeedbacksPair userPair = null;
-		while (!isValidFeedback) {
-			info.waifForFeedbacksPairOrStop();
-			userPair = info.getNodeFeedbackPair();
-			info.clearNodeFeedbackPairs();
-			
-			if (userPair == null) {
-				// Null is also a valid feedback indicating stop of progress
-				break;
-			}
-			isValidFeedback = this.checkIsValidFeedback(userPair);
-		}
-		return userPair;
-	}
-	
-	protected boolean checkIsValidFeedback(final NodeFeedbacksPair pair) {
-		// Feedback is invalid when there are conflicting feedback
-		Objects.requireNonNull(pair, Log.genMsg(getClass(), "Given feedbacksPair cannot not null"));
-		if (pair.getFeedbacks().size() == 1) {
-			return true;
-		}
-		
-		String feedbackType = null;
-		for (UserFeedback feedback : pair.getFeedbacks()) {
-			if (feedbackType == null) {
-				feedbackType = feedback.getFeedbackType();
-			} else if (!feedbackType.equals(feedback.getFeedbackType())) {
-				this.popErrorDialog("You give conflicting feedback on node " + pair.getNode().getOrder());
-				return false;
-			}
-		}
-		
-		return true;
+	protected void popInformationDialog(final String message) {
+		Display.getDefault().asyncExec(() -> {
+			Shell shell = Display.getCurrent().getActiveShell();
+			MessageDialog.openInformation(shell, "DebugPilot Information", message);
+		});
 	}
 	
 	protected boolean canLeadToNextNode(final NodeFeedbacksPair pair) {
@@ -321,170 +242,297 @@ public class DebugPilotHandler extends AbstractHandler {
 		return true;
 	}
 	
-	protected void handleOmissionBug(final TraceNode startNode, final TraceNode endNode, final UserFeedback userFeedback, final FeedbackPath feedbackPath) {
-		Objects.requireNonNull(startNode, Log.genMsg(this.getClass(), "Start node cannot be null"));
-		Objects.requireNonNull(endNode, Log.genMsg(this.getClass(), "End node cannot be null"));
-		Objects.requireNonNull(userFeedback, Log.genMsg(this.getClass(), "User feedback cannot be null"));
-		Objects.requireNonNull(feedbackPath, Log.genMsg(this.getClass(), "Feedback path cannot be null"));
+	protected class PropagationState extends AbstractDebugPilotState {
+
+		protected Stack<NodeFeedbacksPair> userFeedbackRecords;
 		
-		feedbackPath.removePathAfterNode(startNode);
-		this.updateOmissionNodeReason(startNode, endNode, userFeedback);
+		public PropagationState(DebugPilotFiniteStateMachine stateMachine) {
+			super(stateMachine);
+			this.userFeedbackRecords = new Stack<NodeFeedbacksPair>();
+		}
 		
-		System.out.println("Omission bug detected ...");
-		final int startOrder = startNode.getOrder();
-		final int endOrder = endNode.getOrder();
-		List<TraceNode> candidateNodes = this.buggyView.getTrace().getExecutionList().stream().filter(node -> node.getOrder() > startOrder && node.getOrder() < endOrder).toList();
+		public PropagationState(DebugPilotFiniteStateMachine stateMachine, final NodeFeedbacksPair initFeedbacksPair) {
+			this(stateMachine);
+			this.userFeedbackRecords.add(initFeedbacksPair);
+		}
 		
-		if (candidateNodes.isEmpty()) {
-			this.reportOmissionBug(startNode, endNode, userFeedback);
-		} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-			this.handleControlOmissionBug(candidateNodes, feedbackPath);
-		} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-			this.handleDataOmissionBug(candidateNodes, userFeedback.getOption().getReadVar(), feedbackPath);
-		} else {
-			throw new IllegalArgumentException(Log.genMsg(getClass(), "Unhandled feedback type: " + userFeedback));
+		public PropagationState(DebugPilotFiniteStateMachine stateMachine, Stack<NodeFeedbacksPair> userFeedbackRecords) {
+			super(stateMachine);
+			this.userFeedbackRecords = userFeedbackRecords;
+		}
+
+		@Override
+		public void handleFeedback() {
+			final DebugPilot debugPilot = this.stateMachine.getDebugPilot();
+			debugPilot.updateFeedbacks(this.userFeedbackRecords);  
+			debugPilot.multiSlicing();
+			debugPilot.propagate();
+			
+			TraceNode rootCause = debugPilot.locateRootCause();
+			FeedbackPath feedbackPath =  debugPilot.constructPath(rootCause);
+			updatePathView(feedbackPath);
+
+			NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
+			if (userFeedbacksPair == null) {
+				// User click the stop button
+				this.stateMachine.setState(new EndState(this.stateMachine));
+			} else if (userFeedbacksPair.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
+				// User find the root cause
+				feedbackPath.replacePair(userFeedbacksPair);
+				feedbackPath.removePathAfterNode(userFeedbacksPair.getNode());
+				updatePathView(feedbackPath);
+				this.stateMachine.setState(new EndState(this.stateMachine));
+			} else if (userFeedbacksPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
+				// Omission bug detected
+				final int index = feedbackPath.getIndexOf(userFeedbacksPair.getNode());
+				NodeFeedbacksPair prevFeedbacksPair = feedbackPath.get(index-1);
+				feedbackPath.replacePair(userFeedbacksPair);
+				if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+					this.stateMachine.setState(new ControlOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
+				} else if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+					this.stateMachine.setState(new DataOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
+				} else {
+					throw new RuntimeException("Unhandled feedback");
+				}
+			} else if (!canLeadToNextNode(userFeedbacksPair)) {
+				final int index = feedbackPath.getIndexOf(userFeedbacksPair.getNode());
+				NodeFeedbacksPair prevFeedbacksPair = feedbackPath.get(index-1);
+				if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+					this.stateMachine.setState(new ControlOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
+				} else if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+					this.stateMachine.setState(new DataOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
+				} else {
+					throw new RuntimeException("Unhandled feedback");
+				}
+			} else {
+				Stack<NodeFeedbacksPair> newFeedbackRecords = this.constructFeedbackRecords(userFeedbacksPair, feedbackPath);
+				this.stateMachine.setState(new PropagationState(this.stateMachine, newFeedbackRecords));
+			}
 		}
 	}
 	
-	protected void handleControlOmissionBug(final List<TraceNode> rootCauseCandidates, final FeedbackPath feedbackPath) {
-		List<TraceNode> sortedList = this.sortNodeList(rootCauseCandidates);
-		int left = 0;
-		int right = sortedList.size();
-		while (left <= right) {
-			int mid = left + (right - left) / 2;
-			final TraceNode node = sortedList.get(mid);
-			node.reason = StepExplaination.BINARY_SEARCH;
-			feedbackPath.addPairByOrder(node, new UserFeedback(UserFeedback.ROOTCAUSE));
-			this.pathView.setActionPath(feedbackPath);
-			this.updateView();
-			System.out.println("Proposed root cause is node: " + node.getOrder() + ". If you does not agree, please give feedback on this node.");
-			NodeFeedbacksPair pair = this.waitForFeedback();
-			if (pair == null) {
-				Log.printMsg(this.getClass(), DebugPilotHandler.DEBUGPILOT_STOP_MESSAGE);
-				return;
+	protected class EndState extends AbstractDebugPilotState {
+
+		public EndState(DebugPilotFiniteStateMachine stateMachine) {
+			super(stateMachine);
+		}
+
+		@Override
+		public void handleFeedback() {
+			this.stateMachine.setEnd(true);
+		}
+	}
+	
+	protected abstract class OmissionState extends AbstractDebugPilotState {
+
+		protected final FeedbackPath initFeedbackPath;
+		protected final TraceNode startNode;
+		protected final TraceNode endNode;
+		protected final UserFeedback prevFeedback;
+		protected final Trace trace;
+		
+		public OmissionState(DebugPilotFiniteStateMachine stateMachine, final FeedbackPath path, final TraceNode startNode, final TraceNode endNode, final UserFeedback prevUserFeedback, final Trace trace) {
+			super(stateMachine);
+			this.initFeedbackPath = path;
+			this.startNode = startNode;
+			this.endNode = endNode;
+			this.prevFeedback = prevUserFeedback;
+			this.trace = trace;
+		}
+		
+		@Override
+		public void handleFeedback() {
+			initFeedbackPath.removePathAfterNode(this.startNode);
+		}
+		
+		protected boolean handleFeedback(final NodeFeedbacksPair feedbacksPair) {
+			if (feedbacksPair == null) {
+				this.stateMachine.setState(new EndState(this.stateMachine));
+				return true;
 			}
 			
-			if (pair.getFeedbackType().equals(UserFeedback.CORRECT)) {
-				left = mid+1;
-			} else {
-				right = mid-1;
+			if (feedbacksPair.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
+				this.stateMachine.setState(new EndState(this.stateMachine));
+				return true;
 			}
-			node.reason = StepExplaination.USRE_CONFIRMED;
-			feedbackPath.replacePair(pair);
-			this.updatePathView(feedbackPath);
+			
+			final TraceNode node = feedbacksPair.getNode();
+			if (this.initFeedbackPath.contains(node)) {
+				final String feedbackType = feedbacksPair.getFeedbackType();
+				
+				if (feedbackType.equals(UserFeedback.WRONG_PATH) || feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+					Stack<NodeFeedbacksPair> newFeedbackRecords = this.constructFeedbackRecords(feedbacksPair, this.initFeedbackPath);
+					this.stateMachine.setState(new PropagationState(this.stateMachine, newFeedbackRecords));
+					return true;
+				}
+				
+				if (feedbackType.equals(UserFeedback.CORRECT)) {
+					final int index = this.initFeedbackPath.getIndexOf(node);
+					NodeFeedbacksPair prevFeedbacksPair = this.initFeedbackPath.get(index-1);
+					if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+						this.stateMachine.setState(new ControlOmissionState(stateMachine, initFeedbackPath, node, prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), trace));
+					} else if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+						this.stateMachine.setState(new DataOmissionState(stateMachine, initFeedbackPath, node, prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), trace));
+					} else {
+						throw new RuntimeException("Unhandled feedback");
+					}
+					return true;
+				}
+			}
+			
+			return false;
 		}
-		System.out.println("No more trace node can be recommended");
+		
+		protected List<TraceNode> sortNodeList(final List<TraceNode> list) {
+			return list.stream().sorted(
+					new Comparator<TraceNode>() {
+						@Override
+						public int compare(TraceNode node1, TraceNode node2) {
+							return node1.getOrder() - node2.getOrder();
+						}
+					}
+				).toList();
+		}
 	}
 	
-	protected void updatePathView(final FeedbackPath path) {
-		this.pathView.setActionPath(path);
-		this.updateView();
-	}
-	
-	protected void handleDataOmissionBug(final List<TraceNode> rootCauseCandidates, final VarValue wrongVar, final FeedbackPath feedbackPath) {
-		List<TraceNode> sortedCandidateList = this.sortNodeList(rootCauseCandidates);
-		List<TraceNode> relatedCandidateList = sortedCandidateList.stream().filter(node -> node.isReadVariablesContains(wrongVar.getVarID())).toList();
-		int startOrder = sortedCandidateList.get(0).getOrder();
-		int endOrder = sortedCandidateList.get(sortedCandidateList.size()-1).getOrder();
-		for (TraceNode node : relatedCandidateList) {
-			node.reason = StepExplaination.RELATED;
-			feedbackPath.addPairByOrder(node, new UserFeedback(UserFeedback.UNCLEAR));
-			this.updatePathView(feedbackPath);
-			System.out.println("Please give a feedback on node: " + node.getOrder());
-			NodeFeedbacksPair pair = this.waitForFeedback();
-			if (pair == null) {
-				Log.printMsg(this.getClass(), DebugPilotHandler.DEBUGPILOT_STOP_MESSAGE);
-				return;
-			}
-			feedbackPath.replacePair(pair);
-			if (pair.getFeedbackType().equals(UserFeedback.CORRECT)) {
-				startOrder = pair.getNode().getOrder();
+	protected class ControlOmissionState extends OmissionState {
+
+		public ControlOmissionState(DebugPilotFiniteStateMachine stateMachine, FeedbackPath path, TraceNode startNode,
+				TraceNode endNode, UserFeedback prevUserFeedback, Trace trace) {
+			super(stateMachine, path, startNode, endNode, prevUserFeedback, trace);
+		}
+
+		@Override
+		public void handleFeedback() {
+			super.handleFeedback();
+			
+			// Deep copy the initial feedback path in case user redo the process
+			final FeedbackPath feedbackPath = new FeedbackPath(this.initFeedbackPath);
+			startNode.reason = StepExplaination.MISS_BRANCH;
+			endNode.reason = StepExplaination.MISS_BRANCH;
+			updatePathView(feedbackPath);
+			
+			final int startOrder = startNode.getOrder();
+			final int endOrder = endNode.getOrder();
+			List<TraceNode> candidateNodes = trace.getExecutionList().stream().filter(node -> node.getOrder() > startOrder && node.getOrder() < endOrder).toList();
+			
+			if (candidateNodes.isEmpty()) {
+				String message = this.genOmissionMessage(startNode, endNode);
+				popInformationDialog(message);
+				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
+				super.handleFeedback(userFeedbacksPair);
 			} else {
-				endOrder = pair.getNode().getOrder();
-				break;
+				List<TraceNode> sortedList = this.sortNodeList(candidateNodes);
+				int left = 0;
+				int right = sortedList.size();
+				while (left <= right) {
+					int mid = left + (right - left) / 2;
+					final TraceNode node = sortedList.get(mid);
+					node.reason = StepExplaination.BINARY_SEARCH;
+					feedbackPath.addPairByOrder(node, new UserFeedback(UserFeedback.ROOTCAUSE));
+					updatePathView(feedbackPath);
+					NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
+					if (super.handleFeedback(userFeedbacksPair)) {
+						return;
+					}
+					
+					if (userFeedbacksPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
+						left = mid+1;
+					} else {
+						right = mid-1;
+					}
+					node.reason = StepExplaination.USRE_CONFIRMED;
+					feedbackPath.replacePair(userFeedbacksPair);
+					updatePathView(feedbackPath);
+				}
+				popInformationDialog("No more node can be proposed. You may restart the process by giving correct feedback on node: " + startNode.getOrder());
+				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
+				super.handleFeedback(userFeedbacksPair);
 			}
 		}
 		
-		final int startOrder_ = startOrder;
-		final int endOrder_ = endOrder;
-		List<TraceNode> filteredCandidates = sortedCandidateList.stream().filter(node -> node.getOrder() >= startOrder_ && node.getOrder() <= endOrder_).toList();
-		for (TraceNode node : filteredCandidates) {
-			System.out.println("Proposed first deviation node: " + node.getOrder() + ". Please give feedback if you do not agree");
-			node.reason = StepExplaination.SCANNING;
-			feedbackPath.addPairByOrder(node, new UserFeedback(UserFeedback.ROOTCAUSE));
-			this.pathView.setActionPath(feedbackPath);
-			this.updateView();
-			@SuppressWarnings("unused")
-			NodeFeedbacksPair pair = this.waitForFeedback();
-			if (pair == null) {
-				Log.printMsg(this.getClass(), DebugPilotHandler.DEBUGPILOT_STOP_MESSAGE);
-				return;
-			}
-			node.reason = StepExplaination.USRE_CONFIRMED;
-			feedbackPath.replacePair(pair);
-			this.updatePathView(feedbackPath);
+		protected String genOmissionMessage(final TraceNode startNode, final TraceNode endNode) {
+			StringBuilder strBuilder = new StringBuilder();
+			strBuilder.append("Control omission bug detected: \n\n");
+			strBuilder.append("There should be a missing block of code that lie in "
+					+ "between node " + startNode.getOrder() + " and node " + endNode.getOrder() + ", "
+					+ "resulting in wrong branch feedback in node " + endNode.getOrder() + " and"
+					+ " correct feedback in node " + startNode.getOrder() + ".\n\n");
+			strBuilder.append("If you agree with this prediction, please give ROOT_CAUSE feedback.\n");
+			strBuilder.append("If not, please review the path and give another feedback.");
+			return strBuilder.toString();
 		}
-		System.out.println("No more trace node can be recommeded");
+		
 	}
 	
-	protected List<TraceNode> sortNodeList(final List<TraceNode> list) {
-		return list.stream().sorted(
-				new Comparator<TraceNode>() {
-					@Override
-					public int compare(TraceNode node1, TraceNode node2) {
-						return node1.getOrder() - node2.getOrder();
-					}
-				}
-			).toList();
-	}
-	
-	public void updateOmissionNodeReason(final TraceNode startNode, final TraceNode endNode, final UserFeedback feedback) {
-		if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+	protected class DataOmissionState extends OmissionState {
+
+		public DataOmissionState(DebugPilotFiniteStateMachine stateMachine, FeedbackPath path, TraceNode startNode,
+				TraceNode endNode, UserFeedback prevUserFeedback, Trace trace) {
+			super(stateMachine, path, startNode, endNode, prevUserFeedback, trace);
+		}
+
+		@Override
+		public void handleFeedback() {
+			super.handleFeedback();
+			
+			// Deep copy the initial feedback path in case user redo the process
+			final FeedbackPath feedbackPath = new FeedbackPath(this.initFeedbackPath);
 			startNode.reason = StepExplaination.MISS_BRANCH;
 			endNode.reason = StepExplaination.MISS_BRANCH;
-		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)){
-			final VarValue wrongVar = feedback.getOption().getReadVar();
-			startNode.reason = StepExplaination.MISS_DEF(wrongVar.getVarName());
-			endNode.reason = StepExplaination.MISS_DEF(wrongVar.getVarName());
-		} else {
-			throw new IllegalArgumentException(Log.genMsg(getClass(), "Unhandled feedback type: " + feedback));
+			updatePathView(feedbackPath);
+			
+			final int startOrder = startNode.getOrder();
+			final int endOrder = endNode.getOrder();
+			List<TraceNode> candidateNodes = trace.getExecutionList().stream().filter(node -> node.getOrder() > startOrder && node.getOrder() < endOrder).toList();
+			
+			if (candidateNodes.isEmpty()) {
+				String message = this.genOmissionMessage(startNode.getOrder(), endNode.getOrder());
+				popInformationDialog(message);
+				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
+				super.handleFeedback(userFeedbacksPair);
+			} else {
+				List<TraceNode> sortedCandidateList = this.sortNodeList(candidateNodes);
+				List<TraceNode> relatedCandidateList = sortedCandidateList.stream().filter(node -> node.isReadVariablesContains(this.prevFeedback.getOption().getReadVar().getVarID())).toList();
+				int beginOrder = sortedCandidateList.get(0).getOrder();
+				int lastOrder = sortedCandidateList.get(sortedCandidateList.size()-1).getOrder();
+				
+				for (TraceNode node : relatedCandidateList) {
+					node.reason = StepExplaination.RELATED;
+					feedbackPath.addPairByOrder(node, new UserFeedback(UserFeedback.UNCLEAR));
+					updatePathView(feedbackPath);
+					System.out.println("Please give a feedback on node: " + node.getOrder());
+					NodeFeedbacksPair pair = waitForFeedback(feedbackPath);
+					if (super.handleFeedback(pair)) {
+						return;
+					}
+					feedbackPath.replacePair(pair);
+					if (pair.getFeedbackType().equals(UserFeedback.CORRECT)) {
+						beginOrder = pair.getNode().getOrder();
+					} else {
+						lastOrder = pair.getNode().getOrder();
+						break;
+					}
+				}
+				
+				popInformationDialog(this.genOmissionMessage(beginOrder, lastOrder));
+				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
+				super.handleFeedback(userFeedbacksPair);
+			}
 		}
-	}
-	
-	protected void reportOmissionBug(final TraceNode startNode, final TraceNode endNode, final UserFeedback feedback) {
-		if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-			this.reportMissingBranchOmissionBug(startNode, endNode);
-		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-			final VarValue wrongVar = feedback.getOption().getReadVar();
-			this.reportMissingAssignmentOmissionBug(startNode, endNode, wrongVar);
-		} else {
-			throw new IllegalArgumentException(Log.genMsg(getClass(), "Unhandled feedback type: " + feedback));
+		
+		protected String genOmissionMessage(final int startNodeOrder, final int endNodeOrder) {
+			StringBuilder strBuilder = new StringBuilder();
+			strBuilder.append("Data omission bug detected: \n\n");
+			strBuilder.append("There should be a missing block of code that lie in "
+					+ "between node " + startNodeOrder + " and node " + endNodeOrder + ", "
+					+ "resulting in wrong variable feedback in node " + endNodeOrder + " and"
+					+ " correct feedback in node " + startNodeOrder + ".\n\n");
+			strBuilder.append("If you agree with this prediction, please give ROOT_CAUSE feedback.\n");
+			strBuilder.append("If not, please review the path and give another feedback.");
+			return strBuilder.toString();
 		}
+		
 	}
 	
-	protected void reportMissingBranchOmissionBug(final TraceNode startNode, final TraceNode endNode) {
-		Log.printMsg(this.getClass(), "-------------------------------------------");
-		Log.printMsg(this.getClass(), "Omission bug detected");
-		Log.printMsg(this.getClass(), "Scope begin: " + startNode.getOrder());
-		Log.printMsg(this.getClass(), "Scope end: " + endNode.getOrder());
-		Log.printMsg(this.getClass(), "Omission Type: Missing Branch");
-		Log.printMsg(this.getClass(), "-------------------------------------------");
-	}
-	
-	protected void reportMissingAssignmentOmissionBug(final TraceNode startNode, final TraceNode endNode, final VarValue var) {
-		Log.printMsg(this.getClass(), "-------------------------------------------");
-		Log.printMsg(this.getClass(), "Omission bug detected");
-		Log.printMsg(this.getClass(), "Scope begin: " + startNode.getOrder());
-		Log.printMsg(this.getClass(), "Scope end: " + endNode.getOrder());
-		Log.printMsg(this.getClass(), "Omission Type: Missing Assignment of " + var.getVarName());
-		Log.printMsg(this.getClass(), "-------------------------------------------");
-	}
-	
-	protected void popErrorDialog(final String errorMsg) {
-		Display.getDefault().asyncExec(() -> {
-			Shell shell = Display.getCurrent().getActiveShell();
-			MessageDialog.openError(shell, "DebugPilot Error", errorMsg);
-		});
-	}
-
 }

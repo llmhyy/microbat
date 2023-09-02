@@ -51,6 +51,7 @@ public class PathView extends ViewPart {
 	protected FeedbackPath actionPath;
 	protected Button searchButton;
 	protected TraceView buggyTraceView = null;
+	protected ReasonView reasonView = MicroBatViews.getReasonView();
 	protected TableViewer table;
 	
 	
@@ -117,6 +118,9 @@ public class PathView extends ViewPart {
 			this.buggyTraceView.jumpToNode(this.buggyTraceView.getTrace(), node.getOrder(), false);
 			this.buggyTraceView.jumpToNode(node);
 		}
+		
+		UserFeedback feedback = this.actionPath.getFeedback(node).getFirstFeedback();
+		this.reasonView.refresh(node, feedback);
 	}
 	protected void addSearchTextListener(final Text searchText) {
 		searchText.addKeyListener(new KeyAdapter() {
@@ -266,6 +270,8 @@ public class PathView extends ViewPart {
 	public void setBuggyView(TraceView view) {
 		this.buggyTraceView = view;
 	}
+	
+	
 	
 	public void getCheckedElement() {
 		System.out.println(this.checkButtons.size());

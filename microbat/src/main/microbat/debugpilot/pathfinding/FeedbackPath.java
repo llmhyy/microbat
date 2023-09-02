@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.evaluation.Feedback;
@@ -64,6 +66,14 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 	
 	public void setLastAction(final UserFeedback feedback) {
 		this.getLastFeedback().setFeedback(feedback);
+	}
+	
+	public int getIndexOf(final TraceNode node) {
+        int index = IntStream.range(0, this.path.size())
+                .filter(i -> this.path.get(i).getNode().equals(node))
+                .findFirst().orElseThrow();
+
+        return index;
 	}
 	
 	public void removeFirstAction() {
