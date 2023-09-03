@@ -144,6 +144,8 @@ public class TraceNode implements Comparator<TraceNode> {
 	public String reason = "";
 	protected Map<NodeFeedbacksPair, String> reasonMap;
 	
+	public boolean confirmed = false;
+	
 	public TraceNode() {
 		this.breakPoint = null;
 		this.programState = null;

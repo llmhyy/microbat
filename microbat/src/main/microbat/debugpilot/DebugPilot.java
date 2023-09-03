@@ -53,6 +53,7 @@ public class DebugPilot {
 		FeedbackPath mustFollowPath = new FeedbackPath(this.debugPilotSettings.getFeedbacks());
 		for (NodeFeedbacksPair pair : mustFollowPath) {
 			pair.getNode().reason = StepExplaination.USRE_CONFIRMED;
+			pair.getNode().confirmed = true;
 		}
 
 		if (mustFollowPath == null || mustFollowPath.isEmpty()) {

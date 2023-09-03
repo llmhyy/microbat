@@ -280,6 +280,7 @@ public class DebugPilotHandler extends AbstractHandler {
 				// User find the root cause
 				feedbackPath.replacePair(userFeedbacksPair);
 				feedbackPath.removePathAfterNode(userFeedbacksPair.getNode());
+				feedbackPath.forEach(pair -> pair.getNode().confirmed = true);
 				updatePathView(feedbackPath);
 				this.stateMachine.setState(new EndState(this.stateMachine));
 			} else if (userFeedbacksPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
@@ -410,6 +411,13 @@ public class DebugPilotHandler extends AbstractHandler {
 			final FeedbackPath feedbackPath = new FeedbackPath(this.initFeedbackPath);
 			startNode.reason = StepExplaination.MISS_BRANCH;
 			endNode.reason = StepExplaination.MISS_BRANCH;
+			startNode.confirmed = true;
+			endNode.confirmed = true;
+			for (NodeFeedbacksPair pair : feedbackPath) {
+				if (pair.getNode().getOrder()>endNode.getOrder()) {
+					pair.getNode().confirmed = true;
+				}
+			}
 			updatePathView(feedbackPath);
 			
 			final int startOrder = startNode.getOrder();
@@ -442,6 +450,7 @@ public class DebugPilotHandler extends AbstractHandler {
 						right = mid-1;
 					}
 					node.reason = StepExplaination.USRE_CONFIRMED;
+					node.confirmed = true;
 					feedbackPath.replacePair(userFeedbacksPair);
 					updatePathView(feedbackPath);
 				}
@@ -480,6 +489,13 @@ public class DebugPilotHandler extends AbstractHandler {
 			final FeedbackPath feedbackPath = new FeedbackPath(this.initFeedbackPath);
 			startNode.reason = StepExplaination.MISS_BRANCH;
 			endNode.reason = StepExplaination.MISS_BRANCH;
+			startNode.confirmed = true;
+			endNode.confirmed = true;
+			for (NodeFeedbacksPair pair : feedbackPath) {
+				if (pair.getNode().getOrder()>endNode.getOrder()) {
+					pair.getNode().confirmed = true;
+				}
+			}
 			updatePathView(feedbackPath);
 			
 			final int startOrder = startNode.getOrder();
@@ -506,6 +522,7 @@ public class DebugPilotHandler extends AbstractHandler {
 					if (super.handleFeedback(pair)) {
 						return;
 					}
+					pair.getNode().confirmed = true;
 					feedbackPath.replacePair(pair);
 					if (pair.getFeedbackType().equals(UserFeedback.CORRECT)) {
 						beginOrder = pair.getNode().getOrder();

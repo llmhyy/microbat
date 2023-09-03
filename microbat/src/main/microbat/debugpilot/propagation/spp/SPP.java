@@ -97,6 +97,7 @@ public abstract class SPP implements ProbabilityPropagator {
 			final TraceNode node = this.slicedTrace.get(order);
 			
 			if (this.isFeedbackGiven(node)) {
+				node.confirmed = true;
 				node.reason = "User Confirmed";
 				continue;
 			}
@@ -148,7 +149,10 @@ public abstract class SPP implements ProbabilityPropagator {
 	 */
 	protected void forwardProp() {
 		for (TraceNode node : this.slicedTrace) {
-			if (this.isFeedbackGiven(node)) continue;
+			if (this.isFeedbackGiven(node)) {
+				node.confirmed = true;
+				continue;
+			}
 			
 			// Pass forward probability
 			this.inheritForwardProp(node);
@@ -350,6 +354,7 @@ public abstract class SPP implements ProbabilityPropagator {
 		// Calculate computational cost for each variable
 		double maxVarCost = 0.0d;
 		for (TraceNode node : this.slicedTrace) {
+			node.confirmed = false;
 
 //			List<VarValue> readVars = node.getReadVariables().stream().filter(var -> !var.isThisVariable()).toList();
 			List<VarValue> readVars = node.getReadVariables();

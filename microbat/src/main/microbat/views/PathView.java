@@ -186,7 +186,7 @@ public class PathView extends ViewPart {
 		});
 		
 		functions.add(cw -> {
-			return cw.getNode().getNode().reason.equals(StepExplaination.USRE_CONFIRMED) ? "Yes" : "No";
+			return cw.getNode().getNode().confirmed ? "Yes" : "No";
 		});
 		assert(functions.size() == headers.length);
 		assert(weights.length == headers.length);
