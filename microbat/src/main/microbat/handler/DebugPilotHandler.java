@@ -93,13 +93,13 @@ public class DebugPilotHandler extends AbstractHandler {
 		settings.setTrace(this.buggyView.getTrace());
 		
 		NodeFeedbacksPair initFeedback;
-		if (outputNode.isReadVariablesContains(wrongVar.getVarID())) {
-			UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
-			feedback.setOption(new ChosenVariableOption(wrongVar, null));
-			initFeedback = new NodeFeedbacksPair(outputNode, feedback);
-		} else {
+		if (DebugPilotInfo.getInstance().isOutputNodeWrongBranch()) {
 			UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_PATH);
 			initFeedback = new NodeFeedbacksPair(outputNode, feedback);
+		} else {
+			UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
+			feedback.setOption(new ChosenVariableOption(wrongVar, null));
+			initFeedback = new NodeFeedbacksPair(outputNode, feedback);			
 		}
 		
 		// Initialize DebugPilot

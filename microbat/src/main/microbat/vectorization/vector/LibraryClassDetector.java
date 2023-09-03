@@ -9,7 +9,7 @@ import java.util.Set;
 
 public class LibraryClassDetector {
 	private static final String LIBRARY_CLASSES_PATH = "./src/main/microbat/vectorization/vector/java_11_classes.txt";
-	private static final Set<String> LIBRARY_CLASSES = LibraryClassDetector.readLibraryClasses();
+	private static final Set<String> LIBRARY_CLASSES = null;
 	
 	public static boolean isLibClass(final String type) {
 		return LibraryClassDetector.LIBRARY_CLASSES.contains(type);

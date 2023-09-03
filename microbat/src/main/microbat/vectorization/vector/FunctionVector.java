@@ -36,7 +36,7 @@ public class FunctionVector extends Vector {
 	 */
 	
 	public static final int INVOKE_TYPE_COUNT = 5;
-	public static final int DIMENSION = FunctionVector.INVOKE_TYPE_COUNT + 1 +
+	public static final int DIMENSION = FunctionVector.INVOKE_TYPE_COUNT +
 										InputParameterVector.DIMENSION + 
 										OutputParameterVector.DIMENSION;
 	
@@ -48,7 +48,7 @@ public class FunctionVector extends Vector {
 	private static final int SPECIAL_IDX = 2;
 	private static final int STATIC_IDX = 3;
 	private static final int VIRTUAL_IDX = 4;
-	private static final int LIBRARY_FUNC_IDX = 5;
+//	private static final int LIBRARY_FUNC_IDX = 5;
 	
 	public FunctionVector() {
 		super(FunctionVector.DIMENSION);
@@ -56,8 +56,16 @@ public class FunctionVector extends Vector {
 		this.outputParamTypeVector = new OutputParameterVector();
 	}
 	
+	public InputParameterVector getInputParameterVector() {
+		return this.inputParamTypeVector;
+	}
+	
+	public OutputParameterVector getOutputParameterVector() {
+		return this.outputParamTypeVector;
+	}
+	
 	public FunctionVector(final ByteCode byteCode, final String funcSign) {
-		super(FunctionVector.INVOKE_TYPE_COUNT+1);
+		super(FunctionVector.INVOKE_TYPE_COUNT);
 		
 		// Check invoke type
 		final short optCode = byteCode.getOpcode();
@@ -68,7 +76,7 @@ public class FunctionVector extends Vector {
 		if (this.isInvokeVirtual(optCode)) this.set(FunctionVector.VIRTUAL_IDX);
 		
 		final String classname = this.extractClassName(funcSign).replace(".", "/");
-		if (LibraryClassDetector.isLibClass(classname)) this.set(LIBRARY_FUNC_IDX);
+//		if (LibraryClassDetector.isLibClass(classname)) this.set(LIBRARY_FUNC_IDX);
 		
 		final String inputTypeDescriptors = this.extractInputTypeDescriptors(funcSign);
 		this.inputParamTypeVector = new InputParameterVector(inputTypeDescriptors);

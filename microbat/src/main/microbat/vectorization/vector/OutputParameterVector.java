@@ -19,14 +19,14 @@ public class OutputParameterVector extends ParameterVector {
 			if (type.startsWith("[L")) {
 				// Array of object
 				type = type.substring(2, type.length()-1);
-				int idx = LibraryClassDetector.isLibClass(type) ? ParameterVector.LIB_OBJ_IDX : ParameterVector.SELF_DEFINED_OBJ_IDX;
-				this.set(ParameterVector.ARRAY_OFFSET+idx);
+//				int idx = LibraryClassDetector.isLibClass(type) ? ParameterVector.LIB_OBJ_IDX : ParameterVector.SELF_DEFINED_OBJ_IDX;
+//				this.set(ParameterVector.ARRAY_OFFSET+idx);
 			} else if (type.startsWith("L")) {
 				// Object
 				type = type.substring(1, type.length()-1);
 				// Check is the object library object
-				int idx = LibraryClassDetector.isLibClass(type) ? ParameterVector.LIB_OBJ_IDX : ParameterVector.SELF_DEFINED_OBJ_IDX;
-				this.set(idx);
+//				int idx = LibraryClassDetector.isLibClass(type) ? ParameterVector.LIB_OBJ_IDX : ParameterVector.SELF_DEFINED_OBJ_IDX;
+//				this.set(idx);
 			} else if (type.startsWith("[")){
 				// Array of primitive type
 				type = type.substring(1, type.length());

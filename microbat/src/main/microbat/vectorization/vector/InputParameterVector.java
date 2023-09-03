@@ -9,8 +9,6 @@ public class InputParameterVector extends ParameterVector {
 	/*
 	 * 	20-dim: histogram of input type
 	 * 		8-dim for primitive type
-	 * 		1-dim for library object
-	 * 		1-dim for self-defined object
 	 * 		10-dim array version for the above feature
 	 * 
 	 * 	B	byte	signed byte
@@ -26,7 +24,7 @@ public class InputParameterVector extends ParameterVector {
 		
 	 */
 	
-	public static int DIMENSION = 20;
+	public static int DIMENSION = 18;
 	
 	public InputParameterVector() {
 		super(InputParameterVector.DIMENSION);
@@ -43,14 +41,14 @@ public class InputParameterVector extends ParameterVector {
 			if (type.startsWith("[L")) {
 				// Array of object
 				type = type.substring(2, type.length()-1);
-				int idx = LibraryClassDetector.isLibClass(type) ? ParameterVector.LIB_OBJ_IDX : ParameterVector.SELF_DEFINED_OBJ_IDX;
-				this.set(ParameterVector.ARRAY_OFFSET+idx);
+//				int idx = LibraryClassDetector.isLibClass(type) ? ParameterVector.LIB_OBJ_IDX : ParameterVector.SELF_DEFINED_OBJ_IDX;
+//				this.set(ParameterVector.ARRAY_OFFSET+idx);
 			} else if (type.startsWith("L")) {
 				// Object
 				type = type.substring(1, type.length()-1);
 				// Check is the object library object
-				int idx = LibraryClassDetector.isLibClass(type) ? ParameterVector.LIB_OBJ_IDX : ParameterVector.SELF_DEFINED_OBJ_IDX;
-				this.set(idx);
+//				int idx = LibraryClassDetector.isLibClass(type) ? ParameterVector.LIB_OBJ_IDX : ParameterVector.SELF_DEFINED_OBJ_IDX;
+//				this.set(idx);
 			} else if (type.startsWith("[")){
 				// Array of primitive type
 				type = type.substring(1, type.length());

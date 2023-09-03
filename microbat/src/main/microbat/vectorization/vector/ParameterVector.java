@@ -11,9 +11,9 @@ public abstract class ParameterVector extends Vector {
 	protected static final List<String> typeDescriptors_1 = ParameterVector.initTypeDescriptor_1();
 	protected static final List<String> typeDescriptors_2 = ParameterVector.initPrimType_2();
 	
-	protected static final int LIB_OBJ_IDX = 8;
-	protected static final int SELF_DEFINED_OBJ_IDX = 9;
-	protected static final int ARRAY_OFFSET = 10;
+//	protected static final int LIB_OBJ_IDX = 8;
+//	protected static final int SELF_DEFINED_OBJ_IDX = 8;
+	protected static final int ARRAY_OFFSET = 8;
 	
 	public ParameterVector() {}
 	

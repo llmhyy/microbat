@@ -25,17 +25,17 @@ public class VariableVector extends Vector {
 	 * 1-dim: computational cost
 	 */
 	public static final int PRIMITIVE_TYPE_COUNT = 8;
-	public static final int DIMENSION = VariableVector.PRIMITIVE_TYPE_COUNT + 6;
+	public static final int DIMENSION = VariableVector.PRIMITIVE_TYPE_COUNT + 5;
 
 	protected static final List<String> PRIMITIVE_TYPES_1 = VariableVector.initPrimType_1();
 	protected static final List<String> PRIMITIVE_TYPES_2 = VariableVector.initPrimType_2();
 	
 	protected static final int IS_ARRAY_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 0;
-	protected static final int IS_RELIABLE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 1;
-	protected static final int IS_LOCAL_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 2;
-	protected static final int IS_STATIC_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 3;
-	protected static final int IS_INSTANCE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 4;
-	protected static final int IS_CONDITION_RESULT_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 5;
+//	protected static final int IS_RELIABLE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 1;
+	protected static final int IS_LOCAL_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 1;
+	protected static final int IS_STATIC_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 2;
+	protected static final int IS_INSTANCE_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 3;
+	protected static final int IS_CONDITION_RESULT_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 4;
 //	protected static final int IS_THIS_IDX = VariableVector.PRIMITIVE_TYPE_COUNT + 6;
 
 	public VariableVector() {
@@ -72,7 +72,7 @@ public class VariableVector extends Vector {
 		if (var.isLocalVariable()) this.set(VariableVector.IS_LOCAL_IDX);
 		if (var.isField()) this.set(VariableVector.IS_INSTANCE_IDX);
 		if (var.isStatic()) this.set(VariableVector.IS_STATIC_IDX);
-		if (VariableVector.isReliableType(typeStr)) this.set(VariableVector.IS_RELIABLE_IDX);
+//		if (VariableVector.isReliableType(typeStr)) this.set(VariableVector.IS_RELIABLE_IDX);
 //		
 //		this.vector[VariableVector.COST_IDX] = (float) var.getComputationalCost();
 		if (var.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID)) this.set(VariableVector.IS_CONDITION_RESULT_IDX);
