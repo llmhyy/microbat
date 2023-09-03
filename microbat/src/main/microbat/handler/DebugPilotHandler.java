@@ -79,7 +79,13 @@ public class DebugPilotHandler extends AbstractHandler {
 		TraceNode outputNode = DebugPilotInfo.getInstance().getOutputNode();
 		settings.setOutputNode(outputNode);
 		
-		VarValue wrongVar = DebugPilotInfo.getInstance().getOutputs().get(0);
+		VarValue wrongVar;
+		if (DebugPilotInfo.getInstance().isOutputNodeWrongBranch()) {
+			wrongVar = outputNode.getControlDominator().getConditionResult();
+		} else {			
+			wrongVar = DebugPilotInfo.getInstance().getOutputs().get(0);
+		}
+		
 		Set<VarValue> wrongVarSet = new HashSet<>();
 		wrongVarSet.add(wrongVar);
 		settings.setWrongVars(wrongVarSet);
