@@ -349,10 +349,7 @@ public class MicroBatUtil {
 		String exp = className + 
 					 " line:" + lineNumber + 
 					 " duration: " + duration + 
-					 "ms probability: " + String.format("%.2f", prob) + 
-					 " control dominator: " + order 
-					 + " drop: " + drop + 
-					 " cost: " + computationCost;
+					 "ms cost: " + computationCost;
 		return exp;
 	}
 	
