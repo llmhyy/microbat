@@ -65,10 +65,10 @@ public class FeedbackLabelProvider implements ITableLabelProvider {
 					return "-";
 				}
 			case 3:
-				return this.genDescription(userFeedback);
-			case 4:
 				final TraceNode nextNode = TraceUtil.findNextNode(this.currentNode, userFeedback, this.trace);
 				return nextNode == null ? "-" : String.valueOf(nextNode.getOrder());
+			case 4:
+				return this.genDescription(userFeedback);
 			default:
 				return null;
 			}

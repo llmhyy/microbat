@@ -150,7 +150,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
 		costColumn.setAlignment(SWT.LEFT);
-		costColumn.setText("Computation Cost");
+		costColumn.setText("Cost");
 		costColumn.setWidth(100);
 		
 		this.readVariableViewer = new TreeViewer(tree);
@@ -175,7 +175,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
 		costColumn.setAlignment(SWT.LEFT);
-		costColumn.setText("Computation Cost");
+		costColumn.setText("Cost");
 		costColumn.setWidth(100);
 		
 		this.writtenVariableViewer = new TreeViewer(tree);
@@ -207,7 +207,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		TableColumn costColumn = new TableColumn(table, SWT.LEFT);
 		costColumn.setAlignment(SWT.LEFT);
-		costColumn.setText("Condition Computation Cost");
+		costColumn.setText("Condition Cost");
 		costColumn.setWidth(200);
 		
 		
@@ -305,8 +305,8 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		TableColumn typeColumn = new TableColumn(table, SWT.LEFT);
 		typeColumn.setAlignment(SWT.LEFT);
-		typeColumn.setText("Feedback Type");
-		typeColumn.setWidth(200);
+		typeColumn.setText("Type");
+		typeColumn.setWidth(100);
 		 
 		TableColumn varColumn = new TableColumn(table, SWT.LEFT);
 		varColumn.setAlignment(SWT.LEFT);
@@ -318,15 +318,16 @@ public class DebugPilotFeedbackView extends ViewPart {
 		varValueColumn.setText("Value");
 		varValueColumn.setWidth(100);
 		
+		TableColumn nextNodeColumn = new TableColumn(table, SWT.LEFT);
+		nextNodeColumn.setAlignment(SWT.LEFT);
+		nextNodeColumn.setText("Next Node");
+		nextNodeColumn.setWidth(50);
+		
 		TableColumn descriptionColumn = new TableColumn(table, SWT.LEFT);
 		descriptionColumn.setAlignment(SWT.LEFT);
 		descriptionColumn.setText("Description");
 		descriptionColumn.setWidth(200);
 		
-		TableColumn nextNodeColumn = new TableColumn(table, SWT.LEFT);
-		nextNodeColumn.setAlignment(SWT.LEFT);
-		nextNodeColumn.setText("Next Node");
-		nextNodeColumn.setWidth(100);
 		
 		this.availableFeedbackViewer = new CheckboxTableViewer(table);
 		this.availableFeedbackViewer.setContentProvider(new FeedbackContentProvider());
@@ -358,18 +359,18 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		TreeColumn typeColumn = new TreeColumn(tree, SWT.LEFT);
 		typeColumn.setAlignment(SWT.LEFT);
-		typeColumn.setText("Variable Type");
+		typeColumn.setText("Type");
 		typeColumn.setWidth(100);
 		
 		TreeColumn nameColumn = new TreeColumn(tree, SWT.LEFT);
 		nameColumn.setAlignment(SWT.LEFT);
-		nameColumn.setText("Variable Name");
+		nameColumn.setText("Name");
 		nameColumn.setWidth(100);
 		
 		TreeColumn valueColumn = new TreeColumn(tree, SWT.LEFT);
 		valueColumn.setAlignment(SWT.LEFT);
-		valueColumn.setText("Variable Value");
-		valueColumn.setWidth(300);
+		valueColumn.setText("Value");
+		valueColumn.setWidth(200);
 		
 		return tree;
 	}
