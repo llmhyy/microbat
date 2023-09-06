@@ -1,7 +1,6 @@
 package microbat.handler;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -22,14 +21,11 @@ import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReader;
 import microbat.behavior.BehaviorReporter;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
-import microbat.codeanalysis.runtime.RunningInformation;
 import microbat.codeanalysis.runtime.StepLimitException;
 import microbat.evaluation.junit.TestCaseAnalyzer;
+import microbat.handler.callbacks.HandlerCallbackManager;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
-import microbat.model.trace.TraceNode;
-import microbat.model.value.ArrayValue;
-import microbat.model.value.StringValue;
 import microbat.preference.AnalysisScopePreference;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
@@ -64,6 +60,16 @@ public class StartDebugHandler extends AbstractHandler {
 	}
 	
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		
+		// Clear the DebugPilot debugging process if there are any
+		HandlerCallbackManager.getInstance().runDebugPilotTerminateCallbacks();
+		Job.getJobManager().cancel(DebugPilotHandler.JOB_FAMALY_NAME);
+		
+		// Clear the path view and program output form
+		MicroBatViews.getPathView().setActionPath(null);
+		MicroBatViews.getPathView().updateData();
+		MicroBatViews.getDebugPilotFeedbackView().clearProgramOutput();
+		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		if (Settings.isRunTest) {
 			appClassPath.setOptionalTestClass(Settings.launchClass);

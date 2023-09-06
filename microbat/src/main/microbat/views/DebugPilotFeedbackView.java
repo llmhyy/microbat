@@ -269,9 +269,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.wrongOutputTreeViewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event) {
-				wrongOutputTreeViewer.setInput(null);
-				wrongOutputTreeViewer.refresh();
-				DebugPilotInfo.getInstance().clearOutputs();
+				clearProgramOutput();
 			}
 		});
 		
@@ -445,6 +443,12 @@ public class DebugPilotFeedbackView extends ViewPart {
 
 		availableFeedbacks.add(new UserFeedback(UserFeedback.ROOTCAUSE));
 		return availableFeedbacks.toArray(new UserFeedback[0]);
+	}
+	
+	public void clearProgramOutput() {
+		this.wrongOutputTreeViewer.setInput(null);
+		this.wrongOutputTreeViewer.refresh();
+		DebugPilotInfo.getInstance().clearOutputs();
 	}
 	
 }
