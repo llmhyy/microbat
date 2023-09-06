@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 
-import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -39,9 +38,12 @@ import microbat.views.MicroBatViews;
 import microbat.views.PathView;
 import microbat.views.TraceView;
 
-public class DebugPilotHandler extends AbstractHandler {
+public class DebugPilotHandler extends BaseHandler {
 
 	public static final String JOB_FAMALY_NAME = "debugpilot";
+	
+	protected static final String DIALOG_INFO_TITLE = "DebugPilot Information";
+	protected static final String DIALOG_ERROR_TITLE = "DebugPilot Error";
 	
 	protected TraceView buggyView;
 	
@@ -85,7 +87,7 @@ public class DebugPilotHandler extends AbstractHandler {
 	protected void execute() {
 		
 		if (this.isRunningProcess) {
-			this.popErrorDialog("DebugPilot is currently running a process. Please stop the original process before you start a new one");
+			this.popErrorDialog("DebugPilot is currently running a process. Please stop the original process before you start a new one", DebugPilotHandler.DIALOG_ERROR_TITLE);
 			return;
 		}
 		
@@ -209,13 +211,13 @@ public class DebugPilotHandler extends AbstractHandler {
 			if (feedbackType == null) {
 				feedbackType = feedback.getFeedbackType();
 			} else if (!feedbackType.equals(feedback.getFeedbackType())) {
-				this.popErrorDialog("You give conflicting feedback on node " + pair.getNode().getOrder());
+				this.popErrorDialog("You give conflicting feedback on node " + pair.getNode().getOrder(), DebugPilotHandler.DIALOG_ERROR_TITLE);
 				return false;
 			}
 		}
 		
 		if (!path.contains(pair.getNode())) {
-			this.popErrorDialog("Please give the feedback on node that inside the path. Node: " + pair.getNode().getOrder() + " is not lie in path.");
+			this.popErrorDialog("Please give the feedback on node that inside the path. Node: " + pair.getNode().getOrder() + " is not lie in path.", DebugPilotHandler.DIALOG_ERROR_TITLE);
 			return false;
 		}
 		
@@ -238,43 +240,29 @@ public class DebugPilotHandler extends AbstractHandler {
 	protected boolean isDebugPilotReady() {
 		final Trace buggyTrace = this.buggyView.getTrace();
 		if (buggyTrace == null) {
-			this.popErrorDialog("Trace is not generated.");
+			this.popErrorDialog("Trace is not generated.", DebugPilotHandler.DIALOG_ERROR_TITLE);
 			return false;
 		}
 		
 		TraceNode outputNode = this.info.getOutputNode();
 		if (outputNode == null) {
-			this.popErrorDialog("Output node is empty. You can select the output node by selecting it in the trace view.");
+			this.popErrorDialog("Output node is empty. You can select the output node by selecting it in the trace view.", DebugPilotHandler.DIALOG_ERROR_TITLE);
 			return false;
 		}
 		
 		if (info.isOutputNodeWrongBranch()) {
 			if (!this.info.getOutputs().isEmpty()) {
-				this.popErrorDialog("When the output node should not be executed, there should not be wrong variables. Please double click the variables to erase them");
+				this.popErrorDialog("When the output node should not be executed, there should not be wrong variables. Please double click the variables to erase them", DebugPilotHandler.DIALOG_ERROR_TITLE);
 				return false;
 			}
 		} else {
 			if (this.info.getOutputs().isEmpty()) {
-				this.popErrorDialog("Please select one wrong variable to start DebugPilot. If the output node should not be executed, then please click the wrong branch button");
+				this.popErrorDialog("Please select one wrong variable to start DebugPilot. If the output node should not be executed, then please click the wrong branch button", DebugPilotHandler.DIALOG_ERROR_TITLE);
 				return false;
 			}
 		}
 		
 		return true;
-	}
-	
-	protected void popErrorDialog(final String errorMsg) {
-		Display.getDefault().asyncExec(() -> {
-			Shell shell = Display.getCurrent().getActiveShell();
-			MessageDialog.openError(shell, "DebugPilot Error", errorMsg);
-		});
-	}
-	
-	protected void popInformationDialog(final String message) {
-		Display.getDefault().asyncExec(() -> {
-			Shell shell = Display.getCurrent().getActiveShell();
-			MessageDialog.openInformation(shell, "DebugPilot Information", message);
-		});
 	}
 	
 	protected boolean canLeadToNextNode(final NodeFeedbacksPair pair) {
@@ -472,7 +460,7 @@ public class DebugPilotHandler extends AbstractHandler {
 			
 			if (candidateNodes.isEmpty()) {
 				String message = this.genOmissionMessage(startNode, endNode);
-				popInformationDialog(message);
+				popInformationDialog(message, DebugPilotHandler.DIALOG_INFO_TITLE);
 				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
 				super.handleFeedback(userFeedbacksPair);
 			} else {
@@ -500,7 +488,7 @@ public class DebugPilotHandler extends AbstractHandler {
 					feedbackPath.replacePair(userFeedbacksPair);
 					updatePathView(feedbackPath);
 				}
-				popInformationDialog("No more node can be proposed. You may restart the process by giving correct feedback on node: " + startNode.getOrder());
+				popInformationDialog("No more node can be proposed. You may restart the process by giving correct feedback on node: " + startNode.getOrder(), DebugPilotHandler.DIALOG_INFO_TITLE);
 				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
 				super.handleFeedback(userFeedbacksPair);
 			}
@@ -550,7 +538,7 @@ public class DebugPilotHandler extends AbstractHandler {
 			
 			if (candidateNodes.isEmpty()) {
 				String message = this.genOmissionMessage(startNode.getOrder(), endNode.getOrder());
-				popInformationDialog(message);
+				popInformationDialog(message, DebugPilotHandler.DIALOG_INFO_TITLE);
 				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
 				super.handleFeedback(userFeedbacksPair);
 			} else {
@@ -578,7 +566,7 @@ public class DebugPilotHandler extends AbstractHandler {
 					}
 				}
 				
-				popInformationDialog(this.genOmissionMessage(beginOrder, lastOrder));
+				popInformationDialog(this.genOmissionMessage(beginOrder, lastOrder), DebugPilotHandler.DIALOG_INFO_TITLE);
 				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
 				super.handleFeedback(userFeedbacksPair);
 			}
