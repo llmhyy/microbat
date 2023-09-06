@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import fj.P;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.UserFeedback;
@@ -28,7 +29,7 @@ public class DebugPilotInfo {
 
 	protected NodeFeedbacksPair nodeFeedbacksPair = null;
 	protected boolean feedbackUpdatedFlag = false;
-	protected boolean stop = false;
+//	protected boolean stop = false;
 	
 	protected final static long SLEEP_TIME = 200;
 	
@@ -47,13 +48,13 @@ public class DebugPilotInfo {
 		return DebugPilotInfo.instance;
 	}
 	
-	public boolean isStop() {
-		return this.stop;
-	}
-	
-	public void setStop(boolean stop) {
-		this.stop = stop;
-	}
+//	public boolean isStop() {
+//		return this.stop;
+//	}
+//	
+//	public void setStop(boolean stop) {
+//		this.stop = stop;
+//	}
 	
 	public void setOutputNode(final TraceNode node) {
 		this.outputNode = node;
@@ -109,17 +110,26 @@ public class DebugPilotInfo {
 		this.feedbackUpdatedFlag = updated;
 	}
 	
-	public void waifForFeedbacksPairOrStop() {
-		while (!this.feedbackUpdatedFlag && !this.stop) {
+	public void waitForFeedback() {
+		while (!this.feedbackUpdatedFlag) {
 			try {
 				Thread.sleep(DebugPilotInfo.SLEEP_TIME);
-			} catch (Exception e) {
-
-			}
+			} catch (Exception e) {}
 		}
 		this.feedbackUpdatedFlag = false;
-		this.stop = false;
 	}
+	
+//	public void waifForFeedbacksPairOrStop() {
+//		while (!this.feedbackUpdatedFlag && !this.stop) {
+//			try {
+//				Thread.sleep(DebugPilotInfo.SLEEP_TIME);
+//			} catch (Exception e) {
+//
+//			}
+//		}
+//		this.feedbackUpdatedFlag = false;
+//		this.stop = false;
+//	}
 	
 //	public void waitFor 
 //	public static void waitForFeedbackOrRootCauseOrStop() {

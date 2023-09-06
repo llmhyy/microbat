@@ -26,6 +26,8 @@ import microbat.debugpilot.fsc.DebugPilotFiniteStateMachine;
 import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.debugpilot.propagation.spp.StepExplaination;
 import microbat.debugpilot.settings.DebugPilotSettings;
+import microbat.handler.callbacks.HandlerCallback;
+import microbat.handler.callbacks.HandlerCallbackManager;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -39,6 +41,8 @@ import microbat.views.TraceView;
 
 public class DebugPilotHandler extends AbstractHandler {
 
+	public static final String JOB_FAMALY_NAME = "debugpilot";
+	
 	protected TraceView buggyView;
 	
 	protected PathView pathView;
@@ -47,14 +51,31 @@ public class DebugPilotHandler extends AbstractHandler {
 	
 	protected DebugPilotInfo info = DebugPilotInfo.getInstance();
 	
+	protected boolean isRunningProcess = false;
+	
+	public DebugPilotHandler() {
+		HandlerCallbackManager.getInstance().registerDebugPilotTermianteCallback(new HandlerCallback() {
+			@Override
+			public void callBack() {
+				isRunningProcess = false;
+			}
+		});
+	}
+	
+	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		Job job = new Job("DebugPilot") {
+		Job job = new Job(DebugPilotHandler.JOB_FAMALY_NAME) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				setup();
 				execute();
 				return Status.OK_STATUS;
+			}
+			
+			@Override
+			public boolean belongsTo(Object family) {
+				return this.getName().equals(family);
 			}
 		};
 		job.schedule();
@@ -62,6 +83,13 @@ public class DebugPilotHandler extends AbstractHandler {
 	}
 	
 	protected void execute() {
+		
+		if (this.isRunningProcess) {
+			this.popErrorDialog("DebugPilot is currently running a process. Please stop the original process before you start a new one");
+			return;
+		}
+		
+		this.isRunningProcess = true;
 		
 		if (!this.isDebugPilotReady()) {
 			return;
@@ -145,7 +173,8 @@ public class DebugPilotHandler extends AbstractHandler {
 		boolean isValidFeedback = false;
 		NodeFeedbacksPair userPair = null;
 		while (!isValidFeedback) {
-			info.waifForFeedbacksPairOrStop();
+//			info.waifForFeedbacksPairOrStop();
+			this.waitForFeedback();
 			userPair = info.getNodeFeedbackPair();
 			info.clearNodeFeedbackPairs();
 			
@@ -156,6 +185,16 @@ public class DebugPilotHandler extends AbstractHandler {
 			isValidFeedback = this.checkIsValidFeedback(userPair, path);
 		}
 		return userPair;
+	}
+	
+	protected void waitForFeedback() {
+		final DebugPilotInfo info = DebugPilotInfo.getInstance();
+		while (!info.isFeedbackUpdate() && this.isRunningProcess) {
+			try {
+				Thread.sleep(200);
+			} catch (Exception e) {}
+		}
+		info.setFeedbackUpdate(false);
 	}
 	
 	protected boolean checkIsValidFeedback(final NodeFeedbacksPair pair, final FeedbackPath path) {
@@ -354,8 +393,9 @@ public class DebugPilotHandler extends AbstractHandler {
 		
 		protected boolean handleFeedback(final NodeFeedbacksPair feedbacksPair) {
 			if (feedbacksPair == null) {
-				this.stateMachine.setState(new EndState(this.stateMachine));
-				return true;
+//				this.stateMachine.setState(new EndState(this.stateMachine));
+//				return true;
+				throw new RuntimeException("Got null feedback");
 			}
 			
 			if (feedbacksPair.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {

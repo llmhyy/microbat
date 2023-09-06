@@ -9,6 +9,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
 import microbat.debugpilot.DebugPilotInfo;
+import microbat.handler.callbacks.HandlerCallbackManager;
 
 public class StopDebugPilotHandler extends AbstractHandler {
 
@@ -17,7 +18,8 @@ public class StopDebugPilotHandler extends AbstractHandler {
 		Job job = new Job("DebugPilot") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				DebugPilotInfo.getInstance().setStop(true);
+				HandlerCallbackManager.getInstance().runDebugPilotTerminateCallbacks();
+				Job.getJobManager().cancel(DebugPilotHandler.JOB_FAMALY_NAME);
 				return Status.OK_STATUS;
 			}
 		};
