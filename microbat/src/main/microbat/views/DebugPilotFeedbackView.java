@@ -2,16 +2,13 @@ package microbat.views;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
-import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -304,7 +301,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		TableColumn typeColumn = new TableColumn(table, SWT.LEFT);
 		typeColumn.setAlignment(SWT.LEFT);
 		typeColumn.setText("Type");
-		typeColumn.setWidth(100);
+		typeColumn.setWidth(170);
 		 
 		TableColumn varColumn = new TableColumn(table, SWT.LEFT);
 		varColumn.setAlignment(SWT.LEFT);
@@ -319,7 +316,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		TableColumn nextNodeColumn = new TableColumn(table, SWT.LEFT);
 		nextNodeColumn.setAlignment(SWT.LEFT);
 		nextNodeColumn.setText("Next Node");
-		nextNodeColumn.setWidth(50);
+		nextNodeColumn.setWidth(90);
 		
 		TableColumn descriptionColumn = new TableColumn(table, SWT.LEFT);
 		descriptionColumn.setAlignment(SWT.LEFT);

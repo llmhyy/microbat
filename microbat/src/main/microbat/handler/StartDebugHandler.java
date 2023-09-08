@@ -66,8 +66,7 @@ public class StartDebugHandler extends AbstractHandler {
 		Job.getJobManager().cancel(DebugPilotHandler.JOB_FAMALY_NAME);
 		
 		// Clear the path view and program output form
-		MicroBatViews.getPathView().setActionPath(null);
-		MicroBatViews.getPathView().updateData();
+		MicroBatViews.getPathView().updateFeedbackPath(null);
 		MicroBatViews.getDebugPilotFeedbackView().clearProgramOutput();
 		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();

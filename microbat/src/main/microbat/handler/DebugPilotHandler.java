@@ -154,16 +154,14 @@ public class DebugPilotHandler extends BaseHandler {
 	}
 	
 	protected void updatePathView(final FeedbackPath path) {
-		this.pathView.setActionPath(path);
-		this.updateView();
+		this.pathView.updateFeedbackPath(path);
 	}
 	
 	protected void updateView() {
 		Display.getDefault().syncExec(new Runnable() {
 			@Override
 			public void run() {
-				buggyView.updateData();					
-				pathView.updateData();					
+				buggyView.updateData();			
 			}
 		});
 	}

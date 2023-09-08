@@ -43,6 +43,10 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 		return this.path.get(i);
 	}
 	
+	public int indexOf(final NodeFeedbacksPair userFeedbacksPair) {
+		return this.path.indexOf(userFeedbacksPair);
+	}
+	
 	public NodeFeedbacksPair getPairByNode(final TraceNode node) {
 		List<NodeFeedbacksPair> possiblePairs = this.path.stream().filter(pair -> pair.getNode().equals(node)).toList();
 		if (possiblePairs.isEmpty()) {
@@ -299,5 +303,9 @@ public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
 			}
 		}
 		this.path = newPath;
+	}
+	
+	public NodeFeedbacksPair[] toArray() {
+		return this.path.stream().toArray(NodeFeedbacksPair[]::new);
 	}
 }
