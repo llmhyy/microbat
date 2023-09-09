@@ -259,6 +259,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 				if (data instanceof IStructuredSelection selection) {
 					wrongOutputTreeViewer.setInput(Arrays.stream(selection.toArray()).collect(Collectors.toCollection(ArrayList::new)));
 					VarValue[] selectedVar = Arrays.stream(selection.toArray()).map(obj -> {return (VarValue) obj;}).toArray(VarValue[]::new);
+					DebugPilotInfo.getInstance().clearOutputs();
 					DebugPilotInfo.getInstance().addOutputs(selectedVar);
 					return true;
 				}
