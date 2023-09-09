@@ -22,6 +22,7 @@ import microbat.behavior.BehaviorReader;
 import microbat.behavior.BehaviorReporter;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.StepLimitException;
+import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.handler.callbacks.HandlerCallbackManager;
 import microbat.instrumentation.output.RunningInfo;
@@ -66,7 +67,7 @@ public class StartDebugHandler extends AbstractHandler {
 		Job.getJobManager().cancel(DebugPilotHandler.JOB_FAMALY_NAME);
 		
 		// Clear the path view and program output form
-		MicroBatViews.getPathView().updateFeedbackPath(null);
+		MicroBatViews.getPathView().updateFeedbackPath(new FeedbackPath());
 		MicroBatViews.getDebugPilotFeedbackView().clearProgramOutput();
 		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();

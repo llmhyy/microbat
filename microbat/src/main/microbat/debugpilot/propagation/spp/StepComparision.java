@@ -12,7 +12,7 @@ public class StepComparision {
 	protected double variableThreshold;
 
 	public StepComparision() {
-		this(0.7, 0.85);
+		this(0.8, 0.85);
 	}
 
 	public StepComparision(final double stepThreshold, final double variableThreshold) {
