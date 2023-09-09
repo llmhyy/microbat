@@ -9,7 +9,11 @@ import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
@@ -43,6 +47,7 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
+import microbat.util.TraceUtil;
 import microbat.views.utils.contentprovider.ControlDominatorContentProvider;
 import microbat.views.utils.contentprovider.FeedbackContentProvider;
 import microbat.views.utils.contentprovider.ReadVariableContenProvider;
@@ -79,6 +84,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 	protected CheckboxTableViewer availableFeedbackViewer;
 	protected Button feedbackButton;
 	protected Label giveFeedbackLabel;
+	protected Label nextNodeLabel;
 	
     protected final int operations = DND.DROP_COPY | DND.DROP_MOVE;
     protected final Transfer[] transferTypes = new Transfer[] { LocalSelectionTransfer.getTransfer() };
@@ -311,22 +317,38 @@ public class DebugPilotFeedbackView extends ViewPart {
 		TableColumn varValueColumn = new TableColumn(table, SWT.LEFT);
 		varValueColumn.setAlignment(SWT.LEFT);
 		varValueColumn.setText("Value");
-		varValueColumn.setWidth(100);
+		varValueColumn.setWidth(200);
 		
 		TableColumn nextNodeColumn = new TableColumn(table, SWT.LEFT);
 		nextNodeColumn.setAlignment(SWT.LEFT);
 		nextNodeColumn.setText("Next Node");
 		nextNodeColumn.setWidth(90);
 		
-		TableColumn descriptionColumn = new TableColumn(table, SWT.LEFT);
-		descriptionColumn.setAlignment(SWT.LEFT);
-		descriptionColumn.setText("Description");
-		descriptionColumn.setWidth(200);
-		
 		
 		this.availableFeedbackViewer = new CheckboxTableViewer(table);
 		this.availableFeedbackViewer.setContentProvider(new FeedbackContentProvider());
-
+		this.availableFeedbackViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				ISelection iSel = event.getSelection();
+				if (iSel instanceof StructuredSelection structuredSelection) {
+					Object obj = structuredSelection.getFirstElement();
+					if (obj instanceof UserFeedback userFeedback) {				
+						final TraceNode nextNode = TraceUtil.findNextNode(currentNode, userFeedback, trace);
+						if (nextNode != null) {
+							selectTraceViewNode(nextNode);
+						}
+					}
+				}
+			}
+		});
+		
+		this.nextNodeLabel = new Label(parent, SWT.NONE);
+		this.nextNodeLabel.setAlignment(SWT.LEFT);
+		this.nextNodeLabel.setText("Click on the row to explore next node.");
+		GridData labelGridData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		labelGridData.horizontalSpan = 2;
+		this.nextNodeLabel.setLayoutData(labelGridData);
 	}
 	
 	protected void createGiveFeedbackGroup(final Composite parent) {
@@ -345,6 +367,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 				DebugPilotInfo.getInstance().setNodeFeedbacksPair(userFeedbacksPair);
 			}
 		});
+	
 	}
 	
 	protected Tree createVarTree(final Composite parent) {
@@ -447,5 +470,12 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.wrongOutputTreeViewer.refresh();
 		DebugPilotInfo.getInstance().clearOutputs();
 	}
+	
+	protected void selectTraceViewNode(final TraceNode node) {
+		final TraceView traceView = MicroBatViews.getTraceView();
+		traceView.jumpToNode(trace, node.getOrder(), false);
+		traceView.jumpToNode(node);
+	}
+	
 	
 }

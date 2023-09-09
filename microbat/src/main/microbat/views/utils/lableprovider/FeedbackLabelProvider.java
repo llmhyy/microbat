@@ -67,8 +67,6 @@ public class FeedbackLabelProvider implements ITableLabelProvider {
 			case 3:
 				final TraceNode nextNode = TraceUtil.findNextNode(this.currentNode, userFeedback, this.trace);
 				return nextNode == null ? "-" : String.valueOf(nextNode.getOrder());
-			case 4:
-				return this.genDescription(userFeedback);
 			default:
 				return null;
 			}
