@@ -95,6 +95,8 @@ public class DebugPilotHandler extends BaseHandler {
 			return;
 		}
 		
+		this.pathView.updateFeedbackPath(new FeedbackPath());
+		
 		Log.printMsg(getClass(), "");
 		Log.printMsg(getClass(), "---------------------------");
 		Log.printMsg(getClass(), "\t Start Debug Pilot");
