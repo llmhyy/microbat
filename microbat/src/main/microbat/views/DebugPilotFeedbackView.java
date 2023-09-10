@@ -82,8 +82,8 @@ public class DebugPilotFeedbackView extends ViewPart {
 	protected TableViewer controlDominatorViewer;
 	
 	/* Input variable information*/
-	protected TableViewer inputVariablesViewer;
-	protected Label invokeMethodLabel;
+	protected TreeViewer relatedVariablesViewer;
+//	protected Label invokeMethodLabel;
 	
 	/* Program outcome information */
 	protected Label outputNodeLabel;
@@ -128,6 +128,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.createReadVariablesViewer(sashForm);
 		this.createWrittenVariableViewer(sashForm);
 //		this.createControlDominatorGroup(parent);
+		this.createRelatedVariableGroup(sashForm);
 		this.createAvaliableFeedbackView(sashForm);
 	}
 
@@ -142,6 +143,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.refreshWrittenVariableViewer();
 //		this.refreshControlDominoatorViewer();
 		this.refreshOutputGroup();
+		this.refreshRelatedVariableGroup();
 		this.refreshAvailableFeedbackViewer();
 	}
 	
@@ -372,6 +374,48 @@ public class DebugPilotFeedbackView extends ViewPart {
 		});
 	}
 	
+	protected void createRelatedVariableGroup(final Composite parent) {
+		Group group = new Group(parent, SWT.NONE);
+		group.setText("Related Variables");
+		group.setLayout(new FillLayout());
+		
+		GridLayout gridLayout = new GridLayout(1, false);
+		group.setLayout(gridLayout);
+		
+//		this.invokeMethodLabel = new Label(group, SWT.WRAP);
+//		this.invokeMethodLabel.setAlignment(SWT.LEFT);
+//		this.invokeMethodLabel.setText(this.genInvoateMethodLabelContent());
+//		
+//		GridData labelData = new GridData(SWT.FILL, SWT.CENTER, true, false);
+//		labelData.widthHint = 200; // Set to a value that accommodates your text
+//		this.invokeMethodLabel.setLayoutData(labelData);
+		
+		final Tree tree = this.createVarTree(group);
+		
+		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
+		probColumn.setAlignment(SWT.LEFT);
+		probColumn.setText("Correctness");
+		probColumn.setWidth(100);
+		
+		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
+		costColumn.setAlignment(SWT.LEFT);
+		costColumn.setText("Cost");
+		costColumn.setWidth(100);
+		
+		this.relatedVariablesViewer = new TreeViewer(tree);
+		this.relatedVariablesViewer.setLabelProvider(new VariableWithProbabilityLabelProvider());
+	}
+	
+	
+	protected String genInvoateMethodLabelContent() {
+		final String begining = "Invocation Method: ";
+		if (this.currentNode == null) {
+			return begining + "None";
+		} else {
+			return begining + this.currentNode.getInvokingMethod();
+		}
+	}
+	
 	protected void createGiveFeedbackGroup(final Composite parent) {
 		this.giveFeedbackLabel = new Label(parent, SWT.NONE);
 		this.giveFeedbackLabel.setAlignment(SWT.LEFT);
@@ -436,6 +480,14 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.writtenVariableViewer.setContentProvider(new WrittenVariableContentProvider(this.currentNode));
 		this.writtenVariableViewer.setInput(this.currentNode.getWrittenVariables());
 		this.writtenVariableViewer.refresh(true);
+	}
+	
+	protected void refreshRelatedVariableGroup() {
+//		this.invokeMethodLabel.setText(this.genInvoateMethodLabelContent());
+		final TraceNode invokeParent = this.currentNode.getInvocationParent();
+		this.relatedVariablesViewer.setContentProvider(new WrittenVariableContentProvider(invokeParent));
+		this.relatedVariablesViewer.setInput(invokeParent == null ? null : invokeParent.getWrittenVariables());
+		this.relatedVariablesViewer.refresh(true);
 	}
 	
 	protected void refreshControlDominoatorViewer() {
