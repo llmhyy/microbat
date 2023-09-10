@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -15,10 +16,13 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSourceAdapter;
 import org.eclipse.swt.dnd.DragSourceEvent;
@@ -36,6 +40,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.part.ViewPart;
@@ -53,6 +58,7 @@ import microbat.views.utils.contentprovider.FeedbackContentProvider;
 import microbat.views.utils.contentprovider.ReadVariableContenProvider;
 import microbat.views.utils.contentprovider.WrittenVariableContentProvider;
 import microbat.views.utils.lableprovider.ControlDominatorLabelProvider;
+import microbat.views.utils.lableprovider.DummyLabelProvider;
 import microbat.views.utils.lableprovider.FeedbackLabelProvider;
 import microbat.views.utils.lableprovider.VariableLabelProvider;
 import microbat.views.utils.lableprovider.VariableWithProbabilityLabelProvider;
@@ -84,7 +90,12 @@ public class DebugPilotFeedbackView extends ViewPart {
 	protected CheckboxTableViewer availableFeedbackViewer;
 	protected Button feedbackButton;
 	protected Label giveFeedbackLabel;
-	protected Label nextNodeLabel;
+//	protected Label nextNodeLabel;
+	protected TableViewerColumn typeViewerColumn;
+	protected TableViewerColumn varViewerColumn;
+	protected TableViewerColumn varValueViewerColumn;
+	protected TableViewerColumn nextNodeViewerColumn;
+	protected List<Button> nextNodeButtons = new ArrayList<>();
 	
     protected final int operations = DND.DROP_COPY | DND.DROP_MOVE;
     protected final Transfer[] transferTypes = new Transfer[] { LocalSelectionTransfer.getTransfer() };
@@ -299,56 +310,36 @@ public class DebugPilotFeedbackView extends ViewPart {
 		treeGridData.horizontalSpan = 2;
 		variableForm.setLayoutData(treeGridData);
 		
-		Table table = new Table(variableForm, SWT.H_SCROLL | SWT.V_SCROLL| SWT.FULL_SELECTION | SWT.CHECK | SWT.MULTI);
-		table.setHeaderVisible(true);
-		table.setLinesVisible(true);
-		table.setLayout(new FillLayout());
+		this.availableFeedbackViewer = CheckboxTableViewer.newCheckList(variableForm, SWT.H_SCROLL | SWT.V_SCROLL| SWT.FULL_SELECTION | SWT.CHECK | SWT.MULTI);
+		this.availableFeedbackViewer.getTable().setHeaderVisible(true);
+		this.availableFeedbackViewer.getTable().setLinesVisible(true);
+		this.availableFeedbackViewer.setContentProvider(new FeedbackContentProvider());
+		this.availableFeedbackViewer.setLabelProvider(new DummyLabelProvider());
 		
-		TableColumn typeColumn = new TableColumn(table, SWT.LEFT);
+		TableColumn typeColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.LEFT);
 		typeColumn.setAlignment(SWT.LEFT);
 		typeColumn.setText("Type");
 		typeColumn.setWidth(170);
+		this.typeViewerColumn = new TableViewerColumn(this.availableFeedbackViewer, typeColumn);
+		
 		 
-		TableColumn varColumn = new TableColumn(table, SWT.LEFT);
+		TableColumn varColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.LEFT);
 		varColumn.setAlignment(SWT.LEFT);
 		varColumn.setText("Variable");
 		varColumn.setWidth(90);
+		this.varViewerColumn = new TableViewerColumn(this.availableFeedbackViewer, varColumn);
 		
-		TableColumn varValueColumn = new TableColumn(table, SWT.LEFT);
+		TableColumn varValueColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.LEFT);
 		varValueColumn.setAlignment(SWT.LEFT);
 		varValueColumn.setText("Value");
 		varValueColumn.setWidth(200);
+		this.varValueViewerColumn = new TableViewerColumn(this.availableFeedbackViewer, varValueColumn);
 		
-		TableColumn nextNodeColumn = new TableColumn(table, SWT.LEFT);
+		TableColumn nextNodeColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.LEFT);
 		nextNodeColumn.setAlignment(SWT.LEFT);
 		nextNodeColumn.setText("Next Node");
 		nextNodeColumn.setWidth(90);
-		
-		
-		this.availableFeedbackViewer = new CheckboxTableViewer(table);
-		this.availableFeedbackViewer.setContentProvider(new FeedbackContentProvider());
-		this.availableFeedbackViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				ISelection iSel = event.getSelection();
-				if (iSel instanceof StructuredSelection structuredSelection) {
-					Object obj = structuredSelection.getFirstElement();
-					if (obj instanceof UserFeedback userFeedback) {				
-						final TraceNode nextNode = TraceUtil.findNextNode(currentNode, userFeedback, trace);
-						if (nextNode != null) {
-							selectTraceViewNode(nextNode);
-						}
-					}
-				}
-			}
-		});
-		
-		this.nextNodeLabel = new Label(parent, SWT.NONE);
-		this.nextNodeLabel.setAlignment(SWT.LEFT);
-		this.nextNodeLabel.setText("Click on the row to explore next node.");
-		GridData labelGridData = new GridData(SWT.FILL, SWT.FILL, true, false);
-		labelGridData.horizontalSpan = 2;
-		this.nextNodeLabel.setLayoutData(labelGridData);
+		this.nextNodeViewerColumn = new TableViewerColumn(this.availableFeedbackViewer, nextNodeColumn);
 	}
 	
 	protected void createGiveFeedbackGroup(final Composite parent) {
@@ -422,9 +413,64 @@ public class DebugPilotFeedbackView extends ViewPart {
 	}
 	
 	protected void refreshAvailableFeedbackViewer() {
-		this.availableFeedbackViewer.setLabelProvider(new FeedbackLabelProvider(this.currentNode, this.trace));
+		this.typeViewerColumn.setLabelProvider(new ColumnLabelProvider() {
+            @Override
+            public String getText(Object element) {
+            	if (element instanceof UserFeedback userFeedback) {
+            		return genFeedbackType(userFeedback);
+            	}
+            	return null;
+            }
+		});
+		
+		this.varViewerColumn.setLabelProvider(new ColumnLabelProvider() {
+            @Override
+            public String getText(Object element) {
+            	if (element instanceof UserFeedback userFeedback) {
+    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+    					VarValue wrongVar = userFeedback.getOption().getReadVar();
+    					return wrongVar.getVarName();
+    				}
+    				return "-";
+            	}
+            	return null;
+            }
+		});
+		
+		this.varValueViewerColumn.setLabelProvider(new ColumnLabelProvider() {
+            @Override
+            public String getText(Object element) {
+            	if (element instanceof UserFeedback userFeedback) {
+    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+    					return userFeedback.getOption().getReadVar().getManifestationValue();					
+    				} else {
+    					return "-";
+    				}
+            	}
+            	return null;
+            }
+		});
+		
+		this.disposeButtons();
+		this.nextNodeViewerColumn.setLabelProvider(new nextNodeButtonLabelProvider(this.currentNode, this.trace));
+		
+//		this.availableFeedbackViewer.setLabelProvider(new FeedbackLabelProvider(this.currentNode, this.trace));
 		this.availableFeedbackViewer.setInput(this.getAllAvailableFeedbacks());
 		this.availableFeedbackViewer.refresh(true);
+	}
+	
+	protected String genFeedbackType(final UserFeedback feedback) {
+		if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
+			return "CORRECT";
+		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+			return "WRONG_BRANCH";
+		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+			return "WRONG_VARIABLE";
+		} else if (feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
+			return "ROOT_CAUSE";
+		} else {
+			return null;
+		}
 	}
 	
 	protected DragSourceAdapter createDragSourceAdapter(final TreeViewer treeViewer) {
@@ -477,5 +523,55 @@ public class DebugPilotFeedbackView extends ViewPart {
 		traceView.jumpToNode(node);
 	}
 	
+	protected void registerButtons(final Button button) {
+		this.nextNodeButtons.add(button);
+	}
 	
+	protected void disposeButtons() {
+		for (Button button : this.nextNodeButtons) {
+			button.dispose();
+		}
+		this.nextNodeButtons.clear();
+	}
+	
+	protected class nextNodeButtonLabelProvider extends ColumnLabelProvider {
+		protected TraceNode currentNode;
+		protected Trace trace;
+		
+		public nextNodeButtonLabelProvider(final TraceNode node, final Trace trace) {
+			this.currentNode = node;
+			this.trace = trace;
+		}
+		
+		@Override
+		public void update(ViewerCell cell) {
+			Button button = new Button((Composite) cell.getViewerRow().getControl(), SWT.PUSH);
+			final UserFeedback userFeedback = (UserFeedback) cell.getElement();
+			
+			final TraceNode nextNode = TraceUtil.findNextNode(this.currentNode, userFeedback, trace);
+			final String buttonText = nextNode == null ? "-" : String.valueOf(nextNode.getOrder());
+			button.setText(buttonText);
+			button.setEnabled(nextNode != null);
+			button.addSelectionListener(new SelectionListener() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					final TraceView traceView = MicroBatViews.getTraceView();
+					traceView.jumpToNode(trace, nextNode.getOrder(), false);
+					traceView.jumpToNode(nextNode);
+				}
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e) {}
+			});
+			
+            TableItem item = (TableItem) cell.getItem();
+            TableEditor editor = new TableEditor(item.getParent());
+            editor.grabHorizontal  = true;
+            editor.grabVertical = true;
+            editor.setEditor(button , item, cell.getColumnIndex());
+            editor.layout();
+			
+			
+			registerButtons(button);
+		}
+	}
 }
