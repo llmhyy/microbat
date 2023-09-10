@@ -130,6 +130,8 @@ public class DebugPilotFeedbackView extends ViewPart {
 //		this.createControlDominatorGroup(parent);
 		this.createRelatedVariableGroup(sashForm);
 		this.createAvaliableFeedbackView(sashForm);
+		
+		sashForm.setWeights(6, 10, 10, 4, 10);
 	}
 
 	@Override
