@@ -97,10 +97,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 	public void createPartControl(Composite parent) {
 		GridLayout parentLayout = new GridLayout(1, true);
 		parent.setLayout(parentLayout);
+		this.createOutputGroup(parent);
 		this.createReadVariablesViewer(parent);
 		this.createWrittenVariableViewer(parent);
-		this.createControlDominatorGroup(parent);
-		this.createOutputGroup(parent);
+//		this.createControlDominatorGroup(parent);
 		this.createAvaliableFeedbackView(parent);
 	}
 
@@ -113,7 +113,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		DebugPilotInfo.getInstance().setOutputNode(this.currentNode);
 		this.refreshReadVariableViewer();
 		this.refreshWrittenVariableViewer();
-		this.refreshControlDominoatorViewer();
+//		this.refreshControlDominoatorViewer();
 		this.refreshOutputGroup();
 		this.refreshAvailableFeedbackViewer();
 	}
@@ -182,7 +182,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		costColumn.setWidth(100);
 		
 		this.writtenVariableViewer = new TreeViewer(tree);
-		this.writtenVariableViewer.addDragSupport(this.operations, this.transferTypes, this.createDragSourceAdapter(this.writtenVariableViewer));
+//		this.writtenVariableViewer.addDragSupport(this.operations, this.transferTypes, this.createDragSourceAdapter(this.writtenVariableViewer));
 		this.writtenVariableViewer.setLabelProvider(new VariableWithProbabilityLabelProvider());
 	}
 	
@@ -212,7 +212,6 @@ public class DebugPilotFeedbackView extends ViewPart {
 		costColumn.setAlignment(SWT.LEFT);
 		costColumn.setText("Condition Cost");
 		costColumn.setWidth(200);
-		
 		
 		this.controlDominatorViewer = new TableViewer(table);
 		this.controlDominatorViewer.setContentProvider(new ControlDominatorContentProvider());
@@ -313,7 +312,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		TableColumn varColumn = new TableColumn(table, SWT.LEFT);
 		varColumn.setAlignment(SWT.LEFT);
 		varColumn.setText("Variable");
-		varColumn.setWidth(100);
+		varColumn.setWidth(90);
 		
 		TableColumn varValueColumn = new TableColumn(table, SWT.LEFT);
 		varValueColumn.setAlignment(SWT.LEFT);
