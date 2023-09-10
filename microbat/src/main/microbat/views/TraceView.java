@@ -470,19 +470,19 @@ public class TraceView extends ViewPart {
 	}
 
 	protected void otherViewsBehavior(TraceNode node) {
-		DebugFeedbackView feedbackView = MicroBatViews.getDebugFeedbackView();
-		if (this.refreshProgramState) {
-			feedbackView.setTraceView(TraceView.this);
-			feedbackView.refresh(node);
-		}
+//		DebugFeedbackView feedbackView = MicroBatViews.getDebugFeedbackView();
+//		if (this.refreshProgramState) {
+//			feedbackView.setTraceView(TraceView.this);
+//			feedbackView.refresh(node);
+//		}
 		
 		if (this.refreshProgramState) {
 			DebugPilotFeedbackView debugPilotFeedbackView = MicroBatViews.getDebugPilotFeedbackView();
 			debugPilotFeedbackView.refresh(node, this.trace);
 		}
 
-		ReasonView reasonView = MicroBatViews.getReasonView();
-		reasonView.refresh(feedbackView.getRecommender());
+//		ReasonView reasonView = MicroBatViews.getReasonView();
+//		reasonView.refresh(feedbackView.getRecommender());
 
 		markJavaEditor(node);
 	}
