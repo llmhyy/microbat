@@ -12,11 +12,7 @@ import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -65,7 +61,6 @@ import microbat.views.utils.contentprovider.ReadVariableContenProvider;
 import microbat.views.utils.contentprovider.WrittenVariableContentProvider;
 import microbat.views.utils.lableprovider.ControlDominatorLabelProvider;
 import microbat.views.utils.lableprovider.DummyLabelProvider;
-import microbat.views.utils.lableprovider.FeedbackLabelProvider;
 import microbat.views.utils.lableprovider.VariableLabelProvider;
 import microbat.views.utils.lableprovider.VariableWithProbabilityLabelProvider;
 
@@ -85,6 +80,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 	
 	/* Control dominator information*/
 	protected TableViewer controlDominatorViewer;
+	
+	/* Input variable information*/
+	protected TableViewer inputVariablesViewer;
+	protected Label invokeMethodLabel;
 	
 	/* Program outcome information */
 	protected Label outputNodeLabel;
@@ -121,13 +120,15 @@ public class DebugPilotFeedbackView extends ViewPart {
 	
 	@Override
 	public void createPartControl(Composite parent) {
-		GridLayout parentLayout = new GridLayout(1, true);
-		parent.setLayout(parentLayout);
-		this.createOutputGroup(parent);
-		this.createReadVariablesViewer(parent);
-		this.createWrittenVariableViewer(parent);
+//		GridLayout parentLayout = new GridLayout(1, true);
+//		parent.setLayout(parentLayout);
+		SashForm sashForm = new SashForm(parent, SWT.VERTICAL);
+		
+		this.createOutputGroup(sashForm);
+		this.createReadVariablesViewer(sashForm);
+		this.createWrittenVariableViewer(sashForm);
 //		this.createControlDominatorGroup(parent);
-		this.createAvaliableFeedbackView(parent);
+		this.createAvaliableFeedbackView(sashForm);
 	}
 
 	@Override
@@ -163,10 +164,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 	}
 	
 	protected void createReadVariablesViewer(final Composite parent) {
-		SashForm variableForm = new SashForm(parent, SWT.VERTICAL);
-		variableForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+//		SashForm variableForm = new SashForm(parent, SWT.VERTICAL);
+//		variableForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-		Group group = new Group(variableForm, SWT.NONE);
+		Group group = new Group(parent, SWT.NONE);
 		group.setText("Read Variables");
 		group.setLayout(new FillLayout());
 
@@ -188,10 +189,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 	}
 	
 	protected void createWrittenVariableViewer(final Composite parent) {
-		SashForm variableForm = new SashForm(parent, SWT.VERTICAL);
-		variableForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+//		SashForm variableForm = new SashForm(parent, SWT.VERTICAL);
+//		variableForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
-		Group group = new Group(variableForm, SWT.NONE);
+		Group group = new Group(parent, SWT.NONE);
 		group.setText("Written Variables");
 		group.setLayout(new FillLayout());
 		
