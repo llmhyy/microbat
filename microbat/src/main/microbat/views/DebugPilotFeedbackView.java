@@ -38,6 +38,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
@@ -50,6 +51,8 @@ import org.eclipse.ui.part.ViewPart;
 import microbat.debugpilot.DebugPilotInfo;
 import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.FeedbackPath;
+import microbat.handler.callbacks.HandlerCallback;
+import microbat.handler.callbacks.HandlerCallbackManager;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -104,7 +107,16 @@ public class DebugPilotFeedbackView extends ViewPart {
     protected final Transfer[] transferTypes = new Transfer[] { LocalSelectionTransfer.getTransfer() };
 
     public DebugPilotFeedbackView() {
-
+		HandlerCallbackManager.getInstance().registerDebugPilotTermianteCallback(new HandlerCallback() {
+			@Override
+			public void callBack() {
+				Display.getDefault().asyncExec(new Runnable() {
+				    public void run() {
+				    	clearProgramOutput();
+				    }
+				});
+			}
+		});
     }
 	
 	@Override
