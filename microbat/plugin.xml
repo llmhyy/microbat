@@ -90,6 +90,12 @@
             id="microbat.perspectives.ConcurrentPerspective"
             name="Concurrent">
       </perspective>
+      <perspective
+            class="microbat.perspectives.DebugPilotPerspective"
+            icon="icons/play_debug_pilot.png"
+            id="microbat.debugpilotperspective"
+            name="DebugPilot">
+      </perspective>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
