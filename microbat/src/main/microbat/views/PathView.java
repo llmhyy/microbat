@@ -181,4 +181,8 @@ public class PathView extends ViewPart {
 		this.buggyTraceView = view;
 	}
 	
+	public FeedbackPath getFeedbackPath() {
+		return this.feedbackPath;
+	}
+	
 }

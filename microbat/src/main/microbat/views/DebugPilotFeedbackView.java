@@ -47,6 +47,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import microbat.debugpilot.DebugPilotInfo;
 import microbat.debugpilot.NodeFeedbacksPair;
+import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -337,7 +338,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		TableColumn nextNodeColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.LEFT);
 		nextNodeColumn.setAlignment(SWT.LEFT);
-		nextNodeColumn.setText("Next Node");
+		nextNodeColumn.setText("Explore");
 		nextNodeColumn.setWidth(90);
 		this.nextNodeViewerColumn = new TableViewerColumn(this.availableFeedbackViewer, nextNodeColumn);
 	}
@@ -348,7 +349,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.giveFeedbackLabel.setText("Here the possible feedback you may give: ");
 				
 		this.feedbackButton = new Button(parent, SWT.NONE);
-		this.feedbackButton.setText("Give Feedback");
+		this.feedbackButton.setText("Confirm");
 		this.feedbackButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
 		this.feedbackButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -454,8 +455,8 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.disposeButtons();
 		this.nextNodeViewerColumn.setLabelProvider(new nextNodeButtonLabelProvider(this.currentNode, this.trace));
 		
-//		this.availableFeedbackViewer.setLabelProvider(new FeedbackLabelProvider(this.currentNode, this.trace));
 		this.availableFeedbackViewer.setInput(this.getAllAvailableFeedbacks());
+		this.checkDefaultAvailableFeedbacks();
 		this.availableFeedbackViewer.refresh(true);
 	}
 	
@@ -472,6 +473,17 @@ public class DebugPilotFeedbackView extends ViewPart {
 			return null;
 		}
 	}
+	
+	protected void checkDefaultAvailableFeedbacks() {
+		final FeedbackPath suggestedFeedbackPath = MicroBatViews.getPathView().getFeedbackPath();
+		if (suggestedFeedbackPath.contains(this.currentNode)) {
+			UserFeedback suggestedFeedback = suggestedFeedbackPath.getFeedback(this.currentNode).getFirstFeedback();
+			this.availableFeedbackViewer.setCheckedElements(new Object[] {suggestedFeedback});
+		} else {
+			this.availableFeedbackViewer.setAllChecked(false);
+		}
+	}
+	
 	
 	protected DragSourceAdapter createDragSourceAdapter(final TreeViewer treeViewer) {
 		return new DragSourceAdapter() {
