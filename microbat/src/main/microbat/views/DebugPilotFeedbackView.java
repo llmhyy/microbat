@@ -354,9 +354,14 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.feedbackButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				UserFeedback[] feedbacks = Arrays.stream(availableFeedbackViewer.getCheckedElements()).map(obj -> {return (UserFeedback) obj;}).toArray(UserFeedback[]::new);
-				NodeFeedbacksPair userFeedbacksPair = new NodeFeedbacksPair(currentNode, feedbacks);
-				DebugPilotInfo.getInstance().setNodeFeedbacksPair(userFeedbacksPair);
+				final FeedbackPath feedbackPath = MicroBatViews.getPathView().getFeedbackPath();
+				if (!feedbackPath.contains(currentNode)) {
+					DialogUtil.popErrorDialog("Please give feedback only on step in path", "DebugPilot Feedback Error");
+				} else {					
+					UserFeedback[] feedbacks = Arrays.stream(availableFeedbackViewer.getCheckedElements()).map(obj -> {return (UserFeedback) obj;}).toArray(UserFeedback[]::new);
+					NodeFeedbacksPair userFeedbacksPair = new NodeFeedbacksPair(currentNode, feedbacks);
+					DebugPilotInfo.getInstance().setNodeFeedbacksPair(userFeedbacksPair);
+				}
 			}
 		});
 	

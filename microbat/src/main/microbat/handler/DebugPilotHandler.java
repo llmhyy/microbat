@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 
+import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -32,11 +33,12 @@ import microbat.model.value.VarValue;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
+import microbat.views.DialogUtil;
 import microbat.views.MicroBatViews;
 import microbat.views.PathView;
 import microbat.views.TraceView;
 
-public class DebugPilotHandler extends BaseHandler {
+public class DebugPilotHandler extends AbstractHandler {
 
 	public static final String JOB_FAMALY_NAME = "debugpilot";
 	
@@ -85,7 +87,7 @@ public class DebugPilotHandler extends BaseHandler {
 	protected void execute() {
 		
 		if (this.isRunningProcess) {
-			this.popErrorDialog("DebugPilot is currently running a process. Please stop the original process before you start a new one", DebugPilotHandler.DIALOG_ERROR_TITLE);
+			DialogUtil.popErrorDialog("DebugPilot is currently running a process. Please stop the original process before you start a new one", DebugPilotHandler.DIALOG_ERROR_TITLE);
 			return;
 		}
 		
@@ -209,13 +211,13 @@ public class DebugPilotHandler extends BaseHandler {
 			if (feedbackType == null) {
 				feedbackType = feedback.getFeedbackType();
 			} else if (!feedbackType.equals(feedback.getFeedbackType())) {
-				this.popErrorDialog("You give conflicting feedback on node " + pair.getNode().getOrder(), DebugPilotHandler.DIALOG_ERROR_TITLE);
+				DialogUtil.popErrorDialog("You give conflicting feedback on node " + pair.getNode().getOrder(), DebugPilotHandler.DIALOG_ERROR_TITLE);
 				return false;
 			}
 		}
 		
 		if (!path.contains(pair.getNode())) {
-			this.popErrorDialog("Please give the feedback on node that inside the path. Node: " + pair.getNode().getOrder() + " is not lie in path.", DebugPilotHandler.DIALOG_ERROR_TITLE);
+			DialogUtil.popErrorDialog("Please give the feedback on node that inside the path. Node: " + pair.getNode().getOrder() + " is not lie in path.", DebugPilotHandler.DIALOG_ERROR_TITLE);
 			return false;
 		}
 		
@@ -238,24 +240,24 @@ public class DebugPilotHandler extends BaseHandler {
 	protected boolean isDebugPilotReady() {
 		final Trace buggyTrace = this.buggyView.getTrace();
 		if (buggyTrace == null) {
-			this.popErrorDialog("Trace is not generated.", DebugPilotHandler.DIALOG_ERROR_TITLE);
+			DialogUtil.popErrorDialog("Trace is not generated.", DebugPilotHandler.DIALOG_ERROR_TITLE);
 			return false;
 		}
 		
 		TraceNode outputNode = this.info.getOutputNode();
 		if (outputNode == null) {
-			this.popErrorDialog("Output node is empty. You can select the output node by selecting it in the trace view.", DebugPilotHandler.DIALOG_ERROR_TITLE);
+			DialogUtil.popErrorDialog("Output node is empty. You can select the output node by selecting it in the trace view.", DebugPilotHandler.DIALOG_ERROR_TITLE);
 			return false;
 		}
 		
 		if (info.isOutputNodeWrongBranch()) {
 			if (!this.info.getOutputs().isEmpty()) {
-				this.popErrorDialog("When the output node should not be executed, there should not be wrong variables. Please double click the variables to erase them", DebugPilotHandler.DIALOG_ERROR_TITLE);
+				DialogUtil.popErrorDialog("When the output node should not be executed, there should not be wrong variables. Please double click the variables to erase them", DebugPilotHandler.DIALOG_ERROR_TITLE);
 				return false;
 			}
 		} else {
 			if (this.info.getOutputs().isEmpty()) {
-				this.popErrorDialog("Please select one wrong variable to start DebugPilot. If the output node should not be executed, then please click the wrong branch button", DebugPilotHandler.DIALOG_ERROR_TITLE);
+				DialogUtil.popErrorDialog("Please select one wrong variable to start DebugPilot. If the output node should not be executed, then please click the wrong branch button", DebugPilotHandler.DIALOG_ERROR_TITLE);
 				return false;
 			}
 		}
@@ -458,7 +460,7 @@ public class DebugPilotHandler extends BaseHandler {
 			
 			if (candidateNodes.isEmpty()) {
 				String message = this.genOmissionMessage(startNode, endNode);
-				popInformationDialog(message, DebugPilotHandler.DIALOG_INFO_TITLE);
+				DialogUtil.popInformationDialog(message, DebugPilotHandler.DIALOG_INFO_TITLE);
 				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
 				super.handleFeedback(userFeedbacksPair);
 			} else {
@@ -486,7 +488,7 @@ public class DebugPilotHandler extends BaseHandler {
 					feedbackPath.replacePair(userFeedbacksPair);
 					updatePathView(feedbackPath);
 				}
-				popInformationDialog("No more node can be proposed. You may restart the process by giving correct feedback on node: " + startNode.getOrder(), DebugPilotHandler.DIALOG_INFO_TITLE);
+				DialogUtil.popInformationDialog("No more node can be proposed. You may restart the process by giving correct feedback on node: " + startNode.getOrder(), DebugPilotHandler.DIALOG_INFO_TITLE);
 				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
 				super.handleFeedback(userFeedbacksPair);
 			}
@@ -536,7 +538,7 @@ public class DebugPilotHandler extends BaseHandler {
 			
 			if (candidateNodes.isEmpty()) {
 				String message = this.genOmissionMessage(startNode.getOrder(), endNode.getOrder());
-				popInformationDialog(message, DebugPilotHandler.DIALOG_INFO_TITLE);
+				DialogUtil.popInformationDialog(message, DebugPilotHandler.DIALOG_INFO_TITLE);
 				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
 				super.handleFeedback(userFeedbacksPair);
 			} else {
@@ -564,7 +566,7 @@ public class DebugPilotHandler extends BaseHandler {
 					}
 				}
 				
-				popInformationDialog(this.genOmissionMessage(beginOrder, lastOrder), DebugPilotHandler.DIALOG_INFO_TITLE);
+				DialogUtil.popInformationDialog(this.genOmissionMessage(beginOrder, lastOrder), DebugPilotHandler.DIALOG_INFO_TITLE);
 				NodeFeedbacksPair userFeedbacksPair = waitForFeedback(feedbackPath);
 				super.handleFeedback(userFeedbacksPair);
 			}
