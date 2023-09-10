@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -314,8 +316,6 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.availableFeedbackViewer = CheckboxTableViewer.newCheckList(variableForm, SWT.H_SCROLL | SWT.V_SCROLL| SWT.FULL_SELECTION | SWT.CHECK | SWT.MULTI);
 		this.availableFeedbackViewer.getTable().setHeaderVisible(true);
 		this.availableFeedbackViewer.getTable().setLinesVisible(true);
-		this.availableFeedbackViewer.setContentProvider(new FeedbackContentProvider());
-		this.availableFeedbackViewer.setLabelProvider(new DummyLabelProvider());
 		
 		TableColumn typeColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.LEFT);
 		typeColumn.setAlignment(SWT.LEFT);
@@ -341,6 +341,22 @@ public class DebugPilotFeedbackView extends ViewPart {
 		nextNodeColumn.setText("Explore");
 		nextNodeColumn.setWidth(90);
 		this.nextNodeViewerColumn = new TableViewerColumn(this.availableFeedbackViewer, nextNodeColumn);
+
+		this.availableFeedbackViewer.setContentProvider(new FeedbackContentProvider());
+		this.availableFeedbackViewer.setLabelProvider(new DummyLabelProvider());
+		this.availableFeedbackViewer.addCheckStateListener(new ICheckStateListener() {
+			@Override
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				final UserFeedback checkedFeedback = (UserFeedback) event.getElement();
+				for (Object element : availableFeedbackViewer.getCheckedElements()) {
+					if (element instanceof UserFeedback userFeedback) {
+						if (!userFeedback.getFeedbackType().equals(checkedFeedback.getFeedbackType())) {
+							availableFeedbackViewer.setChecked(element, false);
+						}
+					}
+				}
+			}
+		});
 	}
 	
 	protected void createGiveFeedbackGroup(final Composite parent) {
