@@ -26,7 +26,7 @@ public class SPPRootCauseLocator extends AbstractRootCauseLocator {
 		for (TraceNode node : this.slicedTrace) {
 			if (this.isFeedbackGivenTo(node) || node.equals(outputNode)) continue;
 			double drop = this.calDrop(node);
-			drop *= node.getControlDominator() == null ? 1.0d : node.getControlDominator().getConditionResult().getProbability();
+//			drop *= node.getControlDominator() == null ? 1.0d : node.getControlDominator().getConditionResult().getProbability();
 			node.setDrop(maxDrop);
 			if (drop < 0) continue;
 			if (drop > maxDrop) {

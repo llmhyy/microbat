@@ -91,12 +91,12 @@ public class DebugPilotHandler extends AbstractHandler {
 			return;
 		}
 		
-		this.isRunningProcess = true;
 		
 		if (!this.isDebugPilotReady()) {
 			return;
 		}
 		
+		this.isRunningProcess = true;
 		this.pathView.updateFeedbackPath(new FeedbackPath());
 		
 		Log.printMsg(getClass(), "");
@@ -107,6 +107,7 @@ public class DebugPilotHandler extends AbstractHandler {
 		DebugPilotSettings settings = new DebugPilotSettings();
 		settings.setPropagatorSettings(PreferenceParser.getPreferencePropagatorSettings());
 		settings.setPathFinderSettings(PreferenceParser.getPreferencePathFinderSettings());
+		settings.setRootCauseLocatorSettings(PreferenceParser.getPrefereRootCauseLocatorSettings());
 		
 		TraceNode outputNode = DebugPilotInfo.getInstance().getOutputNode();
 		settings.setOutputNode(outputNode);

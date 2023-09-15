@@ -13,6 +13,8 @@ public class RootCauseLocatorFactory {
 			return new ProbInferRootCauseLocator(settings);
 		case SPP:
 			return new SPPRootCauseLocator(settings);
+		case SUSPICIOUS:
+			return new SuspiciousRootCauseLocator(settings);
 		default:
 			throw new IllegalArgumentException(Log.genMsg("RootCauseLocatorFactory", "Unhandled root casue locator type" + settings.getRootCauseLocatorType()));
 		}

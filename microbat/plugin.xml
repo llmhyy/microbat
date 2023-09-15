@@ -255,6 +255,11 @@
                   icon="icons/stop_debug_pilot_button.png"
                   style="push">
             </command>
+            <command
+                  commandId="microbat.testing"
+                  icon="icons/after.ico"
+                  style="push">
+            </command>
          </toolbar>
       </menuContribution>
       <menuContribution

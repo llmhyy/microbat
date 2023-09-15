@@ -2,6 +2,9 @@ package microbat.debugpilot.pathfinding;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+
+import javax.sql.DataSource;
 
 import microbat.debugpilot.settings.PathFinderSettings;
 import microbat.log.Log;
@@ -48,33 +51,54 @@ public class GreedyPathFinder extends AbstractPathFinder {
 		Objects.requireNonNull(node, Log.genMsg(GreedyPathFinder.class, "Given node is null"));
 		UserFeedback feedback = new UserFeedback();
 		
-		TraceNode controlDom = node.getControlDominator();
-		double controlProb = 2.0;
-		if (controlDom != null) {
-			controlProb = controlDom.getConditionResult().getProbability();
-		}
+		final TraceNode controlDom = node.getControlDominator();
 		
-		double minReadProb = 2.0;
-		VarValue wrongVar = null;
-		for (VarValue readVar : node.getReadVariables()) {
-			double prob = readVar.getProbability();
-			if (prob < minReadProb) {
-				minReadProb = prob;
-				wrongVar = readVar;
-			}
-		}
-		
-		// There are no controlDom and readVar
-		if (controlProb == 2.0 && minReadProb == 2.0) {
+		if (controlDom == null && node.getReadVariables().isEmpty()) {
 			feedback.setFeedbackType(UserFeedback.UNCLEAR);
 			return feedback;
-		}
-		if (controlProb <= minReadProb) {
+		} else if (controlDom != null && node.getReadVariables().isEmpty()) {
 			feedback.setFeedbackType(UserFeedback.WRONG_PATH);
-		} else {
+			return feedback;
+		} else if (controlDom == null && !node.getReadVariables().isEmpty()) {
+			Optional<VarValue> targetVarOptional = node.getReadVariables().stream()
+					.min((s1, s2) -> Double.compare(1.0d/s1.computationalCost, 1.0d/s2.computationalCost));
 			feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
-			feedback.setOption(new ChosenVariableOption(wrongVar, null));
+			feedback.setOption(new ChosenVariableOption(targetVarOptional.get(), null));
+			return feedback;
+		} else {
+			double controlScore = 1.0d / controlDom.getConditionResult().computationalCost;
+			Optional<VarValue> targetVarOptional = node.getReadVariables().stream()
+					.min((s1, s2) -> Double.compare(1.0d/s1.computationalCost, 1.0d/s2.computationalCost));
+			double dataScore = 1.0d / targetVarOptional.get().computationalCost;
+			
+			if (controlScore <= dataScore) {
+				feedback.setFeedbackType(UserFeedback.WRONG_PATH);
+			} else {
+				feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+				feedback.setOption(new ChosenVariableOption(targetVarOptional.get(), null));
+			}
+			return feedback;
 		}
-		return feedback;
+		
+//		TraceNode controlDom = node.getControlDominator();
+//		double controlProb = 2.0;
+//		if (controlDom != null) {
+////			controlProb = controlDom.getConditionResult().getProbability();
+//			controlProb = 1.0d / controlDom.getConditionResult().computationalCost;
+//		}
+//		
+//		
+//		if (targetVarOptional.isEmpty()) {
+//			throw new RuntimeException("Option is emtpy");
+//		}
+//		
+//		VarValue targetVar = targetVarOptional.get();
+//		if (controlProb <= 1.0d/targetVar.computationalCost) {
+//			feedback.setFeedbackType(UserFeedback.WRONG_PATH);
+//		} else {
+//			feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+//			feedback.setOption(new ChosenVariableOption(targetVar, null));
+//		}
+//		return feedback;
 	}
 }

@@ -68,6 +68,9 @@ public class DijkstraPathFinder extends AbstractPathFinder {
 		
 		while (!toVisitNodes.isEmpty()) {
 			final TraceNode node = toVisitNodes.poll();
+			if (node.getOrder() == 4) {
+				System.out.println();
+			}
 			directedGraph.addVertex(node);
 			for (VarValue readVar : node.getReadVariables()) {
 				final TraceNode dataDom = this.trace.findDataDependency(node, readVar);
@@ -77,7 +80,8 @@ public class DijkstraPathFinder extends AbstractPathFinder {
 					NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
 					directedGraph.addVertex(dataDom);
 					directedGraph.addEdge(node, dataDom, pair);
-					directedGraph.setEdgeWeight(pair, readVar.getProbability());
+//					directedGraph.setEdgeWeight(pair, readVar.getProbability());
+					directedGraph.setEdgeWeight(pair, 1.0d/readVar.computationalCost);
 					toVisitNodes.add(dataDom);
 				}
 			}
@@ -88,7 +92,8 @@ public class DijkstraPathFinder extends AbstractPathFinder {
 				NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
 				directedGraph.addVertex(controlDom);
 				directedGraph.addEdge(node, controlDom, pair);
-				directedGraph.setEdgeWeight(pair, controlDom.getConditionResult().getProbability());
+//				directedGraph.setEdgeWeight(pair, controlDom.getConditionResult().getProbability());
+				directedGraph.setEdgeWeight(pair, 1.0d/controlDom.getConditionResult().computationalCost);
 				toVisitNodes.add(controlDom);
 			}
 		} 

@@ -43,7 +43,7 @@ public class DebugPilot {
 	public DebugPilot(final DebugPilotSettings settings) {
 		Objects.requireNonNull(settings, Log.genMsg(getClass(), "Settings should not be null"));
 		this.debugPilotSettings = settings;
-		List<TraceNode> slicedTrace = TraceUtil.dynamicSlic(settings.getTrace(), settings.getOutputNode());
+		List<TraceNode> slicedTrace = TraceUtil.dynamicSlice(settings.getTrace(), settings.getOutputNode());
 		this.debugPilotSettings.setSlicedTrace(slicedTrace);
 	}
 
@@ -93,10 +93,10 @@ public class DebugPilot {
 		final TraceNode outputNode = this.debugPilotSettings.getOutputNode();
 
 		Set<TraceNode> relatedNodes = new HashSet<>();
-		relatedNodes.addAll(TraceUtil.dynamicSlic(trace, outputNode));
+		relatedNodes.addAll(TraceUtil.dynamicSlice(trace, outputNode));
 		for (NodeFeedbacksPair pair : this.debugPilotSettings.getFeedbacks()) {
 			final TraceNode node = TraceUtil.findNextNode(pair.getNode(), pair.getFirstFeedback(), trace);
-			relatedNodes.retainAll(TraceUtil.dynamicSlic(trace, node));
+			relatedNodes.retainAll(TraceUtil.dynamicSlice(trace, node));
 		}
 		List<TraceNode> newSlicedNodes = new ArrayList<>();
 		newSlicedNodes.addAll(relatedNodes);
