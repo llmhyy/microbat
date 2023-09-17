@@ -52,6 +52,8 @@ public class VariableLabelProvider implements ITableLabelProvider {
 					return value + (" aliasID:" + aliasVarID);
 				}
 				return value;
+			case 3:
+				return String.format("%.2f", varValue.getComputationalCost());
 			default:
 				throw new IllegalArgumentException("Unhandled columnIndex: " + columnIndex);
 			}

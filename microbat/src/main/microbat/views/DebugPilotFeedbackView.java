@@ -177,19 +177,19 @@ public class DebugPilotFeedbackView extends ViewPart {
 
 		final Tree tree = this.createVarTree(group);
 
-		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
-		probColumn.setAlignment(SWT.LEFT);
-		probColumn.setText("Correctness");
-		probColumn.setWidth(100);
-		
-		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
-		costColumn.setAlignment(SWT.LEFT);
-		costColumn.setText("Cost");
-		costColumn.setWidth(100);
+//		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
+//		probColumn.setAlignment(SWT.LEFT);
+//		probColumn.setText("Correctness");
+//		probColumn.setWidth(100);
+//		
+//		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
+//		costColumn.setAlignment(SWT.LEFT);
+//		costColumn.setText("Cost");
+//		costColumn.setWidth(100);
 		
 		this.readVariableViewer = new TreeViewer(tree);
 		this.readVariableViewer.addDragSupport(this.operations, this.transferTypes, this.createDragSourceAdapter(this.readVariableViewer));
-		this.readVariableViewer.setLabelProvider(new VariableWithProbabilityLabelProvider());
+		this.readVariableViewer.setLabelProvider(new VariableLabelProvider());
 	}
 	
 	protected void createWrittenVariableViewer(final Composite parent) {
@@ -202,19 +202,19 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		final Tree tree = this.createVarTree(group);
 		
-		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
-		probColumn.setAlignment(SWT.LEFT);
-		probColumn.setText("Correctness");
-		probColumn.setWidth(100);
-		
-		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
-		costColumn.setAlignment(SWT.LEFT);
-		costColumn.setText("Cost");
-		costColumn.setWidth(100);
+//		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
+//		probColumn.setAlignment(SWT.LEFT);
+//		probColumn.setText("Correctness");
+//		probColumn.setWidth(100);
+//		
+//		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
+//		costColumn.setAlignment(SWT.LEFT);
+//		costColumn.setText("Cost");
+//		costColumn.setWidth(100);
 		
 		this.writtenVariableViewer = new TreeViewer(tree);
 //		this.writtenVariableViewer.addDragSupport(this.operations, this.transferTypes, this.createDragSourceAdapter(this.writtenVariableViewer));
-		this.writtenVariableViewer.setLabelProvider(new VariableWithProbabilityLabelProvider());
+		this.writtenVariableViewer.setLabelProvider(new VariableLabelProvider());
 	}
 	
 	protected void createControlDominatorGroup(final Composite parent) {
@@ -461,6 +461,11 @@ public class DebugPilotFeedbackView extends ViewPart {
 		valueColumn.setAlignment(SWT.LEFT);
 		valueColumn.setText("Value");
 		valueColumn.setWidth(200);
+		
+		TreeColumn suspicioiusColumn = new TreeColumn(tree, SWT.LEFT);
+		suspicioiusColumn.setAlignment(SWT.LEFT);
+		suspicioiusColumn.setText("Supsicious");
+		suspicioiusColumn.setWidth(100);
 		
 		return tree;
 	}

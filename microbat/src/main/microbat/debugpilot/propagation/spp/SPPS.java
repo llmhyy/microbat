@@ -142,9 +142,6 @@ public class SPPS implements ProbabilityPropagator {
 		for (TraceNode node : this.slicedTrace) {
 			List<VarValue> readVars = node.getReadVariables();
 			
-			if (node.getOrder() == 119) {
-				System.out.println();
-			}
 			if (readVars.isEmpty()) {
 				continue;
 			}

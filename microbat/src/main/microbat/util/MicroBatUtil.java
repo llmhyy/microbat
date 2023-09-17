@@ -349,7 +349,7 @@ public class MicroBatUtil {
 		String exp = className + 
 					 " line:" + lineNumber + 
 					 " duration: " + duration + 
-					 "ms cost: " + computationCost;
+					 "ms suspicious: " + computationCost;
 		return exp;
 	}
 	
