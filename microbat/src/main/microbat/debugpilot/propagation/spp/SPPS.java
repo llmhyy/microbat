@@ -49,7 +49,7 @@ public class SPPS implements ProbabilityPropagator {
 		this.calFeedbackSuspiciousScore();
 		this.calSpectrumSuspiciousScore();
 		this.calSuspiciousScoreVariable();
-	
+		this.normalizeVariableSuspicious();
 
 	}
 	
