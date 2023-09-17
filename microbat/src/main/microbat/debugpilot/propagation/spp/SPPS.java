@@ -49,6 +49,7 @@ public class SPPS implements ProbabilityPropagator {
 		this.calFeedbackSuspiciousScore();
 		this.calSpectrumSuspiciousScore();
 		this.calSuspiciousScoreVariable();
+	
 
 	}
 	
@@ -175,6 +176,17 @@ public class SPPS implements ProbabilityPropagator {
 			}
 		}
 		return null;
+	}
+	
+	protected void normalizeVariableSuspicious() {
+		final double maxSuspicious = Math.max(
+				this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).mapToDouble(var -> var.computationalCost).max().orElse(0.0d),
+				this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).mapToDouble(var -> var.computationalCost).max().orElse(0.0d)
+		);
+		if (maxSuspicious != 0.0d) {
+			this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost /= maxSuspicious);
+			this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost /= maxSuspicious);
+		}
 	}
 	
 	protected void constructUnmodifiedOpcodeType() {

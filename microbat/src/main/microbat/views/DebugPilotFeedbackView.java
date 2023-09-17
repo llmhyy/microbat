@@ -394,18 +394,18 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		final Tree tree = this.createVarTree(group);
 		
-		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
-		probColumn.setAlignment(SWT.LEFT);
-		probColumn.setText("Correctness");
-		probColumn.setWidth(100);
-		
-		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
-		costColumn.setAlignment(SWT.LEFT);
-		costColumn.setText("Cost");
-		costColumn.setWidth(100);
+//		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
+//		probColumn.setAlignment(SWT.LEFT);
+//		probColumn.setText("Correctness");
+//		probColumn.setWidth(100);
+//		
+//		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
+//		costColumn.setAlignment(SWT.LEFT);
+//		costColumn.setText("Cost");
+//		costColumn.setWidth(100);
 		
 		this.relatedVariablesViewer = new TreeViewer(tree);
-		this.relatedVariablesViewer.setLabelProvider(new VariableWithProbabilityLabelProvider());
+		this.relatedVariablesViewer.setLabelProvider(new VariableLabelProvider());
 	}
 	
 	

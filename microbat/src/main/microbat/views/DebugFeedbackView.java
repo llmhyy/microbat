@@ -1277,7 +1277,7 @@ public class DebugFeedbackView extends ViewPart {
 					}
 					return value;
 				case 3:
-					return String.format("%.4f", varValue.getProbability());
+					return String.format("%.4f", varValue.computationalCost);
 //				case 4:
 //					return String.format("%.2f", varValue.getForwardProb());
 //				case 5:
