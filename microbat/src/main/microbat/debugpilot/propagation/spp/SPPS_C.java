@@ -1,9 +1,12 @@
 package microbat.debugpilot.propagation.spp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import microbat.bytecode.ByteCode;
@@ -12,6 +15,7 @@ import microbat.bytecode.OpcodeType;
 import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.propagation.ProbabilityPropagator;
 import microbat.debugpilot.settings.PropagatorSettings;
+import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -19,7 +23,7 @@ import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 import microbat.vectorization.vector.NodeVector;
 
-public class SPPS implements ProbabilityPropagator {
+public class SPPS_C implements ProbabilityPropagator {
 	
 	protected final Trace trace;
 	protected List<TraceNode> slicedTrace;
@@ -29,11 +33,11 @@ public class SPPS implements ProbabilityPropagator {
 	protected final List<OpcodeType> unmodifiedType = new ArrayList<>();
 	protected List<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
 	
-	public SPPS(final PropagatorSettings settings) {
+	public SPPS_C(final PropagatorSettings settings) {
 		this(settings.getTrace(), settings.getSlicedTrace(), settings.getWrongVars(), settings.getFeedbacks());
 	}
 	
-	public SPPS(final Trace trace, final List<TraceNode> sliceTraceNodes, final Collection<VarValue> wrongVars, final Collection<NodeFeedbacksPair> feedbacksPair) {
+	public SPPS_C(final Trace trace, final List<TraceNode> sliceTraceNodes, final Collection<VarValue> wrongVars, final Collection<NodeFeedbacksPair> feedbacksPair) {
 		this.trace = trace;
 		this.slicedTrace = sliceTraceNodes;
 		this.wrongVars.addAll(wrongVars);
@@ -46,13 +50,14 @@ public class SPPS implements ProbabilityPropagator {
 		this.initConfirmed();
 		this.initSuspiciousScore();
 		this.calComputationalSuspiciousScore();
-		this.calFeedbackSuspiciousScore();
-		this.calSpectrumSuspiciousScore();
 		this.calSuspiciousScoreVariable();
 		this.normalizeVariableSuspicious();
 
 	}
 	
+	protected void genRandomSuspiciousScore() {
+		this.slicedTrace.stream().forEach(node -> node.computationCost = Math.random());
+	}
 	protected void initConfirmed() {
 		this.slicedTrace.stream().forEach(node -> node.confirmed = false);
 	}
@@ -69,57 +74,6 @@ public class SPPS implements ProbabilityPropagator {
 			});
 		}
 	}
-	
-	protected void calSpectrumSuspiciousScore() {
-		this.slicedTrace.stream().forEach(node -> {
-			node.cf = 0;
-			node.cs = 0;
-			node.uf = 0;
-		});
-		
-		Set<TraceNode> nodeCoveredByWrongFeedback = new HashSet<>();
-		for (NodeFeedbacksPair feedbackPair : this.feedbackRecords) {
-			if (feedbackPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-				final TraceNode node = feedbackPair.getNode();
-				final List<VarValue> wrongVars = feedbackPair.getFeedbacks().stream().map(feedback -> feedback.getOption().getReadVar()).toList();
-				for (VarValue readVar : node.getReadVariables()) {
-					final TraceNode dataDominator = this.trace.findDataDependency(node, readVar);
-					if (dataDominator == null) {
-						continue;
-					}
-					
-					List<TraceNode> relatedNodes = TraceUtil.dynamicSlice(trace, dataDominator);
-					
-					if (wrongVars.contains(readVar)) {
-						// Variable is wrong
-						nodeCoveredByWrongFeedback.addAll(relatedNodes);
-						relatedNodes.stream().forEach(relatedNode -> relatedNode.cf +=1);
-					} else {
-						// Variable is correct
-						relatedNodes.stream().forEach(relatedNode -> relatedNode.cs +=1);
-					}
-				}
-				
-			} else if (feedbackPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-				final TraceNode controlDominator = feedbackPair.getNode().getControlDominator();
-				if (controlDominator != null) {
-					List<TraceNode> relatedNodes = TraceUtil.dynamicSlice(trace, controlDominator);
-					nodeCoveredByWrongFeedback.addAll(relatedNodes);
-					relatedNodes.stream().forEach(relatedNode -> relatedNode.cf += 1);
-				}
-			}
-		}
-		
-		Set<TraceNode> nodeUnCoveredByWrongFeedback = new HashSet<>();
-		nodeUnCoveredByWrongFeedback.addAll(this.slicedTrace);
-		nodeUnCoveredByWrongFeedback.removeAll(nodeCoveredByWrongFeedback);
-		nodeUnCoveredByWrongFeedback.stream().forEach(uncoveredNode -> uncoveredNode.uf += 1);
-		
-		this.slicedTrace.stream().forEach(node -> {
-			node.computationCost += (node.cf / ((double) node.cf+node.uf+2.0d*node.cs));
-		});
-		
-	}
 
 	protected void calFeedbackSuspiciousScore() {
 		StepComparision comparision = new StepComparision();
@@ -129,7 +83,7 @@ public class SPPS implements ProbabilityPropagator {
 			for (NodeFeedbacksPair nodeFeedbacksPair : this.feedbackRecords) {
 				final NodeVector feedbackNodeVector = new NodeVector(nodeFeedbacksPair.getNode());
 				final double sim = comparision.calCosSimilarity(nodeVector.getVector(), feedbackNodeVector.getVector());
-				score *= (1-sim);
+				score *= (1-Math.pow(sim, 4));
 			}
 			node.computationCost += score;
 		}

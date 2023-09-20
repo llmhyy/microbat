@@ -7,7 +7,8 @@ import microbat.debugpilot.propagation.spp.SPPH;
 import microbat.debugpilot.propagation.spp.SPPRL;
 import microbat.debugpilot.propagation.spp.SPPRLTrain;
 import microbat.debugpilot.propagation.spp.SPPRandom;
-import microbat.debugpilot.propagation.spp.SPPS;
+import microbat.debugpilot.propagation.spp.SPPS_C;
+import microbat.debugpilot.propagation.spp.SPPS_CS;
 import microbat.debugpilot.settings.PropagatorSettings;
 import microbat.log.Log;
 
@@ -33,8 +34,10 @@ public class PropagatorFactory {
 			return new SPPRandom(propagatorSettings);
 		case SPP_CFT:
 			return new SPPCFT(propagatorSettings);
-		case SPP_S:
-			return new SPPS(propagatorSettings);
+		case SPPS_C:
+			return new SPPS_C(propagatorSettings);
+		case SPPS_CS:
+			return new SPPS_CS(propagatorSettings);
 		default:
 			throw new RuntimeException(Log.genMsg(PropagatorFactory.class, "Undefined propagator type: " + propagatorSettings.getPropagatorType()));
 		}
