@@ -22,6 +22,8 @@ public class SPPS_CS extends SPPS_C {
 	protected final Map<BreakPoint, Integer> breakPointCSScore = new HashMap<>();
 	protected final Map<BreakPoint, Integer> breakPointNFScore = new HashMap<>();
 	
+	protected final double eps = 1e-10;
+	
 	public SPPS_CS(final PropagatorSettings settings) {
 		this(settings.getTrace(), settings.getSlicedTrace(), settings.getWrongVars(), settings.getFeedbacks());
 	}
@@ -117,7 +119,7 @@ public class SPPS_CS extends SPPS_C {
 		final int cs = this.breakPointCSScore.getOrDefault(breakPoint, 0);
 		final int nf = this.breakPointNFScore.getOrDefault(breakPoint, 0);
 		
-		return cf / ((double) cf + cs + nf);
+		return cf / ((double) cf + cs + nf + this.eps);
 	}
 
 }
