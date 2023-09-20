@@ -7,7 +7,10 @@ public enum PropagatorType {
 	SPP_COST,
 	SPP_CF,
 	SPP_CFT,
-	SPP_S,
+	SPPS_C,
+	SPPS_CS,
+	SPPS_CB,
+	SPPS_CSB,
 	SPP_RL,
 	SPP_RL_TRAIN,
 }

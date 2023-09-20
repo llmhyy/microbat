@@ -5,4 +5,6 @@ public enum PathFinderType {
 	Greedy,
 	Dijkstra,
 	DijkstraExp,
+	SuspiciousDijkstra,
+	SuspiciousDijkstraExp
 }
