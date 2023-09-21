@@ -128,10 +128,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.createReadVariablesViewer(sashForm);
 		this.createWrittenVariableViewer(sashForm);
 //		this.createControlDominatorGroup(parent);
-		this.createRelatedVariableGroup(sashForm);
+//		this.createRelatedVariableGroup(sashForm);
 		this.createAvaliableFeedbackView(sashForm);
 		
-		sashForm.setWeights(6, 10, 10, 4, 10);
+		sashForm.setWeights(6, 10, 10, 10);
 	}
 
 	@Override
@@ -145,7 +145,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.refreshWrittenVariableViewer();
 //		this.refreshControlDominoatorViewer();
 		this.refreshOutputGroup();
-		this.refreshRelatedVariableGroup();
+//		this.refreshRelatedVariableGroup();
 		this.refreshAvailableFeedbackViewer();
 	}
 	
