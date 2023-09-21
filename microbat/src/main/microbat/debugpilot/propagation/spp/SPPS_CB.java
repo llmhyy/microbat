@@ -44,7 +44,7 @@ public class SPPS_CB extends SPPS_C {
 	public void propagate() {
 		this.initConfirmed();
 		this.initSuspiciousScore();
-		this.calComputationalSuspiciousScore();
+//		this.calComputationalSuspiciousScore();
 		this.calBytecodeSuspiciousScore();
 		this.calSuspiciousScoreVariable();
 		this.normalizeVariableSuspicious();
@@ -55,21 +55,11 @@ public class SPPS_CB extends SPPS_C {
 		for (TraceNode node : this.slicedTrace) {
 			double score = 0.0d;
 			ByteCodeList byteCodeList = new ByteCodeList(node.getBytecode());
-//			if (node.getOrder() == 40 ) {
-//				System.out.println();
-//			}
 			for (ByteCode byteCode : byteCodeList) {
-//				final double s = this.calBytecodeScore(byteCode);
-//				score += s * s;
 				score += this.calBytecodeScore(byteCode);
 			}
-			if (byteCodeList.size() > 0) {				
-				score /= byteCodeList.size();
-			}
-//			System.out.println("TraceNode: " + node.getOrder() + " score: " + score + " bytecode: " + node.getBytecode());
-			node.computationCost += score;
+			node.computationCost += 1+score;
 		}
-		System.out.println("---------------");
 	}
 	
 	protected void updateBytecodeScore() {
@@ -81,9 +71,6 @@ public class SPPS_CB extends SPPS_C {
 		for (NodeFeedbacksPair feedbackPair : this.feedbackRecords) {
 			if (feedbackPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
 				final TraceNode node = feedbackPair.getNode();
-				if (node.getOrder() == 48) {
-					System.out.println();
-				}
 				final List<VarValue> wrongVars = feedbackPair.getFeedbacks().stream().map(feedback -> feedback.getOption().getReadVar()).toList();
 				for (VarValue readVar : node.getReadVariables()) {
 					final TraceNode dataDominator = this.trace.findDataDependency(node, readVar);
