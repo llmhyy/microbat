@@ -315,6 +315,7 @@ public class DebugPilotHandler extends AbstractHandler {
 				feedbackPath.removePathAfterNode(userFeedbacksPair.getNode());
 				feedbackPath.forEach(pair -> pair.getNode().confirmed = true);
 				updatePathView(feedbackPath);
+				DialogUtil.popInformationDialog("Root Cause is found. Debugging process end.", DIALOG_INFO_TITLE);
 				this.stateMachine.setState(new EndState(this.stateMachine));
 			} else if (userFeedbacksPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
 				// Omission bug detected
@@ -354,6 +355,8 @@ public class DebugPilotHandler extends AbstractHandler {
 		@Override
 		public void handleFeedback() {
 			this.stateMachine.setEnd(true);
+			isRunningProcess = false;
+			
 		}
 	}
 	
@@ -385,6 +388,7 @@ public class DebugPilotHandler extends AbstractHandler {
 			}
 			
 			if (feedbacksPair.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
+				DialogUtil.popInformationDialog("Root Cause is found. Debugging process end.", DIALOG_INFO_TITLE);
 				this.stateMachine.setState(new EndState(this.stateMachine));
 				return true;
 			}
