@@ -436,6 +436,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 					UserFeedback[] feedbacks = Arrays.stream(availableFeedbackViewer.getCheckedElements()).map(obj -> {return (UserFeedback) obj;}).toArray(UserFeedback[]::new);
 					NodeFeedbacksPair userFeedbacksPair = new NodeFeedbacksPair(currentNode, feedbacks);
 					DebugPilotInfo.getInstance().setNodeFeedbacksPair(userFeedbacksPair);
+					
+					PathView pathView = MicroBatViews.getPathView();
+					final TraceNode nextNode = TraceUtil.findNextNode(currentNode, userFeedbacksPair.getFirstFeedback(), trace);
+					pathView.focusOnNode(nextNode);
 				}
 			}
 		});
