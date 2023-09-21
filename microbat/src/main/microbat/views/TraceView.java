@@ -52,6 +52,8 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
+import debugpilot.userlogger.UserBehaviorLogger;
+import debugpilot.userlogger.UserBehaviorType;
 import microbat.Activator;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
@@ -345,6 +347,7 @@ public class TraceView extends ViewPart {
 			}
 
 			public void selectionChanged(SelectionChangedEvent event) {
+				UserBehaviorLogger.logEvent(UserBehaviorType.CHECK_NODE);
 				ISelection iSel = event.getSelection();
 				if (iSel instanceof StructuredSelection) {
 					StructuredSelection sel = (StructuredSelection) iSel;

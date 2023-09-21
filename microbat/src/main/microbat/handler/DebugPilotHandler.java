@@ -16,6 +16,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 
+import debugpilot.userlogger.UserBehaviorLogger;
+import debugpilot.userlogger.UserBehaviorType;
 import microbat.debugpilot.DebugPilot;
 import microbat.debugpilot.DebugPilotInfo;
 import microbat.debugpilot.NodeFeedbacksPair;
@@ -85,7 +87,7 @@ public class DebugPilotHandler extends AbstractHandler {
 	}
 	
 	protected void execute() {
-		
+		UserBehaviorLogger.logEvent(UserBehaviorType.START_DEBUGPILOT);
 		if (this.isRunningProcess) {
 			DialogUtil.popErrorDialog("DebugPilot is currently running a process. Please stop the original process before you start a new one", DebugPilotHandler.DIALOG_ERROR_TITLE);
 			return;
