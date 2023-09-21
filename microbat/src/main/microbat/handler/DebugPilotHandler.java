@@ -139,7 +139,6 @@ public class DebugPilotHandler extends AbstractHandler {
 		final DebugPilot debugPilot = new DebugPilot(settings);
 		final DebugPilotFiniteStateMachine fsm = new DebugPilotFiniteStateMachine(debugPilot);
 		fsm.setState(new PropagationState(fsm, initFeedback));
-		
 		while (!fsm.isEnd()) {
 			fsm.handleFeedback();
 		}
@@ -382,8 +381,6 @@ public class DebugPilotHandler extends AbstractHandler {
 		
 		protected boolean handleFeedback(final NodeFeedbacksPair feedbacksPair) {
 			if (feedbacksPair == null) {
-//				this.stateMachine.setState(new EndState(this.stateMachine));
-//				return true;
 				throw new RuntimeException("Got null feedback");
 			}
 			
@@ -497,13 +494,11 @@ public class DebugPilotHandler extends AbstractHandler {
 		
 		protected String genOmissionMessage(final TraceNode startNode, final TraceNode endNode) {
 			StringBuilder strBuilder = new StringBuilder();
-			strBuilder.append("Control omission bug detected: \n\n");
-			strBuilder.append("There should be a missing block of code that lie in "
-					+ "between node " + startNode.getOrder() + " and node " + endNode.getOrder() + ", "
-					+ "resulting in wrong branch feedback in node " + endNode.getOrder() + " and"
-					+ " correct feedback in node " + startNode.getOrder() + ".\n\n");
-			strBuilder.append("If you agree with this prediction, please give ROOT_CAUSE feedback.\n");
-			strBuilder.append("If not, please review the path and give another feedback.");
+			strBuilder.append("Conflicting feedback detected:\n\n");
+			strBuilder.append("TraceNode: " + startNode.getOrder() + " with feedback: Correct\n");
+			strBuilder.append("TraceNode: " + endNode.getOrder() + " with feedback: " + this.prevFeedback + "\n\n");
+			strBuilder.append("It can be omission bug or you give a wrong feedback. \n");
+			strBuilder.append("DebugPilot will now scan the step to narrow down the missing scpe, or you may review the feedback you give previously.");
 			return strBuilder.toString();
 		}
 		
@@ -575,13 +570,11 @@ public class DebugPilotHandler extends AbstractHandler {
 		
 		protected String genOmissionMessage(final int startNodeOrder, final int endNodeOrder) {
 			StringBuilder strBuilder = new StringBuilder();
-			strBuilder.append("Data omission bug detected: \n\n");
-			strBuilder.append("There should be a missing block of code that lie in "
-					+ "between node " + startNodeOrder + " and node " + endNodeOrder + ", "
-					+ "resulting in wrong variable feedback in node " + endNodeOrder + " and"
-					+ " correct feedback in node " + startNodeOrder + ".\n\n");
-			strBuilder.append("If you agree with this prediction, please give ROOT_CAUSE feedback.\n");
-			strBuilder.append("If not, please review the path and give another feedback.");
+			strBuilder.append("Conflicting feedback detected:\n\n");
+			strBuilder.append("TraceNode: " + startNode.getOrder() + " with feedback: Correct\n");
+			strBuilder.append("TraceNode: " + endNode.getOrder() + " with feedback: " + this.prevFeedback + "\n\n");
+			strBuilder.append("It can be omission bug or you give a wrong feedback. \n");
+			strBuilder.append("DebugPilot will now scan the step to narrow down the missing scpe, or you may review the feedback you give previously.");
 			return strBuilder.toString();
 		}
 		
