@@ -59,6 +59,8 @@ import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.userlogger.UserBehaviorLogger;
+import microbat.userlogger.UserBehaviorType;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
@@ -339,6 +341,7 @@ public class TraceView extends ViewPart {
 			}
 
 			public void selectionChanged(SelectionChangedEvent event) {
+				UserBehaviorLogger.logEvent(UserBehaviorType.CHECK_NODE);
 				ISelection iSel = event.getSelection();
 				if (iSel instanceof StructuredSelection) {
 					StructuredSelection sel = (StructuredSelection) iSel;

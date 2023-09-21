@@ -60,6 +60,8 @@ import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.StepRecommender;
 import microbat.recommendation.UserFeedback;
+import microbat.userlogger.UserBehaviorLogger;
+import microbat.userlogger.UserBehaviorType;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
@@ -666,6 +668,7 @@ public class DebugFeedbackView extends ViewPart {
 		}
 
 		public void mouseDown(MouseEvent e) {
+			UserBehaviorLogger.logEvent(UserBehaviorType.FIND_BUG);
 			if (feedback == null) {
 				openChooseFeedbackDialog();
 			} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)
@@ -683,7 +686,15 @@ public class DebugFeedbackView extends ViewPart {
 						boolean isValidForRecommendation = isValidForRecommendation();
 						if(isValidForRecommendation){
 							String feedbackType = feedback.getFeedbackType();
-							
+							if (feedbackType.equals(UserFeedback.CORRECT)) {
+								UserBehaviorLogger.logEvent(UserBehaviorType.CORRECT);
+							} else if (feedbackType.equals(UserFeedback.WRONG_PATH)) {
+								UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING);
+							} else if (feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+								UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING);
+							} else if (feedbackType.equals(UserFeedback.UNCLEAR)) {
+								UserBehaviorLogger.logEvent(UserBehaviorType.UNCLEAR);
+							}
 							CheckingState state = new CheckingState();
 							state.recordCheckingState(currentNode, recommender, trace, Settings.interestedVariables, 
 									Settings.wrongPathNodeOrder, Settings.potentialCorrectPatterns);
