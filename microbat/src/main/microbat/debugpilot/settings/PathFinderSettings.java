@@ -8,7 +8,7 @@ import microbat.model.trace.TraceNode;
 
 public class PathFinderSettings {
 	
-	public static final PathFinderType DEFAULT_PATH_FINDER_TYPE = PathFinderType.DijkstraExp;
+	public static final PathFinderType DEFAULT_PATH_FINDER_TYPE = PathFinderType.SuspiciousDijkstraExp;
 	
 	protected PathFinderType pathFinderType = PathFinderSettings.DEFAULT_PATH_FINDER_TYPE;
 	protected Trace trace = null;

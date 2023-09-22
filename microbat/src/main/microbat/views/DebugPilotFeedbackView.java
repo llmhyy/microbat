@@ -44,6 +44,8 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.part.ViewPart;
 
+import debugpilot.userlogger.UserBehaviorLogger;
+import debugpilot.userlogger.UserBehaviorType;
 import microbat.debugpilot.DebugPilotInfo;
 import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.FeedbackPath;
@@ -128,10 +130,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.createReadVariablesViewer(sashForm);
 		this.createWrittenVariableViewer(sashForm);
 //		this.createControlDominatorGroup(parent);
-		this.createRelatedVariableGroup(sashForm);
+//		this.createRelatedVariableGroup(sashForm);
 		this.createAvaliableFeedbackView(sashForm);
 		
-		sashForm.setWeights(6, 10, 10, 4, 10);
+		sashForm.setWeights(6, 10, 10, 10);
 	}
 
 	@Override
@@ -145,7 +147,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.refreshWrittenVariableViewer();
 //		this.refreshControlDominoatorViewer();
 		this.refreshOutputGroup();
-		this.refreshRelatedVariableGroup();
+//		this.refreshRelatedVariableGroup();
 		this.refreshAvailableFeedbackViewer();
 	}
 	
@@ -436,6 +438,22 @@ public class DebugPilotFeedbackView extends ViewPart {
 					UserFeedback[] feedbacks = Arrays.stream(availableFeedbackViewer.getCheckedElements()).map(obj -> {return (UserFeedback) obj;}).toArray(UserFeedback[]::new);
 					NodeFeedbacksPair userFeedbacksPair = new NodeFeedbacksPair(currentNode, feedbacks);
 					DebugPilotInfo.getInstance().setNodeFeedbacksPair(userFeedbacksPair);
+					
+					PathView pathView = MicroBatViews.getPathView();
+					final TraceNode nextNode = TraceUtil.findNextNode(currentNode, userFeedbacksPair.getFirstFeedback(), trace);
+					pathView.focusOnNode(nextNode);
+					
+					String feedbackType = userFeedbacksPair.getFeedbackType();
+					if (feedbackType.equals(UserFeedback.CORRECT)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.CORRECT);
+					} else if (feedbackType.equals(UserFeedback.WRONG_PATH)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_CONFIRM);
+					} else if (feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_CONFIRM);
+					} else if (feedbackType.equals(UserFeedback.ROOTCAUSE)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.ROOT_CAUSE);
+					}
+					
 				}
 			}
 		});
@@ -652,7 +670,11 @@ public class DebugPilotFeedbackView extends ViewPart {
 		public void update(ViewerCell cell) {
 			Button button = new Button((Composite) cell.getViewerRow().getControl(), SWT.PUSH);
 			final UserFeedback userFeedback = (UserFeedback) cell.getElement();
-			
+			if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+				UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_EXPLORE);
+			} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+				UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_EXPLORE);
+			}
 			final TraceNode nextNode = TraceUtil.findNextNode(this.currentNode, userFeedback, trace);
 			final String buttonText = nextNode == null ? "-" : String.valueOf(nextNode.getOrder());
 			button.setText(buttonText);

@@ -5,6 +5,8 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 
+import debugpilot.userlogger.UserBehaviorLogger;
+import debugpilot.userlogger.UserBehaviorType;
 import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.views.PathView;
 import microbat.views.utils.contentprovider.ActionPathContentProvider;
@@ -20,7 +22,7 @@ public class FeedbackPathSelectionListener implements ISelectionChangedListener 
 	@Override
 	public void selectionChanged(SelectionChangedEvent event) {
 		ISelection iSel = event.getSelection();
-		
+		UserBehaviorLogger.logEvent(UserBehaviorType.CHECK_PATH);
 		if (iSel instanceof StructuredSelection structuredSelection) {
 			Object obj = structuredSelection.getFirstElement();
 			if (obj instanceof NodeFeedbacksPair nodeFeedbackPairs) {				

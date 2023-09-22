@@ -13,7 +13,7 @@ import microbat.model.value.VarValue;
 
 public class PropagatorSettings {
 	
-	public static final PropagatorType DEFAULT_PROPAGATOR_TYPE = PropagatorType.SPPS_C;
+	public static final PropagatorType DEFAULT_PROPAGATOR_TYPE = PropagatorType.SPPS_CS;
 	public static final boolean DEFAULT_USE_LOCATL_SERVER = false;
 	public static final String DEFAULT_SERVER_HOST = "172.26.191.20";
 	public static final int DEFAULT_SERVER_PORT = 8084;

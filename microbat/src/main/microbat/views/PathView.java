@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.part.ViewPart;
 
 import fj.P;
+import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.model.trace.TraceNode;
 import microbat.recommendation.UserFeedback;
@@ -183,6 +184,16 @@ public class PathView extends ViewPart {
 	
 	public FeedbackPath getFeedbackPath() {
 		return this.feedbackPath;
+	}
+	
+	public void focusOnNode(final TraceNode node) {
+		if (node == null) return;
+		for (NodeFeedbacksPair nodeFeedbacksPair : this.feedbackPath) {
+			if (node.equals(nodeFeedbacksPair.getNode())) {
+				StructuredSelection selection = new StructuredSelection(nodeFeedbacksPair);
+				this.feedbackPathViewer.setSelection(selection);
+			}
+		}
 	}
 	
 }

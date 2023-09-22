@@ -41,9 +41,6 @@ public class SuspiciousDijkstraPathFinder extends DijkstraPathFinder {
 		
 		while (!toVisitNodes.isEmpty()) {
 			final TraceNode node = toVisitNodes.poll();
-			if (node.getOrder() == 4) {
-				System.out.println();
-			}
 			directedGraph.addVertex(node);
 			for (VarValue readVar : node.getReadVariables()) {
 				final TraceNode dataDom = this.trace.findDataDependency(node, readVar);
