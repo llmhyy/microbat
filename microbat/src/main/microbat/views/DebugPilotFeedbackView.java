@@ -670,11 +670,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		public void update(ViewerCell cell) {
 			Button button = new Button((Composite) cell.getViewerRow().getControl(), SWT.PUSH);
 			final UserFeedback userFeedback = (UserFeedback) cell.getElement();
-			if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-				UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_EXPLORE);
-			} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-				UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_EXPLORE);
-			}
+
 			final TraceNode nextNode = TraceUtil.findNextNode(this.currentNode, userFeedback, trace);
 			final String buttonText = nextNode == null ? "-" : String.valueOf(nextNode.getOrder());
 			button.setText(buttonText);
@@ -685,6 +681,12 @@ public class DebugPilotFeedbackView extends ViewPart {
 					final TraceView traceView = MicroBatViews.getTraceView();
 					traceView.jumpToNode(trace, nextNode.getOrder(), false);
 					traceView.jumpToNode(nextNode);
+					
+					if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_EXPLORE);
+					} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_EXPLORE);
+					}
 				}
 				@Override
 				public void widgetDefaultSelected(SelectionEvent e) {}
