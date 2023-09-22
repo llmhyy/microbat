@@ -70,7 +70,7 @@ public class FeedbackPathLabelProvider extends ColumnLabelProvider implements IT
 				} else if (feedbackType.equals(UserFeedback.WRONG_PATH)) {
 					return "This step should not be executed";
 				} else if (feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-					return "Wrong variable: " + userFeedbackPair.getFirstFeedback().getOption().getReadVar().getVarName();
+					return "Wrong variable: " + userFeedbackPair.getFirstWrongFeedback().getOption().getReadVar().getVarName();
 				} else if (feedbackType.equals(UserFeedback.UNCLEAR)) {
 					return "Unclear";
 				} else if (feedbackType.equals(UserFeedback.ROOTCAUSE)) {

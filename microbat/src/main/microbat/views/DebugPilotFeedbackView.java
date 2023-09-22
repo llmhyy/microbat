@@ -338,8 +338,8 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		TableColumn typeColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.LEFT);
 		typeColumn.setAlignment(SWT.LEFT);
-		typeColumn.setText("Type");
-		typeColumn.setWidth(170);
+		typeColumn.setText("Feedback");
+		typeColumn.setWidth(250);
 		this.typeViewerColumn = new TableViewerColumn(this.availableFeedbackViewer, typeColumn);
 		
 		 
@@ -367,10 +367,34 @@ public class DebugPilotFeedbackView extends ViewPart {
 			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				final UserFeedback checkedFeedback = (UserFeedback) event.getElement();
-				for (Object element : availableFeedbackViewer.getCheckedElements()) {
-					if (element instanceof UserFeedback userFeedback) {
-						if (!userFeedback.getFeedbackType().equals(checkedFeedback.getFeedbackType())) {
-							availableFeedbackViewer.setChecked(element, false);
+				if (checkedFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+					for (Object element : availableFeedbackViewer.getCheckedElements()) {
+						if (element instanceof UserFeedback userFeedback) {
+							if (userFeedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT) || userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+								availableFeedbackViewer.setChecked(element, false);
+							}
+							if (userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE) && userFeedback.getOption().getReadVar().equals(checkedFeedback.getOption().getReadVar())) {
+								availableFeedbackViewer.setChecked(element, false);
+							}
+						}
+					}
+				} else if (checkedFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+					for (Object element : availableFeedbackViewer.getCheckedElements()) {
+						if (element instanceof UserFeedback userFeedback) {
+							if (userFeedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT) || userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+								availableFeedbackViewer.setChecked(element, false);
+							}
+							if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) && userFeedback.getOption().getReadVar().equals(checkedFeedback.getOption().getReadVar())) {
+								availableFeedbackViewer.setChecked(element, false);
+							}
+						}
+					}
+				} else {					
+					for (Object element : availableFeedbackViewer.getCheckedElements()) {
+						if (element instanceof UserFeedback userFeedback) {
+							if (!userFeedback.getFeedbackType().equals(checkedFeedback.getFeedbackType())) {
+								availableFeedbackViewer.setChecked(element, false);
+							}
 						}
 					}
 				}
@@ -436,12 +460,25 @@ public class DebugPilotFeedbackView extends ViewPart {
 					DialogUtil.popErrorDialog("Please give feedback only on step in path", "DebugPilot Feedback Error");
 				} else {					
 					UserFeedback[] feedbacks = Arrays.stream(availableFeedbackViewer.getCheckedElements()).map(obj -> {return (UserFeedback) obj;}).toArray(UserFeedback[]::new);
+					
+					List<String> feedbackList = Arrays.stream(feedbacks)
+							.map(feedback -> feedback.getFeedbackType())
+							.distinct()
+							.filter(type -> !type.equals(UserFeedback.CORRECT_VARIABLE_VALUE)).toList();
+					if (feedbackList.isEmpty()) {
+						DialogUtil.popErrorDialog("Feedback must contain either root cause, correct, wrong path or wrong variable", "DebugPilot Feedback View Error");
+						return;
+					}
+					
+					
 					NodeFeedbacksPair userFeedbacksPair = new NodeFeedbacksPair(currentNode, feedbacks);
 					DebugPilotInfo.getInstance().setNodeFeedbacksPair(userFeedbacksPair);
 					
 					PathView pathView = MicroBatViews.getPathView();
-					final TraceNode nextNode = TraceUtil.findNextNode(currentNode, userFeedbacksPair.getFirstFeedback(), trace);
-					pathView.focusOnNode(nextNode);
+					final TraceNode nextNode = TraceUtil.findNextNode(currentNode, userFeedbacksPair.getFirstWrongFeedback(), trace);
+					if (nextNode != null) {						
+						pathView.focusOnNode(nextNode);
+					}
 					
 					String feedbackType = userFeedbacksPair.getFeedbackType();
 					if (feedbackType.equals(UserFeedback.CORRECT)) {
@@ -539,7 +576,7 @@ public class DebugPilotFeedbackView extends ViewPart {
             @Override
             public String getText(Object element) {
             	if (element instanceof UserFeedback userFeedback) {
-    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
     					VarValue wrongVar = userFeedback.getOption().getReadVar();
     					return wrongVar.getVarName();
     				}
@@ -553,7 +590,7 @@ public class DebugPilotFeedbackView extends ViewPart {
             @Override
             public String getText(Object element) {
             	if (element instanceof UserFeedback userFeedback) {
-    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
     					return userFeedback.getOption().getReadVar().getManifestationValue();					
     				} else {
     					return "-";
@@ -573,13 +610,15 @@ public class DebugPilotFeedbackView extends ViewPart {
 	
 	protected String genFeedbackType(final UserFeedback feedback) {
 		if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
-			return "CORRECT";
+			return "Step is correct";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-			return "WRONG_BRANCH";
+			return "Step should not be executed";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-			return "WRONG_VARIABLE";
+			return "Variable is wrong";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
-			return "ROOT_CAUSE";
+			return "Step is root cause";
+		} else if (feedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+			return "Variable is correct";
 		} else {
 			return null;
 		}
@@ -588,8 +627,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 	protected void checkDefaultAvailableFeedbacks() {
 		final FeedbackPath suggestedFeedbackPath = MicroBatViews.getPathView().getFeedbackPath();
 		if (suggestedFeedbackPath.contains(this.currentNode)) {
-			UserFeedback suggestedFeedback = suggestedFeedbackPath.getFeedback(this.currentNode).getFirstFeedback();
-			this.availableFeedbackViewer.setCheckedElements(new Object[] {suggestedFeedback});
+			NodeFeedbacksPair nodeFeedbacksPair = suggestedFeedbackPath.getFeedback(currentNode);
+			for (UserFeedback suggestedFeedback : nodeFeedbacksPair.getFeedbacks()) {
+				this.availableFeedbackViewer.setCheckedElements(new Object[] {suggestedFeedback});
+			}
 		} else {
 			this.availableFeedbackViewer.setAllChecked(false);
 		}
@@ -628,6 +669,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 			UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 			feedback.setOption(new ChosenVariableOption(readVar, null));
 			availableFeedbacks.add(feedback);
+			
+			UserFeedback anotherFeedback = new UserFeedback(UserFeedback.CORRECT_VARIABLE_VALUE);
+			anotherFeedback.setOption(new ChosenVariableOption(readVar, null));
+			availableFeedbacks.add(anotherFeedback);
 		}
 
 		availableFeedbacks.add(new UserFeedback(UserFeedback.ROOTCAUSE));
@@ -698,8 +743,7 @@ public class DebugPilotFeedbackView extends ViewPart {
             editor.grabVertical = true;
             editor.setEditor(button , item, cell.getColumnIndex());
             editor.layout();
-			
-			
+
 			registerButtons(button);
 		}
 	}

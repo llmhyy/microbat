@@ -95,8 +95,10 @@ public class DebugPilot {
 		Set<TraceNode> relatedNodes = new HashSet<>();
 		relatedNodes.addAll(TraceUtil.dynamicSlice(trace, outputNode));
 		for (NodeFeedbacksPair pair : this.debugPilotSettings.getFeedbacks()) {
-			final TraceNode node = TraceUtil.findNextNode(pair.getNode(), pair.getFirstFeedback(), trace);
-			relatedNodes.retainAll(TraceUtil.dynamicSlice(trace, node));
+			final TraceNode node = TraceUtil.findNextNode(pair.getNode(), pair.getFirstWrongFeedback(), trace);
+			if (node != null) {
+				relatedNodes.retainAll(TraceUtil.dynamicSlice(trace, node));				
+			}
 		}
 		List<TraceNode> newSlicedNodes = new ArrayList<>();
 		newSlicedNodes.addAll(relatedNodes);

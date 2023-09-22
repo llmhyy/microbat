@@ -208,15 +208,15 @@ public class DebugPilotHandler extends AbstractHandler {
 			return true;
 		}
 		
-		String feedbackType = null;
-		for (UserFeedback feedback : pair.getFeedbacks()) {
-			if (feedbackType == null) {
-				feedbackType = feedback.getFeedbackType();
-			} else if (!feedbackType.equals(feedback.getFeedbackType())) {
-				DialogUtil.popErrorDialog("You give conflicting feedback on node " + pair.getNode().getOrder(), DebugPilotHandler.DIALOG_ERROR_TITLE);
-				return false;
-			}
-		}
+//		String feedbackType = null;
+//		for (UserFeedback feedback : pair.getFeedbacks()) {
+//			if (feedbackType == null) {
+//				feedbackType = feedback.getFeedbackType();
+//			} else if (!feedbackType.equals(feedback.getFeedbackType())) {
+//				DialogUtil.popErrorDialog("You give conflicting feedback on node " + pair.getNode().getOrder(), DebugPilotHandler.DIALOG_ERROR_TITLE);
+//				return false;
+//			}
+//		}
 		
 		if (!path.contains(pair.getNode())) {
 			DialogUtil.popErrorDialog("Please give the feedback on node that inside the path. Node: " + pair.getNode().getOrder() + " is not lie in path.", DebugPilotHandler.DIALOG_ERROR_TITLE);
@@ -327,7 +327,7 @@ public class DebugPilotHandler extends AbstractHandler {
 				if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 					this.stateMachine.setState(new ControlOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
 				} else if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-					this.stateMachine.setState(new DataOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
+					this.stateMachine.setState(new DataOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstWrongFeedback(), buggyView.getTrace()));
 				} else {
 					throw new RuntimeException("Unhandled feedback");
 				}
@@ -337,7 +337,7 @@ public class DebugPilotHandler extends AbstractHandler {
 				if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 					this.stateMachine.setState(new ControlOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
 				} else if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-					this.stateMachine.setState(new DataOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
+					this.stateMachine.setState(new DataOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstWrongFeedback(), buggyView.getTrace()));
 				} else {
 					throw new RuntimeException("Unhandled feedback");
 				}
@@ -411,7 +411,7 @@ public class DebugPilotHandler extends AbstractHandler {
 					if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 						this.stateMachine.setState(new ControlOmissionState(stateMachine, initFeedbackPath, node, prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), trace));
 					} else if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-						this.stateMachine.setState(new DataOmissionState(stateMachine, initFeedbackPath, node, prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), trace));
+						this.stateMachine.setState(new DataOmissionState(stateMachine, initFeedbackPath, node, prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstWrongFeedback(), trace));
 					} else {
 						throw new RuntimeException("Unhandled feedback");
 					}
