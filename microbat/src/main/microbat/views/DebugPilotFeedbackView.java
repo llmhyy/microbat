@@ -64,7 +64,6 @@ import microbat.views.utils.contentprovider.WrittenVariableContentProvider;
 import microbat.views.utils.lableprovider.ControlDominatorLabelProvider;
 import microbat.views.utils.lableprovider.DummyLabelProvider;
 import microbat.views.utils.lableprovider.VariableLabelProvider;
-import microbat.views.utils.lableprovider.VariableWithProbabilityLabelProvider;
 
 public class DebugPilotFeedbackView extends ViewPart {
 
@@ -717,7 +716,8 @@ public class DebugPilotFeedbackView extends ViewPart {
 			final UserFeedback userFeedback = (UserFeedback) cell.getElement();
 
 			final TraceNode nextNode = TraceUtil.findNextNode(this.currentNode, userFeedback, trace);
-			final String buttonText = nextNode == null ? "-" : String.valueOf(nextNode.getOrder());
+			final String buttonText = nextNode == null ? "-" : "See Definition";
+			
 			button.setText(buttonText);
 			button.setEnabled(nextNode != null);
 			button.addSelectionListener(new SelectionListener() {
