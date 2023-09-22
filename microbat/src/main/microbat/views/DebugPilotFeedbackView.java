@@ -357,7 +357,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		TableColumn nextNodeColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.LEFT);
 		nextNodeColumn.setAlignment(SWT.LEFT);
 		nextNodeColumn.setText("Explore");
-		nextNodeColumn.setWidth(90);
+		nextNodeColumn.setWidth(110);
 		this.nextNodeViewerColumn = new TableViewerColumn(this.availableFeedbackViewer, nextNodeColumn);
 
 		this.availableFeedbackViewer.setContentProvider(new FeedbackContentProvider());
