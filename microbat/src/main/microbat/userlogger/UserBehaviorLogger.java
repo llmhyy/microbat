@@ -8,21 +8,33 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.eclipse.swt.widgets.Display;
+
+import microbat.Activator;
+import microbat.preference.MicrobatPreference;
+import microbat.util.Settings;
+
 public class UserBehaviorLogger {
-	
-	private static final String RELATIVE_PATH = "user_behavior_log.txt";
-	private static final String ABSOLUTE_PATH = Paths.get(RELATIVE_PATH).toAbsolutePath().toString();
 	
 	private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private static final String dilimeter = ",";
 	
+	protected static String logPath = null;
+	
 	public static void logEvent(final UserBehaviorType type) {
-
-      
+		
+		Display.getDefault().syncExec(new Runnable() {
+			@Override
+			public void run() {
+				logPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.LOG_PATH_KEY);
+			}
+		});
+		
+		System.out.println(logPath);
 		createFileIfNotExist();
 		
 		String log = genLog(type);
-		try (FileWriter writer = new FileWriter(ABSOLUTE_PATH, true)) {
+		try (FileWriter writer = new FileWriter(logPath, true)) {
 			writer.write(log);
 			writer.write('\n');
 			writer.close();
@@ -32,7 +44,7 @@ public class UserBehaviorLogger {
 	}
 	
 	protected static void createFileIfNotExist() {
-        File file = new File(ABSOLUTE_PATH);
+        File file = new File(logPath);
         if (!file.exists()) {
             try {
 				file.createNewFile();

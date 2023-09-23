@@ -1,5 +1,7 @@
 package microbat.preference;
 
+import java.nio.file.Paths;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -57,6 +59,7 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultApplyRecodingOptimization = Activator.getDefault().getPreferenceStore().getString(RECORDING_OPTIMIZATION);
 		this.defaultEnableMethodSplitting = Activator.getDefault().getPreferenceStore().getBoolean(REQUIRE_METHOD_SPLITTING);
 		this.defaultRunWithDebugMode = Activator.getDefault().getPreferenceStore().getString(RUN_WITH_DEBUG_MODE);
+		MicrobatPreference.defaultLogPath = Activator.getDefault().getPreferenceStore().getString(LOG_PATH_KEY);
 	}
 
 	public static String getStepLimit() {
@@ -86,6 +89,7 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String REQUIRE_METHOD_SPLITTING = "enableMethodSplitting";
 	public static final String SUPPORT_CONCURRENT_TRACE = "supportConcurrentTrace";
 	public static final String RUN_WITH_DEBUG_MODE = "runWithDebugMode";
+	public static final String LOG_PATH_KEY = "LOG_PATH_KEY";
 	
 	private Combo projectCombo;
 	private Text lanuchClassText;
@@ -102,6 +106,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private Button runWithDebugModeButton;
 	private Button enableMethodSplittingButton;
 	private Text java7HomePathText;
+	protected Text logPathText;
 	
 	private String defaultTargetProject = "";
 	private String defaultLanuchClass = "";
@@ -118,6 +123,7 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultApplyRecodingOptimization;
 	private String defaultRunWithDebugMode = "false";
 	private boolean defaultEnableMethodSplitting;
+	public static String defaultLogPath = Paths.get("user_behavior_log.txt").toAbsolutePath().toString();
 	
 	@Override
 	protected Control createContents(Composite parent) {
@@ -139,6 +145,7 @@ public class MicrobatPreference extends PreferencePage implements
 		
 		createSettingGroup(composite);
 		createSeedStatementGroup(composite);
+		createLogTextSetting(composite);
 		
 		return composite;
 	}
@@ -296,6 +303,7 @@ public class MicrobatPreference extends PreferencePage implements
 		preferences.putBoolean(REQUIRE_METHOD_SPLITTING, this.enableMethodSplittingButton.getSelection());
 		preferences.put(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
 		preferences.put(RUN_WITH_DEBUG_MODE, String.valueOf(this.runWithDebugModeButton.getSelection()));
+		preferences.put(LOG_PATH_KEY, this.logPathText.getText());
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(LANUCH_CLASS, this.lanuchClassText.getText());
@@ -312,6 +320,7 @@ public class MicrobatPreference extends PreferencePage implements
 		Activator.getDefault().getPreferenceStore().putValue(REQUIRE_METHOD_SPLITTING, String.valueOf(this.enableMethodSplittingButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(RUN_WITH_DEBUG_MODE, String.valueOf(this.runWithDebugModeButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(LOG_PATH_KEY, this.logPathText.getText());
 		
 		confirmChanges();
 		
@@ -346,6 +355,29 @@ public class MicrobatPreference extends PreferencePage implements
 		}
 		
 		return projectStrings;
+	}
+	
+	protected void createLogTextSetting(final Composite parent) {
+		final Group rootCauseGroup = new Group(parent, SWT.NONE);
+		rootCauseGroup.setText("Log File Settings");
+		
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
+		rootCauseGroup.setLayout(layout);
+		
+		GridData comboData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		comboData.horizontalSpan = 3;
+		rootCauseGroup.setLayoutData(comboData);
+//		rootCauseGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		
+		final Label logPathLabel = new Label(rootCauseGroup, SWT.NONE);
+		logPathLabel.setText("Log Path");
+		
+		this.logPathText = new Text(rootCauseGroup, SWT.BORDER);
+		this.logPathText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+		this.logPathText.setText(MicrobatPreference.defaultLogPath);
+		GridData javaHomeTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		this.logPathText.setLayoutData(javaHomeTextData);
 	}
 
 }

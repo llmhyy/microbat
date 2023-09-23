@@ -51,6 +51,8 @@ public class Settings {
 	 */
 	public static double remainingRate = 0.5;
 	
+	public static String logPath;
+	
 	static{
 		if(Activator.getDefault() != null){
 			try{
@@ -79,6 +81,8 @@ public class Settings {
 				
 				String runWithDebugModeString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RUN_WITH_DEBUG_MODE);
 				isRunWtihDebugMode = runWithDebugModeString.equals("true");
+				
+				logPath = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.LOG_PATH_KEY);
 			}
 			catch(Exception e){
 				e.printStackTrace();
