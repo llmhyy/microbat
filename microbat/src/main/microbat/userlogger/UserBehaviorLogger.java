@@ -3,8 +3,6 @@ package microbat.userlogger;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -12,7 +10,6 @@ import org.eclipse.swt.widgets.Display;
 
 import microbat.Activator;
 import microbat.preference.MicrobatPreference;
-import microbat.util.Settings;
 
 public class UserBehaviorLogger {
 	
@@ -30,7 +27,6 @@ public class UserBehaviorLogger {
 			}
 		});
 		
-		System.out.println(logPath);
 		createFileIfNotExist();
 		
 		String log = genLog(type);
