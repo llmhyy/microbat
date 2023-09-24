@@ -164,6 +164,9 @@ public class TraceUtil {
 	
 	public static TraceNode findNextNode(final TraceNode node, final UserFeedback feedback, final Trace trace) {
 		TraceNode nextNode = null;
+		if (feedback == null) {
+			return null;
+		}
 		if (feedback.getFeedbackType() == UserFeedback.WRONG_PATH) {
 			nextNode = node.getControlDominator();
 		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {
