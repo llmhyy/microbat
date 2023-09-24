@@ -144,6 +144,7 @@ public class DebugFeedbackView extends ViewPart {
 		yesButton.setSelection(false);
 		noButton.setSelection(true);
 		unclearButton.setSelection(false);
+		unclearButton.setEnabled(false);
 		wrongPathButton.setSelection(false);
 		bugTypeInferenceButton.setEnabled(isValidToInferBugType());
 		
@@ -506,7 +507,7 @@ public class DebugFeedbackView extends ViewPart {
 			}
 		});
 		
-		wrongPathButton = new Button(feedbackGroup, SWT.CHECK);
+		wrongPathButton = new Button(feedbackGroup, SWT.RADIO);
 		wrongPathButton.setText("Wrong-Flow");
 		wrongPathButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
 		wrongPathButton.addMouseListener(new MouseListener() {
@@ -560,8 +561,9 @@ public class DebugFeedbackView extends ViewPart {
 	}
 	
 	private boolean isValidToInferBugType(){
-		if(currentNode != null){
-			return true;
+		return false;
+//		if(currentNode != null){
+//			return true;
 			
 //			boolean flag1 = currentNode.getReadVarCorrectness(Settings.interestedVariables, true)==TraceNode.READ_VARS_CORRECT &&
 //					currentNode.getWittenVarCorrectness(Settings.interestedVariables, true)==TraceNode.WRITTEN_VARS_INCORRECT;
@@ -578,10 +580,10 @@ public class DebugFeedbackView extends ViewPart {
 //			return (flag1 && flag2 && flag3) || (flag1 && flag4);
 //			
 //			return flag1;
-		}
-		else{
-			return false;
-		}
+//		}
+//		else{
+//			return false;
+//		}
 	}
 	
 	class FeedbackSubmitListener implements MouseListener{
