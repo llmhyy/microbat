@@ -66,15 +66,15 @@ public class FeedbackPathLabelProvider extends ColumnLabelProvider implements IT
 			case 2:
 				final String feedbackType  = userFeedbackPair.getFeedbackType();
 				if (feedbackType.equals(UserFeedback.CORRECT)) {
-					return "This step is correct";
+					return "Correct";
 				} else if (feedbackType.equals(UserFeedback.WRONG_PATH)) {
-					return "This step should not be executed";
+					return "Wrong Branch";
 				} else if (feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-					return "Wrong variable: " + userFeedbackPair.getFirstWrongFeedback().getOption().getReadVar().getVarName();
+					return "Wrong Variable";
 				} else if (feedbackType.equals(UserFeedback.UNCLEAR)) {
 					return "Unclear";
 				} else if (feedbackType.equals(UserFeedback.ROOTCAUSE)) {
-					return "This step is the root cause";
+					return "Root Cause";
 				}
 			case 3:
 				return userFeedbackPair.getNode().confirmed ? "Yes" : "No";

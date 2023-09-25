@@ -606,13 +606,13 @@ public class DebugPilotFeedbackView extends ViewPart {
 		if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
 			return "Step is correct";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-			return "Step should not be executed";
+			return "Wrong Flow";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-			return "Variable is wrong";
+			return "Wrong Variable";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
-			return "Step is root cause";
+			return "Root Cause";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
-			return "Variable is correct";
+			return "Correct Variable";
 		} else {
 			return null;
 		}
