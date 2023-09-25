@@ -54,6 +54,7 @@ import microbat.handler.callbacks.HandlerCallbackManager;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.model.variable.VirtualVar;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
@@ -572,7 +573,12 @@ public class DebugPilotFeedbackView extends ViewPart {
             	if (element instanceof UserFeedback userFeedback) {
     				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
     					VarValue wrongVar = userFeedback.getOption().getReadVar();
-    					return wrongVar.getVarName();
+    					String name = wrongVar.getVarName();
+    					if(wrongVar.getVariable() instanceof VirtualVar){
+    						String methodName = name.substring(name.lastIndexOf(".")+1);
+    						name = "return from " + methodName + "()";
+    					}
+    					return name;
     				}
     				return "-";
             	}
@@ -585,7 +591,7 @@ public class DebugPilotFeedbackView extends ViewPart {
             public String getText(Object element) {
             	if (element instanceof UserFeedback userFeedback) {
     				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
-    					return userFeedback.getOption().getReadVar().getManifestationValue();					
+    					return userFeedback.getOption().getReadVar().getStringValue();
     				} else {
     					return "-";
     				}
