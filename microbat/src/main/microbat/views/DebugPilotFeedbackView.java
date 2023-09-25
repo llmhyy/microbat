@@ -711,7 +711,12 @@ public class DebugPilotFeedbackView extends ViewPart {
 			final UserFeedback userFeedback = (UserFeedback) cell.getElement();
 
 			final TraceNode nextNode = TraceUtil.findNextNode(this.currentNode, userFeedback, trace);
-			final String buttonText = nextNode == null ? "-" : "See Definition";
+			String buttonText = "-";
+			if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+				buttonText = "Condition";
+			} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+				buttonText = "Definition";
+			}
 			
 			button.setText(buttonText);
 			button.setEnabled(nextNode != null);
