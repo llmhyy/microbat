@@ -41,7 +41,7 @@ public class VariableLabelProvider implements ITableLabelProvider {
 			case 1: 
 				String name = varValue.getVarName();
 				if(varValue.getVariable() instanceof VirtualVar){
-					String methodName = name.substring(name.indexOf("#")+1);
+					String methodName = name.substring(name.lastIndexOf(".")+1);
 					name = "return from " + methodName + "()";
 				}
 				return name;

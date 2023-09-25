@@ -575,7 +575,7 @@ public class DebugPilotFeedbackView extends ViewPart {
     					VarValue wrongVar = userFeedback.getOption().getReadVar();
     					String name = wrongVar.getVarName();
     					if(wrongVar.getVariable() instanceof VirtualVar){
-    						String methodName = name.substring(name.indexOf("#")+1);
+    						String methodName = name.substring(name.lastIndexOf(".")+1);
     						name = "return from " + methodName + "()";
     					}
     					return name;
