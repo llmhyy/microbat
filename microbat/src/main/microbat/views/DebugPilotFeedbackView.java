@@ -585,7 +585,7 @@ public class DebugPilotFeedbackView extends ViewPart {
             public String getText(Object element) {
             	if (element instanceof UserFeedback userFeedback) {
     				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
-    					return userFeedback.getOption().getReadVar().getManifestationValue();					
+    					return userFeedback.getOption().getReadVar().getStringValue();
     				} else {
     					return "-";
     				}

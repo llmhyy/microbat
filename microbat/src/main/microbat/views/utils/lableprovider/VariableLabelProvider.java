@@ -46,11 +46,7 @@ public class VariableLabelProvider implements ITableLabelProvider {
 				}
 				return name;
 			case 2: 
-				String value = varValue.getManifestationValue();
-				String aliasVarID = varValue.getAliasVarID();
-				if(aliasVarID != null){
-					return value + (" aliasID:" + aliasVarID);
-				}
+				String value = varValue.getStringValue();
 				return value;
 			case 3:
 				return String.format("%.2f", varValue.getComputationalCost());
