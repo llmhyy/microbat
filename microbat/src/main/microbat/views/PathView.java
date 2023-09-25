@@ -142,7 +142,7 @@ public class PathView extends ViewPart {
 		
 		TableColumn TraceNodeColumn = new TableColumn(table, SWT.LEFT);
 		TraceNodeColumn.setAlignment(SWT.LEFT);
-		TraceNodeColumn.setText("Trace Node");
+		TraceNodeColumn.setText("Step");
 		TraceNodeColumn.setWidth(100);
 		
 		TableColumn predictionColumn = new TableColumn(table, SWT.LEFT);

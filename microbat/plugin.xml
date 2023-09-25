@@ -44,7 +44,7 @@
             class="microbat.views.PathView"
             icon="icons/path_mark.png"
             id="microbat.evalView.pathView"
-            name="Path view"
+            name="Debugging Plan"
             restorable="true">
       </view>
       <category

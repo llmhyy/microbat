@@ -516,11 +516,6 @@ public class DebugPilotFeedbackView extends ViewPart {
 		valueColumn.setText("Value");
 		valueColumn.setWidth(200);
 		
-		TreeColumn suspicioiusColumn = new TreeColumn(tree, SWT.LEFT);
-		suspicioiusColumn.setAlignment(SWT.LEFT);
-		suspicioiusColumn.setText("Supsicious");
-		suspicioiusColumn.setWidth(100);
-		
 		return tree;
 	}
 	
