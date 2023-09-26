@@ -479,6 +479,13 @@ public class DebugPilotFeedbackView extends ViewPart {
 					
 					
 					NodeFeedbacksPair userFeedbacksPair = new NodeFeedbacksPair(currentNode, feedbacks);
+					
+					if (userFeedbacksPair.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {						
+						if (!DialogUtil.popConfirmDialog("Are you sure this step is the root cause?", "DebugPilot Remind")) {
+							return;
+						}
+					}
+					
 					DebugPilotInfo.getInstance().setNodeFeedbacksPair(userFeedbacksPair);
 					
 					PathView pathView = MicroBatViews.getPathView();
