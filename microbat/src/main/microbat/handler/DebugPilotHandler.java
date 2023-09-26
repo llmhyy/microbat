@@ -163,6 +163,14 @@ public class DebugPilotHandler extends AbstractHandler {
 		this.pathView.updateFeedbackPath(path);
 	}
 	
+	protected void updatePathView(final FeedbackPath path, final boolean focusOnFirstNode) {
+		this.updatePathView(path);
+		if (path.getLength() > 1 && focusOnFirstNode) {
+			final TraceNode node = path.get(0).getNode();
+			this.pathView.focusOnNode(node);
+		}
+	}
+	
 	protected void updateView() {
 		Display.getDefault().syncExec(new Runnable() {
 			@Override

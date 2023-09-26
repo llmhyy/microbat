@@ -367,37 +367,44 @@ public class DebugPilotFeedbackView extends ViewPart {
 			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				final UserFeedback checkedFeedback = (UserFeedback) event.getElement();
-				if (checkedFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-					for (Object element : availableFeedbackViewer.getCheckedElements()) {
-						if (element instanceof UserFeedback userFeedback) {
-							if (userFeedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT) || userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-								availableFeedbackViewer.setChecked(element, false);
-							}
-							if (userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE) && userFeedback.getOption().getReadVar().equals(checkedFeedback.getOption().getReadVar())) {
-								availableFeedbackViewer.setChecked(element, false);
-							}
-						}
-					}
-				} else if (checkedFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
-					for (Object element : availableFeedbackViewer.getCheckedElements()) {
-						if (element instanceof UserFeedback userFeedback) {
-							if (userFeedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT) || userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-								availableFeedbackViewer.setChecked(element, false);
-							}
-							if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) && userFeedback.getOption().getReadVar().equals(checkedFeedback.getOption().getReadVar())) {
-								availableFeedbackViewer.setChecked(element, false);
-							}
-						}
-					}
-				} else {					
-					for (Object element : availableFeedbackViewer.getCheckedElements()) {
-						if (element instanceof UserFeedback userFeedback) {
-							if (!userFeedback.getFeedbackType().equals(checkedFeedback.getFeedbackType())) {
-								availableFeedbackViewer.setChecked(element, false);
-							}
+				for (Object element : availableFeedbackViewer.getCheckedElements()) {
+					if (element instanceof UserFeedback userFeedback) {
+						if (!userFeedback.getFeedbackType().equals(checkedFeedback.getFeedbackType())) {
+							availableFeedbackViewer.setChecked(element, false);
 						}
 					}
 				}
+//				if (checkedFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+//					for (Object element : availableFeedbackViewer.getCheckedElements()) {
+//						if (element instanceof UserFeedback userFeedback) {
+//							if (userFeedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT) || userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+//								availableFeedbackViewer.setChecked(element, false);
+//							}
+//							if (userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE) && userFeedback.getOption().getReadVar().equals(checkedFeedback.getOption().getReadVar())) {
+//								availableFeedbackViewer.setChecked(element, false);
+//							}
+//						}
+//					}
+//				} else if (checkedFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+//					for (Object element : availableFeedbackViewer.getCheckedElements()) {
+//						if (element instanceof UserFeedback userFeedback) {
+//							if (userFeedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT) || userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+//								availableFeedbackViewer.setChecked(element, false);
+//							}
+//							if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) && userFeedback.getOption().getReadVar().equals(checkedFeedback.getOption().getReadVar())) {
+//								availableFeedbackViewer.setChecked(element, false);
+//							}
+//						}
+//					}
+//				} else {					
+//					for (Object element : availableFeedbackViewer.getCheckedElements()) {
+//						if (element instanceof UserFeedback userFeedback) {
+//							if (!userFeedback.getFeedbackType().equals(checkedFeedback.getFeedbackType())) {
+//								availableFeedbackViewer.setChecked(element, false);
+//							}
+//						}
+//					}
+//				}
 			}
 		});
 	}
@@ -461,14 +468,14 @@ public class DebugPilotFeedbackView extends ViewPart {
 				} else {					
 					UserFeedback[] feedbacks = Arrays.stream(availableFeedbackViewer.getCheckedElements()).map(obj -> {return (UserFeedback) obj;}).toArray(UserFeedback[]::new);
 					
-					List<String> feedbackList = Arrays.stream(feedbacks)
-							.map(feedback -> feedback.getFeedbackType())
-							.distinct()
-							.filter(type -> !type.equals(UserFeedback.CORRECT_VARIABLE_VALUE)).toList();
-					if (feedbackList.isEmpty()) {
-						DialogUtil.popErrorDialog("Feedback must contain either root cause, correct, wrong path or wrong variable", "DebugPilot Feedback View Error");
-						return;
-					}
+//					List<String> feedbackList = Arrays.stream(feedbacks)
+//							.map(feedback -> feedback.getFeedbackType())
+//							.distinct()
+//							.filter(type -> !type.equals(UserFeedback.CORRECT_VARIABLE_VALUE)).toList();
+//					if (feedbackList.isEmpty()) {
+//						DialogUtil.popErrorDialog("Feedback must contain either root cause, correct, wrong path or wrong variable", "DebugPilot Feedback View Error");
+//						return;
+//					}
 					
 					
 					NodeFeedbacksPair userFeedbacksPair = new NodeFeedbacksPair(currentNode, feedbacks);
@@ -571,7 +578,8 @@ public class DebugPilotFeedbackView extends ViewPart {
             @Override
             public String getText(Object element) {
             	if (element instanceof UserFeedback userFeedback) {
-    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+//    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+            		if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
     					VarValue wrongVar = userFeedback.getOption().getReadVar();
     					String name = wrongVar.getVarName();
     					if(wrongVar.getVariable() instanceof VirtualVar){
@@ -590,7 +598,8 @@ public class DebugPilotFeedbackView extends ViewPart {
             @Override
             public String getText(Object element) {
             	if (element instanceof UserFeedback userFeedback) {
-    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+//    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+            		if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
     					return userFeedback.getOption().getReadVar().getStringValue();
     				} else {
     					return "-";
@@ -617,8 +626,8 @@ public class DebugPilotFeedbackView extends ViewPart {
 			return "Wrong Variable";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
 			return "Root Cause";
-		} else if (feedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
-			return "Correct Variable";
+//		} else if (feedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+//			return "Correct Variable";
 		} else {
 			return null;
 		}
@@ -670,9 +679,9 @@ public class DebugPilotFeedbackView extends ViewPart {
 			feedback.setOption(new ChosenVariableOption(readVar, null));
 			availableFeedbacks.add(feedback);
 			
-			UserFeedback anotherFeedback = new UserFeedback(UserFeedback.CORRECT_VARIABLE_VALUE);
-			anotherFeedback.setOption(new ChosenVariableOption(readVar, null));
-			availableFeedbacks.add(anotherFeedback);
+//			UserFeedback anotherFeedback = new UserFeedback(UserFeedback.CORRECT_VARIABLE_VALUE);
+//			anotherFeedback.setOption(new ChosenVariableOption(readVar, null));
+//			availableFeedbacks.add(anotherFeedback);
 		}
 
 		availableFeedbacks.add(new UserFeedback(UserFeedback.ROOTCAUSE));

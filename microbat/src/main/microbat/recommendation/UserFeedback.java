@@ -8,7 +8,7 @@ public class UserFeedback {
 	public static final String WRONG_PATH = "wrong path";
 	public static final String UNCLEAR = "unclear";
 	public static final String ROOTCAUSE = "root cause";
-	public static final String CORRECT_VARIABLE_VALUE = "correct variable value";
+//	public static final String CORRECT_VARIABLE_VALUE = "correct variable value";
 	
 	protected ChosenVariableOption option;
 	protected String feedbackType;

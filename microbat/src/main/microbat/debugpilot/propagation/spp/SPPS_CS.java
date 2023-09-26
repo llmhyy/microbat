@@ -56,8 +56,10 @@ public class SPPS_CS extends SPPS_C {
 		
 		Set<TraceNode> nodeCoveredByWrongFeedback = new HashSet<>();
 		for (NodeFeedbacksPair feedbackPair : this.feedbackRecords) {
-			if (feedbackPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || feedbackPair.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+//			if (feedbackPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || feedbackPair.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+			if (feedbackPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
 				final TraceNode node = feedbackPair.getNode();
+				final List<VarValue> wrongVars = feedbackPair.getFeedbacks().stream().map(feedback -> feedback.getOption().getReadVar()).toList();
 				for (VarValue readVar : node.getReadVariables()) {
 					final TraceNode dataDominator = this.trace.findDataDependency(node, readVar);
 					if (dataDominator == null) {
@@ -65,18 +67,41 @@ public class SPPS_CS extends SPPS_C {
 					}
 					
 					List<TraceNode> relatedNodes = TraceUtil.dynamicSlice(trace, dataDominator);
-					nodeCoveredByWrongFeedback.addAll(relatedNodes);
-					List<BreakPoint> breakPoints =  relatedNodes.stream().map(relateNode -> relateNode.getBreakPoint()).distinct().toList();
-					if (feedbackPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+					List<BreakPoint> breakPoints = relatedNodes.stream().map(relateNode -> relateNode.getBreakPoint()).distinct().toList();
+					
+					if (wrongVars.contains(readVar)) {
+						// This variable is wrong
+						nodeCoveredByWrongFeedback.addAll(relatedNodes);
 						for (BreakPoint breakPoint : breakPoints) {
-							this.breakPointCFScore.compute(breakPoint, (k, v) -> (v == null) ? 1 : v + 1);
-						}						
+							this.breakPointCFScore.compute(breakPoint, (k, v) -> (v == null) ? 1 : v+1);
+						}
 					} else {
+						// This variable is not wrong -> correct
 						for (BreakPoint breakPoint : breakPoints) {
 							this.breakPointCSScore.compute(breakPoint, (k, v) -> (v == null) ? 1 : v + 1);
 						}
 					}
 				}
+				
+//				for (VarValue readVar : node.getReadVariables()) {
+//					final TraceNode dataDominator = this.trace.findDataDependency(node, readVar);
+//					if (dataDominator == null) {
+//						continue;
+//					}
+//					
+//					List<TraceNode> relatedNodes = TraceUtil.dynamicSlice(trace, dataDominator);
+//					nodeCoveredByWrongFeedback.addAll(relatedNodes);
+//					List<BreakPoint> breakPoints =  relatedNodes.stream().map(relateNode -> relateNode.getBreakPoint()).distinct().toList();
+//					if (feedbackPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+//						for (BreakPoint breakPoint : breakPoints) {
+//							this.breakPointCFScore.compute(breakPoint, (k, v) -> (v == null) ? 1 : v + 1);
+//						}						
+//					} else {
+//						for (BreakPoint breakPoint : breakPoints) {
+//							this.breakPointCSScore.compute(breakPoint, (k, v) -> (v == null) ? 1 : v + 1);
+//						}
+//					}
+//				}
 				
 				final TraceNode controlDom = node.getControlDominator();
 				if (controlDom != null) {
