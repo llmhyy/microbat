@@ -121,6 +121,13 @@ public class DebugPilotHandler extends AbstractHandler {
 			wrongVar = DebugPilotInfo.getInstance().getOutputs().get(0);
 		}
 		
+		TraceNode dataDominator = trace.findDataDependency(outputNode, wrongVar);
+		if (dataDominator == null) {
+			DialogUtil.popErrorDialog("Given output variable does not have data dominator", DIALOG_ERROR_TITLE);
+			return;
+		}
+		
+		
 		Set<VarValue> wrongVarSet = new HashSet<>();
 		wrongVarSet.add(wrongVar);
 		settings.setWrongVars(wrongVarSet);
