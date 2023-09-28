@@ -169,6 +169,11 @@
             id="microbat.stopdebugpilot"
             name="Stop Debug Pilot">
       </command>
+      <command
+            defaultHandler="microbat.handler.StartDebugRightClickHandler"
+            id="microbat.command.StartDebugRightClick"
+            name="Start Debug context menu">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -372,7 +377,7 @@
             allPopups="false"
             locationURI="popup:org.eclipse.ui.navigator.ProjectExplorer#PopupMenu?after=additions">
          <command
-               commandId="microbat.command.startDebug"
+               commandId="microbat.command.StartDebugRightClick"
                icon="icons/start_debug.png"
                label="Start debug"
                style="push">
