@@ -1276,8 +1276,6 @@ public class DebugFeedbackView extends ViewPart {
 						return value + (" aliasID:" + aliasVarID);
 					}
 					return value;
-				case 3:
-					return String.format("%.4f", varValue.getProbability());
 //				case 4:
 //					return String.format("%.2f", varValue.getForwardProb());
 //				case 5:

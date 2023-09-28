@@ -10,7 +10,7 @@ import microbat.model.trace.TraceNode;
 
 public class RootCauseLocatorSettings {
 	
-	public static final RootCauseLocatorType DEFAULT_ROOT_CAUSE_LOCATOR_TYPE = RootCauseLocatorType.SPP;
+	public static final RootCauseLocatorType DEFAULT_ROOT_CAUSE_LOCATOR_TYPE = RootCauseLocatorType.SUSPICIOUS;
 	
 	protected RootCauseLocatorType rootCauseLocatorType = RootCauseLocatorSettings.DEFAULT_ROOT_CAUSE_LOCATOR_TYPE;
 	protected List<TraceNode> sliceTrace = null;

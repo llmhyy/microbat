@@ -88,6 +88,18 @@ public class NodeFeedbacksPair {
 		return this.feedbacks.get(0);
 	}
 	
+	public UserFeedback getFirstWrongFeedback() {
+		if (this.feedbacks.isEmpty()) {
+			return null;
+		}
+		for (UserFeedback feedback : this.feedbacks) {
+			if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH) || feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+				return feedback;
+			}
+		}
+		return null;
+	}
+	
 	public boolean haveCommonFeedbackWith(final NodeFeedbacksPair otherPair) {
 		Set<UserFeedback> thisFeedbackSet = new HashSet<>();
 		thisFeedbackSet.addAll(this.feedbacks);

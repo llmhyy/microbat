@@ -18,6 +18,10 @@ public class PathFinderFactory {
 			return new RandomPathFinder(settings);
 		case DijkstraExp:
 			return new DijkstraExpPathFinder(settings);
+		case SuspiciousDijkstra:
+			return new SuspiciousDijkstraPathFinder(settings);
+		case SuspiciousDijkstraExp:
+			return new SuspiciousDijkstraExpPathFinder(settings);
 		default:
 			throw new RuntimeException(Log.genMsg(PropagatorFactory.class, "Undefined path finder type: " + settings.getPathFinderType()));
 		}

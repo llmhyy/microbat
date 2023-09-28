@@ -48,9 +48,6 @@ public class MicroBatUtil {
 		IProject iProject = myWorkspaceRoot.getProject(projectName);
 		
 		String projectPath = iProject.getLocationURI().getPath();
-		if (projectPath.startsWith("/")) {
-			projectPath = projectPath.substring(1, projectPath.length());
-		}
 		projectPath = projectPath.replace("/", File.separator);
 		
 		return projectPath;
@@ -349,7 +346,7 @@ public class MicroBatUtil {
 		String exp = className + 
 					 " line:" + lineNumber + 
 					 " duration: " + duration + 
-					 "ms cost: " + computationCost;
+					 "ms";
 		return exp;
 	}
 	

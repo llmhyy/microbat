@@ -146,6 +146,10 @@ public class TraceNode implements Comparator<TraceNode> {
 	
 	public boolean confirmed = false;
 	
+	public int cf = 0;
+	public int cs = 0;
+	public int uf = 0;
+	
 	public TraceNode() {
 		this.breakPoint = null;
 		this.programState = null;

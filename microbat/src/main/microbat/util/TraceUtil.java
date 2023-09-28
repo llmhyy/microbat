@@ -119,7 +119,7 @@ public class TraceUtil {
 		return result;
 	}
 	
-	public static List<TraceNode> dynamicSlic(final Trace trace, final TraceNode targetNode) {
+	public static List<TraceNode> dynamicSlice(final Trace trace, final TraceNode targetNode) {
 		UniquePriorityQueue<TraceNode> toVisitNodes = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
 			@Override
 			public int compare(TraceNode t1, TraceNode t2) {
@@ -164,6 +164,9 @@ public class TraceUtil {
 	
 	public static TraceNode findNextNode(final TraceNode node, final UserFeedback feedback, final Trace trace) {
 		TraceNode nextNode = null;
+		if (feedback == null) {
+			return null;
+		}
 		if (feedback.getFeedbackType() == UserFeedback.WRONG_PATH) {
 			nextNode = node.getControlDominator();
 		} else if (feedback.getFeedbackType() == UserFeedback.WRONG_VARIABLE_VALUE) {

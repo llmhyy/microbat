@@ -2,14 +2,8 @@ package microbat.debugpilot.pathfinding;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 import org.jgrapht.Graph;
-import org.jgrapht.GraphPath;
-import org.jgrapht.alg.connectivity.ConnectivityInspector;
-import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
-import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
 
 import microbat.debugpilot.NodeFeedbacksPair;
@@ -22,38 +16,17 @@ import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.UniquePriorityQueue;
 
-public class DijkstraPathFinder extends AbstractPathFinder {
-
-	public DijkstraPathFinder(final PathFinderSettings settings) {
+public class SuspiciousDijkstraPathFinder extends DijkstraPathFinder {
+	
+	public SuspiciousDijkstraPathFinder(final PathFinderSettings settings) {
 		this(settings.getTrace(), settings.getSlicedTrace());
 	}
 	
-	public DijkstraPathFinder(Trace trace, List<TraceNode> slicedTrace) {
+	public SuspiciousDijkstraPathFinder(Trace trace, List<TraceNode> slicedTrace) {
 		super(trace, slicedTrace);
 	}
-
+	
 	@Override
-	public FeedbackPath findPath(TraceNode startNode, TraceNode endNode) {
-		Objects.requireNonNull(startNode, Log.genMsg(getClass(), "start node should not be null"));
-		Objects.requireNonNull(endNode, Log.genMsg(getClass(), "endNode should not be null"));
-		if (startNode.equals(endNode)) {
-			FeedbackPath path = new FeedbackPath();
-			path.addPair(endNode, new UserFeedback(UserFeedback.ROOTCAUSE));
-			return path;
-		}
-		Graph<TraceNode, NodeFeedbacksPair> graph = this.constructGraph();
-		DijkstraShortestPath<TraceNode, NodeFeedbacksPair> dijstraAlg = new DijkstraShortestPath<>(graph);
-		GraphPath<TraceNode, NodeFeedbacksPair> result = dijstraAlg.getPath(startNode, endNode);
-		if (result == null) 
-			return null;
-		List<NodeFeedbacksPair> path = result.getEdgeList();
-		// Add the root cause feedback to the end of the path
-		UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
-		NodeFeedbacksPair pair = new NodeFeedbacksPair(endNode, feedback);
-		path.add(pair);
-		return new FeedbackPath(path);
-	}
-
 	protected Graph<TraceNode, NodeFeedbacksPair> constructGraph() {
 		Graph<TraceNode, NodeFeedbacksPair> directedGraph = new DirectedWeightedMultigraph<TraceNode, NodeFeedbacksPair>(NodeFeedbacksPair.class);
 		
@@ -68,9 +41,6 @@ public class DijkstraPathFinder extends AbstractPathFinder {
 		
 		while (!toVisitNodes.isEmpty()) {
 			final TraceNode node = toVisitNodes.poll();
-			if (node.getOrder() == 4) {
-				System.out.println();
-			}
 			directedGraph.addVertex(node);
 			for (VarValue readVar : node.getReadVariables()) {
 				final TraceNode dataDom = this.trace.findDataDependency(node, readVar);
@@ -80,8 +50,7 @@ public class DijkstraPathFinder extends AbstractPathFinder {
 					NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
 					directedGraph.addVertex(dataDom);
 					directedGraph.addEdge(node, dataDom, pair);
-					directedGraph.setEdgeWeight(pair, readVar.getProbability());
-//					directedGraph.setEdgeWeight(pair, 1.0d/readVar.computationalCost);
+					directedGraph.setEdgeWeight(pair, 1.0d/readVar.computationalCost);
 					toVisitNodes.add(dataDom);
 				}
 			}
@@ -92,8 +61,7 @@ public class DijkstraPathFinder extends AbstractPathFinder {
 				NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
 				directedGraph.addVertex(controlDom);
 				directedGraph.addEdge(node, controlDom, pair);
-				directedGraph.setEdgeWeight(pair, controlDom.getConditionResult().getProbability());
-//				directedGraph.setEdgeWeight(pair, 1.0d/controlDom.getConditionResult().computationalCost);
+				directedGraph.setEdgeWeight(pair, 1.0d/controlDom.getConditionResult().computationalCost);
 				toVisitNodes.add(controlDom);
 			}
 		} 

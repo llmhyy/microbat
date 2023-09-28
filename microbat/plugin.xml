@@ -44,7 +44,7 @@
             class="microbat.views.PathView"
             icon="icons/path_mark.png"
             id="microbat.evalView.pathView"
-            name="Path view"
+            name="Debugging Plan"
             restorable="true">
       </view>
       <category
@@ -171,8 +171,8 @@
       </command>
       <command
             defaultHandler="microbat.handler.StartDebugRightClickHandler"
-            id="microbat.command.StartDebugRightClick"
-            name="Start Debug context menu">
+            id="microbat.command.StartDebuggingRightClick"
+            name="Start Debugging Right Click command">
       </command>
    </extension>
    <extension
@@ -376,12 +376,15 @@
       <menuContribution
             allPopups="false"
             locationURI="popup:org.eclipse.ui.navigator.ProjectExplorer#PopupMenu?after=additions">
-         <command
-               commandId="microbat.command.StartDebugRightClick"
-               icon="icons/start_debug.png"
-               label="Start debug"
-               style="push">
-         </command>
+         <menu
+               label="Microbat">
+            <command
+                  commandId="microbat.command.StartDebuggingRightClick"
+                  icon="icons/start_debug.png"
+                  label="Start Debug"
+                  style="push">
+            </command>
+         </menu>
       </menuContribution>
    </extension>
    <extension

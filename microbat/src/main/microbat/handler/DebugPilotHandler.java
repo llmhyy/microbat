@@ -16,6 +16,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 
+import debugpilot.userlogger.UserBehaviorLogger;
+import debugpilot.userlogger.UserBehaviorType;
 import microbat.debugpilot.DebugPilot;
 import microbat.debugpilot.DebugPilotInfo;
 import microbat.debugpilot.NodeFeedbacksPair;
@@ -85,18 +87,18 @@ public class DebugPilotHandler extends AbstractHandler {
 	}
 	
 	protected void execute() {
-		
+		UserBehaviorLogger.logEvent(UserBehaviorType.START_DEBUGPILOT);
 		if (this.isRunningProcess) {
 			DialogUtil.popErrorDialog("DebugPilot is currently running a process. Please stop the original process before you start a new one", DebugPilotHandler.DIALOG_ERROR_TITLE);
 			return;
 		}
 		
-		this.isRunningProcess = true;
 		
 		if (!this.isDebugPilotReady()) {
 			return;
 		}
 		
+		this.isRunningProcess = true;
 		this.pathView.updateFeedbackPath(new FeedbackPath());
 		
 		Log.printMsg(getClass(), "");
@@ -107,6 +109,7 @@ public class DebugPilotHandler extends AbstractHandler {
 		DebugPilotSettings settings = new DebugPilotSettings();
 		settings.setPropagatorSettings(PreferenceParser.getPreferencePropagatorSettings());
 		settings.setPathFinderSettings(PreferenceParser.getPreferencePathFinderSettings());
+		settings.setRootCauseLocatorSettings(PreferenceParser.getPrefereRootCauseLocatorSettings());
 		
 		TraceNode outputNode = DebugPilotInfo.getInstance().getOutputNode();
 		settings.setOutputNode(outputNode);
@@ -117,6 +120,13 @@ public class DebugPilotHandler extends AbstractHandler {
 		} else {			
 			wrongVar = DebugPilotInfo.getInstance().getOutputs().get(0);
 		}
+		
+		TraceNode dataDominator = trace.findDataDependency(outputNode, wrongVar);
+		if (dataDominator == null) {
+			DialogUtil.popErrorDialog("Given output variable does not have data dominator", DIALOG_ERROR_TITLE);
+			return;
+		}
+		
 		
 		Set<VarValue> wrongVarSet = new HashSet<>();
 		wrongVarSet.add(wrongVar);
@@ -138,7 +148,6 @@ public class DebugPilotHandler extends AbstractHandler {
 		final DebugPilot debugPilot = new DebugPilot(settings);
 		final DebugPilotFiniteStateMachine fsm = new DebugPilotFiniteStateMachine(debugPilot);
 		fsm.setState(new PropagationState(fsm, initFeedback));
-		
 		while (!fsm.isEnd()) {
 			fsm.handleFeedback();
 		}
@@ -159,6 +168,14 @@ public class DebugPilotHandler extends AbstractHandler {
 	
 	protected void updatePathView(final FeedbackPath path) {
 		this.pathView.updateFeedbackPath(path);
+	}
+	
+	protected void updatePathView(final FeedbackPath path, final boolean focusOnFirstNode) {
+		this.updatePathView(path);
+		if (path.getLength() > 1 && focusOnFirstNode) {
+			final TraceNode node = path.get(0).getNode();
+			this.pathView.focusOnNode(node);
+		}
 	}
 	
 	protected void updateView() {
@@ -206,15 +223,15 @@ public class DebugPilotHandler extends AbstractHandler {
 			return true;
 		}
 		
-		String feedbackType = null;
-		for (UserFeedback feedback : pair.getFeedbacks()) {
-			if (feedbackType == null) {
-				feedbackType = feedback.getFeedbackType();
-			} else if (!feedbackType.equals(feedback.getFeedbackType())) {
-				DialogUtil.popErrorDialog("You give conflicting feedback on node " + pair.getNode().getOrder(), DebugPilotHandler.DIALOG_ERROR_TITLE);
-				return false;
-			}
-		}
+//		String feedbackType = null;
+//		for (UserFeedback feedback : pair.getFeedbacks()) {
+//			if (feedbackType == null) {
+//				feedbackType = feedback.getFeedbackType();
+//			} else if (!feedbackType.equals(feedback.getFeedbackType())) {
+//				DialogUtil.popErrorDialog("You give conflicting feedback on node " + pair.getNode().getOrder(), DebugPilotHandler.DIALOG_ERROR_TITLE);
+//				return false;
+//			}
+//		}
 		
 		if (!path.contains(pair.getNode())) {
 			DialogUtil.popErrorDialog("Please give the feedback on node that inside the path. Node: " + pair.getNode().getOrder() + " is not lie in path.", DebugPilotHandler.DIALOG_ERROR_TITLE);
@@ -315,6 +332,7 @@ public class DebugPilotHandler extends AbstractHandler {
 				feedbackPath.removePathAfterNode(userFeedbacksPair.getNode());
 				feedbackPath.forEach(pair -> pair.getNode().confirmed = true);
 				updatePathView(feedbackPath);
+				DialogUtil.popInformationDialog("Root Cause is found. Debugging process end.", DIALOG_INFO_TITLE);
 				this.stateMachine.setState(new EndState(this.stateMachine));
 			} else if (userFeedbacksPair.getFeedbackType().equals(UserFeedback.CORRECT)) {
 				// Omission bug detected
@@ -324,7 +342,7 @@ public class DebugPilotHandler extends AbstractHandler {
 				if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 					this.stateMachine.setState(new ControlOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
 				} else if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-					this.stateMachine.setState(new DataOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
+					this.stateMachine.setState(new DataOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstWrongFeedback(), buggyView.getTrace()));
 				} else {
 					throw new RuntimeException("Unhandled feedback");
 				}
@@ -334,7 +352,7 @@ public class DebugPilotHandler extends AbstractHandler {
 				if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 					this.stateMachine.setState(new ControlOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
 				} else if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-					this.stateMachine.setState(new DataOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), buggyView.getTrace()));
+					this.stateMachine.setState(new DataOmissionState(this.stateMachine, feedbackPath, userFeedbacksPair.getNode(), prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstWrongFeedback(), buggyView.getTrace()));
 				} else {
 					throw new RuntimeException("Unhandled feedback");
 				}
@@ -354,6 +372,8 @@ public class DebugPilotHandler extends AbstractHandler {
 		@Override
 		public void handleFeedback() {
 			this.stateMachine.setEnd(true);
+			isRunningProcess = false;
+			
 		}
 	}
 	
@@ -381,12 +401,11 @@ public class DebugPilotHandler extends AbstractHandler {
 		
 		protected boolean handleFeedback(final NodeFeedbacksPair feedbacksPair) {
 			if (feedbacksPair == null) {
-//				this.stateMachine.setState(new EndState(this.stateMachine));
-//				return true;
 				throw new RuntimeException("Got null feedback");
 			}
 			
 			if (feedbacksPair.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
+				DialogUtil.popInformationDialog("Root Cause is found. Debugging process end.", DIALOG_INFO_TITLE);
 				this.stateMachine.setState(new EndState(this.stateMachine));
 				return true;
 			}
@@ -407,7 +426,7 @@ public class DebugPilotHandler extends AbstractHandler {
 					if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
 						this.stateMachine.setState(new ControlOmissionState(stateMachine, initFeedbackPath, node, prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), trace));
 					} else if (prevFeedbacksPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-						this.stateMachine.setState(new DataOmissionState(stateMachine, initFeedbackPath, node, prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstFeedback(), trace));
+						this.stateMachine.setState(new DataOmissionState(stateMachine, initFeedbackPath, node, prevFeedbacksPair.getNode(), prevFeedbacksPair.getFirstWrongFeedback(), trace));
 					} else {
 						throw new RuntimeException("Unhandled feedback");
 					}
@@ -496,13 +515,11 @@ public class DebugPilotHandler extends AbstractHandler {
 		
 		protected String genOmissionMessage(final TraceNode startNode, final TraceNode endNode) {
 			StringBuilder strBuilder = new StringBuilder();
-			strBuilder.append("Control omission bug detected: \n\n");
-			strBuilder.append("There should be a missing block of code that lie in "
-					+ "between node " + startNode.getOrder() + " and node " + endNode.getOrder() + ", "
-					+ "resulting in wrong branch feedback in node " + endNode.getOrder() + " and"
-					+ " correct feedback in node " + startNode.getOrder() + ".\n\n");
-			strBuilder.append("If you agree with this prediction, please give ROOT_CAUSE feedback.\n");
-			strBuilder.append("If not, please review the path and give another feedback.");
+			strBuilder.append("Conflicting feedback detected:\n\n");
+			strBuilder.append("TraceNode: " + startNode.getOrder() + " with feedback: Correct\n");
+			strBuilder.append("TraceNode: " + endNode.getOrder() + " with feedback: " + this.prevFeedback + "\n\n");
+			strBuilder.append("It can be omission bug or you give a wrong feedback. \n");
+			strBuilder.append("DebugPilot will now scan the step to narrow down the missing scpe, or you may review the feedback you give previously.");
 			return strBuilder.toString();
 		}
 		
@@ -574,13 +591,11 @@ public class DebugPilotHandler extends AbstractHandler {
 		
 		protected String genOmissionMessage(final int startNodeOrder, final int endNodeOrder) {
 			StringBuilder strBuilder = new StringBuilder();
-			strBuilder.append("Data omission bug detected: \n\n");
-			strBuilder.append("There should be a missing block of code that lie in "
-					+ "between node " + startNodeOrder + " and node " + endNodeOrder + ", "
-					+ "resulting in wrong variable feedback in node " + endNodeOrder + " and"
-					+ " correct feedback in node " + startNodeOrder + ".\n\n");
-			strBuilder.append("If you agree with this prediction, please give ROOT_CAUSE feedback.\n");
-			strBuilder.append("If not, please review the path and give another feedback.");
+			strBuilder.append("Conflicting feedback detected:\n\n");
+			strBuilder.append("TraceNode: " + startNode.getOrder() + " with feedback: Correct\n");
+			strBuilder.append("TraceNode: " + endNode.getOrder() + " with feedback: " + this.prevFeedback + "\n\n");
+			strBuilder.append("It can be omission bug or you give a wrong feedback. \n");
+			strBuilder.append("DebugPilot will now scan the step to narrow down the missing scpe, or you may review the feedback you give previously.");
 			return strBuilder.toString();
 		}
 		

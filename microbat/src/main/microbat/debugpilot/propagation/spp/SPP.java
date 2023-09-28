@@ -384,6 +384,7 @@ public abstract class SPP implements ProbabilityPropagator {
 		final double maxVarCost_ = maxVarCost;
 		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost = maxVarCost_ == 0 ? 0 : var.computationalCost / maxVarCost_);
 		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost = maxVarCost_ == 0 ? 0 : var.computationalCost / maxVarCost_);
+	
 	}
 
 	protected void constructUnmodifiedOpcodeType() {

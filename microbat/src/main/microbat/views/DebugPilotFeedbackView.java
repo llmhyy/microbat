@@ -44,6 +44,8 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.part.ViewPart;
 
+import debugpilot.userlogger.UserBehaviorLogger;
+import debugpilot.userlogger.UserBehaviorType;
 import microbat.debugpilot.DebugPilotInfo;
 import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.FeedbackPath;
@@ -52,6 +54,7 @@ import microbat.handler.callbacks.HandlerCallbackManager;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.model.variable.VirtualVar;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
@@ -62,7 +65,6 @@ import microbat.views.utils.contentprovider.WrittenVariableContentProvider;
 import microbat.views.utils.lableprovider.ControlDominatorLabelProvider;
 import microbat.views.utils.lableprovider.DummyLabelProvider;
 import microbat.views.utils.lableprovider.VariableLabelProvider;
-import microbat.views.utils.lableprovider.VariableWithProbabilityLabelProvider;
 
 public class DebugPilotFeedbackView extends ViewPart {
 
@@ -128,10 +130,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.createReadVariablesViewer(sashForm);
 		this.createWrittenVariableViewer(sashForm);
 //		this.createControlDominatorGroup(parent);
-		this.createRelatedVariableGroup(sashForm);
+//		this.createRelatedVariableGroup(sashForm);
 		this.createAvaliableFeedbackView(sashForm);
 		
-		sashForm.setWeights(6, 10, 10, 4, 10);
+		sashForm.setWeights(6, 10, 10, 10);
 	}
 
 	@Override
@@ -145,7 +147,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.refreshWrittenVariableViewer();
 //		this.refreshControlDominoatorViewer();
 		this.refreshOutputGroup();
-		this.refreshRelatedVariableGroup();
+//		this.refreshRelatedVariableGroup();
 		this.refreshAvailableFeedbackViewer();
 	}
 	
@@ -177,19 +179,19 @@ public class DebugPilotFeedbackView extends ViewPart {
 
 		final Tree tree = this.createVarTree(group);
 
-		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
-		probColumn.setAlignment(SWT.LEFT);
-		probColumn.setText("Correctness");
-		probColumn.setWidth(100);
-		
-		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
-		costColumn.setAlignment(SWT.LEFT);
-		costColumn.setText("Cost");
-		costColumn.setWidth(100);
+//		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
+//		probColumn.setAlignment(SWT.LEFT);
+//		probColumn.setText("Correctness");
+//		probColumn.setWidth(100);
+//		
+//		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
+//		costColumn.setAlignment(SWT.LEFT);
+//		costColumn.setText("Cost");
+//		costColumn.setWidth(100);
 		
 		this.readVariableViewer = new TreeViewer(tree);
 		this.readVariableViewer.addDragSupport(this.operations, this.transferTypes, this.createDragSourceAdapter(this.readVariableViewer));
-		this.readVariableViewer.setLabelProvider(new VariableWithProbabilityLabelProvider());
+		this.readVariableViewer.setLabelProvider(new VariableLabelProvider());
 	}
 	
 	protected void createWrittenVariableViewer(final Composite parent) {
@@ -202,19 +204,19 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		final Tree tree = this.createVarTree(group);
 		
-		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
-		probColumn.setAlignment(SWT.LEFT);
-		probColumn.setText("Correctness");
-		probColumn.setWidth(100);
-		
-		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
-		costColumn.setAlignment(SWT.LEFT);
-		costColumn.setText("Cost");
-		costColumn.setWidth(100);
+//		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
+//		probColumn.setAlignment(SWT.LEFT);
+//		probColumn.setText("Correctness");
+//		probColumn.setWidth(100);
+//		
+//		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
+//		costColumn.setAlignment(SWT.LEFT);
+//		costColumn.setText("Cost");
+//		costColumn.setWidth(100);
 		
 		this.writtenVariableViewer = new TreeViewer(tree);
 //		this.writtenVariableViewer.addDragSupport(this.operations, this.transferTypes, this.createDragSourceAdapter(this.writtenVariableViewer));
-		this.writtenVariableViewer.setLabelProvider(new VariableWithProbabilityLabelProvider());
+		this.writtenVariableViewer.setLabelProvider(new VariableLabelProvider());
 	}
 	
 	protected void createControlDominatorGroup(final Composite parent) {
@@ -336,8 +338,8 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		TableColumn typeColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.LEFT);
 		typeColumn.setAlignment(SWT.LEFT);
-		typeColumn.setText("Type");
-		typeColumn.setWidth(170);
+		typeColumn.setText("Feedback");
+		typeColumn.setWidth(250);
 		this.typeViewerColumn = new TableViewerColumn(this.availableFeedbackViewer, typeColumn);
 		
 		 
@@ -356,7 +358,7 @@ public class DebugPilotFeedbackView extends ViewPart {
 		TableColumn nextNodeColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.LEFT);
 		nextNodeColumn.setAlignment(SWT.LEFT);
 		nextNodeColumn.setText("Explore");
-		nextNodeColumn.setWidth(90);
+		nextNodeColumn.setWidth(110);
 		this.nextNodeViewerColumn = new TableViewerColumn(this.availableFeedbackViewer, nextNodeColumn);
 
 		this.availableFeedbackViewer.setContentProvider(new FeedbackContentProvider());
@@ -372,6 +374,37 @@ public class DebugPilotFeedbackView extends ViewPart {
 						}
 					}
 				}
+//				if (checkedFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+//					for (Object element : availableFeedbackViewer.getCheckedElements()) {
+//						if (element instanceof UserFeedback userFeedback) {
+//							if (userFeedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT) || userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+//								availableFeedbackViewer.setChecked(element, false);
+//							}
+//							if (userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE) && userFeedback.getOption().getReadVar().equals(checkedFeedback.getOption().getReadVar())) {
+//								availableFeedbackViewer.setChecked(element, false);
+//							}
+//						}
+//					}
+//				} else if (checkedFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+//					for (Object element : availableFeedbackViewer.getCheckedElements()) {
+//						if (element instanceof UserFeedback userFeedback) {
+//							if (userFeedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT) || userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+//								availableFeedbackViewer.setChecked(element, false);
+//							}
+//							if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) && userFeedback.getOption().getReadVar().equals(checkedFeedback.getOption().getReadVar())) {
+//								availableFeedbackViewer.setChecked(element, false);
+//							}
+//						}
+//					}
+//				} else {					
+//					for (Object element : availableFeedbackViewer.getCheckedElements()) {
+//						if (element instanceof UserFeedback userFeedback) {
+//							if (!userFeedback.getFeedbackType().equals(checkedFeedback.getFeedbackType())) {
+//								availableFeedbackViewer.setChecked(element, false);
+//							}
+//						}
+//					}
+//				}
 			}
 		});
 	}
@@ -394,18 +427,18 @@ public class DebugPilotFeedbackView extends ViewPart {
 		
 		final Tree tree = this.createVarTree(group);
 		
-		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
-		probColumn.setAlignment(SWT.LEFT);
-		probColumn.setText("Correctness");
-		probColumn.setWidth(100);
-		
-		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
-		costColumn.setAlignment(SWT.LEFT);
-		costColumn.setText("Cost");
-		costColumn.setWidth(100);
+//		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
+//		probColumn.setAlignment(SWT.LEFT);
+//		probColumn.setText("Correctness");
+//		probColumn.setWidth(100);
+//		
+//		TreeColumn costColumn = new TreeColumn(tree, SWT.LEFT);
+//		costColumn.setAlignment(SWT.LEFT);
+//		costColumn.setText("Cost");
+//		costColumn.setWidth(100);
 		
 		this.relatedVariablesViewer = new TreeViewer(tree);
-		this.relatedVariablesViewer.setLabelProvider(new VariableWithProbabilityLabelProvider());
+		this.relatedVariablesViewer.setLabelProvider(new VariableLabelProvider());
 	}
 	
 	
@@ -434,8 +467,44 @@ public class DebugPilotFeedbackView extends ViewPart {
 					DialogUtil.popErrorDialog("Please give feedback only on step in path", "DebugPilot Feedback Error");
 				} else {					
 					UserFeedback[] feedbacks = Arrays.stream(availableFeedbackViewer.getCheckedElements()).map(obj -> {return (UserFeedback) obj;}).toArray(UserFeedback[]::new);
+					
+//					List<String> feedbackList = Arrays.stream(feedbacks)
+//							.map(feedback -> feedback.getFeedbackType())
+//							.distinct()
+//							.filter(type -> !type.equals(UserFeedback.CORRECT_VARIABLE_VALUE)).toList();
+//					if (feedbackList.isEmpty()) {
+//						DialogUtil.popErrorDialog("Feedback must contain either root cause, correct, wrong path or wrong variable", "DebugPilot Feedback View Error");
+//						return;
+//					}
+					
+					
 					NodeFeedbacksPair userFeedbacksPair = new NodeFeedbacksPair(currentNode, feedbacks);
+					
+					if (userFeedbacksPair.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {						
+						if (!DialogUtil.popConfirmDialog("Are you sure this step is the root cause?", "DebugPilot Remind")) {
+							return;
+						}
+					}
+					
 					DebugPilotInfo.getInstance().setNodeFeedbacksPair(userFeedbacksPair);
+					
+					PathView pathView = MicroBatViews.getPathView();
+					final TraceNode nextNode = TraceUtil.findNextNode(currentNode, userFeedbacksPair.getFirstWrongFeedback(), trace);
+					if (nextNode != null) {						
+						pathView.focusOnNode(nextNode);
+					}
+					
+					String feedbackType = userFeedbacksPair.getFeedbackType();
+					if (feedbackType.equals(UserFeedback.CORRECT)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.CORRECT);
+					} else if (feedbackType.equals(UserFeedback.WRONG_PATH)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_CONFIRM);
+					} else if (feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_CONFIRM);
+					} else if (feedbackType.equals(UserFeedback.ROOTCAUSE)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.ROOT_CAUSE);
+					}
+					
 				}
 			}
 		});
@@ -516,9 +585,15 @@ public class DebugPilotFeedbackView extends ViewPart {
             @Override
             public String getText(Object element) {
             	if (element instanceof UserFeedback userFeedback) {
-    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+//    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+            		if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
     					VarValue wrongVar = userFeedback.getOption().getReadVar();
-    					return wrongVar.getVarName();
+    					String name = wrongVar.getVarName();
+    					if(wrongVar.getVariable() instanceof VirtualVar){
+    						String methodName = name.substring(name.lastIndexOf(".")+1);
+    						name = "return from " + methodName + "()";
+    					}
+    					return name;
     				}
     				return "-";
             	}
@@ -530,8 +605,9 @@ public class DebugPilotFeedbackView extends ViewPart {
             @Override
             public String getText(Object element) {
             	if (element instanceof UserFeedback userFeedback) {
-    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-    					return userFeedback.getOption().getReadVar().getManifestationValue();					
+//    				if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+            		if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+    					return userFeedback.getOption().getReadVar().getStringValue();
     				} else {
     					return "-";
     				}
@@ -550,13 +626,15 @@ public class DebugPilotFeedbackView extends ViewPart {
 	
 	protected String genFeedbackType(final UserFeedback feedback) {
 		if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
-			return "CORRECT";
+			return "Step is correct";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-			return "WRONG_BRANCH";
+			return "Wrong Flow";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-			return "WRONG_VARIABLE";
+			return "Wrong Variable";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
-			return "ROOT_CAUSE";
+			return "Root Cause";
+//		} else if (feedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
+//			return "Correct Variable";
 		} else {
 			return null;
 		}
@@ -565,8 +643,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 	protected void checkDefaultAvailableFeedbacks() {
 		final FeedbackPath suggestedFeedbackPath = MicroBatViews.getPathView().getFeedbackPath();
 		if (suggestedFeedbackPath.contains(this.currentNode)) {
-			UserFeedback suggestedFeedback = suggestedFeedbackPath.getFeedback(this.currentNode).getFirstFeedback();
-			this.availableFeedbackViewer.setCheckedElements(new Object[] {suggestedFeedback});
+			NodeFeedbacksPair nodeFeedbacksPair = suggestedFeedbackPath.getFeedback(currentNode);
+			for (UserFeedback suggestedFeedback : nodeFeedbacksPair.getFeedbacks()) {
+				this.availableFeedbackViewer.setCheckedElements(new Object[] {suggestedFeedback});
+			}
 		} else {
 			this.availableFeedbackViewer.setAllChecked(false);
 		}
@@ -605,6 +685,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 			UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 			feedback.setOption(new ChosenVariableOption(readVar, null));
 			availableFeedbacks.add(feedback);
+			
+//			UserFeedback anotherFeedback = new UserFeedback(UserFeedback.CORRECT_VARIABLE_VALUE);
+//			anotherFeedback.setOption(new ChosenVariableOption(readVar, null));
+//			availableFeedbacks.add(anotherFeedback);
 		}
 
 		availableFeedbacks.add(new UserFeedback(UserFeedback.ROOTCAUSE));
@@ -647,9 +731,15 @@ public class DebugPilotFeedbackView extends ViewPart {
 		public void update(ViewerCell cell) {
 			Button button = new Button((Composite) cell.getViewerRow().getControl(), SWT.PUSH);
 			final UserFeedback userFeedback = (UserFeedback) cell.getElement();
-			
+
 			final TraceNode nextNode = TraceUtil.findNextNode(this.currentNode, userFeedback, trace);
-			final String buttonText = nextNode == null ? "-" : String.valueOf(nextNode.getOrder());
+			String buttonText = "-";
+			if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+				buttonText = "Condition";
+			} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+				buttonText = "Definition";
+			}
+			
 			button.setText(buttonText);
 			button.setEnabled(nextNode != null);
 			button.addSelectionListener(new SelectionListener() {
@@ -658,6 +748,12 @@ public class DebugPilotFeedbackView extends ViewPart {
 					final TraceView traceView = MicroBatViews.getTraceView();
 					traceView.jumpToNode(trace, nextNode.getOrder(), false);
 					traceView.jumpToNode(nextNode);
+					
+					if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_EXPLORE);
+					} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+						UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_EXPLORE);
+					}
 				}
 				@Override
 				public void widgetDefaultSelected(SelectionEvent e) {}
@@ -669,8 +765,7 @@ public class DebugPilotFeedbackView extends ViewPart {
             editor.grabVertical = true;
             editor.setEditor(button , item, cell.getColumnIndex());
             editor.layout();
-			
-			
+
 			registerButtons(button);
 		}
 	}

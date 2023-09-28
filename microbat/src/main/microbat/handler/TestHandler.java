@@ -2,7 +2,9 @@ package microbat.handler;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -24,6 +26,7 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.preference.DebugPilotPreference;
 import microbat.util.JavaUtil;
+import microbat.util.TraceUtil;
 import microbat.vectorization.TraceVectorizer;
 import microbat.vectorization.vector.*;
 import microbat.views.MicroBatViews;
@@ -31,6 +34,7 @@ import microbat.views.TraceView;
 import microbat.model.BreakPoint;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 public class TestHandler extends AbstractHandler {
 	
 	private final List<OpcodeType> unmodifiedType = new ArrayList<>();
@@ -55,7 +59,19 @@ public class TestHandler extends AbstractHandler {
 	}
 	
 	private void execute() {
-
+		Trace trace = this.traceView.getTrace();
+		TraceNode node1 = trace.getTraceNode(537);
+		TraceNode node2 = trace.getTraceNode(546);
+		
+		System.out.println("Node: " + node1.getOrder());
+		System.out.println(node1.getBreakPoint().getFullJavaFilePath());
+		System.out.println(node1.getBreakPoint().getLineNumber());
+		
+		System.out.println("Node: " + node2.getOrder());
+		System.out.println(node2.getBreakPoint().getFullJavaFilePath());
+		System.out.println(node2.getBreakPoint().getLineNumber());
+		
+		System.out.println(node1.getBreakPoint().equals(node2.getBreakPoint()));
 	}
 	
 	private void setup() {

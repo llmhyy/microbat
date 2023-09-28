@@ -5,6 +5,7 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.vectorization.vector.NodeVector;
 import microbat.vectorization.vector.VariableVector;
+import microbat.vectorization.vector.Vector;
 
 public class StepComparision {
 
@@ -20,7 +21,11 @@ public class StepComparision {
 		this.variableThreshold = variableThreshold;
 	}
 
-	protected double calCosSimilarity(final float[] array1, final float[] array2) {
+	public double calCosSimilarity(final Vector vector1, final Vector vector2) {
+		return this.calCosSimilarity(vector1.getVector(), vector2.getVector());
+	}
+	
+	public double calCosSimilarity(final float[] array1, final float[] array2) {
 		if (array1.length != array2.length) {
 			throw new IllegalArgumentException(Log.genMsg(getClass(), "Both vector should have the same size"));
 		}
