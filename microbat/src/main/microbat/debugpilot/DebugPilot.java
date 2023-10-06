@@ -56,6 +56,7 @@ public class DebugPilot {
 			pair.getNode().confirmed = true;
 		}
 
+		FeedbackPath tempPath = null;
 		if (mustFollowPath == null || mustFollowPath.isEmpty()) {
 			return pathFinder.findPath(this.debugPilotSettings.getOutputNode(), rootCause);
 		} else {
@@ -64,8 +65,11 @@ public class DebugPilot {
 				final TraceNode nextNode = TraceUtil.findNextNode(latestAction.getNode(), feedback,
 						this.debugPilotSettings.getTrace());
 				FeedbackPath consecutivePath = pathFinder.findPath(nextNode, rootCause);
-				if (consecutivePath == null)
+				if (consecutivePath == null) {
+					tempPath = new FeedbackPath(mustFollowPath);
+					tempPath.addPair(new NodeFeedbacksPair(nextNode, new UserFeedback(UserFeedback.ROOTCAUSE)));
 					continue;
+				}
 				FeedbackPath path = FeedbackPathUtil.concat(mustFollowPath, consecutivePath);
 				for (NodeFeedbacksPair pair : consecutivePath) {
 					if (pair.getNode().equals(rootCause)) {
@@ -77,7 +81,8 @@ public class DebugPilot {
 				return path;
 			}
 		}
-		throw new RuntimeException(Log.genMsg(getClass(), "Cannot construct path"));
+		
+		return tempPath;
 	}
 
 	public TraceNode locateRootCause() {

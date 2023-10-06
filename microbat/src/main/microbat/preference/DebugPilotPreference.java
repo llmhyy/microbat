@@ -36,7 +36,7 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 	public static final String PROPAGATOR_TYPE_KEY = "DP/PROPAGATOR_TYPE";
 	public static final String PATHFINDER_TYPE_KEY = "DP/PATHFINDER_TYPE";
 	public static final String ROOT_CAUSE_LOCATOR_TYPE_KEY = "DP/ROOT_CAUSE_LOCATOR_TYPE";
-	public static final String LOG_PATH_KEY = "DP/LOG_PATH_KEY";
+//	public static final String LOG_PATH_KEY = "DP/LOG_PATH_KEY";
 	
 	/* Probability Propagation Settings */
 	protected Combo propagatorTypeCombo;
@@ -50,9 +50,9 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 	protected Combo rootCauseLocatorTypeCombo;
 	protected RootCauseLocatorType rootCauseLocatorType = RootCauseLocatorSettings.DEFAULT_ROOT_CAUSE_LOCATOR_TYPE;
 	
-	protected Text logText;
-	public static String defaultLogPath = Paths.get("user_behavior_log.txt").toAbsolutePath().toString();
-	protected String logPath;
+//	protected Text logText;
+//	public static String defaultLogPath = Paths.get("user_behavior_log.txt").toAbsolutePath().toString();
+//	protected String logPath;
 	
 			
 	public DebugPilotPreference() {
@@ -66,17 +66,17 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 			this.propagatorType = PropagatorType.valueOf(Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PROPAGATOR_TYPE_KEY));
 			this.pathFinderType = PathFinderType.valueOf(Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.PATHFINDER_TYPE_KEY));
 			this.rootCauseLocatorType = RootCauseLocatorType.valueOf(Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.ROOT_CAUSE_LOCATOR_TYPE_KEY));
-			this.logPath = Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.LOG_PATH_KEY);
+//			this.logPath = Activator.getDefault().getPreferenceStore().getString(DebugPilotPreference.LOG_PATH_KEY);
 		} catch (IllegalArgumentException e) {
 			this.propagatorType = PropagatorSettings.DEFAULT_PROPAGATOR_TYPE;
 			this.pathFinderType = PathFinderSettings.DEFAULT_PATH_FINDER_TYPE;
 			this.rootCauseLocatorType = RootCauseLocatorSettings.DEFAULT_ROOT_CAUSE_LOCATOR_TYPE;
-			this.logPath = this.defaultLogPath;
+//			this.logPath = this.defaultLogPath;
 		}
 		
-		if (this.logPath.isEmpty()) {
-			this.logPath = this.defaultLogPath;
-		}
+//		if (this.logPath.isEmpty()) {
+//			this.logPath = this.defaultLogPath;
+//		}
 	}
 
 	@Override
@@ -87,7 +87,7 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 		this.createPropagatorSetting(contents);
 		this.createPathFinderSetting(contents);
 		this.createRootCauseLocatorSetting(contents);
-		this.createLogTextSetting(contents);
+//		this.createLogTextSetting(contents);
 		return contents;
 	}
 	
@@ -96,7 +96,7 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 		this.propagatorType = PropagatorType.valueOf(this.propagatorTypeCombo.getText());
 		this.pathFinderType = PathFinderType.valueOf(this.pathFinderTypeCombo.getText());
 		this.rootCauseLocatorType = RootCauseLocatorType.valueOf(this.rootCauseLocatorTypeCombo.getText());		
-		this.logPath = this.logText.getText();
+//		this.logPath = this.logText.getText();
 		this.storeData();
 		return true;
 	}
@@ -110,7 +110,7 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 		this.propagatorTypeCombo.select(this.propagatorType.ordinal());
 		this.pathFinderTypeCombo.select(this.pathFinderType.ordinal());
 		this.rootCauseLocatorTypeCombo.select(this.rootCauseLocatorType.ordinal());
-		this.logPath = this.logText.getText();
+//		this.logPath = this.logText.getText();
 		this.storeData();
 	}
 	
@@ -119,11 +119,11 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 		preferences.put(DebugPilotPreference.PROPAGATOR_TYPE_KEY, this.propagatorType.name());
 		preferences.put(DebugPilotPreference.PATHFINDER_TYPE_KEY, this.pathFinderType.name());
 		preferences.put(DebugPilotPreference.ROOT_CAUSE_LOCATOR_TYPE_KEY, this.rootCauseLocatorType.name());
-		preferences.put(DebugPilotPreference.LOG_PATH_KEY, this.logPath);
+//		preferences.put(DebugPilotPreference.LOG_PATH_KEY, this.logPath);
 		Activator.getDefault().getPreferenceStore().putValue(DebugPilotPreference.PROPAGATOR_TYPE_KEY, this.propagatorType.name());
 		Activator.getDefault().getPreferenceStore().putValue(DebugPilotPreference.PATHFINDER_TYPE_KEY, this.pathFinderType.name());
 		Activator.getDefault().getPreferenceStore().putValue(DebugPilotPreference.ROOT_CAUSE_LOCATOR_TYPE_KEY, this.rootCauseLocatorType.name());
-		Activator.getDefault().getPreferenceStore().putValue(DebugPilotPreference.LOG_PATH_KEY, this.logPath);
+//		Activator.getDefault().getPreferenceStore().putValue(DebugPilotPreference.LOG_PATH_KEY, this.logPath);
 	}
 	
 	protected void createPropagatorSetting(final Composite parent) {
@@ -208,11 +208,11 @@ public class DebugPilotPreference extends PreferencePage implements IWorkbenchPr
 		final Label logPathLabel = new Label(rootCauseGroup, SWT.NONE);
 		logPathLabel.setText("Log Path");
 		
-		this.logText = new Text(rootCauseGroup, SWT.BORDER);
-		this.logText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
-		this.logText.setText(this.logPath);
-		GridData javaHomeTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
-		this.logText.setLayoutData(javaHomeTextData);
+//		this.logText = new Text(rootCauseGroup, SWT.BORDER);
+//		this.logText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+//		this.logText.setText(this.logPath);
+//		GridData javaHomeTextData = new GridData(SWT.FILL, SWT.FILL, true, false);
+//		this.logText.setLayoutData(javaHomeTextData);
 	}
 	
 }

@@ -494,16 +494,16 @@ public class DebugPilotFeedbackView extends ViewPart {
 						pathView.focusOnNode(nextNode);
 					}
 					
-					String feedbackType = userFeedbacksPair.getFeedbackType();
-					if (feedbackType.equals(UserFeedback.CORRECT)) {
-						UserBehaviorLogger.logEvent(UserBehaviorType.CORRECT);
-					} else if (feedbackType.equals(UserFeedback.WRONG_PATH)) {
-						UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_CONFIRM);
-					} else if (feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-						UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_CONFIRM);
-					} else if (feedbackType.equals(UserFeedback.ROOTCAUSE)) {
-						UserBehaviorLogger.logEvent(UserBehaviorType.ROOT_CAUSE);
-					}
+//					String feedbackType = userFeedbacksPair.getFeedbackType();
+//					if (feedbackType.equals(UserFeedback.CORRECT)) {
+//						UserBehaviorLogger.logEvent(UserBehaviorType.CORRECT);
+//					} else if (feedbackType.equals(UserFeedback.WRONG_PATH)) {
+//						UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_CONFIRM);
+//					} else if (feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+//						UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_CONFIRM);
+//					} else if (feedbackType.equals(UserFeedback.ROOTCAUSE)) {
+//						UserBehaviorLogger.logEvent(UserBehaviorType.ROOT_CAUSE);
+//					}
 					
 				}
 			}
@@ -749,11 +749,11 @@ public class DebugPilotFeedbackView extends ViewPart {
 					traceView.jumpToNode(trace, nextNode.getOrder(), false);
 					traceView.jumpToNode(nextNode);
 					
-					if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-						UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_EXPLORE);
-					} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-						UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_EXPLORE);
-					}
+//					if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+//						UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_EXPLORE);
+//					} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+//						UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_EXPLORE);
+//					}
 				}
 				@Override
 				public void widgetDefaultSelected(SelectionEvent e) {}

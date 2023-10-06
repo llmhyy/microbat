@@ -22,7 +22,7 @@ public class FeedbackPathSelectionListener implements ISelectionChangedListener 
 	@Override
 	public void selectionChanged(SelectionChangedEvent event) {
 		ISelection iSel = event.getSelection();
-		UserBehaviorLogger.logEvent(UserBehaviorType.CHECK_PATH);
+//		UserBehaviorLogger.logEvent(UserBehaviorType.CHECK_PATH);
 		if (iSel instanceof StructuredSelection structuredSelection) {
 			Object obj = structuredSelection.getFirstElement();
 			if (obj instanceof NodeFeedbacksPair nodeFeedbackPairs) {				

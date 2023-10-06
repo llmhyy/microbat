@@ -87,7 +87,7 @@ public class DebugPilotHandler extends AbstractHandler {
 	}
 	
 	protected void execute() {
-		UserBehaviorLogger.logEvent(UserBehaviorType.START_DEBUGPILOT);
+//		UserBehaviorLogger.logEvent(UserBehaviorType.START_DEBUGPILOT);
 		if (this.isRunningProcess) {
 			DialogUtil.popErrorDialog("DebugPilot is currently running a process. Please stop the original process before you start a new one", DebugPilotHandler.DIALOG_ERROR_TITLE);
 			return;

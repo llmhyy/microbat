@@ -23,7 +23,7 @@ public class StopDebugPilotHandler extends AbstractHandler {
 		Job job = new Job("DebugPilot") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				UserBehaviorLogger.logEvent(UserBehaviorType.STOP_DEBUGPILOT);
+//				UserBehaviorLogger.logEvent(UserBehaviorType.STOP_DEBUGPILOT);
 				HandlerCallbackManager.getInstance().runDebugPilotTerminateCallbacks();
 				Job.getJobManager().cancel(DebugPilotHandler.JOB_FAMALY_NAME);
 				DialogUtil.popInformationDialog("DebugPilot debugging process is stopped.", StopDebugPilotHandler.DIALOG_INFO_TITLE);

@@ -62,10 +62,10 @@ public class PreferenceParser {
 		return string == null ? RootCauseLocatorSettings.DEFAULT_ROOT_CAUSE_LOCATOR_TYPE : RootCauseLocatorType.valueOf(string);
 	}
 	
-	public static String getLogPath() {
-		final String string = PreferenceParser.getPreferenceStringByKey(DebugPilotPreference.LOG_PATH_KEY);
-		return string == null ? DebugPilotPreference.defaultLogPath : string;
-	}
+//	public static String getLogPath() {
+//		final String string = PreferenceParser.getPreferenceStringByKey(DebugPilotPreference.LOG_PATH_KEY);
+//		return string == null ? DebugPilotPreference.defaultLogPath : string;
+//	}
 
 	public static String getPreferenceStringByKey(final String key) {
 		final String string = Activator.getDefault().getPreferenceStore().getString(key);

@@ -23,7 +23,7 @@ public class UserBehaviorLogger {
 		Display.getDefault().syncExec(new Runnable() {
 			@Override
 			public void run() {
-				logPath = PreferenceParser.getLogPath();
+//				logPath = PreferenceParser.getLogPath();
 			}
 		});
 		createFileIfNotExist();

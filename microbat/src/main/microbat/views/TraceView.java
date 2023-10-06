@@ -347,7 +347,7 @@ public class TraceView extends ViewPart {
 			}
 
 			public void selectionChanged(SelectionChangedEvent event) {
-				UserBehaviorLogger.logEvent(UserBehaviorType.CHECK_NODE);
+//				UserBehaviorLogger.logEvent(UserBehaviorType.CHECK_NODE);
 				ISelection iSel = event.getSelection();
 				if (iSel instanceof StructuredSelection) {
 					StructuredSelection sel = (StructuredSelection) iSel;
