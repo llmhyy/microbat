@@ -18,7 +18,7 @@ public class BeliefPropagationClient extends Client {
 	protected final MessageProcessor messageProcessor = new MessageProcessor();
 	
 	public BeliefPropagationClient() {
-		this("127.0.0.1", 8080, false);
+		this("127.0.0.2", 8080, false);
 	}
 	
 	public BeliefPropagationClient(final String host, final int port) {
