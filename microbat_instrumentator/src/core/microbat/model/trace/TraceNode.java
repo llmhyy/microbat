@@ -16,6 +16,7 @@ import microbat.model.ControlScope;
 import microbat.model.Scope;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
+import microbat.model.variable.ConditionVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import sav.common.core.utils.CollectionUtils;
@@ -95,18 +96,7 @@ public class TraceNode{
 	private long timestamp;
 	
 	private String bytecode = null;
-	
-	/**
-	 * Prefix of id of condition result variable. <br><br>
-	 * The id of condition result follow the format: CR_<TraceNode Order>
-	 */
-	public static final String CONDITION_RESULT_ID = "CR_";
-	
-	/**
-	 * Prefix of variable name of condition result. <br><br>
-	 * The variable name of condition result follow the format: ConditionResult_<TraceNode Order>
-	 */
-	public static final String CONDITION_RESULT_NAME = "ConditionResult_";
+
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		this(breakPoint, programState, order, trace, -1, -1, System.currentTimeMillis(), bytecode);
@@ -138,10 +128,10 @@ public class TraceNode{
 	 */
 	public void insertConditionResult(boolean condition) {
 		final String type = "boolean";
-		final String varID = TraceNode.CONDITION_RESULT_ID + this.getOrder();
-		final String varName = TraceNode.CONDITION_RESULT_NAME + this.getOrder();
+		final String varID = ConditionVar.CONDITION_RESULT_ID + this.getOrder();
+		final String varName = ConditionVar.CONDITION_RESULT_NAME + this.getOrder();
 		
-		Variable variable = new LocalVar(varName, type, "", this.getLineNumber());
+		Variable variable = new ConditionVar(varName, type, "", this.getLineNumber());
 		VarValue conditionResult = new PrimitiveValue(condition ? "1" : "0", true, variable);
 		conditionResult.setVarID(varID);
 		
@@ -155,7 +145,7 @@ public class TraceNode{
 	public VarValue getConditionResult() {
 		if (this.isBranch()) {
 			for (VarValue writtenVar : this.getWrittenVariables()) {
-				if (writtenVar.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID)) {
+				if (writtenVar.getVarID().startsWith(ConditionVar.CONDITION_RESULT_ID)) {
 					return writtenVar;
 				}
 			}

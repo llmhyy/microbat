@@ -10,19 +10,17 @@ package microbat.model.value;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import microbat.debugpilot.NodeFeedbackPair;
 import microbat.debugpilot.propagation.probability.HasProbability;
 import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.log.Log;
-import microbat.model.trace.TraceNode;
 import microbat.model.variable.ArrayElementVar;
+import microbat.model.variable.ConditionVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
@@ -625,6 +623,6 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	}
 	
 	public boolean isConditionResult() {
-		return this.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID);
+		return this.getVarID().startsWith(ConditionVar.CONDITION_RESULT_ID);
 	}
 }

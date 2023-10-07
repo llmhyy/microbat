@@ -1,6 +1,7 @@
 package microbat.baseline.constraints;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -8,7 +9,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import microbat.debugpilot.propagation.BP.BeliefPropagation;
 import microbat.debugpilot.propagation.BP.constraint.Constraint;
 import microbat.debugpilot.propagation.BP.constraint.StatementConstraintA5;
 import microbat.debugpilot.propagation.BP.constraint.WrongConstraintConditionException;
@@ -16,6 +16,7 @@ import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
+import microbat.model.variable.ConditionVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 
@@ -60,11 +61,11 @@ public class StatementConstraintA5Test {
 		this.controlDom = new TraceNode(null, null, 1, null, "");
 
 		final String type = "boolean";
-		final String varName = TraceNode.CONDITION_RESULT_NAME + this.controlDom.getOrder();
+		final String varName = ConditionVar.CONDITION_RESULT_NAME + this.controlDom.getOrder();
 
-		this.controlDomValueID = TraceNode.CONDITION_RESULT_ID + this.controlDom.getOrder();
+		this.controlDomValueID = ConditionVar.CONDITION_RESULT_ID + this.controlDom.getOrder();
 
-		Variable variable = new LocalVar(varName, type, "", 1);
+		Variable variable = new ConditionVar(varName, type, "", 1);
 		VarValue conditionResult = new PrimitiveValue("1", true, variable);
 		conditionResult.setVarID(this.controlDomValueID);
 		this.controlDom.addWrittenVariable(conditionResult);

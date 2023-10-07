@@ -1,7 +1,7 @@
 package microbat.vectorization.vector;
 
-import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.model.variable.ConditionVar;
 
 public class VariableVectorC extends VariableVector {
 	
@@ -37,7 +37,7 @@ public class VariableVectorC extends VariableVector {
 //		if (VariableVector.isReliableType(typeStr)) this.set(VariableVector.IS_RELIABLE_IDX);
 //		
 		this.vector[VariableVectorC.COST_IDX] = (float) var.getComputationalCost();
-		if (var.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID)) this.set(VariableVector.IS_CONDITION_RESULT_IDX);
+		if (var.getVarID().startsWith(ConditionVar.CONDITION_RESULT_ID)) this.set(VariableVector.IS_CONDITION_RESULT_IDX);
 	
 	}
 }

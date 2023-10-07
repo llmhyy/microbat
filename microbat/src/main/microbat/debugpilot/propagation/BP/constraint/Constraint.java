@@ -12,6 +12,7 @@ import microbat.debugpilot.propagation.BP.BeliefPropagation;
 import microbat.debugpilot.propagation.BP.VarIDConverter;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.model.variable.ConditionVar;
 
 /**
  * Abstract super of all kind of constraints used in the probability inference model
@@ -411,7 +412,7 @@ public abstract class Constraint {
 	 */
 	public static VarValue extractControlDomVar(TraceNode controlDom) {
 		for (VarValue writeVar : controlDom.getWrittenVariables()) {
-			if (writeVar.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID)) {
+			if (writeVar.getVarID().startsWith(ConditionVar.CONDITION_RESULT_ID)) {
 				return writeVar;
 			}
 		}

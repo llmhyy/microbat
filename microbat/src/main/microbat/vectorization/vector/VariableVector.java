@@ -12,6 +12,7 @@ import java.util.HashSet;
 
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.model.variable.ConditionVar;
 
 public class VariableVector extends Vector {
 	
@@ -75,7 +76,7 @@ public class VariableVector extends Vector {
 //		if (VariableVector.isReliableType(typeStr)) this.set(VariableVector.IS_RELIABLE_IDX);
 //		
 //		this.vector[VariableVector.COST_IDX] = (float) var.getComputationalCost();
-		if (var.getVarID().startsWith(TraceNode.CONDITION_RESULT_ID)) this.set(VariableVector.IS_CONDITION_RESULT_IDX);
+		if (var.getVarID().startsWith(ConditionVar.CONDITION_RESULT_ID)) this.set(VariableVector.IS_CONDITION_RESULT_IDX);
 //		if (var.isThisVariable()) this.set(VariableVector.IS_THIS_IDX);
 	}
 
