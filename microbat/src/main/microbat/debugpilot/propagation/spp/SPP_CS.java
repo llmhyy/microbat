@@ -16,7 +16,7 @@ import microbat.model.value.VarValue;
 import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 
-public class SPPS_CS extends SPPS_C {
+public class SPP_CS extends SPP_C {
 
 	protected final Map<BreakPoint, Integer> breakPointCFScore = new HashMap<>();
 	protected final Map<BreakPoint, Integer> breakPointCSScore = new HashMap<>();
@@ -24,14 +24,14 @@ public class SPPS_CS extends SPPS_C {
 	
 	protected final double eps = 1e-10;
 	
-	public SPPS_CS(final PropagatorSettings settings) {
-		this(settings.getTrace(), settings.getSlicedTrace(), settings.getWrongVars(), settings.getFeedbacks());
+	public SPP_CS(final PropagatorSettings settings) {
+		this(settings.getTrace(), settings.getSlicedTrace(), settings.getFeedbacks());
 	}
-	
-	public SPPS_CS(final Trace trace, final List<TraceNode> sliceTraceNodes, final Collection<VarValue> wrongVars, final Collection<NodeFeedbacksPair> feedbacksPair) {
-		super(trace, sliceTraceNodes, wrongVars, feedbacksPair);
+	 
+	public SPP_CS(final Trace trace, final List<TraceNode> slicedTrace, final Collection<NodeFeedbacksPair> feedbacksRecords) {
+		super(trace, slicedTrace, feedbacksRecords);
 	}
-	
+
 	@Override
 	public void propagate() {
 		this.initConfirmed();
@@ -83,26 +83,6 @@ public class SPPS_CS extends SPPS_C {
 						}
 					}
 				}
-				
-//				for (VarValue readVar : node.getReadVariables()) {
-//					final TraceNode dataDominator = this.trace.findDataDependency(node, readVar);
-//					if (dataDominator == null) {
-//						continue;
-//					}
-//					
-//					List<TraceNode> relatedNodes = TraceUtil.dynamicSlice(trace, dataDominator);
-//					nodeCoveredByWrongFeedback.addAll(relatedNodes);
-//					List<BreakPoint> breakPoints =  relatedNodes.stream().map(relateNode -> relateNode.getBreakPoint()).distinct().toList();
-//					if (feedbackPair.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-//						for (BreakPoint breakPoint : breakPoints) {
-//							this.breakPointCFScore.compute(breakPoint, (k, v) -> (v == null) ? 1 : v + 1);
-//						}						
-//					} else {
-//						for (BreakPoint breakPoint : breakPoints) {
-//							this.breakPointCSScore.compute(breakPoint, (k, v) -> (v == null) ? 1 : v + 1);
-//						}
-//					}
-//				}
 				
 				final TraceNode controlDom = node.getControlDominator();
 				if (controlDom != null) {

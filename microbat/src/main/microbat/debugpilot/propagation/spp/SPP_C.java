@@ -1,42 +1,24 @@
 package microbat.debugpilot.propagation.spp;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
-import microbat.bytecode.OpcodeType;
 import microbat.debugpilot.NodeFeedbacksPair;
-import microbat.debugpilot.pathfinding.AbstractPathFinder;
-import microbat.debugpilot.propagation.ProbabilityPropagator;
 import microbat.debugpilot.settings.PropagatorSettings;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
-public class SPPS_C implements ProbabilityPropagator {
+public class SPP_C extends SPP {
 	
-	protected final Trace trace;
-	protected List<TraceNode> slicedTrace;
-	
-	protected final Set<VarValue> wrongVars = new HashSet<>();
-	
-	protected final List<OpcodeType> unmodifiedType = new ArrayList<>();
-	protected List<NodeFeedbacksPair> feedbackRecords = new ArrayList<>();
-	
-	public SPPS_C(final PropagatorSettings settings) {
-		this(settings.getTrace(), settings.getSlicedTrace(), settings.getWrongVars(), settings.getFeedbacks());
+	public SPP_C(final PropagatorSettings settings) {
+		this(settings.getTrace(), settings.getSlicedTrace(), settings.getFeedbacks());
 	}
 	
-	public SPPS_C(final Trace trace, final List<TraceNode> sliceTraceNodes, final Collection<VarValue> wrongVars, final Collection<NodeFeedbacksPair> feedbacksPair) {
-		this.trace = trace;
-		this.slicedTrace = sliceTraceNodes;
-		this.wrongVars.addAll(wrongVars);
-		this.feedbackRecords.addAll(feedbacksPair);
-		this.constructUnmodifiedOpcodeType();
+	public SPP_C(final Trace trace, final List<TraceNode> sliceTraceNodes, final Collection<NodeFeedbacksPair> feedbacksPairs) {
+		super(trace, sliceTraceNodes, feedbacksPairs);
 	}
 	
 	@Override
@@ -46,7 +28,6 @@ public class SPPS_C implements ProbabilityPropagator {
 		this.calComputationalSuspiciousScore();
 		this.calSuspiciousScoreVariable();
 		this.normalizeVariableSuspicious();
-
 	}
 
 	protected void initConfirmed() {
@@ -65,20 +46,6 @@ public class SPPS_C implements ProbabilityPropagator {
 				node.addSuspiciousness(computationSuspiciousness);
 			});
 		}
-	}
-
-	protected void calFeedbackSuspiciousScore() {
-//		StepComparision comparision = new StepComparision();
-//		for (TraceNode node : this.slicedTrace) {
-//			double score = 1.0d;
-//			final NodeVector nodeVector = new NodeVector(node);
-//			for (NodeFeedbacksPair nodeFeedbacksPair : this.feedbackRecords) {
-//				final NodeVector feedbackNodeVector = new NodeVector(nodeFeedbacksPair.getNode());
-//				final double sim = comparision.calCosSimilarity(nodeVector.getVector(), feedbackNodeVector.getVector());
-//				score *= (1-Math.pow(sim, 4));
-//			}
-//			node.computationCost += score;
-//		}
 	}
 	
 	protected void calSuspiciousScoreVariable() {
@@ -135,25 +102,11 @@ public class SPPS_C implements ProbabilityPropagator {
 		}
 	}
 	
-	protected void constructUnmodifiedOpcodeType() {
-		this.unmodifiedType.add(OpcodeType.LOAD_CONSTANT);
-		this.unmodifiedType.add(OpcodeType.LOAD_FROM_ARRAY);
-		this.unmodifiedType.add(OpcodeType.LOAD_VARIABLE);
-		this.unmodifiedType.add(OpcodeType.STORE_INTO_ARRAY);
-		this.unmodifiedType.add(OpcodeType.STORE_VARIABLE);
-		this.unmodifiedType.add(OpcodeType.RETURN);
-		this.unmodifiedType.add(OpcodeType.GET_FIELD);
-		this.unmodifiedType.add(OpcodeType.GET_STATIC_FIELD);
-		this.unmodifiedType.add(OpcodeType.PUT_FIELD);
-		this.unmodifiedType.add(OpcodeType.PUT_STATIC_FIELD);
-		this.unmodifiedType.add(OpcodeType.INVOKE);
-	}
-	
 	protected int countModifyOperation(final TraceNode node) {
 		ByteCodeList byteCodeList = new ByteCodeList(node.getBytecode());
 		int count = 0;
 		for (ByteCode byteCode : byteCodeList) {
-			if (!this.unmodifiedType.contains(byteCode.getOpcodeType())) {
+			if (!byteCode.isComputational()) {
 				count+=1;
 			}
 		}
