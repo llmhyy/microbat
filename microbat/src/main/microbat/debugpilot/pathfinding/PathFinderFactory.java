@@ -10,20 +10,23 @@ public class PathFinderFactory {
 	
 	public static PathFinder getFinder(PathFinderSettings settings) {
 		switch(settings.getPathFinderType()) {
-		case Dijkstra:
-			return new DijkstraPathFinder(settings);
-		case Greedy:
-			return new GreedyPathFinder(settings);
+		case CorrectnessDijkstra:
+			return new CorrectnessDijkstraPathFinder(settings);
+		case CorrectnessDijstraExp:
+			return new CorrectnessDijkstraExpPathFinder(settings);
+		case CorrectnessGreedy:
+			return new CorrectnessGreedyPathFinder(settings);
 		case Random:
 			return new RandomPathFinder(settings);
-		case DijkstraExp:
-			return new DijkstraExpPathFinder(settings);
 		case SuspiciousDijkstra:
 			return new SuspiciousDijkstraPathFinder(settings);
 		case SuspiciousDijkstraExp:
 			return new SuspiciousDijkstraExpPathFinder(settings);
+		case SuspiciousGreedy:
+			return new SuspiciousGreedyPathFinder(settings);
 		default:
 			throw new RuntimeException(Log.genMsg(PropagatorFactory.class, "Undefined path finder type: " + settings.getPathFinderType()));
+		
 		}
 	}
 }

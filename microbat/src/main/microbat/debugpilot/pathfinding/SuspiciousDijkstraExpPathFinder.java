@@ -26,12 +26,14 @@ public class SuspiciousDijkstraExpPathFinder extends SuspiciousDijkstraPathFinde
 		Objects.requireNonNull(startNode, Log.genMsg(getClass(), "Start node should not be null"));
 		Objects.requireNonNull(endNode, Log.genMsg(getClass(), "End node should not be null"));
 		
+		// Try to construct path with greedy selection
 		FeedbackPath explanablePath = super.findPath(startNode, endNode);
-		if (explanablePath == null) return null;
+		if (explanablePath == null)
+			return null;
 		for (int pathIdx=0; pathIdx < explanablePath.getLength(); pathIdx++) {
 			final NodeFeedbacksPair pair = explanablePath.get(pathIdx);
 			final TraceNode node = pair.getNode();
-			final UserFeedback greedyFeedback = SuspiciousGreedyPathFinder.giveFeedback(node);
+			final UserFeedback greedyFeedback = SuspiciousGreedyPathFinder.giveFeedback_static(node);
 			if (!pair.containsFeedback(greedyFeedback)) {
 				final TraceNode nextNode = TraceUtil.findNextNode(node, greedyFeedback, trace);
 				if (nextNode != null) {

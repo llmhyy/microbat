@@ -37,6 +37,8 @@ public class RandomPathFinder extends AbstractPathFinder {
 			path.addPair(currentNode, feedback);
 			currentNode = TraceUtil.findNextNode(currentNode, feedback, this.trace);
 			if (currentNode == null) {
+				// If there are not next node, then set the previous as root cause
+				path.setLastAction(new UserFeedback(UserFeedback.ROOTCAUSE));
 				return path;
 			}
 		}
@@ -47,29 +49,8 @@ public class RandomPathFinder extends AbstractPathFinder {
 	protected UserFeedback giveRandomFeedback(final TraceNode node) {
 		List<UserFeedback> feedbacks = this.getAllPossibleFeedbacks(node);
         Random random = new Random();
-
-        // Generate a random index within the range of valid indices
         int randomIndex = random.nextInt(feedbacks.size());
-
-        // Retrieve the random element from the list
         return feedbacks.get(randomIndex);
-		
-		// Root Cause
-//		if (this.genProb() < RandomPathFinder.ROOT_CAUSE_PROB) {
-//			return new UserFeedback(UserFeedback.ROOTCAUSE);
-//		}
-//		
-//		final List<VarValue> readVars = this.getFilteredReadVarList(node);
-//		final TraceNode controlDom = node.getControlDominator();
-//		if (controlDom == null && readVars.isEmpty()) {
-//			return new UserFeedback(UserFeedback.ROOTCAUSE);
-//		} else if (controlDom != null && readVars.isEmpty()) {
-//			return new UserFeedback(UserFeedback.WRONG_PATH);
-//		} else if (controlDom == null && !readVars.isEmpty()) {
-//			return this.giveRandomWrongVarFeedback(node);
-//		} else {
-//			return this.genProb() < RandomPathFinder.CONTROL_PROB ? new UserFeedback(UserFeedback.WRONG_PATH) : this.giveRandomWrongVarFeedback(node);
-//		}
 	}
 	
 	protected List<UserFeedback> getAllPossibleFeedbacks(final TraceNode node) {
@@ -90,37 +71,4 @@ public class RandomPathFinder extends AbstractPathFinder {
 		
 		
 	}
-	protected double genProb() {
-		return Math.random();
-	}
-	
-	protected UserFeedback giveRandomWrongVarFeedback(final TraceNode node) {
-		final List<VarValue> readVars = this.getFilteredReadVarList(node);
-		VarValue wrongVar;
-		if (readVars.size() == 1) {
-			wrongVar = readVars.get(0);
-		} else {
-			int maxIdx = -1;
-			double maxProb = -1.0d;
-			for (int idx=0; idx<readVars.size(); idx++) {
-				final double prob = this.genProb();
-				if (prob > maxProb) {
-					maxIdx = idx;
-					maxProb = prob;
-				}
-			}
-			wrongVar = readVars.get(maxIdx);
-		}
-		final ChosenVariableOption option = new ChosenVariableOption(wrongVar, null);
-		return new UserFeedback(option, UserFeedback.WRONG_VARIABLE_VALUE);
-	}
-	
-	protected List<VarValue> getFilteredReadVarList(final TraceNode node) {
-//		return node.getReadVariables().stream().filter(var -> 
-//			(!var.isThisVariable()) && this.trace.findDataDependency(node, var) != null
-//		).toList();
-		return node.getReadVariables().stream().filter(var -> this.trace.findDataDependency(node, var) != null).toList();
-	}
-	
-
 }
