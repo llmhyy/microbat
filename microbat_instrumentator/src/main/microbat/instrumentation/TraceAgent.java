@@ -150,7 +150,7 @@ public class TraceAgent extends Agent {
 						currentNode.addReadVariable(readVar);
 					}
 				}
-			}
+			} 
 			
 			if (currentNode.getInvocationParent() != null && !currentNode.getPassParameters().isEmpty()) {
 				TraceNode invocationParent = currentNode.getInvocationParent();

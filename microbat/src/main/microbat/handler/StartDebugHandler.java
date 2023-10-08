@@ -134,15 +134,15 @@ public class StartDebugHandler extends AbstractHandler {
 								
 								List<Trace> traces = result.getTraceList();
 								
-								for(Trace t: traces) {
-									for(TraceNode step: t.getExecutionList()) {
-										if(step.getInvokingMethod() != null && step.getStepOverNext() != null) {
-											if(step.getStepOverNext().getOrder() != step.getStepInNext().getOrder()) {
-												step.getStepOverNext().getReadVariables().addAll(step.getReadVariables());												
-											}
-										}
-									}
-								}
+//								for(Trace t: traces) {
+//									for(TraceNode step: t.getExecutionList()) {
+//										if(step.getInvokingMethod() != null && step.getStepOverNext() != null) {
+//											if(step.getStepOverNext().getOrder() != step.getStepInNext().getOrder()) {
+//												step.getStepOverNext().getReadVariables().addAll(step.getReadVariables());												
+//											}
+//										}
+//									}
+//								}
 								
 								traceView.setMainTrace(trace);
 								traceView.setTraceList(traces);
