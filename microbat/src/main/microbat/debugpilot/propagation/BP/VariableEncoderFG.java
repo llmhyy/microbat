@@ -113,7 +113,7 @@ public class VariableEncoderFG extends Encoder {
 			String predID = pair.getKey();
 			Double prob = pair.getValue();
 			for (VarValue var : this.getVarByID(predID)) {
-				var.setProbability(prob);
+				var.setCorrectness(prob);
 			}
 		}
 	}

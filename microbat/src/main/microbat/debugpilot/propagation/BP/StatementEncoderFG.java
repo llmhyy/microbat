@@ -143,19 +143,19 @@ public class StatementEncoderFG extends Encoder {
 		List<Constraint> constraints = new ArrayList<>();
 		
 		for (VarValue readVar : node.getReadVariables()) {
-			Constraint constraint = new PriorConstraint(readVar, readVar.getProbability());
+			Constraint constraint = new PriorConstraint(readVar, readVar.getCorrectness());
 			constraints.add(constraint);
 		}
 		
 		for (VarValue writeVar : node.getWrittenVariables()) {
-			Constraint constraint = new PriorConstraint(writeVar, writeVar.getProbability());
+			Constraint constraint = new PriorConstraint(writeVar, writeVar.getCorrectness());
 			constraints.add(constraint);
 		}
 		
 		TraceNode controlDom = node.getControlDominator();
 		if (controlDom != null) {
 			VarValue controlDomValue = Constraint.extractControlDomVar(controlDom);
-			Constraint constraint = new PriorConstraint(controlDomValue, controlDomValue.getProbability());
+			Constraint constraint = new PriorConstraint(controlDomValue, controlDomValue.getCorrectness());
 			constraints.add(constraint);
 		}
 		

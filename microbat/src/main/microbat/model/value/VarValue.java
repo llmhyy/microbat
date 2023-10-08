@@ -16,8 +16,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import microbat.debugpilot.propagation.probability.HasProbability;
-import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.log.Log;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.ConditionVar;
@@ -29,7 +27,7 @@ import microbat.model.variable.Variable;
  * @author Yun Lin
  *
  */
-public abstract class VarValue implements GraphNode, Serializable, HasProbability {
+public abstract class VarValue implements GraphNode, Serializable {
 	private static final long serialVersionUID = -4243257984929286188L;
 	protected String stringValue;
 	protected List<VarValue> parents = new ArrayList<>();
@@ -498,19 +496,12 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 		return null;
 	}
 	
-	public double getProbability() {
+	public double getCorrectness() {
 		return this.correctness;
 	}
+
 	
-	public double getProbability(boolean rounding) {
-		if (rounding) {
-			return this.getProbability() > 0.3 ? PropProbability.HIGH : PropProbability.LOW;
-		} else {
-			return this.getProbability();
-		}
-	}
-	
-	public void setProbability(double probability) {
+	public void setCorrectness(double probability) {
 		if (Double.isNaN(probability) || 
 			Double.isInfinite(probability) || 
 			probability < 0.0d || 
@@ -518,10 +509,6 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 			throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid probability: "));
 		}
 		this.correctness = probability;
-	}
-	
-	public void setAllProbability(final double prob) {
-		this.setProbability(prob);
 	}
 	
 	public boolean id_equals(final Object otherObj) {

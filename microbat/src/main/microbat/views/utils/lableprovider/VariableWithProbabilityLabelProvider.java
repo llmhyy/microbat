@@ -13,7 +13,7 @@ public class VariableWithProbabilityLabelProvider extends VariableLabelProvider 
 			case 2:
 				return super.getColumnText(element, columnIndex);
 			case 3:
-				return String.format("%.4f", varValue.getProbability());
+				return String.format("%.4f", varValue.getCorrectness());
 			case 4:
 				return String.format("%.2f", varValue.getSuspiciousness());
 			default:

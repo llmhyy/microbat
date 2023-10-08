@@ -39,7 +39,7 @@ public class ControlDominatorLabelProvider implements ITableLabelProvider {
 			case 0: 
 				return controlDom == null ? "-" : String.valueOf(controlDom.getOrder());
 			case 1:
-				return controlDom == null ? "-" : String.format("%.4f", controlDom.getConditionResult().getProbability());
+				return controlDom == null ? "-" : String.format("%.4f", controlDom.getConditionResult().getCorrectness());
 			case 2:
 				return controlDom == null ? "-" : String.format("%.2f", controlDom.getConditionResult().getSuspiciousness());
 			default:
