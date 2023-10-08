@@ -101,6 +101,7 @@ Export-Package:
    com.sun.jdi,
    microbat.model.value",
  microbat.debugpilot,
+ microbat.debugpilot.fsc,
  microbat.debugpilot.pathfinding,
  microbat.debugpilot.propagation,
  microbat.debugpilot.propagation.BP,
