@@ -10,7 +10,7 @@ public class RootCauseLocatorFactory {
 	public static RootCauseLocator getLocator(RootCauseLocatorSettings settings) {
 		switch (settings.getRootCauseLocatorType()) {
 		case PROBINFER:
-			return new ProbInferRootCauseLocator(settings);
+			return new CorrectnessRootCauseLocator(settings);
 		case SUSPICIOUS:
 			return new SuspiciousRootCauseLocator(settings);
 		default:

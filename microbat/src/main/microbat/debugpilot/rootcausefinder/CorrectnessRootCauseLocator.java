@@ -8,13 +8,13 @@ import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.settings.RootCauseLocatorSettings;
 import microbat.model.trace.TraceNode;
 
-public class ProbInferRootCauseLocator extends AbstractRootCauseLocator {
+public class CorrectnessRootCauseLocator extends AbstractRootCauseLocator {
 
-	public ProbInferRootCauseLocator(final RootCauseLocatorSettings settings) {
+	public CorrectnessRootCauseLocator(final RootCauseLocatorSettings settings) {
 		this(settings.getSliceTrace(), settings.getFeedbacks(), settings.getOutputNode());
 	}
 	
-	public ProbInferRootCauseLocator(List<TraceNode> sliceTrace, Collection<NodeFeedbacksPair> feedbacks, TraceNode outputNode) {
+	public CorrectnessRootCauseLocator(List<TraceNode> sliceTrace, Collection<NodeFeedbacksPair> feedbacks, TraceNode outputNode) {
 		super(sliceTrace, feedbacks, outputNode);
 	}
 
