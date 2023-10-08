@@ -101,8 +101,8 @@ public class BeliefPropagation {
 		TraceNode errorNode = null;
 		double minProb = 2.0;
 		for (TraceNode node : this.slicedTrace) {
-			if (!this.isFeedbackGiven(node) && node.getProbability() < minProb && node.getProbability() != -1.0) {
-				minProb = node.getProbability();
+			if (!this.isFeedbackGiven(node) && node.getCorrectness() < minProb && node.getCorrectness() != -1.0) {
+				minProb = node.getCorrectness();
 				errorNode = node;
 			}
 		}

@@ -41,25 +41,17 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	 */
 	protected boolean isRoot = false;
 	
-	protected double probability = -1;
-	protected double forward_prob = -1;
-	protected double backward_prob = -1;
-	protected List<Double> conditionBackwardProb = new ArrayList<>();
-	
-	public double computationalCost = 0.0d;
-	protected boolean isInputRelated = false;
+	protected double correctness = -1.0d;
+	protected double suspiciousness = -1.0d;
 
 	public static final int NOT_NULL_VAL = 1;
 	
 	public VarValue(){
-		this.conditionBackwardProb = new ArrayList<>();
 	}
 	
 	protected VarValue(boolean isRoot, Variable variable) {
 		this.isRoot = isRoot;
 		this.variable = variable;
-		this.computationalCost = 0;
-		this.conditionBackwardProb = new ArrayList<>();
 	}
 	
 	public abstract VarValue clone();
@@ -507,7 +499,7 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 	}
 	
 	public double getProbability() {
-		return this.probability;
+		return this.correctness;
 	}
 	
 	public double getProbability(boolean rounding) {
@@ -523,59 +515,13 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 			Double.isInfinite(probability) || 
 			probability < 0.0d || 
 			probability > 1.0d) {
-			throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid probability: " + backward_prob));
+			throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid probability: "));
 		}
-		this.probability = probability;
-	}
-	
-	public double getComputationalCost() {
-		return this.computationalCost;
-	}
-	
-	public void setComputationalCost(final double cost) {
-		this.computationalCost = cost;
-	}
-	
-	public boolean isInputRelated() {
-		return this.isInputRelated;
-	}
-	
-	public void isInputRelated(boolean isInputRelated) {
-		this.isInputRelated = isInputRelated;
-	}
-	
-	public double getForwardProb() {
-		return this.forward_prob;
-	}
-	
-	public void setForwardProb(final double forward_prob) {
-		if (Double.isNaN(forward_prob) || 
-				Double.isInfinite(forward_prob) || 
-				forward_prob < 0.0d || 
-				forward_prob > 1.0d) {
-			throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid forward probability: " + backward_prob));
-			}
-		this.forward_prob = forward_prob;
-	}
-	
-	public double getBackwardProb() {
-		return this.backward_prob;
-	}
-	
-	public void setBackwardProb(final double backward_prob) {
-		if (Double.isNaN(backward_prob) || 
-				Double.isInfinite(backward_prob) || 
-				backward_prob < 0.0d || 
-				backward_prob > 1.0d) {
-				throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid backward probability: " + backward_prob));
-			}
-		this.backward_prob = backward_prob;
+		this.correctness = probability;
 	}
 	
 	public void setAllProbability(final double prob) {
 		this.setProbability(prob);
-		this.setForwardProb(prob);
-		this.setBackwardProb(prob);
 	}
 	
 	public boolean id_equals(final Object otherObj) {
@@ -605,24 +551,15 @@ public abstract class VarValue implements GraphNode, Serializable, HasProbabilit
 		return this.getType().endsWith("[]");
 	}
 	
-	public void addBackwardProbability(final double prob) {
-		if (this.conditionBackwardProb == null) {
-			this.conditionBackwardProb = new ArrayList<>();
-		}
-		this.conditionBackwardProb.add(prob);
-	}
-	
-	public List<Double> getConditionBackwardProb() {
-		return this.conditionBackwardProb;
-	}
-	
-	public void clearBackwardProbs() {
-		if (this.conditionBackwardProb != null) {
-			this.conditionBackwardProb.clear();			
-		}
-	}
-	
 	public boolean isConditionResult() {
 		return this.getVarID().startsWith(ConditionVar.CONDITION_RESULT_ID);
+	}
+	
+	public double getSuspiciousness() {
+		return this.suspiciousness;
+	}
+	
+	public void setSuspiciousness(final double suspiciousness) {
+		this.suspiciousness = suspiciousness;
 	}
 }

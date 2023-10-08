@@ -67,4 +67,13 @@ public class ByteCode {
 	public String toString() {
 		return this.statement;
 	}
+	
+	public boolean isComputational() {
+		return !(this.type == OpcodeType.LOAD_CONSTANT || this.type == OpcodeType.LOAD_FROM_ARRAY ||
+				this.type == OpcodeType.LOAD_VARIABLE || this.type == OpcodeType.STORE_INTO_ARRAY ||
+				this.type == OpcodeType.STORE_VARIABLE || this.type == OpcodeType.RETURN ||
+				this.type == OpcodeType.GET_FIELD || this.type == OpcodeType.GET_STATIC_FIELD ||
+				this.type == OpcodeType.PUT_FIELD || this.type == OpcodeType.PUT_STATIC_FIELD ||
+				this.type == OpcodeType.INVOKE);
+	}
 }

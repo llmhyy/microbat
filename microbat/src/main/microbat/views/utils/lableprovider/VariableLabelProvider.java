@@ -49,7 +49,7 @@ public class VariableLabelProvider implements ITableLabelProvider {
 				String value = varValue.getStringValue();
 				return value;
 			case 3:
-				return String.format("%.2f", varValue.getComputationalCost());
+				return String.format("%.2f", varValue.getSuspiciousness());
 			default:
 				throw new IllegalArgumentException("Unhandled columnIndex: " + columnIndex);
 			}

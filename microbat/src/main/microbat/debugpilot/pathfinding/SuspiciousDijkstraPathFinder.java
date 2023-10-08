@@ -50,7 +50,7 @@ public class SuspiciousDijkstraPathFinder extends DijkstraPathFinder {
 					NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
 					directedGraph.addVertex(dataDom);
 					directedGraph.addEdge(node, dataDom, pair);
-					directedGraph.setEdgeWeight(pair, 1.0d/readVar.computationalCost);
+					directedGraph.setEdgeWeight(pair, 1.0d/(readVar.getSuspiciousness() + AbstractPathFinder.eps));
 					toVisitNodes.add(dataDom);
 				}
 			}
@@ -61,7 +61,7 @@ public class SuspiciousDijkstraPathFinder extends DijkstraPathFinder {
 				NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
 				directedGraph.addVertex(controlDom);
 				directedGraph.addEdge(node, controlDom, pair);
-				directedGraph.setEdgeWeight(pair, 1.0d/controlDom.getConditionResult().computationalCost);
+				directedGraph.setEdgeWeight(pair, 1.0d/(controlDom.getConditionResult().getSuspiciousness() + AbstractPathFinder.eps));
 				toVisitNodes.add(controlDom);
 			}
 		} 

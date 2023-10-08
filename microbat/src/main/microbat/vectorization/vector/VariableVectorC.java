@@ -36,7 +36,7 @@ public class VariableVectorC extends VariableVector {
 		if (var.isStatic()) this.set(VariableVector.IS_STATIC_IDX);
 //		if (VariableVector.isReliableType(typeStr)) this.set(VariableVector.IS_RELIABLE_IDX);
 //		
-		this.vector[VariableVectorC.COST_IDX] = (float) var.getComputationalCost();
+		this.vector[VariableVectorC.COST_IDX] = (float) var.getSuspiciousness();
 		if (var.getVarID().startsWith(ConditionVar.CONDITION_RESULT_ID)) this.set(VariableVector.IS_CONDITION_RESULT_IDX);
 	
 	}

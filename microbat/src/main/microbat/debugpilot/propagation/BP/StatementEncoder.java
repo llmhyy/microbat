@@ -77,7 +77,7 @@ public class StatementEncoder extends Encoder{
 		// model.printTable();
 		double prob = model.getProbability(conclusionIdx);
 
-		tn.setProbability(prob);
+		tn.setCorrectness(prob);
 	}
 	
 	/**

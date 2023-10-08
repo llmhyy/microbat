@@ -41,7 +41,7 @@ public class ControlDominatorLabelProvider implements ITableLabelProvider {
 			case 1:
 				return controlDom == null ? "-" : String.format("%.4f", controlDom.getConditionResult().getProbability());
 			case 2:
-				return controlDom == null ? "-" : String.format("%.2f", controlDom.getConditionResult().getComputationalCost());
+				return controlDom == null ? "-" : String.format("%.2f", controlDom.getConditionResult().getSuspiciousness());
 			default:
 				throw new IllegalArgumentException("Unexpected value: " + columnIndex);
 			}

@@ -1,27 +1,21 @@
 package microbat.debugpilot.propagation.spp;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
 import microbat.debugpilot.NodeFeedbacksPair;
+import microbat.debugpilot.pathfinding.AbstractPathFinder;
 import microbat.debugpilot.propagation.ProbabilityPropagator;
 import microbat.debugpilot.settings.PropagatorSettings;
-import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.recommendation.UserFeedback;
-import microbat.util.TraceUtil;
-import microbat.vectorization.vector.NodeVector;
 
 public class SPPS_C implements ProbabilityPropagator {
 	
@@ -54,45 +48,43 @@ public class SPPS_C implements ProbabilityPropagator {
 		this.normalizeVariableSuspicious();
 
 	}
-	
-	protected void genRandomSuspiciousScore() {
-		this.slicedTrace.stream().forEach(node -> node.computationCost = Math.random());
-	}
+
 	protected void initConfirmed() {
 		this.slicedTrace.stream().forEach(node -> node.confirmed = false);
 	}
 	
 	protected void initSuspiciousScore() {
-		this.slicedTrace.stream().forEach(node -> node.computationCost = 0.0d);
+		this.slicedTrace.stream().forEach(node -> node.setSuspicousness(0.0d));
 	}
 	
 	protected void calComputationalSuspiciousScore() {
 		final long totalNodeCost = this.slicedTrace.stream().mapToLong(node -> this.countModifyOperation(node)).sum();
 		if (totalNodeCost != 0) {
 			this.slicedTrace.stream().forEach(node -> {
-				node.computationCost += this.countModifyOperation(node)/ (double) totalNodeCost;
+				final double computationSuspiciousness = this.countModifyOperation(node) / (double) totalNodeCost;
+				node.addSuspiciousness(computationSuspiciousness);
 			});
 		}
 	}
 
 	protected void calFeedbackSuspiciousScore() {
-		StepComparision comparision = new StepComparision();
-		for (TraceNode node : this.slicedTrace) {
-			double score = 1.0d;
-			final NodeVector nodeVector = new NodeVector(node);
-			for (NodeFeedbacksPair nodeFeedbacksPair : this.feedbackRecords) {
-				final NodeVector feedbackNodeVector = new NodeVector(nodeFeedbacksPair.getNode());
-				final double sim = comparision.calCosSimilarity(nodeVector.getVector(), feedbackNodeVector.getVector());
-				score *= (1-Math.pow(sim, 4));
-			}
-			node.computationCost += score;
-		}
+//		StepComparision comparision = new StepComparision();
+//		for (TraceNode node : this.slicedTrace) {
+//			double score = 1.0d;
+//			final NodeVector nodeVector = new NodeVector(node);
+//			for (NodeFeedbacksPair nodeFeedbacksPair : this.feedbackRecords) {
+//				final NodeVector feedbackNodeVector = new NodeVector(nodeFeedbacksPair.getNode());
+//				final double sim = comparision.calCosSimilarity(nodeVector.getVector(), feedbackNodeVector.getVector());
+//				score *= (1-Math.pow(sim, 4));
+//			}
+//			node.computationCost += score;
+//		}
 	}
 	
 	protected void calSuspiciousScoreVariable() {
 		final double eps = 1e-10;
-		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost = eps);
-		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost = eps);
+		this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.setSuspiciousness(eps));
+		this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setSuspiciousness(eps));
 		
 		for (TraceNode node : this.slicedTrace) {
 			List<VarValue> readVars = node.getReadVariables();
@@ -105,18 +97,18 @@ public class SPPS_C implements ProbabilityPropagator {
 			for (VarValue readVar : readVars) {
 				final VarValue dataDomVar = this.findDataDomVar(readVar, node);
 				if (dataDomVar != null) {
-					readVar.computationalCost = dataDomVar.computationalCost;
+					readVar.setSuspiciousness(dataDomVar.getSuspiciousness());
 				}
 			}
 			
-			double cumulatedScore = readVars.stream().mapToDouble(var -> var.computationalCost * var.computationalCost).sum();
+			double cumulatedScore = readVars.stream().mapToDouble(var -> var.getSuspiciousness() * var.getSuspiciousness()).sum();
 			cumulatedScore = Math.sqrt(cumulatedScore);
-			cumulatedScore += node.computationCost;
+			cumulatedScore += node.getSuspicousness();
 			if (node.getControlDominator()!= null) {
-				cumulatedScore += node.getControlDominator().getConditionResult().computationalCost;
+				cumulatedScore += node.getControlDominator().getConditionResult().getSuspiciousness();
 			}
 			final double cumulatedScore_ = cumulatedScore;
-			node.getWrittenVariables().stream().forEach(var -> var.computationalCost = cumulatedScore_);
+			node.getWrittenVariables().stream().forEach(var -> var.setSuspiciousness(cumulatedScore_));
 		}
 	}
 	
@@ -134,12 +126,12 @@ public class SPPS_C implements ProbabilityPropagator {
 	
 	protected void normalizeVariableSuspicious() {
 		final double maxSuspicious = Math.max(
-				this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).mapToDouble(var -> var.computationalCost).max().orElse(0.0d),
-				this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).mapToDouble(var -> var.computationalCost).max().orElse(0.0d)
+				this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).mapToDouble(var -> var.getSuspiciousness()).max().orElse(0.0d),
+				this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).mapToDouble(var -> var.getSuspiciousness()).max().orElse(0.0d)
 		);
 		if (maxSuspicious != 0.0d) {
-			this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.computationalCost /= maxSuspicious);
-			this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.computationalCost /= maxSuspicious);
+			this.slicedTrace.stream().flatMap(node -> node.getReadVariables().stream()).forEach(var -> var.setSuspiciousness(var.getSuspiciousness() / maxSuspicious));
+			this.slicedTrace.stream().flatMap(node -> node.getWrittenVariables().stream()).forEach(var -> var.setSuspiciousness(var.getSuspiciousness() / maxSuspicious));
 		}
 	}
 	

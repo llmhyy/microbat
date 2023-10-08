@@ -12,6 +12,8 @@ public abstract class AbstractPathFinder implements PathFinder {
 	
 	protected final List<TraceNode> slicedTrace;
 	
+	protected final static double eps = 1e-7;
+	
 	public AbstractPathFinder(final PathFinderSettings settings) {
 		this(settings.getTrace(), settings.getSlicedTrace());
 	}

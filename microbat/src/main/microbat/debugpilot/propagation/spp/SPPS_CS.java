@@ -45,7 +45,8 @@ public class SPPS_CS extends SPPS_C {
 	protected void calSpectrumSuspiciousScore() {
 		this.updateBreakPointScore();
 		this.slicedTrace.stream().forEach(node -> {
-			node.computationCost += this.calBreakPointScore(node.getBreakPoint());
+			final double spectrumSuspiciousness = this.calBreakPointScore(node.getBreakPoint());
+			node.addSuspiciousness(spectrumSuspiciousness);
 		});
 	}
 	

@@ -67,11 +67,11 @@ public class GreedyPathFinder extends AbstractPathFinder {
 			feedback.setOption(new ChosenVariableOption(targetVarOptional.get(), null));
 			return feedback;
 		} else {
-			double controlScore = 1.0d / controlDom.getConditionResult().computationalCost;
+			double controlScore = 1.0d / (controlDom.getConditionResult().getSuspiciousness() + AbstractPathFinder.eps);
 			Optional<VarValue> targetVarOptional = node.getReadVariables().stream()
 //					.min((s1, s2) -> Double.compare(1.0d/s1.computationalCost, 1.0d/s2.computationalCost));
 					.min((s1, s2) -> Double.compare(s1.getProbability(), s2.getProbability()));
-			double dataScore = 1.0d / targetVarOptional.get().computationalCost;
+			double dataScore = 1.0d / targetVarOptional.get().getProbability();
 			
 			if (controlScore <= dataScore) {
 				feedback.setFeedbackType(UserFeedback.WRONG_PATH);

@@ -11,8 +11,6 @@ public class RootCauseLocatorFactory {
 		switch (settings.getRootCauseLocatorType()) {
 		case PROBINFER:
 			return new ProbInferRootCauseLocator(settings);
-		case SPP:
-			return new SPPRootCauseLocator(settings);
 		case SUSPICIOUS:
 			return new SuspiciousRootCauseLocator(settings);
 		default:

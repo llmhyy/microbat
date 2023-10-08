@@ -342,11 +342,11 @@ public class MicroBatUtil {
 		return (T) obj;
 	}
 	
-	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, double prob, int order, double drop, double computationCost){
+	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, int order, double suspiciousness){
 		String exp = className + 
 					 " line:" + lineNumber + 
 					 " duration: " + duration + 
-					 "ms";
+					 "ms" + " control dominator: " + order;
 		return exp;
 	}
 	

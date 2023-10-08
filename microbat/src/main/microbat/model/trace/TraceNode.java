@@ -112,32 +112,16 @@ public class TraceNode implements Comparator<TraceNode> {
 	
 	private transient double sliceBreakerProbability = 0;
 	
-	/**
-	 * It is the probability of correctness as a node
-	 */
-	private double probability = -1.0;
-	
-	
-	// Dijstra Node Property
-	protected double distance = Double.MAX_VALUE;
-	protected boolean isVisited = false;
-	protected NodeFeedbacksPair prevNode = null;
-	
-	protected long minOutputCost = 0;
-	
-	public double drop = -2.0d;
-	public double gain = -2.0d;
-	public double computationCost = -1.0d;
-	public int repeatedCount = 0;
+
 	
 	public String reason = "";
 	protected Map<NodeFeedbacksPair, String> reasonMap;
 	
 	public boolean confirmed = false;
 	
-	public int cf = 0;
-	public int cs = 0;
-	public int uf = 0;
+	protected double suspiciousness = -1.0d;
+	
+	protected double correctness = -1.0d;
 	
 	public TraceNode() {
 		this.breakPoint = null;
@@ -1239,14 +1223,6 @@ public class TraceNode implements Comparator<TraceNode> {
 //		this.hiddenWrittenVariables = hiddenWrittenVariables;
 //	}
 	
-	public void setProbability(double probability) {
-		this.probability = probability;
-	}
-	
-	public double getProbability() {
-		return this.probability;
-	}
-	
 //	public void setInstructions(List<InstructionHandle> instructions) {
 //		this.instructions = new ArrayList<>(instructions);
 //	}
@@ -1382,38 +1358,6 @@ public class TraceNode implements Comparator<TraceNode> {
 		return o1.getOrder() - o2.getOrder();
 	}
 	
-	public long getMinOutpuCost() {
-		return this.minOutputCost;
-	}
-	
-	public void setMinOutputCost(final long minOutputCost) {
-		this.minOutputCost = minOutputCost;
-	}
-	
-	public void setDrop(double  drop) {
-		this.drop = drop;
-	}
-	
-	public double getDrop() {
-		return this.drop;
-	}
-	
-	public void setGain(final double gain) {
-		this.gain = gain;
-	}
-	
-	public double getGain() {
-		return this.gain;
-	}
-	
-	public void setComputationCost(final double cost) {
-		this.computationCost = cost;
-	}
-	
-	public double getComputationCost() {
-		return this.computationCost;
-	}
-	
 	public void storeReason(final NodeFeedbacksPair pair, final String reason) {
 		if (this.reasonMap == null) {
 			this.reasonMap = new HashMap<>();
@@ -1442,5 +1386,28 @@ public class TraceNode implements Comparator<TraceNode> {
 		}
 		
 		return false;
+	}
+	
+	public void setSuspicousness(final double suspiciousness) {
+		this.suspiciousness = suspiciousness;
+	}
+	
+	public double getSuspicousness() {
+		return this.suspiciousness;
+	}
+	
+	public void addSuspiciousness(final double suspiciousness) {
+		this.suspiciousness += suspiciousness;
+	}
+	
+	public void setCorrectness(final double correctness) {
+		if (correctness < 0.0d || correctness > 1.0d) {
+			throw new IllegalArgumentException("Correctness probability should be within the range [0,1] but " + correctness + " is given ");
+		}
+		this.correctness = correctness;
+	}
+	
+	public double getCorrectness() {
+		return this.correctness;
 	}
 }

@@ -71,7 +71,7 @@ public class StatementEncoderFG extends Encoder {
 				if (StatementConstraint.isStatID(predID)) {
 					int nodeOrder = StatementConstraint.extractStatOrderFromID(predID);
 					if (nodeOrder == node.getOrder()) {
-						node.setProbability(prob);
+						node.setCorrectness(prob);
 					}
 				}
 			}

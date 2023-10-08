@@ -23,7 +23,7 @@ public class ProbInferRootCauseLocator extends AbstractRootCauseLocator {
 		return this.slicedTrace.stream()
 				.filter(node -> !node.equals(this.outputNode))
 				.filter(node -> !this.isFeedbackGivenTo(node))
-				.min(Comparator.comparingDouble(TraceNode::getProbability))
+				.min(Comparator.comparingDouble(TraceNode::getCorrectness))
 				.orElse(null);
 	}
 

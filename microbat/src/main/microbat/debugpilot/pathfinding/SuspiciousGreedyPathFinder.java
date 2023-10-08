@@ -59,15 +59,15 @@ public class SuspiciousGreedyPathFinder extends AbstractPathFinder {
 			return feedback;
 		} else if (controlDom == null && !node.getReadVariables().isEmpty()) {
 			Optional<VarValue> targetVarOptional = node.getReadVariables().stream()
-					.min((s1, s2) -> Double.compare(1.0d/s1.computationalCost, 1.0d/s2.computationalCost));
+					.min((s1, s2) -> Double.compare(1.0d/(s1.getSuspiciousness()+AbstractPathFinder.eps), 1.0d/s2.getSuspiciousness()));
 			feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
 			feedback.setOption(new ChosenVariableOption(targetVarOptional.get(), null));
 			return feedback;
 		} else {
-			double controlScore = 1.0d / controlDom.getConditionResult().computationalCost;
+			double controlScore = 1.0d / controlDom.getConditionResult().getSuspiciousness();
 			Optional<VarValue> targetVarOptional = node.getReadVariables().stream()
-					.min((s1, s2) -> Double.compare(1.0d/s1.computationalCost, 1.0d/s2.computationalCost));
-			double dataScore = 1.0d / targetVarOptional.get().computationalCost;
+					.min((s1, s2) -> Double.compare(1.0d/s1.getSuspiciousness(), 1.0d/s2.getSuspiciousness()));
+			double dataScore = 1.0d / targetVarOptional.get().getSuspiciousness();
 			
 			if (controlScore <= dataScore) {
 				feedback.setFeedbackType(UserFeedback.WRONG_PATH);

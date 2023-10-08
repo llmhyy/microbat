@@ -21,7 +21,7 @@ public class SuspiciousRootCauseLocator extends AbstractRootCauseLocator {
 	@Override
 	public TraceNode locateRootCause() {
 		Optional<TraceNode> rootCauseOptinal = this.slicedTrace.stream()
-                .max((s1, s2) -> Double.compare(s1.computationCost, s2.computationCost));
+                .max((s1, s2) -> Double.compare(s1.getSuspicousness(), s2.getSuspicousness()));
 		
 		if (rootCauseOptinal.isEmpty()) {
 			throw new RuntimeException("Cannot find root cause by suspicious");
