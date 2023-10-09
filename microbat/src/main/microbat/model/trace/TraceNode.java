@@ -22,10 +22,8 @@ import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
-import microbat.debugpilot.NodeFeedbackPair;
-import microbat.debugpilot.NodeFeedbacksPair;
-import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.debugpilot.propagation.spp.StepExplaination;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
@@ -34,7 +32,6 @@ import microbat.model.UserInterestedVariables;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.ConditionVar;
-import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
@@ -115,7 +112,7 @@ public class TraceNode implements Comparator<TraceNode> {
 
 	
 	public String reason = "";
-	protected Map<NodeFeedbacksPair, String> reasonMap;
+	protected Map<DPUserFeedback, String> reasonMap;
 	
 	public boolean confirmed = false;
 	
@@ -1358,19 +1355,19 @@ public class TraceNode implements Comparator<TraceNode> {
 		return o1.getOrder() - o2.getOrder();
 	}
 	
-	public void storeReason(final NodeFeedbacksPair pair, final String reason) {
+	public void storeReason(final DPUserFeedback feedback, final String reason) {
 		if (this.reasonMap == null) {
 			this.reasonMap = new HashMap<>();
 		}
 		
-		this.reasonMap.put(pair, reason);
+		this.reasonMap.put(feedback, reason);
 	}
 	
-	public void updateReason(final NodeFeedbacksPair pair) {
+	public void updateReason(final DPUserFeedback feedback) {
 		if (this.reasonMap == null) {
 			this.reason = StepExplaination.COST;
 		} else {			
-			this.reason = this.reasonMap.getOrDefault(pair, StepExplaination.COST);
+			this.reason = this.reasonMap.getOrDefault(feedback, StepExplaination.COST);
 		}
 	}
 	

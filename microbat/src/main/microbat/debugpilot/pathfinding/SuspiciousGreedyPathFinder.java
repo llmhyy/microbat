@@ -3,6 +3,7 @@ package microbat.debugpilot.pathfinding;
 import java.util.List;
 
 import microbat.debugpilot.settings.PathFinderSettings;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -24,7 +25,7 @@ public class SuspiciousGreedyPathFinder extends GreedyPathFinder {
 		super();
 	}
 	
-	public static UserFeedback giveFeedback_static(final TraceNode node) {
+	public static DPUserFeedback giveFeedback_static(final TraceNode node) {
 		GreedyPathFinder greedyPathFinder = new SuspiciousGreedyPathFinder();
 		return greedyPathFinder.giveFeedback(node);
 	}

@@ -27,7 +27,6 @@ import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.handler.callbacks.HandlerCallbackManager;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
-import microbat.model.trace.TraceNode;
 import microbat.preference.AnalysisScopePreference;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
@@ -68,8 +67,8 @@ public class StartDebugHandler extends AbstractHandler {
 		Job.getJobManager().cancel(DebugPilotHandler.JOB_FAMALY_NAME);
 		
 		// Clear the path view and program output form
-		MicroBatViews.getPathView().updateFeedbackPath(new FeedbackPath());
-		MicroBatViews.getDebugPilotFeedbackView().clearProgramOutput();
+		MicroBatViews.getPathView().updateFeedbackPath(null);
+//		MicroBatViews.getDebugPilotFeedbackView().clearProgramOutput();
 		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		if (Settings.isRunTest) {

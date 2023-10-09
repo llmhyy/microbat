@@ -9,14 +9,13 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
 
-import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.settings.PathFinderSettings;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
+import microbat.debugpilot.userfeedback.DPUserFeedbackType;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.recommendation.ChosenVariableOption;
-import microbat.recommendation.UserFeedback;
 import microbat.util.UniquePriorityQueue;
 
 public abstract class DijkstraPathFinder extends AbstractPathFinder {
@@ -42,23 +41,24 @@ public abstract class DijkstraPathFinder extends AbstractPathFinder {
 		// Handle the case that startNode is the endNode
 		if (startNode.equals(endNode)) {
 			FeedbackPath path = new FeedbackPath();
-			path.addPair(endNode, new UserFeedback(UserFeedback.ROOTCAUSE));
+			path.add(new DPUserFeedback(DPUserFeedbackType.ROOT_CAUSE, endNode));
 			return path;
 		}
 		
 		// Construct a graph for library algorithm to use
-		Graph<TraceNode, NodeFeedbacksPair> graph = this.constructGraph();
+		Graph<TraceNode, DPUserFeedback> graph = this.constructGraph();
 		
 		// Run Dijkstra algorithm
-		DijkstraShortestPath<TraceNode, NodeFeedbacksPair> dijstraAlg = new DijkstraShortestPath<>(graph);
-		GraphPath<TraceNode, NodeFeedbacksPair> result = dijstraAlg.getPath(startNode, endNode);
+		DijkstraShortestPath<TraceNode, DPUserFeedback> dijstraAlg = new DijkstraShortestPath<>(graph);
+		GraphPath<TraceNode, DPUserFeedback> result = dijstraAlg.getPath(startNode, endNode);
 		if (result == null) {
 			return null;
 		}
-		List<NodeFeedbacksPair> path = result.getEdgeList();
-		UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
-		NodeFeedbacksPair pair = new NodeFeedbacksPair(endNode, feedback);
-		path.add(pair);
+		List<DPUserFeedback> path = result.getEdgeList();
+		DPUserFeedback feedback = new DPUserFeedback(DPUserFeedbackType.ROOT_CAUSE, endNode);
+//		UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
+//		NodeFeedbacksPair pair = new NodeFeedbacksPair(endNode, feedback);
+		path.add(feedback);
 		return new FeedbackPath(path);
 	}
 	
@@ -66,8 +66,8 @@ public abstract class DijkstraPathFinder extends AbstractPathFinder {
 	 * Construct a graph for algorithm runner
 	 * @return Graph
 	 */
-	protected Graph<TraceNode, NodeFeedbacksPair> constructGraph() {
-		Graph<TraceNode, NodeFeedbacksPair> directedGraph = new DirectedWeightedMultigraph<TraceNode, NodeFeedbacksPair>(NodeFeedbacksPair.class);
+	protected Graph<TraceNode, DPUserFeedback> constructGraph() {
+		Graph<TraceNode, DPUserFeedback> directedGraph = new DirectedWeightedMultigraph<TraceNode, DPUserFeedback>(DPUserFeedback.class);
 		
 		final TraceNode lastNode = this.slicedTrace.get(this.slicedTrace.size()-1);
 		UniquePriorityQueue<TraceNode> toVisitNodes = new UniquePriorityQueue<>(new Comparator<TraceNode>() {
@@ -85,23 +85,26 @@ public abstract class DijkstraPathFinder extends AbstractPathFinder {
 			for (VarValue readVar : node.getReadVariables()) {
 				final TraceNode dataDom = this.trace.findDataDependency(node, readVar);
 				if (dataDom != null) {
-					UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
-					feedback.setOption(new ChosenVariableOption(readVar, null));
-					NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
+					DPUserFeedback feedback = new DPUserFeedback(DPUserFeedbackType.WRONG_VARIABLE, node);
+					feedback.addWrongVar(readVar);
+//					UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
+//					feedback.setOption(new ChosenVariableOption(readVar, null));
+//					NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
 					directedGraph.addVertex(dataDom);
-					directedGraph.addEdge(node, dataDom, pair);
-					directedGraph.setEdgeWeight(pair, this.getCost(readVar));
+					directedGraph.addEdge(node, dataDom, feedback);
+					directedGraph.setEdgeWeight(feedback, this.getCost(readVar));
 					toVisitNodes.add(dataDom);
 				}
 			}
 			
 			TraceNode controlDom = node.getControlDominator();
 			if (controlDom != null) {
-				UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_PATH);
-				NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
+				DPUserFeedback feedback = new DPUserFeedback(DPUserFeedbackType.WRONG_PATH, node);
+//				UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_PATH);
+//				NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedback);
 				directedGraph.addVertex(controlDom);
-				directedGraph.addEdge(node, controlDom, pair);
-				directedGraph.setEdgeWeight(pair, this.getCost(controlDom.getConditionResult()));
+				directedGraph.addEdge(node, controlDom, feedback);
+				directedGraph.setEdgeWeight(feedback, this.getCost(controlDom.getConditionResult()));
 				toVisitNodes.add(controlDom);
 			}
 		} 

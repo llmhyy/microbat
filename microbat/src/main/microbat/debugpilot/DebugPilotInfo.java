@@ -4,10 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import fj.P;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.recommendation.UserFeedback;
 
 /**
  * DebugInfo is used to store the information given from user
@@ -27,7 +26,7 @@ public class DebugPilotInfo {
 	protected TraceNode outputNode = null;
 	protected boolean isOutputNodeWrongBranch = false;
 
-	protected NodeFeedbacksPair nodeFeedbacksPair = null;
+	protected DPUserFeedback userFeedback = null;
 	protected boolean feedbackUpdatedFlag = false;
 //	protected boolean stop = false;
 	
@@ -160,15 +159,15 @@ public class DebugPilotInfo {
 //		DebugPilotInfo.feedbackUpdatedFlag = false;
 //	}
 	
-	public void setNodeFeedbacksPair(NodeFeedbacksPair nodeFeedbackPair) {
-		this.nodeFeedbacksPair = nodeFeedbackPair;
+	public void setNodeFeedbacksPair(DPUserFeedback nodeFeedbackPair) {
+		this.userFeedback = nodeFeedbackPair;
 		this.feedbackUpdatedFlag = true;
 	}
 	
-	public void setNodeFeedbacksPair(TraceNode node, List<UserFeedback> feedbacks) {
-		NodeFeedbacksPair pair = new NodeFeedbacksPair(node, feedbacks);
-		this.setNodeFeedbacksPair(pair);
-	}
+//	public void setNodeFeedbacksPair(TraceNode node, List<UserFeedback> feedbacks) {
+//		DPUserFeedback pair = new NodeFeedbacksPair(node, feedbacks);
+//		this.setNodeFeedbacksPair(pair);
+//	}
 	
 	/**
 	 * Get the list of input given from users
@@ -190,9 +189,9 @@ public class DebugPilotInfo {
 	 * Get the list of node feedback pair from users
 	 * @return Node Feedback Pair
 	 */
-	public NodeFeedbacksPair getNodeFeedbackPair() {
+	public DPUserFeedback getDpUserFeedback() {
 		this.feedbackUpdatedFlag = false;
-		return this.nodeFeedbacksPair;
+		return this.userFeedback;
 	}
 	
 	/**
@@ -215,7 +214,7 @@ public class DebugPilotInfo {
 	 * Clear all node feedback pairs
 	 */
 	public void clearNodeFeedbackPairs() {
-		this.nodeFeedbacksPair = null;
+		this.userFeedback = null;
 	}
 	
 	public void clearOutputNode() {

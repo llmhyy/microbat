@@ -1,311 +1,237 @@
 package microbat.debugpilot.pathfinding;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import microbat.debugpilot.NodeFeedbacksPair;
-import microbat.evaluation.Feedback;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.log.Log;
-import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
-import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
-import microbat.vectorization.NodeFeatureRecord;
 
-public class FeedbackPath implements Iterable<NodeFeedbacksPair>{
-
-	private List<NodeFeedbacksPair> path = new ArrayList<>();
+/**
+ * Path from certain node to another <br/>
+ * The path is constructed by Debug Pilot user feedback
+ */
+public class FeedbackPath {
+	
+	protected LinkedList<DPUserFeedback> feedbacks = new LinkedList<>();
 	
 	public FeedbackPath() {}
 	
-	public FeedbackPath(NodeFeedbacksPair pair) {
-		this.path.add(pair);
+	public FeedbackPath(final List<DPUserFeedback> feedbacks) {
+		this.add(feedbacks);
 	}
 	
-	public FeedbackPath (Collection<NodeFeedbacksPair> path) {
-		this.path.addAll(path);
+	public FeedbackPath(final DPUserFeedback... feedbacks) {
+		this(Arrays.asList(feedbacks));
 	}
 	
-	public FeedbackPath(final FeedbackPath other) {
-		for (NodeFeedbacksPair pair : other) {
-			this.addPair(new NodeFeedbacksPair(pair));
+	public FeedbackPath(final FeedbackPath otherPath) {
+		this(otherPath.feedbacks);
+	}
+	
+	public List<DPUserFeedback> getFeedbacks() {
+		return this.feedbacks;
+	}
+	
+	/**
+	 * Get the idx-th feedback in path
+	 * @param idx Target index
+	 * @return idx-th feedback in path
+	 */
+	public DPUserFeedback get(final int idx) {
+		return this.feedbacks.get(idx);
+	}
+	
+	/**
+	 * Get the index of give feedback in path
+	 * @param feedback Target feedback
+	 * @return Index of give feedback in path
+	 */
+	public int indexOf(final DPUserFeedback feedback) {
+		return this.feedbacks.indexOf(feedback);
+	}
+	
+	public void add(final int idx, final DPUserFeedback feedback) {
+		this.feedbacks.add(idx, feedback);
+	}
+	
+	public void add(final DPUserFeedback... feedbacks) {
+		this.add(Arrays.asList(feedbacks));
+	}
+	
+	public void add(final List<DPUserFeedback> feedbacks) {
+		for (DPUserFeedback feedback : feedbacks) {
+			if (this.feedbacks.contains(feedback)) {
+				throw new IllegalArgumentException("Given feedback already exist in the path: " + feedback);
+			}
+			this.feedbacks.add(feedback);
 		}
 	}
 	
-	public NodeFeedbacksPair get(final int i) {
-		return this.path.get(i);
+	public void set(final int idx, final DPUserFeedback feedback) {
+		this.feedbacks.set(idx, feedback);
 	}
 	
-	public int indexOf(final NodeFeedbacksPair userFeedbacksPair) {
-		return this.path.indexOf(userFeedbacksPair);
+	public boolean containFeedbackByNode(final TraceNode node) {
+		return this.containFeedbackByNodeOrder(node.getOrder());
 	}
 	
-	public NodeFeedbacksPair getPairByNode(final TraceNode node) {
-		List<NodeFeedbacksPair> possiblePairs = this.path.stream().filter(pair -> pair.getNode().equals(node)).toList();
-		if (possiblePairs.isEmpty()) {
-			throw new IllegalArgumentException(Log.genMsg(getClass(), "Path does not contain node: " + node.getOrder()));
-		}
-		return possiblePairs.get(0);
+	public boolean containFeedbackByNodeOrder(final int nodeOrder) {
+		return this.feedbacks.stream()
+				.anyMatch(feedback -> feedback.getNode().getOrder() == nodeOrder);
 	}
 	
+	public DPUserFeedback getFeedbackByNode(final TraceNode node) {
+		Optional<DPUserFeedback> feedbackOptional = this.feedbacks.stream().filter(f -> f.getNode().equals(node)).findFirst();
+		return feedbackOptional.isPresent() ? feedbackOptional.get() : null;
+	}
+	
+	public DPUserFeedback getLastFeedback() {
+		return this.feedbacks.getLast();
+	}
+	
+	public void removeLast() {
+		this.feedbacks.remove(this.feedbacks.getLast());
+	}
+	
+	public void replaceLast(final DPUserFeedback feedback) {
+		this.removeLast();
+		this.add(feedback);
+	}
+	
+	public DPUserFeedback getFirstFeedback() {
+		return this.feedbacks.getFirst();
+	}
+	
+	
+	public void remove(final int idx) {
+		this.feedbacks.remove(idx);
+	}
+	
+	public void remove(final DPUserFeedback feedback) {
+		this.feedbacks.remove(feedback);
+	}
+	
+	/**
+	 * Check is it a empty path
+	 * @return True if the path is empty
+	 */
 	public boolean isEmpty() {
-		return this.path.isEmpty();
+		return this.feedbacks.isEmpty();
 	}
 	
-	public NodeFeedbacksPair getLastFeedback() {
-		return this.path.get(this.getLength()-1);
+	/**
+	 * Size of the path
+	 * @return Size of the path
+	 */
+	public int length() {
+		return this.feedbacks.size();
 	}
 	
-	public boolean canReachRootCause() {
-		NodeFeedbacksPair pair = this.getLastFeedback();
-		return pair.getFeedbackType().equals(UserFeedback.ROOTCAUSE);
-	}
-	
-	public void setLastAction(final UserFeedback feedback) {
-		this.getLastFeedback().setFeedback(feedback);
-	}
-	
-	public int getIndexOf(final TraceNode node) {
-        int index = IntStream.range(0, this.path.size())
-                .filter(i -> this.path.get(i).getNode().equals(node))
-                .findFirst().orElseThrow();
-
-        return index;
-	}
-	
-	public void removeFirstAction() {
-		if (!this.path.isEmpty()) {
-			this.path.remove(0);
+	public FeedbackPath getSubPath(final int startIdx, final int endIdx) {
+		if (startIdx < 0 || startIdx > this.feedbacks.size()) {
+			throw new IndexOutOfBoundsException("Given startIdx is out of bound: " + startIdx);
 		}
-	}
-	
-	public NodeFeedbacksPair pop() {
-		if (!this.path.isEmpty()) {
-			final int lastIdx = this.path.size()-1;
-			NodeFeedbacksPair pair = this.path.get(lastIdx);
-			this.path.remove(lastIdx);
-			return pair;
-		} else {
-			throw new RuntimeException(Log.genMsg(getClass(), "Trying to pop an empty path"));
+		if (endIdx < 0 || endIdx > feedbacks.size()) {
+			throw new IndexOutOfBoundsException("Given endIdx is out of bound: " + endIdx);
 		}
+		if (endIdx < startIdx) {
+			throw new IllegalArgumentException("Given endIdx: " + endIdx + " is smaller than startIdx: " + startIdx);
+		}
+		
+		List<DPUserFeedback> newFeedbackList = this.feedbacks.subList(startIdx, endIdx);
+		return new FeedbackPath(newFeedbackList);
 	}
 	
-	public void addPair(final TraceNode node, final UserFeedback feedback) {
-		this.addPair(new NodeFeedbacksPair(node, feedback));
-	}
-	
-	public void addPair(final NodeFeedbacksPair pair) {
-		this.path.add(pair);
-	}
-	
-	public void addPairByOrder(final TraceNode node, final UserFeedback feedback) {
-		this.addPairByOrder(new NodeFeedbacksPair(node, feedback));
-	}
-	
-	public void addPairByOrder(final NodeFeedbacksPair pairToInsert) {
-		final TraceNode nodeToBeIntert = pairToInsert.getNode();
-		int idx=0;
-		for (; idx<this.path.size(); idx++) {
-			final TraceNode node = this.path.get(idx).getNode();
-			if (node.getOrder() < nodeToBeIntert.getOrder()) {
-				break;
+	public boolean isConnected() {
+		if (this.isEmpty()) {
+			return false;
+		}
+		
+		if (this.length() == 1) {
+			return true;
+		}
+		
+		// Check can every previous feedback can lead to current node
+		for (int idx=1; idx<this.length(); idx++) {
+			final DPUserFeedback prevFeedback = this.get(idx-1);
+			final Set<TraceNode> reachableNodes = TraceUtil.findAllNextNodes(prevFeedback);
+			final TraceNode currentNode = this.get(idx).getNode();
+			if (!reachableNodes.contains(currentNode)) {
+				return false;
 			}
 		}
-		this.path.add(idx, pairToInsert);
+		
+		return true;
 	}
 	
-	public void replacePair(final TraceNode node, final UserFeedback feedback) {
-		this.replacePair(new NodeFeedbacksPair(node, feedback));
-	}
-	
-	public void replacePair(final NodeFeedbacksPair pairToReplace) {
-		for (NodeFeedbacksPair pair : this.path) {
-			final TraceNode node = pair.getNode();
-			if (node.equals(pairToReplace.getNode())) {
-				pair.setFeedbacks(pairToReplace.getFeedbacks());
-				return;
-			}
-		}
-		throw new IllegalArgumentException(Log.genMsg(getClass(), "Target node: " + pairToReplace.getNode().getOrder() + " does not appear in the path"));
-	}
-	
-	public int getLength() {
-		return this.path.size();
-	}
-	
-	public FeedbackPath subPath(final int fromIdx, final int toIdx) {
-		return new FeedbackPath(this.path.subList(fromIdx, toIdx));
-	}
-	
-	public boolean contains(final TraceNode node) {
-		for (NodeFeedbacksPair pair : this) {
-			if (node.equals(pair.getNode())) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	public NodeFeedbacksPair getFeedback(final TraceNode node) {
-		Objects.requireNonNull(node, Log.genMsg(getClass(), "Given node should not be null"));
-		for (NodeFeedbacksPair pair : this.path) {
-			if (pair.getNode().equals(node)) {
-				return pair;
-			}
-		}
-		throw new IllegalArgumentException(Log.genMsg(getClass(), "Path does not contian the node: " + node.getOrder()));
-	}
-	
-	@Override
-	public String toString() {
-		StringBuilder strBuilder = new StringBuilder();
-		for (NodeFeedbacksPair pair : path) {
-			strBuilder.append(pair.toString());
-			strBuilder.append("\n");
-		}
-		return strBuilder.toString();
-	}
-	
-	@Override
-	public Iterator<NodeFeedbacksPair> iterator() {
-		return this.path.iterator();
+	public DPUserFeedback[] toArray() {
+		return this.feedbacks.toArray(new DPUserFeedback[0]);
 	}
 	
 	@Override
 	public int hashCode() {
-		final int prime = 7;
-		int result = 1;
-		for (NodeFeedbacksPair pair : this.path) {
-			result = prime * result + pair.hashCode();
-		}
-		return result;
+		return feedbacks.hashCode();
 	}
 	
 	@Override
-	public boolean equals(Object anotherObj) {
-		if (anotherObj instanceof FeedbackPath) {
-			FeedbackPath otherPath = (FeedbackPath) anotherObj;
-			if (this.path.size() != otherPath.path.size()) {
-				return false;
-			}
-			
-			for (int i=0; i<this.path.size(); i++) {
-				NodeFeedbacksPair thisPair = this.path.get(i);
-				NodeFeedbacksPair otherPair = otherPath.path.get(i);
-				if (!thisPair.equals(otherPair)) {
-					return false;
-				}
-			}
-			
-			return true;
+	public boolean equals(Object otherObj) {
+		if (this == otherObj) return true;
+		if (otherObj == null  || this.getClass() != otherObj.getClass()) return false;
+		
+		FeedbackPath otherPath = (FeedbackPath) otherObj;
+		return this.feedbacks.equals(otherPath.feedbacks);
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder stringBuilder = new StringBuilder();
+		int idx = 0;
+		for (DPUserFeedback feedback : this.feedbacks) {
+			stringBuilder.append(idx++ + "," + feedback + "\n");
+		}
+		return stringBuilder.toString();
+	}
+	
+	public static FeedbackPath concat(final FeedbackPath path1, final FeedbackPath path2) {
+		Objects.requireNonNull(path1, Log.genMsg("FeedbackPath", "Given path1 cannot be null"));
+		Objects.requireNonNull(path2, Log.genMsg("FeedbackPath", "Given path2 cannot be null"));
+		
+		if (path1.isEmpty()) return new FeedbackPath(path2);
+		if (path2.isEmpty()) return new FeedbackPath(path1);
+		
+		FeedbackPath newPath = new FeedbackPath(path1);
+		
+		// Check is the last node of path1 and first node of path2 is the same
+		final TraceNode lastNodeInPath1 = path1.getLastFeedback().getNode();
+		final TraceNode firstNodeInPath2 = path2.getFirstFeedback().getNode();
+		if (lastNodeInPath1.equals(firstNodeInPath2)) {
+			newPath.removeLast();
+			newPath.add(path2.getFeedbacks());
 		} else {
-			return false;
+			// Check can last node in path1 lead to first node in path2
+			Set<TraceNode> possibleNextNodes = TraceUtil.findAllNextNodes(path1.getLastFeedback());
+			if (!possibleNextNodes.contains(firstNodeInPath2)) {
+				throw new RuntimeException(Log.genMsg("FeedbackPath", "path1 and path2 is not connected"));
+			}
+			newPath.add(path2.getFeedbacks());
 		}
+		if (!newPath.isConnected()) {
+			throw new RuntimeException(Log.genMsg("FeedbackPath", "Concatenated path is not connected"));
+		}
+		return newPath;
 	}
 	
-	public boolean isFollowing(final FeedbackPath target) {
-		if (this.getLength() == 0) {
-			return true;
-		}
-		
-		if (this.getLength() < target.getLength()) {
-			return false;
-		}
-		
-		for (int i=0; i<target.getLength(); i++) {
-			final NodeFeedbacksPair targetPair = target.get(i);
-			final TraceNode targetNode = targetPair.getNode();
-
-			final NodeFeedbacksPair pair = this.get(i);
-			final TraceNode node = pair.getNode();
-
-			if(!targetNode.equals(node)) {
-				return false;
-			}
-			
-			if(!targetPair.haveCommonFeedbackWith(pair)) {
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	public static boolean isConnectedPath(final FeedbackPath path, final Trace trace) {
-		if (path == null) throw new IllegalArgumentException("path should not be null");
-		if (trace == null) throw new IllegalArgumentException("trace should not be null");
-		if (path.isEmpty()) return false;
-		
-		// Path with length 1 is completed only when the action is root cause or correct
-		if (path.getLength() == 1) {
-			return path.get(0).getFeedbackType().equals(UserFeedback.ROOTCAUSE) ||
-				   path.get(0).getFeedbackType().equals(UserFeedback.CORRECT);
-		}
-		
-		NodeFeedbacksPair firstAction = path.get(0);
-		Set<TraceNode> reachableNodes = TraceUtil.findAllNextNodes(firstAction.getNode(), firstAction.getFeedbacks(), trace);
-		for (int idx=1; idx<path.getLength(); idx++) {
-			final NodeFeedbacksPair action = path.get(idx);
-			final TraceNode node = action.getNode();
-			if (!reachableNodes.contains(node)) {
-				return false;
-			}
-			if (action.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
-				break;
-			}
-			reachableNodes = TraceUtil.findAllNextNodes(node, action.getFeedbacks(), trace);
-		}
-		return true;
-	}
-	
-	public void removePathAfterNode(final TraceNode node) {
-		this.removePathAfterNodeOrder(node.getOrder());
-	}
-	
-	public void removePathAfterNodeOrder(final int nodeOrder) {
-		boolean nodeOrderInPath = this.path.stream().anyMatch(pair -> pair.getNode().getOrder() == nodeOrder);
-		if (!nodeOrderInPath) {
-			throw new IllegalArgumentException("Given node order: " + nodeOrder + " does not lies in path.");
-		}
-		List<NodeFeedbacksPair> newPath = new ArrayList<>();
-		for (NodeFeedbacksPair pair : this.path) {
-			newPath.add(pair);
-			if (pair.getNode().getOrder() == nodeOrder) {
-				break;
-			}
-		}
-		this.path = newPath;
-	}
-	
-	public void removePathBeforeNode(final TraceNode node) { 
-		this.removePathBeforeNodeOrder(node.getOrder());
-	}
-	
-	public void removePathBeforeNodeOrder(final int nodeOrder) {
-		boolean nodeOrderInPath = this.path.stream().anyMatch(pair -> pair.getNode().getOrder() == nodeOrder);
-		if (!nodeOrderInPath) {
-			throw new IllegalArgumentException("Given node order: " + nodeOrder + " does not lies in path.");
-		}
-		List<NodeFeedbacksPair> newPath = new ArrayList<>();
-		boolean startLoading = false;
-		for (NodeFeedbacksPair pair : this.path) {
-			if (pair.getNode().getOrder() == nodeOrder) {
-				startLoading = true;
-			}
-			if (startLoading) {
-				newPath.add(pair);
-			}
-		}
-		this.path = newPath;
-	}
-	
-	public NodeFeedbacksPair[] toArray() {
-		return this.path.stream().toArray(NodeFeedbacksPair[]::new);
+	public static FeedbackPath splicePathAtIndex(final FeedbackPath sourcePath, final FeedbackPath splicePath, final int idx) {
+		Objects.requireNonNull(sourcePath, Log.genMsg("FeedbackPath", "Given source path cannot be null"));
+		Objects.requireNonNull(splicePath, Log.genMsg("FeedbackPath", "Given splice path cannot be null"));
+		if (idx == 0) {return splicePath;}
+		if (idx > sourcePath.length()) {return FeedbackPath.concat(sourcePath, splicePath);}
+		return FeedbackPath.concat(sourcePath.getSubPath(0, idx), splicePath);
 	}
 }

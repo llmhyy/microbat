@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.propagation.ProbabilityPropagator;
 import microbat.debugpilot.propagation.BP.constraint.Constraint;
 import microbat.debugpilot.settings.PropagatorSettings;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -36,13 +36,13 @@ public class ProbInfer implements ProbabilityPropagator {
 	 */
 	private Set<VarValue> correctVars;
 	
-	private Collection<NodeFeedbacksPair> feedbackRecords = null;
+	private Collection<DPUserFeedback> feedbackRecords = null;
 	
 	public ProbInfer(final PropagatorSettings settings) {
 		this(settings.getTrace(), settings.getSlicedTrace(), settings.getCorrectVars(), settings.getWrongVars(), settings.getFeedbacks());
 	}
 	
-	public ProbInfer(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<NodeFeedbacksPair> feedbackRecords) {
+	public ProbInfer(Trace trace, List<TraceNode> slicedTrace, Set<VarValue> correctVars, Set<VarValue> wrongVars, Collection<DPUserFeedback> feedbackRecords) {
 		Objects.requireNonNull(trace, Log.genMsg(getClass(), "Trace should not be null"));
 		Objects.requireNonNull(slicedTrace, Log.genMsg(getClass(), "Slice trace should not be null"));
 		Objects.requireNonNull(correctVars, Log.genMsg(getClass(), "Correct variables should not be null"));

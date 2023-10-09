@@ -6,11 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.jface.util.LocalSelectionTransfer;
-import org.eclipse.jface.viewers.CheckStateChangedEvent;
-import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -44,11 +41,10 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.part.ViewPart;
 
-import debugpilot.userlogger.UserBehaviorLogger;
-import debugpilot.userlogger.UserBehaviorType;
+import microbat.debugpilot.DebugPilotExecutor;
 import microbat.debugpilot.DebugPilotInfo;
-import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.FeedbackPath;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.handler.callbacks.HandlerCallback;
 import microbat.handler.callbacks.HandlerCallbackManager;
 import microbat.model.trace.Trace;
@@ -65,6 +61,7 @@ import microbat.views.utils.contentprovider.WrittenVariableContentProvider;
 import microbat.views.utils.lableprovider.ControlDominatorLabelProvider;
 import microbat.views.utils.lableprovider.DummyLabelProvider;
 import microbat.views.utils.lableprovider.VariableLabelProvider;
+import microbat.views.utils.manager.FeedbackSelectionManager;
 
 public class DebugPilotFeedbackView extends ViewPart {
 
@@ -94,15 +91,19 @@ public class DebugPilotFeedbackView extends ViewPart {
 	protected Label removeOutputLabel;
 	
 	/* All possible feedbacks */
-	protected CheckboxTableViewer availableFeedbackViewer;
+	protected TableViewer availableFeedbackViewer;
 	protected Button feedbackButton;
 	protected Label giveFeedbackLabel;
 //	protected Label nextNodeLabel;
+	protected TableViewerColumn yesCheckboxColumn;
+	protected TableViewerColumn noCheckboxColumn;
 	protected TableViewerColumn typeViewerColumn;
 	protected TableViewerColumn varViewerColumn;
 	protected TableViewerColumn varValueViewerColumn;
 	protected TableViewerColumn nextNodeViewerColumn;
 	protected List<Button> nextNodeButtons = new ArrayList<>();
+	protected FeedbackSelectionManager feedbackSelectionManager = new FeedbackSelectionManager();
+	
 	
     protected final int operations = DND.DROP_COPY | DND.DROP_MOVE;
     protected final Transfer[] transferTypes = new Transfer[] { LocalSelectionTransfer.getTransfer() };
@@ -122,18 +123,11 @@ public class DebugPilotFeedbackView extends ViewPart {
 	
 	@Override
 	public void createPartControl(Composite parent) {
-//		GridLayout parentLayout = new GridLayout(1, true);
-//		parent.setLayout(parentLayout);
 		SashForm sashForm = new SashForm(parent, SWT.VERTICAL);
-		
-		this.createOutputGroup(sashForm);
 		this.createReadVariablesViewer(sashForm);
 		this.createWrittenVariableViewer(sashForm);
-//		this.createControlDominatorGroup(parent);
-//		this.createRelatedVariableGroup(sashForm);
 		this.createAvaliableFeedbackView(sashForm);
-		
-		sashForm.setWeights(6, 10, 10, 10);
+		sashForm.setWeights(10, 10, 10);
 	}
 
 	@Override
@@ -142,12 +136,8 @@ public class DebugPilotFeedbackView extends ViewPart {
 	public void refresh(final TraceNode currentNode, final Trace trace) {
 		this.currentNode = currentNode;
 		this.trace = trace;
-		DebugPilotInfo.getInstance().setOutputNode(this.currentNode);
 		this.refreshReadVariableViewer();
 		this.refreshWrittenVariableViewer();
-//		this.refreshControlDominoatorViewer();
-		this.refreshOutputGroup();
-//		this.refreshRelatedVariableGroup();
 		this.refreshAvailableFeedbackViewer();
 	}
 	
@@ -170,9 +160,6 @@ public class DebugPilotFeedbackView extends ViewPart {
 	}
 	
 	protected void createReadVariablesViewer(final Composite parent) {
-//		SashForm variableForm = new SashForm(parent, SWT.VERTICAL);
-//		variableForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
 		Group group = new Group(parent, SWT.NONE);
 		group.setText("Read Variables");
 		group.setLayout(new FillLayout());
@@ -332,13 +319,26 @@ public class DebugPilotFeedbackView extends ViewPart {
 		treeGridData.horizontalSpan = 2;
 		variableForm.setLayoutData(treeGridData);
 		
-		this.availableFeedbackViewer = CheckboxTableViewer.newCheckList(variableForm, SWT.H_SCROLL | SWT.V_SCROLL| SWT.FULL_SELECTION | SWT.CHECK | SWT.MULTI);
+//		this.availableFeedbackViewer = TableViewer.newCheckList(variableForm, SWT.H_SCROLL | SWT.V_SCROLL| SWT.FULL_SELECTION | SWT.CHECK | SWT.MULTI);
+		this.availableFeedbackViewer = new TableViewer(variableForm, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
 		this.availableFeedbackViewer.getTable().setHeaderVisible(true);
 		this.availableFeedbackViewer.getTable().setLinesVisible(true);
 		
+		TableColumn yesColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.CENTER);
+		yesColumn.setAlignment(SWT.CENTER);
+		yesColumn.setText("Yes");
+		yesColumn.setWidth(30);
+		this.yesCheckboxColumn = new TableViewerColumn(this.availableFeedbackViewer, yesColumn);
+		
+		TableColumn noColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.CENTER);
+		noColumn.setAlignment(SWT.CENTER);
+		noColumn.setText("No");
+		noColumn.setWidth(30);
+		this.noCheckboxColumn = new TableViewerColumn(this.availableFeedbackViewer, noColumn);
+		
 		TableColumn typeColumn = new TableColumn(this.availableFeedbackViewer.getTable(), SWT.LEFT);
 		typeColumn.setAlignment(SWT.LEFT);
-		typeColumn.setText("Feedback");
+		typeColumn.setText("Question");
 		typeColumn.setWidth(250);
 		this.typeViewerColumn = new TableViewerColumn(this.availableFeedbackViewer, typeColumn);
 		
@@ -363,17 +363,17 @@ public class DebugPilotFeedbackView extends ViewPart {
 
 		this.availableFeedbackViewer.setContentProvider(new FeedbackContentProvider());
 		this.availableFeedbackViewer.setLabelProvider(new DummyLabelProvider());
-		this.availableFeedbackViewer.addCheckStateListener(new ICheckStateListener() {
-			@Override
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				final UserFeedback checkedFeedback = (UserFeedback) event.getElement();
-				for (Object element : availableFeedbackViewer.getCheckedElements()) {
-					if (element instanceof UserFeedback userFeedback) {
-						if (!userFeedback.getFeedbackType().equals(checkedFeedback.getFeedbackType())) {
-							availableFeedbackViewer.setChecked(element, false);
-						}
-					}
-				}
+//		this.availableFeedbackViewer.addCheckStateListener(new ICheckStateListener() {
+//			@Override
+//			public void checkStateChanged(CheckStateChangedEvent event) {
+//				final UserFeedback checkedFeedback = (UserFeedback) event.getElement();
+//				for (Object element : availableFeedbackViewer.getCheckedElements()) {
+//					if (element instanceof UserFeedback userFeedback) {
+//						if (!userFeedback.getFeedbackType().equals(checkedFeedback.getFeedbackType())) {
+//							availableFeedbackViewer.setChecked(element, false);
+//						}
+//					}
+//				}
 //				if (checkedFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
 //					for (Object element : availableFeedbackViewer.getCheckedElements()) {
 //						if (element instanceof UserFeedback userFeedback) {
@@ -405,8 +405,8 @@ public class DebugPilotFeedbackView extends ViewPart {
 //						}
 //					}
 //				}
-			}
-		});
+//			}
+//		});
 	}
 	
 	protected void createRelatedVariableGroup(final Composite parent) {
@@ -462,50 +462,21 @@ public class DebugPilotFeedbackView extends ViewPart {
 		this.feedbackButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				final FeedbackPath feedbackPath = MicroBatViews.getPathView().getFeedbackPath();
-				if (!feedbackPath.contains(currentNode)) {
-					DialogUtil.popErrorDialog("Please give feedback only on step in path", "DebugPilot Feedback Error");
-				} else {					
-					UserFeedback[] feedbacks = Arrays.stream(availableFeedbackViewer.getCheckedElements()).map(obj -> {return (UserFeedback) obj;}).toArray(UserFeedback[]::new);
-					
-//					List<String> feedbackList = Arrays.stream(feedbacks)
-//							.map(feedback -> feedback.getFeedbackType())
-//							.distinct()
-//							.filter(type -> !type.equals(UserFeedback.CORRECT_VARIABLE_VALUE)).toList();
-//					if (feedbackList.isEmpty()) {
-//						DialogUtil.popErrorDialog("Feedback must contain either root cause, correct, wrong path or wrong variable", "DebugPilot Feedback View Error");
-//						return;
-//					}
-					
-					
-					NodeFeedbacksPair userFeedbacksPair = new NodeFeedbacksPair(currentNode, feedbacks);
-					
-					if (userFeedbacksPair.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {						
-						if (!DialogUtil.popConfirmDialog("Are you sure this step is the root cause?", "DebugPilot Remind")) {
-							return;
-						}
-					}
-					
-					DebugPilotInfo.getInstance().setNodeFeedbacksPair(userFeedbacksPair);
-					
-					PathView pathView = MicroBatViews.getPathView();
-					final TraceNode nextNode = TraceUtil.findNextNode(currentNode, userFeedbacksPair.getFirstWrongFeedback(), trace);
-					if (nextNode != null) {						
-						pathView.focusOnNode(nextNode);
-					}
-					
-//					String feedbackType = userFeedbacksPair.getFeedbackType();
-//					if (feedbackType.equals(UserFeedback.CORRECT)) {
-//						UserBehaviorLogger.logEvent(UserBehaviorType.CORRECT);
-//					} else if (feedbackType.equals(UserFeedback.WRONG_PATH)) {
-//						UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_CONFIRM);
-//					} else if (feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-//						UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_CONFIRM);
-//					} else if (feedbackType.equals(UserFeedback.ROOTCAUSE)) {
-//						UserBehaviorLogger.logEvent(UserBehaviorType.ROOT_CAUSE);
-//					}
-					
+				if (!feedbackSelectionManager.isValidSelection()) {
+					StringBuilder stringBuilder = new StringBuilder();
+					stringBuilder.append("Invalid feedback is given. \n");
+					stringBuilder.append("Valid feedback should contain one of the following: \n");
+					stringBuilder.append("1. This step is root cause.\n");
+					stringBuilder.append("2. This step is in wrong branch.\n");
+					stringBuilder.append("3. This step contain wrong read variables.\n");
+					stringBuilder.append("4. This step is correct.\n");
+					DialogUtil.popErrorDialog(stringBuilder.toString(), "Feedback Error");
+					return;
 				}
+				DPUserFeedback userFeedback = feedbackSelectionManager.genDpUserFeedback(currentNode);
+				
+				DebugPilotExecutor executor = new DebugPilotExecutor();
+				executor.execute(userFeedback);
 			}
 		});
 	
@@ -571,6 +542,11 @@ public class DebugPilotFeedbackView extends ViewPart {
 	}
 	
 	protected void refreshAvailableFeedbackViewer() {
+		this.disposeButtons();
+		
+		this.yesCheckboxColumn.setLabelProvider(new YesCheckboxLabelProvider());
+		this.noCheckboxColumn.setLabelProvider(new NoCheckboxLabelProvider());
+		
 		this.typeViewerColumn.setLabelProvider(new ColumnLabelProvider() {
             @Override
             public String getText(Object element) {
@@ -616,23 +592,24 @@ public class DebugPilotFeedbackView extends ViewPart {
             }
 		});
 		
-		this.disposeButtons();
 		this.nextNodeViewerColumn.setLabelProvider(new nextNodeButtonLabelProvider(this.currentNode, this.trace));
 		
-		this.availableFeedbackViewer.setInput(this.getAllAvailableFeedbacks());
+		UserFeedback[] allAvaiableFeedbacks = this.getAllAvailableFeedbacks();
+		this.availableFeedbackViewer.setInput(allAvaiableFeedbacks);
 		this.checkDefaultAvailableFeedbacks();
-		this.availableFeedbackViewer.refresh(true);
+		
+		this.feedbackSelectionManager.verify(allAvaiableFeedbacks);
 	}
 	
 	protected String genFeedbackType(final UserFeedback feedback) {
 		if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
-			return "Step is correct";
+			return "Is step correct?";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-			return "Wrong Flow";
+			return "Is step in correct branch?";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-			return "Wrong Variable";
+			return "Is this variable correct";
 		} else if (feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
-			return "Root Cause";
+			return "Is step root cause?";
 //		} else if (feedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
 //			return "Correct Variable";
 		} else {
@@ -641,14 +618,10 @@ public class DebugPilotFeedbackView extends ViewPart {
 	}
 	
 	protected void checkDefaultAvailableFeedbacks() {
-		final FeedbackPath suggestedFeedbackPath = MicroBatViews.getPathView().getFeedbackPath();
-		if (suggestedFeedbackPath.contains(this.currentNode)) {
-			NodeFeedbacksPair nodeFeedbacksPair = suggestedFeedbackPath.getFeedback(currentNode);
-			for (UserFeedback suggestedFeedback : nodeFeedbacksPair.getFeedbacks()) {
-				this.availableFeedbackViewer.setCheckedElements(new Object[] {suggestedFeedback});
-			}
-		} else {
-			this.availableFeedbackViewer.setAllChecked(false);
+		final FeedbackPath path = MicroBatViews.getPathView().getFeedbackPath();
+		if (path != null && path.containFeedbackByNode(this.currentNode)) {
+			DPUserFeedback feedback = path.getFeedbackByNode(this.currentNode);
+			this.feedbackSelectionManager.checkButtonBasedOnFeedback(feedback);
 		}
 	}
 	
@@ -678,27 +651,21 @@ public class DebugPilotFeedbackView extends ViewPart {
 	
 	protected UserFeedback[] getAllAvailableFeedbacks() {
 		List<UserFeedback> availableFeedbacks = new ArrayList<>();
-		availableFeedbacks.add(new UserFeedback(UserFeedback.CORRECT));
+		availableFeedbacks.add(new UserFeedback(UserFeedback.ROOTCAUSE));
 		availableFeedbacks.add(new UserFeedback(UserFeedback.WRONG_PATH));
-		
 		for (VarValue readVar : this.currentNode.getReadVariables()) {
 			UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 			feedback.setOption(new ChosenVariableOption(readVar, null));
 			availableFeedbacks.add(feedback);
-			
-//			UserFeedback anotherFeedback = new UserFeedback(UserFeedback.CORRECT_VARIABLE_VALUE);
-//			anotherFeedback.setOption(new ChosenVariableOption(readVar, null));
-//			availableFeedbacks.add(anotherFeedback);
 		}
-
-		availableFeedbacks.add(new UserFeedback(UserFeedback.ROOTCAUSE));
+		availableFeedbacks.add(new UserFeedback(UserFeedback.CORRECT));
 		return availableFeedbacks.toArray(new UserFeedback[0]);
 	}
 	
 	public void clearProgramOutput() {
-		this.wrongOutputTreeViewer.setInput(null);
-		this.wrongOutputTreeViewer.refresh();
-		DebugPilotInfo.getInstance().clearOutputs();
+//		this.wrongOutputTreeViewer.setInput(null);
+//		this.wrongOutputTreeViewer.refresh();
+//		DebugPilotInfo.getInstance().clearOutputs();
 	}
 	
 	protected void selectTraceViewNode(final TraceNode node) {
@@ -707,15 +674,32 @@ public class DebugPilotFeedbackView extends ViewPart {
 		traceView.jumpToNode(node);
 	}
 	
+	protected void registerYesCheckbox(final UserFeedback feedback, final Button checkbox) {
+		this.feedbackSelectionManager.registerYesCheckbox(feedback, checkbox);
+	}
+	
+	protected void registerNoCheckbox(final UserFeedback feedback, final Button checkbox) {
+		this.feedbackSelectionManager.registerNoCheckbox(feedback, checkbox);
+	}
+	
 	protected void registerButtons(final Button button) {
 		this.nextNodeButtons.add(button);
 	}
 	
 	protected void disposeButtons() {
+		this.disposeNextButtons();
+		this.disposeYesNoButtons();
+	}
+	
+	protected void disposeNextButtons() {
 		for (Button button : this.nextNodeButtons) {
 			button.dispose();
 		}
-		this.nextNodeButtons.clear();
+		this.nextNodeButtons.clear();		
+	}
+	
+	protected void disposeYesNoButtons() {
+		this.feedbackSelectionManager.dispose();
 	}
 	
 	protected class nextNodeButtonLabelProvider extends ColumnLabelProvider {
@@ -748,12 +732,6 @@ public class DebugPilotFeedbackView extends ViewPart {
 					final TraceView traceView = MicroBatViews.getTraceView();
 					traceView.jumpToNode(trace, nextNode.getOrder(), false);
 					traceView.jumpToNode(nextNode);
-					
-//					if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-//						UserBehaviorLogger.logEvent(UserBehaviorType.CONTROL_SLICING_EXPLORE);
-//					} else if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-//						UserBehaviorLogger.logEvent(UserBehaviorType.DATA_SLICING_EXPLORE);
-//					}
 				}
 				@Override
 				public void widgetDefaultSelected(SelectionEvent e) {}
@@ -767,6 +745,63 @@ public class DebugPilotFeedbackView extends ViewPart {
             editor.layout();
 
 			registerButtons(button);
+		}
+	}
+	
+	protected class YesCheckboxLabelProvider extends ColumnLabelProvider {
+		public YesCheckboxLabelProvider() {	}
+		@Override
+		public void update(ViewerCell cell) {
+			Button button = new Button((Composite) cell.getViewerRow().getControl(), SWT.CHECK);
+			final UserFeedback userFeedback = (UserFeedback) cell.getElement();
+			button.addSelectionListener(new SelectionListener() {
+
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					feedbackSelectionManager.select(userFeedback, true);
+				}
+
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e) {}
+				
+			});
+			
+			TableItem item = (TableItem) cell.getItem();
+            TableEditor editor = new TableEditor(item.getParent());
+            editor.grabHorizontal  = true;
+            editor.grabVertical = true;
+            editor.setEditor(button , item, cell.getColumnIndex());
+            editor.layout();
+            
+			registerYesCheckbox(userFeedback, button);
+		}
+	}
+	
+	protected class NoCheckboxLabelProvider extends ColumnLabelProvider {
+		public NoCheckboxLabelProvider() {	}
+		@Override
+		public void update(ViewerCell cell) {
+			Button button = new Button((Composite) cell.getViewerRow().getControl(), SWT.CHECK);
+			final UserFeedback userFeedback = (UserFeedback) cell.getElement();
+			button.addSelectionListener(new SelectionListener() {
+				
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					feedbackSelectionManager.select(userFeedback, false);
+				}
+				
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e) {}
+				
+			});
+			TableItem item = (TableItem) cell.getItem();
+            TableEditor editor = new TableEditor(item.getParent());
+            editor.grabHorizontal  = true;
+            editor.grabVertical = true;
+            editor.setEditor(button , item, cell.getColumnIndex());
+            editor.layout();
+            
+			registerNoCheckbox(userFeedback, button);
 		}
 	}
 }

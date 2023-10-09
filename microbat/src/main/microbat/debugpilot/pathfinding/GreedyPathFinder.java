@@ -1,16 +1,17 @@
 package microbat.debugpilot.pathfinding;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import microbat.debugpilot.settings.PathFinderSettings;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
+import microbat.debugpilot.userfeedback.DPUserFeedbackType;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.recommendation.ChosenVariableOption;
-import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 
 public abstract class GreedyPathFinder extends AbstractPathFinder {
@@ -39,17 +40,23 @@ public abstract class GreedyPathFinder extends AbstractPathFinder {
 		// Keep giving greedy feedback until endNode is reach, or it miss the endNode
 		while (currentNode != null) {
 			if (currentNode.equals(endNode)) {
-				UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
-				path.addPair(currentNode, feedback);
+				DPUserFeedback feedback = new DPUserFeedback(DPUserFeedbackType.ROOT_CAUSE, currentNode);
+				path.add(feedback);
 				return path;
+//				UserFeedback feedback = new UserFeedback(UserFeedback.ROOTCAUSE);
+//				path.addPair(currentNode, feedback);
+//				return path;
 			}
 			
 			if (currentNode.getOrder() <= endNode.getOrder()) {
 				return null;
 			}
 			
-			UserFeedback greedyFeedback = this.giveFeedback(currentNode);
-			currentNode = TraceUtil.findNextNode(currentNode, greedyFeedback, trace);
+			DPUserFeedback greedyFeedback = this.giveFeedback(currentNode);
+			List<TraceNode> nextNodes = new ArrayList<>(TraceUtil.findAllNextNodes(greedyFeedback));
+			currentNode = nextNodes.get(0);
+//			UserFeedback greedyFeedback = this.giveFeedback(currentNode);
+//			currentNode = TraceUtil.findNextNode(currentNode, greedyFeedback, trace);
 		}
 		return null;
 	}
@@ -59,34 +66,42 @@ public abstract class GreedyPathFinder extends AbstractPathFinder {
 	 * @param node Target node
 	 * @return Greedy feedback
 	 */
-	public UserFeedback giveFeedback(final TraceNode node) {
+	public DPUserFeedback giveFeedback(final TraceNode node) {
 		Objects.requireNonNull(node, Log.genMsg(CorrectnessGreedyPathFinder.class, "Given node is null"));
-		UserFeedback feedback = new UserFeedback();
+//		UserFeedback feedback = new UserFeedback();
 		final TraceNode controlDom = node.getControlDominator();
 		
 		if (controlDom == null && node.getReadVariables().isEmpty()) {
-			feedback.setFeedbackType(UserFeedback.UNCLEAR);
+			DPUserFeedback feedback = new DPUserFeedback(DPUserFeedbackType.ROOT_CAUSE, node);
 			return feedback;
 		} else if (controlDom != null && node.getReadVariables().isEmpty()) {
-			feedback.setFeedbackType(UserFeedback.WRONG_PATH);
-			return feedback;
+//			feedback.setFeedbackType(UserFeedback.WRONG_PATH);
+//			return feedback;
+			return new DPUserFeedback(DPUserFeedbackType.WRONG_PATH, node);
 		} else if (controlDom == null && !node.getReadVariables().isEmpty()) {
 			Optional<VarValue> targetVarOptional = node.getReadVariables().stream()
 					.min((var1, var2) -> Double.compare(this.getCost(var1), this.getCost(var2)));
-			feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
-			feedback.setOption(new ChosenVariableOption(targetVarOptional.get(), null));
+			DPUserFeedback feedback = new DPUserFeedback(DPUserFeedbackType.WRONG_VARIABLE, node);
+			feedback.addWrongVar(targetVarOptional.get());
 			return feedback;
+//			feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+//			feedback.setOption(new ChosenVariableOption(targetVarOptional.get(), null));
+//			return feedback;
 		} else {
 			double controlCost = this.getCost(controlDom.getConditionResult());
 			Optional<VarValue> targetVarOptional = node.getReadVariables().stream()
 					.min((var1, var2) -> Double.compare(this.getCost(var1), this.getCost(var2)));
 			double dataCost = this.getCost(targetVarOptional.get());
 			
+			DPUserFeedback feedback;
 			if (controlCost <= dataCost) {
-				feedback.setFeedbackType(UserFeedback.WRONG_PATH);
+//				feedback.setFeedbackType(UserFeedback.WRONG_PATH);
+				feedback = new DPUserFeedback(DPUserFeedbackType.WRONG_PATH, node);
 			} else {
-				feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
-				feedback.setOption(new ChosenVariableOption(targetVarOptional.get(), null));
+				feedback = new DPUserFeedback(DPUserFeedbackType.WRONG_VARIABLE, node);
+				feedback.addWrongVar(targetVarOptional.get());
+//				feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+//				feedback.setOption(new ChosenVariableOption(targetVarOptional.get(), null));
 			}
 			return feedback;
 		}

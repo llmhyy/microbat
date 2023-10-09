@@ -16,9 +16,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-
 import microbat.agent.TraceAgentRunner;
-import microbat.debugpilot.propagation.BP.BeliefPropagation;
 import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.AgentParams.LogType;
 import microbat.instrumentation.filter.CodeRangeEntry;

@@ -1,35 +1,30 @@
 package microbat.debugpilot.settings;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import microbat.debugpilot.NodeFeedbacksPair;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
 public class DebugPilotSettings {
 
-	protected Collection<NodeFeedbacksPair> feedbacks = new ArrayList<>();
-	protected TraceNode outputNode = null;
 	protected PathFinderSettings pathFinderSettings = new PathFinderSettings();
-	
 	protected PropagatorSettings propagatorSettings = new PropagatorSettings();
 	protected RootCauseLocatorSettings rootCauseLocatorSettings = new RootCauseLocatorSettings();
-	protected Trace trace = null;
 
 	public DebugPilotSettings() {
 
 	}
 
-	public Collection<NodeFeedbacksPair> getFeedbacks() {
-		return feedbacks;
+	public List<DPUserFeedback> getFeedbacks() {
+		return this.propagatorSettings.getFeedbacks();
 	}
 
 	public TraceNode getOutputNode() {
-		return outputNode;
+		return this.rootCauseLocatorSettings.getOutputNode();
 	}
 
 	public PathFinderSettings getPathFinderSettings() {
@@ -45,22 +40,20 @@ public class DebugPilotSettings {
 	}
 
 	public Trace getTrace() {
-		return this.trace;
+		return this.propagatorSettings.getTrace();
 	}
 
 	public void setCorrectVars(Set<VarValue> correctVars) {
 		this.propagatorSettings.setCorrectVars(correctVars);
 	}
 
-	public void setFeedbackRecords(Collection<NodeFeedbacksPair> feedbackRecords) {
-		this.feedbacks.clear();
-		this.feedbacks.addAll(feedbackRecords);
+	public void setFeedbackRecords(Collection<DPUserFeedback> feedbackRecords) {
 		this.propagatorSettings.setFeedbacks(feedbackRecords);
 		this.rootCauseLocatorSettings.setFeedbacks(feedbackRecords);
 	}
 
 	public void setOutputNode(TraceNode outputNode) {
-		this.outputNode = outputNode;
+//		this.outputNode = outputNode;
 		this.rootCauseLocatorSettings.setOutputNode(outputNode);
 	}
 
@@ -83,7 +76,7 @@ public class DebugPilotSettings {
 	}
 	
 	public void setTrace(Trace trace) {
-		this.trace = trace;
+//		this.trace = trace;
 		this.propagatorSettings.setTrace(trace);
 		this.pathFinderSettings.setTrace(trace);
 	}

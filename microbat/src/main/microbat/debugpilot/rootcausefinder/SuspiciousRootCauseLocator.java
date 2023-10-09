@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.settings.RootCauseLocatorSettings;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.trace.TraceNode;
 
 public class SuspiciousRootCauseLocator extends AbstractRootCauseLocator {
@@ -14,7 +14,7 @@ public class SuspiciousRootCauseLocator extends AbstractRootCauseLocator {
 		this(settings.getSliceTrace(), settings.getFeedbacks(), settings.getOutputNode());
 	}
 	
-	public SuspiciousRootCauseLocator(List<TraceNode> sliceTrace, Collection<NodeFeedbacksPair> feedbacks, TraceNode outputNode) {
+	public SuspiciousRootCauseLocator(List<TraceNode> sliceTrace, Collection<DPUserFeedback> feedbacks, TraceNode outputNode) {
 		super(sliceTrace, feedbacks, outputNode);
 	}
 	

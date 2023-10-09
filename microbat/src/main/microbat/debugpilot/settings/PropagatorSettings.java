@@ -5,8 +5,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.propagation.PropagatorType;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -27,7 +27,7 @@ public class PropagatorSettings {
 	protected List<TraceNode> slicedTrace = null;
 	protected Set<VarValue> correctVars = null;
 	protected Set<VarValue> wrongVars = null;
-	protected Collection<NodeFeedbacksPair> feedbacks = new ArrayList<>();
+	protected List<DPUserFeedback> feedbacks = new ArrayList<>();
 	
 	public PropagatorSettings() {
 		
@@ -97,11 +97,11 @@ public class PropagatorSettings {
 		this.wrongVars = wrongVars;
 	}
 
-	public Collection<NodeFeedbacksPair> getFeedbacks() {
+	public List<DPUserFeedback> getFeedbacks() {
 		return feedbacks;
 	}
 
-	public void setFeedbacks(Collection<NodeFeedbacksPair> feedbacks) {
+	public void setFeedbacks(Collection<DPUserFeedback> feedbacks) {
 		this.feedbacks.clear();
 		this.feedbacks.addAll(feedbacks);
 	}

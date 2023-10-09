@@ -1,6 +1,5 @@
 package microbat.debugpilot.propagation.BP.constraint;
 
-import microbat.debugpilot.propagation.BP.BeliefPropagation;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 

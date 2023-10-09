@@ -23,16 +23,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import microbat.Activator;
-import microbat.bytecode.ByteCode;
-import microbat.bytecode.ByteCodeList;
-import microbat.bytecode.OpcodeType;
-import microbat.debugpilot.NodeFeedbacksPair;
-import microbat.model.BreakPoint;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.Variable;
 import microbat.preference.MicrobatPreference;
-import microbat.recommendation.UserFeedback;
 import sav.common.core.SavRtException;
 import sav.common.core.utils.FileUtils;
 import sav.common.core.utils.StringUtils;
@@ -350,29 +344,29 @@ public class MicroBatUtil {
 		return exp;
 	}
 	
-	public static String genPathMessage(final NodeFeedbacksPair pair, final int index) {
-		final TraceNode node = pair.getNode();
-		final UserFeedback feedback = pair.getFirstFeedback();
-		StringBuilder strBuilder = new StringBuilder();
-		strBuilder.append("Path " + index);
-		strBuilder.append("\t|");
-		strBuilder.append("TraceNode: " + node.getOrder());
-		strBuilder.append("\t|");
-		strBuilder.append("Feedback: ");
-		if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
-			strBuilder.append("Correct");
-		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-			strBuilder.append("Wrong path");
-		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-			strBuilder.append("Wrong variable of " + feedback.getOption().getReadVar().getVarName());
-		} else if (feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
-			strBuilder.append("Root cause");
-		}
-		strBuilder.append("\t|");
-		strBuilder.append("Reason: ");
-		strBuilder.append(node.reason);
-		return strBuilder.toString();
-	}
+//	public static String genPathMessage(final NodeFeedbacksPair pair, final int index) {
+//		final TraceNode node = pair.getNode();
+//		final UserFeedback feedback = pair.getFirstFeedback();
+//		StringBuilder strBuilder = new StringBuilder();
+//		strBuilder.append("Path " + index);
+//		strBuilder.append("\t|");
+//		strBuilder.append("TraceNode: " + node.getOrder());
+//		strBuilder.append("\t|");
+//		strBuilder.append("Feedback: ");
+//		if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
+//			strBuilder.append("Correct");
+//		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+//			strBuilder.append("Wrong path");
+//		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+//			strBuilder.append("Wrong variable of " + feedback.getOption().getReadVar().getVarName());
+//		} else if (feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
+//			strBuilder.append("Root cause");
+//		}
+//		strBuilder.append("\t|");
+//		strBuilder.append("Reason: ");
+//		strBuilder.append(node.reason);
+//		return strBuilder.toString();
+//	}
 	
 	/**
 	 * For string1: a b c d

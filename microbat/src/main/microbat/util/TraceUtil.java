@@ -8,10 +8,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
 
+import microbat.debugpilot.userfeedback.DPUserFeedback;
+import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -160,6 +163,33 @@ public class TraceUtil {
 		});
 		
 		return result;
+	}
+	
+	public static Set<TraceNode> findAllNextNodes(final DPUserFeedback feedback) {
+		Objects.requireNonNull(feedback, Log.genMsg("DPUserFeedback", "Given feedback cannot be null"));
+		
+		final TraceNode node = feedback.getNode();
+		final Trace trace = node.getTrace();
+		Set<TraceNode> nextNodes = new HashSet<>();
+		switch (feedback.getType()) {
+		case CORRECT:
+			break;
+		case ROOT_CAUSE:
+			break;
+		case WRONG_PATH:
+			nextNodes.add(node.getControlDominator());
+			break;
+		case WRONG_VARIABLE:
+			for (VarValue wrongVar : feedback.getWrongVars()) {
+				final TraceNode dataDom = trace.findDataDependency(node, wrongVar);
+				nextNodes.add(dataDom);
+			}
+			break;
+		default:
+			throw new RuntimeException(Log.genMsg("TraceUtil", "Unhandled feedback type: " + feedback.getType().name()));
+		}
+		nextNodes.removeIf(nextNode -> nextNode == null);
+		return nextNodes;
 	}
 	
 	public static TraceNode findNextNode(final TraceNode node, final UserFeedback feedback, final Trace trace) {

@@ -3,7 +3,6 @@ package microbat.debugpilot.fsc;
 import java.util.Objects;
 
 import microbat.debugpilot.DebugPilot;
-import microbat.debugpilot.NodeFeedbacksPair;
 
 public class DebugPilotFiniteStateMachine {
 	

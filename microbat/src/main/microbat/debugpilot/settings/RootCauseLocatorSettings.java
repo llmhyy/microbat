@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.rootcausefinder.RootCauseLocatorType;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.trace.TraceNode;
 
 public class RootCauseLocatorSettings {
@@ -14,7 +14,7 @@ public class RootCauseLocatorSettings {
 	
 	protected RootCauseLocatorType rootCauseLocatorType = RootCauseLocatorSettings.DEFAULT_ROOT_CAUSE_LOCATOR_TYPE;
 	protected List<TraceNode> sliceTrace = null;
-	protected Collection<NodeFeedbacksPair> feedbacks = new ArrayList<>();
+	protected List<DPUserFeedback> feedbacks = new ArrayList<>();
 	protected TraceNode outputNode = null; 
 	
 	public RootCauseLocatorSettings() {
@@ -22,7 +22,7 @@ public class RootCauseLocatorSettings {
 	}
 	
 	public RootCauseLocatorSettings(RootCauseLocatorType rootCauseLocatorType, List<TraceNode> sliceTrace,
-			Collection<NodeFeedbacksPair> feedbacks, TraceNode outputNode) {
+			List<DPUserFeedback> feedbacks, TraceNode outputNode) {
 		this.rootCauseLocatorType = rootCauseLocatorType;
 		this.sliceTrace = sliceTrace;
 		this.feedbacks = feedbacks;
@@ -45,11 +45,11 @@ public class RootCauseLocatorSettings {
 		this.sliceTrace = sliceTrace;
 	}
 
-	public Collection<NodeFeedbacksPair> getFeedbacks() {
+	public Collection<DPUserFeedback> getFeedbacks() {
 		return feedbacks;
 	}
 
-	public void setFeedbacks(Collection<NodeFeedbacksPair> feedbacks) {
+	public void setFeedbacks(Collection<DPUserFeedback> feedbacks) {
 		this.feedbacks.clear();
 		this.feedbacks.addAll(feedbacks);
 	}

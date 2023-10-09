@@ -5,8 +5,8 @@ import java.util.List;
 
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
-import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.settings.PropagatorSettings;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -17,7 +17,7 @@ public class SPP_C extends SPP {
 		this(settings.getTrace(), settings.getSlicedTrace(), settings.getFeedbacks());
 	}
 	
-	public SPP_C(final Trace trace, final List<TraceNode> sliceTraceNodes, final Collection<NodeFeedbacksPair> feedbacksPairs) {
+	public SPP_C(final Trace trace, final List<TraceNode> sliceTraceNodes, final Collection<DPUserFeedback> feedbacksPairs) {
 		super(trace, sliceTraceNodes, feedbacksPairs);
 	}
 	

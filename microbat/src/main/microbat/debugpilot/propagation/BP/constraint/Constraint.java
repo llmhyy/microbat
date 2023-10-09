@@ -1,15 +1,10 @@
 package microbat.debugpilot.propagation.BP.constraint;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import microbat.debugpilot.propagation.BP.BeliefPropagation;
-import microbat.debugpilot.propagation.BP.VarIDConverter;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.variable.ConditionVar;

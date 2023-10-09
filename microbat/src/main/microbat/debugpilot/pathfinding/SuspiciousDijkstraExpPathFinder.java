@@ -2,13 +2,13 @@ package microbat.debugpilot.pathfinding;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
-import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.settings.PathFinderSettings;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.log.Log;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
-import microbat.recommendation.UserFeedback;
 import microbat.util.TraceUtil;
 
 public class SuspiciousDijkstraExpPathFinder extends SuspiciousDijkstraPathFinder {
@@ -28,20 +28,23 @@ public class SuspiciousDijkstraExpPathFinder extends SuspiciousDijkstraPathFinde
 		
 		// Try to construct path with greedy selection
 		FeedbackPath explanablePath = super.findPath(startNode, endNode);
-		if (explanablePath == null)
+		if (explanablePath == null) 
 			return null;
-		for (int pathIdx=0; pathIdx < explanablePath.getLength(); pathIdx++) {
-			final NodeFeedbacksPair pair = explanablePath.get(pathIdx);
-			final TraceNode node = pair.getNode();
-			final UserFeedback greedyFeedback = SuspiciousGreedyPathFinder.giveFeedback_static(node);
-			if (!pair.containsFeedback(greedyFeedback)) {
-				final TraceNode nextNode = TraceUtil.findNextNode(node, greedyFeedback, trace);
-				if (nextNode != null) {
-					 FeedbackPath insertPath = super.findPath(nextNode, endNode);
-					 if (insertPath != null) {
-						 explanablePath.get(pathIdx).setFeedback(greedyFeedback);
-						 explanablePath = FeedbackPathUtil.splicePathAtIndex(explanablePath, insertPath, pathIdx+1);
-					 }
+
+		for (int pathIdx=0; pathIdx < explanablePath.length(); pathIdx++) {
+			final DPUserFeedback feedback = explanablePath.get(pathIdx);
+			final TraceNode node = feedback.getNode();
+			final DPUserFeedback greedyFeedback = SuspiciousGreedyPathFinder.giveFeedback_static(node);
+			if (!feedback.isSimilar(greedyFeedback)) {
+				// If the current feedback is not the greedy one,
+				// then try to construct a new shortest path with this greedy feedback
+				Set<TraceNode> nextNodes = TraceUtil.findAllNextNodes(greedyFeedback);
+				for (TraceNode nextNode : nextNodes) {
+					FeedbackPath insertPath = super.findPath(nextNode, endNode);
+					if (insertPath != null) {
+						explanablePath.set(pathIdx, greedyFeedback);
+						explanablePath = FeedbackPath.splicePathAtIndex(explanablePath, insertPath, pathIdx+1);
+					}
 				}
 			}
 		}

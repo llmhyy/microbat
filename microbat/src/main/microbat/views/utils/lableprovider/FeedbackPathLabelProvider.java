@@ -3,14 +3,13 @@ package microbat.views.utils.lableprovider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 
-import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.FeedbackPath;
-import microbat.recommendation.UserFeedback;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
+import microbat.log.Log;
 
 public class FeedbackPathLabelProvider extends ColumnLabelProvider implements ITableLabelProvider {
 
@@ -47,7 +46,7 @@ public class FeedbackPathLabelProvider extends ColumnLabelProvider implements IT
 	
 	@Override
 	public Color getBackground(Object element) {
-		if (element instanceof NodeFeedbacksPair nodeFeedbacksPair) {
+		if (element instanceof DPUserFeedback nodeFeedbacksPair) {
 			if (nodeFeedbacksPair.getNode().confirmed) {
 				return new Color(Display.getCurrent(), 173, 255, 47);
 			}
@@ -57,29 +56,27 @@ public class FeedbackPathLabelProvider extends ColumnLabelProvider implements IT
 
 	@Override
 	public String getColumnText(Object element, int columnIndex) {
-		if (element instanceof NodeFeedbacksPair userFeedbackPair) {
+		if (element instanceof DPUserFeedback userFeedback) {
 			switch (columnIndex) {
 			case 0:
-				return String.valueOf(this.feedbacPath.indexOf(userFeedbackPair));
+				return String.valueOf(this.feedbacPath.indexOf(userFeedback));
 			case 1:
-				return String.valueOf(userFeedbackPair.getNode().getOrder());
+				return String.valueOf(userFeedback.getNode().getOrder());
 			case 2:
-				final String feedbackType  = userFeedbackPair.getFeedbackType();
-				if (feedbackType.equals(UserFeedback.CORRECT)) {
+				switch (userFeedback.getType()) {
+				case CORRECT:
 					return "Correct";
-				} else if (feedbackType.equals(UserFeedback.WRONG_PATH)) {
-					return "Wrong Branch";
-				} else if (feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-					return "Wrong Variable";
-				} else if (feedbackType.equals(UserFeedback.UNCLEAR)) {
-					return "Unclear";
-				} else if (feedbackType.equals(UserFeedback.ROOTCAUSE)) {
+				case ROOT_CAUSE:
 					return "Root Cause";
+				case WRONG_PATH:
+					return "Wrong Branch";
+				case WRONG_VARIABLE:
+					return "Wrong Variable";
+				default:
+					throw new RuntimeException(Log.genMsg(getClass(), "Unhandled feedback type: " + userFeedback.getType()));
 				}
 			case 3:
-				return userFeedbackPair.getNode().confirmed ? "Yes" : "No";
-			default:
-				throw new IllegalArgumentException("Unexpected value: " + columnIndex);
+				return userFeedback.getNode().confirmed ? "Yes" : "No";
 			}
 		}
 		return null;

@@ -9,7 +9,10 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.part.ViewPart;
 
+import microbat.debugpilot.userfeedback.DPUserFeedback;
+import microbat.log.Log;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 import microbat.recommendation.StepRecommender;
 import microbat.recommendation.UserFeedback;
 
@@ -34,6 +37,22 @@ public class ReasonView extends ViewPart {
 		reasonText.setText("** " + reason);
 	}
 
+	public void refresh(final DPUserFeedback feedback) {
+		final TraceNode node = feedback.getNode();
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("Trace Node: " + node.getOrder());
+		stringBuilder.append('\n');
+		stringBuilder.append(this.feedbackToString(feedback));
+		stringBuilder.append('\n');
+		
+		if (!node.reason.isEmpty()) {
+			stringBuilder.append('\n');
+			stringBuilder.append("Reason:\n");
+			stringBuilder.append(node.reason);
+		}
+		
+		this.reasonText.setText(stringBuilder.toString());
+	}
 	public void refresh(final TraceNode node, final UserFeedback userFeedback) {
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("Trace Node: " + node.getOrder());
@@ -49,6 +68,33 @@ public class ReasonView extends ViewPart {
 		
 		this.reasonText.setText(stringBuilder.toString());
 		
+	}
+	
+	public String feedbackToString(final DPUserFeedback feedback) {
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("Prediction: ");
+		switch (feedback.getType()) {
+		case CORRECT:
+			stringBuilder.append("This step is correct");
+			break;
+		case ROOT_CAUSE:
+			stringBuilder.append("This step is the root cause of the bug");
+			break;
+		case WRONG_PATH:
+			stringBuilder.append("This step should not be executed");
+			break;
+		case WRONG_VARIABLE:
+			stringBuilder.append("The variable ");
+			for (VarValue wrongVar : feedback.getWrongVars()) {
+				stringBuilder.append(wrongVar.getVarName() + ",");
+			}
+			stringBuilder.append(" is wrong.");
+			break;
+		default:
+			throw new RuntimeException(Log.genMsg(getClass(), "Unhanlded feedback type: " + feedback.getType()));
+		
+		}
+		return stringBuilder.toString();
 	}
 	
 	public String feedbackToString(final UserFeedback feedback) {

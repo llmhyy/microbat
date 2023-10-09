@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.settings.RootCauseLocatorSettings;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.trace.TraceNode;
 
 public class CorrectnessRootCauseLocator extends AbstractRootCauseLocator {
@@ -14,7 +14,7 @@ public class CorrectnessRootCauseLocator extends AbstractRootCauseLocator {
 		this(settings.getSliceTrace(), settings.getFeedbacks(), settings.getOutputNode());
 	}
 	
-	public CorrectnessRootCauseLocator(List<TraceNode> sliceTrace, Collection<NodeFeedbacksPair> feedbacks, TraceNode outputNode) {
+	public CorrectnessRootCauseLocator(List<TraceNode> sliceTrace, Collection<DPUserFeedback> feedbacks, TraceNode outputNode) {
 		super(sliceTrace, feedbacks, outputNode);
 	}
 

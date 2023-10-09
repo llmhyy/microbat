@@ -3,9 +3,7 @@ package microbat.debugpilot.propagation.BP.constraint;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.debugpilot.propagation.BP.BeliefPropagation;
 import microbat.model.trace.TraceNode;
-import microbat.model.value.VarValue;
 
 /**
  * Abstract class for different kind of statement constraints

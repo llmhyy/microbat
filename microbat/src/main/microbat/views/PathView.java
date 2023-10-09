@@ -22,13 +22,9 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.part.ViewPart;
 
-import fj.P;
-import microbat.debugpilot.NodeFeedbacksPair;
 import microbat.debugpilot.pathfinding.FeedbackPath;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.trace.TraceNode;
-import microbat.recommendation.UserFeedback;
-import microbat.util.MicroBatUtil;
-import microbat.views.utils.contentprovider.ActionPathContentProvider;
 import microbat.views.utils.lableprovider.FeedbackPathContentProvider;
 import microbat.views.utils.lableprovider.FeedbackPathLabelProvider;
 import microbat.views.utils.listeners.FeedbackPathSelectionListener;
@@ -99,8 +95,11 @@ public class PathView extends ViewPart {
 			this.buggyTraceView.jumpToNode(node);
 		}
 		
-		UserFeedback feedback = this.feedbackPath.getFeedback(node).getFirstFeedback();
-		this.reasonView.refresh(node, feedback);
+		DPUserFeedback feedback = this.feedbackPath.getFeedbackByNode(node);
+		this.reasonView.refresh(feedback);
+		
+//		UserFeedback feedback = this.feedbackPath.getFeedback(node).getFirstFeedback();
+//		this.reasonView.refresh(node, feedback);
 	}
 	
 	protected void addSearchTextListener(final Text searchText) {
@@ -167,7 +166,7 @@ public class PathView extends ViewPart {
 	
 	public void updateFeedbackPath(final FeedbackPath feedbackPath) {
 		this.feedbackPath = feedbackPath;
-		Display.getDefault().asyncExec(new Runnable() {
+		Display.getDefault().syncExec(new Runnable() {
 		    @Override
 		    public void run() {
 		        feedbackPathViewer.setLabelProvider(new FeedbackPathLabelProvider(feedbackPath));
@@ -188,12 +187,19 @@ public class PathView extends ViewPart {
 	
 	public void focusOnNode(final TraceNode node) {
 		if (node == null) return;
-		for (NodeFeedbacksPair nodeFeedbacksPair : this.feedbackPath) {
-			if (node.equals(nodeFeedbacksPair.getNode())) {
-				StructuredSelection selection = new StructuredSelection(nodeFeedbacksPair);
+		for (DPUserFeedback feedback : this.feedbackPath.getFeedbacks()) {
+			if (feedback.getNode().equals(node)) {
+				StructuredSelection selection = new StructuredSelection(feedback);
 				this.feedbackPathViewer.setSelection(selection);
+				break;
 			}
 		}
+//		for (NodeFeedbacksPair nodeFeedbacksPair : this.feedbackPath) {
+//			if (node.equals(nodeFeedbacksPair.getNode())) {
+//				StructuredSelection selection = new StructuredSelection(nodeFeedbacksPair);
+//				this.feedbackPathViewer.setSelection(selection);
+//			}
+//		}
 	}
 	
 }
