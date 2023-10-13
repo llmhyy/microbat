@@ -56,7 +56,7 @@ public class FeedbackPathLabelProvider extends ColumnLabelProvider implements IT
 
 	@Override
 	public String getColumnText(Object element, int columnIndex) {
-		if (element instanceof DPUserFeedback userFeedback) {
+		if (element instanceof DPUserFeedback userFeedback && this.feedbacPath != null) {
 			switch (columnIndex) {
 			case 0:
 				return String.valueOf(this.feedbacPath.indexOf(userFeedback));
