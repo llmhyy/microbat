@@ -244,17 +244,6 @@
                   label="Start Debug"
                   style="push">
             </command>
-            <command
-                  commandId="microbat.debugpilot"
-                  icon="icons/play_debug_pilot.png"
-                  label="stepwisePropagation"
-                  style="push">
-            </command>
-            <command
-                  commandId="microbat.stopdebugpilot"
-                  icon="icons/stop_debug_pilot_button.png"
-                  style="push">
-            </command>
          </toolbar>
       </menuContribution>
       <menuContribution

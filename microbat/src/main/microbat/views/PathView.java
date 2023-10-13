@@ -3,6 +3,10 @@ package microbat.views;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
@@ -31,7 +35,8 @@ import microbat.views.utils.listeners.FeedbackPathSelectionListener;
 
 public class PathView extends ViewPart {
 	public static final String ID = "microbat.evalView.pathView";
-
+	public static final String FOLLOW_PATH_FAMILITY_NAME = "Following Path";
+	
 	protected TraceView buggyTraceView = MicroBatViews.getTraceView();
 	protected ReasonView reasonView = MicroBatViews.getReasonView();
 
@@ -44,6 +49,8 @@ public class PathView extends ViewPart {
 	
 	protected List<Button> checkButtons = new ArrayList<>();
 	
+	protected Job followPathJob = null;
+	
 	public PathView() {
 	}
 	
@@ -54,7 +61,7 @@ public class PathView extends ViewPart {
 	@Override
 	public void createPartControl(Composite parent) {
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+		layout.numColumns = 5;
 		parent.setLayout(layout);
 		createSearchBox(parent);
 		createTableView(parent);
@@ -75,8 +82,79 @@ public class PathView extends ViewPart {
 		searchButton.setLayoutData(buttonData);
 		searchButton.setText("Go");
 		addSearchButtonListener(searchButton);		
+		
+		Button clearButton = new Button(parent, SWT.PUSH);
+		GridData clearButtonData = new GridData(SWT.FILL, SWT.FILL, false, false);
+		clearButton.setLayoutData(clearButtonData);
+		clearButton.setText("Clear");
+		clearButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent e) {
+				updateFeedbackPath(null);
+			}
+		});
+		
+		Button playButton = new Button(parent, SWT.PUSH);
+		GridData playButtonData = new GridData(SWT.FILL, SWT.FILL, false, false);
+		playButton.setLayoutData(playButtonData);
+		playButton.setText("Follow Path");
+		playButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent e) {
+				if (feedbackPath != null) {
+					Job job = new Job(PathView.FOLLOW_PATH_FAMILITY_NAME) {
+						@Override
+						protected IStatus run(IProgressMonitor monitor) {
+						
+							for (DPUserFeedback feedback : feedbackPath.getFeedbacks()) {
+								if (monitor.isCanceled()) {
+									return Status.CANCEL_STATUS;
+								}
+								Display.getDefault().asyncExec(new Runnable() {
+									@Override
+									public void run() {
+										focusOnNode(feedback.getNode());
+									}
+								});
+								try {
+									Thread.sleep(2500);
+								} catch (InterruptedException e1) {
+									e1.printStackTrace();
+								}
+								if (monitor.isCanceled()) {
+									return Status.CANCEL_STATUS;
+								}
+							}
+							followPathJob = null;
+							
+							return Status.OK_STATUS;
+						}
+						
+						@Override
+						public boolean belongsTo(Object family) {
+							return this.getName().equals(family);
+						}
+					};
+					followPathJob = job;
+					job.schedule();
+				}
+			}
+		});
+		
+		Button stopPlayButton = new Button(parent, SWT.PUSH);
+		GridData stopPlayButtonData = new GridData(SWT.FILL, SWT.FILL, false, false);
+		stopPlayButton.setLayoutData(stopPlayButtonData);
+		stopPlayButton.setText("Stop Follow Path");
+		stopPlayButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent e) {
+				if (followPathJob != null) {
+					followPathJob.cancel();
+					followPathJob = null;
+				}
+			}
+		});
 	}
-	
 	
 	protected void addSearchButtonListener(final Button serachButton) {
 		searchButton.addMouseListener(new MouseAdapter() {
@@ -131,7 +209,7 @@ public class PathView extends ViewPart {
 		table.setLinesVisible(true);
 		
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
-		gridData.horizontalSpan = 2;
+		gridData.horizontalSpan = 5;
 		table.setLayoutData(gridData);
 		
 		TableColumn IdColumn = new TableColumn(table, SWT.LEFT);
@@ -194,12 +272,6 @@ public class PathView extends ViewPart {
 				break;
 			}
 		}
-//		for (NodeFeedbacksPair nodeFeedbacksPair : this.feedbackPath) {
-//			if (node.equals(nodeFeedbacksPair.getNode())) {
-//				StructuredSelection selection = new StructuredSelection(nodeFeedbacksPair);
-//				this.feedbackPathViewer.setSelection(selection);
-//			}
-//		}
 	}
 	
 }

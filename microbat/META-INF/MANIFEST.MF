@@ -108,6 +108,7 @@ Export-Package:
  microbat.debugpilot.propagation.spp,
  microbat.debugpilot.rootcausefinder,
  microbat.debugpilot.settings,
+ microbat.debugpilot.userfeedback,
  microbat.evaluation;
   uses:="microbat.recommendation,
    microbat.evaluation.accuracy,

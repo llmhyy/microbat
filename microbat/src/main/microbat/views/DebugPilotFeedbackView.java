@@ -363,50 +363,6 @@ public class DebugPilotFeedbackView extends ViewPart {
 
 		this.availableFeedbackViewer.setContentProvider(new FeedbackContentProvider());
 		this.availableFeedbackViewer.setLabelProvider(new DummyLabelProvider());
-//		this.availableFeedbackViewer.addCheckStateListener(new ICheckStateListener() {
-//			@Override
-//			public void checkStateChanged(CheckStateChangedEvent event) {
-//				final UserFeedback checkedFeedback = (UserFeedback) event.getElement();
-//				for (Object element : availableFeedbackViewer.getCheckedElements()) {
-//					if (element instanceof UserFeedback userFeedback) {
-//						if (!userFeedback.getFeedbackType().equals(checkedFeedback.getFeedbackType())) {
-//							availableFeedbackViewer.setChecked(element, false);
-//						}
-//					}
-//				}
-//				if (checkedFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
-//					for (Object element : availableFeedbackViewer.getCheckedElements()) {
-//						if (element instanceof UserFeedback userFeedback) {
-//							if (userFeedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT) || userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-//								availableFeedbackViewer.setChecked(element, false);
-//							}
-//							if (userFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE) && userFeedback.getOption().getReadVar().equals(checkedFeedback.getOption().getReadVar())) {
-//								availableFeedbackViewer.setChecked(element, false);
-//							}
-//						}
-//					}
-//				} else if (checkedFeedback.getFeedbackType().equals(UserFeedback.CORRECT_VARIABLE_VALUE)) {
-//					for (Object element : availableFeedbackViewer.getCheckedElements()) {
-//						if (element instanceof UserFeedback userFeedback) {
-//							if (userFeedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE) || userFeedback.getFeedbackType().equals(UserFeedback.CORRECT) || userFeedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
-//								availableFeedbackViewer.setChecked(element, false);
-//							}
-//							if (userFeedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE) && userFeedback.getOption().getReadVar().equals(checkedFeedback.getOption().getReadVar())) {
-//								availableFeedbackViewer.setChecked(element, false);
-//							}
-//						}
-//					}
-//				} else {					
-//					for (Object element : availableFeedbackViewer.getCheckedElements()) {
-//						if (element instanceof UserFeedback userFeedback) {
-//							if (!userFeedback.getFeedbackType().equals(checkedFeedback.getFeedbackType())) {
-//								availableFeedbackViewer.setChecked(element, false);
-//							}
-//						}
-//					}
-//				}
-//			}
-//		});
 	}
 	
 	protected void createRelatedVariableGroup(final Composite parent) {
