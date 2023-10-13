@@ -1,7 +1,9 @@
 package microbat.debugpilot.userfeedback;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -149,5 +151,53 @@ public class DPUserFeedbackTest {
 		assertEquals(expectedWrongVars, feedback.getWrongVars());
 		assertEquals(expectedCorrectVars, feedback.getCorrectVars());
 	}
+	
+	@Test
+	public void testSimilarRootCause() {
+		DPUserFeedback feedback_1 = new DPUserFeedback(DPUserFeedbackType.ROOT_CAUSE, node1);
+		DPUserFeedback feedback_2 = new DPUserFeedback(DPUserFeedbackType.ROOT_CAUSE, node1);
+		DPUserFeedback feedback_3 = new DPUserFeedback(DPUserFeedbackType.ROOT_CAUSE, node2);
+		
+		assertTrue(feedback_1.isSimilar(feedback_2));
+		assertTrue(feedback_2.isSimilar(feedback_1));
+		assertFalse(feedback_1.isSimilar(feedback_3));
+	}
+	
+	@Test
+	public void testSimilarCorrect() {
+		DPUserFeedback feedback_1 = new DPUserFeedback(DPUserFeedbackType.CORRECT, node1);
+		DPUserFeedback feedback_2 = new DPUserFeedback(DPUserFeedbackType.CORRECT, node1);
+		DPUserFeedback feedback_3 = new DPUserFeedback(DPUserFeedbackType.CORRECT, node2);
+		
+		assertTrue(feedback_1.isSimilar(feedback_2));
+		assertTrue(feedback_2.isSimilar(feedback_1));
+		assertFalse(feedback_1.isSimilar(feedback_3));
+	}
+	
+	@Test
+	public void testSimilarWrongPath() {
+		DPUserFeedback feedback_1 = new DPUserFeedback(DPUserFeedbackType.WRONG_PATH, node1);
+		DPUserFeedback feedback_2 = new DPUserFeedback(DPUserFeedbackType.WRONG_PATH, node1);
+		DPUserFeedback feedback_3 = new DPUserFeedback(DPUserFeedbackType.WRONG_PATH, node2);
+		
+		assertTrue(feedback_1.isSimilar(feedback_2));
+		assertTrue(feedback_2.isSimilar(feedback_1));
+		assertFalse(feedback_1.isSimilar(feedback_3));
+	}
+	
+	@Test
+	public void testSimilarWrongVariable() {
+		DPUserFeedback feedback_1 = new DPUserFeedback(DPUserFeedbackType.WRONG_VARIABLE, node1);
+		feedback_1.addWrongVar(this.var1, this.var2);
+		DPUserFeedback feedback_2 = new DPUserFeedback(DPUserFeedbackType.WRONG_VARIABLE, node1);
+		feedback_2.addWrongVar(this.var2);
+		DPUserFeedback feedback_3 = new DPUserFeedback(DPUserFeedbackType.WRONG_VARIABLE, node2);
+		feedback_3.addWrongVar(this.var1, this.var2);
+		
+		assertTrue(feedback_1.isSimilar(feedback_2));
+		assertFalse(feedback_2.isSimilar(feedback_1));
+		assertFalse(feedback_1.isSimilar(feedback_3));
+	}
+	
 	
 }

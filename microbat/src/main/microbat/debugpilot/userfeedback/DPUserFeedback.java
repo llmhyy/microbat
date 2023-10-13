@@ -3,17 +3,12 @@ package microbat.debugpilot.userfeedback;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import com.mysql.fabric.xmlrpc.base.Struct;
-
 import microbat.log.Log;
-import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.util.TraceUtil;
 
 /**
  * User feedback for DebugPilot (DP) <br/>
@@ -112,6 +107,10 @@ public class DPUserFeedback {
 	 * @return True if similar
 	 */
 	public boolean isSimilar(final DPUserFeedback otherFeedback) {
+		if (!this.node.equals(otherFeedback.node)) {
+			return false;
+		}
+		
 		if (this.type != otherFeedback.type) {
 			return false;
 		}
@@ -176,4 +175,35 @@ public class DPUserFeedback {
 		stringBuilder.append("]");
 		return stringBuilder.toString();
 	}
+	
+//	public static DPUserFeedback parseFeedbacks(final TraceNode node, final UserFeedback... feedbacks) {
+//		return DPUserFeedback.parseFeedbacks(node, Arrays.asList(feedbacks));
+//	}
+//	
+//	public static DPUserFeedback parseFeedbacks(final TraceNode node, final Collection<UserFeedback> userFeedbacks) {
+//		Objects.requireNonNull(userFeedbacks, Log.genMsg("DPUserFeedback", "Given userFeedbacks cannot be null"));
+//		
+//		if (userFeedbacks.isEmpty()) {
+//			throw new IllegalArgumentException(Log.genMsg("DPUserFeedback", "Cannot create DPUserFeedback from no feedbacks"));
+//		}
+//		
+//		// Check that there are no conflicting feedbacks
+//		if (userFeedbacks.stream().map(feedback -> feedback.getFeedbackType()).distinct().limit(2).count() == 1) {
+//			throw new IllegalArgumentException(Log.genMsg("DPUserFeedback", "Cannot create DPUserFeedback from conflicting feedbacks"));
+//		}
+//		
+//		final String feedbackType = userFeedbacks.stream().map(feedback -> feedback.getFeedbackType()).findFirst().orElse(null);
+//		if (feedbackType == null) {
+//			throw new RuntimeException(Log.genMsg("DPUserFeedbacks", "feedbackType is null"));
+//		}
+//		
+//		if (feedbackType.equals(UserFeedback.ROOTCAUSE)) {
+//			return new DPUserFeedback(DPUserFeedbackType.ROOT_CAUSE, node);
+//		} else if (feedbackType.equals(UserFeedback.WRONG_PATH)) {
+//			return new DPUserFeedback(Log.genm)
+//		}
+//		
+//		
+//		return null;
+//	}
 }
