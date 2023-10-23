@@ -177,6 +177,12 @@ public class TraceAgent extends Agent {
 					}
 				}
 			}
+			
+			if(currentNode.getInvokingMethod() != null && currentNode.getStepOverNext() != null) {
+				if(currentNode.getStepOverNext().getOrder() != currentNode.getStepInNext().getOrder()) {
+					currentNode.getStepOverNext().getReadVariables().addAll(currentNode.getReadVariables());												
+				}
+			}
 
 		}
 	}
