@@ -22,11 +22,11 @@ import org.eclipse.ui.texteditor.ITextEditor;
 
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.handler.callbacks.HandlerCallbackManager;
+import microbat.log.Log;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import microbat.views.MicroBatViews;
 import sav.strategies.dto.AppJavaClassPath;
-import wyk.bp.utils.Log;
 
 public class GenerateTraceHandler extends StartDebugHandler {
 
@@ -82,7 +82,7 @@ public class GenerateTraceHandler extends StartDebugHandler {
 				return null;
 				
 			} catch (JavaModelException e) {
-				throw new RuntimeException(Log.genLogMsg(this.getClass(), "Cause JavaModelException"));
+				throw new RuntimeException(Log.genMsg(this.getClass(), "Cause JavaModelException"));
 			}
 		}
 		return null;
@@ -104,7 +104,7 @@ public class GenerateTraceHandler extends StartDebugHandler {
 				}
 			}
 		}
-		throw new RuntimeException(Log.genLogMsg(getClass(), "Cannot find target method: " + methodName));
+		throw new RuntimeException(Log.genMsg(getClass(), "Cannot find target method: " + methodName));
 	}
 
 }
