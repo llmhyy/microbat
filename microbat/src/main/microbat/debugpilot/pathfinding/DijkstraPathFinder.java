@@ -76,7 +76,7 @@ public abstract class DijkstraPathFinder extends AbstractPathFinder {
 				return t2.getOrder() - t1.getOrder();
 			}
 		});
-		toVisitNodes.add(lastNode);
+		toVisitNodes.addAll(this.slicedTrace);
 		
 		// Building the graph in the same way as dynamic slicing
 		while (!toVisitNodes.isEmpty()) {

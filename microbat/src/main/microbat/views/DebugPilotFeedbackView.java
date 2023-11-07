@@ -5,6 +5,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -45,6 +49,7 @@ import microbat.debugpilot.DebugPilotExecutor;
 import microbat.debugpilot.DebugPilotInfo;
 import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.debugpilot.userfeedback.DPUserFeedback;
+import microbat.handler.DebugPilotHandler;
 import microbat.handler.callbacks.HandlerCallback;
 import microbat.handler.callbacks.HandlerCallbackManager;
 import microbat.model.trace.Trace;
@@ -430,9 +435,17 @@ public class DebugPilotFeedbackView extends ViewPart {
 					return;
 				}
 				DPUserFeedback userFeedback = feedbackSelectionManager.genDpUserFeedback(currentNode);
-				
-				DebugPilotExecutor executor = new DebugPilotExecutor();
-				executor.execute(userFeedback);
+			
+				Job job = new Job("DebugPilot ....") {
+					@Override
+					protected IStatus run(IProgressMonitor monitor) {
+						DebugPilotExecutor executor = new DebugPilotExecutor();
+						executor.execute(userFeedback);
+						return Status.OK_STATUS;
+					}
+
+				};
+				job.schedule();
 			}
 		});
 	

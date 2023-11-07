@@ -8,7 +8,7 @@
         <listEntry value="1"/>
     </listAttribute>
     <mapAttribute key="org.eclipse.debug.core.environmentVariables">
-        <mapEntry key="deploy_dir" value="C:\Users\david2\eclipse\committers-2023-06\eclipse\dropins\junit_lib\"/>
+        <mapEntry key="deploy_dir" value="C:\Users\david\eclipse\committers-2023-06\eclipse\dropins\junit_lib\"/>
     </mapAttribute>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_ATTR_USE_ARGFILE" value="false"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>

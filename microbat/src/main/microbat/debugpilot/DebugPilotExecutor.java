@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import org.eclipse.swt.widgets.Display;
+
 import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.debugpilot.settings.DebugPilotSettings;
 import microbat.debugpilot.userfeedback.DPUserFeedback;
@@ -12,6 +14,7 @@ import microbat.handler.PreferenceParser;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.util.TraceUtil;
+import microbat.views.DebugPilotFeedbackView;
 import microbat.views.DialogUtil;
 import microbat.views.MicroBatViews;
 import microbat.views.PathView;
@@ -19,7 +22,23 @@ import microbat.views.TraceView;
 
 public class DebugPilotExecutor {
 	
-	public DebugPilotExecutor() {}
+	protected PathView pathView = null;
+	
+	protected DebugPilotFeedbackView debugPilotFeedbackView = null;
+	
+	protected TraceView traceView = null;
+	
+	public DebugPilotExecutor() {
+		Display.getDefault().syncExec(new Runnable() {
+			@Override
+			public void run() {
+				pathView = MicroBatViews.getPathView();
+				debugPilotFeedbackView = MicroBatViews.getDebugPilotFeedbackView();
+				traceView = MicroBatViews.getTraceView();
+			}
+		});
+		
+	}
 	
 	public void execute(final DPUserFeedback userFeedback) {
 		List<DPUserFeedback> avaiableFeedbacks = this.collectAvailableFeedbacks(userFeedback);
@@ -54,8 +73,7 @@ public class DebugPilotExecutor {
 		settings.setOutputNode(outputNode);
 		
 		// Set trace
-		TraceView traceView = MicroBatViews.getTraceView();
-		final Trace trace = traceView.getTrace();
+		final Trace trace = this.traceView.getTrace();
 		settings.setTrace(trace);
 		
 		// Set feedbacks
@@ -74,18 +92,21 @@ public class DebugPilotExecutor {
 		FeedbackPath path = debugPilot.constructPath(rootCause);
 		this.updatePathView(path);
 		
-		for (TraceNode nextNode : TraceUtil.findAllNextNodes(userFeedback)) {
-			if (path.containFeedbackByNode(nextNode)) {
-				final PathView pathView = MicroBatViews.getPathView();
-				pathView.focusOnNode(nextNode);
-				break;
+		Display.getDefault().syncExec(() -> {
+			
+			for (TraceNode nextNode : TraceUtil.findAllNextNodes(userFeedback)) {
+				if (path.containFeedbackByNode(nextNode)) {
+					this.pathView.focusOnNode(nextNode);
+					break;
+				}
 			}
-		}
+			
+		});
 	}
 	
 	protected List<DPUserFeedback> collectAvailableFeedbacks(final DPUserFeedback userFeedback) {
-		final PathView pathView = MicroBatViews.getPathView();
-		final FeedbackPath feedbackPath = pathView.getFeedbackPath();
+
+		final FeedbackPath feedbackPath = this.pathView.getFeedbackPath();
 		
 		if (feedbackPath != null) {
 			// User need to give feedback on path
@@ -117,8 +138,8 @@ public class DebugPilotExecutor {
 	}
 	
 	protected void updatePathView(final FeedbackPath path) {
-		PathView pathView = MicroBatViews.getPathView();
-		pathView.updateFeedbackPath(path);
+		this.pathView.updateFeedbackPath(path);
+
 	}
 	
 	protected String genOmissionMessage(final int startNodeOrder, final int endNodeOrder, final DPUserFeedback prevDpUserFeedback) {

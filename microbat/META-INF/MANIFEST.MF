@@ -42,7 +42,8 @@ Bundle-ClassPath: .,
  lib/sqlite-jdbc-3.32.3.2.jar,
  lib/jgrapht-core-1.5.2.jar,
  lib/jgrapht-io-1.5.2.jar,
- lib/jheaps-0.14.jar
+ lib/jheaps-0.14.jar,
+ lib/belief-propagation-java-jar-with-dependencies.jar
 Export-Package: 
  microbat;uses:="org.osgi.framework,org.eclipse.jface.resource,org.eclipse.ui.plugin",
  microbat.agent,

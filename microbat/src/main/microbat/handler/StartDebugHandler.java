@@ -89,16 +89,21 @@ public class StartDebugHandler extends AbstractHandler {
 //		InstrumentationExecutor ex = new InstrumentationExecutor(appClassPath);
 //		ex.run();
 		
-		try {
-			new BehaviorReader().readXLSX();
-		} catch (IOException e) {
-			e.printStackTrace();
-		};
+//		try {
+//			new BehaviorReader().readXLSX();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		};
+//		
+//		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
+//		behavior.increaseGenerateTrace();
+//		new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
 		
-		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
-		behavior.increaseGenerateTrace();
-		new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
-		
+		this.generateTrace(appClassPath);
+		return null;
+	}
+
+	protected void generateTrace(final AppJavaClassPath appClassPath) {
 		try {
 			
 			Job job = new Job("Preparing for Debugging ...") {
@@ -134,16 +139,6 @@ public class StartDebugHandler extends AbstractHandler {
 								
 								List<Trace> traces = result.getTraceList();
 								
-//								for(Trace t: traces) {
-//									for(TraceNode step: t.getExecutionList()) {
-//										if(step.getInvokingMethod() != null && step.getStepOverNext() != null) {
-//											if(step.getStepOverNext().getOrder() != step.getStepInNext().getOrder()) {
-//												step.getStepOverNext().getReadVariables().addAll(step.getReadVariables());												
-//											}
-//										}
-//									}
-//								}
-								
 								traceView.setMainTrace(trace);
 								traceView.setTraceList(traces);
 								traceView.updateData();
@@ -163,25 +158,13 @@ public class StartDebugHandler extends AbstractHandler {
 					
 					return Status.OK_STATUS;
 				}
-
-//				private List<String> parseScope(List<BreakPoint> breakpoints) {
-//					List<String> classes = new ArrayList<>();
-//					for(BreakPoint bp: breakpoints){
-//						if(!classes.contains(bp.getDeclaringCompilationUnitName())){
-//							classes.add(bp.getDeclaringCompilationUnitName());
-//						}
-//					}
-//					return classes;
-//				}
 			};
 			job.schedule();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return null;
 	}
-
 	protected String generateTraceDir(AppJavaClassPath appPath) {
 		String traceFolder;
 		if (appPath.getOptionalTestClass() != null) {

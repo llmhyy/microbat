@@ -169,6 +169,11 @@
             id="microbat.stopdebugpilot"
             name="Stop Debug Pilot">
       </command>
+      <command
+            defaultHandler="microbat.handler.GenerateTraceHandler"
+            id="microbat.generateTraceCommand"
+            name="Debug As DebugPilot">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -356,6 +361,15 @@
                   tooltip="Say hello world">
             </command>
          </toolbar>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any">
+         <command
+               commandId="microbat.generateTraceCommand"
+               icon="icons/microbat.png"
+               style="push">
+         </command>
       </menuContribution>
    </extension>
    <extension
