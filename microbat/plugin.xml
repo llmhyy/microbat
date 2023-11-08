@@ -59,6 +59,13 @@
             name="After Trace"
             restorable="true">
       </view>
+      <view
+            category="microbat.category"
+            class="microbat.views.SequentialConcurrentView"
+            id="microbat.view.seqConcurrentTrace"
+            name="Sequential Concurrent View"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">
@@ -131,6 +138,11 @@
             defaultHandler="microbat.handler.TraceRestoreHandler"
             id="microbat.command.RestoreTrace"
             name="Restore Trace">
+      </command>
+      <command
+            defaultHandler="microbat.handler.StartConccurrentTraceHandler"
+            id="microbat.command.startConcTrace"
+            name="Test sequential concurrent trace">
       </command>
    </extension>
    <extension

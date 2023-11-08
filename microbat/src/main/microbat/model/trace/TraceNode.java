@@ -117,7 +117,7 @@ public class TraceNode{
 			if(Settings.interestedVariables.contains(readVarValue)){
 				markedReadVars.add(readVarValue);
 			}
-		}		
+		}
 		
 		return markedReadVars;
 	}

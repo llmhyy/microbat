@@ -1,7 +1,6 @@
 package microbat.handler;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -22,12 +21,12 @@ import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReader;
 import microbat.behavior.BehaviorReporter;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
-import microbat.codeanalysis.runtime.RunningInformation;
 import microbat.codeanalysis.runtime.StepLimitException;
+import microbat.concurrent.model.ConcurrentTrace;
 import microbat.evaluation.junit.TestCaseAnalyzer;
+import microbat.handler.StartDebugHandler.MethodFinder;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
-import microbat.model.value.VarValue;
 import microbat.preference.AnalysisScopePreference;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
@@ -35,12 +34,19 @@ import microbat.util.Settings;
 import microbat.views.ConcurrentTraceView;
 import microbat.views.DebugFeedbackView;
 import microbat.views.MicroBatViews;
+import microbat.views.SequentialConcurrentView;
 import microbat.views.TraceView;
-//import microbat.views.TraceView;
 import sav.common.core.utils.FileUtils;
 import sav.strategies.dto.AppJavaClassPath;
 
-public class StartDebugHandler extends AbstractHandler {
+/**
+ * Test handler for testing concurrent trace generation
+ * @author Gabau
+ *
+ */
+public class StartConccurrentTraceHandler extends AbstractHandler {
+
+	public static String ID = "microbat.command.startConcTrace";
 	
 	private void clearOldData(){
 		Settings.interestedVariables.clear();
@@ -115,21 +121,21 @@ public class StartDebugHandler extends AbstractHandler {
 							
 							@Override
 							public void run() {
-								TraceView traceView = MicroBatViews.getTraceView();
+								SequentialConcurrentView sequentialConcurrentView = 
+										MicroBatViews.getSequentialConcurrentView();
+										
 								if (result == null) {
-									traceView.setMainTrace(null);
-									traceView.setTraceList(null);
+									sequentialConcurrentView.setTraceNodes(null);
 									return;
 								}
-								Trace trace = result.getMainTrace();
+								ConcurrentTrace trace = ConcurrentTrace.fromTimeStampOrder(
+										result.getTraceList());
 								trace.setAppJavaClassPath(appClassPath);
 								List<Trace> traces = result.getTraceList();
 								
-								traceView.setMainTrace(trace);
-								traceView.setTraceList(traces);
-//								List<VarValue> sharedIDs = traceView.getSharedVarIDs();
-//								System.out.println(sharedIDs);
-								traceView.updateData();
+								sequentialConcurrentView.setTraceNodes(trace);
+//								traceView.setTraceList(traces);
+								sequentialConcurrentView.updateData();
 							}
 							
 						});
@@ -218,69 +224,6 @@ public class StartDebugHandler extends AbstractHandler {
 		return methodSig;
 	}
 
-	/**
-	 * This method is used to build the scope of local variables.
-	 * @param classScope
-	 */
-//	private void parseLocalVariables(final List<String> classScope, AppJavaClassPath appPath) {
-//		VariableScopeParser vsParser = new VariableScopeParser();
-//		vsParser.parseLocalVariableScopes(classScope, appPath);
-//		List<LocalVariableScope> lvsList = vsParser.getVariableScopeList();
-////		System.out.println(lvsList);
-//		Settings.localVariableScopes.setVariableScopes(lvsList);
-//	}
-	
-	
-//	@SuppressWarnings("restriction")
-//	private List<String> getSourceLocation(){
-//		IProject iProject = JavaUtil.getSpecificJavaProjectInWorkspace();
-//		IJavaProject javaProject = JavaCore.create(iProject);
-//		
-//		List<String> paths = new ArrayList<String>();
-//		try {
-//			for(IPackageFragmentRoot root: javaProject.getAllPackageFragmentRoots()){
-//				if(!(root instanceof JarPackageFragmentRoot)){
-//					String path = root.getResource().getLocationURI().getPath();
-//					path = path.substring(1, path.length());
-//					//path = path.substring(0, path.length()-Settings.projectName.length()-1);
-//					path = path.replace("/", "\\");
-//					
-//					if(!paths.contains(path)){
-//						paths.add(path);
-//					}					
-//				}
-//			}
-//		} catch (JavaModelException e) {
-//			e.printStackTrace();
-//		}
-//		
-//		return paths;
-//	}
-	
-//	private List<BreakPoint> testSlicing(){
-//		List<BreakPoint> breakpoints = new ArrayList<BreakPoint>();
-//		String clazz = "com.Main";
-//	
-//		BreakPoint bkp3 = new BreakPoint(clazz, null, 12);
-//		bkp3.addVars(new Variable("c"));
-//		bkp3.addVars(new Variable("tag", "tag", VarScope.THIS));
-//		bkp3.addVars(new Variable("output"));
-//		bkp3.addVars(new Variable("i"));
-//	
-//		BreakPoint bkp2 = new BreakPoint(clazz, null, 14);
-//		bkp2.addVars(new Variable("c"));
-//		bkp2.addVars(new Variable("tag", "tag", VarScope.THIS));
-//		bkp2.addVars(new Variable("output"));
-//	
-//		BreakPoint bkp1 = new BreakPoint(clazz, null, 17);
-//		bkp1.addVars(new Variable("c"));
-//		bkp1.addVars(new Variable("tag", "tag", VarScope.THIS));
-//		bkp1.addVars(new Variable("output"));
-//	
-//		breakpoints.add(bkp3);
-//		breakpoints.add(bkp2);
-//		breakpoints.add(bkp1);
-//	
-//		return breakpoints;
-//	}
+
 }
+

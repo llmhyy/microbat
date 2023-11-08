@@ -4,9 +4,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -94,6 +96,12 @@ public class ConcurrentTraceView extends TraceView {
 
 	public ConcurrentTraceView() {
 	}
+	
+	
+
+	
+
+	
 
 	public void setSearchText(String expression) {
 		this.searchText.setText(expression);

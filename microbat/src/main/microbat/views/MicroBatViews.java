@@ -10,6 +10,7 @@ public class MicroBatViews {
 	public static final String TRACE = "microbat.view.trace";
 	public static final String CONCURRENT_TRACE = "microbat.view.concurrentTrace";
 	public static final String REASON = "microbat.view.reason";
+	public static final String SEQUENTIAL_CONCURRENT_TRACE = "microbat.view.seqConcurrentTrace";
 	
 	public static DebugFeedbackView getDebugFeedbackView(){
 		DebugFeedbackView view = null;
@@ -39,22 +40,35 @@ public class MicroBatViews {
 		return view;
 	}
 	
-//	public static ConcurrentTraceView getConcurrentTraceView(){
-//		ConcurrentTraceView view = null;
-//		try {
-//			view = (ConcurrentTraceView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.CONCURRENT_TRACE);
-//		} catch (PartInitException e) {
-//			e.printStackTrace();
-//		}
-//		
-//		return view;
-//	}
+	public static ConcurrentTraceView getConcurrentTraceView(){
+		ConcurrentTraceView view = null;
+		try {
+			view = (ConcurrentTraceView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.CONCURRENT_TRACE);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		
+		return view;
+	}
 	
 	public static ReasonView getReasonView(){
 		ReasonView view = null;
 		try {
 			view = (ReasonView)PlatformUI.getWorkbench().
 					getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.REASON);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		
+		return view;
+	}
+	
+	
+	public static SequentialConcurrentView getSequentialConcurrentView() {
+		SequentialConcurrentView view = null;
+		try {
+			view = (SequentialConcurrentView)PlatformUI.getWorkbench().
+					getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.SEQUENTIAL_CONCURRENT_TRACE);
 		} catch (PartInitException e) {
 			e.printStackTrace();
 		}
