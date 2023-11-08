@@ -9,6 +9,7 @@ import java.util.Set;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.model.variable.Variable;
 import sav.strategies.dto.AppJavaClassPath;
 
 public class ConcurrentTrace extends Trace {
@@ -214,15 +215,56 @@ public class ConcurrentTrace extends Trace {
 	}
 	
 
+	
 	 
+
+	@Override
+	public TraceNode getTraceNode(int order) {
+		// TODO Auto-generated method stub
+		return this.getSequentialTrace().get(order);
+	}
+	
+	public void constructControlDominator() {
+		
+	}
 
 	/**
 	 * Finds data dependency relative to the concurrent trace
 	 */
 	@Override
 	public TraceNode findDataDependency(TraceNode checkingNode, VarValue readVar) {
-		// TODO Auto-generated method stub
-		return super.findDataDependency(checkingNode, readVar);
+		int j = checkingNode.getOrder();
+		// check if it is on heap
+		String s = readVar.getAliasVarID();
+		boolean isOnHeap = s != null;
+
+		// find the individual trace to use the find data dependenccy
+		String varID = Variable.truncateSimpleID(readVar.getVarID());
+		String headID = Variable.truncateSimpleID(readVar.getAliasVarID());
+			
+		for(int i=checkingNode.getOrder()-1; i>=1; i--) {
+			TraceNode node = this.getTraceNode(i);
+			for(VarValue writtenValue: node.getWrittenVariables()) {
+				
+				String wVarID = Variable.truncateSimpleID(writtenValue.getVarID());
+				String wHeadID = Variable.truncateSimpleID(writtenValue.getAliasVarID());
+				
+				if(wVarID != null && wVarID.equals(varID)) {
+					return node;						
+				}
+				
+				if(wHeadID != null && wHeadID.equals(headID)) {
+					return node;
+				}
+				
+				VarValue childValue = writtenValue.findVarValue(varID, headID);
+				if(childValue != null) {
+					return node;
+				}
+				
+			}
+		}
+		return null;
 	}
 
 
