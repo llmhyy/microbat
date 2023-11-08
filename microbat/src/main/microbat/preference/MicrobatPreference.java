@@ -15,6 +15,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -57,6 +58,12 @@ public class MicrobatPreference extends PreferencePage implements
 		this.defaultApplyRecodingOptimization = Activator.getDefault().getPreferenceStore().getString(RECORDING_OPTIMIZATION);
 		this.defaultEnableMethodSplitting = Activator.getDefault().getPreferenceStore().getBoolean(REQUIRE_METHOD_SPLITTING);
 		this.defaultRunWithDebugMode = Activator.getDefault().getPreferenceStore().getString(RUN_WITH_DEBUG_MODE);
+//		this.defaultProjectPath = Activator.getDefault().getPreferenceStore().getString(PROJECT_PATH);
+//		this.defaultDropInFolder = Activator.getDefault().getPreferenceStore().getString(DROP_IN_FOLDER_MICROBAT);
+//		this.defaultConfigPath = Activator.getDefault().getPreferenceStore().getString(CONFIG_PATH_MICROBAT);
+//		this.defaultTestCaseID = Activator.getDefault().getPreferenceStore().getString(TEST_CASE_ID_MICROBAT);
+//		this.defaultUseTestCaseID = Activator.getDefault().getPreferenceStore().getString(USE_TEST_CASE_ID);
+		
 	}
 
 	public static String getStepLimit() {
@@ -86,7 +93,12 @@ public class MicrobatPreference extends PreferencePage implements
 	public static final String REQUIRE_METHOD_SPLITTING = "enableMethodSplitting";
 	public static final String SUPPORT_CONCURRENT_TRACE = "supportConcurrentTrace";
 	public static final String RUN_WITH_DEBUG_MODE = "runWithDebugMode";
-	
+//	public static final String DROP_IN_FOLDER_MICROBAT = "dropInFolder";
+//	public static final String CONFIG_PATH_MICROBAT = "configPath";
+//	public static final String PROJECT_PATH = "projectPath";
+//	public static final String TEST_CASE_ID_MICROBAT = "testCaseID";
+//	public static final String USE_TEST_CASE_ID = "useTestCaseID";
+
 	private Combo projectCombo;
 	private Text lanuchClassText;
 	private Text testMethodText;
@@ -102,6 +114,13 @@ public class MicrobatPreference extends PreferencePage implements
 	private Button runWithDebugModeButton;
 	private Button enableMethodSplittingButton;
 	private Text java7HomePathText;
+//	private Button useTestCaseIDButton;
+//	private Text dropInFolderText;
+//	private Text configPathText;
+//	private Text projectPathText;
+//	private Text testCaseIDText;
+	
+//	private Combo autoFeedbackCombo;
 	
 	private String defaultTargetProject = "";
 	private String defaultLanuchClass = "";
@@ -118,7 +137,12 @@ public class MicrobatPreference extends PreferencePage implements
 	private String defaultApplyRecodingOptimization;
 	private String defaultRunWithDebugMode = "false";
 	private boolean defaultEnableMethodSplitting;
-	
+//	private String defaultDropInFolder;
+//	private String defaultConfigPath;
+//	private String defaultProjectPath;
+//	private String defaultTestCaseID;
+//	private String defaultUseTestCaseID;
+
 	@Override
 	protected Control createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
@@ -139,7 +163,7 @@ public class MicrobatPreference extends PreferencePage implements
 		
 		createSettingGroup(composite);
 		createSeedStatementGroup(composite);
-		
+
 		return composite;
 	}
 	
@@ -261,6 +285,9 @@ public class MicrobatPreference extends PreferencePage implements
 		testMethoDataData.horizontalSpan = 2;
 		testMethodText.setLayoutData(testMethoDataData);
 		
+		// Create setting UI for mutation
+//		this.createMutationSeetingGroup(parent);
+		
 //		Label classNameLabel = new Label(seedStatementGroup, SWT.NONE);
 //		classNameLabel.setText("Class Name: ");
 //		classNameText = new Text(seedStatementGroup, SWT.BORDER);
@@ -296,6 +323,11 @@ public class MicrobatPreference extends PreferencePage implements
 		preferences.putBoolean(REQUIRE_METHOD_SPLITTING, this.enableMethodSplittingButton.getSelection());
 		preferences.put(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
 		preferences.put(RUN_WITH_DEBUG_MODE, String.valueOf(this.runWithDebugModeButton.getSelection()));
+//		preferences.put(DROP_IN_FOLDER_MICROBAT, this.dropInFolderText.getText());
+//		preferences.put(CONFIG_PATH_MICROBAT, this.configPathText.getText());
+//		preferences.put(PROJECT_PATH, this.projectPathText.getText());
+//		preferences.put(TEST_CASE_ID_MICROBAT, this.testCaseIDText.getText());
+//		preferences.put(USE_TEST_CASE_ID, String.valueOf(this.useTestCaseIDButton.getSelection()));
 		
 		Activator.getDefault().getPreferenceStore().putValue(TARGET_PORJECT, this.projectCombo.getText());
 		Activator.getDefault().getPreferenceStore().putValue(LANUCH_CLASS, this.lanuchClassText.getText());
@@ -312,6 +344,11 @@ public class MicrobatPreference extends PreferencePage implements
 		Activator.getDefault().getPreferenceStore().putValue(REQUIRE_METHOD_SPLITTING, String.valueOf(this.enableMethodSplittingButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(SUPPORT_CONCURRENT_TRACE, String.valueOf(this.supportConcurrentTraceButton.getSelection()));
 		Activator.getDefault().getPreferenceStore().putValue(RUN_WITH_DEBUG_MODE, String.valueOf(this.runWithDebugModeButton.getSelection()));
+//		Activator.getDefault().getPreferenceStore().putValue(DROP_IN_FOLDER_MICROBAT, this.dropInFolderText.getText());
+//		Activator.getDefault().getPreferenceStore().putValue(CONFIG_PATH_MICROBAT, this.configPathText.getText());
+//		Activator.getDefault().getPreferenceStore().putValue(PROJECT_PATH, this.projectPathText.getText());
+//		Activator.getDefault().getPreferenceStore().putValue(TEST_CASE_ID_MICROBAT, this.testCaseIDText.getText());
+//		Activator.getDefault().getPreferenceStore().putValue(USE_TEST_CASE_ID, String.valueOf(this.useTestCaseIDButton.getSelection()));
 		
 		confirmChanges();
 		
@@ -333,6 +370,8 @@ public class MicrobatPreference extends PreferencePage implements
 		Settings.applyLibraryOptimization = this.recordingOptimizationButton.getSelection();
 		Settings.supportConcurrentTrace = this.supportConcurrentTraceButton.getSelection();
 		Settings.isRunWtihDebugMode = this.runWithDebugModeButton.getSelection();
+//		Settings.autoFeedbackMethod = this.autoFeedbackCombo.getText();
+		
 	}
 	
 	private String[] getProjectsInWorkspace(){
@@ -347,5 +386,51 @@ public class MicrobatPreference extends PreferencePage implements
 		
 		return projectStrings;
 	}
-
+	
+//	private void createMutationSeetingGroup(Composite parent) {
+//		Group mutationGroup = new Group(parent, SWT.NONE);
+//		mutationGroup.setText("Select Test Case By ID");
+//		
+//		GridData mutationGroupData = new GridData(SWT.FILL, SWT.FILL, true, true);
+//		mutationGroupData.horizontalSpan = 3;
+//		mutationGroup.setLayoutData(mutationGroupData);
+//		
+//		GridLayout layout = new GridLayout();
+//		layout.numColumns = 2;
+//		
+//		mutationGroup.setLayout(layout);
+		
+//		this.useTestCaseIDButton = new Button(mutationGroup, SWT.CHECK);
+//		this.useTestCaseIDButton.setText("Use Test Case ID");
+//		GridData useTestCaseIDData = new GridData(SWT.FILL, SWT.FILL, true, false);
+//		useTestCaseIDData.horizontalSpan = 3;
+//		this.useTestCaseIDButton.setLayoutData(useTestCaseIDData);
+//		boolean useTestCaseIDSelected = this.defaultUseTestCaseID.equals("true");
+//		this.useTestCaseIDButton.setSelection(useTestCaseIDSelected);
+		
+//		Label projectPathLabel = new Label(mutationGroup, SWT.NONE);
+//		projectPathLabel.setText("Project Path: ");
+//		this.projectPathText = new Text(mutationGroup, SWT.NONE);
+//		this.projectPathText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+//		this.projectPathText.setText(this.defaultProjectPath);
+//		
+//		Label dropInFolderLabel = new Label(mutationGroup, SWT.NONE);
+//		dropInFolderLabel.setText("Drop In Folder: ");
+//		this.dropInFolderText = new Text(mutationGroup, SWT.NONE);
+//		this.dropInFolderText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+//		this.dropInFolderText.setText(this.defaultDropInFolder);
+//		
+//		Label configPathLabel = new Label(mutationGroup, SWT.NONE);
+//		configPathLabel.setText("Config Path: ");
+//		this.configPathText = new Text(mutationGroup, SWT.NONE);
+//		this.configPathText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+//		this.configPathText.setText(this.defaultConfigPath);
+		
+//		Label testCaseIDLable = new Label(mutationGroup, SWT.NONE);
+//		testCaseIDLable.setText("Test ID: ");
+//		this.testCaseIDText = new Text(mutationGroup, SWT.NONE);
+//		this.testCaseIDText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+//		this.testCaseIDText.setText(this.defaultTestCaseID);
+//		
+//	}
 }

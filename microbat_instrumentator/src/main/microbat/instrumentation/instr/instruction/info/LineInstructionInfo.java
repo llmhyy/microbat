@@ -12,6 +12,7 @@ import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ArrayInstruction;
+import org.apache.bcel.generic.BranchInstruction;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.CodeExceptionGen;
 import org.apache.bcel.generic.ConstantPoolGen;
@@ -33,7 +34,7 @@ import microbat.codeanalysis.bytecode.CFGNode;
 import microbat.instrumentation.AgentConstants;
 import sav.common.core.utils.StringUtils;
 
-public class LineInstructionInfo {
+public class LineInstructionInfo{	
 	protected int line;
 	protected InstructionHandle lineNumberInsn;
 	protected List<InstructionHandle> lineInsns;
@@ -43,7 +44,8 @@ public class LineInstructionInfo {
 	protected List<RWInstructionInfo> rwInsructionInfo;
 	protected List<InstructionHandle> invokeInsns;
 	protected List<InstructionHandle> returnInsns;
-	private List<InstructionHandle> exitInsns; 
+	private List<InstructionHandle> exitInsns;
+	private InstructionList insnList;
 	private boolean hasExceptionTarget;
 	
 	public LineInstructionInfo() {
@@ -57,8 +59,13 @@ public class LineInstructionInfo {
 		this.localVarTable = method.getLocalVariableTable();
 		this.constPool = constPool;
 		this.lineNumberTable = method.getLineNumberTable();
-		InstructionList insnList = methodGen.getInstructionList();
+		this.insnList = methodGen.getInstructionList();
+		this.insnList.setPositions(true);
 		lineInsns = findCorrespondingInstructions(insnList , lineNumberTable, lineGen.getSourceLine());
+		System.out.println(methodGen.getClassName() + "#" + line);
+//		for (InstructionHandle ih: lineInsns) {
+//			System.out.println(ih);
+//		}
 		rwInsructionInfo = extractRWInstructions(locId, isAppClass);
 		invokeInsns = extractInvokeInstructions(lineInsns);
 		returnInsns = extractReturnInstructions(lineInsns);
@@ -93,6 +100,13 @@ public class LineInstructionInfo {
 	
 	public ConstantPoolGen getConstPool() {
 		return constPool;
+	}
+	
+	public SerializableLineInfo getSerializable() {
+		ArrayList<Integer> interestedPCs = new ArrayList<>();
+		for (InstructionHandle ih: lineInsns)
+			interestedPCs.add(ih.getPosition());
+		return new SerializableLineInfo(this.insnList, interestedPCs, this.localVarTable, this.constPool);
 	}
 
 	protected List<RWInstructionInfo> extractRWInstructions(String locId, boolean isAppClass) {

@@ -1,7 +1,6 @@
 package microbat.handler;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -22,12 +21,14 @@ import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReader;
 import microbat.behavior.BehaviorReporter;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
-import microbat.codeanalysis.runtime.RunningInformation;
 import microbat.codeanalysis.runtime.StepLimitException;
+import microbat.debugpilot.pathfinding.FeedbackPath;
 import microbat.evaluation.junit.TestCaseAnalyzer;
+import microbat.handler.callbacks.HandlerCallbackManager;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import microbat.model.value.VarValue;
+import microbat.model.trace.TraceNode;
 import microbat.preference.AnalysisScopePreference;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
@@ -63,6 +64,15 @@ public class StartDebugHandler extends AbstractHandler {
 	}
 	
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		
+		// Clear the DebugPilot debugging process if there are any
+		HandlerCallbackManager.getInstance().runDebugPilotTerminateCallbacks();
+		Job.getJobManager().cancel(DebugPilotHandler.JOB_FAMALY_NAME);
+		
+		// Clear the path view and program output form
+		MicroBatViews.getPathView().updateFeedbackPath(null);
+//		MicroBatViews.getDebugPilotFeedbackView().clearProgramOutput();
+		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		if (Settings.isRunTest) {
 			appClassPath.setOptionalTestClass(Settings.launchClass);
@@ -81,16 +91,21 @@ public class StartDebugHandler extends AbstractHandler {
 //		InstrumentationExecutor ex = new InstrumentationExecutor(appClassPath);
 //		ex.run();
 		
-		try {
-			new BehaviorReader().readXLSX();
-		} catch (IOException e) {
-			e.printStackTrace();
-		};
+//		try {
+//			new BehaviorReader().readXLSX();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		};
+//		
+//		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
+//		behavior.increaseGenerateTrace();
+//		new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
 		
-		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
-		behavior.increaseGenerateTrace();
-		new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
-		
+		this.generateTrace(appClassPath);
+		return null;
+	}
+
+	protected void generateTrace(final AppJavaClassPath appClassPath) {
 		try {
 			
 			Job job = new Job("Preparing for Debugging ...") {
@@ -123,6 +138,7 @@ public class StartDebugHandler extends AbstractHandler {
 								}
 								Trace trace = result.getMainTrace();
 								trace.setAppJavaClassPath(appClassPath);
+								
 								List<Trace> traces = result.getTraceList();
 								
 								traceView.setMainTrace(trace);
@@ -146,26 +162,13 @@ public class StartDebugHandler extends AbstractHandler {
 					
 					return Status.OK_STATUS;
 				}
-
-//				private List<String> parseScope(List<BreakPoint> breakpoints) {
-//					List<String> classes = new ArrayList<>();
-//					for(BreakPoint bp: breakpoints){
-//						if(!classes.contains(bp.getDeclaringCompilationUnitName())){
-//							classes.add(bp.getDeclaringCompilationUnitName());
-//						}
-//					}
-//					return classes;
-//				}
 			};
 			job.schedule();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		return null;
 	}
-
 	protected String generateTraceDir(AppJavaClassPath appPath) {
 		String traceFolder;
 		if (appPath.getOptionalTestClass() != null) {

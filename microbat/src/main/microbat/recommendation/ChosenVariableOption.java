@@ -12,8 +12,8 @@ import microbat.model.value.VarValue;
  *
  */
 public class ChosenVariableOption {
-	private VarValue readVar;
-	private VarValue writtenVar;
+	protected VarValue readVar;
+	protected VarValue writtenVar;
 
 	public ChosenVariableOption(VarValue readVar, VarValue writtenVar) {
 		super();
@@ -23,7 +23,10 @@ public class ChosenVariableOption {
 
 	@Override
 	public String toString() {
-		return "[readVar=" + readVar + ", writtenVar=" + writtenVar + "]";
+		return "[readVar=" + 
+				(readVar == null ? readVar : readVar.getVarName()) + 
+				", writtenVar=" + 
+				(writtenVar == null ? writtenVar : writtenVar.getVarName()) + "]";
 	}
 
 	public List<String> getIncludedWrongVarID(){

@@ -25,6 +25,8 @@ public class Settings {
 	public static boolean isRunWtihDebugMode;
 	public static int stepLimit;
 	
+	public static String autoFeedbackMethod;
+	
 	private static Integer variableLayer;
 	
 	/**
@@ -79,6 +81,7 @@ public class Settings {
 				
 				String runWithDebugModeString = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.RUN_WITH_DEBUG_MODE);
 				isRunWtihDebugMode = runWithDebugModeString.equals("true");
+				
 			}
 			catch(Exception e){
 				e.printStackTrace();

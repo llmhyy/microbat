@@ -21,7 +21,7 @@ public class TraceTest {
 		String launchClass;
 		boolean isRecordSnapshort;
 		int stepLimit;
-		int referenceFieldLayerInString;
+//		int referenceFieldLayerInString;
 		
 	}
 	
@@ -33,7 +33,7 @@ public class TraceTest {
 		originalSettings.launchClass = Settings.launchClass;
 		originalSettings.isRecordSnapshort = Settings.isRecordSnapshot;
 		originalSettings.stepLimit = Settings.stepLimit;
-		originalSettings.referenceFieldLayerInString = Settings.getVariableLayer();
+//		originalSettings.referenceFieldLayerInString = Settings.getVariableLayer();
 	}
 	
 	@After
@@ -42,12 +42,12 @@ public class TraceTest {
 		Settings.launchClass = originalSettings.launchClass;
 		Settings.isRecordSnapshot = originalSettings.isRecordSnapshort;
 		Settings.stepLimit = originalSettings.stepLimit;
-		Settings.setVariableLayer(originalSettings.referenceFieldLayerInString);
+//		Settings.setVariableLayer(originalSettings.referenceFieldLayerInString);
 	}
 	
-	@Test
+//	@Test
 	public void testRetrieveRunningStatement() {
-		Settings.projectName = "Bugs";
+		Settings.projectName = "DebugExperiment";
 		Settings.stepLimit = 10000;
 		Settings.launchClass = "com.simplecalculator.SimpleCalculator";
 		

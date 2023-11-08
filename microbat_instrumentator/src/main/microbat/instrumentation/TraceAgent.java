@@ -2,7 +2,9 @@ package microbat.instrumentation;
 
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import microbat.instrumentation.filter.CodeRangeUserFilter;
 import microbat.instrumentation.filter.GlobalFilterChecker;
@@ -66,6 +68,10 @@ public class TraceAgent extends Agent {
 			trace.setMain(ExecutionTracer.getMainThreadStore().equals(tracer));
 
 			constructTrace(trace);
+			
+			addConditionResult(trace);
+			changeRedefinedVarID(trace);
+			
 			traceList.add(trace);
 		}
 
@@ -144,8 +150,8 @@ public class TraceAgent extends Agent {
 						currentNode.addReadVariable(readVar);
 					}
 				}
-			}
-
+			} 
+			
 			if (currentNode.getInvocationParent() != null && !currentNode.getPassParameters().isEmpty()) {
 				TraceNode invocationParent = currentNode.getInvocationParent();
 				TraceNode firstChild = invocationParent.getInvocationChildren().get(0);
@@ -169,6 +175,12 @@ public class TraceAgent extends Agent {
 						currentNode.addWrittenVariable(value);
 						returnStep.addReadVariable(value);
 					}
+				}
+			}
+			
+			if(currentNode.getInvokingMethod() != null && currentNode.getStepOverNext() != null) {
+				if(currentNode.getStepOverNext().getOrder() != currentNode.getStepInNext().getOrder()) {
+					currentNode.getStepOverNext().getReadVariables().addAll(currentNode.getReadVariables());												
 				}
 			}
 
@@ -210,5 +222,48 @@ public class TraceAgent extends Agent {
 	@Override
 	public boolean isInstrumentationActive0() {
 		return !ExecutionTracer.isShutdown();
+	}
+	
+	/**
+	 * Insert condition result into branch node.
+	 * Condition is naively defined as follow: <br><br>
+	 * 
+	 * The condition result is true when the stepOverNext node is the next line of code.
+	 * Otherwise, the condition result is false.
+	 * 
+	 * @param trace Target trace
+	 */
+	private void addConditionResult(final Trace trace) {
+		for (TraceNode node : trace.getExecutionList()) {
+			if (node.isBranch()) {
+				TraceNode stepOverNext = node.getStepOverNext();
+				boolean conditionResult = stepOverNext == null ? false : node.getLineNumber()+1 == stepOverNext.getLineNumber();
+				node.insertConditionResult(conditionResult);
+			}
+		}
+	}
+	
+	private void changeRedefinedVarID(Trace trace) {
+		Map<String, String> mapping = new HashMap<>();
+		for (TraceNode node : trace.getExecutionList()) {
+			for (VarValue readVar : node.getReadVariables()) {
+				String varID = readVar.getVarID();
+				if (!mapping.containsKey(varID)) {
+					mapping.put(varID, varID);
+				} else {
+					String newID = mapping.get(varID);
+					readVar.setVarID(newID);
+				}
+			}
+			
+			for (VarValue writeVar : node.getWrittenVariables()) {
+				String varID = writeVar.getVarID();
+				if (mapping.containsKey(varID)) {
+					String newID = writeVar.getVarID() + "-" + node.getOrder();
+					mapping.put(varID, newID);
+					writeVar.setVarID(newID);
+				}
+			}
+		}
 	}
 }

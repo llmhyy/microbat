@@ -51,7 +51,6 @@ import microbat.model.value.ArrayValue;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
-import microbat.model.value.VirtualValue;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
 import microbat.recommendation.Bug;
@@ -68,16 +67,16 @@ import microbat.util.TempVariableInfo;
 
 public class DebugFeedbackView extends ViewPart {
 
-	private TraceNode currentNode;
-//	private TraceNode lastestNode;
+	protected TraceNode currentNode;
+//	protected TraceNode lastestNode;
 	
-//	private MutilThreadTraceView traceView;
-	private TraceView traceView;
+//	protected MutilThreadTraceView traceView;
+	protected TraceView traceView;
 	
-	private StepRecommender recommender = new StepRecommender(Settings.enableLoopInference);
+	protected StepRecommender recommender = new StepRecommender(Settings.enableLoopInference);
 	
-	private UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
-	private String lastFeedbackType = null;
+	protected UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
+	protected String lastFeedbackType = null;
 	
 //	public static final String INPUT = "input";
 //	public static final String OUTPUT = "output";
@@ -87,29 +86,29 @@ public class DebugFeedbackView extends ViewPart {
 	 * Here, the 0th element indicates input; 1st element indicates output; and 2nd element 
 	 * indicates state.
 	 */
-//	private CheckboxTreeViewer[] treeViewerList = new CheckboxTreeViewer[3];
+//	protected CheckboxTreeViewer[] treeViewerList = new CheckboxTreeViewer[3];
 	
-//	private Tree inputTree;
-//	private Tree outputTree;
-//	private Tree stateTree;
+//	protected Tree inputTree;
+//	protected Tree outputTree;
+//	protected Tree stateTree;
 //	
-//	private CheckboxTreeViewer inputTreeViewer;
-//	private CheckboxTreeViewer outputTreeViewer;
-	private CheckboxTreeViewer stateTreeViewer;
-	private CheckboxTreeViewer writtenVariableTreeViewer;
-	private CheckboxTreeViewer readVariableTreeViewer;
+//	protected CheckboxTreeViewer inputTreeViewer;
+//	protected CheckboxTreeViewer outputTreeViewer;
+	protected CheckboxTreeViewer stateTreeViewer;
+	protected CheckboxTreeViewer writtenVariableTreeViewer;
+	protected CheckboxTreeViewer readVariableTreeViewer;
 	
-	private CheckboxTreeViewer consequenceTreeViewer;
+	protected CheckboxTreeViewer consequenceTreeViewer;
 	
-//	private ICheckStateListener stateListener;
-//	private ICheckStateListener RWVarListener;
-	private ITreeViewerListener treeListener;
+//	protected ICheckStateListener stateListener;
+//	protected ICheckStateListener RWVarListener;
+	protected ITreeViewerListener treeListener;
 	
-	private Button yesButton;
-	private Button noButton;
-	private Button unclearButton;
-	private Button wrongPathButton;
-	private Button bugTypeInferenceButton;
+	protected Button correctButton;
+	protected Button wrongVarButton;
+	protected Button unclearButton;
+	protected Button wrongPathButton;
+	protected Button bugTypeInferenceButton;
 	
 	public DebugFeedbackView() {
 	}
@@ -139,8 +138,8 @@ public class DebugFeedbackView extends ViewPart {
 		createWrittenVariableContent(node.getWrittenVariables());
 		createReadVariableContect(node.getReadVariables());
 		
-		yesButton.setSelection(false);
-		noButton.setSelection(true);
+		correctButton.setSelection(false);
+		wrongVarButton.setSelection(true);
 		unclearButton.setSelection(false);
 		wrongPathButton.setSelection(false);
 		bugTypeInferenceButton.setEnabled(isValidToInferBugType());
@@ -161,7 +160,7 @@ public class DebugFeedbackView extends ViewPart {
 	}
 	
 	
-	private void createWrittenVariableContent(List<VarValue> writtenVariables) {
+	protected void createWrittenVariableContent(List<VarValue> writtenVariables) {
 		this.writtenVariableTreeViewer.setContentProvider(new RWVariableContentProvider(false));
 		this.writtenVariableTreeViewer.setLabelProvider(new VariableLabelProvider());
 		this.writtenVariableTreeViewer.setInput(writtenVariables);	
@@ -172,7 +171,7 @@ public class DebugFeedbackView extends ViewPart {
 		
 	}
 
-	private void createReadVariableContect(List<VarValue> readVariables) {
+	protected void createReadVariableContect(List<VarValue> readVariables) {
 		this.readVariableTreeViewer.setContentProvider(new RWVariableContentProvider(true));
 		this.readVariableTreeViewer.setLabelProvider(new VariableLabelProvider());
 		this.readVariableTreeViewer.setInput(readVariables);	
@@ -182,7 +181,7 @@ public class DebugFeedbackView extends ViewPart {
 		this.readVariableTreeViewer.refresh(true);
 	}
 
-	private void createConsequenceContent(List<GraphDiff> cons) {
+	protected void createConsequenceContent(List<GraphDiff> cons) {
 		this.consequenceTreeViewer.setContentProvider(new ConsequenceContentProvider());
 		this.consequenceTreeViewer.setLabelProvider(new ConsequenceLabelProvider());
 		this.consequenceTreeViewer.setInput(cons);	
@@ -192,7 +191,7 @@ public class DebugFeedbackView extends ViewPart {
 		this.consequenceTreeViewer.refresh(true);
 	}
 
-	private void createStateContent(BreakPointValue value){
+	protected void createStateContent(BreakPointValue value){
 		this.stateTreeViewer.setContentProvider(new VariableContentProvider());
 		this.stateTreeViewer.setLabelProvider(new VariableLabelProvider());
 		this.stateTreeViewer.setInput(value);	
@@ -212,7 +211,7 @@ public class DebugFeedbackView extends ViewPart {
 		createBody(parent);
 	}
 
-	private void createBody(Composite parent) {
+	protected void createBody(Composite parent) {
 		SashForm variableForm = new SashForm(parent, SWT.VERTICAL);
 		variableForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
@@ -220,8 +219,8 @@ public class DebugFeedbackView extends ViewPart {
 //		createVarGroup(variableForm, "Consequences: ", OUTPUT);
 //		createConsequenceGroup(variableForm, "Consequences: ");
 		
-		this.writtenVariableTreeViewer = createVarGroup(variableForm, "Written Variables: ");
 		this.readVariableTreeViewer = createVarGroup(variableForm, "Read Variables: ");
+		this.writtenVariableTreeViewer = createVarGroup(variableForm, "Written Variables: ");
 //		this.stateTreeViewer = createVarGroup(variableForm, "States: ");
 
 		variableForm.setWeights(new int[] {5, 5});
@@ -232,14 +231,14 @@ public class DebugFeedbackView extends ViewPart {
 	public static final String RW = "rw";
 	public static final String STATE = "state";
 	
-	private void setChecks(CheckboxTreeViewer treeViewer, String type){
+	protected void setChecks(CheckboxTreeViewer treeViewer, String type){
 		Tree tree = treeViewer.getTree();
 		for(TreeItem item: tree.getItems()){
 			setChecks(item, type);
 		}
 	}
 	
-	private void setChecks(TreeItem item, String type){
+	protected void setChecks(TreeItem item, String type){
 		Object element = item.getData();
 		if(element == null){
 			return;
@@ -326,7 +325,7 @@ public class DebugFeedbackView extends ViewPart {
 		}
 	}
 
-	private void addListener() {
+	protected void addListener() {
 		
 		treeListener = new ITreeViewerListener() {
 			
@@ -367,7 +366,7 @@ public class DebugFeedbackView extends ViewPart {
 		
 	}
 
-	private CheckboxTreeViewer createVarGroup(SashForm variableForm, String groupName) {
+	protected CheckboxTreeViewer createVarGroup(SashForm variableForm, String groupName) {
 		Group varGroup = new Group(variableForm, SWT.NONE);
 		varGroup.setText(groupName);
 		varGroup.setLayout(new FillLayout());
@@ -390,7 +389,22 @@ public class DebugFeedbackView extends ViewPart {
 		valueColumn.setAlignment(SWT.LEFT);
 		valueColumn.setText("Variable Value");
 		valueColumn.setWidth(300);
-
+		
+		TreeColumn probColumn = new TreeColumn(tree, SWT.LEFT);
+		probColumn.setAlignment(SWT.LEFT);
+		probColumn.setText("Probability");
+		probColumn.setWidth(100);
+		
+//		TreeColumn forwardProbColumn = new TreeColumn(tree, SWT.LEFT);
+//		forwardProbColumn.setAlignment(SWT.LEFT);
+//		forwardProbColumn.setText("Forward Prob");
+//		forwardProbColumn.setWidth(100);
+//		
+//		TreeColumn backwardProbColumn = new TreeColumn(tree, SWT.LEFT);
+//		backwardProbColumn.setAlignment(SWT.LEFT);
+//		backwardProbColumn.setText("Backward Prob");
+//		backwardProbColumn.setWidth(100);
+		
 		return new CheckboxTreeViewer(tree);
 //		this.stateTreeViewer = new CheckboxTreeViewer(tree);
 //		if(type.equals(INPUT)){
@@ -404,7 +418,7 @@ public class DebugFeedbackView extends ViewPart {
 //		}
 	}
 	
-	private void createConsequenceGroup(SashForm variableForm, String groupName) {
+	protected void createConsequenceGroup(SashForm variableForm, String groupName) {
 		Group varGroup = new Group(variableForm, SWT.NONE);
 		varGroup.setText(groupName);
 		varGroup.setLayout(new FillLayout());
@@ -436,7 +450,7 @@ public class DebugFeedbackView extends ViewPart {
 		this.consequenceTreeViewer = new CheckboxTreeViewer(tree);
 	}
 	
-	private void createOptionaGroup(Composite parent) {
+	protected void createOptionaGroup(Composite parent) {
 		Group feedbackGroup = new Group(parent, SWT.NONE);
 		feedbackGroup.setText("Options and Explanation");
 		feedbackGroup.setLayoutData(new GridData(SWT.FILL, SWT.UP, true, false));
@@ -465,7 +479,7 @@ public class DebugFeedbackView extends ViewPart {
 		});
 	}
 
-	private void createSubmitGroup(Composite parent) {
+	protected void createSubmitGroup(Composite parent) {
 		Group feedbackGroup = new Group(parent, SWT.NONE);
 		feedbackGroup.setText("Are all variables in this step correct?");
 		feedbackGroup.setLayoutData(new GridData(SWT.FILL, SWT.UP, true, false));
@@ -474,10 +488,10 @@ public class DebugFeedbackView extends ViewPart {
 		gl.marginWidth = 1;
 		feedbackGroup.setLayout(gl);
 		
-		yesButton = new Button(feedbackGroup, SWT.RADIO);
-		yesButton.setText(" Yes");
-		yesButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
-		yesButton.addMouseListener(new MouseListener() {
+		correctButton = new Button(feedbackGroup, SWT.RADIO);
+		correctButton.setText(" Yes");
+		correctButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
+		correctButton.addMouseListener(new MouseListener() {
 			public void mouseUp(MouseEvent e) {
 			}
 
@@ -489,10 +503,10 @@ public class DebugFeedbackView extends ViewPart {
 			}
 		});
 
-		noButton = new Button(feedbackGroup, SWT.RADIO);
-		noButton.setText("Wrong-Var");
-		noButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
-		noButton.addMouseListener(new MouseListener() {
+		wrongVarButton = new Button(feedbackGroup, SWT.RADIO);
+		wrongVarButton.setText("Wrong-Var");
+		wrongVarButton.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, false));
+		wrongVarButton.addMouseListener(new MouseListener() {
 			public void mouseUp(MouseEvent e) {
 			}
 
@@ -544,6 +558,36 @@ public class DebugFeedbackView extends ViewPart {
 		submitButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
 		submitButton.addMouseListener(new FeedbackSubmitListener());
 		
+//		Button baselineButton = new Button(feedbackGroup, SWT.NONE);
+//		baselineButton.setText("Feedback");
+//		baselineButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+//		baselineButton.addMouseListener(new BaselineButtonListener());
+//		
+//		Button inputButton = new Button(feedbackGroup, SWT.NONE);
+//		inputButton.setText("Inputs");
+//		inputButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+//		inputButton.addMouseListener(new AddInputsListener());
+//		
+//		Button outputButton = new Button(feedbackGroup, SWT.NONE);
+//		outputButton.setText("Outputs");
+//		outputButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+//		outputButton.addMouseListener(new AddOutputsListener());
+//		
+//		Button clearIOButton = new Button(feedbackGroup, SWT.NONE);
+//		clearIOButton.setText("clear IO");
+//		clearIOButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+//		clearIOButton.addMouseListener(new ClearVarsListener());
+//		
+//		Button printIOButton = new Button(feedbackGroup, SWT.NONE);
+//		printIOButton.setText("IO");
+//		printIOButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+//		printIOButton.addMouseListener(new ShowIOListener());
+		
+//		Button rootCauseFoundButton = new Button(feedbackGroup, SWT.NONE);
+//		rootCauseFoundButton.setText("Root Cause");
+//		rootCauseFoundButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
+//		rootCauseFoundButton.addMouseListener(new RootCauseFoundListener());
+				
 		bugTypeInferenceButton = new Button(feedbackGroup, SWT.NONE);
 		bugTypeInferenceButton.setText("Infer type!");
 		bugTypeInferenceButton.setLayoutData(new GridData(SWT.RIGHT, SWT.UP, true, false));
@@ -551,13 +595,13 @@ public class DebugFeedbackView extends ViewPart {
 		bugTypeInferenceButton.setEnabled(isValidToInferBugType());
 	}
 	
-	private void setCurrentNodeChecked(Trace trace, TraceNode currentNode) {
+	protected void setCurrentNodeChecked(Trace trace, TraceNode currentNode) {
 		int checkTime = trace.getCheckTime()+1;
 		currentNode.setCheckTime(checkTime);
 		trace.setCheckTime(checkTime);
 	}
 	
-	private boolean isValidToInferBugType(){
+	protected boolean isValidToInferBugType(){
 		if(currentNode != null){
 			return true;
 			
@@ -581,6 +625,94 @@ public class DebugFeedbackView extends ViewPart {
 			return false;
 		}
 	}
+	
+//	class TestingButtonListener implements MouseListener {
+//
+//		@Override
+//		public void mouseDoubleClick(MouseEvent e) {
+//			// TODO Auto-generated method stub
+//			
+//		}
+//
+//		@Override
+//		public void mouseDown(MouseEvent e) {
+//			final Trace trace = getTraceView().getCurrentTrace();
+////			final Trace trace = getConcurrentTraceView().getCurTrace();
+//			
+//			Job job = new Job("searching for suspicious step...") {
+//				
+//				private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
+////					TraceView view = MicroBatViews.getTraceView();
+//					getTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
+////					getConcurrentTraceView().jumpToNode(trace, suspiciousNode.getOrder(), true);
+//				}
+//				
+//				@Override
+//				protected IStatus run(IProgressMonitor monitor) {
+//					
+//					BeliefPropagation encoder = new BeliefPropagation(trace);
+//					encoder.setFlag(true);
+//
+//					encoder.encode();
+//					
+//					TraceNode errorNode = encoder.getMostErroneousNode();
+//					System.out.println("Error Node: " + errorNode.getOrder());
+//					Display.getDefault().asyncExec(new Runnable(){
+//						@Override
+//						public void run() {
+//							jumpToNode(trace, errorNode);	
+//						}
+//					});
+//					
+//					return Status.OK_STATUS;
+//				}
+//			};
+//			job.schedule();
+//			
+//		}
+//
+//		@Override
+//		public void mouseUp(MouseEvent e) {
+//			// TODO Auto-generated method stub
+//			
+//		}
+//		
+//	}
+//	class BaselineButtonListener implements MouseListener {
+//		
+//		@Override
+//		public void mouseDoubleClick(MouseEvent e) {}
+//
+//		@Override
+//		public void mouseDown(MouseEvent e) {
+//			List<UserFeedback> feedbacks = new ArrayList<>();
+//			if (correctButton.getSelection()) {
+//				UserFeedback feedback = new UserFeedback();
+//				feedback.setFeedbackType(UserFeedback.CORRECT);
+//				feedbacks.add(feedback);
+//			} else if (wrongPathButton.getSelection()) {
+//				UserFeedback feedback = new UserFeedback();
+//				feedback.setFeedbackType(UserFeedback.WRONG_PATH);
+//				feedbacks.add(feedback);
+//			} else {
+//				List<VarValue> selectedReadVars = getSelectedReadVars();
+//				List<VarValue> selectedWriteVars = getSelectedWriteVars();
+//				if (selectedReadVars.isEmpty() && selectedWriteVars.isEmpty()) {
+//					throw new RuntimeException("No selected variables");
+//				}
+//				for (VarValue readVar : selectedReadVars) {
+//					UserFeedback feedback = new UserFeedback();
+//					feedback.setFeedbackType(UserFeedback.WRONG_VARIABLE_VALUE);
+//					feedback.setOption(new ChosenVariableOption(readVar, null));
+//					feedbacks.add(feedback);
+//				}
+//			}
+//			DebugPilotInfo.addNodeFeedbacksPair(currentNode, feedbacks);
+//		}
+//
+//		@Override
+//		public void mouseUp(MouseEvent e) {	}
+//	}
 	
 	class FeedbackSubmitListener implements MouseListener{
 		public void mouseUp(MouseEvent e) {}
@@ -1141,6 +1273,10 @@ public class DebugFeedbackView extends ViewPart {
 						return value + (" aliasID:" + aliasVarID);
 					}
 					return value;
+//				case 4:
+//					return String.format("%.2f", varValue.getForwardProb());
+//				case 5:
+//					return String.format("%.2f", varValue.getBackwardProb());
 				}
 			}
 			
@@ -1245,4 +1381,195 @@ public class DebugFeedbackView extends ViewPart {
 //	}
 //	return false;
 //}
+	
+	/**
+	 * Update the feedback view based on the given feedback. Created by David
+	 * @param feedback Feedback that the update referencing to.
+	 */
+	public void updateFeedbackView(UserFeedback feedback) {
+		
+		// Un-check all the feedback first
+		this.correctButton.setSelection(false);
+		this.wrongVarButton.setSelection(false);
+		this.unclearButton.setSelection(false);
+		this.wrongPathButton.setSelection(false);
+		this.uncheckAllVar();
+		
+		switch(feedback.getFeedbackType()) {
+		case UserFeedback.CORRECT:
+			this.correctButton.setSelection(true);
+			return;
+		case UserFeedback.UNCLEAR:
+			this.unclearButton.setSelection(true);
+			return;
+		case UserFeedback.WRONG_PATH:
+			this.wrongPathButton.setSelection(true);
+			return;
+		case UserFeedback.WRONG_VARIABLE_VALUE:
+			this.wrongVarButton.setSelection(true);
+			
+			// Check the wrong variable element in the tree
+			ChosenVariableOption option = feedback.getOption();
+			VarValue wrongVar = option.getReadVar();
+			this.readVariableTreeViewer.setChecked(wrongVar, true);
+			return;
+			
+		default:
+			break;
+		}
+	}
+	
+	public UserFeedback getFeedback() {
+		return this.feedback;
+	}
+	
+	/**
+	 * Un-check all the variable in the read variable tree and write variable tree
+	 */
+	protected void uncheckAllVar() {
+		for (Object element : this.readVariableTreeViewer.getCheckedElements()) {
+			this.readVariableTreeViewer.setChecked(element, false);
+		}
+		
+		for (Object element : this.writtenVariableTreeViewer.getCheckedElements()) {
+			this.writtenVariableTreeViewer.setChecked(element, false);
+		}
+	}
+	
+	protected List<VarValue> getSelectedVars() {
+		List<VarValue> vars = new ArrayList<>();
+		vars.addAll(this.getSelectedReadVars());
+		vars.addAll(this.getSelectedWriteVars());
+		return vars;
+	}
+
+	protected List<VarValue> getSelectedReadVars() {
+		List<VarValue> vars = new ArrayList<>();
+		
+		Object[] readObjList = this.readVariableTreeViewer.getCheckedElements();
+		for (Object object : readObjList) {
+			if (object instanceof VarValue) {
+				VarValue input = (VarValue) object;
+				vars.add(input);
+			}
+		}
+		
+		return vars;
+	}
+	
+	protected List<VarValue> getSelectedWriteVars() {
+		List<VarValue> vars = new ArrayList<>();
+		Object[] writeObjList = this.writtenVariableTreeViewer.getCheckedElements();
+		for (Object object : writeObjList) {
+			if (object instanceof VarValue) {
+				VarValue output = (VarValue) object;
+				vars.add(output);
+			}
+		}
+		return vars;
+	}
+	
+//	protected class AddOutputsListener implements MouseListener {
+//
+//		@Override
+//		public void mouseDoubleClick(MouseEvent e) {}
+//
+//		@Override
+//		public void mouseDown(MouseEvent e) {
+//			List<NodeVarPair> outputNodeVarPairs = new ArrayList<>();
+//			if (wrongPathButton.getSelection()) {
+//				TraceNode controlDom = currentNode.getControlDominator();
+//				VarValue controlDomVar = controlDom.getConditionResult();
+//				outputNodeVarPairs.add(new NodeVarPair(currentNode, controlDomVar, controlDom.getOrder()));
+//				DebugPilotInfo.addOutputNodeVarPairs(outputNodeVarPairs);
+//				
+//				UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_PATH);
+//				NodeFeedbacksPair pair = new NodeFeedbacksPair(currentNode, feedback);
+//				DebugPilotInfo.addNodeFeedbacksPair(pair);
+//			} else {
+//				outputNodeVarPairs.addAll(getSelectedNodeVarPairs());
+//				DebugPilotInfo.addOutputNodeVarPairs(outputNodeVarPairs);
+//			}
+//		}
+//
+//		@Override
+//		public void mouseUp(MouseEvent e) {}
+//	}
+	
+//	protected class AddInputsListener implements MouseListener {
+//
+//		@Override
+//		public void mouseDoubleClick(MouseEvent e) {}
+//
+//		@Override
+//		public void mouseDown(MouseEvent e) {
+//			List<NodeVarPair> inputNodeVarPairs = getSelectedNodeVarPairs();
+//			DebugPilotInfo.addInputNodeVarPairs(inputNodeVarPairs);
+//		}
+//
+//		@Override
+//		public void mouseUp(MouseEvent e) {}
+//	}
+//	
+//	protected class ClearVarsListener implements MouseListener {
+//
+//		@Override
+//		public void mouseDoubleClick(MouseEvent e) {}
+//
+//		@Override
+//		public void mouseDown(MouseEvent e) {
+//			DebugPilotInfo.clearData();
+//		}
+//
+//		@Override
+//		public void mouseUp(MouseEvent e) {	}
+//		
+//	}
+//	
+//	protected class ShowIOListener implements MouseListener {
+//
+//		@Override
+//		public void mouseDoubleClick(MouseEvent e) {}
+//
+//		@Override
+//		public void mouseDown(MouseEvent e) {
+//
+//			DebugPilotInfo.printInputs();
+//			DebugPilotInfo.printOutputs();
+//		}
+//
+//		@Override
+//		public void mouseUp(MouseEvent e) {	}
+//		
+//	}
+//	
+//	protected class RootCauseFoundListener implements MouseListener {
+//
+//		@Override
+//		public void mouseDoubleClick(MouseEvent e) {}
+//
+//		@Override
+//		public void mouseDown(MouseEvent e) {
+//			DebugPilotInfo.setRootCauseFound(true);
+//		}
+//
+//		@Override
+//		public void mouseUp(MouseEvent e) {}
+//		
+//	}
+//	
+//	protected List<NodeVarPair> getSelectedNodeVarPairs() {
+//		List<NodeVarPair> pairs = new ArrayList<>();
+//		List<VarValue> selectedVars = this.getSelectedVars();
+//		List<VarValue> variables = new ArrayList<>();
+//		variables.addAll(currentNode.getReadVariables());
+//		variables.addAll(currentNode.getWrittenVariables());
+//		variables.forEach((var) -> {
+//			if (selectedVars.contains(var)) {
+//				pairs.add(new NodeVarPair(currentNode, var));
+//			}
+//		});
+//		return pairs;
+//	}
+	
 }

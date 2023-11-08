@@ -332,7 +332,10 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				}
 
 				VarValue value = appendVarValue(params[i], var, null);
-				if(value instanceof PrimitiveValue && !(value instanceof StringValue)) {
+//				if(value instanceof PrimitiveValue && !(value instanceof StringValue)) {
+//					addRWriteValue(caller, value, true);					
+//				}
+				if((value instanceof PrimitiveValue || value instanceof ArrayValue) && !(value instanceof StringValue)) {
 					addRWriteValue(caller, value, true);					
 				}
 			}
@@ -404,7 +407,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			hitLine(line, residingClassName, residingMethodSignature);
 			TraceNode latestNode = trace.getLatestNode();
 			if (latestNode != null) {
-				latestNode.setInvokingMethod(methodSig);
+				latestNode.addInvokingMethod(methodSig);
 				initInvokingDetail(invokeObj, invokeTypeSign, methodSig, params, paramTypeSignsCode, residingClassName,
 						latestNode);
 
@@ -503,7 +506,7 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 
 			TraceNode latestNode = trace.getLatestNode();
 			if (latestNode != null) {
-				latestNode.setInvokingMethod(methodSig);
+				latestNode.addInvokingMethod(methodSig);
 				initInvokingDetail(null, invokeTypeSign, methodSig, params, paramTypeSignsCode, className, latestNode);
 			}
 		} catch (Throwable t) {
@@ -537,6 +540,17 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 				TraceNode latestNode = trace.getLatestNode();
 				if (latestNode != null) {
 					latestNode.setInvokingDetail(null);
+					TraceNode invokingMatchNode = this.findInvokingMatchNode(latestNode, invokeMethodSig);
+					if (invokingMatchNode == null) {
+						latestNode.setInvokingMatchNode(latestNode);
+					} else {
+						latestNode.setInvokingMatchNode(invokingMatchNode);
+						invokingMatchNode.setInvokingMatchNode(latestNode);
+						latestNode.setBytecode(invokingMatchNode.getBytecode());
+					}
+					
+					
+					
 					// TraceNode invokingMatchNode = findInvokingMatchNode(latestNode,
 					// invokeMethodSig);
 					// if(invokingMatchNode!=null){
@@ -664,11 +678,19 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 			TraceNode latestNode = trace.getLatestNode();
 			if (latestNode != null && latestNode.getBreakPoint().getClassCanonicalName().equals(className)
 					&& latestNode.getBreakPoint().getLineNumber() == line) {
+				
+				// Add the bytecode if it is missing
+				if (latestNode.getBytecode() == null) {
+					latestNode.setBytecode(bytecode);
+				}
+				
 				trackingDelegate.track(isLocked);
 				return;
 			}
 
 			int order = trace.size() + 1;
+		
+			
 			if (order > stepLimit) {
 				shutdown();
 				Agent._exitProgram("fail;Trace is over long!");
@@ -795,9 +817,9 @@ public class ExecutionTracer implements IExecutionTracer, ITracer {
 		}
 		addSingleRWriteValue(currentNode, value, isWrittenVar);
 	}
-
 	private void addSingleRWriteValue(TraceNode currentNode, VarValue value, boolean isWrittenVar) {
 		if (isWrittenVar) {
+			
 			currentNode.addWrittenVariable(value);
 			// buildDataRelation(currentNode, value, Variable.WRITTEN);
 		} else {

@@ -14,7 +14,10 @@ import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
 import microbat.model.ControlScope;
 import microbat.model.Scope;
+import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
+import microbat.model.variable.ConditionVar;
+import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import sav.common.core.utils.CollectionUtils;
 
@@ -32,7 +35,7 @@ public class TraceNode{
 	public final static int WRITTEN_VARS_INCORRECT = 7;
 	public final static int WRITTEN_VARS_UNKNOWN = 8;
 	
-	private String invokingMethod = null;
+	private String invokingMethod = "";
 	private InvokingDetail invokingDetail = null;
 	
 	private BreakPoint breakPoint;
@@ -92,7 +95,8 @@ public class TraceNode{
 	
 	private long timestamp;
 	
-	private String bytecode;
+	private String bytecode = null;
+
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		this(breakPoint, programState, order, trace, -1, -1, System.currentTimeMillis(), bytecode);
@@ -116,6 +120,37 @@ public class TraceNode{
 		}
 		this.timestamp = timestamp;
 		this.bytecode = bytecode;
+	}
+	
+	/**
+	 * Add condition result variable into written variable list
+	 * @param condition Value of condition, either true or false
+	 */
+	public void insertConditionResult(boolean condition) {
+		final String type = "boolean";
+		final String varID = ConditionVar.CONDITION_RESULT_ID + this.getOrder();
+		final String varName = ConditionVar.CONDITION_RESULT_NAME + this.getOrder();
+		
+		Variable variable = new ConditionVar(varName, type, "", this.getLineNumber());
+		VarValue conditionResult = new PrimitiveValue(condition ? "1" : "0", true, variable);
+		conditionResult.setVarID(varID);
+		
+		this.addWrittenVariable(conditionResult);
+	}
+	
+	/**
+	 * Get the condition result of this trace node.
+	 * @return Condition Result or null if this node is not a branch or cannot find condition result
+	 */
+	public VarValue getConditionResult() {
+		if (this.isBranch()) {
+			for (VarValue writtenVar : this.getWrittenVariables()) {
+				if (writtenVar.getVarID().startsWith(ConditionVar.CONDITION_RESULT_ID)) {
+					return writtenVar;
+				}
+			}
+		}
+		return null;
 	}
 	
 	public String getMethodSign() {
@@ -953,9 +988,10 @@ public class TraceNode{
 		return invokingMethod;
 	}
 
-	public void setInvokingMethod(String invokingMethod) {
-		this.invokingMethod = invokingMethod;
+	public void addInvokingMethod(String invokingMethod) {
+		this.invokingMethod += invokingMethod + "%";
 	}
+
 
 	public InvokingDetail getInvokingDetail() {
 		return invokingDetail;

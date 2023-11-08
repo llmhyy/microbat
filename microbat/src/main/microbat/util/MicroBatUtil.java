@@ -42,7 +42,6 @@ public class MicroBatUtil {
 		IProject iProject = myWorkspaceRoot.getProject(projectName);
 		
 		String projectPath = iProject.getLocationURI().getPath();
-//		projectPath = projectPath.substring(1, projectPath.length());
 		projectPath = projectPath.replace("/", File.separator);
 		
 		return projectPath;
@@ -337,10 +336,37 @@ public class MicroBatUtil {
 		return (T) obj;
 	}
 	
-    public static String combineTraceNodeExpression(String className, int lineNumber, long duration){
-        String exp = className + " line:" + lineNumber + " duration: " + duration + "ms";
-        return exp;
-    }
+	public static String combineTraceNodeExpression(String className, int lineNumber, long duration, int order, double suspiciousness){
+		String exp = className + 
+					 " line:" + lineNumber + 
+					 " duration: " + duration + 
+					 "ms" + " control dominator: " + order;
+		return exp;
+	}
+	
+//	public static String genPathMessage(final NodeFeedbacksPair pair, final int index) {
+//		final TraceNode node = pair.getNode();
+//		final UserFeedback feedback = pair.getFirstFeedback();
+//		StringBuilder strBuilder = new StringBuilder();
+//		strBuilder.append("Path " + index);
+//		strBuilder.append("\t|");
+//		strBuilder.append("TraceNode: " + node.getOrder());
+//		strBuilder.append("\t|");
+//		strBuilder.append("Feedback: ");
+//		if (feedback.getFeedbackType().equals(UserFeedback.CORRECT)) {
+//			strBuilder.append("Correct");
+//		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_PATH)) {
+//			strBuilder.append("Wrong path");
+//		} else if (feedback.getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+//			strBuilder.append("Wrong variable of " + feedback.getOption().getReadVar().getVarName());
+//		} else if (feedback.getFeedbackType().equals(UserFeedback.ROOTCAUSE)) {
+//			strBuilder.append("Root cause");
+//		}
+//		strBuilder.append("\t|");
+//		strBuilder.append("Reason: ");
+//		strBuilder.append(node.reason);
+//		return strBuilder.toString();
+//	}
 	
 	/**
 	 * For string1: a b c d

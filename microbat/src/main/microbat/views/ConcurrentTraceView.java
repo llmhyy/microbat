@@ -63,6 +63,9 @@ import org.eclipse.ui.texteditor.ITextEditor;
 import microbat.behavior.Behavior;
 import microbat.behavior.BehaviorData;
 import microbat.behavior.BehaviorReporter;
+import microbat.bytecode.ByteCode;
+import microbat.bytecode.ByteCodeList;
+import microbat.bytecode.OpcodeType;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -656,11 +659,17 @@ public class ConcurrentTraceView extends TraceView {
 				int order = node.getOrder();
 
 				long duration = node.calulcateDuration();
+
+				TraceNode controlDominator = node.getControlDominator();
+				int predOrder = -1;
+				if (controlDominator != null) {
+					predOrder = controlDominator.getOrder();
+				}
 				
 				// TODO it is better to parse method name as well.
-				// String message = className + "." + methodName + "(...): line " + lineNumber;
+				// String message = className + "." + methodName + "(...): line " + lineNumber + "probability: " + prob;
 				String message = order + ". "
-						+ MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration);
+						+ MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration, predOrder, node.getSuspicousness());
 				return message;
 
 			}

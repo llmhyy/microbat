@@ -24,6 +24,17 @@ public class MicroBatViews {
 		return view;
 	}
 	
+	public static DebugPilotFeedbackView getDebugPilotFeedbackView() {
+		try {
+			DebugPilotFeedbackView view = (DebugPilotFeedbackView) PlatformUI.getWorkbench().
+					getActiveWorkbenchWindow().getActivePage().showView(DebugPilotFeedbackView.ID);
+			return view;
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	public static TraceView getTraceView(){
 		TraceView view = null;
 		try {
@@ -50,7 +61,18 @@ public class MicroBatViews {
 		
 		return view;
 	}
+	public static PathView getPathView() {
+		PathView pathView = null;
+		try {
+			pathView = (PathView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(PathView.ID);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		return pathView;
+	}
 	
+	
+
 	public static ReasonView getReasonView(){
 		ReasonView view = null;
 		try {

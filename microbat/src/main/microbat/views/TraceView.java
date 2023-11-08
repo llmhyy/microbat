@@ -78,7 +78,8 @@ public class TraceView extends ViewPart {
 
 	public TraceView() {
 	}
-
+	
+	
 	public void setSearchText(String expression) {
 		this.searchText.setText(expression);
 		this.previousSearchExpression = expression;
@@ -339,6 +340,7 @@ public class TraceView extends ViewPart {
 			}
 
 			public void selectionChanged(SelectionChangedEvent event) {
+//				UserBehaviorLogger.logEvent(UserBehaviorType.CHECK_NODE);
 				ISelection iSel = event.getSelection();
 				if (iSel instanceof StructuredSelection) {
 					StructuredSelection sel = (StructuredSelection) iSel;
@@ -391,6 +393,37 @@ public class TraceView extends ViewPart {
 
 		appendMenuForTraceStep();
 	}
+	
+	public void jumpToNode(TraceNode node) {
+		if (!programmingSelection) {
+			Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
+			behavior.increaseAdditionalClick();
+			new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
+		}
+
+		otherViewsBehavior(node);
+
+		if (jumpFromSearch) {
+			jumpFromSearch = false;
+
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(300);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					searchText.setFocus();
+				}
+			});
+
+		} else {
+			listViewer.getTree().setFocus();
+		}
+
+		trace.setObservingIndex(node.getOrder() - 1);
+	}
 
 	protected Action createForSearchAction() {
 		Action action = new Action() {
@@ -426,7 +459,6 @@ public class TraceView extends ViewPart {
 			public void menuAboutToShow(IMenuManager manager) {
 				Action action = createForSearchAction();
 				menuMgr.add(action);
-				
 			}
 		});
 		
@@ -434,15 +466,19 @@ public class TraceView extends ViewPart {
 	}
 
 	protected void otherViewsBehavior(TraceNode node) {
-		DebugFeedbackView feedbackView = MicroBatViews.getDebugFeedbackView();
-
+//		DebugFeedbackView feedbackView = MicroBatViews.getDebugFeedbackView();
+//		if (this.refreshProgramState) {
+//			feedbackView.setTraceView(TraceView.this);
+//			feedbackView.refresh(node);
+//		}
+		
 		if (this.refreshProgramState) {
-			feedbackView.setTraceView(TraceView.this);
-			feedbackView.refresh(node);
+			DebugPilotFeedbackView debugPilotFeedbackView = MicroBatViews.getDebugPilotFeedbackView();
+			debugPilotFeedbackView.refresh(node, this.trace);
 		}
 
-		ReasonView reasonView = MicroBatViews.getReasonView();
-		reasonView.refresh(feedbackView.getRecommender());
+//		ReasonView reasonView = MicroBatViews.getReasonView();
+//		reasonView.refresh(feedbackView.getRecommender());
 
 		markJavaEditor(node);
 	}
@@ -526,7 +562,8 @@ public class TraceView extends ViewPart {
 	}
 
 	class TraceLabelProvider implements ILabelProvider {
-
+		
+	
 		public void addListener(ILabelProviderListener listener) {
 
 		}
@@ -581,9 +618,15 @@ public class TraceView extends ViewPart {
 
 				long duration = node.calulcateDuration();
 				
+				int predOrder = -1;
+				TraceNode controlDominator = node.getControlDominator();
+				if (controlDominator != null) {
+					predOrder = controlDominator.getOrder();
+				}
+
 				// TODO it is better to parse method name as well.
-				// String message = className + "." + methodName + "(...): line " + lineNumber;
-				String message = order + ". " + MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration);
+				// String message = className + "." + methodName + "(...): line " + lineNumber + "probability: " + prob;
+				String message = order + ". " + MicroBatUtil.combineTraceNodeExpression(className, lineNumber, duration, predOrder, node.getSuspicousness());
 				return message;
 
 			}
@@ -592,7 +635,8 @@ public class TraceView extends ViewPart {
 		}
 
 	}
-
+	
+	
 	public Trace getCurrentTrace() {
 		return this.trace;
 	}

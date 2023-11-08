@@ -140,6 +140,8 @@ public class TraceOutputWriter extends OutputWriter {
 			allWrittenVars.add(node.getWrittenVariables());
 			writeBoolean(node.isException());
 			writeString(node.getBytecode());
+			writeString(node.getInvokingMethod());
+			writeNodeOrder(node.getInvokingMatchNode());
 		}
 		writeVarValues(allReadVars);
 		writeVarValues(allWrittenVars);

@@ -3,8 +3,10 @@ package microbat.instrumentation.output;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import microbat.instrumentation.instr.instruction.info.SerializableLineInfo;
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
 import microbat.model.ControlScope;
@@ -16,14 +18,16 @@ import sav.common.core.utils.FileUtils;
 
 public class TraceOutputReader extends OutputReader {
 	private String traceExecFolder;
+	private HashMap<Integer, SerializableLineInfo> opcodeTable;
 	
 	public TraceOutputReader(InputStream in) {
 		super(in);
 	}
 	
-	public TraceOutputReader(InputStream in, String traceExecFolder) {
+	public TraceOutputReader(InputStream in, String traceExecFolder, HashMap<Integer, SerializableLineInfo> opcodeTable) {
 		super(in);
 		this.traceExecFolder = traceExecFolder;
+		this.opcodeTable = opcodeTable;
 	}
 
 	public List<Trace> readTrace() throws IOException {
@@ -96,6 +100,14 @@ public class TraceOutputReader extends OutputReader {
 		for (int i = 0; i < size; i++) {
 			TraceNode step = allSteps.get(i);
 			step.setBreakPoint(locationList.get(readVarInt()));
+//			SerializableLineInfo lineInfo = opcodeTable.get(step.getBreakPoint().hashCode());
+//			if (lineInfo != null) {
+//				step.setInstructions(lineInfo.getInstructions());
+//				step.setStackVariables(lineInfo.getLocalVars());
+//				step.setConstPool(lineInfo.getConstPool());
+//			} else {
+//				step.setInstructions(null);
+//			}
 			step.setTimestamp(readLong());
 			TraceNode controlDominator = readNode(allSteps);
 			step.setControlDominator(controlDominator);
@@ -128,6 +140,9 @@ public class TraceOutputReader extends OutputReader {
 			}
 			step.setException(readBoolean());
 			step.setBytecode(readString());
+			step.addInvokingMethod(readString());
+			TraceNode invokeMatchNode = readNode(allSteps);
+			step.setInvokingMatchNode(invokeMatchNode);
 		}
 		readRWVarValues(allSteps, false);
 		readRWVarValues(allSteps, true);

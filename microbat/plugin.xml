@@ -39,6 +39,14 @@
             name="Recommending Reason"
             restorable="true">
       </view>
+      <view
+            category="microbat.category"
+            class="microbat.views.PathView"
+            icon="icons/path_mark.png"
+            id="microbat.evalView.pathView"
+            name="Debugging Plan"
+            restorable="true">
+      </view>
       <category
             id="microbat.evalCategory"
             name="Evaluation">
@@ -60,10 +68,17 @@
             restorable="true">
       </view>
       <view
-            category="microbat.category"
             class="microbat.views.SequentialConcurrentView"
             id="microbat.view.seqConcurrentTrace"
             name="Sequential Concurrent View"
+            restorable="true">
+      </view>
+      <view
+            category="microbat.category"
+            class="microbat.views.DebugPilotFeedbackView"
+            icon="icons/feedback.png"
+            id="microbat.view.debugPilotFeedback"
+            name="DebugPilot Feedback"
             restorable="true">
       </view>
    </extension>
@@ -80,6 +95,12 @@
             icon="icons/concurrency.png"
             id="microbat.perspectives.ConcurrentPerspective"
             name="Concurrent">
+      </perspective>
+      <perspective
+            class="microbat.perspectives.DebugPilotPerspective"
+            icon="icons/play_debug_pilot.png"
+            id="microbat.debugpilotperspective"
+            name="DebugPilot">
       </perspective>
    </extension>
    <extension
@@ -143,6 +164,26 @@
             defaultHandler="microbat.handler.StartConccurrentTraceHandler"
             id="microbat.command.startConcTrace"
             name="Test sequential concurrent trace">
+      </command>
+      <command
+            defaultHandler="microbat.handler.TestHandler"
+            id="microbat.testing"
+            name="Testing Microbat">
+      </command>
+      <command
+            defaultHandler="microbat.handler.DebugPilotHandler"
+            id="microbat.debugpilot"
+            name="Debug Pilot">
+      </command>
+      <command
+            defaultHandler="microbat.handler.StopDebugPilotHandler"
+            id="microbat.stopdebugpilot"
+            name="Stop Debug Pilot">
+      </command>
+      <command
+            defaultHandler="microbat.handler.GenerateTraceHandler"
+            id="microbat.generateTraceCommand"
+            name="Debug As DebugPilot">
       </command>
    </extension>
    <extension
@@ -257,6 +298,90 @@
                tooltip="search the nearest trace step with regard to current step">
          </command>
       </menuContribution>
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="microbat.menus.sampleMenu"
+               label="Sample Menu"
+               mnemonic="M">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  id="microbat.menus.sampleCommand"
+                  mnemonic="S">
+            </command>
+         </menu>
+      </menuContribution>
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="microbat.toolbars.sampleToolbar">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  icon="icons/sample.png"
+                  id="microbat.toolbars.sampleCommand"
+                  tooltip="Say hello world">
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="microbat.menus.sampleMenu"
+               label="Sample Menu"
+               mnemonic="M">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  id="microbat.menus.sampleCommand"
+                  mnemonic="S">
+            </command>
+         </menu>
+      </menuContribution>
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="microbat.toolbars.sampleToolbar">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  icon="icons/sample.png"
+                  id="microbat.toolbars.sampleCommand"
+                  tooltip="Say hello world">
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="microbat.menus.sampleMenu"
+               label="Sample Menu"
+               mnemonic="M">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  id="microbat.menus.sampleCommand"
+                  mnemonic="S">
+            </command>
+         </menu>
+      </menuContribution>
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="microbat.toolbars.sampleToolbar">
+            <command
+                  commandId="microbat.commands.sampleCommand"
+                  icon="icons/sample.png"
+                  id="microbat.toolbars.sampleCommand"
+                  tooltip="Say hello world">
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any">
+         <command
+               commandId="microbat.generateTraceCommand"
+               icon="icons/microbat.png"
+               style="push">
+         </command>
+      </menuContribution>
    </extension>
    <extension
          point="org.eclipse.ui.editors.markerAnnotationSpecification">
@@ -303,12 +428,21 @@
             id="microbat.preference.executionRange"
             name="Execution Range">
       </page>
+      <page
+            category="microbat.preference"
+            class="microbat.preference.DebugPilotPreference"
+            id="microbat.preference.debugpilot"
+            name="Debug Pilot Setting">
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.editors.annotationTypes">
       <type
             name="microbat.specification.step">
       </type>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
    </extension>
 
 </plugin>

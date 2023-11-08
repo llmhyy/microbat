@@ -10,14 +10,15 @@ package microbat.model.value;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import microbat.log.Log;
 import microbat.model.variable.ArrayElementVar;
+import microbat.model.variable.ConditionVar;
 import microbat.model.variable.FieldVar;
 import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
@@ -38,15 +39,17 @@ public abstract class VarValue implements GraphNode, Serializable {
 	 */
 	protected boolean isRoot = false;
 	
-	
+	protected double correctness = -1.0d;
+	protected double suspiciousness = -1.0d;
+
 	public static final int NOT_NULL_VAL = 1;
 	
-	public VarValue(){}
+	public VarValue(){
+	}
 	
 	protected VarValue(boolean isRoot, Variable variable) {
 		this.isRoot = isRoot;
 		this.variable = variable;
-		
 	}
 	
 	public abstract VarValue clone();
@@ -424,6 +427,10 @@ public abstract class VarValue implements GraphNode, Serializable {
 	public boolean isLocalVariable(){
 		return this.variable instanceof LocalVar;
 	}
+	
+	public boolean isThisVariable() {
+		return this.getVarName().equals("this") || this.getVarName().startsWith("this$");
+	}
 
 	public boolean isStatic() {
 		if(this.variable instanceof FieldVar){
@@ -488,7 +495,58 @@ public abstract class VarValue implements GraphNode, Serializable {
 		
 		return null;
 	}
+	
+	public double getCorrectness() {
+		return this.correctness;
+	}
 
 	
-//	public abstract VarValue clone();
+	public void setCorrectness(double probability) {
+		if (Double.isNaN(probability) || 
+			Double.isInfinite(probability) || 
+			probability < 0.0d || 
+			probability > 1.0d) {
+			throw new IllegalArgumentException(Log.genMsg(getClass(), "Invalid probability: "));
+		}
+		this.correctness = probability;
+	}
+	
+	public boolean id_equals(final Object otherObj) {
+		if (otherObj instanceof VarValue) {
+			VarValue otherVar = (VarValue) otherObj;
+			final String varID = Variable.truncateSimpleID(this.getVarID());
+			final String headID = Variable.truncateSimpleID(this.getAliasVarID());
+			final String otherVarID = Variable.truncateSimpleID(otherVar.getVarID());
+			final String otherHeadID = Variable.truncateSimpleID(otherVar.getAliasVarID());
+			if(otherVarID != null && otherVarID.equals(varID)) {
+				return true;						
+			}
+			
+			if(otherHeadID != null && otherHeadID.equals(headID)) {
+				return true;
+			}
+			
+			VarValue childValue = otherVar.findVarValue(varID, headID);
+			if(childValue != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean isArray() {
+		return this.getType().endsWith("[]");
+	}
+	
+	public boolean isConditionResult() {
+		return this.getVarID().startsWith(ConditionVar.CONDITION_RESULT_ID);
+	}
+	
+	public double getSuspiciousness() {
+		return this.suspiciousness;
+	}
+	
+	public void setSuspiciousness(final double suspiciousness) {
+		this.suspiciousness = suspiciousness;
+	}
 }

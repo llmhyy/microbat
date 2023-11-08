@@ -1,6 +1,10 @@
 package microbat.model.trace;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,16 +19,24 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
+import microbat.bytecode.ByteCode;
+import microbat.bytecode.ByteCodeList;
+import microbat.bytecode.OpcodeType;
+import microbat.debugpilot.propagation.spp.StepExplaination;
+import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.BreakPointValue;
 import microbat.model.Scope;
 import microbat.model.UserInterestedVariables;
+import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
+import microbat.model.variable.ConditionVar;
+import microbat.model.variable.Variable;
 import microbat.util.JavaUtil;
 import microbat.util.Settings;
 
-public class TraceNode{
+public class TraceNode implements Comparator<TraceNode> {
 	
 	public final static int STEP_CORRECT = 0;
 	public final static int STEP_INCORRECT = 1;
@@ -93,13 +105,28 @@ public class TraceNode{
 	private long timestamp;
 	
 	private String bytecode;
+	private String invokingMethod = "";
 	
 	private transient double sliceBreakerProbability = 0;
 	
-	/**
-	 * the first element of the pair is the read variable list, the second element is the 
-	 * written variable list.
-	 */
+
+	
+	public String reason = "";
+	protected Map<DPUserFeedback, String> reasonMap;
+	
+	public boolean confirmed = false;
+	
+	protected double suspiciousness = -1.0d;
+	
+	protected double correctness = -1.0d;
+	
+	public TraceNode() {
+		this.breakPoint = null;
+		this.programState = null;
+		this.order = -1;
+		this.trace = null;
+		this.bytecode = "";
+	}
 	
 	public TraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace, String bytecode) {
 		super();
@@ -120,6 +147,32 @@ public class TraceNode{
 		}
 		
 		return markedReadVars;
+	}
+	
+	/**
+	 * Add condition result variable into written variable list
+	 * @param condition Value of condition, either true or false
+	 */
+	public void insertConditionResult(boolean condition) {
+		Variable variable = new ConditionVar(this.getOrder(), this.getLineNumber());
+		VarValue conditionResult = new PrimitiveValue(condition ? "1" : "0", true, variable);
+		conditionResult.setVarID(ConditionVar.CONDITION_RESULT_ID + this.getOrder());
+		this.addWrittenVariable(conditionResult);
+	}
+	
+	/**
+	 * Get the condition result of this trace node.
+	 * @return Condition Result or null if this node is not a branch or cannot find condition result
+	 */
+	public VarValue getConditionResult() {
+		if (this.isBranch()) {
+			for (VarValue writtenVar : this.getWrittenVariables()) {
+				if (writtenVar.getVarID().startsWith(ConditionVar.CONDITION_RESULT_ID)) {
+					return writtenVar;
+				}
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -1166,4 +1219,192 @@ public class TraceNode{
 //	public void setHiddenWrittenVariables(List<VarValue> hiddenWrittenVariables) {
 //		this.hiddenWrittenVariables = hiddenWrittenVariables;
 //	}
+	
+//	public void setInstructions(List<InstructionHandle> instructions) {
+//		this.instructions = new ArrayList<>(instructions);
+//	}
+//	
+//	public List<InstructionHandle> getInstructions() {
+//		return this.instructions;
+//	}
+//	
+//	public void setStackVariables(String[] stackVariables) {
+//		this.stackVariables = stackVariables;
+//	}
+//	
+//	public String getStackVariable(int i) {
+//		if (i >= this.stackVariables.length) {
+//			return null;
+//		}
+//		return stackVariables[i];
+//	}
+//	
+//	public String[] getStackVariables() {
+//		return this.stackVariables;
+//	}
+//	
+//	public void setConstPool(HashMap<Integer, ConstWrapper> constPool) {
+//		this.constPool = constPool;
+//	}
+//	
+//	public HashMap<Integer, ConstWrapper> getConstPool() {
+//		return this.constPool;
+//	}
+//	
+//	public void setAstNode(ASTNode nodes) {
+//		this.astNodes = nodes;
+//	}
+//	
+//	public ASTNode getAstNode() {
+//		return this.astNodes;
+//	}
+//	
+//	public HashMap<String, String> getReadMap() {
+//		if (this.readVarMap == null) {
+//			this.readVarMap = new HashMap<>();
+//			for (VarValue v : this.readVariables) {
+//				if (v instanceof PrimitiveValue) {
+//					readVarMap.put(v.getVarName(), v.getStringValue());
+//				} else {
+//					readVarMap.putAll(getPrimitiveMap(v, ""));
+//				}
+//			}
+//		}
+//		return this.readVarMap;
+//	}
+	
+	private HashMap<String, String> getPrimitiveMap(VarValue v, String name) {
+		HashMap<String, String> result = new HashMap<>();
+		name = name + v.getVarName() + ".";
+		for (VarValue child : v.getChildren()) {
+			if (child instanceof PrimitiveValue) {
+				result.put(name + child.getVarName(), child.getStringValue());
+			} else {
+				result.putAll(getPrimitiveMap(child, name));
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Get the code statement of this trace node
+	 * @return Code statement
+	 */
+	public String getCodeStatement() {
+		final int lineNo = this.getLineNumber();
+		final String filePath = this.getBreakPoint().getFullJavaFilePath();
+		String statement = null;
+		try {
+			statement = Files.readAllLines(Paths.get(filePath)).get(lineNo-1);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return statement;
+	}
+	
+	
+	/**
+	 * Check is this node is throwing exception.
+	 * 
+	 * This method will check the bytecode of this trace node contain
+	 * the throwing bytecode "athrow" or not
+	 * 
+	 * If the parameter bytecode is null, it will throw runtime error
+	 * 
+	 * @return True if this node is throwing exception.
+	 */
+	public boolean isThrowingException() {
+		if (this.bytecode == null) {
+			throw new RuntimeException("TraceNode: " + this.order + " has null bytecode");
+		}
+		
+		return this.bytecode.contains("athrow");
+	}
+	
+	public void addInvokingMethod(final String invokingMethod) {
+		this.invokingMethod += invokingMethod + "%";
+	}
+	
+	public String getInvokingMethod() {
+		return this.invokingMethod;
+	}
+	
+	/**
+	 * Check is this node calling API. <br><br>
+	 * 
+	 * This node is calling an API method if:
+	 * 1. It's byte code list contain operation that invoke some method
+	 * 2. This node does not have any invocation children (because
+	 * self-implemented method will have invocation children.
+	 * @return True if the node is calling API. False otherwise.
+	 */
+	public boolean isCallingAPI() {
+		ByteCodeList byteCodeList = new ByteCodeList(this.getBytecode());
+		for (ByteCode bytecode : byteCodeList) {
+			if(bytecode.getOpcodeType() == OpcodeType.INVOKE) {
+				if (this.invocationChildren.isEmpty()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public int compare(TraceNode o1, TraceNode o2) {
+		return o1.getOrder() - o2.getOrder();
+	}
+	
+	public void storeReason(final DPUserFeedback feedback, final String reason) {
+		if (this.reasonMap == null) {
+			this.reasonMap = new HashMap<>();
+		}
+		
+		this.reasonMap.put(feedback, reason);
+	}
+	
+	public void updateReason(final DPUserFeedback feedback) {
+		if (this.reasonMap == null) {
+			this.reason = StepExplaination.COST;
+		} else {			
+			this.reason = this.reasonMap.getOrDefault(feedback, StepExplaination.COST);
+		}
+	}
+	
+	public boolean isCertain() {
+		if (this.reasonMap == null) {
+			return false;
+		}
+		
+		for (String reason : this.reasonMap.values()) {
+			if (!reason.equals(StepExplaination.COST)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public void setSuspicousness(final double suspiciousness) {
+		this.suspiciousness = suspiciousness;
+	}
+	
+	public double getSuspicousness() {
+		return this.suspiciousness;
+	}
+	
+	public void addSuspiciousness(final double suspiciousness) {
+		this.suspiciousness += suspiciousness;
+	}
+	
+	public void setCorrectness(final double correctness) {
+		if (correctness < 0.0d || correctness > 1.0d) {
+			throw new IllegalArgumentException("Correctness probability should be within the range [0,1] but " + correctness + " is given ");
+		}
+		this.correctness = correctness;
+	}
+	
+	public double getCorrectness() {
+		return this.correctness;
+	}
 }

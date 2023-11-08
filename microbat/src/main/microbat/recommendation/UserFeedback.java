@@ -1,13 +1,17 @@
 package microbat.recommendation;
 
+import microbat.model.value.VarValue;
+
 public class UserFeedback {
 	public static final String CORRECT = "correct";
 	public static final String WRONG_VARIABLE_VALUE = "wrong variable value";
 	public static final String WRONG_PATH = "wrong path";
 	public static final String UNCLEAR = "unclear";
+	public static final String ROOTCAUSE = "root cause";
+//	public static final String CORRECT_VARIABLE_VALUE = "correct variable value";
 	
-	private ChosenVariableOption option;
-	private String feedbackType;
+	protected ChosenVariableOption option;
+	protected String feedbackType;
 	
 	public UserFeedback(ChosenVariableOption option, String feedbackType) {
 		super();
@@ -21,7 +25,7 @@ public class UserFeedback {
 	}
 	
 	public UserFeedback(){}
-
+	
 	public ChosenVariableOption getOption() {
 		return option;
 	}
@@ -38,6 +42,31 @@ public class UserFeedback {
 		this.feedbackType = feedbackType;
 	}
 
+	/**
+	 * week_equals only require the feedback type
+	 * and the read variable matches
+	 * @param obj Other object
+	 * @return True if they are week_equals
+	 */
+	public boolean week_equals(Object obj) {
+		if (obj instanceof UserFeedback) {
+			UserFeedback otherFeedback = (UserFeedback) obj;
+			
+			if (!this.feedbackType.equals(otherFeedback.feedbackType)) {
+				return false;
+			}
+			
+			if (this.feedbackType.equals(UserFeedback.WRONG_VARIABLE_VALUE)) {
+				VarValue thisVar = this.option.getReadVar();
+				VarValue otherVar = otherFeedback.option.getReadVar();
+				return thisVar.equals(otherVar);
+			} else {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	@Override
 	public String toString() {
 		if(option != null){
@@ -46,6 +75,11 @@ public class UserFeedback {
 		else{
 			return "UserFeedback [feedbackType=" + feedbackType + "]";
 		}
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.toString().hashCode();
 	}
 	
 	@Override

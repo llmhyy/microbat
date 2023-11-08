@@ -11,10 +11,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+
+import org.apache.bcel.generic.InstructionHandle;
 
 import microbat.handler.xml.VarValueXmlWriter;
 import microbat.instrumentation.AgentParams;
+import microbat.instrumentation.instr.instruction.info.LineInstructionInfo;
+import microbat.instrumentation.instr.instruction.info.SerializableLineInfo;
 import microbat.model.BreakPoint;
 import microbat.model.trace.StepVariableRelationEntry;
 import microbat.model.trace.Trace;
@@ -216,6 +219,12 @@ public class SqliteRecorder extends SqliteServer implements TraceRecorder {
 		} else {
 			ps.setNull(idx, java.sql.Types.INTEGER);
 		}
+	}
+
+	@Override
+	public void serialize(HashMap<Integer, SerializableLineInfo> instructionTable) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

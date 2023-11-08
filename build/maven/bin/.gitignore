@@ -1,0 +1,4 @@
+apache-maven-3.5.2
+/target
+/.project
+/.classpath
