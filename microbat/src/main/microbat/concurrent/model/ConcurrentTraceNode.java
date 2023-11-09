@@ -40,10 +40,24 @@ public class ConcurrentTraceNode extends TraceNode {
 	
 	protected int currentTraceId = 0;
 	
+	/**
+	 * Pointer to the trace node which writes to this trace node / reads to this trace node
+	 * nullable
+	 */
+	private ConcurrentTraceNode linkedTraceNode;
 	public int getCurrentTraceId() {
 		return currentTraceId;
 	}
 
+	/** 
+	 * Link the read and write trace nodes
+	 * @return
+	 */
+	public ConcurrentTraceNode getLinkedTraceNode() {
+		return linkedTraceNode;
+	}
+	
+	
 	public ConcurrentTraceNode(BreakPoint breakPoint, BreakPointValue programState, int order, Trace trace,
 			String bytecode) {
 		super(breakPoint, programState, order, trace, bytecode);
@@ -80,6 +94,10 @@ public class ConcurrentTraceNode extends TraceNode {
 			ConcurrentTraceNode writeVariables = new ConcurrentTraceNode(node, threadId);
 			writeVariables.setWrittenVariables(node.getWrittenVariables());
 			result.add(writeVariables);
+			if (result.size() == 2) {
+				result.get(1).linkedTraceNode = result.get(0);
+				result.get(0).linkedTraceNode = result.get(1);
+			}
 		}
 		return result;
 	}

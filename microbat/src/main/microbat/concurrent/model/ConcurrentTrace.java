@@ -21,6 +21,8 @@ public class ConcurrentTrace extends Trace {
 	private ArrayList<ArrayList<ConcurrentTraceNode>> traces
 		= new ArrayList<>();
 	
+	private ConcurrentTraceNode linkedTraceNode;
+	
 	public List<ConcurrentTraceNode> getSequentialTrace() {
 		return generatedTraceNodes;
 	}
@@ -233,6 +235,7 @@ public class ConcurrentTrace extends Trace {
 	 */
 	@Override
 	public TraceNode findDataDependency(TraceNode checkingNode, VarValue readVar) {
+	
 		int j = checkingNode.getOrder();
 		// check if it is on heap
 		String s = readVar.getAliasVarID();
@@ -241,7 +244,10 @@ public class ConcurrentTrace extends Trace {
 			throw new RuntimeException("Wrong checking node type");
 		}
 		ConcurrentTraceNode concNode = (ConcurrentTraceNode) checkingNode;
-
+		if (concNode.getWrittenVariables().size() > 0) {
+			return concNode.getLinkedTraceNode();
+		}
+		
 		// find the individual trace to use the find data dependenccy
 		String varID = Variable.truncateSimpleID(readVar.getVarID());
 		String headID = Variable.truncateSimpleID(readVar.getAliasVarID());
