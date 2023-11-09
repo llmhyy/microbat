@@ -160,6 +160,9 @@ public class ConcurrentTraceView extends TraceView {
 		});
 
 	}
+	
+	
+	
 
 	public void jumpToNode(String searchContent, boolean next) {
 		// Trace trace = Activator.getDefault().getCurrentTrace();
@@ -339,46 +342,18 @@ public class ConcurrentTraceView extends TraceView {
 					System.out.println("~~~~~~~~~~~~~~~~~~~~~");
 				}
 
-				// System.out.println("Control Dominator: ");
-				// TraceNode controlDominator = node.getControlDominator();
-				// System.out.println(controlDominator);
-				// System.out.println("~~~~~~~~~~~~~~~~~~~~~");
-				//
-				// System.out.println("Control Dominatee: ");
-				// for(TraceNode dominatee: node.getControlDominatees()){
-				// System.out.println(dominatee);
-				// System.out.println("~~~~~~~~~~~~~~~~~~~~~");
-				// }
-
 				System.out.println("Invocation Parent: ");
 				System.out.println(node.getInvocationParent());
 				System.out.println("~~~~~~~~~~~~~~~~~~~~~");
-
-				// System.out.println("Invocation Children: ");
-				// for(TraceNode dominatee: node.getInvocationChildren()){
-				// System.out.println(dominatee);
-				// System.out.println("~~~~~~~~~~~~~~~~~~~~~");
-				// }
 
 				System.out.println("Loop Parent: ");
 				System.out.println(node.getLoopParent());
 				System.out.println("~~~~~~~~~~~~~~~~~~~~~");
 
-				// System.out.println("Loop Children: ");
-				// for(TraceNode dominatee: node.getLoopChildren()){
-				// System.out.println(dominatee);
-				// System.out.println("~~~~~~~~~~~~~~~~~~~~~");
-				// }
 
 				System.out.println("Abstract Parent: ");
 				System.out.println(node.getAbstractionParent());
 				System.out.println("~~~~~~~~~~~~~~~~~~~~~");
-
-				// System.out.println("Abstract Children: ");
-				// for(TraceNode dominatee: node.getAbstractChildren()){
-				// System.out.println(dominatee);
-				// System.out.println("~~~~~~~~~~~~~~~~~~~~~");
-				// }
 
 				System.out.println();
 				System.out.println();
@@ -392,17 +367,6 @@ public class ConcurrentTraceView extends TraceView {
 
 					if (obj instanceof TraceNode) {
 						TraceNode node = (TraceNode) obj;
-
-						// String simpleSig =
-						// node.getMethodSign().substring(node.getMethodSign().indexOf("#")+1,
-						// node.getMethodSign().length());
-						// MethodFinderBySignature finder = new
-						// MethodFinderBySignature(simpleSig);
-						// ByteCodeParser.parse(node.getClassCanonicalName(), finder,
-						// node.getTrace().getAppJavaClassPath());
-						// System.currentTimeMillis();
-
-						// showDebuggingInfo(node);
 
 						if (!programmingSelection) {
 							Behavior behavior = BehaviorData

@@ -25,6 +25,7 @@ import microbat.codeanalysis.runtime.StepLimitException;
 import microbat.concurrent.model.ConcurrentTrace;
 import microbat.evaluation.junit.TestCaseAnalyzer;
 import microbat.handler.StartDebugHandler.MethodFinder;
+import microbat.handler.callbacks.HandlerCallbackManager;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
@@ -69,6 +70,13 @@ public class StartConccurrentTraceHandler extends AbstractHandler {
 	}
 	
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		HandlerCallbackManager.getInstance().runDebugPilotTerminateCallbacks();
+		Job.getJobManager().cancel(DebugPilotHandler.JOB_FAMALY_NAME);
+		
+		// Clear the path view and program output form
+		MicroBatViews.getPathView().updateFeedbackPath(null);
+		
+		
 		final AppJavaClassPath appClassPath = MicroBatUtil.constructClassPaths();
 		if (Settings.isRunTest) {
 			appClassPath.setOptionalTestClass(Settings.launchClass);
@@ -76,6 +84,7 @@ public class StartConccurrentTraceHandler extends AbstractHandler {
 			appClassPath.setLaunchClass(TestCaseAnalyzer.TEST_RUNNER);
 			appClassPath.setTestCodePath(MicroBatUtil.getSourceFolder(Settings.launchClass, Settings.projectName));
 		}
+		
 		List<String> srcFolders = MicroBatUtil.getSourceFolders(Settings.projectName);
 		appClassPath.setSourceCodePath(appClassPath.getTestCodePath());
 		for (String srcFolder : srcFolders) {
@@ -87,16 +96,7 @@ public class StartConccurrentTraceHandler extends AbstractHandler {
 //		InstrumentationExecutor ex = new InstrumentationExecutor(appClassPath);
 //		ex.run();
 		
-		try {
-			new BehaviorReader().readXLSX();
-		} catch (IOException e) {
-			e.printStackTrace();
-		};
-		
-		Behavior behavior = BehaviorData.getOrNewBehavior(Settings.launchClass);
-		behavior.increaseGenerateTrace();
-		new BehaviorReporter(Settings.launchClass).export(BehaviorData.projectBehavior);
-		
+
 		try {
 			
 			Job job = new Job("Preparing for Debugging ...") {

@@ -237,19 +237,24 @@ public class ConcurrentTrace extends Trace {
 		// check if it is on heap
 		String s = readVar.getAliasVarID();
 		boolean isOnHeap = s != null;
+		if (!(checkingNode instanceof ConcurrentTraceNode)) {
+			throw new RuntimeException("Wrong checking node type");
+		}
+		ConcurrentTraceNode concNode = (ConcurrentTraceNode) checkingNode;
 
 		// find the individual trace to use the find data dependenccy
 		String varID = Variable.truncateSimpleID(readVar.getVarID());
 		String headID = Variable.truncateSimpleID(readVar.getAliasVarID());
 			
 		for(int i=checkingNode.getOrder()-1; i>=1; i--) {
-			TraceNode node = this.getTraceNode(i);
+			ConcurrentTraceNode node = this.getSequentialTrace().get(i);
 			for(VarValue writtenValue: node.getWrittenVariables()) {
 				
 				String wVarID = Variable.truncateSimpleID(writtenValue.getVarID());
 				String wHeadID = Variable.truncateSimpleID(writtenValue.getAliasVarID());
 				
-				if(wVarID != null && wVarID.equals(varID)) {
+				if(wVarID != null && wVarID.equals(varID) && node.getCurrentTraceId() 
+						== concNode.getCurrentTraceId()) {
 					return node;						
 				}
 				
@@ -274,8 +279,38 @@ public class ConcurrentTrace extends Trace {
 	 */
 	@Override
 	public List<TraceNode> findDataDependentee(TraceNode traceNode, VarValue writtenVar) {
-		// TODO Auto-generated method stub
-		return super.findDataDependentee(traceNode, writtenVar);
+		List<TraceNode> consumers = new ArrayList<TraceNode>();
+		
+		String varID = Variable.truncateSimpleID(writtenVar.getVarID());
+		String headID = Variable.truncateSimpleID(writtenVar.getAliasVarID());
+		
+		for(int i=traceNode.getOrder()+1; i <= this.getSequentialTrace().size(); i++) {
+			TraceNode node = this.getSequentialTrace().get(i);
+			for(VarValue readVar: node.getReadVariables()) {
+				
+				String rVarID = Variable.truncateSimpleID(readVar.getVarID());
+				String rHeadID = Variable.truncateSimpleID(readVar.getAliasVarID());
+//				
+//				if (readVar.equals(writtenVar)) {
+//					consumers.add(node);
+//				}
+				if(rVarID != null && rVarID.equals(varID)) {
+					consumers.add(node);						
+				}
+				
+				if(rHeadID != null && rHeadID.equals(headID)) {
+					consumers.add(node);
+				}
+				
+				VarValue childValue = readVar.findVarValue(varID, headID);
+				if(childValue != null) {
+					consumers.add(node);
+				}
+				
+			}
+		}
+		return consumers;
+		
 	}
 
 

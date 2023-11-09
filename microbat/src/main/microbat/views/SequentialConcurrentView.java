@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
@@ -34,6 +35,7 @@ import org.eclipse.ui.texteditor.ITextEditor;
 import microbat.concurrent.model.ConcurrentTrace;
 import microbat.concurrent.model.ConcurrentTraceNode;
 import microbat.model.BreakPoint;
+import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.util.JavaUtil;
 
@@ -42,7 +44,7 @@ import microbat.util.JavaUtil;
  * @author Gabau
  *
  */
-public class SequentialConcurrentView extends ViewPart {
+public class SequentialConcurrentView extends TraceView {
 	// todo: shift these out of this file
 	private static class SequentialConcurrentViewProvider implements IStructuredContentProvider {
 
@@ -73,14 +75,57 @@ public class SequentialConcurrentView extends ViewPart {
 	}
 	
 	
+	
+	
+	@Override
+	public void jumpToNode(String searchContent, boolean next) {
+		// TODO Auto-generated method stub
+	}
+
+
+
+
+	@Override
+	public void jumpToNode(Trace trace, int order, boolean refreshProgramState) {
+		// TODO Auto-generated method stub
+		this.jumpToNode(trace.getTraceNode(order));
+	}
+
+
+
+
+	@Override
+	public void jumpToNode(TraceNode node) {
+		// TODO Auto-generated method stub
+		otherViewsBehavior(node);
+		listViewer.setSelection(
+				new StructuredSelection(node), true);
+	}
+
+
+
+
 	public void setTraceNodes(ConcurrentTrace trace) {
 		this.inputTrace = trace;
 	}
 	
+	@Override
 	public void updateData() {
 		listViewer.setInput(inputTrace.getSequentialTrace());
 		listViewer.refresh();
 		
+	}
+	
+	
+	@Override
+	public Trace getCurrentTrace() {
+		return this.inputTrace;
+	}
+
+	@Override
+	public Trace getTrace() {
+		// TODO Auto-generated method stub
+		return this.inputTrace;
 	}
 
 
@@ -98,10 +143,28 @@ public class SequentialConcurrentView extends ViewPart {
 			    IStructuredSelection selection = listViewer.getStructuredSelection();
 			    ConcurrentTraceNode firstElement = (ConcurrentTraceNode) selection.getFirstElement();
 			    markJavaEditor(firstElement);
+			    otherViewsBehavior(firstElement);
 			}
 		});
 	}
 
+	@Override
+	protected void otherViewsBehavior(TraceNode node) {
+		DebugFeedbackView feedbackView = MicroBatViews.getDebugFeedbackView();
+		feedbackView.setTraceView(this);
+		feedbackView.refresh(node);
+		
+		
+		DebugPilotFeedbackView debugPilotFeedbackView = MicroBatViews.getDebugPilotFeedbackView();
+		debugPilotFeedbackView.refresh(node, this.inputTrace);
+		
+
+//		ReasonView reasonView = MicroBatViews.getReasonView();
+//		reasonView.refresh(feedbackView.getRecommender());
+
+		markJavaEditor(node);
+	}
+	
 	@SuppressWarnings("unchecked")
 	protected void markJavaEditor(TraceNode node) {
 		BreakPoint breakPoint = node.getBreakPoint();
@@ -151,6 +214,8 @@ public class SequentialConcurrentView extends ViewPart {
 		}
 
 	}
+	
+	
 
 	@Override
 	public void setFocus() {
