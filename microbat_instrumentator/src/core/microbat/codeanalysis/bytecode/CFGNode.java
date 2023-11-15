@@ -15,6 +15,7 @@ public class CFGNode implements IGraphNode<CFGNode>{
 
 	private int idx; // index of instruction in instructionList
 	private int lineNo; // optional
+	private boolean isCatch;
 	private InstructionHandle instructionHandle;
 	private List<CFGNode> parents = new ArrayList<>();
 	private List<CFGNode> children = new ArrayList<>();
@@ -39,6 +40,14 @@ public class CFGNode implements IGraphNode<CFGNode>{
 				|| this.instructionHandle.getInstruction() instanceof IfInstruction;
 	}
 	
+	public boolean isCatch() {
+		return this.isCatch;
+	}
+
+	public boolean setIsCatch(boolean isCatch) {
+		return this.isCatch = isCatch;
+	}
+
 	public InstructionHandle getInstructionHandle() {
 		return instructionHandle;
 	}
