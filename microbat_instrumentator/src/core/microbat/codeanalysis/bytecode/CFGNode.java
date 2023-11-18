@@ -44,8 +44,8 @@ public class CFGNode implements IGraphNode<CFGNode>{
 		return this.isCatch;
 	}
 
-	public boolean setIsCatch(boolean isCatch) {
-		return this.isCatch = isCatch;
+	public void setCatch(boolean isCatch) {
+		this.isCatch = isCatch;
 	}
 
 	public InstructionHandle getInstructionHandle() {

@@ -123,7 +123,7 @@ public class CFGConstructor {
 			int end = exception.getEndPC();
 			int handle = exception.getHandlerPC();
 			CFGNode targetNode = cfg.findNode(handle);
-			targetNode.setIsCatch(true);
+			targetNode.setCatch(true);
 			
 			for(int i=start; i<=end; i++){
 				CFGNode sourceNode = cfg.findNode(i);
@@ -328,8 +328,6 @@ public class CFGConstructor {
 		for(CFGNode branchNode: cfg.getNodeList()){
 			if(branchNode.isBranch()){
 				computeControlDependentees(branchNode, branchNode.getChildren(), bGraph);
-			} else if (branchNode.isCatch()) {
-				computeControlDominators(branchNode, branchNode.getParents(), bGraph);
 			}
 		}
 	}
@@ -342,18 +340,6 @@ public class CFGConstructor {
 				if(!isChildPostDominateBranchNode){
 					branchNode.addControlDominatee(child);
 					computeControlDependentees(branchNode, child.getChildren(), bGraph);					
-				}
-			}
-		}
-	}
-
-	private void computeControlDominators(CFGNode catchNode, List<CFGNode> list, BlockGraph bGraph) {
-		for (CFGNode parent : list) {
-			if (!parent.getControlDependentees().contains(catchNode)) {
-
-				boolean isChildPostDominateBranchNode = isChildPostDominateBranchNode(catchNode, parent, bGraph);
-				if (!isChildPostDominateBranchNode) {
-					parent.addControlDominatee(catchNode);
 				}
 			}
 		}

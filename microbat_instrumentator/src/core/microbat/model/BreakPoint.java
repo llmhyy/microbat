@@ -11,6 +11,7 @@ public class BreakPoint extends ClassLocation {
 	
 	private boolean isConditional;
 	private boolean isBranch;
+	private boolean isCatch;
 	
 	/**
 	 * The reason to differentiate control scope and loop scope is that
@@ -178,5 +179,13 @@ public class BreakPoint extends ClassLocation {
 
 	public void setBranch(boolean isBranch) {
 		this.isBranch = isBranch;
+	}
+
+	public boolean isCatch() {
+		return isCatch;
+	}
+
+	public void setCatch(boolean isCatch) {
+		this.isCatch = isCatch;
 	}
 }

@@ -17,7 +17,6 @@ import microbat.model.Scope;
 import microbat.model.value.PrimitiveValue;
 import microbat.model.value.VarValue;
 import microbat.model.variable.ConditionVar;
-import microbat.model.variable.LocalVar;
 import microbat.model.variable.Variable;
 import sav.common.core.utils.CollectionUtils;
 
@@ -1015,6 +1014,10 @@ public class TraceNode{
 
 	public boolean isBranch() {
 		return this.breakPoint.isBranch();
+	}
+
+	public boolean isCatch() {
+		return this.breakPoint.isCatch();
 	}
 
 	public TraceNode getInvokingMatchNode() {
