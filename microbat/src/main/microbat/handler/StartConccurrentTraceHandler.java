@@ -33,6 +33,7 @@ import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import microbat.util.Settings;
 import microbat.views.ConcurrentTraceView;
+import microbat.views.ConcurrentTraceViewSeq;
 import microbat.views.DebugFeedbackView;
 import microbat.views.MicroBatViews;
 import microbat.views.SequentialConcurrentView;
@@ -121,11 +122,10 @@ public class StartConccurrentTraceHandler extends AbstractHandler {
 							
 							@Override
 							public void run() {
-								SequentialConcurrentView sequentialConcurrentView = 
+								ConcurrentTraceViewSeq sequentialConcurrentView = 
 										MicroBatViews.getSequentialConcurrentView();
 										
 								if (result == null) {
-									sequentialConcurrentView.setTraceNodes(null);
 									return;
 								}
 								ConcurrentTrace trace = ConcurrentTrace.fromTimeStampOrder(
@@ -133,7 +133,7 @@ public class StartConccurrentTraceHandler extends AbstractHandler {
 								trace.setAppJavaClassPath(appClassPath);
 								List<Trace> traces = result.getTraceList();
 								
-								sequentialConcurrentView.setTraceNodes(trace);
+								sequentialConcurrentView.setInput(trace);
 //								traceView.setTraceList(traces);
 								sequentialConcurrentView.updateData();
 							}

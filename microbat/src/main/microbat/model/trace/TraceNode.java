@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 
@@ -22,6 +23,7 @@ import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
+import microbat.concurrent.model.ConcurrentTraceNode;
 import microbat.debugpilot.propagation.spp.StepExplaination;
 import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.AttributionVar;
@@ -119,6 +121,21 @@ public class TraceNode implements Comparator<TraceNode> {
 	protected double suspiciousness = -1.0d;
 	
 	protected double correctness = -1.0d;
+	
+	private ConcurrentTraceNode linkedConcurrentTraceNode;
+	
+	/**
+	 * Set a concurrent trace node to link to.
+	 * @param linkedNode
+	 */
+	public void setConcurrentTraceNode(ConcurrentTraceNode linkedNode) {
+		this.linkedConcurrentTraceNode = linkedNode;
+	}
+	
+	public Optional<ConcurrentTraceNode> getLinkedConcurrentNode() {
+		return Optional.of(linkedConcurrentTraceNode);
+	}
+	
 	
 	public TraceNode() {
 		this.breakPoint = null;
@@ -381,6 +398,10 @@ public class TraceNode implements Comparator<TraceNode> {
 
 	public void setOrder(int order) {
 		this.order = order;
+	}
+	
+	public int getSequentialOrder() {
+		return order;
 	}
 
 //	public Boolean getMarkedCorrrect() {

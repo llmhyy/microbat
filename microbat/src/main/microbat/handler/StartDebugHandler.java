@@ -65,6 +65,14 @@ public class StartDebugHandler extends AbstractHandler {
 	
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		
+		// handle concurrent execution
+//		if (Settings.supportConcurrentTrace) {
+//			StartConccurrentTraceHandler concHandler = new StartConccurrentTraceHandler();
+//			concHandler.execute(event);
+//			return null;
+//		}
+		
+		
 		// Clear the DebugPilot debugging process if there are any
 		HandlerCallbackManager.getInstance().runDebugPilotTerminateCallbacks();
 		Job.getJobManager().cancel(DebugPilotHandler.JOB_FAMALY_NAME);

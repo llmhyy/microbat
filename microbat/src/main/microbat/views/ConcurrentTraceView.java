@@ -66,6 +66,7 @@ import microbat.behavior.BehaviorReporter;
 import microbat.bytecode.ByteCode;
 import microbat.bytecode.ByteCodeList;
 import microbat.bytecode.OpcodeType;
+import microbat.concurrent.model.ConcurrentTrace;
 import microbat.model.BreakPoint;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -193,18 +194,18 @@ public class ConcurrentTraceView extends TraceView {
 	/**
 	 * indicate a node is selected by tool or human users.
 	 */
-	private boolean programmingSelection = false;
+	protected boolean programmingSelection = false;
 
 	/**
 	 * indicate whether the program state should be refreshed when a trace node is
 	 * selected programmatically.
 	 */
 	protected boolean refreshProgramState = true;
-
+	
 	public void jumpToNode(Trace trace, int order, boolean refreshProgramState) {
 		assert order > 0;
 		TraceNode node = trace.getExecutionList().get(order - 1);
-
+		
 		List<TraceNode> path = new ArrayList<>();
 		while (node != null) {
 			path.add(node);
@@ -375,7 +376,7 @@ public class ConcurrentTraceView extends TraceView {
 							new BehaviorReporter(Settings.launchClass)
 									.export(BehaviorData.projectBehavior);
 						}
-
+						
 						otherViewsBehavior(node);
 
 						if (jumpFromSearch) {
@@ -466,7 +467,7 @@ public class ConcurrentTraceView extends TraceView {
 		DebugFeedbackView feedbackView = MicroBatViews.getDebugFeedbackView();
 
 		if (this.refreshProgramState) {
-			feedbackView.setTraceView(ConcurrentTraceView.this);
+			feedbackView.setTraceView(this);
 			feedbackView.refresh(node);
 		}
 

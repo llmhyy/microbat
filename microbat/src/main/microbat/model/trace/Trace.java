@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Stack;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -16,6 +17,7 @@ import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import microbat.codeanalysis.ast.LocalVariableScopes;
+import microbat.concurrent.model.ConcurrentTraceNode;
 import microbat.model.AttributionVar;
 import microbat.model.BreakPoint;
 import microbat.model.Scope;
@@ -40,7 +42,7 @@ public class Trace {
 	private boolean isMain;
 	private String threadName;
 	private String id;
-	
+
 	/**
 	 * This variable is to trace whether the variables in different lines are the same
 	 * local variable.

@@ -500,7 +500,8 @@ public class StepRecommender {
 	private TraceNode trySkip(TraceNode suspiciousNode, Trace trace) {
 		for(VarValue value: suspiciousNode.getReadVariables()) {
 			TraceNode node = trace.findProducer(value, suspiciousNode);
-			
+			// no previous producer exists
+			if (node == null) continue;
 			PathInstance path = new PathInstance(node, suspiciousNode);
 			boolean isPathInPattern = Settings.potentialCorrectPatterns.containsPattern(path);
 			if(isPathInPattern) {

@@ -14,15 +14,18 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.AnnotationModel;
+import org.eclipse.jface.viewers.IBaseLabelProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.LabelProviderChangedEvent;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
@@ -56,19 +59,42 @@ public class SequentialConcurrentView extends TraceView {
 			// TODO Auto-generated method stub
 			java.util.List<ConcurrentTraceNode> traceNodes = (java.util.List<ConcurrentTraceNode>) inputElement;
 			return traceNodes.toArray();
-			
 		}
 		
 	}
 	
-	private static class SequentialConcurrentLabelProvider extends LabelProvider {
+	private static class SequentialConcurrentLabelProvider extends StyledCellLabelProvider {
+
+		@Override
+		public void addListener(ILabelProviderListener listener) {
+			// TODO Auto-generated method stub
+			super.addListener(listener);
+		}
+
+		@Override
+		public boolean isLabelProperty(Object element, String property) {
+			// TODO Auto-generated method stub
+			return super.isLabelProperty(element, property);
+		}
+
+		@Override
+		public void removeListener(ILabelProviderListener listener) {
+			// TODO Auto-generated method stub
+			super.removeListener(listener);
+		}
+
+		@Override
+		protected void fireLabelProviderChanged(LabelProviderChangedEvent event) {
+			// TODO Auto-generated method stub
+			super.fireLabelProviderChanged(event);
+		}
 		
 	}
 	protected ConcurrentTrace inputTrace;
 	protected ListViewer listViewer;
 	protected SequentialConcurrentViewProvider provider = 
 			new SequentialConcurrentViewProvider();
-	protected ILabelProvider labelProvider = new SequentialConcurrentLabelProvider();
+	protected IBaseLabelProvider labelProvider = new SequentialConcurrentLabelProvider();
 	
 	public SequentialConcurrentView() {
 		
@@ -144,6 +170,7 @@ public class SequentialConcurrentView extends TraceView {
 			    ConcurrentTraceNode firstElement = (ConcurrentTraceNode) selection.getFirstElement();
 			    markJavaEditor(firstElement);
 			    otherViewsBehavior(firstElement);
+			
 			}
 		});
 	}

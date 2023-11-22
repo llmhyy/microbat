@@ -86,10 +86,10 @@ public class MicroBatViews {
 	}
 	
 	
-	public static SequentialConcurrentView getSequentialConcurrentView() {
-		SequentialConcurrentView view = null;
+	public static ConcurrentTraceViewSeq getSequentialConcurrentView() {
+		ConcurrentTraceViewSeq view = null;
 		try {
-			view = (SequentialConcurrentView)PlatformUI.getWorkbench().
+			view = (ConcurrentTraceViewSeq)PlatformUI.getWorkbench().
 					getActiveWorkbenchWindow().getActivePage().showView(MicroBatViews.SEQUENTIAL_CONCURRENT_TRACE);
 		} catch (PartInitException e) {
 			e.printStackTrace();

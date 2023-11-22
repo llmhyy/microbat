@@ -68,7 +68,7 @@
             restorable="true">
       </view>
       <view
-            class="microbat.views.SequentialConcurrentView"
+            class="microbat.views.ConcurrentTraceViewSeq"
             id="microbat.view.seqConcurrentTrace"
             name="Sequential Concurrent View"
             restorable="true">

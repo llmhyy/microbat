@@ -23,6 +23,14 @@ public class ConcurrentTrace extends Trace {
 	
 	private ConcurrentTraceNode linkedTraceNode;
 	
+	public List<Trace> getTraceList() {
+		return originalTraces;
+	}
+	
+	public Trace getMainTrace() {
+		return originalTraces.get(0);
+	}
+	
 	public List<ConcurrentTraceNode> getSequentialTrace() {
 		return generatedTraceNodes;
 	}
@@ -37,7 +45,7 @@ public class ConcurrentTrace extends Trace {
 	 */
 	private void postProcess() {
 		for (int i = 0; i < generatedTraceNodes.size(); ++i) {
-			generatedTraceNodes.get(i).setOrder(i);
+			generatedTraceNodes.get(i).setOrder(i + 1);
 			this.addTraceNode(generatedTraceNodes.get(i));
 		}
 	}
@@ -57,8 +65,7 @@ public class ConcurrentTrace extends Trace {
 			result.ensureCapacity(trace.getExecutionList().size() * 2);
 			for (int i = 0; i < trace.getExecutionList().size(); ++i) {
 				TraceNode traceNode = trace.getExecutionList().get(i);
-				result.addAll(ConcurrentTraceNode.splitTraceNode(traceNode, ctr));
-				
+				result.addAll(ConcurrentTraceNode.splitTraceNode(traceNode, ctr, trace.getThreadId()));
 			}
 			ctr += 1;
 			traces.add(result);
@@ -78,6 +85,62 @@ public class ConcurrentTrace extends Trace {
 		}
 	}
 	
+	@Override
+	public TraceNode findProducer(VarValue varValue, TraceNode startNode) {
+
+		// check if it is on heap
+		String s = varValue.getAliasVarID();
+		boolean isLocalVar = varValue.isLocalVariable();
+		boolean isOnHeap = !isLocalVar;
+		if (!(startNode instanceof ConcurrentTraceNode)) {
+			throw new RuntimeException("Wrong checking node type");
+		}
+		ConcurrentTraceNode concNode = (ConcurrentTraceNode) startNode;
+		int j = concNode.getOrder();
+		if (!concNode.isAtomic() && concNode.getWrittenVariables().size() > 0) {
+			return concNode.getLinkedTraceNode();
+		}
+		
+		// find the individual trace to use the find data dependenccy
+		String varID = Variable.truncateSimpleID(varValue.getVarID());
+		String headID = Variable.truncateSimpleID(varValue.getAliasVarID());
+		
+			
+		for(int i=j-2; i>=1; i--) {
+			ConcurrentTraceNode node = this.getSequentialTrace().get(i);
+			for(VarValue writtenValue: node.getWrittenVariables()) {
+				
+				if (isOnHeap && writtenValue.getAliasVarID() != null
+						&& writtenValue.getAliasVarID().equals(varValue.getAliasVarID())) {
+					return node;
+				}
+				if (!isOnHeap && concNode.getCurrentThread() != node.getCurrentThread()) {
+					// when the value is on a different thread
+					continue;
+				}
+				
+				String wVarID = Variable.truncateSimpleID(writtenValue.getVarID());
+				String wHeadID = Variable.truncateSimpleID(writtenValue.getAliasVarID());
+				
+				if(wVarID != null && wVarID.equals(varID) && node.getCurrentTraceId() 
+						== concNode.getCurrentTraceId()) {
+					return node;						
+				}
+				
+				if(wHeadID != null && wHeadID.equals(headID)) {
+					return node;
+				}
+				
+				VarValue childValue = writtenValue.findVarValue(varID, headID);
+				if(childValue != null) {
+					return node;
+				}
+				
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Generates a concurrent trace from the given trace by timestamp order.
 	 * End goal is to remove timestamp synchronisation - aka deprecate this.
@@ -226,56 +289,14 @@ public class ConcurrentTrace extends Trace {
 		return this.getSequentialTrace().get(order);
 	}
 	
-	public void constructControlDominator() {
-		
-	}
+
 
 	/**
 	 * Finds data dependency relative to the concurrent trace
 	 */
 	@Override
 	public TraceNode findDataDependency(TraceNode checkingNode, VarValue readVar) {
-	
-		int j = checkingNode.getOrder();
-		// check if it is on heap
-		String s = readVar.getAliasVarID();
-		boolean isOnHeap = s != null;
-		if (!(checkingNode instanceof ConcurrentTraceNode)) {
-			throw new RuntimeException("Wrong checking node type");
-		}
-		ConcurrentTraceNode concNode = (ConcurrentTraceNode) checkingNode;
-		if (concNode.getWrittenVariables().size() > 0) {
-			return concNode.getLinkedTraceNode();
-		}
-		
-		// find the individual trace to use the find data dependenccy
-		String varID = Variable.truncateSimpleID(readVar.getVarID());
-		String headID = Variable.truncateSimpleID(readVar.getAliasVarID());
-			
-		for(int i=checkingNode.getOrder()-1; i>=1; i--) {
-			ConcurrentTraceNode node = this.getSequentialTrace().get(i);
-			for(VarValue writtenValue: node.getWrittenVariables()) {
-				
-				String wVarID = Variable.truncateSimpleID(writtenValue.getVarID());
-				String wHeadID = Variable.truncateSimpleID(writtenValue.getAliasVarID());
-				
-				if(wVarID != null && wVarID.equals(varID) && node.getCurrentTraceId() 
-						== concNode.getCurrentTraceId()) {
-					return node;						
-				}
-				
-				if(wHeadID != null && wHeadID.equals(headID)) {
-					return node;
-				}
-				
-				VarValue childValue = writtenValue.findVarValue(varID, headID);
-				if(childValue != null) {
-					return node;
-				}
-				
-			}
-		}
-		return null;
+		return this.findProducer(readVar, checkingNode);
 	}
 
 
@@ -286,11 +307,15 @@ public class ConcurrentTrace extends Trace {
 	@Override
 	public List<TraceNode> findDataDependentee(TraceNode traceNode, VarValue writtenVar) {
 		List<TraceNode> consumers = new ArrayList<TraceNode>();
+		if (!(traceNode instanceof ConcurrentTraceNode)) {
+			throw new RuntimeException("Wrong trace node type");
+		}
 		
+		ConcurrentTraceNode cnode = (ConcurrentTraceNode) traceNode;
 		String varID = Variable.truncateSimpleID(writtenVar.getVarID());
 		String headID = Variable.truncateSimpleID(writtenVar.getAliasVarID());
 		
-		for(int i=traceNode.getOrder()+1; i <= this.getSequentialTrace().size(); i++) {
+		for(int i=cnode.getOrder() + 1; i <= this.getSequentialTrace().size(); i++) {
 			TraceNode node = this.getSequentialTrace().get(i);
 			for(VarValue readVar: node.getReadVariables()) {
 				
