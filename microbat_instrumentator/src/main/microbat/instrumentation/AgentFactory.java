@@ -3,6 +3,8 @@ package microbat.instrumentation;
 import java.lang.instrument.Instrumentation;
 
 import microbat.instrumentation.AgentParams.LogType;
+import microbat.instrumentation.aggreplay.AggrePlayRecordAgent;
+import microbat.instrumentation.aggreplay.AggrePlayReplayAgent;
 import microbat.instrumentation.cfgcoverage.CoverageAgent;
 import microbat.instrumentation.cfgcoverage.CoverageAgentParams;
 import microbat.instrumentation.precheck.PrecheckAgent;
@@ -26,6 +28,12 @@ public class AgentFactory {
 			agent.setInstrumentation(inst);
 		} else if (cmd.getBoolean(AgentParams.OPT_PRECHECK, false)) {
 			agent = new PrecheckAgent(cmd, inst);
+			agent.setInstrumentation(inst);
+		} else if (cmd.getBoolean(AgentParams.OPT_AGGREPLAY_RECORD, false)) {
+			agent = new AggrePlayRecordAgent(cmd);
+			agent.setInstrumentation(inst);
+		} else if (cmd.getBoolean(AgentParams.OPT_AGGREPLAY_REPLAY, false)) {
+			agent = new AggrePlayReplayAgent(cmd);
 			agent.setInstrumentation(inst);
 		} else {
 			agent = new TraceAgent(cmd);
