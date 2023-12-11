@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
+import javax.swing.tree.VariableHeightLayoutCache;
 
 import microbat.instrumentation.filter.CodeRangeUserFilter;
 import microbat.instrumentation.filter.GlobalFilterChecker;
@@ -71,7 +76,7 @@ public class TraceAgent extends Agent {
 			
 			addConditionResult(trace);
 			changeRedefinedVarID(trace);
-			
+			matchArrayElementName(trace);
 			traceList.add(trace);
 		}
 
@@ -101,30 +106,6 @@ public class TraceAgent extends Agent {
 		// trace.constructLoopParentRelation();
 
 	}
-
-//	private void writeOutput(Trace trace) throws Exception {
-//		AgentLogger.debug("Saving trace...");
-//
-//		if (agentParams.getDumpFile() != null) {
-//			RunningInfo result = new RunningInfo();
-//			result.setProgramMsg(Agent.getProgramMsg());
-//			result.setTrace(trace);
-//			result.setCollectedSteps(trace.getExecutionList().size());
-//			result.setExpectedSteps(agentParams.getExpectedSteps());
-//			result.saveToFile(agentParams.getDumpFile(), false);
-//			AgentLogger.debug(result.toString());
-//		} else if (agentParams.getTcpPort() != AgentConstants.UNSPECIFIED_INT_VALUE) {
-//			TcpConnector tcpConnector = new TcpConnector(agentParams.getTcpPort());
-//			TraceOutputWriter traceWriter = tcpConnector.connect();
-//			traceWriter.writeString(Agent.getProgramMsg());
-//			traceWriter.writeTrace(trace);
-//			traceWriter.flush();
-//			Thread.sleep(10000l);
-//			tcpConnector.close();
-//		}
-//
-//		AgentLogger.debug("Trace saved.");
-//	}
 
 	private void createVirtualDataRelation(Trace trace) {
 		for (int i = 0; i < trace.size(); i++) {
@@ -265,5 +246,80 @@ public class TraceAgent extends Agent {
 				}
 			}
 		}
+	}
+	
+	private void matchArrayElementName(final Trace trace) {
+		/*
+		 * Element variables' name is the address of the array it belongs to,
+		 * which is not readable to human, this function will replace the
+		 * address by the name of array variable.
+		 */
+
+		// First, store the name of all variables that have children
+		Map<String, String> parentNameMap = new HashMap<>();
+		for (TraceNode node : trace.getExecutionList()) {
+			List<VarValue> variables = new ArrayList<>();
+			variables.addAll(node.getReadVariables());
+			variables.addAll(node.getWrittenVariables());
+			for (VarValue var : variables) {
+				if (!var.getChildren().isEmpty()) {
+					parentNameMap.put(var.getAliasVarID(),  var.getVarName());
+				}
+			}
+		}
+		
+		// Second, for every element in array, replace the name
+		for (TraceNode node : trace.getExecutionList()) {
+			List<VarValue> variables = new ArrayList<>();
+			variables.addAll(node.getReadVariables());
+			variables.addAll(node.getWrittenVariables());
+			for (VarValue var : variables) {
+				if (var.isElementOfArray()) {
+					// If the variable is element of array, then it must have one parent
+					final VarValue parent = var.getParents().get(0);
+					final String aliasID = parent.getVarID();
+					if (parentNameMap.containsKey(aliasID)) {
+						final String parentName = parentNameMap.get(aliasID);
+						final String indexStr = this.extractIndexFromName(var.getVarName());
+						final String newVarName = parentName + "[" + indexStr + "]";
+						var.getVariable().setName(newVarName);
+					}
+				}
+			}
+		}
+		
+		// Last, also change the element variable of the array variable children
+		for (TraceNode node : trace.getExecutionList()) {
+			List<VarValue> variables = new ArrayList<>();
+			variables.addAll(node.getReadVariables());
+			variables.addAll(node.getWrittenVariables());
+			for (VarValue var : variables) {
+				if (!var.getChildren().isEmpty()) {
+					for (VarValue child : var.getChildren()) {
+						if (child.isElementOfArray()) {
+							final String indexStr = this.extractIndexFromName(child.getVarName());
+							final String newVarName = var.getVarName() + "[" + indexStr + "]";
+							child.getVariable().setName(newVarName);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	private String extractIndexFromName(final String name) {
+        // Define the pattern for matching text within square brackets
+        Pattern pattern = Pattern.compile("\\[([^\\]]+)\\]");
+
+        // Create a matcher with the input string
+        Matcher matcher = pattern.matcher(name);
+
+        // Find and print all matches
+        String indexStr = "";
+        while (matcher.find()) {
+            indexStr = matcher.group(1); // Group 1 contains the text within brackets
+        }
+        
+        return indexStr;
 	}
 }
