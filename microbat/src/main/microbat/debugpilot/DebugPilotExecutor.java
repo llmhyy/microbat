@@ -2,6 +2,7 @@ package microbat.debugpilot;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 
 import org.eclipse.swt.widgets.Display;
@@ -66,7 +67,8 @@ public class DebugPilotExecutor {
 		settings.setPropagatorSettings(PreferenceParser.getPreferencePropagatorSettings());
 		settings.setPathFinderSettings(PreferenceParser.getPreferencePathFinderSettings());
 		settings.setRootCauseLocatorSettings(PreferenceParser.getPrefereRootCauseLocatorSettings());
-		
+		settings.setWrongVars(new HashSet<>());
+		settings.setCorrectVars(new HashSet<>());
 		// Determine the output step
 		// We can directly get(0) because feedbacks must have one element
 		final TraceNode outputNode = avaiableFeedbacks.get(0).getNode();

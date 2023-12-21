@@ -1,87 +1,76 @@
 package microbat.debugpilot.propagation.BP.constraint;
 
+import java.util.ArrayList;
+import java.util.List;
+import BeliefPropagation.graph.Factor;
+import BeliefPropagation.graph.HDArray;
+import BeliefPropagation.graph.Variable;
+import microbat.debugpilot.propagation.probability.PropProbability;
+import microbat.log.Log;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
-/**
- * A3 Variable Constraint
- * 
- * If all the read and written variables are correct,
- * then the control dominator is correct as well.
- * 
- * @author David
- *
- */
 public class VariableConstraintA3 extends VariableConstraint {
 
-	/**
-	 * Number of A3 Variable Constraint generated
-	 */
-	private static int count = 0;
-	
-	/**
-	 * Constructor
-	 * @param node Target node
-	 * @param propProbability Propagation probability
-	 */
-	public VariableConstraintA3(TraceNode node, double propProbability) {
-		super(node, propProbability, VariableConstraintA3.genID());
-		
-		if (node.getControlDominator() == null) {
-			throw new WrongConstraintConditionException("Node: " + node.getOrder() + " do not have control dominator. Cannot construct Variable Constraint A3");
-		}
-		
-		if (Constraint.countReadVars(node) == 0 && Constraint.countWrittenVars(node) == 0) {
-			throw new WrongConstraintConditionException("Node: " + node.getOrder() + " do not have any read or written variable to constraint Variable Constraint A3");
-		}
-		
-		this.setVarsID(node);
-	}
+    protected final VarValue controlDom;
 
-	/**
-	 * Constructor
-	 * @param bitRepresentation Bit representation of this constraint
-	 * @param conclusionIdx Index of conclusion variable
-	 * @param propProbability Propagation probability
-	 * @param order Order of trace node that this constraint based on
-	 */
-	public VariableConstraintA3(BitRepresentation bitRepresentation, int conclusionIdx, double propProbability, int order) {
-		super(bitRepresentation, conclusionIdx, propProbability, VariableConstraintA3.genID(), order);
-	}
-	
-	/**
-	 * Deep Copy Constructor
-	 * @param constraint Other constraint
-	 */
-	public VariableConstraintA3(VariableConstraintA3 constraint) {
-		super(constraint);
-	}
-	
-	@Override
-	protected BitRepresentation genBitRepresentation(TraceNode node) {
-		final int totalLen = Constraint.countPreds(node);
-		BitRepresentation varsIncluded = new BitRepresentation(totalLen);
-		varsIncluded.set(0, totalLen);
-		return varsIncluded;
-	}
+    public VariableConstraintA3(final TraceNode node) {
+        this(node, PropProbability.HIGH);
+    }
 
-	@Override
-	protected int defineConclusionIdx(TraceNode node) {
-		return Constraint.countPreds(node)-1;
-	}
-	
-	@Override
-	public String toString() {
-		return "Var Constraint A3 " + super.toString();
-	}
-	
-	private static String genID() {
-		return "VC3_" + VariableConstraintA3.count++;
-	}
-	
-	public static void resetID() {
-		VariableConstraintA3.count = 0;
-	}
+    public VariableConstraintA3(final TraceNode node, final double propagtionProbability) {
+        super(node, VariableConstraintA3.genID(node), propagtionProbability);
 
+        if (Constraint.countPredicates(node) == 0) {
+            throw new WrongConstraintConditionException(Log.genMsg(getClass(),
+                    "Cannot form Variable Constraint A3 without any predicates for node: "
+                            + node.getOrder()));
+        }
+
+        if (node.getControlDominator() == null) {
+            throw new WrongConstraintConditionException(Log.genMsg(getClass(),
+                    "Cannot form Variable Constraint A3 without control dominator for node: "
+                            + node.getOrder()));
+        }
+
+        if (Constraint.countPredicates(node) == 1) {
+            throw new WrongConstraintConditionException(Log.genMsg(getClass(),
+                    "Cannot form Variable Constraint A3 without any written variables and read variables for node: "
+                            + node.getOrder()));
+        }
+
+        this.controlDom = node.getControlDominator().getConditionResult();
+    }
+
+    @Override
+    public Factor genFactor() {
+        // For VA3, the invalid case is that all the other written variables and read variables
+        // are correct, but the control dominator is wrong
+        final String factorName = this.name;
+
+        // Construct variables for factor, note that order matters
+        List<Variable<?>> variables = new ArrayList<>();
+        for (VarValue varValue : node.getReadVariables()) {
+            variables.add(new Variable<>(varValue, 2));
+        }
+        for (VarValue varValue : node.getWrittenVariables()) {
+            variables.add(new Variable<>(varValue, 2));
+        }
+        variables.add(new Variable<>(this.controlDom, 2));
+
+        // Calculate probability distribution
+        final int numPredicates = variables.size();
+        final int[] shape = Constraint.initShapeByDimension(numPredicates);
+        HDArray probabilityDistribution =
+                HDArray.createBySizeWithValue(this.propagationProb, shape);
+        final int[] invalidIndices = this.genInvalidIndices(numPredicates);
+        probabilityDistribution.set(1.0d - this.propagationProb, invalidIndices);
+
+        return new Factor(factorName, probabilityDistribution, variables);
+    }
+
+    private static String genID(final TraceNode node) {
+        return "VA3_" + node.getOrder();
+    }
 
 }
