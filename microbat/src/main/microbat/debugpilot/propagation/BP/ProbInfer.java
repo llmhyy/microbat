@@ -14,15 +14,43 @@ import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
+/**
+ * This class is the main class for belief propagation. It propagates the probability of variables
+ * and statements.
+ */
 public class ProbInfer implements ProbabilityPropagator {
 
+    /**
+     * The trace to be propagated.
+     */
     protected List<TraceNode> trace;
 
+    /**
+     * The set of wrong variables.
+     */
     protected Set<VarValue> wrongVars;
+
+    /**
+     * The set of correct variables.
+     */
     protected Set<VarValue> correctVars;
 
+    /**
+     * The set of feedbacks.
+     */
     protected Set<DPUserFeedback> feedbackRecords;
 
+    /**
+     * Constructs a {@code ProbInfer} with the given trace, wrong variables, correct variables and
+     * feedbacks.
+     *
+     * @param trace the trace to be propagated
+     * @param wrongVars the set of wrong variables
+     * @param correctVars the set of correct variables
+     * @param feedbackRecords the set of feedbacks
+     * @throws NullPointerException if the trace, wrong variables, correct variables or feedbacks is
+     *         {@code null}
+     */
     public ProbInfer(final Collection<TraceNode> trace, final Collection<VarValue> wrongVars,
             final Collection<VarValue> correctVars,
             final Collection<DPUserFeedback> feedbackRecords) {
@@ -39,6 +67,13 @@ public class ProbInfer implements ProbabilityPropagator {
         this.feedbackRecords = new HashSet<>(feedbackRecords);
     }
 
+    /**
+     * Constructs a {@code ProbInfer} with the given settings.
+     *
+     * @param settings the settings
+     * @throws NullPointerException if the settings is {@code null}
+     * @see PropagatorSettings
+     */
     public ProbInfer(final PropagatorSettings settings) {
         this(settings.getSlicedTrace(), settings.getWrongVars(), settings.getCorrectVars(),
                 settings.getFeedbacks());

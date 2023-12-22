@@ -2,11 +2,13 @@ package microbat.debugpilot.propagation.BP;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.jgrapht.graph.DefaultEdge;
 import BeliefPropagation.alg.propagation.LoopyBeliefPropagation;
 import BeliefPropagation.graph.Factor;
 import BeliefPropagation.graph.FactorGraph;
 import BeliefPropagation.graph.Variable;
+import BeliefPropagation.utils.Log;
 import microbat.debugpilot.propagation.ProbabilityPropagator;
 import microbat.debugpilot.propagation.BP.constraint.Constraint;
 import microbat.debugpilot.propagation.BP.constraint.PriorConstraint;
@@ -20,11 +22,28 @@ import microbat.debugpilot.propagation.probability.PropProbability;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
+/**
+ * This class is the main class for belief propagation. It propagates the probability of correctness
+ * of statements.
+ */
 public class StatementPropagator implements ProbabilityPropagator {
 
+    /**
+     * The trace to be propagated.
+     */
     protected List<TraceNode> traceNodeList;
 
+    /**
+     * Constructs a {@code ProbInfer} with the given trace, wrong variables, correct variables and
+     * feedbacks.
+     *
+     * @param traceNodeList the trace to be propagated
+     * @throws NullPointerException if the trace, wrong variables, correct variables or feedbacks is
+     *         {@code null}
+     */
     public StatementPropagator(List<TraceNode> traceNodeList) {
+        Objects.requireNonNull(traceNodeList,
+                Log.genLogMsg(getClass(), "Trace should not be null"));
         this.traceNodeList = traceNodeList;
     }
 
@@ -37,10 +56,12 @@ public class StatementPropagator implements ProbabilityPropagator {
                 continue;
             }
 
+            // Generate constraints
             List<Constraint> constraints = new ArrayList<>();
             constraints.addAll(this.genVarToStatConstraints(node));
             constraints.addAll(this.genPriorConstraints(node));
 
+            // Convert the constraint to factor graph
             List<Factor> factors = constraints.stream().map(Constraint::genFactor).toList();
             final FactorGraph<DefaultEdge> factorGraph = new FactorGraph<>(DefaultEdge.class);
             for (Factor factor : factors) {
@@ -51,6 +72,7 @@ public class StatementPropagator implements ProbabilityPropagator {
             }
             factorGraph.fillEdges();
 
+            // Run belief propagation to obtain the correctness of the statement
             LoopyBeliefPropagation<DefaultEdge> lbp = new LoopyBeliefPropagation<>(factorGraph);
             Variable<TraceNode> statement = new Variable<>(node, 2);
             final double correctness = lbp.getBelief(statement).getProbability().get(1);
@@ -58,6 +80,12 @@ public class StatementPropagator implements ProbabilityPropagator {
         }
     }
 
+    /**
+     * Generates the constraints for the given node.
+     * 
+     * @param node the node to be processed
+     * @return the constraints
+     */
     protected List<Constraint> genVarToStatConstraints(final TraceNode node) {
         List<Constraint> constraints = new ArrayList<>();
 
@@ -102,18 +130,42 @@ public class StatementPropagator implements ProbabilityPropagator {
         return constraints;
     }
 
+    /**
+     * Checks whether the given node has read variables.
+     * 
+     * @param node the node to be checked
+     * @return {@code true} if the node has read variables; {@code false} otherwise
+     */
     protected boolean haveReadVar(final TraceNode node) {
         return !node.getReadVariables().isEmpty();
     }
 
+    /**
+     * Checks whether the given node has written variables.
+     * 
+     * @param node the node to be checked
+     * @return {@code true} if the node has written variables; {@code false} otherwise
+     */
     protected boolean haveWrittenVar(final TraceNode node) {
         return !node.getWrittenVariables().isEmpty();
     }
 
+    /**
+     * Checks whether the given node has control dominator.
+     * 
+     * @param node the node to be checked
+     * @return {@code true} if the node has control dominator; {@code false} otherwise
+     */
     protected boolean haveControlDom(final TraceNode node) {
         return node.getControlDominator() != null;
     }
 
+    /**
+     * Generates the prior constraints for the given node.
+     * 
+     * @param node the node to be processed
+     * @return the constraints
+     */
     protected List<Constraint> genPriorConstraints(final TraceNode node) {
         List<Constraint> constraints = new ArrayList<>();
 

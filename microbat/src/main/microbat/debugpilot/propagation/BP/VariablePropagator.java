@@ -25,12 +25,38 @@ import microbat.debugpilot.userfeedback.DPUserFeedback;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 
+/**
+ * This class is the main class for belief propagation. It propagates the probability of correctness
+ * of variables.
+ */
 public class VariablePropagator implements ProbabilityPropagator {
 
+    /**
+     * The set of correct variables.
+     */
     protected Set<VarValue> correctVars;
+
+    /**
+     * The trace to be propagated.
+     */
     protected List<TraceNode> traceNodeList;
+
+    /**
+     * The set of wrong variables.
+     */
     protected Set<VarValue> wrongVars;
 
+    /**
+     * Constructs a {@code ProbInfer} with the given trace, wrong variables, correct variables and
+     * feedbacks.
+     *
+     * @param traceNodeList the trace to be propagated
+     * @param wrongVars the set of wrong variables
+     * @param correctVars the set of correct variables
+     * @param feedbackRecords the set of feedbacks
+     * @throws NullPointerException if the trace, wrong variables, correct variables or feedbacks is
+     *         {@code null}
+     */
     public VariablePropagator(List<TraceNode> traceNodeList, Collection<VarValue> correctVars,
             Collection<VarValue> wrongVars, Collection<DPUserFeedback> feedbackRecords) {
         Objects.requireNonNull(traceNodeList,
@@ -46,6 +72,11 @@ public class VariablePropagator implements ProbabilityPropagator {
         this.fuseUserFeedback(feedbackRecords);
     }
 
+    /**
+     * Update the correct and wrong variables according to the feedbacks.
+     * 
+     * @param feedbackRecords
+     */
     protected void fuseUserFeedback(final Collection<DPUserFeedback> feedbackRecords) {
         for (DPUserFeedback feedback : feedbackRecords) {
             final TraceNode node = feedback.getNode();
@@ -83,6 +114,11 @@ public class VariablePropagator implements ProbabilityPropagator {
         }
     }
 
+    /**
+     * Generates the constraints.
+     * 
+     * @return the constraints
+     */
     protected List<Constraint> generateConstraints() {
         List<Constraint> constraints = new ArrayList<>();
         for (TraceNode node : this.traceNodeList) {
@@ -92,6 +128,12 @@ public class VariablePropagator implements ProbabilityPropagator {
         return constraints;
     }
 
+    /**
+     * Generate variable constraints
+     * 
+     * @param node the node to be processed
+     * @return the constraints
+     */
     protected List<Constraint> genVarConstraints(final TraceNode node) {
         List<Constraint> constraints = new ArrayList<>();
 
@@ -121,18 +163,41 @@ public class VariablePropagator implements ProbabilityPropagator {
         return constraints;
     }
 
+    /**
+     * Checks whether the given node has read variables.
+     * 
+     * @param node the node to be checked
+     * @return {@code true} if the node has read variables; {@code false} otherwise
+     */
     protected boolean haveReadVar(final TraceNode node) {
         return !node.getReadVariables().isEmpty();
     }
 
+    /**
+     * Checks whether the given node has written variables.
+     * 
+     * @param node the node to be checked
+     * @return {@code true} if the node has written variables; {@code false} otherwise
+     */
     protected boolean haveWrittenVar(final TraceNode node) {
         return !node.getWrittenVariables().isEmpty();
     }
 
+    /**
+     * Checks whether the given node has control dominator.
+     * 
+     * @param node the node to be checked
+     * @return {@code true} if the node has control dominator; {@code false} otherwise
+     */
     protected boolean haveControlDom(final TraceNode node) {
         return node.getControlDominator() != null;
     }
 
+    /**
+     * Generates the prior constraints.
+     * 
+     * @return the constraints
+     */
     protected List<Constraint> genPriorConstraints() {
         List<Constraint> constraints = new ArrayList<>();
 
