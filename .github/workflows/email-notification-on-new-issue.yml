@@ -1,0 +1,27 @@
+name: Notify Team on New Issue
+
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  notify-team-of-new-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Email Notification on New Issue
+        uses: dawidd6/action-send-mail@v1
+        with:
+          server_address: ${{ secrets.EMAIL_SERVER_ADDRESS }}
+          server_port: ${{ secrets.EMAIL_SERVER_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: 'Microbat-New Issue'
+          to: ${{ secrets.TEAM_MEMBERS_EMAIL }}
+          body: |
+            A new issue for Microbat has been opened. Please respond to the issue ASAP.
+
+            Details:
+            - Title: ${{ github.event.issue.title }}
+            - Body: ${{ github.event.issue.body }}
+            - URL: ${{ github.event.issue.html_url }}

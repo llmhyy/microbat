@@ -1,0 +1,27 @@
+name: Notify Team on New Pull Request
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  notify-team-of-new-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Email Notification on New Pull Request
+        uses: dawidd6/action-send-mail@v1
+        with:
+          server_address: ${{ secrets.EMAIL_SERVER_ADDRESS }}
+          server_port: ${{ secrets.EMAIL_SERVER_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: 'Microbat-New Pull Request'
+          to: ${{ secrets.TEAM_MEMBERS_EMAIL }}
+          body: |
+            A new pull request for Microbat has been opened.
+
+            Details:
+            - Author: ${{ github.event.pull_request.user.login }}
+            - Title: ${{ github.event.pull_request.title }}
+            - URL: ${{ github.event.pull_request.html_url }}
