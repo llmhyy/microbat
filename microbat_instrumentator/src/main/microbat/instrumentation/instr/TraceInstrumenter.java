@@ -3,7 +3,9 @@ package microbat.instrumentation.instr;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.bcel.classfile.JavaClass;
@@ -50,6 +52,7 @@ import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.SWAP;
 import org.apache.bcel.generic.TargetLostException;
 import org.apache.bcel.generic.Type;
+import org.apache.bcel.util.InstructionFinder;
 
 import microbat.instrumentation.Agent;
 import microbat.instrumentation.AgentConstants;
@@ -67,7 +70,6 @@ import microbat.instrumentation.instr.instruction.info.SerializableLineInfo;
 import microbat.instrumentation.runtime.IExecutionTracer;
 import microbat.instrumentation.runtime.TraceUtils;
 import microbat.instrumentation.utils.MicrobatUtils;
-import microbat.model.BreakPoint;
 
 public class TraceInstrumenter extends AbstractInstrumenter {
 	protected static final String TRACER_VAR_NAME = "$tracer"; // local var
@@ -222,8 +224,14 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 			return false;
 		}
 		
+		ArrayList<InstructionHandle> positionsToUpdate = injectCodeTempVars(insnList, constPool, methodGen);
+		
 		/* fill up missing variables in localVariableTable */
 		LocalVariableSupporter.fillUpVariableTable(methodGen, method, constPool);
+		/* update method */
+		if (positionsToUpdate != null) {
+			method = methodGen.getMethod();
+		}
 		List<LineInstructionInfo> lineInsnInfos = LineInstructionInfo.buildLineInstructionInfos(classGen, constPool,
 				methodGen, method, isAppClass, insnList);
 		int startLine = Integer.MAX_VALUE;
@@ -316,6 +324,36 @@ public class TraceInstrumenter extends AbstractInstrumenter {
 		injectCodeInitTracer(methodGen, constPool, startLine, endLine, isAppClass, classNameVar,
 				methodSigVar, isMainMethod, tracerVar);
 		return true;
+	}
+	
+	private ArrayList<InstructionHandle> injectCodeTempVars(InstructionList insnList, ConstantPoolGen constPool, MethodGen methodGen) {
+		Random nameGenerator = new Random(0);
+		ArrayList<InstructionHandle> positionsToUpdate = null;
+		
+		InstructionFinder instructionFinder = new InstructionFinder(insnList);
+		String constantWrappingPattern = "ICONST INVOKESTATIC";
+		Iterator<InstructionHandle[]> iterator = instructionFinder.search(constantWrappingPattern);
+		while (iterator.hasNext()) {
+			// assume each pair contains 2 instructions
+			InstructionHandle[] pair = iterator.next();
+			InstructionHandle wrapConstHandle = pair[1];
+			InstructionHandle nextLineHandle = wrapConstHandle.getNext().getNext();
+			if (positionsToUpdate == null) {
+				positionsToUpdate = new ArrayList<>();
+			}
+			positionsToUpdate.add(nextLineHandle);
+			
+			// Stack: ..., wrappedObject
+			InstructionList newInsns = new InstructionList();
+			newInsns.append(new DUP()); // Stack: ..., wrappedObject, wrappedObject
+			LocalVariableGen tempVar = methodGen.addLocalVariable(
+					"temp_" + String.valueOf(nameGenerator.nextInt()), Type.OBJECT, null, null);
+			newInsns.append(new ASTORE(tempVar.getIndex())); // Stack: ..., wrappedObject
+			
+			insnList.append(wrapConstHandle, newInsns);
+			newInsns.dispose();
+		}
+		return positionsToUpdate;
 	}
 
 	private void injectCodeTracerExit(InstructionHandle exitInsHandle, InstructionList insnList, 
